@@ -7,8 +7,14 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+use App\Models\ClickupTaskClient; // Importa o nosso Model de Clientes
+
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    // 🔍 O Eloquent faz a mágica: busca todos os clientes sincronizados da Hetzner!
+    $clients = ClickupTaskClient::all(); 
+
+    // Envia os clientes para a página do Dashboard
+    return view('dashboard', compact('clients'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

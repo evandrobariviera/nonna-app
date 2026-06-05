@@ -6,16 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class ClickupTaskClient extends Model
 {
-    //
-}
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Model;
-
-class ClickupTaskClient extends Model
-{
     // 1. Diz ao Laravel o nome exato da sua tabela existente no Postgres
     protected $table = 'clickup_tasks_clients';
 
