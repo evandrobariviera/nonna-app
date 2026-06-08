@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nonna · Guia de Diagnóstico & Imersão</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════════ */
+:root{
+  --bg:      #0c0c12;
+  --s1:      #111118;
+  --s2:      #17171f;
+  --s3:      #1e1e28;
+  --border:  rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text:    #ebebf5;
+  --muted:   rgba(255,255,255,0.38);
+  --muted2:  rgba(255,255,255,0.55);
+  --c1:#ff5c4d; --c2:#d63eaa; --c3:#7b3fe4;
+  --grad:linear-gradient(135deg,var(--c1),var(--c2),var(--c3));
+  --grad2:linear-gradient(135deg,var(--c3),var(--c2),var(--c1));
+  --green:#34d399; --yellow:#fbbf24; --red:#f87171;
+  --sidebar:260px;
+  --topbar:56px;
+  --botbar:58px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{height:100%;}
+body{
+  height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Syne',sans-serif;
+  font-size:14px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ── TOPBAR ── */
+.topbar{
+  height:var(--topbar);
+  background:rgba(12,12,18,0.95);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 28px;
+  flex-shrink:0;
+  z-index:100;
+  position:relative;
+}
+.tb-left{display:flex;align-items:center;gap:16px;}
+.tb-logo img{height:22px;}
+.tb-logo-text{
+  font-size:15px;font-weight:800;
+  background:var(--grad);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.tb-divider{width:1px;height:20px;background:var(--border2);}
+.tb-title{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;font-weight:500;
+  color:var(--muted2);
+  letter-spacing:.06em;
+}
+.tb-right{display:flex;align-items:center;gap:20px;}
+.tb-save-btn{
+  background:none;border:1px solid var(--border2);color:var(--muted2);
+  padding:7px 16px;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;
+}
+.tb-save-btn:hover{border-color:var(--c2);color:var(--c2);}
+.tb-save-btn.saved{border-color:var(--green);color:var(--green);}
+.tb-progress-wrap{display:flex;align-items:center;gap:10px;}
+.tb-progress-bar{
+  width:120px;height:4px;background:var(--s3);border-radius:2px;overflow:hidden;
+}
+.tb-progress-fill{
+  height:100%;background:var(--grad);border-radius:2px;
+  transition:width .5s cubic-bezier(.77,0,.18,1);
+}
+.tb-pct{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted2);}
+
+/* ── BODY LAYOUT ── */
+.layout{display:flex;flex:1;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sidebar);flex-shrink:0;
+  background:var(--s1);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.sidebar::-webkit-scrollbar{width:3px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border2);}
+.sb-section-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted);padding:20px 20px 8px;
+}
+.sb-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:12px 20px;cursor:pointer;
+  border-left:2px solid transparent;
+  transition:all .15s;
+  position:relative;
+}
+.sb-item:hover{background:var(--s2);}
+.sb-item.active{
+  background:var(--s2);
+  border-left-color:var(--c2);
+}
+.sb-icon{
+  width:22px;height:22px;border-radius:4px;
+  background:var(--s3);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;flex-shrink:0;margin-top:1px;
+  transition:all .2s;
+}
+.sb-item.done .sb-icon{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.3);}
+.sb-item.active .sb-icon{background:rgba(214,62,170,.1);border-color:rgba(214,62,170,.3);}
+.sb-text{}
+.sb-num{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.1em;}
+.sb-name{font-size:12px;font-weight:700;line-height:1.3;margin-top:1px;}
+.sb-check{
+  margin-left:auto;flex-shrink:0;
+  font-size:10px;color:var(--green);
+  opacity:0;transition:opacity .2s;
+}
+.sb-item.done .sb-check{opacity:1;}
+.sb-progress{height:2px;background:var(--s3);margin:0 20px 4px;}
+.sb-progress-fill{height:100%;background:var(--c2);transition:width .3s;}
+
+/* ── MAIN ── */
+.main{
+  flex:1;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+  padding:0;
+}
+.main::-webkit-scrollbar{width:4px;}
+.main::-webkit-scrollbar-thumb{background:var(--border2);}
+.section-page{display:none;padding:48px 56px 80px;}
+.section-page.active{display:block;animation:fadeUp .3s ease both;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── SECTION HEADER ── */
+.sec-hdr{
+  display:flex;align-items:flex-start;gap:20px;
+  padding-bottom:32px;margin-bottom:36px;
+  border-bottom:1px solid var(--border);
+}
+.sec-num-big{
+  font-family:'Fraunces',serif;
+  font-size:72px;font-weight:700;line-height:1;
+  background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  opacity:.18;flex-shrink:0;
+}
+.sec-hdr-text{}
+.sec-eyebrow{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:9px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--muted2);margin-bottom:8px;
+}
+.sec-title{
+  font-size:clamp(22px,2.5vw,34px);font-weight:800;
+  line-height:1.1;letter-spacing:-.02em;margin-bottom:10px;
+}
+.sec-title .g{
+  background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.sec-desc{font-size:13px;color:var(--muted2);line-height:1.7;max-width:620px;}
+.sec-time{
+  display:inline-flex;align-items:center;gap:6px;margin-top:12px;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);
+  background:var(--s3);border:1px solid var(--border);padding:4px 10px;
+}
+.sec-time::before{content:'⏱';font-size:10px;}
+
+/* ── BLOCKS ── */
+.block{margin-bottom:36px;}
+.block-title{
+  font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted2);margin-bottom:16px;
+  display:flex;align-items:center;gap:10px;
+}
+.block-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── FIELD ── */
+.field{margin-bottom:14px;}
+.field-label{
+  font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;
+  display:flex;align-items:center;gap:8px;
+}
+.req{color:var(--c1);font-size:10px;}
+.field-hint{font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:400;font-style:italic;line-height:1.5;}
+input[type=text],textarea,select{
+  width:100%;background:var(--s2);
+  border:1px solid var(--border2);
+  color:var(--text);font-family:'Syne',sans-serif;font-size:13px;
+  padding:10px 14px;outline:none;
+  transition:border-color .2s,background .2s;
+  resize:vertical;
+}
+input[type=text]:focus,textarea:focus,select:focus{
+  border-color:var(--c2);background:var(--s3);
+}
+input[type=text]::placeholder,textarea::placeholder{color:var(--muted);}
+textarea{min-height:80px;line-height:1.6;}
+select option{background:var(--s2);}
+
+/* ── GRID FIELDS ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+
+/* ── CHECKLIST ── */
+.checklist{display:flex;flex-direction:column;gap:2px;}
+.cl-item{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:11px 14px;background:var(--s2);
+  border:1px solid var(--border);cursor:pointer;
+  transition:background .15s,border-color .15s;
+  user-select:none;
+}
+.cl-item:hover{background:var(--s3);border-color:var(--border2);}
+.cl-item.checked{
+  background:rgba(52,211,153,.04);
+  border-color:rgba(52,211,153,.15);
+}
+.cl-box{
+  width:18px;height:18px;border:1px solid var(--border2);
+  border-radius:2px;flex-shrink:0;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--s1);transition:all .2s;
+  font-size:10px;
+}
+.cl-item.checked .cl-box{
+  background:rgba(52,211,153,.15);
+  border-color:var(--green);color:var(--green);
+}
+.cl-text{flex:1;}
+.cl-label{font-size:13px;font-weight:600;line-height:1.4;}
+.cl-item.checked .cl-label{color:var(--muted2);text-decoration:line-through;text-decoration-color:rgba(255,255,255,.2);}
+.cl-sub{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5;}
+.cl-note{
+  width:100%;background:transparent;border:none;
+  border-top:1px solid var(--border);margin-top:8px;
+  padding:8px 0 0;font-family:'Syne',sans-serif;font-size:12px;
+  color:var(--muted2);outline:none;resize:none;
+}
+.cl-note::placeholder{color:var(--muted);}
+
+/* ── COMPETITOR CARD ── */
+.competitor-card{
+  background:var(--s2);border:1px solid var(--border);
+  padding:20px 20px;margin-bottom:12px;position:relative;
+}
+.competitor-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+}
+.competitor-card:nth-child(1)::before{background:var(--c1);}
+.competitor-card:nth-child(2)::before{background:var(--c2);}
+.competitor-card:nth-child(3)::before{background:var(--c3);}
+.comp-header{
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;
+}
+.comp-badge{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;
+  padding:3px 10px;border:1px solid var(--border2);color:var(--muted);
+}
+.comp-badge:nth-child(1){color:var(--c1);border-color:rgba(255,92,77,.25);}
+
+/* ── INSIGHT BOX ── */
+.insight-box{
+  background:linear-gradient(135deg,rgba(255,92,77,.05),rgba(123,63,228,.05));
+  border:1px solid rgba(214,62,170,.2);
+  padding:24px;margin-bottom:16px;
+  position:relative;overflow:hidden;
+}
+.insight-box::before{
+  content:'';position:absolute;top:0;left:0;width:3px;height:100%;
+  background:var(--grad);
+}
+.insight-box .ib-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--c2);margin-bottom:10px;
+}
+.insight-box textarea{
+  background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.08);
+  min-height:100px;
+}
+
+/* ── RATING ROW ── */
+.rating-row{
+  display:flex;gap:4px;
+  flex-wrap:wrap;margin-top:4px;
+}
+.rating-btn{
+  width:32px;height:32px;border:1px solid var(--border2);
+  background:var(--s2);color:var(--muted2);font-weight:700;font-size:12px;
+  cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;justify-content:center;
+}
+.rating-btn:hover{background:var(--s3);border-color:var(--border2);color:var(--text);}
+.rating-btn.sel{
+  background:rgba(214,62,170,.15);
+  border-color:var(--c2);color:var(--c2);
+}
+.rating-label{
+  font-size:11px;color:var(--muted);margin-top:6px;
+  font-family:'IBM Plex Mono',monospace;
+}
+
+/* ── AUDIT ITEM ── */
+.audit-row{
+  display:grid;grid-template-columns:1fr auto;
+  align-items:center;gap:16px;
+  padding:12px 16px;background:var(--s2);
+  border:1px solid var(--border);margin-bottom:2px;
+}
+.audit-label{font-size:13px;font-weight:600;}
+.audit-hint{font-size:11px;color:var(--muted);margin-top:2px;}
+.audit-status{display:flex;gap:4px;}
+.ast-btn{
+  padding:5px 10px;border:1px solid var(--border2);
+  background:var(--s1);color:var(--muted);
+  font-family:'Syne',sans-serif;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em;
+  cursor:pointer;transition:all .15s;
+}
+.ast-btn:hover{background:var(--s3);}
+.ast-btn.ok.sel{background:rgba(52,211,153,.1);border-color:var(--green);color:var(--green);}
+.ast-btn.warn.sel{background:rgba(251,191,36,.1);border-color:var(--yellow);color:var(--yellow);}
+.ast-btn.bad.sel{background:rgba(248,113,113,.1);border-color:var(--red);color:var(--red);}
+
+/* ── PERSONA SECTION ── */
+.persona-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+/* ── NAV BUTTONS ── */
+.botbar{
+  height:var(--botbar);
+  background:rgba(12,12,18,.95);
+  backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;
+  justify-content:space-between;
+  padding:0 28px;flex-shrink:0;
+  z-index:100;
+}
+.nav-btn{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 20px;border:1px solid var(--border2);
+  background:none;color:var(--text);
+  font-family:'Syne',sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;
+  cursor:pointer;transition:all .2s;
+}
+.nav-btn:hover{background:var(--s2);border-color:var(--border2);}
+.nav-btn.primary{
+  background:var(--grad);border:none;color:#fff;
+  padding:10px 24px;
+}
+.nav-btn.primary:hover{opacity:.85;}
+.nav-btn:disabled{opacity:.25;cursor:default;}
+.nav-center{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;color:var(--muted);
+}
+
+/* ── CALLOUT ── */
+.callout{
+  background:var(--s3);border-left:3px solid var(--yellow);
+  padding:14px 18px;margin-bottom:20px;
+}
+.callout-icon{margin-right:6px;}
+.callout-text{font-size:12px;color:rgba(255,255,255,.7);line-height:1.6;}
+.callout-text strong{color:var(--yellow);}
+
+/* ── TAG ROW ── */
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.tag-tog{
+  font-size:11px;font-weight:700;
+  padding:5px 12px;border:1px solid var(--border2);
+  background:var(--s2);color:var(--muted2);cursor:pointer;transition:all .15s;
+  letter-spacing:.04em;
+}
+.tag-tog:hover{background:var(--s3);color:var(--text);}
+.tag-tog.sel{background:rgba(214,62,170,.12);border-color:rgba(214,62,170,.35);color:var(--c2);}
+
+/* ── SUMMARY VIEW ── */
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.sum-card{
+  background:var(--s2);border:1px solid var(--border);padding:18px 20px;
+}
+.sum-card-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px;
+}
+.sum-card-val{font-size:13px;color:var(--text);line-height:1.6;min-height:32px;}
+.sum-card-val.empty{color:var(--muted);font-style:italic;}
+
+.print-btn{
+  background:var(--grad);border:none;color:#fff;
+  font-family:'Syne',sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;
+  padding:12px 28px;cursor:pointer;width:100%;margin-top:16px;
+  transition:opacity .2s;
+}
+.print-btn:hover{opacity:.85;}
+
+/* ── SECTION COMPLETE ── */
+.sec-complete{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);
+  padding:8px 16px;margin-top:16px;
+  font-size:11px;font-weight:700;color:var(--green);
+  letter-spacing:.08em;text-transform:uppercase;
+}
+
+/* ── SEPARATOR ── */
+.sep{height:1px;background:var(--border);margin:28px 0;}
+
+/* ── PRINT ── */
+@media print{
+  .topbar,.sidebar,.botbar{display:none!important;}
+  .layout{overflow:visible!important;}
+  .main{overflow:visible!important;}
+  .section-page{display:block!important;padding:24px!important;}
+  body{overflow:visible!important;height:auto!important;}
+  .layout{display:block!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <div class="tb-logo">
+      <img src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png" alt="Nonna"
+        onerror="this.style.display='none';this.nextSibling.style.display='block'">
+      <span class="tb-logo-text" style="display:none">nonna</span>
+    </div>
+    <div class="tb-divider"></div>
+    <div class="tb-title">Guia de Diagnóstico & Imersão · v1.0</div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-progress-wrap">
+      <div class="tb-progress-bar"><div class="tb-progress-fill" id="progFill" style="width:0%"></div></div>
+      <span class="tb-pct" id="progPct">0%</span>
+    </div>
+    <button class="tb-save-btn" id="saveBtn" onclick="saveAll()">Salvar</button>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-section-label">Etapas do Diagnóstico</div>
+
+    <div class="sb-item active" data-sec="0" onclick="goTo(0)">
+      <div class="sb-icon">📁</div>
+      <div class="sb-text">
+        <div class="sb-num">00</div>
+        <div class="sb-name">Identificação do Projeto</div>
+      </div>
+      <div class="sb-check">✓</div>
+    </div>
+
+    <div class="sb-item" data-sec="1" onclick="goTo(1)">
+      <div class="sb-icon">🏢</div>
+      <div class="sb-text">
+        <div class="sb-num">01</div>
+        <div class="sb-name">Briefing de Negócio</div>
+      </div>
+      <div class="sb-check">✓</div>
+    </div>
+    <div class="sb-progress"><div class="sb-progress-fill" id="sp1" style="width:0%"></div></div>
+
+    <div class="sb-item" data-sec="2" onclick="goTo(2)">
+      <div class="sb-icon">📡</div>
+      <div class="sb-text">
+        <div class="sb-num">02</div>
+        <div class="sb-name">Cenário de Marketing Atual</div>
+      </div>
+      <div class="sb-check">✓</div>
+    </div>
+    <div class="sb-progress"><div class="sb-progress-fill" id="sp2" style="width:0%"></div></div>
+
+    <div class="sb-item" data-sec="3" onclick="goTo(3)">
+      <div class="sb-icon">🔎</div>
+      <div class="sb-text">
+        <div class="sb-num">03</div>
+        <div class="sb-name">Auditoria de Comunicação</div>
+      </div>
+      <div class="sb-check">✓</div>
+    </div>
+    <div class="sb-progress"><div class="sb-progress-fill" id="sp3" style="width:0%"></div></div>
+
+    <div class="sb-item" data-sec="4" onclick="goTo(4)">
+      <div class="sb-icon">⚔️</div>
+      <div class="sb-text">
+        <div class="sb-num">04</div>
+        <div class="sb-name">Análise de Concorrência</div>
+      </div>
+      <div class="sb-check">✓</div>
+    </div>
+    <div class="sb-progress"><div class="sb-progress-fill" id="sp4" style="width:0%"></div></div>
+
+    <div class="sb-item" data-sec="5" onclick="goTo(5)">
+      <div class="sb-icon">👤</div>
+      <div class="sb-text">
+        <div class="sb-num">05</div>
+        <div class="sb-name">Público & Persona</div>
+      </div>
+      <div class="sb-check">✓</div>
+    </div>
+    <div class="sb-progress"><div class="sb-progress-fill" id="sp5" style="width:0%"></div></div>
+
+    <div class="sb-item" data-sec="6" onclick="goTo(6)">
+      <div class="sb-icon">💡</div>
+      <div class="sb-text">
+        <div class="sb-num">06</div>
+        <div class="sb-name">Síntese Estratégica</div>
+      </div>
+      <div class="sb-check">✓</div>
+    </div>
+    <div class="sb-progress"><div class="sb-progress-fill" id="sp6" style="width:0%"></div></div>
+
+    <div class="sb-item" data-sec="7" onclick="goTo(7)">
+      <div class="sb-icon">📄</div>
+      <div class="sb-text">
+        <div class="sb-num">→</div>
+        <div class="sb-name">Visualizar Diagnóstico</div>
+      </div>
+    </div>
+
+    <div style="padding:20px;margin-top:auto;">
+      <div style="font-size:10px;color:var(--muted);line-height:1.6;">
+        Preencha todas as seções antes de avançar para a Brand Platform.
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main" id="mainArea">
+
+    <!-- ══ SEC 0: IDENTIFICAÇÃO ══ -->
+    <div class="section-page active" id="sec0">
+      <div class="sec-hdr">
+        <div class="sec-num-big">00</div>
+        <div class="sec-hdr-text">
+          <div class="sec-eyebrow">Início do Processo</div>
+          <h1 class="sec-title">Identificação<br>do <span class="g">Projeto</span></h1>
+          <p class="sec-desc">Antes de iniciar as perguntas estratégicas, registre as informações básicas do projeto para organização interna da Nonna.</p>
+          <span class="sec-time">5 minutos</span>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Dados do Cliente</div>
+        <div class="grid-2">
+          <div class="field">
+            <div class="field-label">Nome do cliente / empresa <span class="req">*</span></div>
+            <input type="text" id="f_empresa" placeholder="Ex: Studio Aura">
+          </div>
+          <div class="field">
+            <div class="field-label">Segmento de atuação <span class="req">*</span></div>
+            <input type="text" id="f_segmento" placeholder="Ex: Clínica de Estética">
+          </div>
+          <div class="field">
+            <div class="field-label">Responsável pelo cliente (Nonna) <span class="req">*</span></div>
+            <input type="text" id="f_responsavel" placeholder="Nome do profissional da Nonna">
+          </div>
+          <div class="field">
+            <div class="field-label">Data da imersão</div>
+            <input type="text" id="f_data" placeholder="DD/MM/AAAA">
+          </div>
+          <div class="field">
+            <div class="field-label">Nome do interlocutor no cliente</div>
+            <input type="text" id="f_interlocutor" placeholder="Quem será entrevistado?">
+          </div>
+          <div class="field">
+            <div class="field-label">Cargo / função do interlocutor</div>
+            <input type="text" id="f_cargo" placeholder="Ex: Sócia-fundadora, Gerente de Marketing">
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Contexto do Contrato</div>
+        <div class="grid-2">
+          <div class="field">
+            <div class="field-label">Serviços contratados</div>
+            <div class="field-hint">Marque o que faz parte do escopo deste cliente</div>
+            <div class="tag-row" id="servicos_tags">
+              <span class="tag-tog" data-val="trafego">Tráfego Pago</span>
+              <span class="tag-tog" data-val="social">Social Media</span>
+              <span class="tag-tog" data-val="site">Site / Landing Page</span>
+              <span class="tag-tog" data-val="seo">SEO</span>
+              <span class="tag-tog" data-val="email">E-mail Marketing</span>
+              <span class="tag-tog" data-val="automacao">Automação</span>
+              <span class="tag-tog" data-val="consultoria">Consultoria</span>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-label">Investimento mensal em mídia (verba do cliente)</div>
+            <input type="text" id="f_verba" placeholder="Ex: R$ 2.000 / mês">
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Observações iniciais / contexto do onboarding</div>
+          <textarea id="f_obs_inicial" placeholder="Como esse cliente chegou até a Nonna? Qual foi a dor inicial relatada? Alguma situação importante a registrar?"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SEC 1: BRIEFING DE NEGÓCIO ══ -->
+    <div class="section-page" id="sec1">
+      <div class="sec-hdr">
+        <div class="sec-num-big">01</div>
+        <div class="sec-hdr-text">
+          <div class="sec-eyebrow">Entrevista de Imersão</div>
+          <h1 class="sec-title">Briefing de<br><span class="g">Negócio</span></h1>
+          <p class="sec-desc">Conduzir com o fundador ou decisor principal. Objetivo: entender profundamente o negócio, sua história e sua visão — antes de falar sobre marketing.</p>
+          <span class="sec-time">45–60 minutos com o cliente</span>
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">💬</span>
+        <span class="callout-text"><strong>Dica de condução:</strong> Esta entrevista deve ser uma conversa, não um questionário. Use as perguntas como guia, mas deixe o cliente falar. As respostas mais valiosas costumam aparecer quando você para de perguntar e começa a escutar.</span>
+      </div>
+
+      <div class="block">
+        <div class="block-title">História e Identidade</div>
+        <div class="field">
+          <div class="field-label">Como e por que a empresa foi fundada? <span class="req">*</span></div>
+          <div class="field-hint">Peça para contar a história desde o início. Preste atenção ao que os motivou — esse pode ser o propósito.</div>
+          <textarea id="f_historia" placeholder="Registre aqui..."></textarea>
+        </div>
+        <div class="field">
+          <div class="field-label">O que vocês vendem / entregam? (descreva em detalhes)</div>
+          <div class="field-hint">Produtos, serviços, formatos, preços, diferenciais técnicos.</div>
+          <textarea id="f_produto" placeholder="Registre aqui..."></textarea>
+        </div>
+        <div class="field">
+          <div class="field-label">O que torna o produto/serviço de vocês diferente dos concorrentes?</div>
+          <div class="field-hint">Atenção: muitos clientes dirão "qualidade e atendimento". Aprofunde: o que especificamente é diferente no seu processo, entrega ou experiência?</div>
+          <textarea id="f_diferencial" placeholder="Registre aqui..."></textarea>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Momento Atual</div>
+        <div class="grid-2">
+          <div class="field">
+            <div class="field-label">Faturamento mensal aproximado</div>
+            <input type="text" id="f_faturamento" placeholder="Faixa aproximada">
+          </div>
+          <div class="field">
+            <div class="field-label">Número de funcionários / colaboradores</div>
+            <input type="text" id="f_colaboradores" placeholder="Ex: 5 fixos + 2 freelancers">
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Qual é o principal desafio do negócio hoje?</div>
+          <div class="field-hint">Não marketing — o negócio em si. Pode ser operacional, financeiro, de pessoas, de produto.</div>
+          <textarea id="f_desafio" placeholder="Registre aqui..."></textarea>
+        </div>
+        <div class="field">
+          <div class="field-label">Como a empresa gera clientes hoje? (fontes de aquisição)</div>
+          <div class="field-hint">Indicação, Google orgânico, redes sociais, feiras, parceiros, presença física...</div>
+          <textarea id="f_aquisicao" placeholder="Registre aqui..."></textarea>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Visão e Objetivos</div>
+        <div class="field">
+          <div class="field-label">Onde você quer estar em 2 anos?</div>
+          <div class="field-hint">Faturamento, presença, equipe, novos produtos, expansão geográfica...</div>
+          <textarea id="f_visao" placeholder="Registre aqui..."></textarea>
+        </div>
+        <div class="field">
+          <div class="field-label">Qual é o objetivo número 1 com o marketing digital agora?</div>
+          <div class="field-hint">Gerar leads? Reposicionar a marca? Aumentar ticket médio? Entrar em novo mercado?</div>
+          <textarea id="f_obj_mkt" placeholder="Registre aqui..."></textarea>
+        </div>
+        <div class="field">
+          <div class="field-label">Como você saberia que o marketing está funcionando? O que seria sucesso?</div>
+          <div class="field-hint">Esta pergunta revela como o cliente mede valor — essencial para alinhar expectativas.</div>
+          <textarea id="f_sucesso" placeholder="Registre aqui..."></textarea>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Checklist — Perguntas cobertas na entrevista</div>
+        <div class="checklist" id="cl_briefing">
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text">
+              <div class="cl-label">História e fundação da empresa</div>
+              <div class="cl-sub">O contexto de como nasceu e o que motivou</div>
+            </div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text">
+              <div class="cl-label">Portfólio completo de produtos / serviços</div>
+              <div class="cl-sub">Tudo que oferecem, com preços e diferenciais</div>
+            </div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text">
+              <div class="cl-label">Melhor cliente atual (quem é, por que compra)</div>
+              <div class="cl-sub">Peça para descrever o cliente dos sonhos com detalhes</div>
+            </div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text">
+              <div class="cl-label">Maiores conquistas dos últimos 12 meses</div>
+            </div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text">
+              <div class="cl-label">O que já tentaram em marketing e não funcionou</div>
+              <div class="cl-sub">Evita repetir erros e revela expectativas frustradas</div>
+            </div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text">
+              <div class="cl-label">Concorrentes que admiram (mesmo fora do segmento)</div>
+            </div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text">
+              <div class="cl-label">Marcas de referência visual / comunicação que gostam</div>
+              <div class="cl-sub">Peça exemplos — logo, site, Instagram de outras marcas que admira</div>
+            </div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text">
+              <div class="cl-label">Restrições de comunicação (o que NÃO podem / querem falar)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SEC 2: CENÁRIO DE MARKETING ══ -->
+    <div class="section-page" id="sec2">
+      <div class="sec-hdr">
+        <div class="sec-num-big">02</div>
+        <div class="sec-hdr-text">
+          <div class="sec-eyebrow">Análise Interna</div>
+          <h1 class="sec-title">Cenário de<br><span class="g">Marketing Atual</span></h1>
+          <p class="sec-desc">Entender o que já existe em termos de comunicação e estrutura digital. Parte desta seção pode ser preenchida com o cliente, parte após análise interna da Nonna.</p>
+          <span class="sec-time">20 minutos com cliente + 30 min análise interna</span>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Presença Digital Atual</div>
+        <div class="grid-2">
+          <div class="field">
+            <div class="field-label">URL do site</div>
+            <input type="text" id="f_site" placeholder="https://...">
+          </div>
+          <div class="field">
+            <div class="field-label">Instagram</div>
+            <input type="text" id="f_ig" placeholder="@usuario · N° de seguidores">
+          </div>
+          <div class="field">
+            <div class="field-label">Facebook</div>
+            <input type="text" id="f_fb" placeholder="URL ou nome da página">
+          </div>
+          <div class="field">
+            <div class="field-label">LinkedIn</div>
+            <input type="text" id="f_li" placeholder="URL da empresa">
+          </div>
+          <div class="field">
+            <div class="field-label">Google Meu Negócio</div>
+            <input type="text" id="f_gmb" placeholder="Nota atual + nº de avaliações">
+          </div>
+          <div class="field">
+            <div class="field-label">Outros canais relevantes</div>
+            <input type="text" id="f_outros_canais" placeholder="YouTube, TikTok, WhatsApp Business...">
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Histórico de Tráfego Pago</div>
+        <div class="field">
+          <div class="field-label">Já rodaram anúncios pagos?</div>
+          <div class="tag-row" id="trafego_hist">
+            <span class="tag-tog" data-val="meta_sim">Meta Ads — sim</span>
+            <span class="tag-tog" data-val="meta_nao">Meta Ads — nunca</span>
+            <span class="tag-tog" data-val="google_sim">Google Ads — sim</span>
+            <span class="tag-tog" data-val="google_nao">Google Ads — nunca</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Se já rodaram: qual foi o resultado? O que funcionou ou não?</div>
+          <textarea id="f_hist_trafego" placeholder="Descreva a experiência anterior com tráfego pago..."></textarea>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <div class="field-label">Verba mensal disponível para mídia (Meta + Google)</div>
+            <input type="text" id="f_verba_midia" placeholder="Ex: R$ 2.000 / mês">
+          </div>
+          <div class="field">
+            <div class="field-label">Acesso às contas de anúncio já existe?</div>
+            <div class="tag-row" id="acesso_contas">
+              <span class="tag-tog" data-val="meta_acesso">Meta Business — sim</span>
+              <span class="tag-tog" data-val="meta_criar">Meta Business — criar</span>
+              <span class="tag-tog" data-val="google_acesso">Google Ads — sim</span>
+              <span class="tag-tog" data-val="google_criar">Google Ads — criar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Estrutura de Vendas e CRM</div>
+        <div class="field">
+          <div class="field-label">Como é o processo de venda hoje? (do lead ao fechamento)</div>
+          <textarea id="f_processo_venda" placeholder="Descreva o fluxo: como o lead chega, como é atendido, como fecha..."></textarea>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <div class="field-label">Usam alguma ferramenta de CRM ou funil?</div>
+            <input type="text" id="f_crm" placeholder="Ex: RD Station, HubSpot, planilha, WhatsApp...">
+          </div>
+          <div class="field">
+            <div class="field-label">Taxa de conversão de lead para cliente (estimativa)</div>
+            <input type="text" id="f_conversao" placeholder="Ex: 1 em cada 5 contatos fecha">
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Checklist — Informações coletadas nesta etapa</div>
+        <div class="checklist" id="cl_mkt">
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text"><div class="cl-label">URLs de todos os canais digitais mapeados</div></div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text"><div class="cl-label">Acesso ou status das contas de mídia paga confirmados</div></div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text"><div class="cl-label">Histórico de tráfego pago documentado (o que rodou, com que resultado)</div></div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text"><div class="cl-label">Verba de mídia confirmada e alinhada</div></div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text"><div class="cl-label">Processo de venda e jornada do lead mapeados</div></div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text"><div class="cl-label">Pixel do Meta e tag do Google instalados (ou tarefa criada)</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SEC 3: AUDITORIA ══ -->
+    <div class="section-page" id="sec3">
+      <div class="sec-hdr">
+        <div class="sec-num-big">03</div>
+        <div class="sec-hdr-text">
+          <div class="sec-eyebrow">Análise Interna da Nonna</div>
+          <h1 class="sec-title">Auditoria de<br><span class="g">Comunicação</span></h1>
+          <p class="sec-desc">Esta etapa é conduzida pela equipe Nonna <strong style="color:#fff">após</strong> a reunião com o cliente. Avalie cada canal com imparcialidade — o diagnóstico honesto é a base de tudo.</p>
+          <span class="sec-time">1–2 horas · Análise interna</span>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Avaliação do Site</div>
+        <div class="audit-row">
+          <div><div class="audit-label">Clareza da proposta de valor</div><div class="audit-hint">Em 5 segundos dá para entender o que a empresa faz?</div></div>
+          <div class="audit-status">
+            <button class="ast-btn ok" onclick="setAudit(this,'ok')">OK</button>
+            <button class="ast-btn warn" onclick="setAudit(this,'warn')">Mediano</button>
+            <button class="ast-btn bad" onclick="setAudit(this,'bad')">Ruim</button>
+          </div>
+        </div>
+        <div class="audit-row">
+          <div><div class="audit-label">Velocidade de carregamento (mobile)</div><div class="audit-hint">Teste no PageSpeed Insights</div></div>
+          <div class="audit-status">
+            <button class="ast-btn ok" onclick="setAudit(this,'ok')">OK</button>
+            <button class="ast-btn warn" onclick="setAudit(this,'warn')">Mediano</button>
+            <button class="ast-btn bad" onclick="setAudit(this,'bad')">Ruim</button>
+          </div>
+        </div>
+        <div class="audit-row">
+          <div><div class="audit-label">CTAs (chamadas para ação)</div><div class="audit-hint">Há botões claros de contato / conversão?</div></div>
+          <div class="audit-status">
+            <button class="ast-btn ok" onclick="setAudit(this,'ok')">OK</button>
+            <button class="ast-btn warn" onclick="setAudit(this,'warn')">Mediano</button>
+            <button class="ast-btn bad" onclick="setAudit(this,'bad')">Ruim</button>
+          </div>
+        </div>
+        <div class="audit-row">
+          <div><div class="audit-label">Consistência visual com a marca</div></div>
+          <div class="audit-status">
+            <button class="ast-btn ok" onclick="setAudit(this,'ok')">OK</button>
+            <button class="ast-btn warn" onclick="setAudit(this,'warn')">Mediano</button>
+            <button class="ast-btn bad" onclick="setAudit(this,'bad')">Ruim</button>
+          </div>
+        </div>
+        <div class="field" style="margin-top:12px;">
+          <div class="field-label">Observações sobre o site</div>
+          <textarea id="f_audit_site" placeholder="O que mais se destaca positiva ou negativamente..."></textarea>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Avaliação do Instagram</div>
+        <div class="audit-row">
+          <div><div class="audit-label">Consistência visual do feed</div><div class="audit-hint">Há linha visual reconhecível?</div></div>
+          <div class="audit-status">
+            <button class="ast-btn ok" onclick="setAudit(this,'ok')">OK</button>
+            <button class="ast-btn warn" onclick="setAudit(this,'warn')">Mediano</button>
+            <button class="ast-btn bad" onclick="setAudit(this,'bad')">Ruim</button>
+          </div>
+        </div>
+        <div class="audit-row">
+          <div><div class="audit-label">Consistência de tom de voz nas legendas</div></div>
+          <div class="audit-status">
+            <button class="ast-btn ok" onclick="setAudit(this,'ok')">OK</button>
+            <button class="ast-btn warn" onclick="setAudit(this,'warn')">Mediano</button>
+            <button class="ast-btn bad" onclick="setAudit(this,'bad')">Ruim</button>
+          </div>
+        </div>
+        <div class="audit-row">
+          <div><div class="audit-label">Taxa de engajamento (média por post)</div><div class="audit-hint">Referência: acima de 2% é ok para contas médias</div></div>
+          <div class="audit-status">
+            <button class="ast-btn ok" onclick="setAudit(this,'ok')">OK</button>
+            <button class="ast-btn warn" onclick="setAudit(this,'warn')">Mediano</button>
+            <button class="ast-btn bad" onclick="setAudit(this,'bad')">Ruim</button>
+          </div>
+        </div>
+        <div class="audit-row">
+          <div><div class="audit-label">Frequência de publicação</div></div>
+          <div class="audit-status">
+            <button class="ast-btn ok" onclick="setAudit(this,'ok')">OK</button>
+            <button class="ast-btn warn" onclick="setAudit(this,'warn')">Mediano</button>
+            <button class="ast-btn bad" onclick="setAudit(this,'bad')">Ruim</button>
+          </div>
+        </div>
+        <div class="audit-row">
+          <div><div class="audit-label">Uso de Stories e Reels</div></div>
+          <div class="audit-status">
+            <button class="ast-btn ok" onclick="setAudit(this,'ok')">OK</button>
+            <button class="ast-btn warn" onclick="setAudit(this,'warn')">Mediano</button>
+            <button class="ast-btn bad" onclick="setAudit(this,'bad')">Ruim</button>
+          </div>
+        </div>
+        <div class="audit-row">
+          <div><div class="audit-label">Bio e link otimizados</div><div class="audit-hint">A bio comunica claramente o que fazem e onde estão?</div></div>
+          <div class="audit-status">
+            <button class="ast-btn ok" onclick="setAudit(this,'ok')">OK</button>
+            <button class="ast-btn warn" onclick="setAudit(this,'warn')">Mediano</button>
+            <button class="ast-btn bad" onclick="setAudit(this,'bad')">Ruim</button>
+          </div>
+        </div>
+        <div class="field" style="margin-top:12px;">
+          <div class="field-label">Observações sobre o Instagram</div>
+          <textarea id="f_audit_ig" placeholder="Posts que se destacam, erros recorrentes, oportunidades..."></textarea>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Avaliação Geral de Comunicação</div>
+        <div class="field">
+          <div class="field-label">A comunicação atual comunica o diferencial real do negócio?</div>
+          <div class="field-hint">Alguém que não conhece a empresa consegue entender por que ela é diferente só pela comunicação digital?</div>
+          <div class="tag-row" id="comunica_diferencial">
+            <span class="tag-tog" data-val="sim">Sim, claramente</span>
+            <span class="tag-tog" data-val="parcial">Parcialmente</span>
+            <span class="tag-tog" data-val="nao">Não comunica</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Qual é o maior problema de comunicação identificado na auditoria?</div>
+          <textarea id="f_maior_problema" placeholder="Seja direto e específico — isso vai alimentar o Brief Estratégico"></textarea>
+        </div>
+        <div class="field">
+          <div class="field-label">O que a comunicação atual faz bem (mesmo que pouco)?</div>
+          <textarea id="f_pontos_pos" placeholder="Registre pontos positivos para preservar e amplificar..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SEC 4: CONCORRÊNCIA ══ -->
+    <div class="section-page" id="sec4">
+      <div class="sec-hdr">
+        <div class="sec-num-big">04</div>
+        <div class="sec-hdr-text">
+          <div class="sec-eyebrow">Análise de Mercado</div>
+          <h1 class="sec-title">Análise de<br><span class="g">Concorrência</span></h1>
+          <p class="sec-desc">Mapeie 3 concorrentes diretos. O objetivo não é apenas saber o que eles fazem — é encontrar o <strong style="color:#fff">espaço vazio</strong> que o cliente pode ocupar.</p>
+          <span class="sec-time">1 hora · Análise interna</span>
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">🎯</span>
+        <span class="callout-text"><strong>Foco estratégico:</strong> Para cada concorrente, identifique a <em>vulnerabilidade</em> — o que eles não comunicam, o público que ignoram, a promessa que não cumprem. É nesses espaços que o posicionamento do cliente deve se encaixar.</span>
+      </div>
+
+      <!-- Competitor 1 -->
+      <div class="competitor-card">
+        <div class="comp-header">
+          <span class="comp-badge">Concorrente 01</span>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <div class="field-label">Nome / empresa</div>
+            <input type="text" id="c1_nome" placeholder="Nome do concorrente">
+          </div>
+          <div class="field">
+            <div class="field-label">Canal principal</div>
+            <input type="text" id="c1_canal" placeholder="Instagram, Google, indicação...">
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Posicionamento percebido — como eles se comunicam?</div>
+          <textarea id="c1_posicionamento" placeholder="Qual é a mensagem central deles? Como se apresentam ao mercado?" style="min-height:60px;"></textarea>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <div class="field-label">Pontos fortes na comunicação</div>
+            <textarea id="c1_forte" placeholder="O que fazem bem..." style="min-height:60px;"></textarea>
+          </div>
+          <div class="field">
+            <div class="field-label">Vulnerabilidade / espaço em aberto</div>
+            <textarea id="c1_vuln" placeholder="O que ignoram, o que prometem e não entregam..." style="min-height:60px;"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Competitor 2 -->
+      <div class="competitor-card">
+        <div class="comp-header">
+          <span class="comp-badge" style="color:var(--c2);border-color:rgba(214,62,170,.25)">Concorrente 02</span>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <div class="field-label">Nome / empresa</div>
+            <input type="text" id="c2_nome" placeholder="Nome do concorrente">
+          </div>
+          <div class="field">
+            <div class="field-label">Canal principal</div>
+            <input type="text" id="c2_canal" placeholder="Instagram, Google, indicação...">
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Posicionamento percebido</div>
+          <textarea id="c2_posicionamento" placeholder="" style="min-height:60px;"></textarea>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <div class="field-label">Pontos fortes</div>
+            <textarea id="c2_forte" style="min-height:60px;"></textarea>
+          </div>
+          <div class="field">
+            <div class="field-label">Vulnerabilidade</div>
+            <textarea id="c2_vuln" style="min-height:60px;"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Competitor 3 -->
+      <div class="competitor-card">
+        <div class="comp-header">
+          <span class="comp-badge" style="color:var(--c3);border-color:rgba(123,63,228,.3)">Concorrente 03</span>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <div class="field-label">Nome / empresa</div>
+            <input type="text" id="c3_nome" placeholder="Nome do concorrente">
+          </div>
+          <div class="field">
+            <div class="field-label">Canal principal</div>
+            <input type="text" id="c3_canal" placeholder="Instagram, Google, indicação...">
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Posicionamento percebido</div>
+          <textarea id="c3_posicionamento" placeholder="" style="min-height:60px;"></textarea>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <div class="field-label">Pontos fortes</div>
+            <textarea id="c3_forte" style="min-height:60px;"></textarea>
+          </div>
+          <div class="field">
+            <div class="field-label">Vulnerabilidade</div>
+            <textarea id="c3_vuln" style="min-height:60px;"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="block" style="margin-top:28px;">
+        <div class="block-title">Mapa de Posicionamento</div>
+        <div class="field">
+          <div class="field-label">Qual espaço está em aberto no mercado? O que nenhum concorrente comunica?</div>
+          <div class="field-hint">Esta é a pergunta mais importante desta seção. A resposta começa a desenhar onde o cliente pode e deve se posicionar.</div>
+          <textarea id="f_espaco_aberto" placeholder="Descreva o território de comunicação que está disponível para o cliente ocupar..." style="min-height:100px;"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SEC 5: PERSONA ══ -->
+    <div class="section-page" id="sec5">
+      <div class="sec-hdr">
+        <div class="sec-num-big">05</div>
+        <div class="sec-hdr-text">
+          <div class="sec-eyebrow">Mapeamento de Público</div>
+          <h1 class="sec-title">Público &<br><span class="g">Persona</span></h1>
+          <p class="sec-desc">Vá além da persona de tráfego (idade, localização). O que realmente importa é entender o <strong style="color:#fff">comportamento, as frustrações e o processo de decisão</strong> de quem compra.</p>
+          <span class="sec-time">30 minutos · Parte com cliente, parte inferência</span>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Persona Principal</div>
+        <div class="grid-2">
+          <div class="field">
+            <div class="field-label">Nome fictício da persona</div>
+            <input type="text" id="p_nome" placeholder="Ex: Marina, Rafael, Ana...">
+          </div>
+          <div class="field">
+            <div class="field-label">Idade / faixa etária</div>
+            <input type="text" id="p_idade" placeholder="Ex: 28–38 anos">
+          </div>
+          <div class="field">
+            <div class="field-label">Profissão / renda</div>
+            <input type="text" id="p_profissao" placeholder="Ex: Profissional liberal, renda R$6k–12k/mês">
+          </div>
+          <div class="field">
+            <div class="field-label">Onde mora / região de atuação</div>
+            <input type="text" id="p_local" placeholder="Ex: Batel, Curitiba">
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Comportamento e Psicologia</div>
+        <div class="field">
+          <div class="field-label">O que essa pessoa busca de verdade ao contratar/comprar?</div>
+          <div class="field-hint">Não o produto — a necessidade emocional ou funcional por trás. "Quer emagrecer" é produto. "Quer se sentir no controle da própria vida" é profundo.</div>
+          <textarea id="p_busca" placeholder="Registre aqui..."></textarea>
+        </div>
+        <div class="field">
+          <div class="field-label">Quais são as maiores frustrações com a categoria / mercado?</div>
+          <div class="field-hint">O que ela já tentou e não funcionou? O que a decepcionou em outros fornecedores?</div>
+          <textarea id="p_frustracoes" placeholder="Registre aqui..."></textarea>
+        </div>
+        <div class="field">
+          <div class="field-label">Como ela decide pela compra? Qual é o processo de decisão?</div>
+          <div class="field-hint">Pesquisa no Google? Pede indicação? Observa o Instagram antes de contatar? Compra impulsivamente ou delibera muito?</div>
+          <textarea id="p_decisao" placeholder="Registre aqui..."></textarea>
+        </div>
+        <div class="field">
+          <div class="field-label">Quais objeções ela levanta antes de fechar?</div>
+          <div class="field-hint">"É caro", "não tenho tempo", "já tentei antes"... Essas objeções precisam ser endereçadas na comunicação.</div>
+          <textarea id="p_objecoes" placeholder="Registre aqui..."></textarea>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Checklist de Persona</div>
+        <div class="checklist" id="cl_persona">
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text"><div class="cl-label">Dados demográficos básicos definidos</div><div class="cl-sub">Idade, renda, localização, profissão</div></div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text"><div class="cl-label">Necessidade emocional / funcional profunda identificada</div></div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text"><div class="cl-label">Frustrações com a categoria mapeadas</div></div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text"><div class="cl-label">Processo de decisão de compra descrito</div></div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text"><div class="cl-label">Principais objeções listadas</div></div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text"><div class="cl-label">Persona validada com o cliente (ele reconhece como real)</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SEC 6: SÍNTESE ══ -->
+    <div class="section-page" id="sec6">
+      <div class="sec-hdr">
+        <div class="sec-num-big">06</div>
+        <div class="sec-hdr-text">
+          <div class="sec-eyebrow">Consolidação do Diagnóstico</div>
+          <h1 class="sec-title">Síntese<br><span class="g">Estratégica</span></h1>
+          <p class="sec-desc">Esta é a seção mais importante. Aqui você transforma dados coletados em <strong style="color:#fff">raciocínio estratégico</strong> — a base que alimentará a Brand Platform e o Brief.</p>
+          <span class="sec-time">1 hora · Reflexão interna da equipe Nonna</span>
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">⚡</span>
+        <span class="callout-text"><strong>Como preencher esta seção:</strong> Reúna a equipe que participou da imersão. Discutam as respostas antes de escrever. O objetivo é chegar a conclusões, não apenas resumir o que o cliente disse.</span>
+      </div>
+
+      <div class="block">
+        <div class="block-title">O que o negócio tem de verdadeiro e forte</div>
+        <div class="insight-box">
+          <div class="ib-label">Forças reais da marca</div>
+          <textarea id="s_forcas" placeholder="O que este negócio genuinamente tem que a concorrência não tem? Pode ser técnica, relacionamento, história, cultura, processo..."></textarea>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">O problema central de comunicação</div>
+        <div class="insight-box">
+          <div class="ib-label">Em 1–2 frases: qual é o problema real?</div>
+          <textarea id="s_problema" placeholder="Ex: 'O cliente tem um produto de qualidade superior, mas a comunicação atual é genérica demais para que quem não o conhece perceba isso.'" style="min-height:80px;"></textarea>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">O espaço estratégico disponível</div>
+        <div class="insight-box">
+          <div class="ib-label">Território de posicionamento em aberto</div>
+          <textarea id="s_territorio" placeholder="Com base na análise de concorrência e na persona: qual é o espaço de comunicação que nenhum concorrente ocupa e que este cliente pode reivindicar com credibilidade?"></textarea>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">O insight estratégico</div>
+        <div class="insight-box">
+          <div class="ib-label">A grande observação que orienta tudo</div>
+          <textarea id="s_insight" placeholder="O insight é uma verdade sobre o público ou o mercado que justifica o posicionamento. Ex: 'As mulheres que buscam tratamentos estéticos não querem apenas resultado — querem ser lembradas, não processadas.'" style="min-height:100px;"></textarea>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Hipótese de posicionamento</div>
+        <div class="insight-box">
+          <div class="ib-label">Rascunho inicial — será refinado na Brand Platform</div>
+          <textarea id="s_posicionamento_hip" placeholder="Para [público], [nome da marca] é a única [categoria] que [diferencial único] — porque [razão para acreditar]." style="min-height:80px;"></textarea>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Checklist de qualidade do Diagnóstico</div>
+        <div class="checklist" id="cl_sintese">
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text"><div class="cl-label">Todas as 6 seções anteriores preenchidas</div></div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text"><div class="cl-label">O insight estratégico está baseado em dados coletados (não achismo)</div></div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text"><div class="cl-label">A hipótese de posicionamento é diferente do que os concorrentes comunicam</div></div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text"><div class="cl-label">O problema de comunicação foi validado com pelo menos um membro do time</div></div>
+          </div>
+          <div class="cl-item" onclick="toggleCl(this)">
+            <div class="cl-box"></div>
+            <div class="cl-text"><div class="cl-label">O diagnóstico está pronto para virar Brand Platform</div></div>
+          </div>
+        </div>
+        <div class="sec-complete" id="diagCompleto" style="display:none">
+          ✓ Diagnóstico completo — pronto para Brand Platform
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SEC 7: RESUMO / VISUALIZAÇÃO ══ -->
+    <div class="section-page" id="sec7">
+      <div class="sec-hdr">
+        <div class="sec-num-big">→</div>
+        <div class="sec-hdr-text">
+          <div class="sec-eyebrow">Documento Final</div>
+          <h1 class="sec-title">Diagnóstico<br><span class="g">Completo</span></h1>
+          <p class="sec-desc">Resumo consolidado do diagnóstico preenchido. Revise antes de apresentar ao time ou usar como base para a Brand Platform.</p>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Identificação</div>
+        <div class="summary-grid" id="sum_id"></div>
+      </div>
+      <div class="block">
+        <div class="block-title">Diagnóstico Estratégico</div>
+        <div class="summary-grid" id="sum_strat"></div>
+      </div>
+      <div class="block">
+        <div class="block-title">Concorrência</div>
+        <div class="summary-grid" id="sum_comp"></div>
+      </div>
+      <div class="block">
+        <div class="block-title">Síntese</div>
+        <div id="sum_sintese"></div>
+      </div>
+
+      <button class="print-btn" onclick="window.print()">⬇ Imprimir / Exportar Diagnóstico como PDF</button>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- BOTTOM BAR -->
+<div class="botbar">
+  <button class="nav-btn" id="btnPrev" onclick="navigate(-1)" disabled>← Anterior</button>
+  <div class="nav-center" id="navLabel">Seção 0 de 7</div>
+  <button class="nav-btn primary" id="btnNext" onclick="navigate(1)">Próxima →</button>
+</div>
+
+<script>
+// ═══════ STATE ═══════
+let cur = 0;
+const TOTAL = 8;
+const sectionNames = [
+  'Identificação do Projeto',
+  'Briefing de Negócio',
+  'Cenário de Marketing',
+  'Auditoria de Comunicação',
+  'Análise de Concorrência',
+  'Público & Persona',
+  'Síntese Estratégica',
+  'Visualizar Diagnóstico'
+];
+
+// ═══════ NAVIGATION ═══════
+function goTo(n) {
+  document.querySelectorAll('.section-page').forEach((p,i) => {
+    p.classList.toggle('active', i === n);
+    if (i === n) p.scrollTop = 0;
+  });
+  document.querySelectorAll('.sb-item[data-sec]').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.sec) === n);
+  });
+  cur = n;
+  document.getElementById('btnPrev').disabled = (n === 0);
+  document.getElementById('btnNext').disabled = (n === TOTAL - 1);
+  document.getElementById('navLabel').textContent = `${sectionNames[n]} · ${n + 1} / ${TOTAL}`;
+  document.getElementById('mainArea').scrollTop = 0;
+  if (n === 7) buildSummary();
+  updateProgress();
+}
+function navigate(d) { goTo(Math.min(Math.max(cur + d, 0), TOTAL - 1)); }
+
+// ═══════ CHECKLIST ═══════
+function toggleCl(el) {
+  el.classList.toggle('checked');
+  updateProgress();
+  saveSilent();
+}
+
+// ═══════ AUDIT BUTTONS ═══════
+function setAudit(btn, type) {
+  const row = btn.closest('.audit-status');
+  row.querySelectorAll('.ast-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  updateProgress();
+  saveSilent();
+}
+
+// ═══════ TOGGLE TAGS ═══════
+document.querySelectorAll('.tag-row').forEach(row => {
+  row.querySelectorAll('.tag-tog').forEach(tag => {
+    tag.addEventListener('click', () => {
+      tag.classList.toggle('sel');
+      updateProgress();
+      saveSilent();
+    });
+  });
+});
+
+// ═══════ RATING ═══════
+document.querySelectorAll('.rating-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const group = btn.closest('.rating-row');
+    group.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    updateProgress();
+    saveSilent();
+  });
+});
+
+// ═══════ INPUT AUTOSAVE ═══════
+document.querySelectorAll('input,textarea').forEach(el => {
+  el.addEventListener('input', () => { updateProgress(); saveSilent(); });
+});
+
+// ═══════ PROGRESS ═══════
+function calcSectionProgress(secId) {
+  const sec = document.getElementById(secId);
+  if (!sec) return 0;
+  let filled = 0, total = 0;
+  // inputs/textareas
+  sec.querySelectorAll('input[type=text], textarea').forEach(el => {
+    total++;
+    if (el.value.trim()) filled++;
+  });
+  // checklist items
+  sec.querySelectorAll('.cl-item').forEach(el => {
+    total++;
+    if (el.classList.contains('checked')) filled++;
+  });
+  return total > 0 ? Math.round((filled / total) * 100) : 0;
+}
+
+function updateProgress() {
+  let totalFilled = 0, totalFields = 0;
+  for (let i = 0; i < TOTAL - 1; i++) {
+    const pct = calcSectionProgress('sec' + i);
+    totalFilled += pct;
+    totalFields++;
+    // sidebar progress bars
+    const spEl = document.getElementById('sp' + i);
+    if (spEl) spEl.style.width = pct + '%';
+    // sidebar done state
+    const sbEl = document.querySelector(`.sb-item[data-sec="${i}"]`);
+    if (sbEl) sbEl.classList.toggle('done', pct >= 80);
+  }
+  const overall = Math.round(totalFilled / totalFields);
+  document.getElementById('progFill').style.width = overall + '%';
+  document.getElementById('progPct').textContent = overall + '%';
+
+  // Show complete badge in sec6
+  const allDone = calcSectionProgress('sec6') >= 80;
+  const badge = document.getElementById('diagCompleto');
+  if (badge) badge.style.display = allDone ? 'inline-flex' : 'none';
+}
+
+// ═══════ SAVE / LOAD ═══════
+function gatherData() {
+  const data = {};
+  document.querySelectorAll('input[id], textarea[id]').forEach(el => {
+    data[el.id] = el.value;
+  });
+  document.querySelectorAll('.cl-item').forEach((el, i) => {
+    const sec = el.closest('.section-page')?.id || 'x';
+    data['cl_' + sec + '_' + i] = el.classList.contains('checked');
+  });
+  document.querySelectorAll('.tag-tog.sel').forEach(el => {
+    data['tag_' + el.dataset.val] = true;
+  });
+  document.querySelectorAll('.ast-btn.sel').forEach((el, i) => {
+    data['audit_' + i] = el.className;
+  });
+  return data;
+}
+
+function saveAll() {
+  const data = gatherData();
+  try {
+    localStorage.setItem('nonna_diag_' + (data.f_empresa || 'draft'), JSON.stringify(data));
+    const btn = document.getElementById('saveBtn');
+    btn.textContent = '✓ Salvo';
+    btn.classList.add('saved');
+    setTimeout(() => { btn.textContent = 'Salvar'; btn.classList.remove('saved'); }, 2500);
+  } catch(e) {
+    alert('Não foi possível salvar. Para exportar, use o botão de imprimir na última seção.');
+  }
+}
+
+function saveSilent() {
+  const data = gatherData();
+  try {
+    localStorage.setItem('nonna_diag_' + (data.f_empresa || 'draft'), JSON.stringify(data));
+  } catch(e) {}
+}
+
+function loadData() {
+  // try to find most recent save
+  let saved = null;
+  const empresa = document.getElementById('f_empresa')?.value;
+  const key = 'nonna_diag_' + (empresa || 'draft');
+  try {
+    const raw = localStorage.getItem(key) || localStorage.getItem('nonna_diag_draft');
+    if (raw) saved = JSON.parse(raw);
+  } catch(e) {}
+  if (!saved) return;
+  // restore inputs/textareas
+  Object.keys(saved).forEach(k => {
+    const el = document.getElementById(k);
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
+      el.value = saved[k];
+    }
+  });
+  // restore checklists
+  document.querySelectorAll('.cl-item').forEach((el, i) => {
+    const sec = el.closest('.section-page')?.id || 'x';
+    if (saved['cl_' + sec + '_' + i]) el.classList.add('checked');
+  });
+  // restore tags
+  document.querySelectorAll('.tag-tog').forEach(el => {
+    if (saved['tag_' + el.dataset.val]) el.classList.add('sel');
+  });
+  updateProgress();
+}
+
+// ═══════ SUMMARY ═══════
+function makeCard(label, val) {
+  const empty = !val || val.trim() === '';
+  return `<div class="sum-card">
+    <div class="sum-card-label">${label}</div>
+    <div class="sum-card-val ${empty ? 'empty' : ''}">${empty ? 'Não preenchido' : val.replace(/\n/g,'<br>')}</div>
+  </div>`;
+}
+function buildSummary() {
+  const g = id => (document.getElementById(id)?.value || '');
+  document.getElementById('sum_id').innerHTML =
+    makeCard('Empresa / Cliente', g('f_empresa')) +
+    makeCard('Segmento', g('f_segmento')) +
+    makeCard('Responsável Nonna', g('f_responsavel')) +
+    makeCard('Data da Imersão', g('f_data')) +
+    makeCard('Interlocutor', g('f_interlocutor')) +
+    makeCard('Verba de Mídia', g('f_verba_midia'));
+
+  document.getElementById('sum_strat').innerHTML =
+    makeCard('Diferencial do negócio', g('f_diferencial')) +
+    makeCard('Principal desafio', g('f_desafio')) +
+    makeCard('Objetivo com marketing', g('f_obj_mkt')) +
+    makeCard('Maior problema de comunicação (auditoria)', g('f_maior_problema')) +
+    makeCard('Persona principal', g('p_nome') + ' · ' + g('p_profissao')) +
+    makeCard('O que a persona busca de verdade', g('p_busca'));
+
+  document.getElementById('sum_comp').innerHTML =
+    makeCard('Concorrente 01 — Vulnerabilidade', g('c1_vuln')) +
+    makeCard('Concorrente 02 — Vulnerabilidade', g('c2_vuln')) +
+    makeCard('Concorrente 03 — Vulnerabilidade', g('c3_vuln')) +
+    makeCard('Espaço em aberto no mercado', g('f_espaco_aberto'));
+
+  document.getElementById('sum_sintese').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      ${[
+        ['Forças reais da marca', g('s_forcas')],
+        ['Problema central de comunicação', g('s_problema')],
+        ['Território de posicionamento', g('s_territorio')],
+        ['Insight estratégico', g('s_insight')],
+        ['Hipótese de posicionamento', g('s_posicionamento_hip')]
+      ].map(([l,v]) => `<div class="sum-card" style="grid-column:span 2">
+        <div class="sum-card-label">${l}</div>
+        <div class="sum-card-val ${!v ? 'empty' : ''}">${v ? v.replace(/\n/g,'<br>') : 'Não preenchido'}</div>
+      </div>`).join('')}
+    </div>`;
+}
+
+// ═══════ INIT ═══════
+goTo(0);
+loadData();
+</script>
+</body>
+</html>

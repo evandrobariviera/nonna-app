@@ -1,65 +1,97 @@
 <x-app-layout>
-    <x-slot name="header">
-        {{ __('Dashboard Principal') }}
-    </x-slot>
+    <x-slot name="header">Dashboard</x-slot>
 
-    <!-- Removido o max-w-7xl para deixar o painel se esticar de forma fluida de ponta a ponta -->
-    <div class="w-full">
-        <div class="bg-white dark:bg-gray-900 overflow-hidden shadow-sm rounded-2xl border border-gray-100 dark:border-gray-800">
-            
-            <div class="p-8 text-gray-900 dark:text-gray-100">
-                <div class="flex items-center justify-between mb-8">
-                    <div>
-                        <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-x-2">
-                            🤝 Carteira de Clientes Ativos (CRM Sincronizado)
-                        </h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Dados reais obtidos diretamente da base de dados PostgreSQL na Hetzner.</p>
-                    </div>
-                </div>
-                
-                @if($clients->isEmpty())
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Nenhum cliente encontrado no seu banco de dados remoto.</p>
-                @else
-                    <div class="overflow-x-auto border border-gray-200 dark:border-gray-800 rounded-xl">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
-                            <thead class="bg-gray-50 dark:bg-gray-950">
-                                <tr>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID ClickUp</th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nome da Empresa</th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Website</th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">CNPJ</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
-                                @foreach($clients as $client)
-                                    <tr class="hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20 transition-colors">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-                                            {{ $client->client_task_id }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-gray-100">
-                                            {{ $client->company_name }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
-                                            @if($client->website)
-                                                <a href="{{ $client->website }}" target="_blank" class="flex items-center gap-x-1">
-                                                    {{ $client->website }}
-                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
-                                                </a>
-                                            @else
-                                                <span class="text-gray-400">-</span>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 dark:text-gray-400">
-                                            {{ $client->cnpj ?? 'Não informado' }}
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @endif
-            </div>
-
+    {{-- ── STAT CARDS ── --}}
+    <div class="grid grid-cols-2 gap-4 mb-6 md:grid-cols-4">
+        <div class="stat-card">
+            <div class="stat-label">Clientes Ativos</div>
+            <div class="stat-value grad-text">{{ $clients->count() }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Campanhas</div>
+            <div class="stat-value" style="color:var(--muted2)">—</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Sprints em curso</div>
+            <div class="stat-value" style="color:var(--muted2)">—</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Tickets abertos</div>
+            <div class="stat-value" style="color:var(--muted2)">—</div>
         </div>
     </div>
+
+    {{-- ── TABELA DE CLIENTES ── --}}
+    <div class="card">
+        <div class="card-header flex items-center justify-between">
+            <div>
+                <p class="stat-label" style="margin-bottom:4px">CRM · PostgreSQL</p>
+                <h2 class="text-base font-bold" style="color:var(--text)">Carteira de Clientes Ativos</h2>
+            </div>
+            <span class="badge badge-green">Sincronizado</span>
+        </div>
+
+        @if($clients->isEmpty())
+            <div class="px-6 py-12 text-center" style="color:var(--muted)">
+                <p class="text-sm">Nenhum cliente encontrado na base de dados remota.</p>
+            </div>
+        @else
+            <div class="overflow-x-auto">
+                <table class="nonna-table">
+                    <thead>
+                        <tr>
+                            <th>ID ClickUp</th>
+                            <th>Empresa</th>
+                            <th>Website</th>
+                            <th>CNPJ</th>
+                            <th>Últ. Sync</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($clients as $client)
+                            <tr>
+                                <td>
+                                    <span class="font-mono text-xs badge badge-purple">
+                                        {{ $client->client_task_id }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="font-bold text-sm" style="color:var(--text)">
+                                        {{ $client->company_name }}
+                                    </span>
+                                </td>
+                                <td>
+                                    @if($client->website)
+                                        <a href="{{ $client->website }}" target="_blank"
+                                           class="flex items-center gap-1 text-xs transition-colors"
+                                           style="color:var(--purple)"
+                                           onmouseover="this.style.color='var(--orange)'"
+                                           onmouseout="this.style.color='var(--purple)'">
+                                            {{ parse_url($client->website, PHP_URL_HOST) ?? $client->website }}
+                                            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                            </svg>
+                                        </a>
+                                    @else
+                                        <span style="color:var(--muted)">—</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <span class="font-mono text-xs" style="color:var(--muted2)">
+                                        {{ $client->cnpj ?? '—' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="font-mono text-xs" style="color:var(--muted)">
+                                        {{ $client->last_synced_at ? \Carbon\Carbon::parse($client->last_synced_at)->diffForHumans() : '—' }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+
 </x-app-layout>

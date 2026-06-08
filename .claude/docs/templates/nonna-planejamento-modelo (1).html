@@ -1,0 +1,2150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nonna Agência Digital — Projeto Exemplo: Studio Aura</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0b14;
+      --surface: #13131f;
+      --surface2: #1a1a2e;
+      --border: rgba(255, 255, 255, 0.07);
+      --border2: rgba(255, 255, 255, 0.12);
+      --text: #f0f0f8;
+      --muted: rgba(255, 255, 255, 0.48);
+
+      /* Nonna gradient */
+      --c1: #ff5c4d;
+      /* coral */
+      --c2: #d63eaa;
+      /* magenta */
+      --c3: #7b3fe4;
+      /* roxo */
+      --grad: linear-gradient(135deg, var(--c1), var(--c2), var(--c3));
+      --grad-h: linear-gradient(135deg, var(--c3), var(--c2), var(--c1));
+
+      /* Cores auxiliares adaptadas ao dark premium */
+      --accent: var(--c2);
+      --accent2: #38bdf8;
+      /* neon blue */
+      --accent3: #34d399;
+      /* neon green */
+      --gold: #cca43b;
+      /* gold */
+
+      --slide-w: 1400px;
+    }
+
+    /* ── RESET ── */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    /* ── DECK SHELL ── */
+    .deck {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      flex-shrink: 0;
+      height: 60px;
+      background: rgba(11, 11, 20, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      z-index: 50;
+    }
+
+    .tb-logo img {
+      height: 28px;
+      display: block;
+    }
+
+    .tb-logo-fallback {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .tb-nav {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .tb-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-btn {
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.45);
+      cursor: pointer;
+      white-space: nowrap;
+      border: 1px solid transparent;
+      background: none;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+      color: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .nav-btn.active {
+      color: #fff;
+      background: rgba(214, 62, 170, 0.15);
+      border-color: rgba(214, 62, 170, 0.3);
+    }
+
+    .tb-right {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: .05em;
+    }
+
+    .slide-counter {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── SLIDES VIEWPORT ── */
+    .slides-wrap {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .slides-track {
+      display: flex;
+      height: 100%;
+      transition: transform .5s cubic-bezier(.77, 0, .18, 1);
+    }
+
+    .slide {
+      flex-shrink: 0;
+      width: 100vw;
+      height: 100%;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border2) transparent;
+      padding: 0;
+    }
+
+    .slide::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .slide::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 2px;
+    }
+
+    /* ── INNER CONTENT ── */
+    .inner {
+      max-width: var(--slide-w);
+      margin: 0 auto;
+      padding: 40px 60px;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .inner.top {
+      justify-content: flex-start;
+      padding-top: 50px;
+    }
+
+    /* ── BOTTOM NAV ── */
+    .botnav {
+      flex-shrink: 0;
+      height: 68px;
+      background: rgba(11, 11, 20, 0.9);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 48px;
+    }
+
+    .nav-arrow {
+      background: none;
+      border: 1px solid var(--border2);
+      color: var(--text);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .2s;
+    }
+
+    .nav-arrow:hover {
+      background: var(--surface2);
+      border-color: var(--c2);
+    }
+
+    .nav-arrow:disabled {
+      opacity: .25;
+      cursor: default;
+    }
+
+    .nav-title {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    /* ── GRADIENT TEXT ── */
+    .g {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── CHIP / TAG ── */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 2px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--muted);
+    }
+
+    .chip.neon {
+      background: rgba(214, 62, 170, .12);
+      border-color: rgba(214, 62, 170, .3);
+      color: var(--c2);
+    }
+
+    .chip.green {
+      background: rgba(52, 211, 153, .1);
+      border-color: rgba(52, 211, 153, .25);
+      color: #34d399;
+    }
+
+    .chip.orange {
+      background: rgba(255, 92, 77, .1);
+      border-color: rgba(255, 92, 77, .25);
+      color: var(--c1);
+    }
+
+    .chip.purple {
+      background: rgba(123, 63, 228, .12);
+      border-color: rgba(123, 63, 228, .3);
+      color: var(--c3);
+    }
+
+    /* ══════════════════════════════════════════
+   SLIDE 01 — CAPA
+══════════════════════════════════════════ */
+    #s0 {
+      background: var(--bg);
+    }
+
+    #s0 .inner {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .cover-glow {
+      position: absolute;
+      top: -200px;
+      right: -200px;
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(123, 63, 228, .18) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .cover-glow2 {
+      position: absolute;
+      bottom: -150px;
+      left: -100px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(255, 92, 77, .1) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .cover-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .cover-eyebrow {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    .cover-h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(44px, 5vw, 78px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -.02em;
+      margin-bottom: 28px;
+    }
+
+    .cover-sub {
+      font-size: 19px;
+      color: var(--muted);
+      font-weight: 300;
+      max-width: 720px;
+      line-height: 1.7;
+      margin-bottom: 40px;
+    }
+
+    .cover-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 32px;
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+    }
+
+    .cover-meta-line {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .cover-meta-line strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .cover-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 48px;
+    }
+
+    .cover-right h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 32px;
+      color: #fff;
+    }
+
+    .cover-index {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .cover-index li {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .cover-index li:hover {
+      border-color: var(--c2);
+      transform: translateX(6px);
+    }
+
+    .ci-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--c2);
+      width: 24px;
+      flex-shrink: 0;
+    }
+
+    .ci-name {
+      font-size: 14.5px;
+      font-weight: 500;
+      color: var(--text);
+      flex: 1;
+    }
+
+    .ci-type {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .ci-arrow {
+      color: var(--c2);
+      font-size: 12px;
+    }
+
+    /* ── GRIDS ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    /* ── CONTENT BOXES ── */
+    .box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 28px 32px;
+      margin-bottom: 16px;
+      border-radius: 4px;
+    }
+
+    .box.accent {
+      border-left: 4px solid var(--c1);
+    }
+
+    .box.blue {
+      border-left: 4px solid var(--accent2);
+    }
+
+    .box.green {
+      border-left: 4px solid var(--accent3);
+    }
+
+    .box.gold {
+      border-left: 4px solid var(--gold);
+    }
+
+    .box.full-accent {
+      background: var(--grad);
+      color: #fff;
+      border: none;
+    }
+
+    .box.full-ink {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      color: var(--text);
+    }
+
+    .box-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .box.full-accent .box-label {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .box.full-ink .box-label {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .box-content {
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .box.full-accent .box-content {
+      color: #fff;
+      font-size: 18px;
+      font-weight: 400;
+      font-style: italic;
+    }
+
+    .box.full-ink .box-content {
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    /* ── BLOCK HEADER & TYPOGRAPHY ── */
+    .block {
+      margin-bottom: 40px;
+    }
+
+    .block-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 19px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      letter-spacing: -0.01em;
+    }
+
+    .block-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    p.body {
+      font-size: 16px;
+      line-height: 1.75;
+      color: rgba(255, 255, 255, 0.75);
+      margin-bottom: 16px;
+    }
+
+    p.body strong {
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .callout {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-top: 3px solid var(--gold);
+      padding: 24px 28px;
+      margin: 24px 0;
+      font-size: 15px;
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.85);
+      line-height: 1.65;
+    }
+
+    .callout strong {
+      font-style: normal;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* ── STYLED LISTS ── */
+    ul.styled {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    ul.styled li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14.5px;
+      line-height: 1.6;
+    }
+
+    ul.styled li::before {
+      content: '→';
+      color: var(--c1);
+      flex-shrink: 0;
+      font-weight: 700;
+    }
+
+    ul.styled.blue li::before {
+      color: var(--accent2);
+    }
+
+    ul.styled.green li::before {
+      color: var(--accent3);
+    }
+
+    ul.styled.dot li::before {
+      content: '·';
+      font-size: 24px;
+      line-height: 1;
+      color: var(--c2);
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .tag {
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      padding: 5px 14px;
+      background: var(--surface2);
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tag.accent {
+      background: rgba(214, 62, 170, 0.12);
+      border-color: rgba(214, 62, 170, 0.3);
+      color: var(--c2);
+    }
+
+    /* ── TABLES ── */
+    table.doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-top: 12px;
+      margin-bottom: 24px;
+    }
+
+    table.doc-table th {
+      text-align: left;
+      padding: 14px 18px;
+      background: var(--surface2);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border-bottom: 2px solid var(--border2);
+    }
+
+    table.doc-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      line-height: 1.6;
+      background: var(--surface);
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    table.doc-table tr:nth-child(even) td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* ── PERSONA ── */
+    .persona-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 32px;
+      border-radius: 4px;
+    }
+
+    .persona-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+
+    .persona-desc {
+      font-size: 13px;
+      color: var(--c2);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .persona-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .persona-col {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .persona-col-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+    }
+
+    /* ── PHASES ── */
+    .phase-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .phase-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 24px;
+      border-radius: 4px;
+    }
+
+    .phase-item-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--border2);
+      line-height: 1;
+    }
+
+    .phase-item-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--c2);
+      margin: 10px 0 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .phase-item-desc {
+      font-size: 13.5px;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.6;
+    }
+
+    /* ── KPIS ── */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+      border-radius: 4px;
+      transition: border-color 0.2s;
+    }
+
+    .kpi-card:hover {
+      border-color: var(--c2);
+    }
+
+    .kpi-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .kpi-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    /* ── TONES ── */
+    .tone-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 8px;
+    }
+
+    .tone-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 28px;
+    }
+
+    .tone-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 16px;
+    }
+
+    .tone-label.yes {
+      color: var(--accent3);
+    }
+
+    .tone-label.no {
+      color: var(--c1);
+    }
+
+    ul.tone-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    ul.tone-list li {
+      font-size: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    ul.tone-list.yes li::before {
+      content: '✓';
+      color: var(--accent3);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    ul.tone-list.no li::before {
+      content: '✗';
+      color: var(--c1);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* ── TIMELINE ── */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .tl-item {
+      display: grid;
+      grid-template-columns: 100px 1px 1fr;
+      gap: 0 32px;
+      position: relative;
+    }
+
+    .tl-time {
+      padding: 24px 0;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .tl-line {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .tl-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--c2);
+      box-shadow: 0 0 8px var(--c2);
+      margin-top: 28px;
+      flex-shrink: 0;
+      z-index: 1;
+    }
+
+    .tl-bar {
+      flex: 1;
+      width: 1px;
+      background: var(--border2);
+    }
+
+    .tl-item:last-child .tl-bar {
+      display: none;
+    }
+
+    .tl-content {
+      padding: 20px 0 28px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tl-item:last-child .tl-content {
+      border: none;
+    }
+
+    .tl-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+
+    .tl-desc {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.6;
+    }
+
+    /* ── SECTION HEADER (shared) ── */
+    .sec-header {
+      margin-bottom: 40px;
+    }
+
+    .sec-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sec-eyebrow::before {
+      content: '';
+      width: 32px;
+      height: 1px;
+      background: var(--c2);
+    }
+
+    .sec-h {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(28px, 3.5vw, 46px);
+      font-weight: 800;
+      letter-spacing: -.02em;
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:980px) {
+      .inner {
+        padding: 40px 24px;
+      }
+
+      #s0 .inner {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .grid-2,
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+
+      .kpi-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .phase-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .tone-row {
+        grid-template-columns: 1fr;
+      }
+
+      .persona-row {
+        flex-direction: column;
+        gap: 20px;
+      }
+    }
+
+    /* ── FADE IN ── */
+    @keyframes sIn {
+      from {
+        opacity: 0;
+        transform: translateY(22px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .slide.active .inner>* {
+      animation: sIn .45s ease both;
+    }
+
+    .slide.active .inner>*:nth-child(1) {
+      animation-delay: .05s
+    }
+
+    .slide.active .inner>*:nth-child(2) {
+      animation-delay: .12s
+    }
+
+    .slide.active .inner>*:nth-child(3) {
+      animation-delay: .19s
+    }
+
+    .slide.active .inner>*:nth-child(4) {
+      animation-delay: .26s
+    }
+
+    .slide.active .inner>*:nth-child(5) {
+      animation-delay: .33s
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="deck">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div class="tb-logo">
+        <img
+          src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png"
+          alt="Nonna" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <span class="tb-logo-fallback" style="display:none">nonna</span>
+      </div>
+
+      <!-- Custom Direct Nav Tabs -->
+      <div class="tb-nav" id="tb-nav">
+        <button class="nav-btn active" onclick="go(0)">Capa</button>
+        <button class="nav-btn" onclick="go(1)">01 · Contexto</button>
+        <button class="nav-btn" onclick="go(2)">02 · Brand Platform</button>
+        <button class="nav-btn" onclick="go(3)">03 · Briefing</button>
+        <button class="nav-btn" onclick="go(4)">04 · Conceito</button>
+        <button class="nav-btn" onclick="go(5)">05 · Mídia</button>
+        <button class="nav-btn" onclick="go(6)">06 · Manual</button>
+        <button class="nav-btn" onclick="go(7)">07 · Relatório</button>
+      </div>
+
+      <div class="tb-right">
+        <span class="slide-counter" id="counter">1 / 8</span>
+      </div>
+    </div>
+
+    <!-- SLIDES -->
+    <div class="slides-wrap">
+      <div class="slides-track" id="track">
+
+        <!-- ─── SLIDE 0: CAPA ─── -->
+        <div class="slide active" id="s0">
+          <div class="inner">
+            <div class="cover-glow"></div>
+            <div class="cover-glow2"></div>
+            <div class="cover-left">
+              <div class="cover-eyebrow">Nonna Agência Digital · Projeto Modelo</div>
+              <h1 class="cover-h1">Projeto<br><span class="g">Studio Aura</span></h1>
+              <p class="cover-sub">Documentação estratégica completa de um cliente modelo — desenhada para exemplificar
+                a consistência e o rigor metodológico das entregas da Nonna.</p>
+
+              <div class="cover-meta">
+                <div class="cover-meta-line"><strong>Cliente:</strong> Studio Aura — Estética & Bem-Estar</div>
+                <div class="cover-meta-line"><strong>Segmento:</strong> Clínica de Estética · Curitiba–PR</div>
+                <div class="cover-meta-line"><strong>Porte de Investimento:</strong> Operação estratégica ativa</div>
+                <div class="cover-meta-line"><strong>Desafio Mapeado:</strong> Construir autoridade e presença
+                  estratégica no ambiente digital</div>
+              </div>
+            </div>
+
+            <div class="cover-right">
+              <h2>Estrutura do Projeto Modelo</h2>
+              <ul class="cover-index">
+                <li onclick="go(1)"><span class="ci-num">01</span><span class="ci-name">Contexto &
+                    Diagnóstico</span><span class="ci-type">Imersão</span><span class="ci-arrow">→</span></li>
+                <li onclick="go(2)"><span class="ci-num">02</span><span class="ci-name">Brand Platform</span><span
+                    class="ci-type">Estratégia</span><span class="ci-arrow">→</span></li>
+                <li onclick="go(3)"><span class="ci-num">03</span><span class="ci-name">Briefing Estratégico</span><span
+                    class="ci-type">Estratégia</span><span class="ci-arrow">→</span></li>
+                <li onclick="go(4)"><span class="ci-num">04</span><span class="ci-name">Conceito de Campanha</span><span
+                    class="ci-type">Criação</span><span class="ci-arrow">→</span></li>
+                <li onclick="go(5)"><span class="ci-num">05</span><span class="ci-name">Plano de Mídia &
+                    Performance</span><span class="ci-type">Execução</span><span class="ci-arrow">→</span></li>
+                <li onclick="go(6)"><span class="ci-num">06</span><span class="ci-name">Manual da Campanha</span><span
+                    class="ci-type">Execução</span><span class="ci-arrow">→</span></li>
+                <li onclick="go(7)"><span class="ci-num">07</span><span class="ci-name">Relatório
+                    Estratégico</span><span class="ci-type">Análise</span><span class="ci-arrow">→</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 1: CONTEXTO ─── -->
+        <div class="slide" id="s1">
+          <div class="inner top">
+            <div class="sec-header">
+              <div class="sec-eyebrow">Documento 01 — Imersão e Diagnóstico</div>
+              <div class="sec-h">Contexto & <span class="g">Diagnóstico</span></div>
+            </div>
+
+            <div class="block">
+              <div class="block-title">Sobre o cliente</div>
+              <p class="body">O <strong>Studio Aura</strong> é uma clínica de estética localizada no Batel, em Curitiba.
+                Fundada em 2019 por Fernanda Luz, esteticista com mais de 12 anos de experiência, a clínica oferece
+                tratamentos faciais, corporais e de bem-estar. Em 2023, abriu uma segunda sala e contratou duas
+                profissionais. Hoje fatura entre R$35k e R$55k/mês com agenda de alta densidade por indicações locais,
+                mas busca consolidar sua autoridade e expansão de mercado através de uma comunicação estratégica
+                padronizada.</p>
+
+              <div class="grid-2" style="margin-top:20px; margin-bottom: 32px;">
+                <div class="box blue">
+                  <div class="box-label">Pontos de Força (Operação)</div>
+                  <div class="box-content">
+                    <ul class="styled blue">
+                      <li>Fidelização e taxa de retorno de clientes acima da média local</li>
+                      <li>Recomendação orgânica (boca a boca) consolidada na região do Batel e Água Verde</li>
+                      <li>Amplo diferencial de conhecimento técnico e abordagem científica por parte da fundadora</li>
+                      <li>Estrutura física sensorial de alta qualidade — minimalista e intimista</li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="box accent">
+                  <div class="box-label">Gargalos de Comunicação</div>
+                  <div class="box-content">
+                    <ul class="styled">
+                      <li>Presença em redes sociais sem linha estética ou editorial definida</li>
+                      <li>Mensagem oscilante entre o excessivamente científico e o excessivamente coloquial</li>
+                      <li>Baixa visibilidade dos diferenciais competitivos perante concorrentes de menor qualidade</li>
+                      <li>Inexistência de campanhas de tráfego em motores de busca de alta intenção (Google Ads)</li>
+                      <li>Ausência de uma estratégia de posicionamento que sustente as ativações de mídia paga</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="block">
+              <div class="block-title">Análise de Concorrência</div>
+              <table class="doc-table">
+                <thead>
+                  <tr>
+                    <th>Concorrente</th>
+                    <th>Posicionamento percebido</th>
+                    <th>Comunicação do concorrente</th>
+                    <th>Vulnerabilidade identificada</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Espaço Serena</strong><br><span style="font-size:12px;color:var(--muted);">Batel</span>
+                    </td>
+                    <td>Luxo e sofisticação. Preços elevados com apelo elitizado.</td>
+                    <td>Refinada visualmente. Linguagem fria, distante e institucionalizada.</td>
+                    <td>Distanciamento humano. Ausência de construção de vínculo afetivo real.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Clínica Bella</strong><br><span style="font-size:12px;color:var(--muted);">Água
+                        Verde</span></td>
+                    <td>Vendas em volume. Foco em promoções e preços baixos imediatos.</td>
+                    <td>Comunicação puramente promocional. Ofertas constantes de serviços.</td>
+                    <td>Inexistência de valor percebido de marca. Guerra por preços baixos.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Renata Melo</strong><br><span style="font-size:12px;color:var(--muted);">Personal
+                        Brand</span></td>
+                    <td>Estética baseada na imagem pessoal da fundadora.</td>
+                    <td>Geração constante de reels e conteúdos de dicas diárias.</td>
+                    <td>Escalabilidade restrita à presença e imagem física da fundadora.</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="callout">
+                <strong>Insight Metodológico:</strong> Mapeamos uma lacuna mercadológica significativa no Batel. Nenhuma
+                clínica de alto nível ocupa a posição de <em>"expertise acolhedora"</em> — o equilíbrio exato entre
+                autoridade técnica de ponta e cuidado humanizado genuíno. Há uma oportunidade clara para o Studio Aura
+                liderar este território.
+              </div>
+            </div>
+
+            <div class="block" style="margin-top:32px;">
+              <div class="block-title">Persona de Marca</div>
+              <div class="persona-card">
+                <div class="persona-name">Marina, 36 anos</div>
+                <div class="persona-desc">Persona de Posicionamento Principal · Batel, Curitiba · Classe B/A</div>
+                <div class="persona-row">
+                  <div class="persona-col">
+                    <div class="persona-col-label">Perfil & Comportamento</div>
+                    <ul class="styled dot" style="font-size:13.5px;">
+                      <li>Profissional liberal de alta performance ou gestora corporativa</li>
+                      <li>Aprecia marcas premium e prioriza a qualidade técnica</li>
+                      <li>Toma decisões baseadas em estudos e consistência de marca</li>
+                    </ul>
+                  </div>
+                  <div class="persona-col">
+                    <div class="persona-col-label">Expectativas de Cuidado</div>
+                    <ul class="styled dot" style="font-size:13.5px;">
+                      <li>Tratamentos individualizados com resultados nítidos</li>
+                      <li>Profissionais comprometidas com o seu histórico clínico</li>
+                      <li>Ambiente propício à desaceleração da rotina diária</li>
+                    </ul>
+                  </div>
+                  <div class="persona-col">
+                    <div class="persona-col-label">Gargalos e Dores</div>
+                    <ul class="styled dot" style="font-size:13.5px;">
+                      <li>Frustração com promessas de resultados milagrosos ou temporários</li>
+                      <li>Atendimento frio ou excessivamente transacional</li>
+                      <li>Comunicação focada apenas em tabelas de preços</li>
+                    </ul>
+                  </div>
+                  <div class="persona-col">
+                    <div class="persona-col-label">Critérios de Decisão</div>
+                    <ul class="styled dot" style="font-size:13.5px;">
+                      <li>Recomendações e avaliações de alta confiabilidade</li>
+                      <li>Coerência estética e de linguagem nas plataformas da marca</li>
+                      <li>Percepção imediata de integridade e honestidade médica</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 2: BRAND PLATFORM ─── -->
+        <div class="slide" id="s2">
+          <div class="inner top">
+            <div class="sec-header">
+              <div class="sec-eyebrow">Documento 02 — Estratégia de Marca</div>
+              <div class="sec-h">Brand <span class="g">Platform</span></div>
+            </div>
+
+            <div class="block">
+              <div class="block-title">Propósito</div>
+              <div class="box full-ink">
+                <div class="box-label">A Razão de Ser do Studio Aura</div>
+                <div class="box-content"
+                  style="font-size:19px; font-family:'Syne', sans-serif; font-weight:700; font-style:italic; line-height:1.6;">
+                  "Existimos para devolver às mulheres a relação de cuidado genuíno com o próprio corpo — onde se sintam
+                  vistas, não apenas atendidas."
+                </div>
+              </div>
+            </div>
+
+            <div class="block">
+              <div class="block-title">Posicionamento Estratégico</div>
+              <div class="box full-accent">
+                <div class="box-label">O Espaço na Mente do Público</div>
+                <div class="box-content">
+                  Para mulheres que valorizam alta performance técnica sem abrir mão do cuidado acolhedor, o Studio Aura
+                  é a clínica estética de referência em Curitiba que integra sofisticação clínica e experiência
+                  profundamente humana — fundamentando o cuidado na premissa de que a estética começa com o respeito ao
+                  seu tempo e à sua individualidade.
+                </div>
+              </div>
+            </div>
+
+            <div class="grid-2" style="margin-bottom:40px;">
+              <div class="box accent">
+                <div class="box-label">Promessa Central de Entrega</div>
+                <div class="box-content">
+                  <p
+                    style="font-family:'Syne', sans-serif; font-size:18px; font-weight:700; font-style:italic; line-height:1.5;">
+                    "Aqui, você não precisa se explicar toda vez. A gente já sabe quem você é."</p>
+                  <p style="margin-top:12px; font-size:14px; color:var(--muted); line-height:1.6;">Esta promessa
+                    constrói uma mensagem de memória e continuidade clínica, neutralizando as abordagens puramente
+                    comerciais da concorrência direta.</p>
+                </div>
+              </div>
+              <div class="box gold">
+                <div class="box-label">Arquétipo Dominante</div>
+                <div class="box-content">
+                  <p><strong>O Cuidador + O Sábio</strong></p>
+                  <p style="font-size:14px; margin-top:8px; color:rgba(255,255,255,0.8); line-height:1.6;">Autoridade e
+                    precisão médica com abordagem compassiva e próxima. Transmite credibilidade técnica absoluta sem a
+                    necessidade de uma postura imponente ou inacessível.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="block">
+              <div class="block-title">Personalidade Visual e Verbal</div>
+              <div class="grid-3">
+                <div class="box">
+                  <div class="box-label">Diretrizes Praticadas</div>
+                  <div class="tag-row">
+                    <span class="tag accent">Acolhedora</span>
+                    <span class="tag accent">Competente</span>
+                    <span class="tag accent">Honesta</span>
+                    <span class="tag accent">Sensorial</span>
+                    <span class="tag accent">Equilibrada</span>
+                  </div>
+                </div>
+                <div class="box">
+                  <div class="box-label">Comportamentos Vetados</div>
+                  <div class="tag-row">
+                    <span class="tag">Fria e Distante</span>
+                    <span class="tag">Hiperpromocional</span>
+                    <span class="tag">Exagerada</span>
+                    <span class="tag">Sua-vida-no-stories</span>
+                    <span class="tag">Genérica</span>
+                  </div>
+                </div>
+                <div class="box">
+                  <div class="box-label">Personalização de Tom</div>
+                  <div class="box-content"
+                    style="font-size:14px; color:rgba(255,255,255,0.7); line-height:1.6; font-style:italic;">
+                    A voz da marca soa como uma especialista experiente e de total confiança, que prioriza a saúde da
+                    pele e o bem-estar real ao invés de modismos de mercado.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="block">
+              <div class="block-title">Tom de Voz</div>
+              <div class="tone-row">
+                <div class="tone-card">
+                  <div class="tone-label yes">Como o Studio Aura fala</div>
+                  <ul class="tone-list yes">
+                    <li>Com proximidade acolhedora, preservando o refinamento</li>
+                    <li>Com profunda base científica, traduzida de forma acessível</li>
+                    <li>Com direcionamento individualizado ("falar com você", não "com o público")</li>
+                    <li>Com termos assertivos e maduros, evitando adjetivos vazios</li>
+                    <li>Com foco em reflexões sobre saúde e autocuidado autêntico</li>
+                  </ul>
+                </div>
+                <div class="tone-card">
+                  <div class="tone-label no">Como o Studio Aura não fala</div>
+                  <ul class="tone-list no">
+                    <li>Uso de jargões promocionais agressivos ("Últimos horários! 🔥")</li>
+                    <li>Promessas sensacionalistas ou resultados mágicos de antes e depois</li>
+                    <li>Excesso de emojis, exclamações ou ruídos de digitação</li>
+                    <li>Uso de descontos agressivos como principal argumento de venda</li>
+                    <li>Coloquialismos excessivos ou dancinhas corporativas</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="block" style="margin-top:32px;">
+              <div class="block-title">Território Visual</div>
+              <div class="grid-3">
+                <div class="box">
+                  <div class="box-label">Direcionamento de Paleta</div>
+                  <div style="display:flex;gap:8px;margin-top:10px;margin-bottom:12px;">
+                    <div
+                      style="width:36px;height:36px;background:#f0ebe3;border:1px solid var(--border);border-radius:2px;">
+                    </div>
+                    <div style="width:36px;height:36px;background:#c8b8a2;border-radius:2px;"></div>
+                    <div style="width:36px;height:36px;background:#8b7355;border-radius:2px;"></div>
+                    <div style="width:36px;height:36px;background:#2d2926;border-radius:2px;"></div>
+                    <div style="width:36px;height:36px;background:#a8c4b8;border-radius:2px;"></div>
+                  </div>
+                  <div style="font-size:13.5px;color:var(--muted);line-height:1.6;">Tons terrosos, calorosos e maduros.
+                    Toques de verde-sage para evocar frescor clínico. Distante de estéticas comuns infantis ou rosas
+                    clichês.</div>
+                </div>
+                <div class="box">
+                  <div class="box-label">Fotografia & Identidade</div>
+                  <ul class="styled dot" style="font-size:13.5px;">
+                    <li>Iluminação natural, suave e focada na verdade</li>
+                    <li>Foco em texturas clínicas reais, cerâmica e tecidos nobres</li>
+                    <li>Modelos reais com expressões de tranquilidade e suavidade</li>
+                    <li>Edições limpas, sem distorção cromática ou filtros artificiais</li>
+                  </ul>
+                </div>
+                <div class="box">
+                  <div class="box-label">Estética a Ser Evitada</div>
+                  <ul class="styled dot" style="font-size:13.5px;color:rgba(255,255,255,0.75);">
+                    <li>Rosa ou roxo típicos de clínicas tradicionais femininas</li>
+                    <li>Uso constante de fotos de bancos de imagem comerciais</li>
+                    <li>Peças gráficas excessivamente poluídas de informações</li>
+                    <li>Estúdio estéril ou iluminação fria de estúdio fotográfico</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 3: BRIEFING ESTRATÉGICO ─── -->
+        <div class="slide" id="s3">
+          <div class="inner top">
+            <div class="sec-header">
+              <div class="sec-eyebrow">Documento 03 — Estratégia de Campanha</div>
+              <div class="sec-h">Briefing <span class="g">Estratégico</span></div>
+            </div>
+
+            <div class="block">
+              <div class="block-title">O Cenário Atual</div>
+              <p class="body">O Studio Aura possui um forte apelo orgânico de indicações e excelência operacional na
+                entrega clínica. Contudo, seu posicionamento digital era difuso e não refletia sua identidade real. O
+                digital funcionava de modo desconectado de sua verdadeira qualidade, atraindo cliques sem intenção e
+                falhando em construir autoridade perante o público frio.</p>
+              <p class="body">A clínica está preparada para expandir suas operações e otimizar a escala de novos
+                profissionais. Para isso, a comunicação precisa desempenhar o papel de filtrar a atração de novos
+                clientes e pré-qualificar as consultas.</p>
+            </div>
+
+            <div class="block">
+              <div class="block-title">O Desafio de Posicionamento</div>
+              <div class="box full-accent">
+                <div class="box-label">O Objetivo de Comunicação</div>
+                <div class="box-content">
+                  Desenvolver uma narrativa digital que transponha a experiência premium vivida no Studio Aura para o
+                  ambiente online. A comunicação deve educar a audiência sobre o valor clínico de cada tratamento,
+                  gerando confiança antes do primeiro agendamento.
+                </div>
+              </div>
+            </div>
+
+            <div class="grid-2" style="margin-bottom:40px;">
+              <div class="box accent">
+                <div class="box-label">Percepção Desejada no Público</div>
+                <div class="box-content">
+                  <p
+                    style="font-style:italic; font-family:'Syne', sans-serif; font-weight:700; font-size:17px; line-height:1.5;">
+                    "Esta clínica possui um respeito e entendimento real do cuidado. Sinto segurança em iniciar meu
+                    tratamento aqui."</p>
+                </div>
+              </div>
+              <div class="box green">
+                <div class="box-label">Ações Estratégicas Solicitadas</div>
+                <div class="box-content">
+                  <ul class="styled green">
+                    <li>Interagir de forma qualificada com o conteúdo técnico no Instagram</li>
+                    <li>Salvar conteúdos de rotinas clínicas e metodologias para consulta</li>
+                    <li>Direcionar contato para o agendamento através das páginas de destino</li>
+                    <li>Comparecer à primeira consulta médica ciente do diferencial da clínica</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="block">
+              <div class="block-title">Métricas de Sucesso da Campanha (Semestral)</div>
+              <div class="kpi-row">
+                <div class="kpi-card">
+                  <div class="kpi-value">+40%</div>
+                  <div class="kpi-label">Crescimento de audiência local hiper-segmentada (Mulheres, Batel/Água Verde,
+                    28–45)</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-value">30+</div>
+                  <div class="kpi-label">Novas consultas pré-agendadas via canais digitais/mês</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-value">4,8★</div>
+                  <div class="kpi-label">Manutenção e fomento de avaliações estruturadas no Google My Business</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-value">≤R$45</div>
+                  <div class="kpi-label">Custo por agendamento via canais de tráfego de alta intenção</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="block" style="margin-top:32px;">
+              <div class="block-title">Limites de Atuação e Regras Clínicas</div>
+              <div class="box gold">
+                <div class="box-label">Limitações Conceituais</div>
+                <div class="box-content">
+                  <ul class="styled" style="font-size:14.5px;">
+                    <li>Evitar a superexposição pessoal da fundadora — o foco principal é o ecossistema e qualidade do
+                      Studio Aura</li>
+                    <li>Não utilizar técnicas de preços promocionais ou saldos agressivos</li>
+                    <li>Não utilizar antes e depois exagerados, preservando os códigos éticos de medicina estética</li>
+                    <li>Jamais comprometer a sobriedade visual e coerência estética da marca</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 4: CONCEITO DE CAMPANHA ─── -->
+        <div class="slide" id="s4">
+          <div class="inner top">
+            <div class="sec-header">
+              <div class="sec-eyebrow">Documento 04 — Criação Criativa</div>
+              <div class="sec-h">Conceito de <span class="g">Campanha</span></div>
+            </div>
+
+            <div class="block">
+              <div class="block-title">O Insight da Campanha</div>
+              <div class="callout">
+                O mercado estético comumente trata o <strong>cuidado como mero serviço avulso</strong> — uma tabela
+                mercantilizada de procedimentos rápidos. Contudo, o público premium busca uma relação duradoura. Elas
+                valorizam a tranquilidade de um diagnóstico contínuo que lembra das suas necessidades e respeita as
+                especificidades de sua pele ao longo do tempo.
+              </div>
+            </div>
+
+            <div class="block">
+              <div class="block-title">A Grande Ideia Norteadora</div>
+              <div class="box full-ink" style="text-align:center; padding:48px;">
+                <div class="box-label" style="text-align:center; margin-bottom:20px;">Assinatura Conceitual da Campanha
+                </div>
+                <div
+                  style="font-family:'Syne', sans-serif; font-size:44px; font-weight:800; color:#fff; line-height:1.1; letter-spacing:-0.02em;">
+                  "A gente lembra<br><span class="g">de você."</span></div>
+                <div
+                  style="font-size:15px; color:rgba(255,255,255,0.6); margin-top:24px; font-style:italic; max-width:600px; margin-left:auto; margin-right:auto; line-height:1.7;">
+                  Uma campanha de reposicionamento que foca na premissa da atenção individual, do cuidado histórico e do
+                  profissionalismo continuado. A antítese do atendimento transacional rápido.
+                </div>
+              </div>
+            </div>
+
+            <div class="block">
+              <div class="block-title">Justificativa e Impacto Técnico</div>
+              <div class="grid-3">
+                <div class="box accent">
+                  <div class="box-label">Integridade do Discurso</div>
+                  <div class="box-content" style="font-size:14px; line-height:1.65; color:rgba(255,255,255,0.85);">
+                    Traduz o comportamento clínico real da equipe do Studio Aura. O conteúdo não inventa uma nova
+                    narrativa, mas traz para o digital o cuidado que as clientes de indicação já vivenciam na prática.
+                  </div>
+                </div>
+                <div class="box blue">
+                  <div class="box-label">Diferenciação Estética</div>
+                  <div class="box-content" style="font-size:14px; line-height:1.65; color:rgba(255,255,255,0.85);">
+                    Nenhum concorrente na região atua sob os conceitos de memória e diagnóstico continuado. Trata-se de
+                    um território conceitual exclusivo, maduro e de altíssimo valor.</div>
+                </div>
+                <div class="box green">
+                  <div class="box-label">Apelo Afetivo</div>
+                  <div class="box-content" style="font-size:14px; line-height:1.65; color:rgba(255,255,255,0.85);">
+                    Conecta-se com a necessidade humana de ser ouvida. Estabelece um posicionamento clínico sólido
+                    focado na construção de valor de marca em longo prazo.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="block" style="margin-top:32px;">
+              <div class="block-title">Estrutura de Fases da Campanha</div>
+              <div class="phase-strip">
+                <div class="phase-item">
+                  <div class="phase-item-num">01</div>
+                  <div class="phase-item-label">Meses 01–02 · Conexão & Alinhamento</div>
+                  <div class="phase-item-desc">Apresentação dos pilares estéticos e da filosofia clínica da clínica.
+                    Introdução da fundadora e dos códigos de cuidado de ambiente. Foco absoluto em branding de alta
+                    qualidade.</div>
+                </div>
+                <div class="phase-item">
+                  <div class="phase-item-num">02</div>
+                  <div class="phase-item-label">Meses 03–04 · Validação e Autoridade</div>
+                  <div class="phase-item-desc">Depoimentos editoriais de clientes históricas da marca com foco em
+                    cuidado. Produção de narrativas maduras focadas na experiência, nos bastidores técnicos e na
+                    fidelização.</div>
+                </div>
+                <div class="phase-item">
+                  <div class="phase-item-num">03</div>
+                  <div class="phase-item-label">Meses 05–06 · Escala & Conversão</div>
+                  <div class="phase-item-desc">Aceleração de mídia direcionada a públicos aquecidos pelas fases
+                    conceituais anteriores. Ativação direta para consultas e rituais clínicos premium de primeira
+                    visita.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="block" style="margin-top:32px;">
+              <div class="block-title">Aplicações Práticas de Linguagem</div>
+              <div class="grid-2">
+                <div class="box">
+                  <div class="box-label">Instagram — Redação de Feed</div>
+                  <div class="box-content"
+                    style="font-style:italic; font-family:'Syne', sans-serif; font-size:17px; font-weight:700; line-height:1.6; color:#fff;">
+                    "Você não precisa explicar sua pele toda vez que vem aqui. A gente já conhece a sua jornada."
+                  </div>
+                  <div style="font-size:12.5px; color:var(--muted); margin-top:12px;">Estética: macrofotografia de alta
+                    qualidade com luz natural lateral focada em textura de pele saudável. Lettering sóbrio.</div>
+                </div>
+                <div class="box">
+                  <div class="box-label">Instagram — Peças de Ativação (Stories)</div>
+                  <div class="box-content"
+                    style="font-style:italic; font-family:'Syne', sans-serif; font-size:17px; font-weight:700; line-height:1.6; color:#fff;">
+                    "A sua primeira consulta é apenas o início de um acompanhamento continuado."
+                  </div>
+                  <div style="font-size:12.5px; color:var(--muted); margin-top:12px;">Chamada de ação refinada
+                    direcionando para agendamento assistido, mantendo o tom respeitoso.</div>
+                </div>
+                <div class="box">
+                  <div class="box-label">Google Ads — Textos de Alta Intenção</div>
+                  <div class="box-content" style="font-size:14px; line-height:1.6; color:rgba(255,255,255,0.85);">
+                    <strong>Título:</strong> Studio Aura · Experiência e Cuidado no Batel<br>
+                    <strong>Descrição:</strong> Rituais faciais, corporais e diagnósticos profundos em Curitiba.
+                    Acolhimento premium em ambiente clínico projetado para desacelerar. Reserve seu horário.
+                  </div>
+                </div>
+                <div class="box">
+                  <div class="box-label">Sustentação por Prova Social (Case Real)</div>
+                  <div class="box-content"
+                    style="font-style:italic; font-size:14px; line-height:1.6; color:rgba(255,255,255,0.8);">
+                    "Realizo meus tratamentos de pele com a Fernanda há mais de dois anos. Ela lembra exatamente de como
+                    minha pele reage ao clima e às rotinas de trabalho. Sinto-me plenamente segura."<br>
+                    <span
+                      style="font-size:12px; font-style:normal; color:var(--muted); font-weight:600; display:block; margin-top:8px;">—
+                      Camila, 38 anos, cliente desde 2023</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 5: PLANO DE MÍDIA ─── -->
+        <div class="slide" id="s5">
+          <div class="inner top">
+            <div class="sec-header">
+              <div class="sec-eyebrow">Documento 05 — Distribuição e Tráfego</div>
+              <div class="sec-h">Plano de Mídia & <span class="g">Performance</span></div>
+            </div>
+
+            <div class="block">
+              <div class="block-title">Arquitetura de Funil de Tráfego</div>
+              <div class="grid-3">
+                <div class="box accent">
+                  <div class="box-label">Topo de Funil — Awareness</div>
+                  <div class="box-content" style="font-size:13.5px; line-height:1.6; color:rgba(255,255,255,0.85);">
+                    <strong>Meta:</strong> Gerar reconhecimento de marca qualificado na região de atendimento Batel e
+                    adjacências.<br><br>
+                    <strong>Canais:</strong> Ativação de anúncios Meta Ads em formato de vídeo/reels focados no
+                    posicionamento conceitual.<br><br>
+                    <strong>Verba Mensal:</strong> R$ 600,00
+                  </div>
+                </div>
+                <div class="box blue">
+                  <div class="box-label">Meio de Funil — Consideração</div>
+                  <div class="box-content" style="font-size:13.5px; line-height:1.6; color:rgba(255,255,255,0.85);">
+                    <strong>Meta:</strong> Nutrir e engajar quem já interagiu, apresentando os depoimentos e
+                    rituais.<br><br>
+                    <strong>Canais:</strong> Retargeting estruturado em Meta Ads para visualizadores de vídeo e
+                    visitantes do site nos últimos 30 dias.<br><br>
+                    <strong>Verba Mensal:</strong> R$ 600,00
+                  </div>
+                </div>
+                <div class="box green">
+                  <div class="box-label">Fundo de Funil — Conversão</div>
+                  <div class="box-content" style="font-size:13.5px; line-height:1.6; color:rgba(255,255,255,0.85);">
+                    <strong>Meta:</strong> Captar buscas de alta intenção e usuários prontos para o agendamento
+                    final.<br><br>
+                    <strong>Canais:</strong> Google Ads Search focado em palavras de interesse localizado e Meta Ads com
+                    chamada direta via mensagens direcionadas.<br><br>
+                    <strong>Verba Mensal:</strong> R$ 600,00
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="block">
+              <div class="block-title">Matriz de Distribuição Técnica de Canais</div>
+              <table class="doc-table">
+                <thead>
+                  <tr>
+                    <th>Plataforma de Mídia</th>
+                    <th>Objetivo Principal</th>
+                    <th>Alocação Mensal</th>
+                    <th>Métricas de Sucesso (KPIs)</th>
+                    <th>Sincronia com a Mensagem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Meta Ads (Frio)</strong></td>
+                    <td>Reconhecimento e atração de novos usuários</td>
+                    <td>R$ 400,00</td>
+                    <td>CPM · Taxas de Visualização (Throughplay)</td>
+                    <td>Conceitos amplos "A gente lembra de você"</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Meta Ads (Retargeting)</strong></td>
+                    <td>Reengajamento, Prova Social e Detalhes Clínicos</td>
+                    <td>R$ 400,00</td>
+                    <td>CTR · Cliques no Link · Engajamento</td>
+                    <td>Depoimentos editoriais e rituais sensoriais</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Google Ads (Pesquisa)</strong></td>
+                    <td>Capturar demanda ativa de agendamentos</td>
+                    <td>R$ 600,00</td>
+                    <td>Taxa de Conversão · CPC · Custo por Lead (CPL)</td>
+                    <td>Copywriters focados na verdade e sofisticação clínica</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Google Meu Negócio</strong></td>
+                    <td>Autoridade de busca local e reviews reais</td>
+                    <td>— (Gestão inclusa)</td>
+                    <td>Avaliações · CTR local · Direções</td>
+                    <td>Feed de depoimentos e respostas da fundadora</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Instagram (Orgânico)</strong></td>
+                    <td>Sedimentação de marca e senso de comunidade</td>
+                    <td>— (Gestão de conteúdo)</td>
+                    <td>Compartilhamentos · Salvamentos</td>
+                    <td>Seguimento rigoroso do Manual da Campanha</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="block" style="margin-top:32px;">
+              <div class="block-title">Regras de Segmentação de Audiência</div>
+              <div class="grid-2">
+                <div class="box">
+                  <div class="box-label">Audiência de Prospecção (Fria)</div>
+                  <ul class="styled" style="font-size:13.5px;">
+                    <li>Mulheres, 28–48 anos, geolocalização: Batel + raio de 10km</li>
+                    <li>Interesses refinados: bem-estar corporal, autocuidado clínico, yoga, qualidade de pele</li>
+                    <li>Comportamento: viajantes internacionais de negócios, compradores de alto valor</li>
+                    <li>Exclusão: exclusão de lista ativa de clientes da clínica (lista CRM)</li>
+                  </ul>
+                </div>
+                <div class="box">
+                  <div class="box-label">Audiência de Retargeting (Quente)</div>
+                  <ul class="styled" style="font-size:13.5px;">
+                    <li>Interagiram com perfil do Instagram do Studio Aura nos últimos 60 dias</li>
+                    <li>Visitantes e leitores de páginas do site nos últimos 30 dias</li>
+                    <li>Público semente lookalike estruturado (1%–2%) com base em clientes reais</li>
+                    <li>Visualizadores de mais de 50% dos vídeos de branding</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="block" style="margin-top:32px;">
+              <div class="block-title">Previsão e Amadurecimento de Metas</div>
+              <table class="doc-table">
+                <thead>
+                  <tr>
+                    <th>Fase da Mídia</th>
+                    <th>Cronograma de Análise</th>
+                    <th>Investimento Médio</th>
+                    <th>Expectativa de Agendamentos</th>
+                    <th>CPL Recomendado para Calibragem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>01 · Aprendizado</strong></td>
+                    <td>Meses 01–02</td>
+                    <td>R$ 3.600,00 (Total)</td>
+                    <td>10–15 consultas iniciadas/mês</td>
+                    <td>R$ 120–240 (Foco em volumetria e tags)</td>
+                  </tr>
+                  <tr>
+                    <td><strong>02 · Otimização</strong></td>
+                    <td>Meses 03–04</td>
+                    <td>R$ 3.600,00 (Total)</td>
+                    <td>20–25 consultas iniciadas/mês</td>
+                    <td>R$ 70–100 (Melhoria de criativos)</td>
+                  </tr>
+                  <tr>
+                    <td><strong>03 · Consolidação</strong></td>
+                    <td>Meses 05–06</td>
+                    <td>R$ 3.600,00 (Total)</td>
+                    <td>30+ consultas iniciadas/mês</td>
+                    <td>≤ R$ 45 (Consolidação de canais maduros)</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="callout">
+                <strong>Orientações de Performance:</strong> O investimento inicial foca em educar o público de Curitiba
+                e rastrear os dados de pixel corretos. Conforme o posicionamento ganha força, as metas de conversão de
+                fundo de funil tornam-se consideravelmente mais eficientes e baratas de reter.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 6: GUIA DE CONTEÚDO ─── -->
+        <div class="slide" id="s6">
+          <div class="inner top">
+            <div class="sec-header">
+              <div class="sec-eyebrow">Documento 06 — Editorial de Sustentação</div>
+              <div class="sec-h">Manual da <span class="g">Campanha</span></div>
+            </div>
+
+            <div class="block">
+              <div class="block-title">Pilares Editoriais de Sustentação</div>
+              <div class="grid-3">
+                <div class="box accent">
+                  <div class="box-label">Pilar 1 · Autoridade e Ciência</div>
+                  <div class="box-content" style="font-size:13.5px; line-height:1.6; color:rgba(255,255,255,0.85);">
+                    <strong>Objetivo:</strong> Consolidar os diferenciais de conhecimento da equipe do estúdio.<br><br>
+                    <strong>Abordagens:</strong> "Diferenças científicas da limpeza de pele profunda comparada à rotina
+                    doméstica", "Como a análise profunda orienta nossa escolha cosmética"<br><br>
+                    <strong>Tom:</strong> Educativo, maduro e direto.
+                  </div>
+                </div>
+                <div class="box blue">
+                  <div class="box-label">Pilar 2 · Bastidores do Cuidado</div>
+                  <div class="box-content" style="font-size:13.5px; line-height:1.6; color:rgba(255,255,255,0.85);">
+                    <strong>Objetivo:</strong> Revelar a atenção clínica dedicada a cada protocolo individual.<br><br>
+                    <strong>Abordagens:</strong> Vídeos de processos de assepsia e preparação da sala, seleção minuciosa
+                    de toalhas e aromas, rotinas calmas pré-atendimento<br><br>
+                    <strong>Tom:</strong> Intimista, detalhista e estético.
+                  </div>
+                </div>
+                <div class="box green">
+                  <div class="box-label">Pilar 3 · Sensações Clínicas</div>
+                  <div class="box-content" style="font-size:13.5px; line-height:1.6; color:rgba(255,255,255,0.85);">
+                    <strong>Objetivo:</strong> Evocar a atmosfera acolhedora e de desaceleração que a clínica
+                    oferece.<br><br>
+                    <strong>Abordagens:</strong> ASMR sutil do espaço físico, tomadas focadas na luz solar do Batel
+                    adentrando o estúdio, macro-vídeos texturais<br><br>
+                    <strong>Tom:</strong> Sensorial, tranquilo e refinado.
+                  </div>
+                </div>
+                <div class="box">
+                  <div class="box-label">Pilar 4 · Vozes de Quem Vive</div>
+                  <div class="box-content" style="font-size:13.5px; line-height:1.6; color:rgba(255,255,255,0.85);">
+                    <strong>Objetivo:</strong> Permitir que as clientes consolidadas atestem a excelência da
+                    marca.<br><br>
+                    <strong>Abordagens:</strong> Depoimentos curtos diagramados em formato editorial clássico, capturas
+                    sutis autorizadas de feedbacks<br><br>
+                    <strong>Tom:</strong> Natural, verossímil e polido.
+                  </div>
+                </div>
+                <div class="box">
+                  <div class="box-label">Pilar 5 · Rituais de Bem-estar</div>
+                  <div class="box-content" style="font-size:13.5px; line-height:1.6; color:rgba(255,255,255,0.85);">
+                    <strong>Objetivo:</strong> Promover o acompanhamento continuado em casa com foco no auto-respeito
+                    corporal.<br><br>
+                    <strong>Abordagens:</strong> "Um hábito diário para desinflamar a pele facial", "Cuidados
+                    fundamentais pós-procedimentos estéticos faciais"<br><br>
+                    <strong>Tom:</strong> Amigável, consultivo e integrador.
+                  </div>
+                </div>
+                <div class="box gold">
+                  <div class="box-label">Pilar 6 · Posicionamento e Visão</div>
+                  <div class="box-content" style="font-size:13.5px; line-height:1.6; color:rgba(255,255,255,0.85);">
+                    <strong>Objetivo:</strong> Expressar as convicções de marca perante o mercado de Curitiba.<br><br>
+                    <strong>Abordagens:</strong> "Por que rejeitamos estéticas artificiais e temporárias", "Estética
+                    como a mais antiga e íntima prática de autocuidado"<br><br>
+                    <strong>Tom:</strong> Integro, forte e elegante.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="block" style="margin-top:32px;">
+              <div class="block-title">Matriz Editorial de Publicações Semanal</div>
+              <table class="doc-table">
+                <thead>
+                  <tr>
+                    <th>Dia Programado</th>
+                    <th>Formato Criativo</th>
+                    <th>Pilar Editorial</th>
+                    <th>Aplicação Prática da Pauta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Segunda-feira</strong></td>
+                    <td>Carrossel Educacional</td>
+                    <td>Autoridade e Ciência</td>
+                    <td>"Os 3 erros silenciosos que reduzem os efeitos dos cosméticos na sua pele"</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Quarta-feira</strong></td>
+                    <td>Vídeo Curto (Reels)</td>
+                    <td>Bastidores do Cuidado / Sensações</td>
+                    <td>Preparação cuidadosa das salas de atendimento no estúdio (foco sensorial e estético)</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Quinta-feira</strong></td>
+                    <td>Sequência de Ativação (Stories)</td>
+                    <td>Rituais / Contato Humano</td>
+                    <td>Sessão de esclarecimentos de pele e mitos cosméticos liderada pela fundadora</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Sábado</strong></td>
+                    <td>Peça Editorial Estática</td>
+                    <td>Vozes de Quem Vive / Visão</td>
+                    <td>Diagramação refinada de depoimento real de cliente sobre a sensação de acompanhamento</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="block" style="margin-top:32px;">
+              <div class="block-title">Guia Verbal de Aplicações e Expressões</div>
+              <table class="doc-table">
+                <thead>
+                  <tr>
+                    <th>Ação / Contexto</th>
+                    <th style="color:var(--c1);">❌ Como a marca NÃO deve falar</th>
+                    <th style="color:var(--accent3);">✓ Como o Studio Aura se expressa</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Notificar aberturas na agenda clínica</td>
+                    <td>"🔥 ATENÇÃO! Últimos horários! Clique no link e garanta sua vaga!"</td>
+                    <td>"Disponibilizamos duas janelas de atendimento nesta quinta-feira para rituais faciais. Sinta-se
+                      convidada a agendar."</td>
+                  </tr>
+                  <tr>
+                    <td>Responder avaliações dos clientes</td>
+                    <td>"Obrigada pelo carinho! Amamos muito sua presença! 💕"</td>
+                    <td>"Ficamos lisonjeadas com suas palavras, [nome]. Garantir seu conforto e saúde de pele é nosso
+                      foco diário."</td>
+                  </tr>
+                  <tr>
+                    <td>Introduzir novos procedimentos estéticos</td>
+                    <td>"Chegou o tratamento REVOLUCIONÁRIO e INCRÍVEL que vai sumir com as rugas!"</td>
+                    <td>"A radiofrequência é uma tecnologia que respeitamos muito. Sua ação é sutil, estimulando as
+                      fibras de colágeno de forma consistente."</td>
+                  </tr>
+                  <tr>
+                    <td>Referir-se à demanda clínica local</td>
+                    <td>"Agenda 100% lotada porque somos líderes absolutos no Batel!"</td>
+                    <td>"Nossas consultas de março estão completas. Caso busque iniciar seu cronograma em abril,
+                      sugerimos agendar com antecedência."</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 7: RELATÓRIO ─── -->
+        <div class="slide" id="s7">
+          <div class="inner top">
+            <div class="sec-header">
+              <div class="sec-eyebrow">Documento 07 — Métricas e Evolução</div>
+              <div class="sec-h">Relatório <span class="g">Estratégico</span></div>
+            </div>
+
+            <div class="block">
+              <div class="block-title">Resultados Consolidados do Ciclo (Exemplo Ativo)</div>
+              <div class="kpi-row">
+                <div class="kpi-card">
+                  <div class="kpi-value">34</div>
+                  <div class="kpi-label">Agendamentos Clínicos via Tráfego Pago<br><span
+                      style="color:var(--accent3); font-weight:700;">↑ Meta de 25 superada</span></div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-value">R$ 41</div>
+                  <div class="kpi-label">Custo Médio por Agendamento Realizado<br><span
+                      style="color:var(--accent3); font-weight:700;">↓ Abaixo do teto de R$ 45</span></div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-value">+28%</div>
+                  <div class="kpi-label">Crescimento Qualificado de Seguidores Locals<br><span
+                      style="color:var(--c2); font-weight:700;">Em linha com meta semestral de 40%</span></div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-value">4,9★</div>
+                  <div class="kpi-label">Pontuação Média Google My Business<br><span
+                      style="color:var(--accent3); font-weight:700;">↑ Evolução de 4,5 iniciais</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="block" style="margin-top:32px;">
+              <div class="block-title">Análise Estratégica dos Dados</div>
+              <p class="body">Os indicadores consolidam a solidez da arquitetura de funil traçada pela Nonna. A atração
+                de alta intenção pelo Google Ads obteve resultados de conversão excelentes para termos localizados como
+                <strong>"clínica de estética Batel"</strong> e <strong>"limpeza de pele Curitiba"</strong>, confirmando
+                o valor de direcionar verba estratégica para onde o desejo do público-alvo já está latente.</p>
+              <p class="body">A taxa de retorno de clientes captadas via digital registrou a marca expressiva de
+                <strong>62%</strong>, comprovando que a estratégia editorial e de branding desenhada pré-qualificou os
+                novos agendamentos com extrema precisão, aproximando-as do perfil histórico das pacientes que chegam via
+                boca a boca.</p>
+
+              <div class="grid-2" style="margin-top:20px; margin-bottom: 32px;">
+                <div class="box green">
+                  <div class="box-label">Pontos de Sétimo Ciclo Bem-sucedidos</div>
+                  <ul class="styled green" style="font-size:13.5px;">
+                    <li>Conteúdos focados no pilar de Sensações Clínicas registram salvamentos 3x maiores que posts
+                      estáticos comuns</li>
+                    <li>Excelente eficiência de tráfego em buscadores (Google Search), recomendando-se realocação de
+                      verba</li>
+                    <li>Feedbacks orais espontâneos sobre o slogan "A gente lembra de você" sendo citados na recepção
+                      física da clínica</li>
+                    <li>Fidelização e taxa de retorno alinhadas à expectativa histórica do estúdio</li>
+                  </ul>
+                </div>
+                <div class="box accent">
+                  <div class="box-label">Pontos sob Atenção e Melhorias</div>
+                  <ul class="styled" style="font-size:13.5px;">
+                    <li>Crescimento bruto de seguidores demanda atração de mais reels de topo de funil semanais</li>
+                    <li>Visualização de Stories abaixo do esperado às quintas — recomendável ajuste de horário de
+                      postagem</li>
+                    <li>Estudo de criativos com variações em vídeo estético vs. foto para otimizar custo de mil
+                      impressões (CPM)</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="block">
+              <div class="block-title">Acompanhamento e Próximos Passos (Plano de Ação)</div>
+              <div class="timeline">
+                <div class="tl-item">
+                  <div class="tl-time">Semana 01</div>
+                  <div class="tl-line">
+                    <div class="tl-dot"></div>
+                    <div class="tl-bar"></div>
+                  </div>
+                  <div class="tl-content">
+                    <div class="tl-title">Ajuste e Otimização Orçamentária</div>
+                    <div class="tl-desc">Realocação de 15% do orçamento de Meta Ads Awareness para Google Search
+                      (Buscador), potencializando agendamentos locais qualificados.</div>
+                  </div>
+                </div>
+                <div class="tl-item">
+                  <div class="tl-time">Semana 01–02</div>
+                  <div class="tl-line">
+                    <div class="tl-dot"></div>
+                    <div class="tl-bar"></div>
+                  </div>
+                  <div class="tl-content">
+                    <div class="tl-title">Produção de Vídeos de Amplo Alcance</div>
+                    <div class="tl-desc">Produção de 4 novos reels com foco estético e sensorial focado em
+                      procedimentos, utilizando as referências e tons contidos no Manual da Campanha.</div>
+                  </div>
+                </div>
+                <div class="tl-item">
+                  <div class="tl-time">Semana 02</div>
+                  <div class="tl-line">
+                    <div class="tl-dot"></div>
+                    <div class="tl-bar"></div>
+                  </div>
+                  <div class="tl-content">
+                    <div class="tl-title">Campanha Interna de Avaliações</div>
+                    <div class="tl-desc">Fomento e ativação de rotina de solicitação de reviews de forma humanizada para
+                      as novas clientes via WhatsApp, consolidando a marca no Google My Business.</div>
+                  </div>
+                </div>
+                <div class="tl-item">
+                  <div class="tl-time">Semana 04</div>
+                  <div class="tl-line">
+                    <div class="tl-dot"></div>
+                    <div class="tl-bar"></div>
+                  </div>
+                  <div class="tl-content">
+                    <div class="tl-title">Revisão de Desdobramento de Fases</div>
+                    <div class="tl-desc">Validação de criativos e cópias conceituais da fase anterior para estruturação
+                      dos anúncios focados em atração direta do próximo mês.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="block" style="margin-top:32px;">
+              <div class="block-title">Reflexão Metodológica para a Cliente</div>
+              <div class="box full-ink">
+                <div class="box-label">Para o Time Studio Aura</div>
+                <div class="box-content"
+                  style="font-style:italic; font-family:'Syne', sans-serif; font-size:18px; font-weight:700; line-height:1.6;">
+                  "O amadurecimento dos números comprova que o Studio Aura já detinha o diferencial clínico necessário.
+                  O papel da Nonna foi criar as pontes e a precisão da estratégia para revelar essa integridade ao
+                  mercado local de forma coordenada."
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /track -->
+    </div><!-- /wrap -->
+
+    <!-- BOTTOM NAV -->
+    <div class="botnav">
+      <button class="nav-arrow" id="prev" onclick="move(-1)" disabled>←</button>
+      <div class="nav-title" id="slide-title">Projeto Modelo — Studio Aura</div>
+      <button class="nav-arrow" id="next" onclick="move(1)">→</button>
+    </div>
+
+  </div><!-- /deck -->
+
+  <script>
+    const titles = [
+      'Projeto Modelo — Studio Aura',
+      '01 · Contexto & Diagnóstico',
+      '02 · Brand Platform',
+      '03 · Briefing Estratégico',
+      '04 · Conceito de Campanha',
+      '05 · Plano de Mídia & Performance',
+      '06 · Manual da Campanha',
+      '07 · Relatório Estratégico'
+    ];
+
+    const TOTAL = 8;
+    let cur = 0;
+
+    const track = document.getElementById('track');
+    const counter = document.getElementById('counter');
+    const prevBtn = document.getElementById('prev');
+    const nextBtn = document.getElementById('next');
+    const stTitle = document.getElementById('slide-title');
+
+    function go(n) {
+      // Update internal slide state
+      document.querySelectorAll('.slide').forEach((s, i) => {
+        s.classList.toggle('active', i === n);
+        if (i === n) s.scrollTop = 0;
+      });
+
+      // Update nav buttons
+      document.querySelectorAll('.nav-btn').forEach((b, i) => {
+        b.classList.toggle('active', i === n);
+      });
+
+      cur = n;
+      track.style.transform = `translateX(-${n * 100}vw)`;
+      counter.textContent = `${n + 1} / ${TOTAL}`;
+      stTitle.textContent = titles[n] || '';
+      prevBtn.disabled = (n === 0);
+      nextBtn.disabled = (n === TOTAL - 1);
+    }
+
+    function move(d) { go(Math.min(Math.max(cur + d, 0), TOTAL - 1)); }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') move(1);
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') move(-1);
+    });
+  </script>
+
+</body>
+
+</html>

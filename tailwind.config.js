@@ -12,7 +12,18 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Syne', ...defaultTheme.fontFamily.sans],
+                mono: ['IBM Plex Mono', ...defaultTheme.fontFamily.mono],
+            },
+            colors: {
+                nonna: {
+                    purple: '#6A5ACD',
+                    orange: '#FF8C00',
+                    bg:     '#0c0c12',
+                    s1:     '#111118',
+                    s2:     '#17171f',
+                    s3:     '#1e1e28',
+                },
             },
         },
     },

@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nonna Agência Digital — Nossa Metodologia</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0b14;
+      --surface: #13131f;
+      --surface2: #1a1a2e;
+      --border: rgba(255, 255, 255, 0.07);
+      --border2: rgba(255, 255, 255, 0.12);
+      --text: #f0f0f8;
+      --muted: rgba(255, 255, 255, 0.48);
+
+      /* Nonna gradient */
+      --c1: #ff5c4d;
+      /* coral */
+      --c2: #d63eaa;
+      /* magenta */
+      --c3: #7b3fe4;
+      /* roxo */
+      --grad: linear-gradient(135deg, var(--c1), var(--c2), var(--c3));
+      --grad-h: linear-gradient(135deg, var(--c3), var(--c2), var(--c1));
+
+      /* Ampliado para melhor aproveitamento de espaço em telas maiores */
+      --slide-w: 1400px;
+    }
+
+    /* ── RESET ── */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      /* Aumentado de 15px */
+      line-height: 1.7;
+    }
+
+    /* ── DECK SHELL ── */
+    .deck {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      flex-shrink: 0;
+      height: 60px;
+      /* Aumentado de 52px */
+      background: rgba(11, 11, 20, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      z-index: 50;
+    }
+
+    .tb-logo img {
+      height: 28px;
+      display: block;
+    }
+
+    .tb-logo-fallback {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .tb-center {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tb-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .tb-dot.active {
+      background: var(--grad);
+      border: none;
+      background: var(--c2);
+    }
+
+    .tb-right {
+      font-size: 13px;
+      /* Aumentado de 11px */
+      color: var(--muted);
+      letter-spacing: .05em;
+    }
+
+    .slide-counter {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── SLIDES VIEWPORT ── */
+    .slides-wrap {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .slides-track {
+      display: flex;
+      height: 100%;
+      transition: transform .5s cubic-bezier(.77, 0, .18, 1);
+    }
+
+    .slide {
+      flex-shrink: 0;
+      width: 100vw;
+      height: 100%;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border2) transparent;
+      padding: 0;
+    }
+
+    .slide::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .slide::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 2px;
+    }
+
+    /* ── INNER CONTENT ── */
+    .inner {
+      max-width: var(--slide-w);
+      margin: 0 auto;
+      padding: 40px 60px;
+      /* Otimizado para usar melhor a tela verticalmente e horizontalmente */
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .inner.top {
+      justify-content: flex-start;
+      padding-top: 50px;
+    }
+
+    /* ── BOTTOM NAV ── */
+    .botnav {
+      flex-shrink: 0;
+      height: 68px;
+      /* Aumentado de 60px */
+      background: rgba(11, 11, 20, 0.9);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 48px;
+    }
+
+    .nav-arrow {
+      background: none;
+      border: 1px solid var(--border2);
+      color: var(--text);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .2s;
+    }
+
+    .nav-arrow:hover {
+      background: var(--surface2);
+      border-color: var(--c2);
+    }
+
+    .nav-arrow:disabled {
+      opacity: .25;
+      cursor: default;
+    }
+
+    .nav-title {
+      font-size: 13px;
+      /* Aumentado de 12px */
+      color: var(--muted);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    /* ── GRADIENT TEXT ── */
+    .g {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── CHIP / TAG ── */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      /* Aumentado de 10px */
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 2px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--muted);
+    }
+
+    .chip.neon {
+      background: rgba(214, 62, 170, .12);
+      border-color: rgba(214, 62, 170, .3);
+      color: var(--c2);
+    }
+
+    .chip.green {
+      background: rgba(52, 211, 153, .1);
+      border-color: rgba(52, 211, 153, .25);
+      color: #34d399;
+    }
+
+    .chip.orange {
+      background: rgba(255, 92, 77, .1);
+      border-color: rgba(255, 92, 77, .25);
+      color: var(--c1);
+    }
+
+    .chip.purple {
+      background: rgba(123, 63, 228, .12);
+      border-color: rgba(123, 63, 228, .3);
+      color: var(--c3);
+    }
+
+    /* ══════════════════════════════════════════
+   SLIDE 01 — CAPA
+══════════════════════════════════════════ */
+    #s0 {
+      background: var(--bg);
+    }
+
+    #s0 .inner {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover-glow {
+      position: absolute;
+      top: -200px;
+      right: -200px;
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(123, 63, 228, .18) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .cover-glow2 {
+      position: absolute;
+      bottom: -150px;
+      left: -100px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(255, 92, 77, .1) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .cover-eyebrow {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      /* Aumentado de 11px */
+      font-weight: 700;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    .cover-h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(44px, 5vw, 78px);
+      /* Ligeiramente maior */
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -.02em;
+      margin-bottom: 28px;
+    }
+
+    .cover-sub {
+      font-size: 19px;
+      /* Aumentado de 17px */
+      color: var(--muted);
+      font-weight: 300;
+      max-width: 720px;
+      /* Aumentado de 560px para melhor distribuição horizontal */
+      line-height: 1.7;
+      margin-bottom: 48px;
+    }
+
+    .cover-cards {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .cover-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 22px 28px;
+      /* Aumentado */
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .cc-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px;
+      /* Aumentado de 28px */
+      font-weight: 800;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .cc-label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Aumentado de 12px */
+    .cover-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 3px;
+      background: var(--grad);
+    }
+
+    /* ══════════════════════════════════════════
+   VISÃO GERAL
+══════════════════════════════════════════ */
+    .overview-intro {
+      font-size: 19px;
+      /* Aumentado de 17px */
+      color: rgba(255, 255, 255, .75);
+      line-height: 1.75;
+      max-width: 1100px;
+      /* Expandido para aproveitar a largura */
+      margin-bottom: 40px;
+    }
+
+    .steps-flow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      /* Espaço aumentado para não sufocar */
+    }
+
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 32px 28px;
+      /* Aumentado */
+      position: relative;
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+
+    .step-card:hover {
+      border-color: rgba(214, 62, 170, .3);
+    }
+
+    .step-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--grad);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+
+    .step-card:hover::before {
+      opacity: 1;
+    }
+
+    .step-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      /* Aumentado */
+      font-weight: 700;
+      letter-spacing: .15em;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+
+    .step-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      /* Aumentado de 15px */
+      font-weight: 700;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .step-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* Aumentado de 12px */
+
+    /* ══════════════════════════════════════════
+   DOC SLIDES (etapas)
+══════════════════════════════════════════ */
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 1.1fr 1.3fr;
+      /* Ajustado para melhor proporção em telas largas */
+      gap: 80px;
+      /* Aumentado de 64px para dar respiro lateral */
+      align-items: center;
+    }
+
+    .doc-left {}
+
+    .doc-step-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 110px;
+      /* Aumentado */
+      font-weight: 800;
+      line-height: 1;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      opacity: .25;
+      margin-bottom: -15px;
+    }
+
+    .doc-eyebrow {
+      font-size: 12px;
+      /* Aumentado de 10px */
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .doc-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(32px, 3.5vw, 52px);
+      /* Aumentado */
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -.02em;
+      margin-bottom: 24px;
+    }
+
+    .doc-body {
+      font-size: 16.5px;
+      /* Aumentado de 15px */
+      color: rgba(255, 255, 255, .7);
+      line-height: 1.75;
+      margin-bottom: 32px;
+    }
+
+    .doc-right {}
+
+    .doc-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 36px;
+      /* Aumentado de 32px */
+      margin-bottom: 16px;
+    }
+
+    .doc-box-label {
+      font-size: 11px;
+      /* Aumentado de 10px */
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .doc-items {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Maior espaçamento */
+    .doc-items li {
+      font-size: 14.5px;
+      /* Aumentado de 13px */
+      color: rgba(255, 255, 255, .8);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      line-height: 1.55;
+    }
+
+    .doc-items li span.arr {
+      color: var(--c2);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .doc-output {
+      background: linear-gradient(135deg, rgba(255, 92, 77, .08), rgba(123, 63, 228, .08));
+      border: 1px solid rgba(214, 62, 170, .2);
+      padding: 22px 28px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .doc-output-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .doc-output-text {
+      font-size: 14.5px;
+      color: rgba(255, 255, 255, .75);
+      line-height: 1.6;
+    }
+
+    /* Aumentado de 13px */
+    .doc-output-text strong {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* How slide */
+    .how-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--c2);
+      /* Linha levemente mais espessa */
+      padding: 24px 28px;
+      margin-bottom: 12px;
+    }
+
+    .how-box.c1 {
+      border-left-color: var(--c1);
+    }
+
+    .how-box.c3 {
+      border-left-color: var(--c3);
+    }
+
+    .how-box.cg {
+      border-left-color: #34d399;
+    }
+
+    .how-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .how-content {
+      font-size: 15px;
+      color: rgba(255, 255, 255, .8);
+      line-height: 1.65;
+    }
+
+    /* Aumentado de 14px */
+
+    /* ══════════════════════════════════════════
+   CRONOGRAMA
+══════════════════════════════════════════ */
+    .crono-intro {
+      font-size: 17px;
+      color: rgba(255, 255, 255, .65);
+      max-width: 920px;
+      line-height: 1.7;
+      margin-bottom: 40px;
+    }
+
+    .crono-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      /* Aumentado para melhor distribuição */
+      margin-bottom: 32px;
+    }
+
+    .crono-col {
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+
+    .crono-head {
+      padding: 20px 22px;
+      border-bottom: 1px solid var(--border);
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+    }
+
+    .crono-head .week-label {
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .crono-head .week-name {
+      font-size: 15px;
+    }
+
+    /* Aumentado de 13px */
+    .crono-body {
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Maior espaçamento */
+    .crono-item {
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 12px 14px;
+      font-size: 13.5px;
+      /* Aumentado de 12px */
+      line-height: 1.5;
+    }
+
+    .crono-item .ci-tag {
+      font-size: 10px;
+      /* Aumentado de 9px */
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .ci-tag.meet {
+      color: var(--c2);
+    }
+
+    .ci-tag.doc {
+      color: var(--c3);
+    }
+
+    .ci-tag.work {
+      color: var(--c1);
+    }
+
+    .ci-tag.pres {
+      color: #34d399;
+    }
+
+    .mtg-legend {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .leg-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13.5px;
+      color: var(--muted);
+    }
+
+    /* Aumentado */
+    .leg-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════════════════
+   REUNIÕES
+══════════════════════════════════════════ */
+    .mtg-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    /* Mais espaçamento lateral */
+    .mtg-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 28px;
+      /* Aumentado de 24px */
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mtg-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      /* Aumentado de 2px */
+    }
+
+    .mtg-card.kick::after {
+      background: var(--grad);
+    }
+
+    .mtg-card.brand::after {
+      background: var(--c3);
+    }
+
+    .mtg-card.brief::after {
+      background: var(--c2);
+    }
+
+    .mtg-card.camp::after {
+      background: var(--c1);
+    }
+
+    .mtg-type {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .mtg-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    /* Aumentado */
+    .mtg-when {
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
+    .mtg-when span {
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      font-size: 12.5px;
+      /* Aumentado de 11px */
+      font-weight: 500;
+    }
+
+    .mtg-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .mtg-list li {
+      font-size: 13.5px;
+      color: rgba(255, 255, 255, .65);
+      display: flex;
+      gap: 10px;
+      line-height: 1.5;
+    }
+
+    /* Aumentado */
+    .mtg-list li::before {
+      content: '→';
+      color: var(--c2);
+      flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════════════════
+   COMPROMISSOS
+══════════════════════════════════════════ */
+    .commit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .commit-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 32px;
+      /* Aumentado de 28px */
+    }
+
+    .commit-icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+
+    .commit-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 17px;
+      /* Aumentado de 15px */
+      margin-bottom: 12px;
+    }
+
+    .commit-body {
+      font-size: 14.5px;
+      color: rgba(255, 255, 255, .65);
+      line-height: 1.65;
+    }
+
+    /* Aumentado de 13px */
+
+    /* ══════════════════════════════════════════
+   FINAL
+══════════════════════════════════════════ */
+    .final-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 100%;
+      padding: 60px;
+    }
+
+    .final-h {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(40px, 5.5vw, 78px);
+      font-weight: 800;
+      letter-spacing: -.025em;
+      line-height: 1.1;
+      margin-bottom: 24px;
+    }
+
+    .final-sub {
+      font-size: 20px;
+      /* Aumentado de 18px */
+      color: rgba(255, 255, 255, .55);
+      max-width: 580px;
+      line-height: 1.7;
+      margin-bottom: 48px;
+    }
+
+    .final-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--grad);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      /* Aumentado de 13px */
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 18px 40px;
+      /* Aumentado */
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: opacity .2s;
+    }
+
+    .final-cta:hover {
+      opacity: .85;
+    }
+
+    .final-logo {
+      margin-top: 48px;
+      opacity: .4;
+    }
+
+    .final-logo img {
+      height: 32px;
+    }
+
+    /* ── SECTION HEADER (shared) ── */
+    .sec-header {
+      margin-bottom: 32px;
+    }
+
+    .sec-eyebrow {
+      font-size: 11px;
+      /* Aumentado de 10px */
+      font-weight: 700;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sec-eyebrow::before {
+      content: '';
+      width: 32px;
+      height: 1px;
+      background: var(--c2);
+    }
+
+    .sec-h {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(28px, 3.5vw, 46px);
+      font-weight: 800;
+      letter-spacing: -.02em;
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:980px) {
+      .inner {
+        padding: 40px 24px;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .doc-step-num {
+        font-size: 80px;
+      }
+
+      .steps-flow {
+        grid-template-columns: 1fr;
+      }
+
+      .crono-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .mtg-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .commit-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── FADE IN ── */
+    @keyframes sIn {
+      from {
+        opacity: 0;
+        transform: translateY(22px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .slide.active .inner>* {
+      animation: sIn .45s ease both;
+    }
+
+    .slide.active .inner>*:nth-child(1) {
+      animation-delay: .05s
+    }
+
+    .slide.active .inner>*:nth-child(2) {
+      animation-delay: .12s
+    }
+
+    .slide.active .inner>*:nth-child(3) {
+      animation-delay: .19s
+    }
+
+    .slide.active .inner>*:nth-child(4) {
+      animation-delay: .26s
+    }
+
+    .slide.active .inner>*:nth-child(5) {
+      animation-delay: .33s
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="deck">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div class="tb-logo">
+        <img
+          src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png"
+          alt="Nonna" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <span class="tb-logo-fallback" style="display:none">nonna</span>
+      </div>
+      <div class="tb-center" id="dots"></div>
+      <div class="tb-right">
+        <span class="slide-counter" id="counter">1 / 12</span>
+      </div>
+    </div>
+
+    <!-- SLIDES -->
+    <div class="slides-wrap">
+      <div class="slides-track" id="track">
+
+        <!-- ─── SLIDE 0: CAPA ─── -->
+        <div class="slide active" id="s0">
+          <div class="inner">
+            <div class="cover-glow"></div>
+            <div class="cover-glow2"></div>
+            <div class="cover-eyebrow">Nonna Agência Digital · Apresentação de Metodologia</div>
+            <h1 class="cover-h1">
+              Como vamos<br>
+              <span class="g">construir a sua<br>comunicação</span>
+            </h1>
+            <p class="cover-sub">Uma metodologia estruturada em 6 etapas que integra profundidade estratégica,
+              planejamento criativo e a precisão técnica do ambiente digital.</p>
+            <div class="cover-cards">
+              <div class="cover-card">
+                <div class="cc-num">06</div>
+                <div class="cc-label">Etapas estruturadas</div>
+              </div>
+              <div class="cover-card">
+                <div class="cc-num">06</div>
+                <div class="cc-label">Documentos entregues</div>
+              </div>
+              <div class="cover-card">
+                <div class="cc-num">04</div>
+                <div class="cc-label">Reuniões de alinhamento</div>
+              </div>
+              <div class="cover-card">
+                <div class="cc-num">30</div>
+                <div class="cc-label">Dias para a base estratégica</div>
+              </div>
+            </div>
+            <div class="cover-line"></div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 1: VISÃO GERAL ─── -->
+        <div class="slide" id="s1">
+          <div class="inner top">
+            <div class="sec-header">
+              <div class="sec-eyebrow">Visão Geral</div>
+              <div class="sec-h">Um processo que começa<br>pelo <span class="g">porquê</span>, não pelo o quê</div>
+            </div>
+            <p class="overview-intro">Nosso processo de trabalho é fundamentado na clareza estratégica. Identificamos a
+              identidade da sua marca, os objetivos de comunicação e o comportamento real do seu público-alvo. Essa base
+              sólida assegura que cada peça, anúncio e campanha subsequente possua alta relevância comercial e precisão
+              técnica.</p>
+            <div class="steps-flow">
+              <div class="step-card">
+                <div class="step-num">ETAPA 01</div>
+                <div class="step-name">Diagnóstico & Imersão</div>
+                <div class="step-desc">Entendemos a fundo a estrutura do seu negócio, as tendências do mercado e a sua
+                  comunicação atual.</div>
+              </div>
+              <div class="step-card">
+                <div class="step-num">ETAPA 02</div>
+                <div class="step-name">Brand Platform</div>
+                <div class="step-desc">Desenvolvemos o documento-base que consolida a identidade verbal, os valores e o
+                  posicionamento da marca.</div>
+              </div>
+              <div class="step-card">
+                <div class="step-num">ETAPA 03</div>
+                <div class="step-name">Briefing Estratégico</div>
+                <div class="step-desc">Mapeamos os desafios comerciais prioritários e definimos os objetivos reais de
+                  comunicação.</div>
+              </div>
+              <div class="step-card">
+                <div class="step-num">ETAPA 04</div>
+                <div class="step-name">Conceito de Campanha</div>
+                <div class="step-desc">Estruturamos o conceito criativo norteador para assegurar a consistência em todas
+                  as peças e canais.</div>
+              </div>
+              <div class="step-card">
+                <div class="step-num">ETAPA 05</div>
+                <div class="step-name">Plano de Mídia</div>
+                <div class="step-desc">Planejamos os canais de captação e a distribuição técnica de investimento focada
+                  em performance.</div>
+              </div>
+              <div class="step-card">
+                <div class="step-num">ETAPA 06</div>
+                <div class="step-name">Manual da Campanha</div>
+                <div class="step-desc">Elaboramos o guia editorial que alinha a linguagem visual e textual da marca em
+                  cada ponto de contato.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 2: ETAPA 01 ─── -->
+        <div class="slide" id="s2">
+          <div class="inner">
+            <div class="doc-layout">
+              <div class="doc-left">
+                <div class="doc-step-num">01</div>
+                <div class="doc-eyebrow">Primeira etapa</div>
+                <h2 class="doc-title">Diagnóstico<br>& <span class="g">Imersão</span></h2>
+                <p class="doc-body">Analisamos profundamente o posicionamento atual da sua marca e o contexto
+                  competitivo do mercado. Este diagnóstico inicial orienta todo o desenvolvimento criativo subsequente,
+                  direcionando os investimentos para camais de alto potencial.</p>
+                <div class="chip orange">Ponto de partida obrigatório</div>
+              </div>
+              <div class="doc-right">
+                <div class="doc-box">
+                  <div class="doc-box-label">O que fazemos nesta etapa</div>
+                  <ul class="doc-items">
+                    <li><span class="arr">→</span>Entrevista estruturada com a liderança do negócio e principais
+                      stakeholders</li>
+                    <li><span class="arr">→</span>Auditoria detalhada de todos os canais de comunicação ativos</li>
+                    <li><span class="arr">→</span>Estudo de concorrência direta — posicionamento, pontos fortes e
+                      lacunas comerciais</li>
+                    <li><span class="arr">→</span>Definição do perfil comportamental da persona ideal da marca</li>
+                    <li><span class="arr">→</span>Identificação do insight de mercado capaz de diferenciar o seu negócio
+                    </li>
+                  </ul>
+                </div>
+                <div class="doc-output">
+                  <div class="doc-output-icon">📋</div>
+                  <div class="doc-output-text"><strong>Impacto estratégico:</strong> Este mapeamento evita erros de
+                    posicionamento e fornece os insumos indispensáveis para que os próximos passos do planejamento sejam
+                    de alta eficácia.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 3: ETAPA 02 ─── -->
+        <div class="slide" id="s3">
+          <div class="inner">
+            <div class="doc-layout">
+              <div class="doc-left">
+                <div class="doc-step-num">02</div>
+                <div class="doc-eyebrow">Segunda etapa</div>
+                <h2 class="doc-title">Brand<br><span class="g">Platform</span></h2>
+                <p class="doc-body">Desenvolvemos a estrutura de diretrizes que rege a identidade da marca. Este
+                  documento assegura a unidade visual e verbal do negócio, permitindo que todas as futuras ativações
+                  transmitam uma mensagem única, forte e coerente ao mercado.</p>
+                <div class="chip purple">Estrutura permanente de marca</div>
+              </div>
+              <div class="doc-right">
+                <div class="doc-box">
+                  <div class="doc-box-label">O que compõe a Brand Platform</div>
+                  <ul class="doc-items">
+                    <li><span class="arr">→</span><strong style="color:#fff">Propósito</strong> — os valores e objetivos
+                      de longo prazo da empresa</li>
+                    <li><span class="arr">→</span><strong style="color:#fff">Posicionamento</strong> — a proposta de
+                      valor única na mente do consumidor</li>
+                    <li><span class="arr">→</span><strong style="color:#fff">Promessa Central</strong> — o compromisso e
+                      diferencial técnico oferecido ao público</li>
+                    <li><span class="arr">→</span><strong style="color:#fff">Atributos de Personalidade</strong> — os
+                      traços que dão identidade à marca</li>
+                    <li><span class="arr">→</span><strong style="color:#fff">Tom de Voz</strong> — regras de linguagem e
+                      expressão da comunicação</li>
+                    <li><span class="arr">→</span><strong style="color:#fff">Território Visual</strong> — direcionamento
+                      conceitual de design, fotografia e estética</li>
+                  </ul>
+                </div>
+                <div class="doc-output">
+                  <div class="doc-output-icon">🏛</div>
+                  <div class="doc-output-text"><strong>Impacto estratégico:</strong> Consolida a identidade da marca,
+                    garantindo que qualquer futura produção (da agência ou da própria empresa) mantenha a mesma força
+                    conceitual.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 4: ETAPA 03 ─── -->
+        <div class="slide" id="s4">
+          <div class="inner">
+            <div class="doc-layout">
+              <div class="doc-left">
+                <div class="doc-step-num">03</div>
+                <div class="doc-eyebrow">Terceira etapa</div>
+                <h2 class="doc-title">Briefing<br><span class="g">Estratégico</span></h2>
+                <p class="doc-body">O briefing estratégico define com precisão técnica os desafios centrais de mercado
+                  do seu negócio e estabelece objetivos comerciais mensuráveis. Ele atua como o alinhamento central do
+                  projeto criativo, direcionando o foco do time para resultados concretos.</p>
+                <div class="chip neon">Definição do foco comercial</div>
+              </div>
+              <div class="doc-right">
+                <div class="doc-box">
+                  <div class="doc-box-label">O que o Briefing Estratégico define</div>
+                  <ul class="doc-items">
+                    <li><span class="arr">→</span>O momento mercadológico do produto, serviço ou marca</li>
+                    <li><span class="arr">→</span>O objetivo de negócio prioritário da campanha (ex: conversão,
+                      posicionamento)</li>
+                    <li><span class="arr">→</span>A percepção de valor que queremos construir junto ao cliente</li>
+                    <li><span class="arr">→</span>As ações imediatas que esperamos do público-alvo</li>
+                    <li><span class="arr">→</span>KPIs de comunicação e indicadores de performance claros</li>
+                    <li><span class="arr">→</span>Diretrizes operacionais e restrições específicas</li>
+                  </ul>
+                </div>
+                <div class="how-box c1">
+                  <div class="how-label">Impacto na Qualidade da Campanha</div>
+                  <div class="how-content">O alinhamento claro dos objetivos de negócio protege a integridade das
+                    campanhas e estabelece métricas de sucesso transparentes, otimizando o fluxo de aprovação e execução
+                    de todas as peças.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 5: ETAPA 04 ─── -->
+        <div class="slide" id="s5">
+          <div class="inner">
+            <div class="doc-layout">
+              <div class="doc-left">
+                <div class="doc-step-num">04</div>
+                <div class="doc-eyebrow">Quarta etapa</div>
+                <h2 class="doc-title">Conceito de<br><span class="g">Campanha</span></h2>
+                <p class="doc-body">Desenvolvemos um conceito criativo central que unifica toda a comunicação visual e
+                  textual do período. Esta unidade temática potencializa a lembrança e o reconhecimento da sua marca
+                  pelo consumidor final através de múltiplos pontos de contato.</p>
+                <div class="chip orange">Unidade conceitual e visual</div>
+              </div>
+              <div class="doc-right">
+                <div class="doc-box">
+                  <div class="doc-box-label">O que compõe o Conceito de Campanha</div>
+                  <ul class="doc-items">
+                    <li><span class="arr">→</span><strong style="color:#fff">Insight de Campanha</strong> — a grande
+                      verdade do consumidor que inspirou a ideia</li>
+                    <li><span class="arr">→</span><strong style="color:#fff">O Conceito Criativo</strong> — o tema
+                      unificador, slogan e linguagem da ação</li>
+                    <li><span class="arr">→</span><strong style="color:#fff">Racional Conceitual</strong> — a
+                      justificativa do porquê o caminho escolhido gera resultados</li>
+                    <li><span class="arr">→</span><strong style="color:#fff">Planejamento de Fases</strong> — a evolução
+                      cronológica do tema no período</li>
+                    <li><span class="arr">→</span><strong style="color:#fff">Protótipos de Copy e Direção de
+                        Arte</strong> — referências visuais reais da campanha</li>
+                  </ul>
+                </div>
+                <div class="doc-output">
+                  <div class="doc-output-icon">💡</div>
+                  <div class="doc-output-text"><strong>Impacto na Qualidade:</strong> Garante que o consumidor receba
+                    uma mensagem unificada em todas as mídias, multiplicando a fixação da mensagem e a eficácia das
+                    conversões.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 6: ETAPA 05 ─── -->
+        <div class="slide" id="s6">
+          <div class="inner">
+            <div class="doc-layout">
+              <div class="doc-left">
+                <div class="doc-step-num">05</div>
+                <div class="doc-eyebrow">Quinta etapa</div>
+                <h2 class="doc-title">Plano de<br><span class="g">Mídia</span></h2>
+                <p class="doc-body">Estruturamos a distribuição de mídia paga de forma totalmente integrada ao
+                  posicionamento e ao conceito da marca. Cada anúncio é desenhado com uma função clara no funil de
+                  conversão, otimizando o custo por aquisição de clientes.</p>
+                <div class="chip purple">Distribuição qualificada de recursos</div>
+              </div>
+              <div class="doc-right">
+                <div class="doc-box">
+                  <div class="doc-box-label">O que o Plano de Mídia define</div>
+                  <ul class="doc-items">
+                    <li><span class="arr">→</span>Arquitetura de Funil — atração, consideração e conversão integradas
+                    </li>
+                    <li><span class="arr">→</span>Mix de Canais — seleção precisa de plataformas de tráfego pago</li>
+                    <li><span class="arr">→</span>Segmentação Avançada — públicos qualificados com base na persona</li>
+                    <li><span class="arr">→</span>Alocação Orçamentária — distribuição inteligente e dinâmica de verbas
+                    </li>
+                    <li><span class="arr">→</span>KPIs de Performance — métricas de CTR, CPA, ROAS e conversão</li>
+                  </ul>
+                </div>
+                <div class="how-box cg">
+                  <div class="how-label">Impacto na Qualidade da Campanha</div>
+                  <div class="how-content">A distribuição planejada de mídia conecta-se de forma direta com o
+                    posicionamento criativo, gerando anúncios que além de captar tráfego qualificado, sedimentam a
+                    autoridade da marca no ambiente digital.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 7: ETAPA 06 ─── -->
+        <div class="slide" id="s7">
+          <div class="inner">
+            <div class="doc-layout">
+              <div class="doc-left">
+                <div class="doc-step-num">06</div>
+                <div class="doc-eyebrow">Sexta etapa</div>
+                <h2 class="doc-title">Manual da<br><span class="g">Campanha</span></h2>
+                <p class="doc-body">O Manual da Campanha formaliza as regras de sustentação de conteúdo e os
+                  desdobramentos de comunicação. Ele serve como o guia operacional para garantir que todas as
+                  publicações e interações permaneçam fiéis à identidade estabelecida e ao conceito criativo.</p>
+                <div class="chip neon">Consistência permanente</div>
+              </div>
+              <div class="doc-right">
+                <div class="doc-box">
+                  <div class="doc-box-label">O que o Manual da Campanha entrega</div>
+                  <ul class="doc-items">
+                    <li><span class="arr">→</span><strong style="color:#fff">Pilares de Conteúdo</strong> — os temas
+                      estratégicos que serão abordados</li>
+                    <li><span class="arr">→</span><strong style="color:#fff">Calendário Editorial</strong> — estrutura,
+                      frequência e dinâmicas de publicação</li>
+                    <li><span class="arr">→</span><strong style="color:#fff">Diretrizes de Linguagem</strong> — termos
+                      recomendados, voz e redação da campanha</li>
+                    <li><span class="arr">→</span><strong style="color:#fff">Guia Estético da Campanha</strong> —
+                      padrões gráficos, paleta de cores e design das peças</li>
+                    <li><span class="arr">→</span><strong style="color:#fff">Limites Editoriais</strong> — temas que a
+                      marca deve apoiar e termos a evitar</li>
+                  </ul>
+                </div>
+                <div class="doc-output">
+                  <div class="doc-output-icon">📅</div>
+                  <div class="doc-output-text"><strong>Impacto na Qualidade:</strong> Elimina ruídos ou improvisos na
+                    comunicação e assegura um padrão estético e textual rigoroso ao longo de toda a duração da campanha.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 8: CRONOGRAMA ─── -->
+        <div class="slide" id="s8">
+          <div class="inner top">
+            <div class="sec-header">
+              <div class="sec-eyebrow">Cronograma de Trabalho</div>
+              <div class="sec-h">O que acontece em<br><span class="g">cada semana</span></div>
+            </div>
+            <p class="crono-intro">As 4 primeiras semanas são o período de planejamento — ao final, você terá todos os 6
+              documentos estratégicos aprovados e prontos para guiar a execução das peças e anúncios de forma
+              coordenada.</p>
+            <div class="crono-grid">
+              <div class="crono-col">
+                <div class="crono-head">
+                  <div class="week-label">Semana 01</div>
+                  <div class="week-name">Imersão</div>
+                </div>
+                <div class="crono-body">
+                  <div class="crono-item">
+                    <div class="ci-tag meet">Reunião</div>
+                    Kickoff — apresentações, alinhamento de expectativas e cronograma
+                  </div>
+                  <div class="crono-item">
+                    <div class="ci-tag work">Trabalho</div>
+                    Entrevista de imersão de negócios (1h30) — Equipe Nonna com gestor
+                  </div>
+                  <div class="crono-item">
+                    <div class="ci-tag work">Trabalho</div>
+                    Auditoria de comunicação atual e análise profunda de mercado
+                  </div>
+                </div>
+              </div>
+              <div class="crono-col">
+                <div class="crono-head">
+                  <div class="week-label">Semana 02</div>
+                  <div class="week-name">Estratégia de Marca</div>
+                </div>
+                <div class="crono-body">
+                  <div class="crono-item">
+                    <div class="ci-tag work">Trabalho</div>
+                    Elaboração do Diagnóstico e desenvolvimento da Brand Platform
+                  </div>
+                  <div class="crono-item">
+                    <div class="ci-tag meet">Reunião</div>
+                    Apresentação e validação da Brand Platform com o cliente
+                  </div>
+                  <div class="crono-item">
+                    <div class="ci-tag doc">Entregável</div>
+                    Documentos de Diagnóstico e Brand Platform enviados para aprovação
+                  </div>
+                </div>
+              </div>
+              <div class="crono-col">
+                <div class="crono-head">
+                  <div class="week-label">Semana 03</div>
+                  <div class="week-name">Briefing & Conceito</div>
+                </div>
+                <div class="crono-body">
+                  <div class="crono-item">
+                    <div class="ci-tag work">Trabalho</div>
+                    Elaboração do Briefing Estratégico e do Conceito de Campanha
+                  </div>
+                  <div class="crono-item">
+                    <div class="ci-tag meet">Reunião</div>
+                    Apresentação do Conceito Criativo e validação de protótipos
+                  </div>
+                  <div class="crono-item">
+                    <div class="ci-tag doc">Entregável</div>
+                    Briefing Estratégico e Conceito Criativo finalizados para aprovação
+                  </div>
+                </div>
+              </div>
+              <div class="crono-col">
+                <div class="crono-head">
+                  <div class="week-label">Semana 04</div>
+                  <div class="week-name">Ativação Planejada</div>
+                </div>
+                <div class="crono-body">
+                  <div class="crono-item">
+                    <div class="ci-tag work">Trabalho</div>
+                    Elaboração do Plano de Mídia e estruturação do Manual da Campanha
+                  </div>
+                  <div class="crono-item">
+                    <div class="ci-tag meet">Reunião</div>
+                    Alinhamento Operacional Final e apresentação dos direcionadores operacionais
+                  </div>
+                  <div class="crono-item">
+                    <div class="ci-tag pres">Início</div>
+                    Plano de Mídia e Manual de Campanha aprovados — início da veiculação
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mtg-legend">
+              <div class="leg-item">
+                <div class="leg-dot" style="background:var(--c2)"></div>Reunião com cliente
+              </div>
+              <div class="leg-item">
+                <div class="leg-dot" style="background:var(--c3)"></div>Entregável de documento
+              </div>
+              <div class="leg-item">
+                <div class="leg-dot" style="background:var(--c1)"></div>Planejamento interno Nonna
+              </div>
+              <div class="leg-item">
+                <div class="leg-dot" style="background:#34d399"></div>Início de veiculação
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 9: REUNIÕES ─── -->
+        <div class="slide" id="s9">
+          <div class="inner top">
+            <div class="sec-header">
+              <div class="sec-eyebrow">Reuniões de Alinhamento</div>
+              <div class="sec-h">Quatro encontros,<br><span class="g">cada um com propósito</span></div>
+            </div>
+            <div class="mtg-grid">
+              <div class="mtg-card kick">
+                <div class="mtg-type">Reunião 01</div>
+                <div class="mtg-name">Kickoff — Alinhamento e Imersão</div>
+                <div class="mtg-when"><span>Semana 1 · 1h30 · Presencial ou Online</span></div>
+                <ul class="mtg-list">
+                  <li>Apresentação da equipe multidisciplinar da Nonna</li>
+                  <li>Alineamento de metas, cronogramas de entrega e de aprovações</li>
+                  <li>Integração das dinâmicas e canais de contato</li>
+                  <li>Início do processo de imersão de negócios com o cliente</li>
+                </ul>
+              </div>
+              <div class="mtg-card brand">
+                <div class="mtg-type">Reunião 02</div>
+                <div class="mtg-name">Apresentação da Brand Platform</div>
+                <div class="mtg-when"><span>Semana 2 · 1h · Videoconferência</span></div>
+                <ul class="mtg-list">
+                  <li>Apresentação formal do Diagnóstico e dos insights coletados</li>
+                  <li>Explanação detalhada da estrutura da Brand Platform</li>
+                  <li>Alinhamento do posicionamento da marca e validação conceitual</li>
+                  <li>Discussão, ajustes e aprovação das diretrizes</li>
+                </ul>
+              </div>
+              <div class="mtg-card brief">
+                <div class="mtg-type">Reunião 03</div>
+                <div class="mtg-name">Apresentação do Conceito Criativo e Briefing</div>
+                <div class="mtg-when"><span>Semana 3 · 1h · Videoconferência</span></div>
+                <ul class="mtg-list">
+                  <li>Apresentação do Briefing Estratégico — o desafio comercial mapeado</li>
+                  <li>Apresentação do Conceito de Campanha, slogans e caminhos de linguagem</li>
+                  <li>Análise de referências visuais e textuais para a aprovação</li>
+                  <li>Definição do conceito central antes da produção de qualquer peça</li>
+                </ul>
+              </div>
+              <div class="mtg-card camp">
+                <div class="mtg-type">Reunião 04</div>
+                <div class="mtg-name">Alinhamento Operacional Final</div>
+                <div class="mtg-when"><span>Semana 4 · 1h30 · Videoconferência</span></div>
+                <ul class="mtg-list">
+                  <li>Apresentação do Plano de Mídia — canais, verba e metas de conversão</li>
+                  <li>Walkthrough do Manual da Campanha (editorial e design de sustentação)</li>
+                  <li>Definição das sprints, prazos operacionais e fluxo de entregas</li>
+                  <li>Assinatura de aprovação do projeto estrutural estratégico</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 10: NOSSO COMPROMISSO ─── -->
+        <div class="slide" id="s10">
+          <div class="inner top">
+            <div class="sec-header">
+              <div class="sec-eyebrow">Nosso Compromisso</div>
+              <div class="sec-h">O que você pode<br><span class="g">esperar da Nonna</span></div>
+            </div>
+            <div class="commit-grid">
+              <div class="commit-card">
+                <div class="commit-icon">🎯</div>
+                <div class="commit-title">Estratégia aplicada à execução</div>
+                <div class="commit-body">Toda peça criativa, anúncio ou publicação existirá com um objetivo estratégico
+                  claro, mapeado nos estudos prévios e focado em alcançar resultados consistentes.</div>
+              </div>
+              <div class="commit-card">
+                <div class="commit-icon">🔍</div>
+                <div class="commit-title">Transparência operacional</div>
+                <div class="commit-body">Você possui total visibilidade sobre os processos. Todas as metodologias e
+                  documentos são entregues de forma acessível e transparente à sua empresa.</div>
+              </div>
+              <div class="commit-card">
+                <div class="commit-icon">📐</div>
+                <div class="commit-title">Unidade conceitual de ponta a ponta</div>
+                <div class="commit-body">A Brand Platform e o Manual da Campanha garantem que cada ponto de contato
+                  expresse o mesmo padrão verbal, ético e de design do seu negócio.</div>
+              </div>
+              <div class="commit-card">
+                <div class="commit-icon">📈</div>
+                <div class="commit-title">Gestão e análise de performance</div>
+                <div class="commit-body">Com metas de conversão e alcance definidas no Briefing e no Plano de Mídia,
+                  todas as métricas são avaliadas rigorosamente, otimizando investimentos em tempo real.</div>
+              </div>
+              <div class="commit-card">
+                <div class="commit-icon">🤝</div>
+                <div class="commit-title">Parceria de negócios ativa</div>
+                <div class="commit-body">Trabalhamos de forma consultiva e integrada, atuando como um facilitador
+                  estratégico da sua empresa para provocar novos horizontes de crescimento.</div>
+              </div>
+              <div class="commit-card">
+                <div class="commit-icon">⚡</div>
+                <div class="commit-title">Precisão técnica em ambiente digital</div>
+                <div class="commit-body">O cuidado analítico e a consistência visual são associados à rapidez exigida
+                  pelo marketing digital, garantindo dinamismo sem perda de profundidade de marca.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── SLIDE 11: FINAL ─── -->
+        <div class="slide" id="s11">
+          <div class="final-inner">
+            <div class="sec-eyebrow" style="justify-content:center;margin-bottom:24px;">Nonna Agência Digital · Próximos
+              passos</div>
+            <h2 class="final-h">Prontos para<br><span class="g">começar?</span></h2>
+            <p class="final-sub">Sua marca tem valor real. O que faremos juntos é estruturar uma comunicação à altura de
+              quem você é no mercado.</p>
+            <a class="final-cta" href="https://wa.me/554930902871" target="_blank">Falar com a Nonna →</a>
+            <div class="final-logo">
+              <img
+                src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png"
+                alt="Nonna" onerror="this.style.display='none'">
+            </div>
+            <div style="margin-top:32px;font-size:13px;color:rgba(255,255,255,.25);">nonnaagenciadigital.com.br · (49)
+              3090-2871 · Videira–SC</div>
+          </div>
+        </div>
+
+      </div><!-- /track -->
+    </div><!-- /wrap -->
+
+    <!-- BOTTOM NAV -->
+    <div class="botnav">
+      <button class="nav-arrow" id="prev" onclick="move(-1)" disabled>←</button>
+      <div class="nav-title" id="slide-title">Apresentação da Metodologia</div>
+      <button class="nav-arrow" id="next" onclick="move(1)">→</button>
+    </div>
+
+  </div><!-- /deck -->
+
+  <script>
+    const titles = [
+      'Apresentação da Metodologia',
+      'Visão Geral do Processo',
+      'Etapa 01 — Diagnóstico & Imersão',
+      'Etapa 02 — Brand Platform',
+      'Etapa 03 — Briefing Estratégico',
+      'Etapa 04 — Conceito de Campanha',
+      'Etapa 05 — Plano de Mídia',
+      'Etapa 06 — Manual da Campanha',
+      'Cronograma de 4 Semanas',
+      'Reuniões de Alinhamento',
+      'Nosso Compromisso',
+      'Próximos Passos'
+    ];
+
+    const TOTAL = 12;
+    let cur = 0;
+
+    const track = document.getElementById('track');
+    const counter = document.getElementById('counter');
+    const prevBtn = document.getElementById('prev');
+    const nextBtn = document.getElementById('next');
+    const stTitle = document.getElementById('slide-title');
+    const dotsWrap = document.getElementById('dots');
+
+    // Build dots
+    for (let i = 0; i < TOTAL; i++) {
+      const d = document.createElement('div');
+      d.className = 'tb-dot' + (i === 0 ? ' active' : '');
+      d.onclick = () => go(i);
+      dotsWrap.appendChild(d);
+    }
+
+    function go(n) {
+      document.querySelectorAll('.slide').forEach((s, i) => {
+        s.classList.toggle('active', i === n);
+        if (i === n) s.scrollTop = 0;
+      });
+      document.querySelectorAll('.tb-dot').forEach((d, i) => {
+        d.classList.toggle('active', i === n);
+      });
+      cur = n;
+      track.style.transform = `translateX(-${n * 100}vw)`;
+      counter.textContent = `${n + 1} / ${TOTAL}`;
+      stTitle.textContent = titles[n] || '';
+      prevBtn.disabled = (n === 0);
+      nextBtn.disabled = (n === TOTAL - 1);
+    }
+
+    function move(d) { go(Math.min(Math.max(cur + d, 0), TOTAL - 1)); }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') move(1);
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') move(-1);
+    });
+  </script>
+
+</body>
+
+</html>

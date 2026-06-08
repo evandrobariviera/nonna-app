@@ -1,0 +1,154 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
+
+class Client extends Model
+{
+    use HasUuids;
+
+    protected $connection = 'pgsql';
+
+    protected $fillable = [
+        'clickup_task_id',
+        'company_name',
+        'tax_id',
+        'website',
+        'segment',
+        'status',
+        'monthly_ad_budget',
+        'contracted_services',
+        // Empresa — contato
+        'contact_email',
+        'contact_phone',
+        'address',
+        'zip_code',
+        // Responsável
+        'responsible_name',
+        'responsible_birthdate',
+        'responsible_rg',
+        'responsible_cpf',
+        'responsible_address',
+        'responsible_marital_status',
+        // Cobrança
+        'payment_method',
+        'billing_day',
+        'billing_email',
+        'billing_whatsapp',
+        'billing_notes',
+        // Interno
+        'notes',
+        'registration_token',
+        'registration_completed_at',
+    ];
+
+    protected $casts = [
+        'contracted_services'       => 'array',
+        'registration_completed_at' => 'datetime',
+        'responsible_birthdate'     => 'date',
+        'billing_day'               => 'integer',
+    ];
+
+    public static array $statuses = [
+        'lead'     => ['label' => 'Lead',    'color' => 'muted'],
+        'active'   => ['label' => 'Ativo',   'color' => 'green'],
+        'inactive' => ['label' => 'Inativo', 'color' => 'red'],
+    ];
+
+    public static array $segments = [
+        'Clínica / Saúde',
+        'Educação',
+        'E-commerce',
+        'Imobiliário',
+        'Restaurante / Food',
+        'Varejo',
+        'Serviços B2B',
+        'Tecnologia',
+        'Beleza & Estética',
+        'Advocacia / Jurídico',
+        'Outro',
+    ];
+
+    public static array $services = [
+        'trafego'     => 'Tráfego Pago',
+        'social'      => 'Social Media',
+        'site'        => 'Site / Landing Page',
+        'seo'         => 'SEO',
+        'email'       => 'E-mail Marketing',
+        'automacao'   => 'Automação',
+        'consultoria' => 'Consultoria',
+    ];
+
+    public static array $paymentMethods = [
+        'pix'    => 'PIX',
+        'cartao' => 'Cartão',
+        'boleto' => 'Boleto',
+    ];
+
+    public static array $billingDays = [10, 15, 20];
+
+    public static array $maritalStatuses = [
+        'solteiro'      => 'Solteiro(a)',
+        'casado'        => 'Casado(a)',
+        'divorciado'    => 'Divorciado(a)',
+        'viuvo'         => 'Viúvo(a)',
+        'uniao_estavel' => 'União Estável',
+    ];
+
+    public function generateRegistrationToken(): string
+    {
+        $token = Str::random(48);
+        $this->update(['registration_token' => $token]);
+        return $token;
+    }
+
+    public function statusLabel(): string
+    {
+        return self::$statuses[$this->status]['label'] ?? $this->status;
+    }
+
+    public function statusColor(): string
+    {
+        return self::$statuses[$this->status]['color'] ?? 'muted';
+    }
+
+    public function isRegistrationComplete(): bool
+    {
+        return $this->registration_completed_at !== null;
+    }
+
+    // ── Relacionamentos CRM Pipeline ──
+
+    public function credentials(): HasMany
+    {
+        return $this->hasMany(ClientCredential::class);
+    }
+
+    public function onboarding(): HasOne
+    {
+        return $this->hasOne(ClientOnboarding::class);
+    }
+
+    public function contacts(): BelongsToMany
+    {
+        return $this->belongsToMany(Contact::class, 'client_contacts', 'client_id', 'contact_id')
+            ->withPivot(['role', 'is_primary'])
+            ->withTimestamps();
+    }
+
+    public function opportunities(): HasMany
+    {
+        return $this->hasMany(Opportunity::class);
+    }
+
+    public function primaryContact()
+    {
+        return $this->contacts()->wherePivot('is_primary', true)->first();
+    }
+}
