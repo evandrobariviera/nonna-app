@@ -41,7 +41,7 @@
 {{-- ══ OPERACIONAL ══ --}}
 <div class="nav-group-label" style="margin-top:8px">Operacional</div>
 
-<div x-data="{ open: {{ request()->is('operacional*') ? 'true' : 'false' }} }">
+<div x-data="{ open: {{ request()->routeIs('macroplans.*') || request()->routeIs('projects.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -54,14 +54,13 @@
         </svg>
     </button>
     <div x-show="open" x-transition style="display:none">
-        <a href="#" class="nav-sub-item">Planejamentos (Roadmaps)</a>
-        <a href="#" class="nav-sub-item">Projetos</a>
-        <a href="#" class="nav-sub-item">Backlog</a>
+        <a href="{{ route('projects.dashboard') }}" class="nav-sub-item {{ request()->routeIs('projects.dashboard') ? 'active' : '' }}">Projetos (Dashboard)</a>
+        <a href="{{ route('macroplans.index') }}" class="nav-sub-item {{ request()->routeIs('macroplans.*') && !request()->routeIs('projects.*') ? 'active' : '' }}">Planejamentos</a>
         <a href="#" class="nav-sub-item">Sprints</a>
     </div>
 </div>
 
-<div x-data="{ open: false }">
+<div x-data="{ open: {{ request()->routeIs('meetings.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -74,7 +73,7 @@
         </svg>
     </button>
     <div x-show="open" x-transition style="display:none">
-        <a href="#" class="nav-sub-item">Agenda (Reuniões)</a>
+        <a href="{{ route('meetings.index') }}" class="nav-sub-item {{ request()->routeIs('meetings.*') ? 'active' : '' }}">Agenda (Reuniões)</a>
         <a href="#" class="nav-sub-item">Tickets / Suporte</a>
         <a href="#" class="nav-sub-item">Onboarding</a>
         <a href="#" class="nav-sub-item">Offboarding</a>

@@ -499,30 +499,579 @@
         </div>
 
         {{-- TAB: CONTATOS --}}
-        <div x-show="tab === 'contatos'" x-cloak>
-            <div class="tab-placeholder">
-                <div class="tab-placeholder-icon">👥</div>
-                <p class="tab-placeholder-title">Contatos</p>
-                <p class="tab-placeholder-desc">Cadastro de pessoas físicas vinculadas a este cliente — decisores, gestores, financeiro. Em breve.</p>
+        <div x-show="tab === 'contatos'" x-cloak
+             x-data="{ mode: null, editId: null }">
+
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">
+                    Contatos Vinculados
+                    @if($client->contacts->count())
+                        <span class="ml-2 tab-count">{{ $client->contacts->count() }}</span>
+                    @endif
+                </h3>
+                <div class="flex gap-2">
+                    <button @click="mode = mode === 'link' ? null : 'link'"
+                            :style="mode === 'link' ? 'border-color:var(--purple); color:var(--purple)' : ''"
+                            class="px-3 py-1.5 text-xs font-bold font-mono uppercase tracking-widest transition-colors"
+                            style="border:1px solid var(--border2); color:var(--muted2)">
+                        Vincular Existente
+                    </button>
+                    <button @click="mode = mode === 'new' ? null : 'new'"
+                            :style="mode === 'new' ? '' : ''"
+                            class="px-3 py-1.5 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                            style="background:var(--purple)">
+                        + Novo Contato
+                    </button>
+                </div>
             </div>
+
+            {{-- FORM: Vincular contato existente --}}
+            <div x-show="mode === 'link'" x-cloak class="card p-5 mb-5">
+                <p class="text-xs font-mono uppercase tracking-widest mb-4" style="color:var(--muted)">Vincular Contato do CRM</p>
+                @if($availableContacts->isEmpty())
+                    <p class="text-sm" style="color:var(--muted)">
+                        Todos os contatos cadastrados já estão vinculados a este cliente,
+                        ou não há contatos no CRM ainda.
+                        <a href="{{ route('contacts.create') }}" style="color:var(--purple)" class="underline">Cadastrar novo contato</a>.
+                    </p>
+                @else
+                    <form method="POST" action="{{ route('clients.contacts.link', $client) }}" class="space-y-4">
+                        @csrf
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                                    Contato <span style="color:var(--orange)">*</span>
+                                </label>
+                                <select name="contact_id" required
+                                        class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                    <option value="">Selecione um contato...</option>
+                                    @foreach($availableContacts as $c)
+                                        <option value="{{ $c->id }}">
+                                            {{ $c->name }}
+                                            @if($c->job_title) · {{ $c->job_title }} @endif
+                                            @if($c->company_name && $c->company_name !== $client->company_name)
+                                                ({{ $c->company_name }})
+                                            @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                                    Papel neste cliente
+                                </label>
+                                <select name="role"
+                                        class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                    <option value="">Sem papel definido</option>
+                                    @foreach(\App\Http\Controllers\ClientContactController::$roles as $key => $label)
+                                        <option value="{{ $key }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="is_primary" value="1"
+                                   class="w-4 h-4 accent-[var(--purple)]">
+                            <span class="text-sm" style="color:var(--muted2)">Contato principal deste cliente</span>
+                        </label>
+                        <div class="flex gap-3">
+                            <button type="submit"
+                                    class="px-5 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                                    style="background:var(--purple)">
+                                Vincular
+                            </button>
+                            <button type="button" @click="mode = null"
+                                    class="px-4 py-2 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] transition-colors">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                @endif
+            </div>
+
+            {{-- FORM: Criar novo contato e vincular --}}
+            <div x-show="mode === 'new'" x-cloak class="card p-5 mb-5">
+                <p class="text-xs font-mono uppercase tracking-widest mb-4" style="color:var(--muted)">Novo Contato — Já vinculado a este cliente</p>
+                <form method="POST" action="{{ route('clients.contacts.store-and-link', $client) }}" class="space-y-4">
+                    @csrf
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                                Nome Completo <span style="color:var(--orange)">*</span>
+                            </label>
+                            <input type="text" name="name" required placeholder="Nome do contato"
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                                Cargo / Função
+                            </label>
+                            <input type="text" name="job_title" placeholder="Ex: Sócia-fundadora, Gestor"
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">E-mail</label>
+                            <input type="email" name="email" placeholder="email@exemplo.com"
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Telefone / WhatsApp</label>
+                            <input type="text" name="whatsapp" placeholder="(41) 99999-9999"
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                                Papel neste cliente
+                            </label>
+                            <select name="role"
+                                    class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                <option value="">Sem papel definido</option>
+                                @foreach(\App\Http\Controllers\ClientContactController::$roles as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="flex items-end pb-1">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" name="is_primary" value="1"
+                                       class="w-4 h-4 accent-[var(--purple)]">
+                                <span class="text-sm" style="color:var(--muted2)">Contato principal</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button type="submit"
+                                class="px-5 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                                style="background:var(--purple)">
+                            Criar e Vincular
+                        </button>
+                        <button type="button" @click="mode = null"
+                                class="px-4 py-2 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] transition-colors">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {{-- LISTA de contatos vinculados --}}
+            @if($client->contacts->isEmpty())
+                <div class="tab-placeholder">
+                    <div class="tab-placeholder-icon">👥</div>
+                    <div class="tab-placeholder-title">Nenhum contato vinculado</div>
+                    <div class="tab-placeholder-desc">Vincule contatos existentes do CRM ou cadastre um novo já vinculado.</div>
+                </div>
+            @else
+                <div class="card">
+                    <table class="nonna-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Cargo</th>
+                                <th>Papel no Cliente</th>
+                                <th>Contato</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($client->contacts as $contact)
+                                <tr>
+                                    {{-- Linha de exibição --}}
+                                    <template x-if="editId !== '{{ $contact->id }}'">
+                                        <td>
+                                            <div class="flex items-center gap-2">
+                                                @if($contact->pivot->is_primary)
+                                                    <span class="text-xs font-bold px-1.5 py-0.5"
+                                                          style="background:rgba(106,90,205,.15); color:var(--purple); border:1px solid rgba(106,90,205,.3)">
+                                                        Principal
+                                                    </span>
+                                                @endif
+                                                <a href="{{ route('contacts.show', $contact) }}"
+                                                   class="text-sm font-semibold hover:underline"
+                                                   style="color:var(--text)">
+                                                    {{ $contact->name }}
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </template>
+                                    <template x-if="editId === '{{ $contact->id }}'">
+                                        <td class="font-semibold text-sm" style="color:var(--text)">{{ $contact->name }}</td>
+                                    </template>
+
+                                    <td class="text-xs" style="color:var(--muted2)">
+                                        {{ $contact->job_title ?: '—' }}
+                                    </td>
+
+                                    {{-- Papel: exibição ou edição --}}
+                                    <template x-if="editId !== '{{ $contact->id }}'">
+                                        <td class="text-xs" style="color:var(--muted2)">
+                                            @php
+                                                $roles = \App\Http\Controllers\ClientContactController::$roles;
+                                                $roleKey = $contact->pivot->role;
+                                            @endphp
+                                            {{ $roles[$roleKey] ?? ($roleKey ?: '—') }}
+                                        </td>
+                                    </template>
+                                    <template x-if="editId === '{{ $contact->id }}'">
+                                        <td>
+                                            <form id="edit-contact-{{ $contact->id }}" method="POST"
+                                                  action="{{ route('clients.contacts.update-pivot', [$client, $contact]) }}">
+                                                @csrf @method('PATCH')
+                                                <div class="flex items-center gap-2">
+                                                    <select name="role" form="edit-contact-{{ $contact->id }}"
+                                                            class="bg-[var(--s3)] border border-[var(--border2)] text-xs text-[var(--text)] px-2 py-1.5 focus:outline-none focus:border-[var(--purple)]">
+                                                        <option value="">—</option>
+                                                        @foreach(\App\Http\Controllers\ClientContactController::$roles as $key => $rl)
+                                                            <option value="{{ $key }}" {{ $contact->pivot->role === $key ? 'selected' : '' }}>
+                                                                {{ $rl }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <label class="flex items-center gap-1 text-xs" style="color:var(--muted2); white-space:nowrap">
+                                                        <input type="checkbox" name="is_primary" value="1"
+                                                               form="edit-contact-{{ $contact->id }}"
+                                                               {{ $contact->pivot->is_primary ? 'checked' : '' }}
+                                                               class="w-3.5 h-3.5 accent-[var(--purple)]">
+                                                        Principal
+                                                    </label>
+                                                </div>
+                                            </form>
+                                        </td>
+                                    </template>
+
+                                    <td class="text-xs font-mono" style="color:var(--muted)">
+                                        @if($contact->whatsapp)
+                                            {{ $contact->whatsapp }}
+                                        @elseif($contact->email)
+                                            {{ $contact->email }}
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
+
+                                    <td class="text-right">
+                                        <div class="flex items-center justify-end gap-3">
+                                            <template x-if="editId !== '{{ $contact->id }}'">
+                                                <button type="button" @click="editId = '{{ $contact->id }}'"
+                                                        class="text-xs font-mono text-[var(--muted)] hover:text-[var(--purple)] transition-colors">
+                                                    Editar papel
+                                                </button>
+                                            </template>
+                                            <template x-if="editId === '{{ $contact->id }}'">
+                                                <div class="flex gap-2">
+                                                    <button type="submit" form="edit-contact-{{ $contact->id }}"
+                                                            class="text-xs font-mono text-[var(--purple)] hover:underline">
+                                                        Salvar
+                                                    </button>
+                                                    <button type="button" @click="editId = null"
+                                                            class="text-xs font-mono text-[var(--muted)]">
+                                                        Cancelar
+                                                    </button>
+                                                </div>
+                                            </template>
+                                            <form method="POST"
+                                                  action="{{ route('clients.contacts.unlink', [$client, $contact]) }}"
+                                                  onsubmit="return confirm('Desvincular {{ $contact->name }} deste cliente?')">
+                                                @csrf @method('DELETE')
+                                                <button type="submit"
+                                                        class="text-xs font-mono text-[var(--muted)] hover:text-[var(--red)] transition-colors">
+                                                    Desvincular
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         </div>
 
         {{-- TAB: CONTAS DE ANÚNCIOS --}}
-        <div x-show="tab === 'contas'" x-cloak>
-            <div class="tab-placeholder">
-                <div class="tab-placeholder-icon">📡</div>
-                <p class="tab-placeholder-title">Contas de Anúncios</p>
-                <p class="tab-placeholder-desc">IDs de contas Meta Ads, Google Ads e outras plataformas. Consultadas pelo n8n para sincronização de métricas. Em breve.</p>
+        <div x-show="tab === 'contas'" x-cloak x-data="{ addForm: false, editId: null }">
+
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">
+                    Contas de Anúncios
+                </h3>
+                <button @click="addForm = !addForm"
+                        class="px-4 py-1.5 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                        style="background: var(--purple);">
+                    + Adicionar
+                </button>
             </div>
+
+            {{-- Formulário de nova conta --}}
+            <div x-show="addForm" x-cloak class="card p-5 mb-6">
+                <h4 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-4">Nova Conta de Anúncios</h4>
+                <form method="POST" action="{{ route('clients.ad-accounts.store', $client) }}" class="space-y-4">
+                    @csrf
+                    <div class="grid grid-cols-2 gap-4" x-data="{ platform: '' }">
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                Plataforma <span class="text-[var(--orange)]">*</span>
+                            </label>
+                            <select name="platform" x-model="platform" required
+                                    class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                <option value="">Selecione...</option>
+                                @foreach(\App\Models\ClientAdAccount::$platforms as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <div x-show="platform === 'outros'" class="mt-2">
+                                <input type="text" name="platform_custom"
+                                       placeholder="Qual plataforma?"
+                                       class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2 focus:outline-none focus:border-[var(--purple)]">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                Status <span class="text-[var(--orange)]">*</span>
+                            </label>
+                            <select name="status" required
+                                    class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                @foreach(\App\Models\ClientAdAccount::$statuses as $key => $s)
+                                    <option value="{{ $key }}" {{ $key === 'ativo' ? 'selected' : '' }}>{{ $s['label'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                ID da Conta <span class="text-[var(--orange)]">*</span>
+                            </label>
+                            <input type="text" name="account_id" required
+                                   placeholder="Ex: act_123456789"
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 font-mono focus:outline-none focus:border-[var(--purple)]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                Nome da Conta
+                            </label>
+                            <input type="text" name="account_name"
+                                   placeholder="Ex: Conta Principal"
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Observações</label>
+                            <input type="text" name="notes"
+                                   placeholder="Ex: conta de remarketing, separada da principal..."
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button type="submit"
+                                class="px-5 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                                style="background: var(--purple);">
+                            Salvar
+                        </button>
+                        <button type="button" @click="addForm = false"
+                                class="px-4 py-2 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] transition-colors">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {{-- Lista de contas --}}
+            @if($client->adAccounts->isEmpty())
+                <div class="tab-placeholder">
+                    <div class="tab-placeholder-icon">📡</div>
+                    <div class="tab-placeholder-title">Nenhuma conta cadastrada</div>
+                    <div class="tab-placeholder-desc">Adicione os IDs de Meta Ads, Google Ads e outras plataformas para centralizar aqui.</div>
+                </div>
+            @else
+                <div class="card">
+                    <table class="nonna-table">
+                        <thead>
+                            <tr>
+                                <th>Plataforma</th>
+                                <th>ID da Conta</th>
+                                <th>Nome</th>
+                                <th>Status</th>
+                                <th>Obs</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($client->adAccounts as $account)
+                                <tr>
+                                    {{-- Linha de exibição --}}
+                                    <template x-if="editId !== '{{ $account->id }}'">
+                                        <td class="font-semibold text-[var(--text)]">
+                                            {{ $account->platformLabel() }}
+                                        </td>
+                                    </template>
+                                    <template x-if="editId === '{{ $account->id }}'">
+                                        <td>
+                                            <select name="platform" form="edit-account-{{ $account->id }}"
+                                                    class="w-full bg-[var(--s3)] border border-[var(--border2)] text-xs text-[var(--text)] px-2 py-1.5 focus:outline-none focus:border-[var(--purple)]">
+                                                @foreach(\App\Models\ClientAdAccount::$platforms as $key => $label)
+                                                    <option value="{{ $key }}" {{ $account->platform === $key ? 'selected' : '' }}>{{ $label }}</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                    </template>
+
+                                    <template x-if="editId !== '{{ $account->id }}'">
+                                        <td class="font-mono text-sm text-[var(--purple)]">{{ $account->account_id }}</td>
+                                    </template>
+                                    <template x-if="editId === '{{ $account->id }}'">
+                                        <td>
+                                            <input type="text" name="account_id" form="edit-account-{{ $account->id }}"
+                                                   value="{{ $account->account_id }}"
+                                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-xs font-mono text-[var(--text)] px-2 py-1.5 focus:outline-none focus:border-[var(--purple)]">
+                                        </td>
+                                    </template>
+
+                                    <template x-if="editId !== '{{ $account->id }}'">
+                                        <td class="text-sm text-[var(--muted2)]">{{ $account->account_name ?: '—' }}</td>
+                                    </template>
+                                    <template x-if="editId === '{{ $account->id }}'">
+                                        <td>
+                                            <input type="text" name="account_name" form="edit-account-{{ $account->id }}"
+                                                   value="{{ $account->account_name }}"
+                                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-xs text-[var(--text)] px-2 py-1.5 focus:outline-none focus:border-[var(--purple)]">
+                                        </td>
+                                    </template>
+
+                                    <template x-if="editId !== '{{ $account->id }}'">
+                                        <td>
+                                            <span class="badge badge-{{ $account->statusColor() }}">{{ $account->statusLabel() }}</span>
+                                        </td>
+                                    </template>
+                                    <template x-if="editId === '{{ $account->id }}'">
+                                        <td>
+                                            <select name="status" form="edit-account-{{ $account->id }}"
+                                                    class="w-full bg-[var(--s3)] border border-[var(--border2)] text-xs text-[var(--text)] px-2 py-1.5 focus:outline-none focus:border-[var(--purple)]">
+                                                @foreach(\App\Models\ClientAdAccount::$statuses as $key => $s)
+                                                    <option value="{{ $key }}" {{ $account->status === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                    </template>
+
+                                    <td class="text-xs text-[var(--muted)] max-w-[150px] truncate">
+                                        {{ $account->notes ?: '—' }}
+                                    </td>
+
+                                    <td class="text-right">
+                                        <div class="flex items-center justify-end gap-3">
+                                            <template x-if="editId !== '{{ $account->id }}'">
+                                                <button type="button" @click="editId = '{{ $account->id }}'"
+                                                        class="text-xs font-mono text-[var(--muted)] hover:text-[var(--purple)] transition-colors">
+                                                    Editar
+                                                </button>
+                                            </template>
+                                            <template x-if="editId === '{{ $account->id }}'">
+                                                <div class="flex gap-2">
+                                                    <button type="submit" form="edit-account-{{ $account->id }}"
+                                                            class="text-xs font-mono text-[var(--purple)] hover:underline">
+                                                        Salvar
+                                                    </button>
+                                                    <button type="button" @click="editId = null"
+                                                            class="text-xs font-mono text-[var(--muted)] hover:text-[var(--text)]">
+                                                        Cancelar
+                                                    </button>
+                                                </div>
+                                            </template>
+                                            <form method="POST"
+                                                  action="{{ route('clients.ad-accounts.destroy', [$client, $account]) }}"
+                                                  onsubmit="return confirm('Remover esta conta?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                        class="text-xs font-mono text-[var(--muted)] hover:text-[var(--red)] transition-colors">
+                                                    Remover
+                                                </button>
+                                            </form>
+                                        </div>
+                                        {{-- Form oculto de edição --}}
+                                        <form id="edit-account-{{ $account->id }}" method="POST"
+                                              action="{{ route('clients.ad-accounts.update', [$client, $account]) }}"
+                                              class="hidden">
+                                            @csrf
+                                            @method('PATCH')
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         </div>
 
         {{-- TAB: DIAGNÓSTICOS --}}
         <div x-show="tab === 'diagnosticos'" x-cloak>
-            <div class="tab-placeholder">
-                <div class="tab-placeholder-icon">🔎</div>
-                <p class="tab-placeholder-title">Diagnósticos Estratégicos</p>
-                <p class="tab-placeholder-desc">Imersão completa: briefing de negócio, cenário de marketing, auditoria de comunicação, análise de concorrência, personas e síntese estratégica. Em breve.</p>
+
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">
+                    Diagnósticos Estratégicos
+                </h3>
+                <form method="POST" action="{{ route('clients.diagnostics.store', $client) }}">
+                    @csrf
+                    <button type="submit"
+                            class="px-4 py-1.5 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                            style="background: var(--purple);">
+                        + Novo Diagnóstico
+                    </button>
+                </form>
             </div>
+
+            @if($client->diagnostics->isEmpty())
+                <div class="tab-placeholder">
+                    <div class="tab-placeholder-icon">🔎</div>
+                    <div class="tab-placeholder-title">Nenhum diagnóstico cadastrado</div>
+                    <div class="tab-placeholder-desc">Clique em "Novo Diagnóstico" para iniciar a imersão estratégica do cliente.</div>
+                </div>
+            @else
+                <div class="card">
+                    <table class="nonna-table">
+                        <thead>
+                            <tr>
+                                <th>Versão</th>
+                                <th>Título</th>
+                                <th>Status</th>
+                                <th>Criado em</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($client->diagnostics as $diag)
+                                <tr>
+                                    <td class="font-mono text-xs text-[var(--muted)]">v{{ $diag->version }}</td>
+                                    <td class="font-semibold text-[var(--text)]">{{ $diag->title }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ $diag->statusColor() }}">
+                                            {{ $diag->statusLabel() }}
+                                        </span>
+                                    </td>
+                                    <td class="text-xs text-[var(--muted)]">
+                                        {{ $diag->created_at->format('d/m/Y') }}
+                                    </td>
+                                    <td class="text-right">
+                                        <div class="flex items-center justify-end gap-3">
+                                            <a href="{{ route('clients.diagnostics.edit', [$client, $diag]) }}"
+                                               class="text-xs font-mono text-[var(--purple)] hover:underline">
+                                                Editar
+                                            </a>
+                                            <form method="POST"
+                                                  action="{{ route('clients.diagnostics.destroy', [$client, $diag]) }}"
+                                                  onsubmit="return confirm('Remover este diagnóstico e todos os seus dados?')">
+                                                @csrf @method('DELETE')
+                                                <button type="submit"
+                                                        class="text-xs font-mono text-[var(--muted)] hover:text-[var(--red)] transition-colors">
+                                                    Remover
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         </div>
 
         {{-- TAB: ATAS --}}
@@ -545,11 +1094,59 @@
 
         {{-- TAB: PLANEJAMENTOS --}}
         <div x-show="tab === 'planejamentos'" x-cloak>
-            <div class="tab-placeholder">
-                <div class="tab-placeholder-icon">🗺️</div>
-                <p class="tab-placeholder-title">Macroplanejamentos</p>
-                <p class="tab-placeholder-desc">Ciclos estratégicos de 60–90 dias → Projetos multidisciplinares → Tarefas lançadas no ClickUp. Em breve.</p>
+            <div class="flex items-center justify-between mb-4">
+                <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
+                    {{ $client->macroplans->count() }} macroplanejamento{{ $client->macroplans->count() !== 1 ? 's' : '' }}
+                </p>
+                <a href="{{ route('macroplans.create', ['client_id' => $client->id]) }}"
+                   class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                   style="background:var(--purple)">
+                    + Novo Planejamento
+                </a>
             </div>
+
+            @if($client->macroplans->isEmpty())
+                <div class="px-6 py-12 text-center" style="color:var(--muted)">
+                    <p class="text-sm mb-2">Nenhum macroplanejamento criado ainda.</p>
+                    <a href="{{ route('macroplans.create', ['client_id' => $client->id]) }}"
+                       class="text-sm font-semibold" style="color:var(--purple)">
+                        Criar primeiro ciclo →
+                    </a>
+                </div>
+            @else
+                <div class="flex flex-col gap-3">
+                    @foreach($client->macroplans as $plan)
+                        <div class="card px-5 py-4">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="font-bold text-sm" style="color:var(--text)">{{ $plan->title }}</span>
+                                        <span class="badge badge-{{ $plan->statusColor() }}">{{ $plan->statusLabel() }}</span>
+                                        @if($plan->isLaunched())
+                                            <span class="badge badge-green">ClickUp</span>
+                                        @endif
+                                    </div>
+                                    <p class="text-xs font-mono mb-2" style="color:var(--muted)">{{ $plan->periodLabel() }}</p>
+                                    @if($plan->projects->count() > 0)
+                                        <div class="flex flex-wrap gap-1">
+                                            @foreach($plan->projects as $proj)
+                                                <span class="badge">{{ $proj->title }}</span>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <span class="text-xs" style="color:var(--muted)">Sem projetos</span>
+                                    @endif
+                                </div>
+                                <a href="{{ route('macroplans.edit', $plan) }}"
+                                   class="text-xs font-mono flex-shrink-0 transition-colors" style="color:var(--muted)"
+                                   onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                                    Editar →
+                                </a>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
 
     </div>{{-- /x-data tabs --}}

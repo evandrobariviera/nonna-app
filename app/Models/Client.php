@@ -138,13 +138,29 @@ class Client extends Model
     public function contacts(): BelongsToMany
     {
         return $this->belongsToMany(Contact::class, 'client_contacts', 'client_id', 'contact_id')
+            ->using(ClientContact::class)
             ->withPivot(['role', 'is_primary'])
             ->withTimestamps();
+    }
+
+    public function adAccounts(): HasMany
+    {
+        return $this->hasMany(ClientAdAccount::class);
+    }
+
+    public function diagnostics(): HasMany
+    {
+        return $this->hasMany(ClientDiagnostic::class)->orderByDesc('version');
     }
 
     public function opportunities(): HasMany
     {
         return $this->hasMany(Opportunity::class);
+    }
+
+    public function macroplans(): HasMany
+    {
+        return $this->hasMany(MacroPlan::class)->orderByDesc('period_start');
     }
 
     public function primaryContact()

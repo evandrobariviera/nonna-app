@@ -71,6 +71,7 @@ class Contact extends Model
     public function clients(): BelongsToMany
     {
         return $this->belongsToMany(Client::class, 'client_contacts', 'contact_id', 'client_id')
+            ->using(ClientContact::class)
             ->withPivot(['role', 'is_primary'])
             ->withTimestamps();
     }

@@ -1,0 +1,123 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Meeting extends Model
+{
+    use HasUuids;
+
+    protected $connection = 'pgsql';
+
+    protected $fillable = [
+        'title',
+        'type',
+        'modality',
+        'status',
+        'client_id',
+        'opportunity_id',
+        'organized_by',
+        'created_by',
+        'scheduled_at',
+        'duration_minutes',
+        'location',
+        'online_link',
+        'agenda',
+        'ata',
+        'next_steps',
+        'ata_recorded_at',
+    ];
+
+    protected $casts = [
+        'scheduled_at'    => 'datetime',
+        'ata_recorded_at' => 'datetime',
+        'duration_minutes'=> 'integer',
+    ];
+
+    public static array $types = [
+        'comercial_vendas'          => 'Comercial / Vendas',
+        'boas_vindas'               => 'Boas Vindas (Onboarding)',
+        'kickoff_estrategico'       => 'Kick-off Estratégico',
+        'macroplanejamento'         => 'Macroplanejamento Periódico',
+        'alinhamento_projeto'       => 'Alinhamento de Projeto',
+        'setor_sync'                => 'De Setor (Sync de Qualidade)',
+        'distribuicao_sprint'       => 'Distribuição (Sprint Planning)',
+        'evento_captacao'           => 'Evento ou Captação Externa',
+        'outros'                    => 'Outros',
+    ];
+
+    public static array $modalities = [
+        'online'                => 'Online',
+        'presencial_agencia'    => 'Presencial — Agência',
+        'presencial_cliente'    => 'Presencial — Cliente',
+    ];
+
+    public static array $statuses = [
+        'para_agendar' => ['label' => 'Para Agendar', 'color' => 'muted'],
+        'agendada'     => ['label' => 'Agendada',     'color' => 'purple'],
+        'pos_reuniao'  => ['label' => 'Pós-Reunião',  'color' => 'orange'],
+        'realizada'    => ['label' => 'Realizada',    'color' => 'green'],
+        'cancelada'    => ['label' => 'Cancelada',    'color' => 'red'],
+    ];
+
+    public function typeLabel(): string
+    {
+        return self::$types[$this->type] ?? $this->type;
+    }
+
+    public function modalityLabel(): string
+    {
+        return self::$modalities[$this->modality] ?? $this->modality;
+    }
+
+    public function statusLabel(): string
+    {
+        return self::$statuses[$this->status]['label'] ?? $this->status;
+    }
+
+    public function statusColor(): string
+    {
+        return self::$statuses[$this->status]['color'] ?? 'muted';
+    }
+
+    public function hasAta(): bool
+    {
+        return !empty($this->ata);
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
+    }
+
+    public function opportunity(): BelongsTo
+    {
+        return $this->belongsTo(Opportunity::class);
+    }
+
+    public function organizer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'organized_by');
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function participantLinks(): HasMany
+    {
+        return $this->hasMany(MeetingParticipant::class);
+    }
+
+    public function participants(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'meeting_participants', 'meeting_id', 'user_id')
+            ->withTimestamps();
+    }
+}

@@ -71,8 +71,15 @@ class ClientController extends Controller
 
     public function show(Client $client)
     {
-        $client->load('credentials');
-        return view('clients.show', compact('client'));
+        $client->load(['credentials', 'adAccounts', 'diagnostics', 'contacts', 'macroplans.projects']);
+
+        // Contatos disponíveis para vincular (excluindo os já vinculados)
+        $linkedIds = $client->contacts->pluck('id');
+        $availableContacts = \App\Models\Contact::whereNotIn('id', $linkedIds)
+            ->orderBy('name')
+            ->get(['id', 'name', 'job_title', 'company_name']);
+
+        return view('clients.show', compact('client', 'availableContacts'));
     }
 
     public function edit(Client $client)
