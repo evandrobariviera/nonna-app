@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Task extends Model
 {
@@ -13,20 +15,23 @@ class Task extends Model
     protected $connection = 'pgsql';
 
     protected $fillable = [
-        'project_id', 'macro_plan_id', 'client_id',
-        'title', 'description', 'task_type', 'status', 'situation',
+        'project_id', 'macro_plan_id', 'sprint_id', 'client_id',
+        'title', 'description', 'task_type', 'destination', 'status', 'situation',
         'executor_id', 'created_by',
-        'due_date', 'approval_date', 'publish_date', 'approval_location',
+        'due_date', 'approval_date', 'publish_date',
+        'approval_location', 'approval_method', 'internal_approval',
+        'requester_name', 'requester_whatsapp', 'requester_channel',
         'origin', 'is_ticket', 'clickup_task_id', 'launched_at', 'custom_fields',
     ];
 
     protected $casts = [
-        'due_date'      => 'date',
-        'approval_date' => 'date',
-        'publish_date'  => 'date',
-        'launched_at'   => 'datetime',
-        'is_ticket'     => 'boolean',
-        'custom_fields' => 'array',
+        'due_date'          => 'date',
+        'approval_date'     => 'date',
+        'publish_date'      => 'date',
+        'launched_at'       => 'datetime',
+        'is_ticket'         => 'boolean',
+        'internal_approval' => 'boolean',
+        'custom_fields'     => 'array',
     ];
 
     // ── Kanban: 4 colunas visuais ──────────────────────────────────────────
@@ -53,7 +58,6 @@ class Task extends Model
         ],
     ];
 
-    // Status detalhados do workflow
     public static array $statuses = [
         'backlog'               => ['label' => 'Backlog',             'col' => 'backlog',      'color' => 'muted'],
         'em_copy'               => ['label' => 'Em Copy',             'col' => 'em_andamento', 'color' => 'orange'],
@@ -68,18 +72,45 @@ class Task extends Model
     ];
 
     public static array $types = [
-        'criacao'       => 'Criação',
-        'web'           => 'Web / Dev',
-        'trafego'       => 'Tráfego',
-        'setup'         => 'Setup',
-        'social'        => 'Social Media',
-        'seo'           => 'SEO',
-        'email'         => 'E-mail',
-        'estrategia'    => 'Estratégia',
-        'administrativo'=> 'Administrativo',
+        'criacao'        => 'Criação / Audiovisual',
+        'web'            => 'Web / Dev',
+        'trafego'        => 'Tráfego / Performance',
+        'setup'          => 'Setup / Tracking',
+        'social'         => 'Social Media',
+        'seo'            => 'SEO',
+        'email'          => 'E-mail Marketing',
+        'estrategia'     => 'Estratégia / Planejamento',
+        'administrativo' => 'Administrativo / Financeiro',
+        'reunioes'       => 'Reuniões / Atendimento',
     ];
 
-    // Status padrão ao mover para cada coluna kanban
+    public static array $destinations = [
+        'publicacao_organica'      => 'Publicação Orgânica',
+        'campanhas_patrocinadas'   => 'Campanhas Patrocinadas',
+        'projeto_web'              => 'Projeto Web',
+        'administrativo_financeiro'=> 'Administrativo / Financeiro',
+        'envio_resposta_cliente'   => 'Envio / Resposta ao Cliente',
+    ];
+
+    public static array $approvalMethods = [
+        'aprovaaí'  => 'Aprova aí',
+        'whatsapp'  => 'WhatsApp',
+        'email'     => 'E-mail',
+    ];
+
+    public static array $origins = [
+        'onboarding' => 'Onboarding',
+        'projeto'    => 'Projeto',
+        'roadmap'    => 'Roadmap',
+        'ticket'     => 'Ticket',
+    ];
+
+    public static array $requesterChannels = [
+        'whatsapp'  => 'WhatsApp',
+        'email'     => 'E-mail',
+        'presencial'=> 'Presencial',
+    ];
+
     public static array $kanbanDefaultStatus = [
         'backlog'      => 'backlog',
         'em_andamento' => 'em_producao',
@@ -107,9 +138,29 @@ class Task extends Model
         return self::$types[$this->task_type] ?? $this->task_type;
     }
 
+    public function destinationLabel(): string
+    {
+        return self::$destinations[$this->destination] ?? '';
+    }
+
+    public function approvalMethodLabel(): string
+    {
+        return self::$approvalMethods[$this->approval_method] ?? '';
+    }
+
+    public function originLabel(): string
+    {
+        return self::$origins[$this->origin] ?? $this->origin;
+    }
+
     public function isOverdue(): bool
     {
         return $this->due_date && $this->due_date->isPast() && $this->status !== 'concluido';
+    }
+
+    public function sprint(): BelongsTo
+    {
+        return $this->belongsTo(Sprint::class);
     }
 
     public function project(): BelongsTo
@@ -135,5 +186,27 @@ class Task extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function executorLinks(): HasMany
+    {
+        return $this->hasMany(TaskExecutor::class);
+    }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(TaskAttachment::class)->orderBy('created_at');
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(TaskComment::class)->orderBy('created_at');
+    }
+
+    public function executors(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'task_executors', 'task_id', 'user_id')
+            ->withPivot('role')
+            ->withTimestamps();
     }
 }

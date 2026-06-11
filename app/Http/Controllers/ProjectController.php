@@ -83,7 +83,7 @@ class ProjectController extends Controller
     {
         abort_unless($project->macro_plan_id === $macroplan->id, 403);
 
-        $project->load(['tasks.executor', 'macroPlan.client']);
+        $project->load(['tasks.executor', 'tasks.executors', 'macroPlan.client']);
         $users = User::orderBy('name')->get(['id', 'name']);
 
         // Agrupar tarefas por coluna do kanban

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ClientAdAccountController;
+use App\Http\Controllers\FilaController;
 use App\Http\Controllers\ClientContactController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientCredentialController;
@@ -12,7 +13,11 @@ use App\Http\Controllers\MacroPlanController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\OpportunityController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\SprintController;
+use App\Http\Controllers\TaskAttachmentController;
+use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TicketController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicRegistrationController;
 use App\Models\ClickupTaskClient;
@@ -164,6 +169,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/planejamentos/{macroplan}', [MacroPlanController::class, 'destroy'])
         ->name('macroplans.destroy');
 
+    // ── Filas (backlog aguardando sprint) ──
+    Route::get('/filas', [FilaController::class, 'index'])
+        ->name('fila.index');
+
+    // ── Lista global de tarefas ──
+    Route::get('/tarefas', [TaskController::class, 'index'])
+        ->name('tasks.index');
+
+    // ── Detalhe da tarefa ──
+    Route::get('/tarefas/{task}', [TaskController::class, 'show'])
+        ->name('tasks.show');
+    Route::patch('/tarefas/{task}', [TaskController::class, 'updateInline'])
+        ->name('tasks.update-inline');
+
+    // ── Anexos da tarefa ──
+    Route::post('/tarefas/{task}/anexos', [TaskAttachmentController::class, 'store'])
+        ->name('task-attachments.store');
+    Route::delete('/tarefas/{task}/anexos/{attachment}', [TaskAttachmentController::class, 'destroy'])
+        ->name('task-attachments.destroy');
+
+    // ── Comentários da tarefa ──
+    Route::post('/tarefas/{task}/comentarios', [TaskCommentController::class, 'store'])
+        ->name('task-comments.store');
+    Route::delete('/tarefas/{task}/comentarios/{comment}', [TaskCommentController::class, 'destroy'])
+        ->name('task-comments.destroy');
+
     // ── Dashboard global de projetos ──
     Route::get('/projetos', [ProjectController::class, 'dashboard'])
         ->name('projects.dashboard');
@@ -177,6 +208,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('macroplans.projects.update');
     Route::delete('/planejamentos/{macroplan}/projetos/{project}', [ProjectController::class, 'destroy'])
         ->name('macroplans.projects.destroy');
+
+    // ── Sprints ──
+    Route::get('/sprints', [SprintController::class, 'index'])->name('sprints.index');
+    Route::get('/sprints/nova', [SprintController::class, 'create'])->name('sprints.create');
+    Route::post('/sprints', [SprintController::class, 'store'])->name('sprints.store');
+    Route::get('/sprints/{sprint}', [SprintController::class, 'show'])->name('sprints.show');
+    Route::patch('/sprints/{sprint}', [SprintController::class, 'update'])->name('sprints.update');
+    Route::post('/sprints/{sprint}/travar', [SprintController::class, 'lock'])->name('sprints.lock');
+    Route::post('/sprints/{sprint}/reabrir', [SprintController::class, 'unlock'])->name('sprints.unlock');
+    Route::post('/sprints/{sprint}/encerrar', [SprintController::class, 'close'])->name('sprints.close');
+    Route::post('/sprints/{sprint}/tarefas/{task}', [SprintController::class, 'addTask'])->name('sprints.add-task');
+    Route::delete('/sprints/{sprint}/tarefas/{task}', [SprintController::class, 'removeTask'])->name('sprints.remove-task');
+    Route::delete('/sprints/{sprint}', [SprintController::class, 'destroy'])->name('sprints.destroy');
+
+    // ── Tickets (tarefas avulsas) ──
+    Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
+    Route::get('/tickets/novo', [TicketController::class, 'create'])->name('tickets.create');
+    Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
+    Route::patch('/tickets/{task}/status', [TicketController::class, 'updateStatus'])->name('tickets.update-status');
+    Route::delete('/tickets/{task}', [TicketController::class, 'destroy'])->name('tickets.destroy');
 
     // ── Tarefas dentro de um projeto ──
     Route::post('/planejamentos/{macroplan}/projetos/{project}/tarefas', [TaskController::class, 'store'])

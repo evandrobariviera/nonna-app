@@ -1,4 +1,12 @@
-{{-- ══ CADASTROS ══ --}}
+@php
+    $_sidebarSprints = \App\Models\Sprint::whereIn('status', ['active', 'planning'])
+        ->orderByRaw("CASE status WHEN 'active' THEN 0 ELSE 1 END")
+        ->orderByDesc('starts_at')
+        ->limit(5)
+        ->get(['id', 'title', 'status']);
+@endphp
+
+{{-- ══ CRM ══ --}}
 <div class="nav-group-label">CRM</div>
 
 <div x-data="{ open: {{ request()->routeIs('clients.*') || request()->routeIs('contacts.*') ? 'true' : 'false' }} }">
@@ -33,19 +41,20 @@
         </svg>
     </button>
     <div x-show="open" x-transition style="display:none">
-        <a href="{{ route('opportunities.index') }}" class="nav-sub-item {{ request()->routeIs('opportunities.*') ? 'active' : '' }}">Oportunidades (Kanban)</a>
-        <a href="#" class="nav-sub-item">Contratos (Jurídico)</a>
+        <a href="{{ route('opportunities.index') }}" class="nav-sub-item {{ request()->routeIs('opportunities.*') ? 'active' : '' }}">Oportunidades</a>
+        <a href="#" class="nav-sub-item">Contratos</a>
     </div>
 </div>
 
 {{-- ══ OPERACIONAL ══ --}}
 <div class="nav-group-label" style="margin-top:8px">Operacional</div>
 
-<div x-data="{ open: {{ request()->routeIs('macroplans.*') || request()->routeIs('projects.*') ? 'true' : 'false' }} }">
+{{-- Fluxo de Trabalho --}}
+<div x-data="{ open: {{ request()->routeIs('macroplans.*') || request()->routeIs('projects.*') || request()->routeIs('fila.*') || request()->routeIs('sprints.*') || request()->routeIs('tickets.*') || request()->routeIs('tasks.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V19.5a2.25 2.25 0 002.25 2.25h.75" />
             </svg>
             Fluxo de Trabalho
         </span>
@@ -54,12 +63,63 @@
         </svg>
     </button>
     <div x-show="open" x-transition style="display:none">
-        <a href="{{ route('projects.dashboard') }}" class="nav-sub-item {{ request()->routeIs('projects.dashboard') ? 'active' : '' }}">Projetos (Dashboard)</a>
-        <a href="{{ route('macroplans.index') }}" class="nav-sub-item {{ request()->routeIs('macroplans.*') && !request()->routeIs('projects.*') ? 'active' : '' }}">Planejamentos</a>
-        <a href="#" class="nav-sub-item">Sprints</a>
+
+        <a href="{{ route('macroplans.index') }}"
+           class="nav-sub-item {{ request()->routeIs('macroplans.*') && !request()->routeIs('projects.*') ? 'active' : '' }}">
+            Planejamentos
+        </a>
+
+        <a href="{{ route('projects.dashboard') }}"
+           class="nav-sub-item {{ request()->routeIs('projects.*') ? 'active' : '' }}">
+            Projetos
+        </a>
+
+        <a href="{{ route('fila.index') }}"
+           class="nav-sub-item {{ request()->routeIs('fila.*') ? 'active' : '' }}">
+            <span class="flex items-center justify-between w-full">
+                <span>Filas</span>
+                @php
+                    $_filaCount = \App\Models\Task::whereNull('sprint_id')
+                        ->whereNotIn('status', ['concluido', 'cancelado'])
+                        ->count();
+                @endphp
+                @if($_filaCount > 0)
+                    <span class="text-xs px-1.5 py-px rounded-full font-semibold"
+                          style="background:{{ request()->routeIs('fila.*') ? 'rgba(106,90,205,.15)' : 'var(--s3)' }};
+                                 color:{{ request()->routeIs('fila.*') ? 'var(--purple)' : 'var(--muted)' }};
+                                 border:1px solid {{ request()->routeIs('fila.*') ? 'rgba(106,90,205,.25)' : 'var(--border2)' }}">
+                        {{ $_filaCount }}
+                    </span>
+                @endif
+            </span>
+        </a>
+
+        <a href="{{ route('sprints.index') }}"
+           class="nav-sub-item {{ request()->routeIs('sprints.index') || request()->routeIs('sprints.create') ? 'active' : '' }}">
+            Sprints
+        </a>
+
+        @foreach($_sidebarSprints as $sp)
+            <a href="{{ route('sprints.show', $sp) }}"
+               class="nav-sprint-item {{ request()->is('sprints/'.$sp->id) ? 'active' : '' }}">
+                <span class="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                      style="background:{{ $sp->status === 'active' ? 'var(--green)' : 'var(--orange)' }}"></span>
+                <span class="truncate flex-1 min-w-0">{{ $sp->title }}</span>
+                @if($sp->status === 'active')
+                    <span style="color:var(--green); font-size:9px; flex-shrink:0">●</span>
+                @endif
+            </a>
+        @endforeach
+
+        <a href="{{ route('tickets.index') }}"
+           class="nav-sub-item {{ request()->routeIs('tickets.*') ? 'active' : '' }}">
+            Tickets
+        </a>
+
     </div>
 </div>
 
+{{-- Atendimento --}}
 <div x-data="{ open: {{ request()->routeIs('meetings.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
@@ -74,7 +134,6 @@
     </button>
     <div x-show="open" x-transition style="display:none">
         <a href="{{ route('meetings.index') }}" class="nav-sub-item {{ request()->routeIs('meetings.*') ? 'active' : '' }}">Agenda (Reuniões)</a>
-        <a href="#" class="nav-sub-item">Tickets / Suporte</a>
         <a href="#" class="nav-sub-item">Onboarding</a>
         <a href="#" class="nav-sub-item">Offboarding</a>
     </div>
