@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\TaskApprovalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -71,6 +72,9 @@ class TaskController extends Controller
             'attachments.uploadedBy',
             'comments.user',
             'createdBy',
+            'latestApprovalRound.tokens.contact',
+            'approvalRounds.tokens.contact',
+            'approvalRounds.tokens.feedbacks.attachment',
         ]);
 
         $users = User::orderBy('name')->get(['id', 'name']);
@@ -80,12 +84,14 @@ class TaskController extends Controller
 
     public function updateInline(Request $request, Task $task)
     {
+        $situationKeys = array_keys(array_filter(Task::$situations, fn($k) => $k !== '', ARRAY_FILTER_USE_KEY));
+
         $data = $request->validate([
             'title'              => 'required|string|max:300',
             'description'        => 'nullable|string',
             'task_type'          => 'required|in:' . implode(',', array_keys(Task::$types)),
             'destination'        => 'nullable|in:' . implode(',', array_keys(Task::$destinations)),
-            'situation'          => 'nullable|string|max:150',
+            'situation'          => 'nullable|in:' . implode(',', $situationKeys),
             'status'             => 'required|in:' . implode(',', array_keys(Task::$statuses)),
             'origin'             => 'nullable|in:' . implode(',', array_keys(Task::$origins)),
             'approval_method'    => 'nullable|in:' . implode(',', array_keys(Task::$approvalMethods)),
@@ -103,12 +109,39 @@ class TaskController extends Controller
             'sprint_id'          => 'nullable|uuid|exists:sprints,id',
         ]);
 
+        $triggerApproval = $data['situation'] === 'enviar_para_cliente'
+            && $task->situation !== 'enviar_para_cliente'
+            && $task->status !== 'aguardando_aprovacao';
+
         $task->update([
             ...$data,
             'internal_approval' => $request->boolean('internal_approval'),
         ]);
 
         $this->syncExecutors($task, $data);
+
+        if ($triggerApproval) {
+            $task->load('attachments');
+            $newAttachments = $task->attachments
+                ->where('is_deliverable', false)
+                ->pluck('id')
+                ->toArray();
+
+            if (!empty($newAttachments)) {
+                app(TaskApprovalService::class)->submitForApproval(
+                    $task,
+                    Auth::user(),
+                    $newAttachments,
+                );
+
+                return redirect()->route('tasks.show', $task)
+                    ->with('success', 'Material enviado para aprovação do cliente. Os contatos serão notificados.');
+            }
+
+            return redirect()->route('tasks.show', $task)
+                ->with('success', 'Tarefa atualizada.')
+                ->with('warning', 'Nenhum arquivo encontrado para enviar. Faça o upload dos arquivos e altere a situação novamente.');
+        }
 
         return redirect()->route('tasks.show', $task)->with('success', 'Tarefa atualizada.');
     }

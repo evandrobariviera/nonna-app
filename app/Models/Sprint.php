@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Sprint extends Model
 {
-    protected $connection = 'pgsql';
+    use HasUuids;
 
-    public $incrementing = false;
-    protected $keyType = 'string';
+    protected $connection = 'pgsql';
 
     protected $fillable = [
         'title', 'starts_at', 'ends_at', 'status',

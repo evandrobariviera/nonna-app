@@ -1,0 +1,58 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\TaskApprovalToken;
+use App\Services\TaskApprovalService;
+use Illuminate\Http\Request;
+
+class ApprovalController extends Controller
+{
+    public function __construct(private TaskApprovalService $service) {}
+
+    public function show(string $token)
+    {
+        $approvalToken = TaskApprovalToken::where('token', $token)
+            ->with([
+                'round.task.client',
+                'round.submittedBy',
+                'contact',
+            ])
+            ->firstOrFail();
+
+        if (! $approvalToken->isValid()) {
+            return view('approval.expired', compact('approvalToken'));
+        }
+
+        $deliverables = $approvalToken->round->deliverables();
+
+        return view('approval.show', compact('approvalToken', 'deliverables'));
+    }
+
+    public function submit(Request $request, string $token)
+    {
+        $approvalToken = TaskApprovalToken::where('token', $token)->firstOrFail();
+
+        if (! $approvalToken->isValid()) {
+            return redirect()->route('approval.show', $token);
+        }
+
+        $request->validate([
+            'feedbacks'                => 'required|array|min:1',
+            'feedbacks.*.attachment_id'=> 'required|uuid|exists:task_attachments,id',
+            'feedbacks.*.status'       => 'required|in:approved,changes_requested',
+            'feedbacks.*.comment'      => 'nullable|string|max:1000',
+            'overall_comment'          => 'nullable|string|max:2000',
+        ]);
+
+        $this->service->submitFeedback(
+            $approvalToken,
+            $request->feedbacks,
+            $request->overall_comment,
+        );
+
+        $approvalToken->refresh();
+
+        return view('approval.thanks', ['approvalToken' => $approvalToken->load('round.task')]);
+    }
+}

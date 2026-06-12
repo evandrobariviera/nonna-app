@@ -18,16 +18,35 @@ class ClientContact extends Pivot
 
     protected $keyType = 'string';
 
+    // Papéis possíveis de um contato dentro de um cliente
+    const ROLES = [
+        'decisor'          => 'Decisor',
+        'gestor_marketing' => 'Gestor de Marketing',
+        'acompanhante'     => 'Acompanhante',
+        'financeiro'       => 'Financeiro',
+        'tecnico'          => 'Técnico',
+    ];
+
+    // Papéis que recebem links de aprovação por padrão
+    const APPROVAL_ROLES = ['decisor', 'gestor_marketing'];
+
     protected $fillable = [
         'client_id',
         'contact_id',
         'role',
         'is_primary',
+        'receives_approvals',
     ];
 
     protected $casts = [
-        'is_primary' => 'boolean',
+        'is_primary'         => 'boolean',
+        'receives_approvals' => 'boolean',
     ];
+
+    public function roleLabel(): string
+    {
+        return self::ROLES[$this->role] ?? ($this->role ?? '—');
+    }
 
     public function client(): BelongsTo
     {

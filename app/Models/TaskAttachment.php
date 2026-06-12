@@ -2,19 +2,24 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 
 class TaskAttachment extends Model
 {
-    protected $connection = 'pgsql';
+    use HasUuids;
 
-    public $incrementing = false;
-    protected $keyType = 'string';
+    protected $connection = 'pgsql';
 
     protected $fillable = [
         'task_id', 'filename', 'disk_path', 'disk', 'mime_type', 'size', 'uploaded_by',
+        'is_deliverable', 'round_number',
+    ];
+
+    protected $casts = [
+        'is_deliverable' => 'boolean',
     ];
 
     public function task(): BelongsTo
@@ -29,6 +34,9 @@ class TaskAttachment extends Model
 
     public function url(): string
     {
+        if ($this->disk === 'r2') {
+            return Storage::disk('r2')->temporaryUrl($this->disk_path, now()->addHours(24));
+        }
         return Storage::disk($this->disk)->url($this->disk_path);
     }
 

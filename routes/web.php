@@ -14,6 +14,8 @@ use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\OpportunityController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SprintController;
+use App\Http\Controllers\ApprovalController;
+use App\Http\Controllers\TaskApprovalController;
 use App\Http\Controllers\TaskAttachmentController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
@@ -195,6 +197,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/tarefas/{task}/comentarios/{comment}', [TaskCommentController::class, 'destroy'])
         ->name('task-comments.destroy');
 
+    // ── Submissão para aprovação (autenticado — designer/gestor) ──
+    Route::post('/tarefas/{task}/aprovacao', [TaskApprovalController::class, 'store'])
+        ->name('task-approval.store');
+
+    // ── Dashboard central de aprovações ──
+    Route::get('/aprovacoes', [\App\Http\Controllers\ApprovalDashboardController::class, 'index'])
+        ->name('approvals.index');
+
     // ── Dashboard global de projetos ──
     Route::get('/projetos', [ProjectController::class, 'dashboard'])
         ->name('projects.dashboard');
@@ -247,6 +257,13 @@ Route::get('/cadastro/{token}', [PublicRegistrationController::class, 'show'])
 
 Route::post('/cadastro/{token}', [PublicRegistrationController::class, 'submit'])
     ->name('clients.register.submit');
+
+// ── Aprovação pública (sem autenticação — acesso via link tokenizado) ──
+Route::get('/aprovar/{token}', [ApprovalController::class, 'show'])
+    ->name('approval.show');
+
+Route::post('/aprovar/{token}', [ApprovalController::class, 'submit'])
+    ->name('approval.submit');
 
 // ── Perfil ──
 Route::middleware('auth')->group(function () {

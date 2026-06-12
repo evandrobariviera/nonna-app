@@ -7,6 +7,12 @@
             {{ session('success') }}
         </div>
     @endif
+    @if(session('warning'))
+        <div class="mb-5 px-4 py-3 text-sm font-semibold"
+             style="background:rgba(255,140,0,.08); border:1px solid rgba(255,140,0,.25); color:var(--orange)">
+            ⚠ {{ session('warning') }}
+        </div>
+    @endif
 
     <div x-data="{ editing: false }" class="flex gap-5" style="align-items: start;">
 
@@ -103,9 +109,15 @@
                         @endforeach
                         <div>
                             <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Situação</label>
-                            <input type="text" name="situation" value="{{ $task->situation }}" placeholder="Sub-status..."
-                                class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                            <select name="situation" class="w-full px-3 py-2.5 text-sm focus:outline-none"
                                 style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                @foreach(\App\Models\Task::$situations as $key => $label)
+                                    <option value="{{ $key }}" {{ ($task->situation ?? '') === $key ? 'selected' : '' }}
+                                        @if($key === 'enviar_para_cliente') style="color:var(--orange); font-weight:600" @endif>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
 
@@ -182,7 +194,7 @@
                             ['Origem',            $task->originLabel()],
                             ['Método de Aprov.',  $task->approvalMethodLabel() ?: '—'],
                             ['Aprovação Interna', $task->internal_approval ? 'Sim' : 'Não'],
-                            ['Situação',          $task->situation ?: '—'],
+                            ['Situação',          $task->situationLabel()],
                         ];
                     @endphp
                     @foreach($campos as [$label, $value])
@@ -323,6 +335,164 @@
                     </div>
                 @endif
             </div>
+
+            {{-- ══ RETORNO DO CLIENTE ══ --}}
+            @if($task->approvalRounds->count() > 0)
+                @php
+                    $allRounds     = $task->approvalRounds->sortByDesc('round_number');
+                    $latestReview  = $allRounds->first();
+                    $hasOpenChange = $latestReview && $latestReview->status === 'changes_requested';
+                @endphp
+
+                {{-- Banner de alerta quando há ajustes pendentes --}}
+                @if($hasOpenChange)
+                    <div class="px-4 py-3 flex items-start gap-3 text-sm font-semibold"
+                         style="background:rgba(255,140,0,.07); border:1px solid rgba(255,140,0,.3); color:var(--orange)">
+                        <span class="flex-shrink-0 text-base">✎</span>
+                        <span>O cliente solicitou ajustes na Rodada #{{ $latestReview->round_number }}. Revise os feedbacks abaixo antes de reenviar.</span>
+                    </div>
+                @endif
+
+                <div class="card card-body-lg">
+                    <div class="flex items-center justify-between mb-5">
+                        <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
+                            Retorno do Cliente
+                        </p>
+                        <span class="px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">
+                            {{ $allRounds->count() }} {{ $allRounds->count() === 1 ? 'rodada' : 'rodadas' }}
+                        </span>
+                    </div>
+
+                    <div class="flex flex-col gap-3">
+                        @foreach($allRounds as $round)
+                            @php
+                                $rHasChanges = $round->status === 'changes_requested';
+                                $rApproved   = $round->status === 'approved';
+                                $rPending    = $round->status === 'pending';
+                                $borderColor = $rHasChanges ? 'rgba(255,140,0,.3)' : ($rApproved ? 'rgba(34,197,94,.3)' : 'var(--border2)');
+                                $bgHeader    = $rHasChanges ? 'rgba(255,140,0,.04)' : ($rApproved ? 'rgba(34,197,94,.04)' : 'var(--s2)');
+                            @endphp
+
+                            <div x-data="{ open: {{ $loop->first ? 'true' : 'false' }} }"
+                                 style="border:1px solid {{ $borderColor }}">
+
+                                {{-- Cabeçalho da rodada (clicável) --}}
+                                <button type="button" @click="open = !open"
+                                    class="w-full flex items-center justify-between px-4 py-3 text-left"
+                                    style="background:{{ $bgHeader }}">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-sm font-bold" style="color:var(--text)">Rodada #{{ $round->round_number }}</span>
+                                        <span class="text-xs" style="color:var(--muted)">{{ $round->submitted_at->format('d/m/Y H:i') }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-xs font-semibold px-2 py-0.5"
+                                              style="background:{{ $rApproved ? 'rgba(34,197,94,.12)' : ($rHasChanges ? 'rgba(255,140,0,.12)' : 'rgba(106,90,205,.12)') }};
+                                                     color:{{ $rApproved ? '#22c55e' : ($rHasChanges ? 'var(--orange)' : 'var(--purple)') }}">
+                                            {{ $round->statusLabel() }}
+                                        </span>
+                                        <span x-text="open ? '▴' : '▾'" style="color:var(--muted); font-size:10px"></span>
+                                    </div>
+                                </button>
+
+                                {{-- Corpo da rodada --}}
+                                <div x-show="open" x-cloak class="flex flex-col gap-3 px-4 pb-4 pt-3">
+                                    @foreach($round->tokens as $token)
+                                        @if($token->reviewed_at)
+                                            <div style="border:1px solid var(--border2)">
+                                                {{-- Cabeçalho do aprovador --}}
+                                                <div class="flex items-center justify-between px-4 py-2.5"
+                                                     style="border-bottom:1px solid var(--border2); background:var(--s2)">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0"
+                                                             style="background:var(--grad)">
+                                                            {{ strtoupper(substr($token->contact->name, 0, 1)) }}
+                                                        </div>
+                                                        <span class="text-sm font-semibold" style="color:var(--text)">{{ $token->contact->name }}</span>
+                                                        <span class="text-xs font-semibold px-1.5 py-0.5"
+                                                              style="background:{{ $token->status === 'approved' ? 'rgba(34,197,94,.12)' : 'rgba(255,140,0,.12)' }};
+                                                                     color:{{ $token->status === 'approved' ? '#22c55e' : 'var(--orange)' }}">
+                                                            {{ $token->status === 'approved' ? '✓ Aprovado' : '✎ Ajustes' }}
+                                                        </span>
+                                                    </div>
+                                                    <span class="text-xs" style="color:var(--muted)">
+                                                        {{ $token->reviewed_at->format('d/m H:i') }}
+                                                    </span>
+                                                </div>
+
+                                                <div class="px-4 py-3 flex flex-col gap-2.5">
+                                                    {{-- Comentário geral do aprovador --}}
+                                                    @if($token->overall_comment)
+                                                        <div class="px-3 py-2.5 mb-1"
+                                                             style="background:rgba(106,90,205,.04); border-left:3px solid var(--purple)">
+                                                            <p class="text-xs font-semibold uppercase tracking-widest mb-1.5"
+                                                               style="color:var(--muted); letter-spacing:.07em">Comentário Geral</p>
+                                                            <p class="text-sm whitespace-pre-wrap"
+                                                               style="color:var(--text); line-height:1.65">{{ $token->overall_comment }}</p>
+                                                        </div>
+                                                    @endif
+
+                                                    {{-- Feedback por peça --}}
+                                                    @foreach($token->feedbacks as $feedback)
+                                                        @php $needsChange = $feedback->status === 'changes_requested'; @endphp
+                                                        <div class="flex gap-3 px-3 py-2.5"
+                                                             style="background:{{ $needsChange ? 'rgba(255,140,0,.04)' : 'rgba(34,197,94,.03)' }};
+                                                                    border:1px solid {{ $needsChange ? 'rgba(255,140,0,.2)' : 'rgba(34,197,94,.15)' }}">
+                                                            <span class="text-xl flex-shrink-0 mt-0.5 leading-none">
+                                                                {{ $feedback->attachment?->icon() ?? '📎' }}
+                                                            </span>
+                                                            <div class="flex-1 min-w-0">
+                                                                <div class="flex items-start justify-between gap-2 flex-wrap mb-1">
+                                                                    <span class="text-sm font-medium leading-snug"
+                                                                          style="color:var(--text); word-break:break-all">
+                                                                        {{ $feedback->attachment?->filename ?? '—' }}
+                                                                    </span>
+                                                                    <span class="text-xs font-semibold flex-shrink-0 px-2 py-0.5"
+                                                                          style="background:{{ $needsChange ? 'rgba(255,140,0,.12)' : 'rgba(34,197,94,.12)' }};
+                                                                                 color:{{ $needsChange ? 'var(--orange)' : '#22c55e' }}">
+                                                                        {{ $needsChange ? '✎ Ajustes' : '✓ Aprovado' }}
+                                                                    </span>
+                                                                </div>
+                                                                @if($feedback->comment)
+                                                                    <p class="text-sm whitespace-pre-wrap"
+                                                                       style="color:{{ $needsChange ? 'var(--text)' : 'var(--muted2)' }}; line-height:1.6">
+                                                                        {{ $feedback->comment }}
+                                                                    </p>
+                                                                @elseif(!$needsChange)
+                                                                    <p class="text-xs" style="color:var(--muted)">Sem comentários.</p>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @else
+                                            {{-- Aprovador ainda não respondeu --}}
+                                            <div class="flex items-center justify-between px-4 py-3"
+                                                 style="background:var(--s2); border:1px dashed var(--border2)">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0"
+                                                         style="background:var(--grad); opacity:.4">
+                                                        {{ strtoupper(substr($token->contact->name, 0, 1)) }}
+                                                    </div>
+                                                    <span class="text-sm" style="color:var(--muted)">{{ $token->contact->name }}</span>
+                                                </div>
+                                                <span class="text-xs" style="color:var(--muted)">Aguardando resposta…</span>
+                                            </div>
+                                        @endif
+                                    @endforeach
+
+                                    {{-- Se rodada pendente mas ninguém revisou ainda --}}
+                                    @if($round->tokens->filter(fn($t) => $t->reviewed_at)->isEmpty() && $rPending)
+                                        <p class="text-sm text-center py-3" style="color:var(--muted)">
+                                            Nenhum aprovador respondeu ainda.
+                                        </p>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             {{-- ══ COMENTÁRIOS ══ --}}
             <div class="card card-body-lg" id="comentarios">
@@ -513,28 +683,70 @@
                 </div>
             </div>
 
-            {{-- APROVAÇÃO --}}
+            {{-- APROVAÇÃO DO CLIENTE --}}
             <div class="card card-body">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Aprovação</p>
-                <div class="flex flex-col gap-3">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs" style="color:var(--muted)">Método</span>
-                        <span class="text-sm font-medium" style="color:var(--text)">{{ $task->approvalMethodLabel() ?: '—' }}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs" style="color:var(--muted)">Aprov. Interna</span>
-                        <span class="text-sm font-semibold"
-                              style="color:{{ $task->internal_approval ? 'var(--purple)' : 'var(--muted2)' }}">
-                            {{ $task->internal_approval ? 'Sim' : 'Não' }}
-                        </span>
-                    </div>
-                    @if($task->approval_date)
+
+                @php $latestRound = $task->latestApprovalRound; @endphp
+
+                @if($latestRound)
+                    <div class="flex flex-col gap-3">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs" style="color:var(--muted)">Data</span>
-                            <span class="text-sm font-medium" style="color:var(--text)">{{ $task->approval_date->format('d/m/Y') }}</span>
+                            <span class="text-xs" style="color:var(--muted)">Rodada</span>
+                            <span class="text-sm font-semibold" style="color:var(--text)">#{{ $latestRound->round_number }}</span>
                         </div>
-                    @endif
-                </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs" style="color:var(--muted)">Status</span>
+                            <span class="text-xs font-semibold px-2 py-0.5"
+                                  style="background:{{ $latestRound->status === 'approved' ? 'rgba(34,197,94,.12)' : ($latestRound->status === 'changes_requested' ? 'rgba(255,140,0,.12)' : 'rgba(106,90,205,.12)') }};
+                                         color:{{ $latestRound->status === 'approved' ? '#22c55e' : ($latestRound->status === 'changes_requested' ? 'var(--orange)' : 'var(--purple)') }}">
+                                {{ $latestRound->statusLabel() }}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs" style="color:var(--muted)">Enviado em</span>
+                            <span class="text-xs font-medium" style="color:var(--muted2)">{{ $latestRound->submitted_at->format('d/m H:i') }}</span>
+                        </div>
+                        @php $tokens = $latestRound->tokens; @endphp
+                        @if($tokens->count())
+                            <div style="border-top:1px solid var(--border2); padding-top:10px; margin-top:4px">
+                                <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Aprovadores</p>
+                                @foreach($tokens as $token)
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <span class="text-xs truncate" style="color:var(--muted2); max-width:120px">{{ $token->contact->name }}</span>
+                                        <span class="text-xs font-semibold"
+                                              style="color:{{ $token->status === 'approved' ? '#22c55e' : ($token->status === 'changes_requested' ? 'var(--orange)' : 'var(--muted)') }}">
+                                            {{ $token->status === 'approved' ? '✓ Aprovado' : ($token->status === 'changes_requested' ? '✎ Ajustes' : '· Pendente') }}
+                                        </span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                @else
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs" style="color:var(--muted)">Método</span>
+                            <span class="text-sm font-medium" style="color:var(--text)">{{ $task->approvalMethodLabel() ?: '—' }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs" style="color:var(--muted)">Aprov. Interna</span>
+                            <span class="text-sm font-semibold"
+                                  style="color:{{ $task->internal_approval ? 'var(--purple)' : 'var(--muted2)' }}">
+                                {{ $task->internal_approval ? 'Sim' : 'Não' }}
+                            </span>
+                        </div>
+                        @if($task->approval_date)
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs" style="color:var(--muted)">Data</span>
+                                <span class="text-sm font-medium" style="color:var(--text)">{{ $task->approval_date->format('d/m/Y') }}</span>
+                            </div>
+                        @endif
+                        <p class="text-xs mt-1" style="color:var(--muted2); line-height:1.5">
+                            Para enviar ao cliente, altere a <strong>Situação</strong> para <em>Enviar para o Cliente</em>.
+                        </p>
+                    </div>
+                @endif
             </div>
 
             {{-- SOLICITANTE --}}

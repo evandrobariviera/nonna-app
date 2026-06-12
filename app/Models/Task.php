@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Task extends Model
 {
@@ -66,9 +67,11 @@ class Task extends Model
         'revisao'               => ['label' => 'Em Revisão',          'col' => 'revisao',      'color' => 'purple'],
         'aguardando_envio'      => ['label' => 'Aguardando Envio',    'col' => 'revisao',      'color' => 'purple'],
         'aguardando_resposta'   => ['label' => 'Aguardando Resposta', 'col' => 'revisao',      'color' => 'purple'],
-        'ajuste'                => ['label' => 'Em Ajuste',           'col' => 'revisao',      'color' => 'purple'],
-        'concluido'             => ['label' => 'Concluído',           'col' => 'concluido',    'color' => 'green'],
-        'cancelado'             => ['label' => 'Cancelado',           'col' => 'cancelado',    'color' => 'red'],
+        'ajuste'                    => ['label' => 'Em Ajuste',              'col' => 'revisao',      'color' => 'purple'],
+        'aguardando_aprovacao'      => ['label' => 'Aguardando Aprovação',   'col' => 'revisao',      'color' => 'blue'],
+        'concluido'                 => ['label' => 'Concluído',              'col' => 'concluido',    'color' => 'green'],
+        'aprovado'                  => ['label' => 'Aprovado pelo Cliente',  'col' => 'concluido',    'color' => 'green'],
+        'cancelado'                 => ['label' => 'Cancelado',              'col' => 'cancelado',    'color' => 'red'],
     ];
 
     public static array $types = [
@@ -105,6 +108,16 @@ class Task extends Model
         'ticket'     => 'Ticket',
     ];
 
+    public static array $situations = [
+        ''                        => '—',
+        'em_producao'             => 'Em Produção',
+        'aguardando_referencias'  => 'Aguardando Referências',
+        'em_revisao_interna'      => 'Em Revisão Interna',
+        'enviar_para_cliente'     => 'Enviar para o Cliente',
+        'agendado_publicacao'     => 'Agendado para Publicação',
+        'publicado'               => 'Publicado',
+    ];
+
     public static array $requesterChannels = [
         'whatsapp'  => 'WhatsApp',
         'email'     => 'E-mail',
@@ -136,6 +149,11 @@ class Task extends Model
     public function typeLabel(): string
     {
         return self::$types[$this->task_type] ?? $this->task_type;
+    }
+
+    public function situationLabel(): string
+    {
+        return self::$situations[$this->situation ?? ''] ?? ($this->situation ?? '—');
     }
 
     public function destinationLabel(): string
@@ -201,6 +219,16 @@ class Task extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(TaskComment::class)->orderBy('created_at');
+    }
+
+    public function approvalRounds(): HasMany
+    {
+        return $this->hasMany(TaskApprovalRound::class)->orderBy('round_number');
+    }
+
+    public function latestApprovalRound(): HasOne
+    {
+        return $this->hasOne(TaskApprovalRound::class)->orderByDesc('round_number');
     }
 
     public function executors(): BelongsToMany

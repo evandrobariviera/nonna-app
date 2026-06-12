@@ -119,6 +119,27 @@
     </div>
 </div>
 
+{{-- Aprovações --}}
+@php
+    $_approvalPending = \App\Models\TaskApprovalRound::whereIn('status',['pending','changes_requested'])->count();
+@endphp
+<a href="{{ route('approvals.index') }}"
+   class="nav-group-trigger {{ request()->routeIs('approvals.*') ? 'open' : '' }}"
+   style="{{ request()->routeIs('approvals.*') ? 'color:var(--orange);' : '' }}">
+    <span class="flex items-center gap-3">
+        <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Aprovações
+    </span>
+    @if($_approvalPending > 0)
+        <span class="text-xs px-1.5 py-px rounded-full font-semibold"
+              style="background:rgba(255,140,0,.15); color:var(--orange); border:1px solid rgba(255,140,0,.3)">
+            {{ $_approvalPending }}
+        </span>
+    @endif
+</a>
+
 {{-- Atendimento --}}
 <div x-data="{ open: {{ request()->routeIs('meetings.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">

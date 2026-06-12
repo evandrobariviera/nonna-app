@@ -13,17 +13,18 @@ class TaskAttachmentController extends Controller
     public function store(Request $request, Task $task)
     {
         $request->validate([
-            'file' => 'required|file|max:51200', // 50 MB
+            'file' => 'required|file|max:102400', // 100 MB
         ]);
 
         $file = $request->file('file');
-        $path = $file->store("tasks/{$task->id}", 'public');
+        $disk = config('filesystems.default', 'r2');
+        $path = $file->store("tasks/{$task->id}", $disk);
 
         TaskAttachment::create([
             'task_id'     => $task->id,
             'filename'    => $file->getClientOriginalName(),
             'disk_path'   => $path,
-            'disk'        => 'public',
+            'disk'        => $disk,
             'mime_type'   => $file->getMimeType(),
             'size'        => $file->getSize(),
             'uploaded_by' => Auth::id(),

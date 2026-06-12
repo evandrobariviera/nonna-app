@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'n8n' => [
+        'approval_webhook_url' => env('N8N_APPROVAL_WEBHOOK_URL'),
+    ],
+
 ];
