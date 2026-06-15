@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+
+class OrganizationSettingsController extends Controller
+{
+    public function index(): View
+    {
+        $org          = app('currentOrganization');
+        $integrations = $org->integrations()->orderBy('provider')->orderBy('label')->get();
+        $members      = $org->users()->withPivot('role')->orderBy('name')->get();
+        $apiTokens    = $org->tokens()->orderByDesc('created_at')->get();
+
+        return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens'));
+    }
+
+    public function createToken(Request $request): RedirectResponse
+    {
+        $org  = app('currentOrganization');
+        $data = $request->validate(['token_name' => ['required', 'string', 'max:80']]);
+
+        $token = $org->createToken($data['token_name']);
+
+        return back()
+            ->with('new_token', $token->plainTextToken)
+            ->with('success', 'Token gerado. Copie agora — não será exibido novamente.')
+            ->with('tab', 'api');
+    }
+
+    public function deleteToken(Request $request, int $tokenId): RedirectResponse
+    {
+        $org = app('currentOrganization');
+        $org->tokens()->where('id', $tokenId)->delete();
+
+        return back()->with('success', 'Token revogado.')->with('tab', 'api');
+    }
+
+    public function update(Request $request): RedirectResponse
+    {
+        $org = app('currentOrganization');
+
+        $data = $request->validate([
+            'name'            => ['required', 'string', 'max:120'],
+            'primary_color'   => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'secondary_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'logo_url'        => ['nullable', 'url', 'max:500'],
+        ]);
+
+        $settings = $org->settings ?? [];
+        $settings['branding']['primary_color']   = $data['primary_color']   ?? '#6A5ACD';
+        $settings['branding']['secondary_color'] = $data['secondary_color'] ?? '#FF8C00';
+        $settings['branding']['logo_url']        = $data['logo_url'] ?? null;
+
+        $org->update([
+            'name'     => $data['name'],
+            'settings' => $settings,
+        ]);
+
+        return back()->with('success', 'Configurações salvas.');
+    }
+}

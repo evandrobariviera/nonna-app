@@ -11,6 +11,20 @@
     <link href="https://fonts.bunny.net/css?family=syne:700,800&display=swap" rel="stylesheet" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    {{-- Branding dinâmico do tenant --}}
+    @isset($currentOrg)
+    @php
+        $brandPrimary   = $currentOrg->brandColor('primary_color',   '#6A5ACD');
+        $brandSecondary = $currentOrg->brandColor('secondary_color',  '#FF8C00');
+    @endphp
+    <style>
+        :root {
+            --purple: {{ $brandPrimary }};
+            --orange: {{ $brandSecondary }};
+        }
+    </style>
+    @endisset
 </head>
 <body class="h-screen overflow-hidden" x-data="{ sidebarOpen: false }">
 
@@ -52,10 +66,16 @@
         <aside class="hidden md:flex md:w-64 md:flex-col sidebar-nav flex-shrink-0">
             {{-- Logo --}}
             <div class="flex h-16 items-center px-6 border-b" style="border-color:var(--border); flex-shrink:0">
-                <img src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png"
-                     alt="Nonna OS" class="h-7 w-auto"
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
-                <span class="text-base font-black grad-text hidden">nonna OS</span>
+                @if(isset($currentOrg) && $currentOrg->logoUrl())
+                    <img src="{{ $currentOrg->logoUrl() }}" alt="{{ $currentOrg->name }}" class="h-7 w-auto"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <span class="text-base font-black grad-text hidden">{{ $currentOrg->name }}</span>
+                @else
+                    <img src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png"
+                         alt="{{ config('app.name') }}" class="h-7 w-auto"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <span class="text-base font-black grad-text hidden">{{ config('app.name') }}</span>
+                @endif
             </div>
 
             {{-- Usuário logado --}}

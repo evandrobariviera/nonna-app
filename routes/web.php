@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\ClientAdAccountController;
 use App\Http\Controllers\FilaController;
+use App\Http\Controllers\OrganizationIntegrationController;
+use App\Http\Controllers\OrganizationMemberController;
+use App\Http\Controllers\OrganizationSettingsController;
 use App\Http\Controllers\ClientContactController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientCredentialController;
@@ -248,6 +251,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('tasks.update-status');
     Route::delete('/planejamentos/{macroplan}/projetos/{project}/tarefas/{task}', [TaskController::class, 'destroy'])
         ->name('tasks.destroy');
+
+    // ── Configurações da Organização (somente admin/owner) ──
+    Route::middleware('org.admin')->group(function () {
+        Route::get('/configuracoes', [OrganizationSettingsController::class, 'index'])
+            ->name('settings.index');
+        Route::patch('/configuracoes', [OrganizationSettingsController::class, 'update'])
+            ->name('settings.update');
+
+        Route::post('/configuracoes/integracoes', [OrganizationIntegrationController::class, 'store'])
+            ->name('settings.integrations.store');
+        Route::patch('/configuracoes/integracoes/{integration}', [OrganizationIntegrationController::class, 'update'])
+            ->name('settings.integrations.update');
+        Route::delete('/configuracoes/integracoes/{integration}', [OrganizationIntegrationController::class, 'destroy'])
+            ->name('settings.integrations.destroy');
+
+        Route::post('/configuracoes/api/tokens', [OrganizationSettingsController::class, 'createToken'])
+            ->name('settings.tokens.create');
+        Route::delete('/configuracoes/api/tokens/{tokenId}', [OrganizationSettingsController::class, 'deleteToken'])
+            ->name('settings.tokens.delete');
+
+        Route::post('/configuracoes/equipe', [OrganizationMemberController::class, 'store'])
+            ->name('settings.members.store');
+        Route::patch('/configuracoes/equipe/{user}', [OrganizationMemberController::class, 'update'])
+            ->name('settings.members.update');
+        Route::delete('/configuracoes/equipe/{user}', [OrganizationMemberController::class, 'destroy'])
+            ->name('settings.members.destroy');
+    });
 
 });
 

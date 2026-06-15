@@ -1,0 +1,71 @@
+version: '3.8'
+
+# Stack do Portainer — Nonna App
+# Deploy: Portainer > Stacks > Add stack > Upload este arquivo
+# Variáveis de ambiente: configurar em "Environment variables" no Portainer
+
+services:
+  app:
+    image: ghcr.io/evandrobariviera/nonna-app:latest
+    restart: unless-stopped
+    environment:
+      APP_NAME: "Nonna App"
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: ${APP_KEY}
+      APP_URL: https://app.nonnaagenciadigital.com.br
+      APP_DOMAIN: nonnaagenciadigital.com.br
+
+      DB_CONNECTION: pgsql
+      DB_HOST: 10.0.0.3          # IP privado do servidor de banco
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      SESSION_DRIVER: database
+      SESSION_DOMAIN: .nonnaagenciadigital.com.br
+      SESSION_LIFETIME: 480
+
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+
+      FILESYSTEM_DISK: r2
+      CLOUDFLARE_R2_ACCESS_KEY_ID: ${CLOUDFLARE_R2_ACCESS_KEY_ID}
+      CLOUDFLARE_R2_SECRET_ACCESS_KEY: ${CLOUDFLARE_R2_SECRET_ACCESS_KEY}
+      CLOUDFLARE_R2_BUCKET: ${CLOUDFLARE_R2_BUCKET}
+      CLOUDFLARE_R2_ENDPOINT: ${CLOUDFLARE_R2_ENDPOINT}
+      CLOUDFLARE_R2_PUBLIC_URL: ${CLOUDFLARE_R2_PUBLIC_URL}
+
+      N8N_APPROVAL_WEBHOOK_URL: ${N8N_APPROVAL_WEBHOOK_URL}
+
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: error
+
+    networks:
+      - nonna-project-02-manager
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first       # sobe novo antes de derrubar o atual (zero downtime)
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.nonna-app.rule=Host(`app.nonnaagenciadigital.com.br`)"
+        - "traefik.http.routers.nonna-app.entrypoints=websecure"
+        - "traefik.http.routers.nonna-app.tls.certresolver=letsencryptresolver"
+        - "traefik.http.services.nonna-app.loadbalancer.server.port=80"
+        # Redirect HTTP → HTTPS
+        - "traefik.http.routers.nonna-app-http.rule=Host(`app.nonnaagenciadigital.com.br`)"
+        - "traefik.http.routers.nonna-app-http.entrypoints=web"
+        - "traefik.http.routers.nonna-app-http.middlewares=https-redirect"
+
+networks:
+  nonna-project-02-manager:
+    name: nonna-project-02-manager
+    external: true
