@@ -581,8 +581,6 @@
             </div>
         </div>
 
-    </div>
-
         {{-- ══ TAB API & TOKENS ══ --}}
         <div x-show="tab === 'api'" x-cloak>
 
@@ -701,6 +699,8 @@
                 </div>
             @endif
         </div>
+
+    </div>
 
     @push('scripts')
     <script>
