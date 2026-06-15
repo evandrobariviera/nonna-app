@@ -10,7 +10,6 @@ storage/framework/cache/*
 storage/framework/sessions/*
 storage/framework/views/*
 public/build
-docker
 *.md
 tests
 .claude
