@@ -11,7 +11,8 @@ until php -r "new PDO('pgsql:host=${DB_HOST};port=${DB_PORT:-5432};dbname=${DB_D
 done
 echo "==> Banco disponível."
 
-# Cache de configurações (melhora performance em produção)
+# Descobre pacotes e gera cache de configurações
+php artisan package:discover --ansi
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache

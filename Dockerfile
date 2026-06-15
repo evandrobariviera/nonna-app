@@ -63,7 +63,7 @@ COPY --from=assets /app/public/build ./public/build
 
 # Finaliza autoload do Composer
 COPY --from=vendor /usr/bin/composer /usr/bin/composer
-RUN composer dump-autoload --optimize --no-dev --classmap-authoritative \
+RUN composer dump-autoload --optimize --no-dev --classmap-authoritative --no-scripts \
     && rm /usr/bin/composer
 
 # Configurações
