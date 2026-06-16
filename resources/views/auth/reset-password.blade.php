@@ -1,39 +1,62 @@
 <x-guest-layout>
-    <form method="POST" action="{{ route('password.store') }}">
-        @csrf
+    <x-slot name="title">Nova senha — {{ config('app.name', 'Nonna OS') }}</x-slot>
 
-        <!-- Password Reset Token -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-black mb-1" style="color: var(--text)">Criar nova senha</h2>
+        <p class="text-sm" style="color: var(--muted)">Escolha uma senha segura para sua conta.</p>
+    </div>
+
+    <form method="POST" action="{{ route('password.store') }}" class="space-y-5">
+        @csrf
         <input type="hidden" name="token" value="{{ $request->route('token') }}">
 
-        <!-- Email Address -->
         <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email', $request->email)" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            <label for="email" class="block text-xs font-semibold mb-1.5" style="color: var(--muted)">
+                E-mail
+            </label>
+            <input id="email" type="email" name="email"
+                   value="{{ old('email', $request->email) }}"
+                   required autofocus autocomplete="username"
+                   class="w-full rounded-lg border px-3 py-2.5 text-sm outline-none focus:ring-2"
+                   style="background: var(--s1); border-color: var(--border2); color: var(--text);
+                          --tw-ring-color: var(--purple); --tw-ring-opacity: 0.25">
+            @error('email')
+                <p class="mt-1.5 text-xs" style="color: var(--red)">{{ $message }}</p>
+            @enderror
         </div>
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-            <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+        <div>
+            <label for="password" class="block text-xs font-semibold mb-1.5" style="color: var(--muted)">
+                Nova senha
+            </label>
+            <input id="password" type="password" name="password"
+                   required autocomplete="new-password" placeholder="Mínimo 8 caracteres"
+                   class="w-full rounded-lg border px-3 py-2.5 text-sm outline-none focus:ring-2"
+                   style="background: var(--s1); border-color: var(--border2); color: var(--text);
+                          --tw-ring-color: var(--purple); --tw-ring-opacity: 0.25">
+            @error('password')
+                <p class="mt-1.5 text-xs" style="color: var(--red)">{{ $message }}</p>
+            @enderror
         </div>
 
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                                type="password"
-                                name="password_confirmation" required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+        <div>
+            <label for="password_confirmation" class="block text-xs font-semibold mb-1.5" style="color: var(--muted)">
+                Confirmar nova senha
+            </label>
+            <input id="password_confirmation" type="password" name="password_confirmation"
+                   required autocomplete="new-password" placeholder="••••••••"
+                   class="w-full rounded-lg border px-3 py-2.5 text-sm outline-none focus:ring-2"
+                   style="background: var(--s1); border-color: var(--border2); color: var(--text);
+                          --tw-ring-color: var(--purple); --tw-ring-opacity: 0.25">
+            @error('password_confirmation')
+                <p class="mt-1.5 text-xs" style="color: var(--red)">{{ $message }}</p>
+            @enderror
         </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Reset Password') }}
-            </x-primary-button>
-        </div>
+        <button type="submit"
+                class="w-full py-2.5 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"
+                style="background: var(--grad)">
+            Redefinir senha
+        </button>
     </form>
 </x-guest-layout>

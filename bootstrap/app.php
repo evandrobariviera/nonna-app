@@ -18,7 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'org.admin' => \App\Http\Middleware\EnsureOrganizationAdmin::class,
+            'org.admin'  => \App\Http\Middleware\EnsureOrganizationAdmin::class,
+            'superadmin' => \App\Http\Middleware\EnsureSuperAdmin::class,
+            'portal'     => \App\Http\Middleware\EnsurePortalAccess::class,
+            'not-client' => \App\Http\Middleware\EnsureNotClient::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

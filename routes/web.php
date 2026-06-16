@@ -1,5 +1,12 @@
 <?php
 
+use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboard;
+use App\Http\Controllers\SuperAdmin\OrganizationController as SuperAdminOrgs;
+use App\Http\Controllers\Portal\DashboardController as PortalDashboard;
+use App\Http\Controllers\Portal\ProjectController as PortalProjects;
+use App\Http\Controllers\Portal\AccountController as PortalAccount;
+use App\Http\Controllers\Portal\CampaignController as PortalCampaigns;
+use App\Http\Controllers\ClientPortalAccessController;
 use App\Http\Controllers\ClientAdAccountController;
 use App\Http\Controllers\FilaController;
 use App\Http\Controllers\OrganizationIntegrationController;
@@ -38,7 +45,7 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // ── CRM: Clientes (autenticado) ──
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
 
     Route::resource('clientes', ClientController::class)->parameters([
         'clientes' => 'client',
@@ -300,6 +307,29 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// ── Portal do Cliente (Nível 3) ──
+Route::prefix('portal')->name('portal.')->middleware(['auth', 'portal'])->group(function () {
+    Route::get('/', [PortalDashboard::class, 'index'])->name('dashboard');
+    Route::get('/projetos', [PortalProjects::class, 'index'])->name('projects.index');
+    Route::get('/projetos/{macroplan}', [PortalProjects::class, 'show'])->name('projects.show');
+    Route::get('/campanhas', [PortalCampaigns::class, 'index'])->name('campaigns.index');
+    Route::get('/conta', [PortalAccount::class, 'index'])->name('account');
+});
+
+// ── Criar acesso ao portal (agência) ──
+Route::middleware(['auth', 'not-client'])->group(function () {
+    Route::post('/clientes/{client}/acesso-portal', [ClientPortalAccessController::class, 'store'])
+        ->name('clients.portal-access.store');
+    Route::delete('/clientes/{client}/acesso-portal', [ClientPortalAccessController::class, 'destroy'])
+        ->name('clients.portal-access.destroy');
+});
+
+// ── SuperAdmin ──
+Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'superadmin'])->group(function () {
+    Route::get('/', [SuperAdminDashboard::class, 'index'])->name('dashboard');
+    Route::resource('organizations', SuperAdminOrgs::class)->except(['show', 'destroy']);
 });
 
 require __DIR__.'/auth.php';

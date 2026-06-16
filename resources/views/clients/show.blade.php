@@ -77,6 +77,9 @@
             <button class="tab-btn" :class="{ active: tab === 'planejamentos' }" @click="tab = 'planejamentos'">
                 Planejamentos
             </button>
+            <button class="tab-btn" :class="{ active: tab === 'portal' }" @click="tab = 'portal'">
+                Portal
+            </button>
         </div>
 
         {{-- TAB: GERAL --}}
@@ -1147,6 +1150,82 @@
                     @endforeach
                 </div>
             @endif
+        </div>
+
+        {{-- ══ TAB PORTAL ══ --}}
+        @php $portalUser = \App\Models\User::where('client_id', $client->id)->first(); @endphp
+        <div x-show="tab === 'portal'" x-cloak>
+            <div class="max-w-lg">
+                <h2 class="text-sm font-bold mb-1" style="color: var(--text)">Acesso ao Portal do Cliente</h2>
+                <p class="text-xs mb-5" style="color: var(--muted)">
+                    Crie um login para que o cliente acompanhe seus projetos e planejamentos diretamente no portal.
+                </p>
+
+                @if($portalUser)
+                    {{-- Acesso já existe --}}
+                    <div class="card p-5 mb-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-bold uppercase tracking-wide mb-1" style="color: var(--green)">
+                                    Acesso ativo
+                                </p>
+                                <p class="text-sm font-semibold" style="color: var(--text)">{{ $portalUser->name }}</p>
+                                <p class="text-xs" style="color: var(--muted)">{{ $portalUser->email }}</p>
+                            </div>
+                            <a href="{{ route('portal.dashboard') }}" target="_blank"
+                               class="text-xs font-semibold px-3 py-2 rounded-lg"
+                               style="background: rgba(106,90,205,.1); color: var(--purple)">
+                                Ver portal →
+                            </a>
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ route('clients.portal-access.destroy', $client) }}"
+                          onsubmit="return confirm('Remover acesso de {{ $portalUser->name }}?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="text-xs font-semibold"
+                                style="color: var(--muted)"
+                                onmouseover="this.style.color='var(--red)'"
+                                onmouseout="this.style.color='var(--muted)'">
+                            Remover acesso
+                        </button>
+                    </form>
+                @else
+                    {{-- Criar acesso --}}
+                    <form method="POST" action="{{ route('clients.portal-access.store', $client) }}"
+                          class="card p-5 space-y-4">
+                        @csrf
+                        <div>
+                            <label class="block text-xs font-semibold mb-1.5" style="color: var(--muted)">
+                                E-mail de acesso
+                            </label>
+                            <input type="email" name="portal_email"
+                                   value="{{ old('portal_email', $client->contact_email) }}"
+                                   required placeholder="email@cliente.com.br"
+                                   class="w-full rounded-lg border px-3 py-2 text-sm"
+                                   style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                            @error('portal_email')
+                                <p class="mt-1 text-xs" style="color: var(--red)">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1.5" style="color: var(--muted)">
+                                Senha inicial
+                            </label>
+                            <input type="text" name="portal_password"
+                                   required placeholder="Mínimo 8 caracteres"
+                                   class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
+                                   style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                            @error('portal_password')
+                                <p class="mt-1 text-xs" style="color: var(--red)">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <button type="submit" class="btn-primary px-4 py-2 text-sm rounded-lg font-semibold">
+                            Criar Acesso
+                        </button>
+                    </form>
+                @endif
+            </div>
         </div>
 
     </div>{{-- /x-data tabs --}}
