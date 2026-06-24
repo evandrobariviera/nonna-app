@@ -1,6 +1,8 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
+
+@source "../../resources/views/**/*.blade.php";
+@source "../../resources/js/**/*.js";
 
 [x-cloak] { display: none !important; }
 
