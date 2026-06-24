@@ -206,6 +206,52 @@
     </div>
 </div>
 
+{{-- ══ VISÕES (por papel funcional) ══ --}}
+@php
+    $_visionRoles = [
+        'direcao_geral'    => 'Direção Geral',
+        'direcao_criativa' => 'Direção Criativa',
+        'coo'              => 'COO & Operação',
+        'gestor_campanhas' => 'Gestor de Campanhas',
+        'head_criativa'    => 'Head Criativa & Copy',
+        'head_tech'        => 'Head de Tecnologia',
+        'designer'         => 'Design',
+        'trafego'          => 'Tráfego',
+        'dev'              => 'Dev',
+    ];
+    $_myRoles = ($isOrgAdmin ?? false)
+        ? array_keys($_visionRoles)
+        : ($userFunctionRoles ?? []);
+    $_activeVision = request()->route('role') ?? null;
+@endphp
+@if(!empty($_myRoles))
+<div class="nav-group-label" style="margin-top:8px">Visões</div>
+
+<div x-data="{ open: {{ $_activeVision ? 'true' : 'false' }} }">
+    <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
+        <span class="flex items-center gap-3">
+            <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+            </svg>
+            Meus Dashboards
+        </span>
+        <svg class="h-3.5 w-3.5 transition-transform duration-200" :class="open ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+    </button>
+    <div x-show="open" x-transition style="display:none">
+        @foreach($_myRoles as $_role)
+            @if(isset($_visionRoles[$_role]))
+                <a href="{{ route('visoes.show', $_role) }}"
+                   class="nav-sub-item {{ $_activeVision === $_role ? 'active' : '' }}">
+                    {{ $_visionRoles[$_role] }}
+                </a>
+            @endif
+        @endforeach
+    </div>
+</div>
+@endif
+
 {{-- ══ ADMINISTRAÇÃO (somente admin/owner) ══ --}}
 @if($isOrgAdmin ?? false)
 <div class="nav-group-label" style="margin-top:8px">Administração</div>

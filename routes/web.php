@@ -30,6 +30,7 @@ use App\Http\Controllers\TaskAttachmentController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\VisionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicRegistrationController;
 use App\Models\ClickupTaskClient;
@@ -262,6 +263,11 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('tasks.update-status');
     Route::delete('/planejamentos/{macroplan}/projetos/{project}/tarefas/{task}', [TaskController::class, 'destroy'])
         ->name('tasks.destroy');
+
+    // ── Visões por papel funcional ──
+    Route::get('/visoes/{role}', [VisionController::class, 'show'])
+        ->name('visoes.show')
+        ->where('role', 'direcao_geral|direcao_criativa|coo|gestor_campanhas|head_criativa|head_tech|designer|trafego|dev');
 
     // ── Configurações da Organização (somente admin/owner) ──
     Route::middleware('org.admin')->group(function () {

@@ -12,7 +12,7 @@ class OrganizationSettingsController extends Controller
     {
         $org          = app('currentOrganization');
         $integrations = $org->integrations()->orderBy('provider')->orderBy('label')->get();
-        $members      = $org->users()->withPivot('role')->orderBy('name')->get();
+        $members      = $org->users()->withPivot(['role', 'function_roles'])->orderBy('name')->get();
         $apiTokens    = $org->tokens()->orderByDesc('created_at')->get();
 
         return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens'));

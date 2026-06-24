@@ -36,22 +36,30 @@ class SetTenant
         if ($organization) {
             app()->instance('currentOrganization', $organization);
 
-            $role = null;
+            $role          = null;
+            $functionRoles = [];
+
             if (auth()->check()) {
-                $role = $organization->users()
+                $pivot = $organization->users()
                     ->where('user_id', auth()->id())
-                    ->first()?->pivot?->role;
+                    ->first()?->pivot;
+
+                $role          = $pivot?->role;
+                $functionRoles = $pivot?->function_roles ?? [];
             }
 
             app()->instance('currentOrgRole', $role);
+            app()->instance('userFunctionRoles', $functionRoles);
 
             view()->share('currentOrg', $organization);
             view()->share('currentOrgRole', $role);
             view()->share('isOrgAdmin', in_array($role, ['owner', 'admin']));
+            view()->share('userFunctionRoles', $functionRoles);
         } else {
             view()->share('currentOrg', null);
             view()->share('currentOrgRole', null);
             view()->share('isOrgAdmin', false);
+            view()->share('userFunctionRoles', []);
         }
 
         return $next($request);

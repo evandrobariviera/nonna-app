@@ -396,14 +396,14 @@
              x-data="{
                 modal: false,
                 editing: null,
-                form: { name: '', email: '', password: '', role: 'member' },
+                form: { name: '', email: '', password: '', role: 'member', function_roles: [] },
                 open(member) {
                     if (member) {
                         this.editing = member;
-                        this.form = { name: member.name, email: member.email, password: '', role: member.role };
+                        this.form = { name: member.name, email: member.email, password: '', role: member.role, function_roles: member.function_roles || [] };
                     } else {
                         this.editing = null;
-                        this.form = { name: '', email: '', password: '', role: 'member' };
+                        this.form = { name: '', email: '', password: '', role: 'member', function_roles: [] };
                     }
                     this.modal = true;
                 },
@@ -474,7 +474,7 @@
                                     @if(!$isOrgOwner)
                                         <div class="flex items-center gap-3 justify-end">
                                             <button type="button"
-                                                    @click="open({{ json_encode(['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'role' => $role]) }})"
+                                                    @click="open({{ json_encode(['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'role' => $role, 'function_roles' => $member->pivot->function_roles ?? []]) }})"
                                                     class="text-xs font-semibold transition-colors"
                                                     style="color:var(--muted)"
                                                     onmouseover="this.style.color='var(--purple)'"
@@ -555,7 +555,7 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Papel</label>
+                            <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Papel (permissão)</label>
                             <select name="role" x-model="form.role" required
                                     class="w-full rounded-lg border px-3 py-2 text-sm"
                                     style="background:var(--s2); border-color:var(--border2); color:var(--text)">
@@ -563,6 +563,27 @@
                                 <option value="manager">Gestor</option>
                                 <option value="member">Membro</option>
                             </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold mb-2" style="color:var(--muted)">Papéis funcionais (dashboards)</label>
+                            <div style="display:flex; flex-wrap:wrap; gap:6px">
+                                @foreach(\App\Models\OrganizationUser::$functionRoles as $frKey => $frLabel)
+                                    <label style="cursor:pointer; position:relative">
+                                        <input type="checkbox"
+                                               name="function_roles[]"
+                                               value="{{ $frKey }}"
+                                               x-model="form.function_roles"
+                                               style="position:absolute; opacity:0; width:0; height:0; pointer-events:none">
+                                        <span :style="form.function_roles.includes('{{ $frKey }}')
+                                                ? 'background:rgba(106,90,205,.12); border-color:rgba(106,90,205,.4); color:var(--purple);'
+                                                : 'background:var(--s3); border-color:var(--border2); color:var(--muted);'"
+                                              style="display:inline-block; padding:4px 12px; border-radius:100px; font-size:11px; font-weight:600; border:1px solid; transition:all .12s; user-select:none">
+                                            {{ $frLabel }}
+                                        </span>
+                                    </label>
+                                @endforeach
+                            </div>
                         </div>
 
                         <div class="flex justify-end gap-3 pt-2">

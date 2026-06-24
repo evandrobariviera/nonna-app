@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\OrganizationUser;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,11 +16,15 @@ class OrganizationMemberController extends Controller
     {
         $org = app('currentOrganization');
 
+        $validFunctionRoles = array_keys(OrganizationUser::$functionRoles);
+
         $data = $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'email', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
-            'role'     => ['required', 'in:admin,manager,member'],
+            'name'           => ['required', 'string', 'max:255'],
+            'email'          => ['required', 'email', 'unique:users,email'],
+            'password'       => ['required', 'string', 'min:8'],
+            'role'           => ['required', 'in:admin,manager,member'],
+            'function_roles' => ['nullable', 'array'],
+            'function_roles.*' => ['in:' . implode(',', $validFunctionRoles)],
         ]);
 
         $user = User::create([
@@ -28,7 +33,11 @@ class OrganizationMemberController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
-        $org->users()->attach($user->id, ['id' => Str::uuid(), 'role' => $data['role']]);
+        $org->users()->attach($user->id, [
+            'id'             => Str::uuid(),
+            'role'           => $data['role'],
+            'function_roles' => json_encode($data['function_roles'] ?? []),
+        ]);
 
         return back()->with('success', 'Usuário criado e adicionado à organização.')->with('tab', 'equipe');
     }
@@ -39,11 +48,15 @@ class OrganizationMemberController extends Controller
 
         abort_unless($org->users()->where('user_id', $user->id)->exists(), 403);
 
+        $validFunctionRoles = array_keys(OrganizationUser::$functionRoles);
+
         $data = $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'email', Rule::unique('users')->ignore($user->id)],
-            'password' => ['nullable', 'string', 'min:8'],
-            'role'     => ['required', 'in:admin,manager,member'],
+            'name'             => ['required', 'string', 'max:255'],
+            'email'            => ['required', 'email', Rule::unique('users')->ignore($user->id)],
+            'password'         => ['nullable', 'string', 'min:8'],
+            'role'             => ['required', 'in:admin,manager,member'],
+            'function_roles'   => ['nullable', 'array'],
+            'function_roles.*' => ['in:' . implode(',', $validFunctionRoles)],
         ]);
 
         $updateData = ['name' => $data['name'], 'email' => $data['email']];
@@ -52,7 +65,10 @@ class OrganizationMemberController extends Controller
         }
         $user->update($updateData);
 
-        $org->users()->updateExistingPivot($user->id, ['role' => $data['role']]);
+        $org->users()->updateExistingPivot($user->id, [
+            'role'           => $data['role'],
+            'function_roles' => json_encode($data['function_roles'] ?? []),
+        ]);
 
         return back()->with('success', 'Usuário atualizado.')->with('tab', 'equipe');
     }
