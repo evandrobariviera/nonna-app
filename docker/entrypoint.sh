@@ -5,7 +5,7 @@ echo "==> Iniciando Nonna App..."
 
 # Aguarda o banco ficar disponível
 echo "==> Aguardando banco de dados..."
-until php -r "new PDO('pgsql:host=${DB_HOST};port=${DB_PORT:-5432};dbname=${DB_DATABASE}', '${DB_USERNAME}', '${DB_PASSWORD}');" 2>/dev/null; do
+until php -r "new PDO('pgsql:host=${DB_HOST};port=${DB_PORT:-5432};dbname=${DB_DATABASE}', '${DB_USERNAME}', '${DB_PASSWORD}');" > /dev/null 2>&1; do
     echo "    Banco indisponível — aguardando 2s..."
     sleep 2
 done

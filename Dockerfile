@@ -23,7 +23,7 @@ RUN composer install \
 
 
 # ── Stage 3: Runtime ───────────────────────────────────────────────────────────
-FROM php:8.3-fpm-alpine
+FROM php:8.4-fpm-alpine
 
 # Pacotes do sistema
 RUN apk add --no-cache \
