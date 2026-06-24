@@ -65,8 +65,8 @@
             <button class="tab-btn" :class="{ active: tab === 'contas' }" @click="tab = 'contas'">
                 Contas de Anúncios
             </button>
-            <button class="tab-btn" :class="{ active: tab === 'diagnosticos' }" @click="tab = 'diagnosticos'">
-                Diagnósticos
+            <button class="tab-btn" :class="{ active: tab === 'dossies' }" @click="tab = 'dossies'">
+                Dossiê de Marca
             </button>
             <button class="tab-btn" :class="{ active: tab === 'atas' }" @click="tab = 'atas'">
                 Atas
@@ -1004,70 +1004,65 @@
             @endif
         </div>
 
-        {{-- TAB: DIAGNÓSTICOS --}}
-        <div x-show="tab === 'diagnosticos'" x-cloak>
+        {{-- TAB: DOSSIÊ DE MARCA --}}
+        <div x-show="tab === 'dossies'" x-cloak>
 
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">
-                    Diagnósticos Estratégicos
+                    Dossiê de Marca
                 </h3>
-                <form method="POST" action="{{ route('clients.diagnostics.store', $client) }}">
+                <form method="POST" action="{{ route('clients.dossiers.store', $client) }}">
                     @csrf
                     <button type="submit"
                             class="px-4 py-1.5 text-xs font-bold font-mono uppercase tracking-widest text-white"
                             style="background: var(--purple);">
-                        + Novo Diagnóstico
+                        + Novo Dossiê
                     </button>
                 </form>
             </div>
 
-            @if($client->diagnostics->isEmpty())
+            @if($client->dossiers->isEmpty())
                 <div class="tab-placeholder">
-                    <div class="tab-placeholder-icon">🔎</div>
-                    <div class="tab-placeholder-title">Nenhum diagnóstico cadastrado</div>
-                    <div class="tab-placeholder-desc">Clique em "Novo Diagnóstico" para iniciar a imersão estratégica do cliente.</div>
+                    <div class="tab-placeholder-icon">📋</div>
+                    <div class="tab-placeholder-title">Nenhum dossiê criado</div>
+                    <div class="tab-placeholder-desc">Clique em "Novo Dossiê" para iniciar o processo de Etapa 01 — Dossiê de Marca.</div>
                 </div>
             @else
                 <div class="card">
                     <table class="nonna-table">
                         <thead>
                             <tr>
-                                <th>Versão</th>
+                                <th style="width:50px">Vers.</th>
                                 <th>Título</th>
-                                <th>Status</th>
+                                <th>Fase</th>
+                                <th>Kickoff</th>
                                 <th>Criado em</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($client->diagnostics as $diag)
+                            @foreach($client->dossiers as $dossier)
                                 <tr>
-                                    <td class="font-mono text-xs text-[var(--muted)]">v{{ $diag->version }}</td>
-                                    <td class="font-semibold text-[var(--text)]">{{ $diag->title }}</td>
+                                    <td class="font-mono text-xs text-[var(--muted)]">v{{ $dossier->version }}</td>
+                                    <td class="font-semibold text-[var(--text)]">{{ $dossier->title }}</td>
                                     <td>
-                                        <span class="badge badge-{{ $diag->statusColor() }}">
-                                            {{ $diag->statusLabel() }}
+                                        <span class="text-xs font-mono px-2 py-0.5"
+                                              style="background:{{ $dossier->faseColor() }}22; color:{{ $dossier->faseColor() }}; border:1px solid {{ $dossier->faseColor() }}44">
+                                            {{ $dossier->faseLabel() }}
                                         </span>
                                     </td>
                                     <td class="text-xs text-[var(--muted)]">
-                                        {{ $diag->created_at->format('d/m/Y') }}
+                                        {{ $dossier->data_kickoff?->format('d/m/Y') ?? '—' }}
+                                    </td>
+                                    <td class="text-xs text-[var(--muted)]">
+                                        {{ $dossier->created_at->format('d/m/Y') }}
                                     </td>
                                     <td class="text-right">
-                                        <div class="flex items-center justify-end gap-3">
-                                            <a href="{{ route('clients.diagnostics.edit', [$client, $diag]) }}"
-                                               class="text-xs font-mono text-[var(--purple)] hover:underline">
-                                                Editar
-                                            </a>
-                                            <form method="POST"
-                                                  action="{{ route('clients.diagnostics.destroy', [$client, $diag]) }}"
-                                                  onsubmit="return confirm('Remover este diagnóstico e todos os seus dados?')">
-                                                @csrf @method('DELETE')
-                                                <button type="submit"
-                                                        class="text-xs font-mono text-[var(--muted)] hover:text-[var(--red)] transition-colors">
-                                                    Remover
-                                                </button>
-                                            </form>
-                                        </div>
+                                        <a href="{{ route('clients.dossiers.show', [$client, $dossier]) }}"
+                                           class="text-xs font-mono hover:underline"
+                                           style="color:var(--purple)">
+                                            Abrir
+                                        </a>
                                     </td>
                                 </tr>
                             @endforeach

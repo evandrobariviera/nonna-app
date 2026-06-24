@@ -15,10 +15,10 @@ use App\Http\Controllers\OrganizationSettingsController;
 use App\Http\Controllers\ClientContactController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientCredentialController;
-use App\Http\Controllers\ClientDiagnosticController;
+use App\Http\Controllers\BrandDossierController;
+use App\Http\Controllers\DossierCompetitorController;
+use App\Http\Controllers\DossierPersonaController;
 use App\Http\Controllers\ContactController;
-use App\Http\Controllers\DiagnosticCompetitorController;
-use App\Http\Controllers\DiagnosticPersonaController;
 use App\Http\Controllers\MacroPlanController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\OpportunityController;
@@ -93,35 +93,33 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::delete('/clientes/{client}/contas-anuncios/{adAccount}', [ClientAdAccountController::class, 'destroy'])
         ->name('clients.ad-accounts.destroy');
 
-    // ── Diagnósticos do cliente ──
-    Route::post('/clientes/{client}/diagnosticos', [ClientDiagnosticController::class, 'store'])
-        ->name('clients.diagnostics.store');
-    Route::get('/clientes/{client}/diagnosticos/{diagnostic}/editar', [ClientDiagnosticController::class, 'edit'])
-        ->name('clients.diagnostics.edit');
-    Route::patch('/clientes/{client}/diagnosticos/{diagnostic}', [ClientDiagnosticController::class, 'update'])
-        ->name('clients.diagnostics.update');
-    Route::post('/clientes/{client}/diagnosticos/{diagnostic}/concluir', [ClientDiagnosticController::class, 'complete'])
-        ->name('clients.diagnostics.complete');
-    Route::post('/clientes/{client}/diagnosticos/{diagnostic}/reabrir', [ClientDiagnosticController::class, 'reopen'])
-        ->name('clients.diagnostics.reopen');
-    Route::delete('/clientes/{client}/diagnosticos/{diagnostic}', [ClientDiagnosticController::class, 'destroy'])
-        ->name('clients.diagnostics.destroy');
+    // ── Dossiê de Marca ──
+    Route::post('/clientes/{client}/dossies', [BrandDossierController::class, 'store'])
+        ->name('clients.dossiers.store');
+    Route::get('/clientes/{client}/dossies/{dossier}', [BrandDossierController::class, 'show'])
+        ->name('clients.dossiers.show');
+    Route::patch('/clientes/{client}/dossies/{dossier}', [BrandDossierController::class, 'update'])
+        ->name('clients.dossiers.update');
+    Route::post('/clientes/{client}/dossies/{dossier}/avancar', [BrandDossierController::class, 'avancaFase'])
+        ->name('clients.dossiers.avancar-fase');
+    Route::delete('/clientes/{client}/dossies/{dossier}', [BrandDossierController::class, 'destroy'])
+        ->name('clients.dossiers.destroy');
 
-    // ── Concorrentes do diagnóstico ──
-    Route::post('/clientes/{client}/diagnosticos/{diagnostic}/concorrentes', [DiagnosticCompetitorController::class, 'store'])
-        ->name('diagnostics.competitors.store');
-    Route::patch('/clientes/{client}/diagnosticos/{diagnostic}/concorrentes/{competitor}', [DiagnosticCompetitorController::class, 'update'])
-        ->name('diagnostics.competitors.update');
-    Route::delete('/clientes/{client}/diagnosticos/{diagnostic}/concorrentes/{competitor}', [DiagnosticCompetitorController::class, 'destroy'])
-        ->name('diagnostics.competitors.destroy');
+    // ── Concorrentes do dossiê ──
+    Route::post('/clientes/{client}/dossies/{dossier}/concorrentes', [DossierCompetitorController::class, 'store'])
+        ->name('dossiers.competitors.store');
+    Route::patch('/clientes/{client}/dossies/{dossier}/concorrentes/{competitor}', [DossierCompetitorController::class, 'update'])
+        ->name('dossiers.competitors.update');
+    Route::delete('/clientes/{client}/dossies/{dossier}/concorrentes/{competitor}', [DossierCompetitorController::class, 'destroy'])
+        ->name('dossiers.competitors.destroy');
 
-    // ── Personas do diagnóstico ──
-    Route::post('/clientes/{client}/diagnosticos/{diagnostic}/personas', [DiagnosticPersonaController::class, 'store'])
-        ->name('diagnostics.personas.store');
-    Route::patch('/clientes/{client}/diagnosticos/{diagnostic}/personas/{persona}', [DiagnosticPersonaController::class, 'update'])
-        ->name('diagnostics.personas.update');
-    Route::delete('/clientes/{client}/diagnosticos/{diagnostic}/personas/{persona}', [DiagnosticPersonaController::class, 'destroy'])
-        ->name('diagnostics.personas.destroy');
+    // ── Personas do dossiê ──
+    Route::post('/clientes/{client}/dossies/{dossier}/personas', [DossierPersonaController::class, 'store'])
+        ->name('dossiers.personas.store');
+    Route::patch('/clientes/{client}/dossies/{dossier}/personas/{persona}', [DossierPersonaController::class, 'update'])
+        ->name('dossiers.personas.update');
+    Route::delete('/clientes/{client}/dossies/{dossier}/personas/{persona}', [DossierPersonaController::class, 'destroy'])
+        ->name('dossiers.personas.destroy');
 
     // ── CRM: Contatos ──
     Route::resource('contatos', ContactController::class)->parameters([

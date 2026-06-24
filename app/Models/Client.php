@@ -149,9 +149,9 @@ class Client extends Model
         return $this->hasMany(ClientAdAccount::class);
     }
 
-    public function diagnostics(): HasMany
+    public function dossiers(): HasMany
     {
-        return $this->hasMany(ClientDiagnostic::class)->orderByDesc('version');
+        return $this->hasMany(BrandDossier::class)->orderByDesc('version');
     }
 
     public function opportunities(): HasMany

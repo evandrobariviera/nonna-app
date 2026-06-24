@@ -71,7 +71,7 @@ class ClientController extends Controller
 
     public function show(Client $client)
     {
-        $client->load(['credentials', 'adAccounts', 'diagnostics', 'contacts', 'macroplans.projects']);
+        $client->load(['credentials', 'adAccounts', 'dossiers', 'contacts', 'macroplans.projects']);
 
         // Contatos disponíveis para vincular (excluindo os já vinculados)
         $linkedIds = $client->contacts->pluck('id');
