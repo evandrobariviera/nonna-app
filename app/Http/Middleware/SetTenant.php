@@ -12,11 +12,12 @@ class SetTenant
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $host   = $request->getHost();
-        $domain = config('app.domain');
+        $host     = $request->getHost();
+        $domain   = config('app.domain');
+        $mainHost = parse_url(config('app.url'), PHP_URL_HOST);
         $organization = null;
 
-        if ($domain && str_ends_with($host, '.' . $domain)) {
+        if ($domain && str_ends_with($host, '.' . $domain) && $host !== $mainHost) {
             $slug = substr($host, 0, -strlen('.' . $domain));
             $organization = Organization::where('slug', $slug)
                 ->whereIn('status', ['active', 'trial'])
