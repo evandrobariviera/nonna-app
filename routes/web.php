@@ -35,8 +35,12 @@ use App\Http\Controllers\PublicRegistrationController;
 use App\Models\ClickupTaskClient;
 use Illuminate\Support\Facades\Route;
 
-// ── Página de boas-vindas ──
-Route::get('/', fn () => view('welcome'));
+// ── Raiz: redireciona autenticados pro dashboard, demais pro login ──
+Route::get('/', function () {
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
+});
 
 // ── Dashboard ──
 Route::get('/dashboard', function () {
