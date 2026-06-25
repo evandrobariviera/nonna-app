@@ -4,30 +4,22 @@
         ->orderByDesc('starts_at')
         ->limit(5)
         ->get(['id', 'title', 'status']);
+
+    $_filaCount = \App\Models\Task::whereNull('sprint_id')
+        ->whereNotIn('status', ['concluido', 'cancelado'])
+        ->count();
+
+    $_approvalPending = \App\Models\TaskApprovalRound::whereIn('status', ['pending', 'changes_requested'])->count();
+
+    $_ticketsCount = \App\Models\Task::where('is_ticket', true)
+        ->whereNotIn('status', ['concluido', 'cancelado'])
+        ->count();
 @endphp
 
 {{-- ══ CRM ══ --}}
 <div class="nav-group-label">CRM</div>
 
-<div x-data="{ open: {{ request()->routeIs('clients.*') || request()->routeIs('contacts.*') ? 'true' : 'false' }} }">
-    <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
-        <span class="flex items-center gap-3">
-            <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125v-3.75m16.5 0v3.75m-16.5-3.75v3.75" />
-            </svg>
-            Cadastros
-        </span>
-        <svg class="h-3.5 w-3.5 transition-transform duration-200" :class="open ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-        </svg>
-    </button>
-    <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" style="display:none">
-        <a href="{{ route('contacts.index') }}" class="nav-sub-item {{ request()->routeIs('contacts.*') ? 'active' : '' }}">Contatos</a>
-        <a href="{{ route('clients.index') }}" class="nav-sub-item {{ request()->routeIs('clients.*') ? 'active' : '' }}">Clientes</a>
-        <a href="#" class="nav-sub-item">Contas de Anúncios</a>
-    </div>
-</div>
-
+{{-- Comercial --}}
 <div x-data="{ open: {{ request()->routeIs('opportunities.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
@@ -46,43 +38,109 @@
     </div>
 </div>
 
-{{-- ══ OPERACIONAL ══ --}}
-<div class="nav-group-label" style="margin-top:8px">Operacional</div>
-
-{{-- Fluxo de Trabalho --}}
-<div x-data="{ open: {{ request()->routeIs('macroplans.*') || request()->routeIs('projects.*') || request()->routeIs('fila.*') || request()->routeIs('sprints.*') || request()->routeIs('tickets.*') || request()->routeIs('tasks.*') ? 'true' : 'false' }} }">
+{{-- Cadastros --}}
+<div x-data="{ open: {{ request()->routeIs('clients.*') || request()->routeIs('contacts.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V19.5a2.25 2.25 0 002.25 2.25h.75" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125v-3.75m16.5 0v3.75m-16.5-3.75v3.75" />
             </svg>
-            Fluxo de Trabalho
+            Cadastros
         </span>
         <svg class="h-3.5 w-3.5 transition-transform duration-200" :class="open ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
     </button>
     <div x-show="open" x-transition style="display:none">
+        <a href="{{ route('contacts.index') }}" class="nav-sub-item {{ request()->routeIs('contacts.*') ? 'active' : '' }}">Contatos</a>
+        <a href="{{ route('clients.index') }}" class="nav-sub-item {{ request()->routeIs('clients.*') ? 'active' : '' }}">Clientes</a>
+    </div>
+</div>
 
+{{-- ══ OPERACIONAL ══ --}}
+<div class="nav-group-label" style="margin-top:8px">Operacional</div>
+
+{{-- Atendimento --}}
+<div x-data="{ open: {{ request()->routeIs('meetings.*') || request()->routeIs('tickets.*') ? 'true' : 'false' }} }">
+    <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
+        <span class="flex items-center gap-3">
+            <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+            </svg>
+            Atendimento
+        </span>
+        <svg class="h-3.5 w-3.5 transition-transform duration-200" :class="open ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+    </button>
+    <div x-show="open" x-transition style="display:none">
+        <a href="{{ route('meetings.index') }}" class="nav-sub-item {{ request()->routeIs('meetings.*') ? 'active' : '' }}">Agenda</a>
+        <a href="{{ route('tickets.index') }}" class="nav-sub-item {{ request()->routeIs('tickets.*') ? 'active' : '' }}">
+            <span class="flex items-center justify-between w-full">
+                <span>Chamados (Tickets)</span>
+                @if($_ticketsCount > 0)
+                    <span class="text-xs px-1.5 py-px rounded-full font-semibold"
+                          style="background:{{ request()->routeIs('tickets.*') ? 'rgba(106,90,205,.15)' : 'var(--s3)' }};
+                                 color:{{ request()->routeIs('tickets.*') ? 'var(--purple)' : 'var(--muted)' }};
+                                 border:1px solid {{ request()->routeIs('tickets.*') ? 'rgba(106,90,205,.25)' : 'var(--border2)' }}">
+                        {{ $_ticketsCount }}
+                    </span>
+                @endif
+            </span>
+        </a>
+    </div>
+</div>
+
+{{-- Gestão de Clientes --}}
+<div x-data="{ open: false }">
+    <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
+        <span class="flex items-center gap-3">
+            <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+            </svg>
+            Gestão de Clientes
+        </span>
+        <svg class="h-3.5 w-3.5 transition-transform duration-200" :class="open ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+    </button>
+    <div x-show="open" x-transition style="display:none">
+        <a href="#" class="nav-sub-item">Entrada (Onboarding)</a>
+        <a href="#" class="nav-sub-item">Sucesso do Cliente (CS)</a>
+        <a href="#" class="nav-sub-item">Saída (Offboarding)</a>
+    </div>
+</div>
+
+{{-- Fluxo --}}
+<div x-data="{ open: {{ request()->routeIs('macroplans.*') || request()->routeIs('projects.*') || request()->routeIs('fila.*') || request()->routeIs('clients.dossiers.*') ? 'true' : 'false' }} }">
+    <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
+        <span class="flex items-center gap-3">
+            <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V19.5a2.25 2.25 0 002.25 2.25h.75" />
+            </svg>
+            Fluxo
+        </span>
+        <svg class="h-3.5 w-3.5 transition-transform duration-200" :class="open ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+    </button>
+    <div x-show="open" x-transition style="display:none">
+        <a href="{{ route('clients.index') }}"
+           class="nav-sub-item {{ request()->routeIs('clients.dossiers.*') ? 'active' : '' }}">
+            Dossiê de Marca
+        </a>
         <a href="{{ route('macroplans.index') }}"
            class="nav-sub-item {{ request()->routeIs('macroplans.*') && !request()->routeIs('projects.*') ? 'active' : '' }}">
-            Planejamentos
+            Planejamentos (Roadmaps)
         </a>
-
         <a href="{{ route('projects.dashboard') }}"
            class="nav-sub-item {{ request()->routeIs('projects.*') ? 'active' : '' }}">
-            Projetos
+            Projetos (Projects)
         </a>
-
         <a href="{{ route('fila.index') }}"
            class="nav-sub-item {{ request()->routeIs('fila.*') ? 'active' : '' }}">
             <span class="flex items-center justify-between w-full">
-                <span>Filas</span>
-                @php
-                    $_filaCount = \App\Models\Task::whereNull('sprint_id')
-                        ->whereNotIn('status', ['concluido', 'cancelado'])
-                        ->count();
-                @endphp
+                <span>Filas (Backlog)</span>
                 @if($_filaCount > 0)
                     <span class="text-xs px-1.5 py-px rounded-full font-semibold"
                           style="background:{{ request()->routeIs('fila.*') ? 'rgba(106,90,205,.15)' : 'var(--s3)' }};
@@ -93,12 +151,27 @@
                 @endif
             </span>
         </a>
+    </div>
+</div>
 
+{{-- Sprints --}}
+<div x-data="{ open: {{ request()->routeIs('sprints.*') ? 'true' : 'false' }} }">
+    <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
+        <span class="flex items-center gap-3">
+            <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+            </svg>
+            Sprints
+        </span>
+        <svg class="h-3.5 w-3.5 transition-transform duration-200" :class="open ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+    </button>
+    <div x-show="open" x-transition style="display:none">
         <a href="{{ route('sprints.index') }}"
            class="nav-sub-item {{ request()->routeIs('sprints.index') || request()->routeIs('sprints.create') ? 'active' : '' }}">
-            Sprints
+            Todas as Sprints
         </a>
-
         @foreach($_sidebarSprints as $sp)
             <a href="{{ route('sprints.show', $sp) }}"
                class="nav-sprint-item {{ request()->is('sprints/'.$sp->id) ? 'active' : '' }}">
@@ -110,19 +183,11 @@
                 @endif
             </a>
         @endforeach
-
-        <a href="{{ route('tickets.index') }}"
-           class="nav-sub-item {{ request()->routeIs('tickets.*') ? 'active' : '' }}">
-            Tickets
-        </a>
-
     </div>
 </div>
 
 {{-- Aprovações --}}
-@php
-    $_approvalPending = \App\Models\TaskApprovalRound::whereIn('status',['pending','changes_requested'])->count();
-@endphp
+@php $_approvalPending = \App\Models\TaskApprovalRound::whereIn('status',['pending','changes_requested'])->count(); @endphp
 <a href="{{ route('approvals.index') }}"
    class="nav-group-trigger {{ request()->routeIs('approvals.*') ? 'open' : '' }}"
    style="{{ request()->routeIs('approvals.*') ? 'color:var(--orange);' : '' }}">
@@ -140,52 +205,29 @@
     @endif
 </a>
 
-{{-- Atendimento --}}
-<div x-data="{ open: {{ request()->routeIs('meetings.*') ? 'true' : 'false' }} }">
-    <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
-        <span class="flex items-center gap-3">
-            <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-            </svg>
-            Atendimento
-        </span>
-        <svg class="h-3.5 w-3.5 transition-transform duration-200" :class="open ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-        </svg>
-    </button>
-    <div x-show="open" x-transition style="display:none">
-        <a href="{{ route('meetings.index') }}" class="nav-sub-item {{ request()->routeIs('meetings.*') ? 'active' : '' }}">Agenda (Reuniões)</a>
-        <a href="#" class="nav-sub-item">Onboarding</a>
-        <a href="#" class="nav-sub-item">Offboarding</a>
-    </div>
-</div>
-
-{{-- ══ TRÁFEGO ══ --}}
-<div class="nav-group-label" style="margin-top:8px">Tráfego & Performance</div>
-
+{{-- Rotina --}}
 <div x-data="{ open: false }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v5.625c0 .621-.504 1.125-1.125 1.125h-2.25A1.125 1.125 0 013 18.75v-5.625zM16.5 13.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 12 21 12.504 21 13.125v5.625c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125v-5.625zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v10.125c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
             </svg>
-            Campanhas & Ads
+            Rotina
         </span>
         <svg class="h-3.5 w-3.5 transition-transform duration-200" :class="open ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
     </button>
     <div x-show="open" x-transition style="display:none">
-        <a href="#" class="nav-sub-item">Campanhas Ativas</a>
-        <a href="#" class="nav-sub-item">Diário de Otimizações</a>
+        <a href="#" class="nav-sub-item">Campanhas</a>
         <a href="#" class="nav-sub-item">Orçamentos</a>
         <a href="#" class="nav-sub-item">Prestação de Contas</a>
+        <a href="#" class="nav-sub-item">Suporte e Manutenção</a>
     </div>
 </div>
 
-{{-- ══ INTELIGÊNCIA ══ --}}
+{{-- ══ INTELIGÊNCIA IA ══ --}}
 <div class="nav-group-label" style="margin-top:8px">Inteligência IA</div>
-
 
 <div x-data="{ open: false }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
@@ -206,7 +248,7 @@
     </div>
 </div>
 
-{{-- ══ VISÕES (por papel funcional) ══ --}}
+{{-- ══ VISÕES ══ --}}
 @php
     $_visionRoles = [
         'direcao_geral'    => 'Direção Geral',
@@ -252,7 +294,7 @@
 </div>
 @endif
 
-{{-- ══ ADMINISTRAÇÃO (somente admin/owner) ══ --}}
+{{-- ══ ADMINISTRAÇÃO ══ --}}
 @if($isOrgAdmin ?? false)
 <div class="nav-group-label" style="margin-top:8px">Administração</div>
 <a href="{{ route('settings.index') }}"
