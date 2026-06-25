@@ -44,8 +44,9 @@ class SetTenant
                     ->where('user_id', auth()->id())
                     ->first()?->pivot;
 
-                $role          = $pivot?->role;
-                $functionRoles = $pivot?->function_roles ?? [];
+                $role = $pivot?->role;
+                $raw  = $pivot?->function_roles ?? [];
+                $functionRoles = is_array($raw) ? $raw : (json_decode((string) $raw, true) ?? []);
             }
 
             app()->instance('currentOrgRole', $role);
