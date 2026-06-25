@@ -79,7 +79,10 @@ export function registerRichEditor() {
                 },
             });
 
-            this.$cleanup(() => this.editor?.destroy());
+        },
+
+        destroy() {
+            this.editor?.destroy();
         },
 
         // Reading this.tick makes Alpine track it as a dependency, so active()
