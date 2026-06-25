@@ -403,6 +403,9 @@
 .rich-editor {
     padding: 12px 14px;
     cursor: text;
+    resize: vertical;
+    overflow: auto;
+    min-height: 120px;
 }
 .rich-editor .ProseMirror {
     outline: none;

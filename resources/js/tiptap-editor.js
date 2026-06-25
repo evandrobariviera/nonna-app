@@ -17,6 +17,7 @@ function normalizeContent(content) {
 export function registerRichEditor() {
     Alpine.data('richEditor', (initialContent = '') => ({
         editor: null,
+        tick: 0, // reactive counter — forces Alpine to re-evaluate active() on every editor change
 
         init() {
             const el    = this.$refs.editor;
@@ -30,9 +31,9 @@ export function registerRichEditor() {
                 element: el,
                 extensions: [
                     StarterKit.configure({
-                        heading: { levels: [2, 3] },
+                        heading:   { levels: [2, 3] },
                         codeBlock: false,
-                        code: false,
+                        code:      false,
                     }),
                     Underline,
                     Link.configure({
@@ -47,7 +48,7 @@ export function registerRichEditor() {
                     attributes: { class: 'rich-prose' },
                     handlePaste(view, event) {
                         const items = Array.from(event.clipboardData?.items ?? []);
-                        const img = items.find(i => i.type.startsWith('image/'));
+                        const img   = items.find(i => i.type.startsWith('image/'));
                         if (!img) return false;
                         event.preventDefault();
                         const reader = new FileReader();
@@ -70,37 +71,50 @@ export function registerRichEditor() {
                 onUpdate({ editor }) {
                     input.value = editor.getHTML();
                     input.dispatchEvent(new Event('input', { bubbles: true }));
+                    self.tick++;
+                },
+                onSelectionUpdate() {
+                    // cursor moved — toolbar active states need to refresh
+                    self.tick++;
                 },
             });
 
             this.$cleanup(() => this.editor?.destroy());
         },
 
+        // Reading this.tick makes Alpine track it as a dependency, so active()
+        // re-evaluates whenever the editor state changes.
         active(type, opts = {}) {
+            void this.tick;
             return this.editor?.isActive(type, opts) ?? false;
+        },
+
+        activeAlign(align) {
+            void this.tick;
+            return this.editor?.isActive({ textAlign: align }) ?? false;
         },
 
         run(cmd) {
             if (!this.editor) return;
             const c = this.editor.chain().focus();
             switch (cmd) {
-                case 'bold':        c.toggleBold().run(); break;
-                case 'italic':      c.toggleItalic().run(); break;
-                case 'underline':   c.toggleUnderline().run(); break;
-                case 'strike':      c.toggleStrike().run(); break;
-                case 'h2':          c.toggleHeading({ level: 2 }).run(); break;
-                case 'h3':          c.toggleHeading({ level: 3 }).run(); break;
-                case 'ul':          c.toggleBulletList().run(); break;
-                case 'ol':          c.toggleOrderedList().run(); break;
-                case 'blockquote':  c.toggleBlockquote().run(); break;
-                case 'left':        c.setTextAlign('left').run(); break;
-                case 'center':      c.setTextAlign('center').run(); break;
-                case 'right':       c.setTextAlign('right').run(); break;
-                case 'hr':          c.setHorizontalRule().run(); break;
-                case 'undo':        c.undo().run(); break;
-                case 'redo':        c.redo().run(); break;
-                case 'link':        this.setLink(); break;
-                case 'image':       this.pickImage(); break;
+                case 'bold':       c.toggleBold().run();                break;
+                case 'italic':     c.toggleItalic().run();              break;
+                case 'underline':  c.toggleUnderline().run();           break;
+                case 'strike':     c.toggleStrike().run();              break;
+                case 'h2':         c.toggleHeading({ level: 2 }).run(); break;
+                case 'h3':         c.toggleHeading({ level: 3 }).run(); break;
+                case 'ul':         c.toggleBulletList().run();          break;
+                case 'ol':         c.toggleOrderedList().run();         break;
+                case 'blockquote': c.toggleBlockquote().run();          break;
+                case 'left':       c.setTextAlign('left').run();        break;
+                case 'center':     c.setTextAlign('center').run();      break;
+                case 'right':      c.setTextAlign('right').run();       break;
+                case 'hr':         c.setHorizontalRule().run();         break;
+                case 'undo':       c.undo().run();                      break;
+                case 'redo':       c.redo().run();                      break;
+                case 'link':       this.setLink();                      break;
+                case 'image':      this.$refs.fileInput.click();        break;
             }
         },
 
@@ -113,18 +127,13 @@ export function registerRichEditor() {
                 : this.editor.chain().focus().setLink({ href: url }).run();
         },
 
-        pickImage() {
-            const inp = document.createElement('input');
-            inp.type = 'file';
-            inp.accept = 'image/*';
-            inp.onchange = () => {
-                const file = inp.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = e => this.editor.chain().focus().setImage({ src: e.target.result }).run();
-                reader.readAsDataURL(file);
-            };
-            inp.click();
+        onFileChange(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            event.target.value = ''; // reset so same file can be picked again
+            const reader = new FileReader();
+            reader.onload = e => this.editor.chain().focus().setImage({ src: e.target.result }).run();
+            reader.readAsDataURL(file);
         },
     }));
 }
