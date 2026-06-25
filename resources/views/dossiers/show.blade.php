@@ -1047,6 +1047,8 @@
 @push('scripts')
 <script>
 function dossierEditor(initialCompetitors, initialPersonas, initialValores, initialExemplos) {
+    const safeArr = v => Array.isArray(v) ? v : [];
+    console.log('[dossierEditor init]', {initialCompetitors, initialPersonas, initialValores, initialExemplos});
     return {
         mode: 'roteiro',
         section: 'config',
@@ -1055,13 +1057,13 @@ function dossierEditor(initialCompetitors, initialPersonas, initialValores, init
         dirty: false,
         timer: null,
 
-        competitors: initialCompetitors.map(c => ({ ...c, _editing: false })),
-        personas:    initialPersonas,
+        competitors: safeArr(initialCompetitors).map(c => ({ ...c, _editing: false })),
+        personas:    safeArr(initialPersonas),
         addingCompetitor: false,
         addingPersona:    false,
 
-        valores:     initialValores.length ? initialValores : [],
-        exemplosTom: initialExemplos.length ? initialExemplos : [],
+        valores:     safeArr(initialValores).length ? initialValores : [],
+        exemplosTom: safeArr(initialExemplos).length ? initialExemplos : [],
 
         newCompetitor: { nome: '', o_que_comunica: '', como_se_posiciona: '', o_que_nao_ocupa: '' },
         newPersona:    { tipo: 'principal', nome_ficticio: '', idade_genero: '', cargo_setor: '', renda_contexto: '', como_se_informa: '', o_que_valida_compra: '', dores_principais: '', o_que_motiva: '', o_que_nunca_diria: '', insight_persona: '' },
