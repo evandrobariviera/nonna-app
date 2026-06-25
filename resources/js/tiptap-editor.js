@@ -34,6 +34,9 @@ export function registerRichEditor() {
                         heading:   { levels: [2, 3] },
                         codeBlock: false,
                         code:      false,
+                        // Disabled here because we add them below with custom config
+                        link:      false,
+                        underline: false,
                     }),
                     Underline,
                     Link.configure({
