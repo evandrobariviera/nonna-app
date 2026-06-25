@@ -21,21 +21,13 @@
         $b03Vals     = $dossier->bloco03_valores ?? [];
         $b04ExTom    = $dossier->bloco04_exemplos_tom ?? [];
         $b04Vis      = $dossier->bloco04_territorio_visual ?? [];
-        $dossierUrls = [
-            'update'          => route('clients.dossiers.update', [$client, $dossier]),
-            'competitorsStore'=> route('dossiers.competitors.store', [$client, $dossier]),
-            'competitorUrl'   => route('dossiers.competitors.update', [$client, $dossier, '__ID__']),
-            'personasStore'   => route('dossiers.personas.store', [$client, $dossier]),
-            'personaUrl'      => route('dossiers.personas.destroy', [$client, $dossier, '__ID__']),
-        ];
     @endphp
 
     <div x-data="dossierEditor(
             @json($dossier->competitors->toArray()),
             @json($dossier->personas->toArray()),
             @json($b03Vals),
-            @json($b04ExTom),
-            @json($dossierUrls)
+            @json($b04ExTom)
          )"
          x-init="init()"
          @input.capture="markDirty()"
@@ -1053,6 +1045,15 @@
     </div>{{-- /x-data --}}
 
 @push('scripts')
+<script>
+window._dossierUrls = {
+    update:           '{{ route("clients.dossiers.update", [$client, $dossier]) }}',
+    competitorsStore: '{{ route("dossiers.competitors.store", [$client, $dossier]) }}',
+    competitorUrl:    '{{ route("dossiers.competitors.update", [$client, $dossier, "__ID__"]) }}',
+    personasStore:    '{{ route("dossiers.personas.store", [$client, $dossier]) }}',
+    personaUrl:       '{{ route("dossiers.personas.destroy", [$client, $dossier, "__ID__"]) }}',
+};
+</script>
 <style>
 .section-hd {
     font-family: 'Syne', sans-serif;

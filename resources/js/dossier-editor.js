@@ -1,6 +1,6 @@
 export function registerDossierEditor() {
-    const dossierEditorFn = (initialCompetitors, initialPersonas, initialValores, initialExemplos, urls) => {
-        console.log('[dossierEditor] init called', { initialCompetitors, initialPersonas, initialValores, initialExemplos, urls });
+    const dossierEditorFn = (initialCompetitors, initialPersonas, initialValores, initialExemplos) => {
+        const urls = window._dossierUrls || {};
         const safeArr = v => Array.isArray(v) ? v : [];
         const csrf = () => document.querySelector('meta[name="csrf-token"]').content;
 
