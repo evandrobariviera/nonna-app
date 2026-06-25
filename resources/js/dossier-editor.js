@@ -1,5 +1,6 @@
 export function registerDossierEditor() {
-    Alpine.data('dossierEditor', (initialCompetitors, initialPersonas, initialValores, initialExemplos, urls) => {
+    const dossierEditorFn = (initialCompetitors, initialPersonas, initialValores, initialExemplos, urls) => {
+        console.log('[dossierEditor] init called', { initialCompetitors, initialPersonas, initialValores, initialExemplos, urls });
         const safeArr = v => Array.isArray(v) ? v : [];
         const csrf = () => document.querySelector('meta[name="csrf-token"]').content;
 
@@ -137,5 +138,9 @@ export function registerDossierEditor() {
                 if (res.ok) this.personas = this.personas.filter(p => p.id !== id);
             },
         };
-    });
+    };
+
+    // Register via Alpine.data() AND expose on window as fallback
+    Alpine.data('dossierEditor', dossierEditorFn);
+    window.dossierEditor = dossierEditorFn;
 }
