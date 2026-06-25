@@ -1054,6 +1054,9 @@ window._dossierUrls = {
     personaUrl:       '{{ route("dossiers.personas.destroy", [$client, $dossier, "__ID__"]) }}',
 };
 </script>
+@endpush
+
+@push('styles')
 <style>
 .section-hd {
     font-family: 'Syne', sans-serif;
