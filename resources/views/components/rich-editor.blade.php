@@ -1,7 +1,6 @@
 @props(['name', 'value' => '', 'minHeight' => '160px'])
 
 <div x-data="richEditor(@js($value ?? ''))"
-     x-init="init()"
      class="rich-wrapper">
 
     {{-- ── Toolbar ── --}}
