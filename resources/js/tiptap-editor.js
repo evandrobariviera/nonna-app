@@ -102,7 +102,10 @@ export function registerRichEditor() {
 
         run(cmd) {
             if (!this.editor) return;
-            const c = this.editor.chain().focus();
+            // No .focus() in chain — @mousedown.prevent on toolbar keeps focus in editor.
+            // In Tiptap v3, chain().focus() dispatches a selection transaction before the
+            // command transaction, causing "Applying a mismatched transaction" errors.
+            const c = this.editor.chain();
             switch (cmd) {
                 case 'bold':       c.toggleBold().run();                break;
                 case 'italic':     c.toggleItalic().run();              break;

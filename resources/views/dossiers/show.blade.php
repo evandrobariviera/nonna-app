@@ -1092,6 +1092,9 @@ function dossierEditor(initialCompetitors, initialPersonas, initialValores, init
                     const json = await res.json();
                     this.savedAt = json.saved_at;
                     this.dirty = false;
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    console.error('[dossier save] HTTP ' + res.status, err.error ?? '');
                 }
             } catch(e) { console.error('save error', e); }
             this.saving = false;

@@ -64,7 +64,19 @@ class BrandDossierController extends Controller
             }
         }
 
-        $dossier->update($data);
+        try {
+            $dossier->update($data);
+        } catch (\Throwable $e) {
+            \Log::error('dossier.update failed', [
+                'dossier' => $dossier->id,
+                'error'   => $e->getMessage(),
+                'fields'  => array_keys($data),
+            ]);
+            if ($request->expectsJson()) {
+                return response()->json(['ok' => false, 'error' => $e->getMessage()], 422);
+            }
+            throw $e;
+        }
 
         if ($request->expectsJson()) {
             return response()->json(['ok' => true, 'saved_at' => now()->format('H:i:s')]);
