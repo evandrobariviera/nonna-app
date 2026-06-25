@@ -355,3 +355,115 @@
         line-height: 1.6;
     }
 }
+
+/* ══ Rich Editor (Tiptap) ══ */
+.rich-wrapper {
+    border: 1px solid var(--border2);
+    background: var(--s2);
+    transition: border-color .15s;
+}
+.rich-wrapper:focus-within { border-color: var(--purple); }
+
+.rich-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    padding: 5px 8px;
+    border-bottom: 1px solid var(--border2);
+    background: var(--s1);
+    flex-wrap: wrap;
+    user-select: none;
+}
+.rtb-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 6px;
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted2);
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: color .1s, background .1s;
+    line-height: 1;
+    min-width: 26px;
+}
+.rtb-btn:hover { color: var(--text); background: var(--s3); }
+.rtb-on { color: var(--purple) !important; background: rgba(106,90,205,.1) !important; }
+.rtb-sep {
+    width: 1px;
+    height: 14px;
+    background: var(--border2);
+    margin: 0 4px;
+    flex-shrink: 0;
+}
+
+.rich-editor {
+    padding: 12px 14px;
+    cursor: text;
+}
+.rich-editor .ProseMirror {
+    outline: none;
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.7;
+}
+.rich-editor .ProseMirror > * + * { margin-top: .6em; }
+.rich-editor .ProseMirror p { margin: 0; }
+.rich-editor .ProseMirror p + p { margin-top: .6em; }
+.rich-editor .ProseMirror h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: .9375rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-top: 1.2em;
+    margin-bottom: .3em;
+    letter-spacing: -.01em;
+}
+.rich-editor .ProseMirror h3 {
+    font-size: .8125rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-top: 1em;
+    margin-bottom: .2em;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.rich-editor .ProseMirror strong { font-weight: 700; }
+.rich-editor .ProseMirror em    { font-style: italic; color: var(--muted2); }
+.rich-editor .ProseMirror u     { text-decoration: underline; }
+.rich-editor .ProseMirror s     { text-decoration: line-through; opacity: .6; }
+.rich-editor .ProseMirror ul { list-style: disc;    padding-left: 1.4em; }
+.rich-editor .ProseMirror ol { list-style: decimal; padding-left: 1.4em; }
+.rich-editor .ProseMirror li + li { margin-top: .2em; }
+.rich-editor .ProseMirror blockquote {
+    border-left: 3px solid var(--purple);
+    padding-left: 1em;
+    color: var(--muted2);
+    font-style: italic;
+}
+.rich-editor .ProseMirror a {
+    color: var(--purple);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.rich-editor .ProseMirror hr {
+    border: none;
+    border-top: 1px solid var(--border2);
+}
+.rich-editor .ProseMirror img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 2px;
+}
+.rich-editor .ProseMirror.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    color: var(--muted);
+    font-style: italic;
+    pointer-events: none;
+    float: left;
+    height: 0;
+}

@@ -251,13 +251,13 @@
     <div class="form-group">
         <label class="form-label">Observações sobre o cliente</label>
         <div class="form-guide">Site, redes sociais, Google, LinkedIn, avaliações, produtos. O que chamou atenção, contradições percebidas, perguntas que surgiram.</div>
-        <textarea name="roteiro_pesquisa_previa[observacoes_cliente]" class="form-textarea" rows="8">{{ old('roteiro_pesquisa_previa.observacoes_cliente', $rPre['observacoes_cliente'] ?? '') }}</textarea>
+        <x-rich-editor name="roteiro_pesquisa_previa[observacoes_cliente]" :value="old('roteiro_pesquisa_previa.observacoes_cliente', $rPre['observacoes_cliente'] ?? '')" min-height="200px" />
     </div>
 
     <div class="form-group">
         <label class="form-label">Observações sobre o setor e concorrentes óbvios</label>
         <div class="form-guide">Quem são os 3–5 maiores players, como o setor se comunica em geral, quem se destaca.</div>
-        <textarea name="roteiro_pesquisa_previa[observacoes_setor]" class="form-textarea" rows="6">{{ old('roteiro_pesquisa_previa.observacoes_setor', $rPre['observacoes_setor'] ?? '') }}</textarea>
+        <x-rich-editor name="roteiro_pesquisa_previa[observacoes_setor]" :value="old('roteiro_pesquisa_previa.observacoes_setor', $rPre['observacoes_setor'] ?? '')" />
     </div>
 </div>
 
@@ -285,7 +285,7 @@
         <div class="form-group">
             <label class="form-label" style="color:var(--text)">{{ $pergunta }}</label>
             <div class="form-guide">→ {{ $por_que }}</div>
-            <textarea name="roteiro_kickoff_negocio[{{ $key }}]" class="form-textarea" rows="4">{{ $rKickNeg[$key] ?? '' }}</textarea>
+            <x-rich-editor name="roteiro_kickoff_negocio[{{ $key }}]" :value="$rKickNeg[$key] ?? ''" />
         </div>
     @endforeach
 </div>
@@ -312,7 +312,7 @@
         <div class="form-group">
             <label class="form-label" style="color:var(--text)">{{ $pergunta }}</label>
             <div class="form-guide">→ {{ $por_que }}</div>
-            <textarea name="roteiro_kickoff_mercado[{{ $key }}]" class="form-textarea" rows="4">{{ $rKickMer[$key] ?? '' }}</textarea>
+            <x-rich-editor name="roteiro_kickoff_mercado[{{ $key }}]" :value="$rKickMer[$key] ?? ''" />
         </div>
     @endforeach
 </div>
@@ -339,7 +339,7 @@
         <div class="form-group">
             <label class="form-label" style="color:var(--text)">{{ $pergunta }}</label>
             <div class="form-guide">→ {{ $por_que }}</div>
-            <textarea name="roteiro_kickoff_cliente[{{ $key }}]" class="form-textarea" rows="4">{{ $rKickCli[$key] ?? '' }}</textarea>
+            <x-rich-editor name="roteiro_kickoff_cliente[{{ $key }}]" :value="$rKickCli[$key] ?? ''" />
         </div>
     @endforeach
 </div>
@@ -366,7 +366,7 @@
         <div class="form-group">
             <label class="form-label" style="color:var(--text)">{{ $pergunta }}</label>
             <div class="form-guide">→ {{ $por_que }}</div>
-            <textarea name="roteiro_kickoff_comunicacao[{{ $key }}]" class="form-textarea" rows="4">{{ $rKickCom[$key] ?? '' }}</textarea>
+            <x-rich-editor name="roteiro_kickoff_comunicacao[{{ $key }}]" :value="$rKickCom[$key] ?? ''" />
         </div>
     @endforeach
 </div>
@@ -381,7 +381,7 @@
     <div class="form-group">
         <label class="form-label">Notas de pesquisa — concorrentes e mercado</label>
         <div class="form-guide">Para cada concorrente: o que comunicam, como se posicionam, o que não ocupam. Pesquise site, redes, Meta Ad Library, Google Ads Transparency. O espaço disponível é o oposto do que todos estão fazendo.</div>
-        <textarea name="roteiro_pesquisa_notas" class="form-textarea" rows="12">{{ old('roteiro_pesquisa_notas', $dossier->roteiro_pesquisa_notas) }}</textarea>
+        <x-rich-editor name="roteiro_pesquisa_notas" :value="old('roteiro_pesquisa_notas', $dossier->roteiro_pesquisa_notas ?? '')" min-height="280px" />
     </div>
 
     <div class="insight-box mt-4">
@@ -405,32 +405,32 @@
     <div class="form-group">
         <label class="form-label">1.1 · Visão geral do negócio <span class="form-tag">3–5 parágrafos</span></label>
         <div class="form-guide">O que faz, como faz, há quanto tempo, em qual escala e em quais mercados. Evite adjetivos — descreva fatos.</div>
-        <textarea name="bloco01_visao_geral" class="form-textarea" rows="8">{{ old('bloco01_visao_geral', $dossier->bloco01_visao_geral) }}</textarea>
+        <x-rich-editor name="bloco01_visao_geral" :value="old('bloco01_visao_geral', $dossier->bloco01_visao_geral ?? '')" min-height="200px" />
     </div>
 
     <div class="form-group">
         <label class="form-label">1.2 · Histórico e marcos relevantes <span class="form-tag">linha do tempo</span></label>
         <div class="form-guide">Momentos que definem quem a empresa é hoje. Fundação, expansão, crises superadas, reconhecimentos. Fatos com potencial narrativo.</div>
-        <textarea name="bloco01_historico" class="form-textarea" rows="6">{{ old('bloco01_historico', $dossier->bloco01_historico) }}</textarea>
+        <x-rich-editor name="bloco01_historico" :value="old('bloco01_historico', $dossier->bloco01_historico ?? '')" />
     </div>
 
     <div class="grid grid-cols-2 gap-4">
         <div class="form-group">
             <label class="form-label">1.3 · Pontos fortes reais</label>
             <div class="form-guide">O que genuinamente faz melhor — comprovado por dados, histórico ou relatos de clientes.</div>
-            <textarea name="bloco01_pontos_fortes" class="form-textarea" rows="6">{{ old('bloco01_pontos_fortes', $dossier->bloco01_pontos_fortes) }}</textarea>
+            <x-rich-editor name="bloco01_pontos_fortes" :value="old('bloco01_pontos_fortes', $dossier->bloco01_pontos_fortes ?? '')" />
         </div>
         <div class="form-group">
             <label class="form-label">1.4 · Pontos de atenção</label>
             <div class="form-guide">O que limita o crescimento ou cria percepção negativa. Honestidade aqui é fundamental.</div>
-            <textarea name="bloco01_pontos_atencao" class="form-textarea" rows="6">{{ old('bloco01_pontos_atencao', $dossier->bloco01_pontos_atencao) }}</textarea>
+            <x-rich-editor name="bloco01_pontos_atencao" :value="old('bloco01_pontos_atencao', $dossier->bloco01_pontos_atencao ?? '')" />
         </div>
     </div>
 
     <div class="form-group">
         <label class="form-label">1.5 · Objetivos estratégicos <span class="form-tag">próximos 12–24 meses</span></label>
         <div class="form-guide">O que o cliente quer construir ou alcançar no horizonte de trabalho com a Nonna.</div>
-        <textarea name="bloco01_objetivos" class="form-textarea" rows="5">{{ old('bloco01_objetivos', $dossier->bloco01_objetivos) }}</textarea>
+        <x-rich-editor name="bloco01_objetivos" :value="old('bloco01_objetivos', $dossier->bloco01_objetivos ?? '')" />
     </div>
 </div>
 
@@ -443,19 +443,19 @@
     <div class="form-group">
         <label class="form-label">2.1 · Contexto e tendências do setor</label>
         <div class="form-guide">O que está acontecendo no mercado que é relevante para a estratégia da marca.</div>
-        <textarea name="bloco01_contexto_mercado" class="form-textarea" rows="7">{{ old('bloco01_contexto_mercado', $dossier->bloco01_contexto_mercado) }}</textarea>
+        <x-rich-editor name="bloco01_contexto_mercado" :value="old('bloco01_contexto_mercado', $dossier->bloco01_contexto_mercado ?? '')" />
     </div>
 
     <div class="grid grid-cols-2 gap-4">
         <div class="form-group">
             <label class="form-label">2.2 · Como o mercado compra</label>
             <div class="form-guide">Quem decide, quais critérios usa, fontes consultadas, ciclo de compra.</div>
-            <textarea name="bloco01_como_compra" class="form-textarea" rows="6">{{ old('bloco01_como_compra', $dossier->bloco01_como_compra) }}</textarea>
+            <x-rich-editor name="bloco01_como_compra" :value="old('bloco01_como_compra', $dossier->bloco01_como_compra ?? '')" />
         </div>
         <div class="form-group">
             <label class="form-label">2.3 · O que gera confiança neste mercado</label>
             <div class="form-guide">Sinais que o mercado interpreta como credibilidade e segurança.</div>
-            <textarea name="bloco01_gera_confianca" class="form-textarea" rows="6">{{ old('bloco01_gera_confianca', $dossier->bloco01_gera_confianca) }}</textarea>
+            <x-rich-editor name="bloco01_gera_confianca" :value="old('bloco01_gera_confianca', $dossier->bloco01_gera_confianca ?? '')" />
         </div>
     </div>
 </div>
@@ -549,7 +549,7 @@
     <div class="form-group mt-5">
         <label class="form-label">3.2 · Espaço disponível no mercado <span class="form-tag">conclusão da análise</span></label>
         <div class="form-guide">O que nenhum concorrente está comunicando que esta marca poderia ocupar com credibilidade.</div>
-        <textarea name="bloco01_espaco_disponivel" class="form-textarea" rows="6">{{ old('bloco01_espaco_disponivel', $dossier->bloco01_espaco_disponivel) }}</textarea>
+        <x-rich-editor name="bloco01_espaco_disponivel" :value="old('bloco01_espaco_disponivel', $dossier->bloco01_espaco_disponivel ?? '')" />
     </div>
 </div>
 
@@ -679,19 +679,19 @@
         <div class="form-group">
             <label class="form-label">5.1 · Como a marca se comunica hoje</label>
             <div class="form-guide">Análise objetiva: canais usados, tipo de conteúdo, tom de voz, consistência visual, frequência.</div>
-            <textarea name="bloco01_comunicacao_atual" class="form-textarea" rows="7">{{ old('bloco01_comunicacao_atual', $dossier->bloco01_comunicacao_atual) }}</textarea>
+            <x-rich-editor name="bloco01_comunicacao_atual" :value="old('bloco01_comunicacao_atual', $dossier->bloco01_comunicacao_atual ?? '')" />
         </div>
         <div class="form-group">
             <label class="form-label">5.2 · Como a marca é percebida hoje</label>
             <div class="form-guide">O que alguém de fora perceberia ao ver a comunicação atual pela primeira vez.</div>
-            <textarea name="bloco01_percepcao_atual" class="form-textarea" rows="7">{{ old('bloco01_percepcao_atual', $dossier->bloco01_percepcao_atual) }}</textarea>
+            <x-rich-editor name="bloco01_percepcao_atual" :value="old('bloco01_percepcao_atual', $dossier->bloco01_percepcao_atual ?? '')" />
         </div>
     </div>
 
     <div class="form-group">
         <label class="form-label">5.3 · O gap de percepção <span class="form-tag">síntese crítica</span></label>
         <div class="form-guide">A diferença entre o que a empresa realmente é e o que parece ser pela comunicação. Este é o problema a resolver.</div>
-        <textarea name="bloco01_gap_percepcao" class="form-textarea" rows="6">{{ old('bloco01_gap_percepcao', $dossier->bloco01_gap_percepcao) }}</textarea>
+        <x-rich-editor name="bloco01_gap_percepcao" :value="old('bloco01_gap_percepcao', $dossier->bloco01_gap_percepcao ?? '')" />
     </div>
 </div>
 
@@ -704,13 +704,13 @@
     <div class="form-group">
         <label class="form-label">O problema central <span class="form-tag">uma frase</span></label>
         <div class="form-guide">Começa com "Como fazer com que..." ou "Como transformar a percepção de...". Se não couber em uma frase, ainda não está suficientemente claro.</div>
-        <textarea name="bloco02_problema" class="form-textarea" rows="4">{{ old('bloco02_problema', $dossier->bloco02_problema) }}</textarea>
+        <x-rich-editor name="bloco02_problema" :value="old('bloco02_problema', $dossier->bloco02_problema ?? '')" />
     </div>
 
     <div class="form-group">
         <label class="form-label">Por que esse é o problema real</label>
         <div class="form-guide">A justificativa que conecta o problema ao diagnóstico. Por que resolver isso é mais importante do que qualquer outro problema identificado.</div>
-        <textarea name="bloco02_problema_justificativa" class="form-textarea" rows="6">{{ old('bloco02_problema_justificativa', $dossier->bloco02_problema_justificativa) }}</textarea>
+        <x-rich-editor name="bloco02_problema_justificativa" :value="old('bloco02_problema_justificativa', $dossier->bloco02_problema_justificativa ?? '')" />
     </div>
 </div>
 
@@ -723,7 +723,7 @@
     <div class="form-group">
         <label class="form-label">O território disponível</label>
         <div class="form-guide">Formulado como: "Existe um espaço não ocupado relacionado a [território] que esta marca tem credibilidade para ocupar porque [razão]."</div>
-        <textarea name="bloco02_oportunidade" class="form-textarea" rows="8">{{ old('bloco02_oportunidade', $dossier->bloco02_oportunidade) }}</textarea>
+        <x-rich-editor name="bloco02_oportunidade" :value="old('bloco02_oportunidade', $dossier->bloco02_oportunidade ?? '')" min-height="200px" />
     </div>
 </div>
 
@@ -735,15 +735,13 @@
 
     <div class="insight-box mb-4">
         <div class="text-xs font-mono uppercase tracking-widest mb-3" style="color:#fbbf24">Insight Central</div>
-        <textarea name="bloco02_insight" class="w-full bg-transparent border-0 resize-none outline-none text-lg font-bold leading-snug" rows="4"
-                  style="color:var(--text); font-family:'Syne',sans-serif"
-                  placeholder="A verdade humana que destrava a estratégia...">{{ old('bloco02_insight', $dossier->bloco02_insight) }}</textarea>
+        <x-rich-editor name="bloco02_insight" :value="old('bloco02_insight', $dossier->bloco02_insight ?? '')" />
     </div>
 
     <div class="form-group">
         <label class="form-label">Por que esse insight é verdadeiro</label>
         <div class="form-guide">A evidência que sustenta o insight — algo do kickoff, comportamento observado no mercado ou dado da pesquisa.</div>
-        <textarea name="bloco02_insight_sustentacao" class="form-textarea" rows="6">{{ old('bloco02_insight_sustentacao', $dossier->bloco02_insight_sustentacao) }}</textarea>
+        <x-rich-editor name="bloco02_insight_sustentacao" :value="old('bloco02_insight_sustentacao', $dossier->bloco02_insight_sustentacao ?? '')" />
     </div>
 </div>
 
@@ -756,17 +754,17 @@
     <div class="form-group">
         <label class="form-label">O que o mercado deve pensar</label>
         <div class="form-guide">A mudança de percepção: "Antes pensava X, depois deve pensar Y."</div>
-        <textarea name="bloco02_objetivos[pensar]" class="form-textarea" rows="4">{{ $b02Obj['pensar'] ?? '' }}</textarea>
+        <x-rich-editor name="bloco02_objetivos[pensar]" :value="$b02Obj['pensar'] ?? ''" />
     </div>
     <div class="form-group">
         <label class="form-label">O que o mercado deve sentir</label>
         <div class="form-guide">O estado emocional que a marca deve provocar — confiança, desejo, identificação, admiração.</div>
-        <textarea name="bloco02_objetivos[sentir]" class="form-textarea" rows="4">{{ $b02Obj['sentir'] ?? '' }}</textarea>
+        <x-rich-editor name="bloco02_objetivos[sentir]" :value="$b02Obj['sentir'] ?? ''" />
     </div>
     <div class="form-group">
         <label class="form-label">O que o mercado deve fazer <span class="form-tag">ação concreta</span></label>
         <div class="form-guide">O comportamento concreto que a comunicação deve estimular.</div>
-        <textarea name="bloco02_objetivos[fazer]" class="form-textarea" rows="4">{{ $b02Obj['fazer'] ?? '' }}</textarea>
+        <x-rich-editor name="bloco02_objetivos[fazer]" :value="$b02Obj['fazer'] ?? ''" />
     </div>
 </div>
 
@@ -779,19 +777,19 @@
     <div class="form-group">
         <label class="form-label">Propósito <span class="form-tag">por que existe</span></label>
         <div class="form-guide">A razão de existir além do lucro. Começa com "Existimos para..." ou "Acreditamos que...". Não pode ser sobre o produto.</div>
-        <textarea name="bloco03_proposito" class="form-textarea" rows="4">{{ old('bloco03_proposito', $dossier->bloco03_proposito) }}</textarea>
+        <x-rich-editor name="bloco03_proposito" :value="old('bloco03_proposito', $dossier->bloco03_proposito ?? '')" />
     </div>
 
     <div class="grid grid-cols-2 gap-4">
         <div class="form-group">
             <label class="form-label">Visão <span class="form-tag">onde quer chegar</span></label>
             <div class="form-guide">O futuro desejado. Ambicioso mas alcançável.</div>
-            <textarea name="bloco03_visao" class="form-textarea" rows="5">{{ old('bloco03_visao', $dossier->bloco03_visao) }}</textarea>
+            <x-rich-editor name="bloco03_visao" :value="old('bloco03_visao', $dossier->bloco03_visao ?? '')" />
         </div>
         <div class="form-group">
             <label class="form-label">Missão <span class="form-tag">o que faz hoje</span></label>
             <div class="form-guide">O que a marca faz de concreto para avançar em direção à visão.</div>
-            <textarea name="bloco03_missao" class="form-textarea" rows="5">{{ old('bloco03_missao', $dossier->bloco03_missao) }}</textarea>
+            <x-rich-editor name="bloco03_missao" :value="old('bloco03_missao', $dossier->bloco03_missao ?? '')" />
         </div>
     </div>
 </div>
@@ -847,19 +845,19 @@
     <div class="form-group">
         <label class="form-label">Posicionamento em texto corrido</label>
         <div class="form-guide">Com o contexto necessário para que qualquer membro do time entenda onde a marca se coloca e por quê.</div>
-        <textarea name="bloco03_posicionamento_texto" class="form-textarea" rows="6">{{ old('bloco03_posicionamento_texto', $dossier->bloco03_posicionamento_texto) }}</textarea>
+        <x-rich-editor name="bloco03_posicionamento_texto" :value="old('bloco03_posicionamento_texto', $dossier->bloco03_posicionamento_texto ?? '')" />
     </div>
 
     <div class="form-group">
         <label class="form-label">Promessa central <span class="form-tag">o benefício mais importante</span></label>
         <div class="form-guide">O benefício mais importante que a marca entrega. Não é slogan — é interno, orienta a criação.</div>
-        <textarea name="bloco03_promessa" class="form-textarea" rows="4">{{ old('bloco03_promessa', $dossier->bloco03_promessa) }}</textarea>
+        <x-rich-editor name="bloco03_promessa" :value="old('bloco03_promessa', $dossier->bloco03_promessa ?? '')" />
     </div>
 
     <div class="form-group">
         <label class="form-label">Razões para acreditar <span class="form-tag">provas da promessa</span></label>
         <div class="form-guide">Fatos concretos que tornam a promessa crível. Dados, histórico, certificações, estrutura, comportamento verificável.</div>
-        <textarea name="bloco03_razoes" class="form-textarea" rows="5">{{ old('bloco03_razoes', $dossier->bloco03_razoes) }}</textarea>
+        <x-rich-editor name="bloco03_razoes" :value="old('bloco03_razoes', $dossier->bloco03_razoes ?? '')" />
     </div>
 </div>
 
@@ -872,7 +870,7 @@
     <div class="form-group">
         <label class="form-label">Personalidade da marca <span class="form-tag">4–6 adjetivos com exemplos</span></label>
         <div class="form-guide">Cada adjetivo com exemplo concreto. "Confiável" é genérico. "Confiável como um veterinário de zona rural — direto, fala o que precisa ser feito" é específico.</div>
-        <textarea name="bloco03_personalidade" class="form-textarea" rows="8">{{ old('bloco03_personalidade', $dossier->bloco03_personalidade) }}</textarea>
+        <x-rich-editor name="bloco03_personalidade" :value="old('bloco03_personalidade', $dossier->bloco03_personalidade ?? '')" min-height="200px" />
     </div>
 
     <div class="card">
@@ -890,7 +888,7 @@
         </div>
         <div>
             <label class="form-label">Justificativa e como se manifesta</label>
-            <textarea name="bloco03_arquetipo[descricao]" class="form-textarea" rows="5" placeholder="Por que este arquétipo é o mais adequado...">{{ $b03Arq['descricao'] ?? '' }}</textarea>
+            <x-rich-editor name="bloco03_arquetipo[descricao]" :value="$b03Arq['descricao'] ?? ''" />
         </div>
     </div>
 </div>
@@ -912,7 +910,7 @@
     <div class="form-group">
         <label class="form-label">O que essa essência significa</label>
         <div class="form-guide">Como ela conecta todos os elementos — propósito, posicionamento, personalidade e arquétipo. Esta é a âncora criativa: se uma peça não reflete essa essência, está errada.</div>
-        <textarea name="bloco03_essencia_descricao" class="form-textarea" rows="6">{{ old('bloco03_essencia_descricao', $dossier->bloco03_essencia_descricao) }}</textarea>
+        <x-rich-editor name="bloco03_essencia_descricao" :value="old('bloco03_essencia_descricao', $dossier->bloco03_essencia_descricao ?? '')" />
     </div>
 </div>
 
@@ -925,7 +923,7 @@
     <div class="form-group">
         <label class="form-label">Definição do tom de voz</label>
         <div class="form-guide">3 a 5 dimensões: registro, velocidade, emoção, autoridade. Use contrastes: "É X, mas não é Y".</div>
-        <textarea name="bloco04_tom_voz" class="form-textarea" rows="7">{{ old('bloco04_tom_voz', $dossier->bloco04_tom_voz) }}</textarea>
+        <x-rich-editor name="bloco04_tom_voz" :value="old('bloco04_tom_voz', $dossier->bloco04_tom_voz ?? '')" />
     </div>
 
     <div class="mb-4">
@@ -964,22 +962,22 @@
         <div class="form-group">
             <label class="form-label">Paleta de cores</label>
             <div class="form-guide">Cores primárias com códigos. Cores de apoio. Como usar cada uma.</div>
-            <textarea name="bloco04_territorio_visual[cores]" class="form-textarea" rows="5">{{ $b04Vis['cores'] ?? '' }}</textarea>
+            <x-rich-editor name="bloco04_territorio_visual[cores]" :value="$b04Vis['cores'] ?? ''" />
         </div>
         <div class="form-group">
             <label class="form-label">Tipografia</label>
             <div class="form-guide">Família tipográfica principal e secundária. Hierarquia de uso.</div>
-            <textarea name="bloco04_territorio_visual[tipografia]" class="form-textarea" rows="5">{{ $b04Vis['tipografia'] ?? '' }}</textarea>
+            <x-rich-editor name="bloco04_territorio_visual[tipografia]" :value="$b04Vis['tipografia'] ?? ''" />
         </div>
         <div class="form-group">
             <label class="form-label">Estilo fotográfico</label>
             <div class="form-guide">Enquadramento, luz, paleta, tipo de cena. O que mostrar e o que evitar.</div>
-            <textarea name="bloco04_territorio_visual[foto]" class="form-textarea" rows="5">{{ $b04Vis['foto'] ?? '' }}</textarea>
+            <x-rich-editor name="bloco04_territorio_visual[foto]" :value="$b04Vis['foto'] ?? ''" />
         </div>
         <div class="form-group">
             <label class="form-label">Linguagem gráfica</label>
             <div class="form-guide">Ícones, ilustrações, grafismos, textura. Estilo geral das peças.</div>
-            <textarea name="bloco04_territorio_visual[linguagem]" class="form-textarea" rows="5">{{ $b04Vis['linguagem'] ?? '' }}</textarea>
+            <x-rich-editor name="bloco04_territorio_visual[linguagem]" :value="$b04Vis['linguagem'] ?? ''" />
         </div>
     </div>
 </div>
@@ -994,24 +992,24 @@
         <div class="form-group">
             <label class="form-label" style="color:#7b3fe4">Palavras prioritárias</label>
             <div class="form-guide">Termos que carregam o posicionamento. Devem aparecer com frequência.</div>
-            <textarea name="bloco04_palavras_prioritarias" class="form-textarea" rows="8">{{ old('bloco04_palavras_prioritarias', $dossier->bloco04_palavras_prioritarias) }}</textarea>
+            <x-rich-editor name="bloco04_palavras_prioritarias" :value="old('bloco04_palavras_prioritarias', $dossier->bloco04_palavras_prioritarias ?? '')" min-height="200px" />
         </div>
         <div class="form-group">
             <label class="form-label" style="color:var(--muted2)">Palavras secundárias</label>
             <div class="form-guide">Relevantes para a categoria, mas não são o foco da narrativa.</div>
-            <textarea name="bloco04_palavras_secundarias" class="form-textarea" rows="8">{{ old('bloco04_palavras_secundarias', $dossier->bloco04_palavras_secundarias) }}</textarea>
+            <x-rich-editor name="bloco04_palavras_secundarias" :value="old('bloco04_palavras_secundarias', $dossier->bloco04_palavras_secundarias ?? '')" min-height="200px" />
         </div>
         <div class="form-group">
             <label class="form-label" style="color:#f87171">Palavras a evitar</label>
             <div class="form-guide">Genéricas, saturadas ou que contradizem o posicionamento.</div>
-            <textarea name="bloco04_palavras_evitar" class="form-textarea" rows="8">{{ old('bloco04_palavras_evitar', $dossier->bloco04_palavras_evitar) }}</textarea>
+            <x-rich-editor name="bloco04_palavras_evitar" :value="old('bloco04_palavras_evitar', $dossier->bloco04_palavras_evitar ?? '')" min-height="200px" />
         </div>
     </div>
 
     <div class="form-group">
         <label class="form-label">Frases-âncora</label>
         <div class="form-guide">3 a 5 frases que encapsulam o posicionamento. Não são slogans — são o padrão que outras frases devem seguir.</div>
-        <textarea name="bloco04_frases_ancora" class="form-textarea" rows="5">{{ old('bloco04_frases_ancora', $dossier->bloco04_frases_ancora) }}</textarea>
+        <x-rich-editor name="bloco04_frases_ancora" :value="old('bloco04_frases_ancora', $dossier->bloco04_frases_ancora ?? '')" />
     </div>
 </div>
 
@@ -1025,19 +1023,19 @@
         <div class="form-group">
             <label class="form-label">O que a comunicação deve ter</label>
             <div class="form-guide">O que não pode faltar em nenhuma peça desta marca.</div>
-            <textarea name="bloco04_mandatorios" class="form-textarea" rows="8">{{ old('bloco04_mandatorios', $dossier->bloco04_mandatorios) }}</textarea>
+            <x-rich-editor name="bloco04_mandatorios" :value="old('bloco04_mandatorios', $dossier->bloco04_mandatorios ?? '')" min-height="200px" />
         </div>
         <div class="form-group">
             <label class="form-label">O que a comunicação não deve fazer</label>
             <div class="form-guide">Temas, abordagens, formatos ou associações que contradizem o posicionamento.</div>
-            <textarea name="bloco04_restricoes" class="form-textarea" rows="8">{{ old('bloco04_restricoes', $dossier->bloco04_restricoes) }}</textarea>
+            <x-rich-editor name="bloco04_restricoes" :value="old('bloco04_restricoes', $dossier->bloco04_restricoes ?? '')" min-height="200px" />
         </div>
     </div>
 
     <div class="form-group">
         <label class="form-label">O teste final</label>
         <div class="form-guide">Uma ou duas perguntas que qualquer pessoa do time pode fazer para saber se uma peça está dentro do território da marca.</div>
-        <textarea name="bloco04_teste_final" class="form-textarea" rows="4">{{ old('bloco04_teste_final', $dossier->bloco04_teste_final) }}</textarea>
+        <x-rich-editor name="bloco04_teste_final" :value="old('bloco04_teste_final', $dossier->bloco04_teste_final ?? '')" />
     </div>
 </div>
 
