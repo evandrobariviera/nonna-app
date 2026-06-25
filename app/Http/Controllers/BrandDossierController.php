@@ -38,12 +38,6 @@ class BrandDossierController extends Controller
 
     public function update(Request $request, Client $client, BrandDossier $dossier)
     {
-        \Log::error('dossier.update.called', [
-            'dossier'        => $dossier->id,
-            'content_length' => $request->header('Content-Length'),
-            'field_count'    => count($request->except(['_token', '_method'])),
-        ]);
-
         $data = $request->except(['_token', '_method']);
 
         // Normaliza campos vazios que são FK

@@ -75,7 +75,8 @@ COPY docker/entrypoint.sh   /entrypoint.sh
 RUN chmod +x /entrypoint.sh \
     && chown -R www-data:www-data /var/www/html/storage \
     && chown -R www-data:www-data /var/www/html/bootstrap/cache \
-    && mkdir -p /var/log/supervisor /run/nginx
+    && mkdir -p /var/log/supervisor /run/nginx /tmp/nginx_client_body \
+    && chown www-data:www-data /tmp/nginx_client_body
 
 EXPOSE 80
 
