@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nonna · Apresentação de Time 2025</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08080d; --s1:#0d0d16; --s2:#12121e; --s3:#181826; --s4:#1f1f2e;
+  --b1:rgba(255,255,255,.05); --b2:rgba(255,255,255,.09); --b3:rgba(255,255,255,.15);
+  --ink:#eeeef6; --mu:rgba(238,238,246,.32); --mu2:rgba(238,238,246,.58);
+  --c1:#ff5c4d; --c2:#d63eaa; --c3:#7b3fe4;
+  --grad:linear-gradient(135deg,var(--c1),var(--c2),var(--c3));
+  --green:#34d399; --yellow:#fbbf24; --teal:#2dd4bf;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;font-size:15px;}
+
+/* ── SLIDES ── */
+.deck{width:100vw;height:100vh;position:relative;overflow:hidden;}
+.slide{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  padding:60px 72px;opacity:0;pointer-events:none;
+  transition:opacity .3s ease,transform .3s ease;
+  transform:translateX(32px);overflow:hidden;
+}
+.slide.active{opacity:1;pointer-events:all;transform:translateX(0);}
+.slide.prev{transform:translateX(-32px);}
+
+/* ── CHROME ── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;height:2px;z-index:200;
+  background:var(--b1);
+}
+.topbar-fill{height:100%;background:var(--grad);transition:width .35s;}
+.logo-fixed{
+  position:fixed;top:18px;left:28px;z-index:200;
+  display:flex;align-items:center;gap:8px;
+}
+.logo-fixed img{height:15px;opacity:.55;}
+.logo-text{font-size:11px;font-weight:800;background:var(--grad);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;opacity:.6;}
+.num-fixed{
+  position:fixed;top:18px;right:28px;z-index:200;
+  font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:.06em;
+}
+.block-indicator{
+  position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:200;
+  display:flex;gap:6px;align-items:center;
+}
+.bi-item{
+  font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;
+  letter-spacing:.12em;text-transform:uppercase;padding:3px 10px;
+  border:1px solid var(--b2);color:var(--mu);transition:all .2s;
+}
+.bi-item.active{color:var(--c2);border-color:rgba(214,62,170,.3);background:rgba(214,62,170,.06);}
+
+/* ── CONTROLS ── */
+.controls{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:12px;z-index:200;
+}
+.ctrl{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--s2);border:1px solid var(--b2);
+  color:var(--mu2);font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.ctrl:hover{background:var(--s3);border-color:var(--c2);color:var(--ink);}
+.ctrl:disabled{opacity:.2;cursor:default;}
+.dots{display:flex;gap:4px;align-items:center;}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--b3);cursor:pointer;transition:all .2s;}
+.dot.active{background:var(--c2);width:16px;border-radius:3px;}
+
+/* ── TYPOGRAPHY ── */
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--mu);
+  margin-bottom:14px;display:flex;align-items:center;gap:8px;
+}
+.eyebrow::before{content:'';width:16px;height:1px;background:var(--c2);}
+h1{font-family:'Syne',sans-serif;font-size:clamp(38px,5vw,72px);font-weight:800;letter-spacing:-.025em;line-height:1.03;}
+h2{font-family:'Syne',sans-serif;font-size:clamp(26px,3.2vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1.07;}
+h3{font-family:'Syne',sans-serif;font-size:clamp(14px,1.6vw,22px);font-weight:700;line-height:1.2;}
+.g{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.lead{font-size:clamp(13px,1.3vw,17px);color:var(--mu2);line-height:1.72;max-width:620px;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+
+/* ── GLOW ── */
+.glow{position:absolute;border-radius:50%;pointer-events:none;}
+
+/* ── CARDS ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;}
+.card{background:var(--s2);border:1px solid var(--b2);padding:22px 20px;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.accent-c1::before{background:var(--c1);}
+.accent-c2::before{background:var(--c2);}
+.accent-c3::before{background:var(--c3);}
+.accent-green::before{background:var(--green);}
+.accent-yellow::before{background:var(--yellow);}
+.card-tag{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--mu);margin-bottom:8px;}
+.card p{font-size:12px;color:var(--mu2);line-height:1.55;margin-top:6px;}
+ul.cl{list-style:none;display:flex;flex-direction:column;gap:7px;margin-top:8px;}
+ul.cl li{font-size:12px;color:var(--mu2);display:flex;gap:7px;line-height:1.4;}
+ul.cl li::before{content:'›';color:var(--c2);flex-shrink:0;font-weight:700;}
+ul.cl.c1 li::before{color:var(--c1);}
+ul.cl.c3 li::before{color:var(--c3);}
+ul.cl.green li::before{color:var(--green);}
+
+/* ── CALLOUT ── */
+.callout{
+  background:var(--s3);border:1px solid rgba(214,62,170,.15);
+  border-left:3px solid var(--c2);
+  padding:14px 18px;font-size:12px;color:var(--mu2);line-height:1.65;
+}
+.callout strong{color:var(--ink);}
+
+/* ── FLOW ── */
+.flow{display:flex;align-items:stretch;gap:2px;}
+.flow-step{flex:1;background:var(--s2);border:1px solid var(--b2);padding:18px 14px;position:relative;}
+.flow-step::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.flow-step:not(:last-child)::after{content:'→';position:absolute;right:-14px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--c2);z-index:2;}
+.flow-num{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;margin-bottom:7px;}
+.flow-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;margin-bottom:5px;line-height:1.2;}
+.flow-desc{font-size:10px;color:var(--mu);line-height:1.5;}
+
+/* ── NONNA UNIT CARD ── */
+.unit-card{
+  background:var(--s2);border:1px solid var(--b2);
+  padding:28px 24px;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.unit-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.unit-logo{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(22px,2.5vw,32px);
+  margin-bottom:4px;line-height:1;
+}
+.unit-name{
+  font-size:11px;font-weight:600;letter-spacing:.06em;
+  margin-bottom:12px;
+}
+.unit-desc{font-size:12px;color:var(--mu2);line-height:1.6;margin-bottom:16px;flex:1;}
+.unit-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;
+  letter-spacing:.12em;text-transform:uppercase;
+  padding:4px 10px;border:1px solid var(--b2);color:var(--mu);
+  align-self:flex-start;
+}
+
+/* ── PIPELINE ── */
+.pipe{display:flex;flex-direction:column;gap:2px;}
+.pipe-item{
+  display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:flex-start;
+  padding:12px 14px;background:var(--s2);border:1px solid var(--b1);
+}
+.pipe-num{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mu);padding-top:1px;}
+.pipe-name{font-size:12px;font-weight:600;margin-bottom:2px;}
+.pipe-desc{font-size:10px;color:var(--mu);line-height:1.4;}
+.ptag{font-family:'IBM Plex Mono',monospace;font-size:7px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border:1px solid var(--b2);color:var(--mu);flex-shrink:0;white-space:nowrap;margin-top:2px;}
+
+/* ── ORG CHART ── */
+.org{display:flex;flex-direction:column;align-items:center;gap:0;}
+.org-layer{display:flex;gap:8px;justify-content:center;position:relative;width:100%;}
+.org-node{
+  background:var(--s2);border:1px solid var(--b2);
+  padding:10px 14px;text-align:center;position:relative;min-width:110px;
+}
+.org-node::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.on-strat::before{background:var(--yellow);}
+.on-coo::before{background:var(--green);}
+.on-mgr::before{background:var(--c2);}
+.on-design::before{background:var(--c1);}
+.on-perf::before{background:var(--c2);}
+.on-tech::before{background:var(--c3);}
+.on-name{font-family:'Syne',sans-serif;font-weight:700;font-size:11px;margin-bottom:2px;}
+.on-role{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.06em;}
+.org-line{width:1px;height:20px;background:linear-gradient(to bottom,var(--c2),rgba(214,62,170,.2));margin:0 auto;}
+.org-hline{height:1px;background:var(--b2);position:absolute;top:0;left:10%;right:10%;}
+.org-branch{display:flex;justify-content:center;gap:8px;position:relative;padding-top:20px;}
+.org-branch::before{content:'';position:absolute;top:0;left:50%;width:1px;height:20px;background:rgba(214,62,170,.3);}
+
+/* ── WHAT CHANGES GRID ── */
+.wc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.wc-card{background:var(--s2);border:1px solid var(--b2);padding:18px 16px;}
+.wc-role{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;margin-bottom:6px;}
+.wc-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:10px;}
+ul.wc-list{list-style:none;display:flex;flex-direction:column;gap:5px;}
+ul.wc-list li{font-size:11px;color:var(--mu2);display:flex;gap:6px;line-height:1.4;}
+ul.wc-list li span{flex-shrink:0;font-weight:700;}
+
+/* ── FLOW PESSOAS ── */
+.flow-pessoas{display:flex;align-items:center;gap:0;overflow:hidden;}
+.fp-node{
+  background:var(--s2);border:1px solid var(--b2);
+  padding:14px 12px;text-align:center;flex:1;min-width:0;
+  position:relative;
+}
+.fp-node::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.fp-arr{color:var(--c2);font-size:18px;flex-shrink:0;padding:0 4px;}
+.fp-name{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;line-height:1.2;margin-bottom:3px;}
+.fp-role{font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--mu);letter-spacing:.06em;}
+.fp-deliverable{font-size:9px;color:var(--c2);margin-top:5px;line-height:1.3;}
+
+/* ── SECTION DIVIDER SLIDE ── */
+.divider-slide{
+  justify-content:center;align-items:flex-start;
+}
+.sec-label{
+  font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;
+  letter-spacing:.22em;text-transform:uppercase;
+  padding:6px 14px;border:1px solid var(--b2);color:var(--mu);
+  display:inline-block;margin-bottom:28px;
+}
+.sec-num-bg{
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:clamp(100px,15vw,200px);line-height:1;
+  color:rgba(255,255,255,.025);letter-spacing:-.04em;
+  position:absolute;right:40px;bottom:-20px;
+  pointer-events:none;user-select:none;
+}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="topbar-fill" id="fill"></div></div>
+<div class="logo-fixed">
+  <img src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png" alt="Nonna" onerror="this.style.display='none';this.nextSibling.style.display='block'">
+  <span class="logo-text" style="display:none">nonna</span>
+</div>
+<div class="num-fixed" id="numFixed">1 / 17</div>
+<div class="block-indicator">
+  <div class="bi-item active" id="bi0">As 3 Nonnas</div>
+  <div class="bi-item" id="bi1">Metodologia</div>
+  <div class="bi-item" id="bi2">Pessoas</div>
+</div>
+
+<div class="deck" id="deck">
+
+<!-- ══ 01 CAPA ══ -->
+<div class="slide active" id="s0">
+  <div class="glow" style="width:600px;height:600px;top:-150px;right:-150px;background:radial-gradient(circle,rgba(123,63,228,.11) 0%,transparent 65%);"></div>
+  <div class="glow" style="width:400px;height:400px;bottom:-100px;left:-80px;background:radial-gradient(circle,rgba(255,92,77,.07) 0%,transparent 65%);"></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+    <div class="eyebrow">Nonna Agência Digital · Apresentação Interna · 2025</div>
+    <h1 style="margin-bottom:22px;">A Nonna que<br>estamos <span class="g">construindo</span></h1>
+    <p class="lead">Três marcas. Uma metodologia. Uma equipe. O que muda, por que muda e qual é o papel de cada um nessa construção.</p>
+  </div>
+  <div style="display:flex;gap:36px;flex-wrap:wrap;padding-top:24px;border-top:1px solid var(--b2);">
+    <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;margin-bottom:4px;">BLOCOS</div><div style="font-size:13px;font-weight:500;">3 grandes temas</div></div>
+    <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;margin-bottom:4px;">SLIDES</div><div style="font-size:13px;font-weight:500;">15 ao total</div></div>
+    <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;margin-bottom:4px;">DURAÇÃO</div><div style="font-size:13px;font-weight:500;">~50 minutos</div></div>
+  </div>
+</div>
+
+<!-- ══ 02 POR QUE 3 MARCAS ══ -->
+<div class="slide divider-slide" id="s1">
+  <div class="sec-num-bg">01</div>
+  <div>
+    <div class="sec-label">Bloco 01 · As 3 Nonnas</div>
+    <div class="eyebrow">A decisão estratégica</div>
+    <h2 style="margin-bottom:20px;">Por que criamos<br><span class="g">3 marcas?</span></h2>
+    <p class="lead" style="margin-bottom:32px;">A Nonna cresceu e passou a oferecer serviços com naturezas muito diferentes. O problema: para o cliente de fora, tudo parecia a mesma coisa. Isso confundia na hora de contratar — e nos limitava na hora de precificar.</p>
+    <div class="grid-2" style="max-width:680px;">
+      <div class="card accent-c1">
+        <div class="card-tag">O problema anterior</div>
+        <h3 style="margin-bottom:6px;font-size:14px;">Uma marca,<br>três realidades diferentes</h3>
+        <p>Site, anúncio e vídeo são serviços completamente diferentes em processo, prazo e entrega. Comunicar tudo como "Nonna" criava confusão — para o cliente e para nós mesmos.</p>
+      </div>
+      <div class="card accent-c2" style="background:rgba(214,62,170,.03);">
+        <div class="card-tag">A solução</div>
+        <h3 style="margin-bottom:6px;font-size:14px;">Três marcas com<br>identidade própria</h3>
+        <p>Cada unidade tem nome, escopo e proposta de valor claros. O cliente sabe exatamente com quem está contratando. A Nonna como nome-mãe garante credibilidade cruzada entre as três.</p>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:16px;max-width:680px;">
+      <strong>O modelo:</strong> submarcas endossadas. O nome Nonna aparece em todas — o complemento sinaliza a especialidade. Reputação unificada, clareza comercial separada.
+    </div>
+  </div>
+</div>
+
+<!-- ══ 03 AS 3 NONNAS OVERVIEW ══ -->
+<div class="slide" id="s2">
+  <div class="eyebrow">Bloco 01 · As 3 Nonnas</div>
+  <h2 style="margin-bottom:24px;">As três unidades<br><span class="g">que formam a Nonna</span></h2>
+  <div class="grid-3" style="flex:1;align-content:start;">
+    <div class="unit-card" style="border-top:3px solid var(--c1);">
+      <div class="unit-logo" style="color:var(--c1);">Nonna</div>
+      <div class="unit-name" style="color:var(--c1);">Publicidade</div>
+      <div class="unit-desc">A unidade estratégica e de comunicação contínua. É a porta de entrada do cliente na Nonna e a responsável pela visão de marca integrada.</div>
+      <ul class="cl c1">
+        <li>Consultoria & Gestão Estratégica</li>
+        <li>Planejamento, Roadmaps, Diagnóstico</li>
+        <li>Tráfego Pago</li>
+        <li>Social Media & Conteúdo</li>
+        <li>Branding e identidade de marca</li>
+      </ul>
+      <div class="unit-tag" style="margin-top:14px;color:var(--c1);border-color:rgba(255,92,77,.2);">Porta de entrada</div>
+    </div>
+    <div class="unit-card" style="border-top:3px solid var(--c2);">
+      <div class="unit-logo" style="color:var(--c2);">Nonna</div>
+      <div class="unit-name" style="color:var(--c2);">Produtora</div>
+      <div class="unit-desc">A unidade de produção audiovisual. Responsável por toda a cadeia de criação em vídeo, fotografia e motion — independente do canal de destino.</div>
+      <ul class="cl">
+        <li>Produção de vídeo (institucional, reels, ads)</li>
+        <li>Roteiro e direção criativa audiovisual</li>
+        <li>Motion graphics e animação</li>
+        <li>Fotografia</li>
+      </ul>
+      <div class="unit-tag" style="margin-top:14px;color:var(--c2);border-color:rgba(214,62,170,.2);">Sob demanda</div>
+    </div>
+    <div class="unit-card" style="border-top:3px solid var(--c3);">
+      <div class="unit-logo" style="color:var(--c3);">Nonna</div>
+      <div class="unit-name" style="color:var(--c3);">Tech</div>
+      <div class="unit-desc">A unidade tecnológica. Atua no desenvolvimento digital, automações e IA aplicada. Maior potencial de crescimento e diferenciação da agência.</div>
+      <ul class="cl c3">
+        <li>Desenvolvimento Web (sites, LPs, e-commerce)</li>
+        <li>Automações de marketing e processos</li>
+        <li>Inteligência Artificial aplicada</li>
+        <li>Integrações de sistemas e CRM</li>
+      </ul>
+      <div class="unit-tag" style="margin-top:14px;color:var(--c3);border-color:rgba(123,63,228,.2);">Por projeto</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 04 NONNA PUBLICIDADE ══ -->
+<div class="slide" id="s3">
+  <div class="eyebrow" style="--c2:var(--c1);">Bloco 01 · Nonna Publicidade</div>
+  <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:48px;flex:1;align-items:center;">
+    <div>
+      <div style="font-family:'Syne',sans-serif;font-size:clamp(32px,4vw,56px);font-weight:800;line-height:1;color:var(--c1);margin-bottom:12px;">Nonna<br>Publicidade</div>
+      <p class="lead" style="margin-bottom:20px;">A unidade central. Onde o relacionamento com o cliente começa e onde a estratégia de marca vive.</p>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:.12em;margin-bottom:8px;">DOIS TIPOS DE ENTREGA</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="card" style="padding:14px 16px;">
+          <div class="card-tag" style="color:var(--c1);">Consultoria</div>
+          <div style="font-size:12px;color:var(--mu2);">Diagnóstico pontual. O cliente tem uma decisão. Entregamos direção. Relacionamento finito — e porta de entrada para a gestão.</div>
+        </div>
+        <div class="card" style="padding:14px 16px;background:rgba(255,92,77,.03);border-color:rgba(255,92,77,.12);">
+          <div class="card-tag" style="color:var(--c1);">Gestão Estratégica</div>
+          <div style="font-size:12px;color:var(--mu2);">Parceria contínua. A Nonna assume o marketing ao longo do tempo — com execução, gestão e responsabilidade por resultados. Produto de retenção.</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:.12em;margin-bottom:12px;">O QUE ENTREGA</div>
+      <div class="pipe">
+        <div class="pipe-item"><div class="pipe-num">01</div><div><div class="pipe-name">Diagnóstico & Imersão</div><div class="pipe-desc">Pesquisa de negócio, concorrentes, personas, auditoria de comunicação</div></div><div class="ptag">Fundação</div></div>
+        <div class="pipe-item"><div class="pipe-num">02</div><div><div class="pipe-name">Brand Platform</div><div class="pipe-desc">Propósito, posicionamento, promessa, personalidade, tom de voz, território visual</div></div><div class="ptag">Fundação</div></div>
+        <div class="pipe-item"><div class="pipe-num">03</div><div><div class="pipe-name">Conceito de Campanha + Roadmap</div><div class="pipe-desc">Ideia-mãe do trimestre e planejamento de campanhas e projetos por ciclo de 90 dias</div></div><div class="ptag">Trimestral</div></div>
+        <div class="pipe-item"><div class="pipe-num">04</div><div><div class="pipe-name">Social Media & Tráfego Pago</div><div class="pipe-desc">Execução contínua de conteúdo e campanhas de mídia paga ancoradas no conceito</div></div><div class="ptag">Mensal</div></div>
+        <div class="pipe-item"><div class="pipe-num">05</div><div><div class="pipe-name">Relatório Estratégico + Reunião</div><div class="pipe-desc">Leitura dos resultados com recomendações de direção para o próximo ciclo</div></div><div class="ptag">Mensal</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 05 NONNA PRODUTORA ══ -->
+<div class="slide" id="s4">
+  <div class="eyebrow">Bloco 01 · Nonna Produtora</div>
+  <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:48px;flex:1;align-items:center;">
+    <div>
+      <div style="font-family:'Syne',sans-serif;font-size:clamp(32px,4vw,56px);font-weight:800;line-height:1;color:var(--c2);margin-bottom:12px;">Nonna<br>Produtora</div>
+      <p class="lead" style="margin-bottom:20px;">A inteligência audiovisual da Nonna. Cada vídeo nasce com o contexto da brand platform — não é produção genérica.</p>
+      <div class="callout">
+        <strong>O diferencial:</strong> a Produtora não funciona no vácuo. Quando a Publicidade define o conceito de campanha, a Produtora já sabe o território visual, o tom e o objetivo. Produção com propósito de marca.
+      </div>
+    </div>
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:.12em;margin-bottom:12px;">PORTFÓLIO DE PRODUÇÃO</div>
+      <div class="grid-2" style="gap:8px;">
+        <div class="card accent-c2" style="padding:16px;">
+          <div class="card-tag" style="color:var(--c2);">Vídeo</div>
+          <ul class="cl" style="margin-top:4px;">
+            <li>Reels e Shorts (até 60s)</li>
+            <li>Vídeo institucional (até 3min)</li>
+            <li>Pack de conteúdo (dia de captação)</li>
+            <li>Ads em vídeo para tráfego</li>
+          </ul>
+        </div>
+        <div class="card accent-c2" style="padding:16px;">
+          <div class="card-tag" style="color:var(--c2);">Produção</div>
+          <ul class="cl" style="margin-top:4px;">
+            <li>Roteiro e direção criativa</li>
+            <li>Motion graphics e animação</li>
+            <li>Fotografia (produto/ambiente/equipe)</li>
+            <li>Edição e pós-produção</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card" style="margin-top:8px;padding:14px 16px;">
+        <div class="card-tag">Como funciona comercialmente</div>
+        <div style="font-size:12px;color:var(--mu2);">Cobrado separado da gestão mensal. Cliente da Publicidade solicita produção sob demanda — a Produtora executa com briefing já alinhado pela estratégia.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 06 NONNA TECH ══ -->
+<div class="slide" id="s5">
+  <div class="eyebrow">Bloco 01 · Nonna Tech</div>
+  <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:48px;flex:1;align-items:center;">
+    <div>
+      <div style="font-family:'Syne',sans-serif;font-size:clamp(32px,4vw,56px);font-weight:800;line-height:1;color:var(--c3);margin-bottom:12px;">Nonna<br>Tech</div>
+      <p class="lead" style="margin-bottom:20px;">A maior vantagem competitiva da Nonna nos próximos anos. Poucas agências do nosso porte têm dev e IA in-house.</p>
+      <div class="callout" style="border-left-color:var(--c3);">
+        <strong>A oportunidade:</strong> automações de marketing e agentes de IA como produto próprio. Empresas que querem adotar IA mas não têm time técnico — esse é o cliente da Nonna Tech.
+      </div>
+    </div>
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:.12em;margin-bottom:12px;">PORTFÓLIO TECNOLÓGICO</div>
+      <div class="grid-2" style="gap:8px;">
+        <div class="card accent-c3" style="padding:16px;">
+          <div class="card-tag" style="color:var(--c3);">Desenvolvimento</div>
+          <ul class="cl c3" style="margin-top:4px;">
+            <li>Sites institucionais (WordPress)</li>
+            <li>Landing pages de conversão</li>
+            <li>E-commerce e lojas digitais</li>
+            <li>Manutenção e evolução</li>
+          </ul>
+        </div>
+        <div class="card accent-c3" style="padding:16px;">
+          <div class="card-tag" style="color:var(--c3);">Automação & IA</div>
+          <ul class="cl c3" style="margin-top:4px;">
+            <li>Automações de marketing (n8n)</li>
+            <li>Integrações de CRM e funil</li>
+            <li>Agentes de IA para atendimento</li>
+            <li>WhatsApp marketing com IA</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card" style="margin-top:8px;padding:14px 16px;">
+        <div class="card-tag">Como funciona comercialmente</div>
+        <div style="font-size:12px;color:var(--mu2);">Projetos com escopo, prazo e valor fechados antes do início. Pode ser contratado junto com a Publicidade (como item do roadmap) ou de forma independente.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 07 COMO AS 3 SE CONECTAM ══ -->
+<div class="slide" id="s6">
+  <div class="eyebrow">Bloco 01 · Integração</div>
+  <h2 style="margin-bottom:24px;">Como as três<br><span class="g">trabalham juntas</span></h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex:1;align-content:start;">
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:.12em;margin-bottom:12px;">O FLUXO NATURAL</div>
+      <div class="pipe">
+        <div class="pipe-item" style="border-left:3px solid var(--c1);">
+          <div class="pipe-num" style="color:var(--c1);">→</div>
+          <div><div class="pipe-name">Publicidade define o conceito</div><div class="pipe-desc">Brand platform aprovada, conceito de campanha criado, roadmap do trimestre definido</div></div>
+        </div>
+        <div class="pipe-item" style="border-left:3px solid var(--c2);">
+          <div class="pipe-num" style="color:var(--c2);">→</div>
+          <div><div class="pipe-name">Produtora recebe o briefing</div><div class="pipe-desc">Com o contexto da marca já resolvido — produz vídeo e foto dentro do território visual do conceito</div></div>
+        </div>
+        <div class="pipe-item" style="border-left:3px solid var(--c3);">
+          <div class="pipe-num" style="color:var(--c3);">→</div>
+          <div><div class="pipe-name">Tech recebe o projeto do roadmap</div><div class="pipe-desc">Com escopo definido, design alinhado ao território visual — desenvolve e entrega dentro do sprint</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:.12em;margin-bottom:12px;">DESIGN: RECURSO COMPARTILHADO</div>
+      <div class="card" style="margin-bottom:10px;padding:16px;">
+        <div class="card-tag">Onde fica o Design</div>
+        <p>O designer gráfico está alocado na Publicidade — onde o contexto estratégico do cliente está concentrado. Quando Produtora ou Tech precisam de design, o recurso é compartilhado internamente. O designer entra levando a brand platform consigo.</p>
+      </div>
+      <div class="callout">
+        <strong>Para o cliente:</strong> ele contrata a Nonna e recebe o ecossistema completo. Estratégia, produção e tecnologia com o mesmo DNA de marca — sem precisar gerenciar três fornecedores diferentes.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 08 VISÃO GERAL DO PROCESSO ══ -->
+<div class="slide" id="s7">
+  <style>
+  /* FLOW ELEMENTS */
+  .fl{display:flex;align-items:stretch;gap:0;width:100%;}
+  .fstep{flex:1;display:flex;flex-direction:column;position:relative;}
+  .fstep:not(:last-child)::after{content:'→';position:absolute;right:-14px;top:50%;transform:translateY(-50%);font-size:20px;color:var(--c2);z-index:2;font-weight:700;}
+  .fbox{flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:6px;border:1px solid var(--b2);background:var(--s2);}
+  .fnum{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.15em;color:var(--mu);}
+  .ftitle{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;line-height:1.2;}
+  .fdesc{font-size:10px;color:var(--mu);line-height:1.45;flex:1;}
+  .ftime{font-family:'IBM Plex Mono',monospace;font-size:8px;margin-top:4px;}
+  .fwho{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;}
+  .fw{font-size:8px;font-family:'IBM Plex Mono',monospace;padding:2px 6px;border-radius:2px;}
+  .fw-ev{background:rgba(251,191,36,.15);color:#fbbf24;}
+  .fw-vi{background:rgba(123,63,228,.15);color:#7b3fe4;}
+  .fw-al{background:rgba(52,211,153,.15);color:#34d399;}
+  .fw-ma{background:rgba(214,62,170,.15);color:#d63eaa;}
+  .fw-cl{background:rgba(237,237,246,.1);color:#ededf6;}
+  .fw-pa{background:rgba(45,212,191,.15);color:#2dd4bf;}
+  /* PHASE BLOCKS */
+  .phase-block{border:1px solid var(--b2);padding:20px;position:relative;overflow:hidden;}
+  .phase-block::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+  .pb-c1::before{background:var(--c1);}
+  .pb-c2::before{background:var(--c2);}
+  .pb-loop::before{background:var(--grad);}
+  .pb-tag{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px;}
+  .pb-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px;line-height:1.1;}
+  .pb-sub{font-size:11px;color:var(--mu2);line-height:1.5;}
+  .pb-dur{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;margin-top:10px;}
+  /* CALENDAR/GANTT */
+  .cal{display:grid;gap:2px;}
+  .cal-row{display:grid;gap:2px;align-items:center;}
+  .cal-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);text-align:right;padding-right:8px;white-space:nowrap;}
+  .cal-cell{height:28px;border:1px solid var(--b1);background:var(--s3);display:flex;align-items:center;padding:0 6px;font-size:9px;color:var(--mu);}
+  .cal-cell.active{border-color:rgba(214,62,170,.3);}
+  .cal-cell.hl{background:rgba(214,62,170,.12);border-color:rgba(214,62,170,.4);color:var(--c2);font-weight:600;}
+  .cal-cell.sprint{background:linear-gradient(135deg,rgba(255,92,77,.1),rgba(123,63,228,.1));border-color:rgba(255,92,77,.3);color:var(--c1);font-weight:600;}
+  .cal-cell.client{background:rgba(237,237,246,.06);border-color:rgba(237,237,246,.15);color:var(--ink);}
+  .cal-day{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);text-align:center;padding:2px;}
+  /* CYCLE RING */
+  .cycle{display:flex;align-items:center;justify-content:center;gap:0;}
+  .cstep{background:var(--s2);border:1px solid var(--b2);padding:10px 12px;flex:1;text-align:center;position:relative;}
+  .cstep:not(:last-child)::after{content:'→';position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--c2);z-index:2;}
+  .cstep-name{font-size:10px;font-weight:600;margin-bottom:3px;line-height:1.2;}
+  .cstep-sub{font-size:9px;color:var(--mu);line-height:1.3;}
+  </style>
+
+  <div class="eyebrow">Bloco 02 · O processo</div>
+  <h2 style="margin-bottom:20px;">Três etapas.<br><span class="g">Uma só cadência.</span></h2>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px;flex:1;align-content:start;">
+    <div class="phase-block pb-c1">
+      <div class="pb-tag" style="color:var(--c1);">Etapa 00 · Uma vez</div>
+      <div class="pb-name">Onboarding</div>
+      <div class="pb-sub">Entrada do cliente na Nonna — contrato, setup, apresentação do processo e agendamento do kickoff.</div>
+      <div class="pb-dur" style="color:var(--c1);">5 dias</div>
+    </div>
+    <div class="phase-block pb-c2">
+      <div class="pb-tag" style="color:var(--c2);">Etapa 01 · Uma vez</div>
+      <div class="pb-name">Fundação</div>
+      <div class="pb-sub">Kickoff, Dossiê de Marca e primeiro Roadmap — construídos e aprovados com o cliente antes de qualquer execução.</div>
+      <div class="pb-dur" style="color:var(--c2);">20 dias</div>
+    </div>
+    <div class="phase-block pb-loop" style="background:rgba(214,62,170,.03);">
+      <div class="pb-tag" style="color:var(--c2);">Etapa 02 · Recorrente</div>
+      <div class="pb-name">Ciclo Trimestral</div>
+      <div class="pb-sub">Detalhamento → Conceito de Campanha → Aprovação → Sprint quinzenal. Acontece indefinidamente — o ciclo anterior ainda está ativo quando o próximo já está sendo planejado.</div>
+      <div class="pb-dur" style="background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Quinzenal · para sempre</div>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:14px;">
+    <strong>A lógica do overlap:</strong> o cliente nunca fica no vácuo entre ciclos — quando o Roadmap atual está sendo executado, o próximo já está sendo planejado internamente. No primeiro ciclo, o setup de contas preenche esse espaço.
+  </div>
+</div>
+
+<!-- ══ 09 ETAPA 00 ══ -->
+<div class="slide" id="s8">
+  <div class="eyebrow">Etapa 00 · 5 dias</div>
+  <h2 style="margin-bottom:6px;">Onboarding</h2>
+  <p style="font-size:12px;color:var(--mu2);margin-bottom:24px;">O cliente entra, é apresentado ao processo e chega ao kickoff preparado. Conduzido inteiramente pelo atendimento — sem depender da direção.</p>
+
+  <div class="fl" style="gap:6px;flex:1;align-items:stretch;">
+    <div class="fstep">
+      <div class="fbox" style="border-top:3px solid var(--green);">
+        <div class="fnum">Dia 1</div>
+        <div class="ftitle">Contrato & Burocracia</div>
+        <div class="fdesc">Assinatura do contrato via ClickSign. Primeiro pagamento confirmado. Dados cadastrais do cliente coletados.</div>
+        <div class="fwho"><span class="fw fw-al">Alisson</span></div>
+      </div>
+    </div>
+    <div class="fstep">
+      <div class="fbox" style="border-top:3px solid var(--green);">
+        <div class="fnum">Dia 2</div>
+        <div class="ftitle">Setup de Canais</div>
+        <div class="fdesc">Criação do grupo de atendimento no WhatsApp. Pasta compartilhada no Drive. Acesso ao ClickUp configurado.</div>
+        <div class="fwho"><span class="fw fw-al">Alisson</span></div>
+      </div>
+    </div>
+    <div class="fstep">
+      <div class="fbox" style="border-top:3px solid var(--c2);">
+        <div class="fnum">Dias 2–3</div>
+        <div class="ftitle">Apresentação da Nonna</div>
+        <div class="fdesc">Mini-cursinho para o cliente: como funciona o processo, prazos de aprovação, canais de comunicação, o que esperar de cada etapa.</div>
+        <div class="fwho"><span class="fw fw-al">Atendimento</span></div>
+      </div>
+    </div>
+    <div class="fstep">
+      <div class="fbox" style="border-top:3px solid var(--c2);">
+        <div class="fnum">Dias 3–4</div>
+        <div class="ftitle">Pedido de Acessos</div>
+        <div class="fdesc">Formulário de acessos enviado ao cliente: Meta Business, Google Ads, Analytics, site, redes sociais e demais plataformas.</div>
+        <div class="fwho"><span class="fw fw-al">Atendimento</span></div>
+      </div>
+    </div>
+    <div class="fstep">
+      <div class="fbox" style="border-top:3px solid var(--yellow);">
+        <div class="fnum">Dia 5</div>
+        <div class="ftitle">Kickoff Agendado</div>
+        <div class="fdesc">Confirmação de todos os acessos. Reunião de kickoff agendada com Evandro. Onboarding concluído — cliente pronto para a Fundação.</div>
+        <div class="fwho"><span class="fw fw-al">Alisson</span><span class="fw fw-ev">Evandro</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 10 ETAPA 01 ══ -->
+<div class="slide" id="s9">
+  <div class="eyebrow">Etapa 01 · 20 dias</div>
+  <h2 style="margin-bottom:6px;">Fundação</h2>
+  <p style="font-size:12px;color:var(--mu2);margin-bottom:20px;">Do kickoff ao Dossiê de Marca + Roadmap aprovados com o cliente. Acontece uma única vez e orienta toda a comunicação do cliente enquanto a marca não mudar de posicionamento.</p>
+
+  <div class="fl" style="gap:6px;margin-bottom:14px;">
+    <div class="fstep">
+      <div class="fbox" style="border-top:3px solid var(--yellow);">
+        <div class="fnum">Dias 1–2</div>
+        <div class="ftitle">Reunião de Kickoff</div>
+        <div class="fdesc">Evandro conduz o briefing inicial. Todos os dados do cliente, negócio, mercado e objetivos são coletados e gravados.</div>
+        <div class="fwho"><span class="fw fw-ev">Evandro</span><span class="fw fw-cl">Cliente</span></div>
+      </div>
+    </div>
+    <div class="fstep">
+      <div class="fbox" style="border-top:3px solid var(--yellow);">
+        <div class="fnum">Dias 3–4</div>
+        <div class="ftitle">Transcrição & Briefing</div>
+        <div class="fdesc">Evandro transcreve a reunião e estrutura o briefing inicial. Passa para o Vitor com contexto completo do cliente.</div>
+        <div class="fwho"><span class="fw fw-ev">Evandro</span></div>
+      </div>
+    </div>
+    <div class="fstep">
+      <div class="fbox" style="border-top:3px solid var(--c3);">
+        <div class="fnum">Dias 5–8</div>
+        <div class="ftitle">Complemento Estratégico</div>
+        <div class="fdesc">Vitor enriquece com pesquisa de mercado, análise de concorrentes, percepções e visão estratégica de comunicação.</div>
+        <div class="fwho"><span class="fw fw-vi">Vitor</span></div>
+      </div>
+    </div>
+    <div class="fstep">
+      <div class="fbox" style="border-top:3px solid var(--yellow);background:rgba(251,191,36,.03);">
+        <div class="fnum">Dias 9–15</div>
+        <div class="ftitle">Dossiê de Marca + Roadmap</div>
+        <div class="fdesc">Evandro formata o Dossiê (Brand Platform + Brief Estratégico) e o primeiro Roadmap com campanhas e projetos do ciclo inicial.</div>
+        <div class="fwho"><span class="fw fw-ev">Evandro</span></div>
+      </div>
+    </div>
+    <div class="fstep">
+      <div class="fbox" style="border-top:3px solid var(--green);background:rgba(52,211,153,.03);">
+        <div class="fnum">Dias 16–20</div>
+        <div class="ftitle">Aprovação com o Cliente</div>
+        <div class="fdesc">Dossiê de Marca e Roadmap apresentados e aprovados juntos. Base estratégica estabelecida. Ciclo recorrente inicia.</div>
+        <div class="fwho"><span class="fw fw-ev">Evandro</span><span class="fw fw-cl">Cliente</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Dossiê + Roadmap aprovados na mesma reunião.</strong> O cliente sai com a base estratégica da marca definida e o plano do primeiro trimestre acordado — tudo de uma vez.
+  </div>
+</div>
+
+<!-- ══ 11 ETAPA 02 - CICLO ══ -->
+<div class="slide" id="s10">
+  <div class="eyebrow">Etapa 02 · Recorrente</div>
+  <h2 style="margin-bottom:6px;">O Ciclo de Planejamento</h2>
+  <p style="font-size:12px;color:var(--mu2);margin-bottom:18px;">A cada trimestre, esse ciclo acontece em paralelo ao sprint ativo — o cliente nunca para enquanto o próximo período é preparado.</p>
+
+  <div class="fl" style="gap:5px;margin-bottom:14px;">
+    <div class="fstep">
+      <div class="fbox" style="border-top:3px solid var(--c2);">
+        <div class="fnum">Passo 01</div>
+        <div class="ftitle">Roadmap aprovado</div>
+        <div class="fdesc">Marlon apresenta o Roadmap ao cliente com campanhas e projetos do próximo ciclo. Aprovado, o detalhamento começa.</div>
+        <div class="fwho"><span class="fw fw-ma">Marlon</span><span class="fw fw-cl">Cliente</span></div>
+      </div>
+    </div>
+    <div class="fstep">
+      <div class="fbox" style="border-top:3px solid var(--c2);">
+        <div class="fnum">Passo 02</div>
+        <div class="ftitle">Reunião de Detalhamento</div>
+        <div class="fdesc">Marlon convoca heads dos setores envolvidos (+ Vitor quando necessário) para lapidar os detalhes de cada campanha e projeto.</div>
+        <div class="fwho"><span class="fw fw-ma">Marlon</span><span class="fw fw-vi">Vitor</span><span class="fw fw-al">Heads</span></div>
+      </div>
+    </div>
+    <div class="fstep">
+      <div class="fbox" style="border-top:3px solid var(--c3);background:rgba(123,63,228,.03);">
+        <div class="fnum">Passo 03 · 2 dias</div>
+        <div class="ftitle">Conceito de Campanha</div>
+        <div class="fdesc">Vitor elabora o Conceito — regras de comunicação, direcionamento visual e peças base que guiarão toda a produção do período.</div>
+        <div class="fwho"><span class="fw fw-vi">Vitor</span></div>
+      </div>
+    </div>
+    <div class="fstep">
+      <div class="fbox" style="border-top:3px solid var(--green);background:rgba(52,211,153,.03);">
+        <div class="fnum">Passo 04 · 2 dias</div>
+        <div class="ftitle">Aprovação do Conceito</div>
+        <div class="fdesc">Marlon apresenta o Conceito ao cliente para aprovação. Aprovado, as tarefas são distribuídas. Não aprovado, Vitor ajusta.</div>
+        <div class="fwho"><span class="fw fw-ma">Marlon</span><span class="fw fw-cl">Cliente</span></div>
+      </div>
+    </div>
+    <div class="fstep">
+      <div class="fbox" style="border-top:3px solid var(--yellow);">
+        <div class="fnum">Passo 05</div>
+        <div class="ftitle">Distribuição & Sprint</div>
+        <div class="fdesc">Marlon distribui tarefas para a fila. Na sexta-feira seguinte, Alisson insere na sprint. Segunda-feira: execução começa.</div>
+        <div class="fwho"><span class="fw fw-ma">Marlon</span><span class="fw fw-al">Alisson</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+    <div class="callout" style="border-left-color:var(--c3);">
+      <strong>Regra do Conceito:</strong> Vitor não recebe um rascunho — recebe um briefing lapidado. A reunião de detalhamento existe para resolver o que precisa ser resolvido antes de chegar nele.
+    </div>
+    <div class="callout" style="border-left-color:var(--yellow);">
+      <strong>Regra da Sexta:</strong> Tarefas entram na sprint toda sexta-feira. Conceito aprovado até quarta entra na sexta da mesma semana. Depois disso, entra na sexta seguinte.
+    </div>
+  </div>
+</div>
+
+<!-- ══ 12 TABELA DE PRAZOS ══ -->
+<div class="slide" id="s11">
+  <div class="eyebrow">Etapa 02 · Prazos</div>
+  <h2 style="margin-bottom:6px;">A janela de <span class="g">planejamento</span></h2>
+  <p style="font-size:12px;color:var(--mu2);margin-bottom:18px;">14 dias corridos do início do planejamento até a entrada na sprint. Tudo conectado — um atraso em qualquer passo empurra a sprint inteira.</p>
+
+  <div style="display:grid;grid-template-columns:auto repeat(5,1fr) 8px repeat(5,1fr) 8px 1fr;gap:2px;align-items:center;margin-bottom:14px;">
+    <!-- Header -->
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);padding-right:8px;"></div>
+    <div class="cal-day">Seg</div><div class="cal-day">Ter</div><div class="cal-day">Qua</div><div class="cal-day">Qui</div><div class="cal-day">Sex</div>
+    <div></div>
+    <div class="cal-day">Seg</div><div class="cal-day">Ter</div><div class="cal-day">Qua</div><div class="cal-day">Qui</div><div class="cal-day">Sex</div>
+    <div></div>
+    <div class="cal-day">Seg</div>
+
+    <!-- Semana labels -->
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);padding-right:8px;white-space:nowrap;">Semana</div>
+    <div class="cal-cell active" style="grid-column:span 5;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu2);">SEMANA 1 — Planejamento</div>
+    <div></div>
+    <div class="cal-cell active" style="grid-column:span 5;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu2);">SEMANA 2 — Aprovação</div>
+    <div></div>
+    <div class="cal-cell sprint" style="justify-content:center;font-size:8px;">SPRINT</div>
+
+    <!-- Marlon row -->
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--c2);padding-right:8px;white-space:nowrap;">Marlon</div>
+    <div class="cal-cell hl" style="border-color:rgba(214,62,170,.4);color:var(--c2);">Reun. detalhamento</div>
+    <div class="cal-cell hl" style="border-color:rgba(214,62,170,.4);color:var(--c2);">Brief p/ Vitor</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">aguarda</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">aguarda</div>
+    <div class="cal-cell hl" style="border-color:rgba(214,62,170,.4);color:var(--c2);">Envia ao cliente</div>
+    <div></div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">aguarda</div>
+    <div class="cal-cell hl" style="border-color:rgba(214,62,170,.4);color:var(--c2);">Distribui tarefas</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div></div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+
+    <!-- Vitor row -->
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--c3);padding-right:8px;white-space:nowrap;">Vitor</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell hl" style="border-color:rgba(123,63,228,.4);color:var(--c3);">Conceito ←</div>
+    <div class="cal-cell hl" style="border-color:rgba(123,63,228,.4);color:var(--c3);">→ 2 dias</div>
+    <div class="cal-cell hl" style="border-color:rgba(123,63,228,.4);color:var(--c3);">Entrega</div>
+    <div></div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div></div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+
+    <!-- Cliente row -->
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--ink);padding-right:8px;white-space:nowrap;">Cliente</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">recebe</div>
+    <div></div>
+    <div class="cal-cell client">aprova ←</div>
+    <div class="cal-cell client">→ 2 dias</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div></div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+
+    <!-- Alisson row -->
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--green);padding-right:8px;white-space:nowrap;">Alisson</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div></div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell" style="color:var(--mu);font-style:italic;">–</div>
+    <div class="cal-cell hl" style="border-color:rgba(52,211,153,.4);color:var(--green);">Revisa fila</div>
+    <div class="cal-cell hl" style="border-color:rgba(52,211,153,.4);color:var(--green);">Fecha fila</div>
+    <div class="cal-cell hl" style="border-color:rgba(52,211,153,.4);color:var(--green);">SPRINT ↓</div>
+    <div></div>
+    <div class="cal-cell sprint">Inicia!</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+    <div class="callout" style="font-size:11px;border-left-color:var(--c2);">
+      <strong>Regra 1:</strong> Conceito atrasado empurra a sprint inteira para a próxima quinzena.
+    </div>
+    <div class="callout" style="font-size:11px;border-left-color:var(--ink);">
+      <strong>Regra 2:</strong> Cliente não aprova até terça = tarefas entram na sprint seguinte.
+    </div>
+    <div class="callout" style="font-size:11px;border-left-color:var(--green);">
+      <strong>Regra 3:</strong> Reunião de detalhamento na segunda é inegociável — é o gatilho de tudo.
+    </div>
+  </div>
+</div>
+
+<!-- ══ 13 O QUE MUDA (COMPACTO) ══ -->
+<div class="slide" id="s12">
+  <div class="eyebrow">Bloco 02 · Na prática</div>
+  <h2 style="margin-bottom:20px;">O que muda para<br><span class="g">cada área</span></h2>
+  <div class="wc-grid" style="flex:1;align-content:start;gap:10px;">
+    <div class="wc-card" style="border-top:2px solid var(--c1);">
+      <div class="wc-role" style="color:var(--c1);">Design · Alessandra · Vitor · Tiago · Andreo</div>
+      <div class="wc-title">Criação com território definido</div>
+      <ul class="wc-list">
+        <li><span style="color:var(--green);">→</span>Recebe conceito de campanha com referências visuais antes de começar</li>
+        <li><span style="color:var(--green);">→</span>Paleta, tipografia e estilo do período já aprovados — você executa, não inventa do zero</li>
+        <li><span style="color:var(--green);">→</span>Menos revisões porque a direção criativa foi validada antes da produção</li>
+      </ul>
+    </div>
+    <div class="wc-card" style="border-top:2px solid var(--c2);">
+      <div class="wc-role" style="color:var(--c2);">Performance · Marielen</div>
+      <div class="wc-title">Mídia integrada à marca</div>
+      <ul class="wc-list">
+        <li><span style="color:var(--green);">→</span>Recebe brief de campanha com objetivos, público e conceito criativo já definidos</li>
+        <li><span style="color:var(--green);">→</span>Criativos de ads derivam do mesmo conceito do orgânico — consistência de mensagem</li>
+        <li><span style="color:var(--green);">→</span>Foco 100% em execução e otimização de mídia — sem dividir com atendimento</li>
+      </ul>
+    </div>
+    <div class="wc-card" style="border-top:2px solid var(--c3);">
+      <div class="wc-role" style="color:var(--c3);">Tecnologia · Patrick · Fernando · Marcus</div>
+      <div class="wc-title">Projetos com escopo fechado</div>
+      <ul class="wc-list">
+        <li><span style="color:var(--green);">→</span>Todo projeto entra no roadmap com especificação antes de começar</li>
+        <li><span style="color:var(--green);">→</span>Design e copy chegam alinhados ao território visual da campanha</li>
+        <li><span style="color:var(--green);">→</span>Prazo definido no planejamento — mudança de escopo tem processo formal</li>
+      </ul>
+    </div>
+    <div class="wc-card" style="border-top:2px solid var(--green);">
+      <div class="wc-role" style="color:var(--green);">Operação · Alisson · Atendimento</div>
+      <div class="wc-title">Sistema que organiza, não urgência que apaga</div>
+      <ul class="wc-list">
+        <li><span style="color:var(--green);">→</span>Sprint no ClickUp gerencia prazos — operação fiscaliza, não corre atrás</li>
+        <li><span style="color:var(--green);">→</span>Aprovações via Aprovaaí com notificação automática — menos WhatsApp manual</li>
+        <li><span style="color:var(--green);">→</span>Atendimento foca em relacionamento estratégico com o cliente, não em tarefas admin</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 14 PESSOAS INTRO ══ -->
+<div class="slide divider-slide" id="s13">
+  <div class="sec-num-bg">03</div>
+  <div>
+    <div class="sec-label">Bloco 03 · Estrutura de Pessoas</div>
+    <div class="eyebrow">Quem somos</div>
+    <h2 style="margin-bottom:20px;">Papéis, responsabilidades<br>e <span class="g">como o trabalho flui</span></h2>
+    <p class="lead" style="max-width:560px;">A metodologia só funciona se cada pessoa sabe exatamente o que recebe, o que produz e para quem passa. Esse é o organograma que garante isso.</p>
+  </div>
+</div>
+
+<!-- ══ 15 ESTRUTURA DE PESSOAS ══ -->
+<div class="slide" id="s14">
+  <div class="eyebrow">Bloco 03 · Organograma</div>
+  <h2 style="margin-bottom:20px;font-size:clamp(20px,2.5vw,32px);">Estrutura da <span class="g">Nonna 2025</span></h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;flex:1;align-content:start;">
+
+    <!-- LEFT: ORG VISUAL -->
+    <div>
+      <!-- Estratégia -->
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.14em;margin-bottom:8px;">DIREÇÃO ESTRATÉGICA</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+        <div style="background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.15);border-top:2px solid var(--yellow);padding:12px 14px;">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;">Evandro</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--yellow);margin-top:2px;">CEO · Estratégia & Performance</div>
+        </div>
+        <div style="background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.15);border-top:2px solid var(--yellow);padding:12px 14px;">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;">Vitor</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--yellow);margin-top:2px;">Direção Criativa · Conceito & Copy</div>
+        </div>
+      </div>
+      <!-- COO + MGR -->
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.14em;margin-bottom:8px;margin-top:12px;">GESTÃO & OPERAÇÃO</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+        <div style="background:rgba(52,211,153,.04);border:1px solid rgba(52,211,153,.12);border-top:2px solid var(--green);padding:12px 14px;">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;">Alisson</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--green);margin-top:2px;">COO · Sprints · Atendimento · Financeiro</div>
+        </div>
+        <div style="background:rgba(214,62,170,.04);border:1px solid rgba(214,62,170,.12);border-top:2px solid var(--c2);padding:12px 14px;">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;">Marlon</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--c2);margin-top:2px;">Gestor de Campanhas & Projetos</div>
+        </div>
+      </div>
+      <!-- Pods -->
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.14em;margin-bottom:8px;margin-top:12px;">EXECUÇÃO</div>
+      <div style="display:grid;grid-template-columns:1.4fr 0.8fr 1fr;gap:6px;">
+        <div style="background:rgba(255,92,77,.04);border:1px solid rgba(255,92,77,.12);border-top:2px solid var(--c1);padding:10px 12px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--c1);margin-bottom:4px;">CRIAÇÃO & DESIGN</div>
+          <div style="font-size:10px;font-weight:600;">Alessandra <span style="color:var(--mu);font-weight:400;">(head + copy)</span></div>
+          <div style="font-size:10px;font-weight:600;">Vitor <span style="color:var(--mu);font-weight:400;">(conceito)</span></div>
+          <div style="font-size:10px;color:var(--mu);">Tiago · Andreo</div>
+        </div>
+        <div style="background:rgba(214,62,170,.04);border:1px solid rgba(214,62,170,.12);border-top:2px solid var(--c2);padding:10px 12px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--c2);margin-bottom:4px;">TRÁFEGO</div>
+          <div style="font-size:10px;font-weight:600;">Marielen</div>
+          <div style="font-size:10px;color:var(--mu);">Performance</div>
+        </div>
+        <div style="background:rgba(123,63,228,.04);border:1px solid rgba(123,63,228,.12);border-top:2px solid var(--c3);padding:10px 12px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--c3);margin-bottom:4px;">TECH</div>
+          <div style="font-size:10px;font-weight:600;">Patrick <span style="color:var(--mu);font-weight:400;">(head)</span></div>
+          <div style="font-size:10px;color:var(--mu);">Fernando · Marcus</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: PAPEL DE CADA UM -->
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.14em;margin-bottom:12px;">O PAPEL DE CADA UM</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="background:var(--s2);border:1px solid var(--b1);padding:10px 14px;display:grid;grid-template-columns:80px 1fr;gap:10px;align-items:center;">
+          <div style="font-size:10px;font-weight:600;">Evandro</div>
+          <div style="font-size:10px;color:var(--mu);">Conduz o briefing inicial, formata a brand platform e os entregáveis estratégicos. Lidera o planejamento periódico e dá origem às campanhas conceituais.</div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--b1);padding:10px 14px;display:grid;grid-template-columns:80px 1fr;gap:10px;align-items:center;">
+          <div style="font-size:10px;font-weight:600;">Vitor</div>
+          <div style="font-size:10px;color:var(--mu);">Complementa o diagnóstico com pesquisa e visão estratégica. Elabora o conceito de campanha — regras de comunicação e peças base. Apoia o design na camada criativa.</div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--b1);padding:10px 14px;display:grid;grid-template-columns:80px 1fr;gap:10px;align-items:center;">
+          <div style="font-size:10px;font-weight:600;">Alisson</div>
+          <div style="font-size:10px;color:var(--mu);">Conduz o onboarding, cuida do atendimento ao cliente e do financeiro. Junto com o Marlon, mantém o ritmo da sprint e garante que os prazos são cumpridos.</div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--b1);padding:10px 14px;display:grid;grid-template-columns:80px 1fr;gap:10px;align-items:center;">
+          <div style="font-size:10px;font-weight:600;">Marlon</div>
+          <div style="font-size:10px;color:var(--mu);">Leva campanhas e planejamentos para aprovação do cliente. Distribui as tarefas aprovadas para os squads. Acompanha a operação de tráfego e apoia a Marielen em pontos específicos.</div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--b1);padding:10px 14px;display:grid;grid-template-columns:80px 1fr;gap:10px;align-items:center;">
+          <div style="font-size:10px;font-weight:600;">Alessandra</div>
+          <div style="font-size:10px;color:var(--mu);">Head de criação, redatora e copy — escreve os textos e garante que tudo produzido pelo squad de design está alinhado ao conceito aprovado.</div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--b1);padding:10px 14px;display:grid;grid-template-columns:80px 1fr;gap:10px;align-items:center;">
+          <div style="font-size:10px;font-weight:600;">Marielen</div>
+          <div style="font-size:10px;color:var(--mu);">Conduz toda a operação de tráfego pago — 100% focada em performance de mídia.</div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--b1);padding:10px 14px;display:grid;grid-template-columns:80px 1fr;gap:10px;align-items:center;">
+          <div style="font-size:10px;font-weight:600;">Patrick</div>
+          <div style="font-size:10px;color:var(--mu);">Aloca e revisa os projetos de desenvolvimento — qualidade técnica e code review.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <button class="ctrl" id="prev" onclick="move(-1)" disabled>←</button>
+  <div class="dots" id="dotsWrap"></div>
+  <button class="ctrl" id="next" onclick="move(1)">→</button>
+</div>
+
+<script>
+const SLIDES = document.querySelectorAll('.slide');
+const N = SLIDES.length;
+const BLOCKS = [[0,6],[7,11],[12,14]]; // slide ranges per block
+let cur = 0;
+
+const dotsWrap = document.getElementById('dotsWrap');
+for(let i=0;i<N;i++){
+  const d=document.createElement('div');
+  d.className='dot'+(i===0?' active':'');
+  d.onclick=()=>go(i);
+  dotsWrap.appendChild(d);
+}
+
+function go(n){
+  SLIDES[cur].classList.remove('active');
+  SLIDES[cur].classList.add('prev');
+  setTimeout(()=>SLIDES[cur].classList.remove('prev'),320);
+  cur=n;
+  SLIDES[cur].classList.add('active');
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===cur));
+  document.getElementById('numFixed').textContent=`${cur+1} / ${N}`;
+  document.getElementById('fill').style.width=((cur+1)/N*100)+'%';
+  document.getElementById('prev').disabled=(cur===0);
+  document.getElementById('next').disabled=(cur===N-1);
+  // block indicator
+  BLOCKS.forEach((range,bi)=>{
+    document.getElementById('bi'+bi).classList.toggle('active', cur>=range[0] && cur<=range[1]);
+  });
+}
+
+function move(d){ if(cur+d>=0&&cur+d<N) go(cur+d); }
+
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight','ArrowDown',' '].includes(e.key)){e.preventDefault();move(1);}
+  if(['ArrowLeft','ArrowUp'].includes(e.key)){e.preventDefault();move(-1);}
+});
+
+let tx=0;
+document.addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tx;
+  if(Math.abs(dx)>50) move(dx<0?1:-1);
+},{passive:true});
+
+document.getElementById('numFixed').textContent=`1 / ${N}`;
+document.getElementById('fill').style.width=(1/N*100)+'%';
+</script>
+</body>
+</html>

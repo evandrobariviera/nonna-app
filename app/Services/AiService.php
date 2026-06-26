@@ -8,6 +8,165 @@ use Illuminate\Support\Facades\Http;
 
 class AiService
 {
+    public function chat(
+        AiAgent $agent,
+        array $history,
+        array $context = [],
+        ?int $userId = null,
+        ?string $clientId = null,
+    ): string {
+        $agent->loadMissing('provider');
+
+        $apiKey = $agent->resolvedApiKey();
+        if (!$apiKey) {
+            throw new \RuntimeException("Agente '{$agent->name}': nenhuma chave de API configurada para {$agent->provider->name}.");
+        }
+
+        $systemPrompt = $this->buildChatSystemPrompt($agent->system_prompt, $context);
+        [$responseText, $usage] = $this->dispatchChat($agent, $apiKey->getApiKey(), $systemPrompt, $history);
+        $this->logUsage($agent, $usage, $userId, $clientId, 'chat');
+
+        return $responseText;
+    }
+
+    private function buildChatSystemPrompt(string $agentPrompt, array $context): string
+    {
+        if (empty($context)) {
+            return $agentPrompt;
+        }
+
+        $labelMap = [
+            'task_title'      => 'Tarefa',
+            'task_description'=> 'Descrição',
+            'task_type'       => 'Tipo',
+            'task_status'     => 'Status',
+            'task_situation'  => 'Situação',
+            'client_name'     => 'Cliente',
+            'client_segment'  => 'Segmento',
+            'project_name'    => 'Projeto',
+            'project_brief'   => 'Brief do Projeto',
+            'executor_name'   => 'Executor',
+            'macro_plan_name' => 'Macroplanejamento',
+        ];
+
+        $skip = ['task_id', 'project_id', 'campaign_id', 'client_id'];
+        $lines = [];
+
+        foreach ($context as $key => $value) {
+            if (!empty($value) && !in_array($key, $skip)) {
+                $label   = $labelMap[$key] ?? $key;
+                $lines[] = "{$label}: {$value}";
+            }
+        }
+
+        if (empty($lines)) {
+            return $agentPrompt;
+        }
+
+        return $agentPrompt . "\n\n---\nCONTEXTO ATUAL:\n" . implode("\n", $lines);
+    }
+
+    private function dispatchChat(AiAgent $agent, string $apiKey, string $systemPrompt, array $history): array
+    {
+        return match ($agent->provider->slug) {
+            'openai', 'groq' => $this->callOpenAiCompatChat($agent, $apiKey, $systemPrompt, $history),
+            'anthropic'      => $this->callAnthropicChat($agent, $apiKey, $systemPrompt, $history),
+            'google'         => $this->callGoogleChat($agent, $apiKey, $systemPrompt, $history),
+            default          => throw new \RuntimeException("Provider '{$agent->provider->slug}' não suportado."),
+        };
+    }
+
+    private function callOpenAiCompatChat(AiAgent $agent, string $apiKey, string $systemPrompt, array $history): array
+    {
+        $messages = array_merge(
+            [['role' => 'system', 'content' => $systemPrompt]],
+            $history
+        );
+
+        $response = Http::withToken($apiKey)
+            ->timeout(120)
+            ->post(rtrim($agent->provider->base_url, '/') . '/chat/completions', [
+                'model'       => $agent->model,
+                'messages'    => $messages,
+                'temperature' => $agent->temperature,
+                'max_tokens'  => $agent->max_tokens,
+            ])
+            ->throw()
+            ->json();
+
+        return [
+            $response['choices'][0]['message']['content'] ?? '',
+            [
+                'prompt_tokens'     => $response['usage']['prompt_tokens'] ?? 0,
+                'completion_tokens' => $response['usage']['completion_tokens'] ?? 0,
+                'total_tokens'      => $response['usage']['total_tokens'] ?? 0,
+            ],
+        ];
+    }
+
+    private function callAnthropicChat(AiAgent $agent, string $apiKey, string $systemPrompt, array $history): array
+    {
+        $response = Http::withHeaders([
+                'x-api-key'         => $apiKey,
+                'anthropic-version' => '2023-06-01',
+            ])
+            ->timeout(120)
+            ->post(rtrim($agent->provider->base_url, '/') . '/messages', [
+                'model'      => $agent->model,
+                'system'     => $systemPrompt,
+                'messages'   => $history,
+                'max_tokens' => $agent->max_tokens,
+            ])
+            ->throw()
+            ->json();
+
+        $in  = $response['usage']['input_tokens'] ?? 0;
+        $out = $response['usage']['output_tokens'] ?? 0;
+
+        return [
+            $response['content'][0]['text'] ?? '',
+            [
+                'prompt_tokens'     => $in,
+                'completion_tokens' => $out,
+                'total_tokens'      => $in + $out,
+            ],
+        ];
+    }
+
+    private function callGoogleChat(AiAgent $agent, string $apiKey, string $systemPrompt, array $history): array
+    {
+        $url = rtrim($agent->provider->base_url, '/') . "/models/{$agent->model}:generateContent?key={$apiKey}";
+
+        $contents = array_map(fn($m) => [
+            'role'  => $m['role'] === 'assistant' ? 'model' : 'user',
+            'parts' => [['text' => $m['content']]],
+        ], $history);
+
+        $response = Http::timeout(120)
+            ->post($url, [
+                'systemInstruction' => ['parts' => [['text' => $systemPrompt]]],
+                'contents'          => $contents,
+                'generationConfig'  => [
+                    'temperature'     => $agent->temperature,
+                    'maxOutputTokens' => $agent->max_tokens,
+                ],
+            ])
+            ->throw()
+            ->json();
+
+        $in  = $response['usageMetadata']['promptTokenCount'] ?? 0;
+        $out = $response['usageMetadata']['candidatesTokenCount'] ?? 0;
+
+        return [
+            $response['candidates'][0]['content']['parts'][0]['text'] ?? '',
+            [
+                'prompt_tokens'     => $in,
+                'completion_tokens' => $out,
+                'total_tokens'      => $in + $out,
+            ],
+        ];
+    }
+
     public function run(
         AiAgent $agent,
         string $userMessage,

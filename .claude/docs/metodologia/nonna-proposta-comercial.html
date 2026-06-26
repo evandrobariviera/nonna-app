@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nonna · Proposta Comercial</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08080d;--s1:#0d0d16;--s2:#121220;--s3:#181828;--s4:#1f1f30;
+  --b1:rgba(255,255,255,.05);--b2:rgba(255,255,255,.09);--b3:rgba(255,255,255,.15);
+  --ink:#ededf6;--mu:rgba(237,237,246,.32);--mu2:rgba(237,237,246,.6);
+  --c1:#ff5c4d;--c2:#d63eaa;--c3:#7b3fe4;
+  --grad:linear-gradient(135deg,var(--c1),var(--c2),var(--c3));
+  --green:#34d399;--yellow:#fbbf24;--teal:#2dd4bf;
+  --nav:248px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.65;overflow-x:hidden;}
+.editbar{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(13,13,22,.96);backdrop-filter:blur(16px);border-bottom:1px solid rgba(214,62,170,.2);padding:0 24px;height:40px;display:flex;align-items:center;justify-content:space-between;}
+.eb-left{display:flex;align-items:center;gap:10px;}
+.eb-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--c2);}
+.eb-hint{font-size:10px;color:var(--mu);}
+.eb-right{display:flex;gap:6px;}
+.eb-btn{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:5px 13px;border:1px solid var(--b3);background:none;color:var(--mu2);cursor:pointer;transition:all .2s;}
+.eb-btn:hover{color:var(--ink);border-color:var(--b3);}
+.eb-btn.primary{background:var(--grad);border:none;color:#fff;}
+aside{position:fixed;top:40px;left:0;bottom:0;width:var(--nav);background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;z-index:200;overflow-y:auto;scrollbar-width:none;}
+aside::-webkit-scrollbar{display:none;}
+.sb-logo{padding:22px 20px 16px;border-bottom:1px solid var(--b1);}
+.sb-logo img{height:17px;display:block;}
+.sb-logo-text{font-size:13px;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sb-section{padding:18px 20px 6px;font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--mu);}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 20px;cursor:pointer;border-left:2px solid transparent;text-decoration:none;transition:all .15s;}
+.sb-item:hover{background:var(--s2);}
+.sb-item.active{background:var(--s2);border-left-color:var(--c2);}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:var(--b3);flex-shrink:0;transition:background .2s;}
+.sb-item.active .sb-dot{background:var(--c2);}
+.sb-name{font-size:11px;color:var(--mu2);}
+.sb-item.active .sb-name{color:var(--ink);font-weight:600;}
+.sb-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--b1);}
+.sb-footer p{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);line-height:1.6;}
+main{margin-left:var(--nav);padding-top:40px;}
+.sec{padding:64px 60px 80px;border-bottom:1px solid var(--b1);min-height:100vh;}
+.sec:last-child{border-bottom:none;}
+[contenteditable]{outline:none;cursor:text;border-bottom:1px dashed rgba(214,62,170,.25);transition:border-color .2s;}
+[contenteditable]:hover{border-bottom-color:rgba(214,62,170,.5);}
+[contenteditable]:focus{border-bottom-color:var(--c2);}
+[contenteditable].block{display:block;border-bottom:none;border-left:2px dashed rgba(214,62,170,.3);padding-left:12px;}
+[contenteditable].block:focus{border-left-color:var(--c2);}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:var(--mu);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.eyebrow::before{content:'';width:16px;height:1px;background:var(--c2);}
+.sec-h{font-family:'Syne',sans-serif;font-size:clamp(28px,3.5vw,46px);font-weight:800;letter-spacing:-.022em;line-height:1.07;margin-bottom:12px;}
+.sec-sub{font-size:15px;color:var(--mu2);max-width:620px;line-height:1.75;margin-bottom:40px;}
+.g{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.sep{height:1px;background:var(--b2);margin:32px 0;}
+.card{background:var(--s2);border:1px solid var(--b2);padding:24px 22px;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.card.cc1::before{background:var(--c1);}
+.card.cc2::before{background:var(--c2);}
+.card.cc3::before{background:var(--c3);}
+.card-label{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--mu);margin-bottom:9px;}
+.card-h{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:7px;line-height:1.25;}
+.card p{font-size:12px;color:var(--mu2);line-height:1.6;}
+ul.lst{list-style:none;display:flex;flex-direction:column;gap:8px;}
+ul.lst li{font-size:12px;color:var(--mu2);display:flex;align-items:flex-start;gap:9px;line-height:1.45;}
+ul.lst li::before{content:'→';flex-shrink:0;font-size:11px;margin-top:1px;}
+ul.lst.c1 li::before{color:var(--c1);}
+ul.lst.c2 li::before{color:var(--c2);}
+ul.lst.c3 li::before{color:var(--c3);}
+ul.lst.green li::before{color:var(--green);}
+.callout{background:var(--s3);border:1px solid rgba(214,62,170,.14);border-left:3px solid var(--c2);padding:16px 20px;font-size:13px;color:var(--mu2);line-height:1.65;}
+.callout strong{color:var(--ink);}
+.callout.c1{border-left-color:var(--c1);}
+.callout.c3{border-left-color:var(--c3);}
+.callout.green{border-left-color:var(--green);}
+.phase{display:grid;grid-template-columns:1fr 1.4fr;gap:24px;padding:24px;background:var(--s2);border:1px solid var(--b2);margin-bottom:10px;position:relative;}
+.phase::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;}
+.phase.ph1::before{background:var(--c1);}
+.phase.ph2::before{background:var(--c2);}
+.phase.ph3::before{background:var(--c3);}
+.phase.ph4::before{background:var(--green);}
+.ph-num{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.15em;color:var(--mu);margin-bottom:6px;}
+.ph-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:6px;line-height:1.2;}
+.ph-desc{font-size:12px;color:var(--mu2);line-height:1.6;}
+.ph-right-label{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.15em;text-transform:uppercase;color:var(--mu);margin-bottom:8px;}
+.svc{background:var(--s2);border:1px solid var(--b2);margin-bottom:14px;overflow:hidden;}
+.svc-head{padding:20px 22px;border-bottom:1px solid var(--b2);display:flex;align-items:flex-start;justify-content:space-between;gap:14px;}
+.svc-icon{font-size:20px;flex-shrink:0;margin-top:2px;}
+.svc-info{flex:1;}
+.svc-tag{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;margin-bottom:6px;}
+.svc-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:5px;}
+.svc-desc{font-size:12px;color:var(--mu2);line-height:1.6;max-width:520px;}
+.svc-body{padding:20px 22px;}
+.svc-body-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+table.t{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;}
+table.t th{text-align:left;padding:8px 12px;background:var(--s3);font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--b2);}
+table.t td{padding:11px 12px;border-bottom:1px solid var(--b1);color:var(--mu2);vertical-align:top;line-height:1.4;}
+table.t td:first-child{color:var(--ink);font-weight:500;}
+table.t td:last-child{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--c2);white-space:nowrap;}
+table.t tr:last-child td{border-bottom:none;}
+.inv-block{background:var(--s2);border:1px solid var(--b2);padding:36px;margin-bottom:12px;position:relative;overflow:hidden;}
+.inv-block::before{content:'';position:absolute;top:-60px;right:-60px;width:240px;height:240px;background:radial-gradient(circle,rgba(214,62,170,.08) 0%,transparent 65%);pointer-events:none;}
+.inv-row{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:18px 0;border-bottom:1px solid var(--b1);}
+.inv-row:last-child{border:none;}
+.inv-label{font-size:14px;color:var(--mu2);flex:1;}
+.inv-label small{display:block;font-size:10px;color:var(--mu);font-family:'IBM Plex Mono',monospace;margin-top:3px;letter-spacing:.04em;}
+.inv-val{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--ink);text-align:right;white-space:nowrap;}
+.inv-val input{background:none;border:none;color:inherit;font:inherit;text-align:right;width:160px;outline:none;cursor:text;border-bottom:1px dashed rgba(214,62,170,.3);}
+.inv-val input:focus{border-bottom-color:var(--c2);}
+.inv-total{display:flex;align-items:center;justify-content:space-between;padding:22px 28px;background:linear-gradient(135deg,rgba(255,92,77,.04),rgba(123,63,228,.05));border:1px solid rgba(214,62,170,.15);margin-top:12px;}
+.inv-total-label{font-size:12px;color:var(--mu2);}
+.inv-total-label small{display:block;font-size:10px;color:var(--mu);font-family:'IBM Plex Mono',monospace;margin-top:3px;}
+.inv-total-val{font-family:'Syne',sans-serif;font-size:38px;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.cond-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px;}
+.cond-item{background:var(--s2);border:1px solid var(--b1);padding:16px 18px;}
+.cond-item-label{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:var(--mu);margin-bottom:6px;}
+.cond-item-val{font-size:13px;font-weight:500;color:var(--ink);line-height:1.4;}
+.cond-item-val small{display:block;font-size:11px;color:var(--mu);font-weight:400;margin-top:2px;}
+.howgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px;}
+.how-item{background:var(--s2);border:1px solid var(--b1);padding:18px 16px;}
+.how-icon{font-size:18px;margin-bottom:10px;}
+.how-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;margin-bottom:6px;}
+.how-body{font-size:11px;color:var(--mu);line-height:1.55;}
+.tl{display:flex;flex-direction:column;gap:0;position:relative;}
+.tl::before{content:'';position:absolute;left:18px;top:22px;bottom:22px;width:1px;background:linear-gradient(to bottom,var(--c2),rgba(214,62,170,.1));}
+.tl-step{display:grid;grid-template-columns:38px 1fr;gap:16px;padding:0 0 24px;position:relative;}
+.tl-step:last-child{padding-bottom:0;}
+.tl-dot{width:38px;height:38px;border-radius:50%;background:var(--s3);border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--c2);flex-shrink:0;position:relative;z-index:1;}
+.tl-body{padding-top:8px;}
+.tl-period{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--c2);letter-spacing:.1em;margin-bottom:4px;}
+.tl-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:4px;}
+.tl-desc{font-size:12px;color:var(--mu2);line-height:1.6;}
+.sig{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:48px;padding-top:36px;border-top:1px solid var(--b2);}
+.sig-block .sig-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.15em;text-transform:uppercase;margin-bottom:18px;}
+.sig-line{height:1px;background:var(--b3);margin-bottom:8px;}
+.sig-name{font-size:12px;color:var(--mu2);}
+.unit-intro{background:var(--s2);border:1px solid var(--b2);padding:28px 24px;position:relative;overflow:hidden;}
+.unit-intro::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.unit-intro.u1::before{background:var(--c1);}
+.unit-intro.u2::before{background:var(--c2);}
+.unit-intro.u3::before{background:var(--c3);}
+.unit-name-big{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(20px,2.5vw,30px);line-height:1.1;margin-bottom:10px;}
+.unit-tagline{font-size:12px;color:var(--mu2);line-height:1.6;margin-bottom:16px;}
+@media print{
+  .editbar,aside,.iadd,.abtn,button.irm2{display:none!important;}
+  main{margin-left:0!important;padding-top:0!important;}
+  .sec{padding:40px!important;min-height:auto!important;page-break-inside:avoid;}
+  #capa{min-height:100vh!important;page-break-after:always;}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important;}
+  body{background:#08080d!important;}
+  [contenteditable]{border-bottom:none!important;border-left:none!important;}
+  .irow2,.inv-wrap,.isec,.irow{page-break-inside:avoid;}
+  textarea{border:none!important;}
+}
+@media(max-width:860px){
+  :root{--nav:0px;}
+  aside{display:none;}
+  main{margin-left:0;}
+  .grid2,.grid3,.svc-body-grid,.cond-grid,.sig{grid-template-columns:1fr;}
+  .phase{grid-template-columns:1fr;}
+  .sec{padding:36px 20px 56px;}
+  .howgrid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+<div class="editbar">
+  <div class="eb-left">
+    <span class="eb-tag">✦ Proposta Nonna</span>
+    <span class="eb-hint">Clique nos campos para editar</span>
+  </div>
+  <div class="eb-right">
+    <button class="eb-btn" onclick="window.print()">Exportar PDF</button>
+    <button class="eb-btn" id="saveBtn" onclick="saveAll()">Salvar</button>
+    <button class="eb-btn primary" onclick="gerarVersaoCliente()">&#8659; Vers&atilde;o para o cliente</button>
+  </div>
+</div>
+
+<aside>
+  <div class="sb-logo">
+    <img src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png" alt="Nonna" onerror="this.style.display='none';this.nextSibling.style.display='block'">
+    <span class="sb-logo-text" style="display:none">nonna</span>
+  </div>
+  <div class="sb-section">Proposta</div>
+  <a class="sb-item active" href="#capa"><div class="sb-dot"></div><span class="sb-name">Apresentação</span></a>
+  <a class="sb-item" href="#cenario"><div class="sb-dot"></div><span class="sb-name">Cenário</span></a>
+  <a class="sb-item" href="#nonna"><div class="sb-dot"></div><span class="sb-name">Conheça a Nonna</span></a>
+  <a class="sb-item" href="#metodologia"><div class="sb-dot"></div><span class="sb-name">Como trabalhamos</span></a>
+  <a class="sb-item" href="#servicos"><div class="sb-dot"></div><span class="sb-name">O que você contrata</span></a>
+  <a class="sb-item" href="#investimento"><div class="sb-dot"></div><span class="sb-name">Investimento</span></a>
+  <a class="sb-item" href="#condicoes"><div class="sb-dot"></div><span class="sb-name">Condições</span></a>
+  <a class="sb-item" href="#inicio"><div class="sb-dot"></div><span class="sb-name">Como começamos</span></a>
+  <div class="sb-footer">
+    <p>Campos com traço pontilhado são editáveis. Use Salvar para preservar as edições.</p>
+  </div>
+</aside>
+
+<main>
+
+<section class="sec" id="capa" style="min-height:100vh;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;">
+  <div style="position:absolute;width:600px;height:600px;top:-150px;right:-150px;background:radial-gradient(circle,rgba(123,63,228,.1) 0%,transparent 65%);pointer-events:none;border-radius:50%;"></div>
+  <div style="position:absolute;width:400px;height:400px;bottom:-80px;left:-80px;background:radial-gradient(circle,rgba(255,92,77,.07) 0%,transparent 65%);pointer-events:none;border-radius:50%;"></div>
+  <div style="position:relative;z-index:1;">
+    <div class="eyebrow" style="margin-bottom:40px;">Nonna Agência Digital · Proposta Comercial</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mu);margin-bottom:16px;letter-spacing:.06em;">Apresentado para</div>
+    <div style="font-family:'Syne',sans-serif;font-size:clamp(52px,8vw,100px);font-weight:800;line-height:.95;letter-spacing:-.03em;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:18px;" contenteditable="true" id="f_cliente">Nome do Cliente</div>
+    <div style="font-size:17px;color:var(--mu2);max-width:480px;line-height:1.6;">Parceria em marketing digital — <span contenteditable="true" id="f_segmento">segmento do cliente</span></div>
+  </div>
+  <div style="position:relative;z-index:1;">
+    <div style="height:1px;background:var(--b2);margin-bottom:24px;"></div>
+    <div style="display:grid;grid-template-columns:repeat(4,auto);gap:32px;align-items:start;justify-content:start;">
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.14em;margin-bottom:5px;">PREPARADO POR</div><div style="font-size:12px;font-weight:500;" contenteditable="true" id="f_resp">Evandro · Nonna Agência Digital</div></div>
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.14em;margin-bottom:5px;">DATA</div><div style="font-size:12px;font-weight:500;" contenteditable="true" id="f_data">Julho 2025</div></div>
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.14em;margin-bottom:5px;">VALIDADE</div><div style="font-size:12px;font-weight:500;" contenteditable="true" id="f_validade">30 dias</div></div>
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.14em;margin-bottom:5px;">CONTATO</div><div style="font-size:12px;font-weight:500;" contenteditable="true" id="f_contato">contato@nonnaagenciadigital.com.br</div></div>
+    </div>
+    <div style="height:3px;background:var(--grad);margin-top:28px;margin-left:-60px;margin-right:-60px;"></div>
+  </div>
+</section>
+
+<section class="sec" id="cenario">
+  <div class="eyebrow">01 · Contexto</div>
+  <h2 class="sec-h">O cenário e a<br><span class="g">oportunidade</span></h2>
+  <p class="sec-sub">Nossa leitura do momento atual de <span class="f_cliente_ref">Nome do Cliente</span> — e o que identificamos como principal oportunidade de crescimento via comunicação.</p>
+  <div class="callout" style="margin-bottom:28px;"><strong>Diagnóstico inicial</strong><br><span contenteditable="true" class="block" id="f_diagnostico">Descreva aqui o diagnóstico inicial do cliente: o contexto do negócio, o principal desafio identificado e a oportunidade de comunicação. Este campo deve ser personalizado para cada cliente após a reunião de imersão.</span></div>
+  <div class="grid2">
+    <div class="card cc1"><div class="card-label">O que já funciona</div><div class="card-h">Pontos fortes identificados</div><div contenteditable="true" class="block" id="f_fortes" style="font-size:12px;color:var(--mu2);line-height:1.65;margin-top:8px;">Liste aqui os pontos fortes do negócio do cliente — o que já funciona e que a comunicação deve preservar e amplificar.</div></div>
+    <div class="card cc2" style="background:rgba(214,62,170,.03);"><div class="card-label">A oportunidade</div><div class="card-h">Onde está o crescimento</div><div contenteditable="true" class="block" id="f_oportunidade" style="font-size:12px;color:var(--mu2);line-height:1.65;margin-top:8px;">Descreva o espaço estratégico disponível: o que os concorrentes não comunicam, o que o público busca e não encontra, onde a marca pode se posicionar de forma única.</div></div>
+  </div>
+</section>
+
+<section class="sec" id="nonna">
+  <div class="eyebrow">02 · A agência</div>
+  <h2 class="sec-h">Conheça a<br><span class="g">Nonna</span></h2>
+  <p class="sec-sub">A Nonna é uma agência de marketing digital organizada em três unidades complementares. Cada uma tem escopo, identidade e entrega próprios — e as três operam com o mesmo padrão de qualidade e o mesmo DNA estratégico.</p>
+  <div class="grid3" style="margin-bottom:20px;">
+    <div class="unit-intro u1">
+      <div class="unit-name-big" style="color:var(--c1);">Nonna<br><span style="font-size:clamp(16px,1.8vw,22px);">Publicidade</span></div>
+      <div class="unit-tagline">A unidade estratégica e de comunicação contínua. É a porta de entrada e a responsável pela visão de marca integrada do cliente.</div>
+      <ul class="lst c1"><li>Consultoria e gestão estratégica</li><li>Planejamento, diagnóstico e brand platform</li><li>Tráfego pago (Meta e Google)</li><li>Social media e produção de conteúdo</li><li>Branding e identidade de marca</li></ul>
+    </div>
+    <div class="unit-intro u2">
+      <div class="unit-name-big" style="color:var(--c2);">Nonna<br><span style="font-size:clamp(16px,1.8vw,22px);">Produtora</span></div>
+      <div class="unit-tagline">A unidade de produção audiovisual. Toda a cadeia de criação em vídeo, fotografia e motion — com o contexto da marca já resolvido pela Publicidade.</div>
+      <ul class="lst c2"><li>Produção de vídeo (institucional, reels, ads)</li><li>Roteiro e direção criativa audiovisual</li><li>Motion graphics e animação</li><li>Fotografia de produto, ambiente e equipe</li></ul>
+    </div>
+    <div class="unit-intro u3">
+      <div class="unit-name-big" style="color:var(--c3);">Nonna<br><span style="font-size:clamp(16px,1.8vw,22px);">Tech</span></div>
+      <div class="unit-tagline">A unidade tecnológica. Desenvolvimento web, automações e inteligência artificial aplicada ao marketing e aos processos do cliente.</div>
+      <ul class="lst c3"><li>Desenvolvimento de sites e landing pages</li><li>Automações de marketing e processos</li><li>Inteligência artificial aplicada</li><li>Hospedagem de sites e e-mails profissionais</li></ul>
+    </div>
+  </div>
+  <div class="callout"><strong>Como as três funcionam juntas:</strong> o cliente contrata a Nonna e acessa o ecossistema completo. Quando a Publicidade define o conceito de uma campanha, a Produtora já sabe o território visual para produzir o vídeo e a Tech já sabe o contexto da marca para desenvolver a landing page. Tudo com o mesmo DNA estratégico.</div>
+</section>
+
+<section class="sec" id="metodologia">
+  <div class="eyebrow">03 · Processo</div>
+  <h2 class="sec-h">Como<br><span class="g">trabalhamos</span></h2>
+  <p class="sec-sub">A Nonna Publicidade trabalha em um processo estruturado que garante que toda execução parte de uma base estratégica sólida. Antes de qualquer post, anúncio ou campanha — entendemos profundamente quem é a sua marca.</p>
+  <div style="margin-bottom:10px;">
+    <div class="phase ph1">
+      <div><div class="ph-num">ETAPA 01 · PRIMEIRO MÊS</div><div class="ph-name">Plataforma de Marca</div><div class="ph-desc">O primeiro mês é dedicado exclusivamente à construção da base estratégica. Sem produção, sem anúncio. Entendemos seu negócio, mapeamos o mercado e construímos os documentos que vão orientar tudo que vem depois — para sempre.</div></div>
+      <div><div class="ph-right-label">O que você recebe</div><ul class="lst c1"><li><strong style="color:var(--ink);">Dossiê de Marca</strong> — Diagnóstico completo do seu negócio, mercado e comunicação atual. Composto pela Plataforma de Marca, que aborda propósito, posicionamento, promessa e outros pilares estratégicos; pelo Brief Estratégico, que traz o problema global da comunicação e o cenário ideal; e pela Reunião de Macroplanejamento.</li></ul></div>
+    </div>
+    <div class="phase ph2">
+      <div><div class="ph-num">ETAPA 02 · RECORRENTE</div><div class="ph-name">Roadmap &amp; Conceito de Campanha</div><div class="ph-desc">A cada ciclo de 90 dias, planejamos o trimestre completo e criamos o conceito criativo que vai guiar toda a produção do período. O conceito define o território visual, a linha de comunicação e o desdobramento das campanhas — antes de qualquer peça ser produzida.</div></div>
+      <div><div class="ph-right-label">O que você recebe</div><ul class="lst c2"><li>Roadmap do trimestre com campanhas e projetos organizados</li><li>Conceito de campanha com território visual, linha de linguagem e desdobramentos</li><li>Visão completa do que será produzido antes de qualquer execução começar</li></ul></div>
+    </div>
+    <div class="phase ph3">
+      <div><div class="ph-num">ETAPA 03 · RECORRENTE</div><div class="ph-name">Projetos &amp; Campanhas</div><div class="ph-desc">Com o conceito aprovado, as campanhas e projetos do trimestre entram em execução. Cada entregável é produzido dentro do território aprovado, garantindo coerência de marca em todos os pontos de contato.</div></div>
+      <div><div class="ph-right-label">O que você recebe</div><ul class="lst c3"><li>Execução de campanhas de mídia paga (Meta e Google)</li><li>Produção de conteúdo para social media alinhado ao conceito</li><li>Projetos específicos do roadmap (landing pages, automações, materiais)</li><li>Aprovações via plataforma dedicada com rastreamento de cada peça</li></ul></div>
+    </div>
+    <div class="phase ph4">
+      <div><div class="ph-num">ETAPA 04 · RECORRENTE</div><div class="ph-name">Análise &amp; Próximo Ciclo</div><div class="ph-desc">Ao final de cada mês e trimestre, apresentamos os resultados com leitura estratégica — não apenas números. O que funcionou, o que aprendemos e o que muda no próximo ciclo.</div></div>
+      <div><div class="ph-right-label">O que você recebe</div><ul class="lst green"><li>Relatório estratégico mensal com análise e recomendações</li><li>Reunião mensal de alinhamento com quem pensa junto com você</li><li>Ajustes de rota com base nos dados do período</li><li>Planejamento do próximo ciclo construído sobre os aprendizados do atual</li></ul></div>
+    </div>
+  </div>
+  <div class="callout"><strong>A diferença do processo:</strong> a maioria das agências começa executando. A Nonna começa pelo raciocínio. O conceito de cada campanha é aprovado antes de qualquer produção começar — isso reduz retrabalho, garante coerência e constrói marca ao longo do tempo.</div>
+</section>
+
+<section class="sec" id="servicos">
+  <div class="eyebrow">04 · Serviços</div>
+  <h2 class="sec-h">O que você<br><span class="g">contrata</span></h2>
+  <p class="sec-sub">Os serviços da Nonna organizados por unidade — com clareza do que está incluído em cada pacote e o que pode ser contratado de forma complementar.</p>
+
+  <div class="svc" style="border-top:3px solid var(--yellow);">
+    <div class="svc-head"><div class="svc-icon">🏛</div><div class="svc-info"><div class="svc-tag" style="color:var(--yellow);">Nonna Publicidade · Primeiro mês</div><div class="svc-name">Plataforma de Marca</div><div class="svc-desc">A base estratégica que orienta toda a comunicação do cliente. Acontece uma única vez — no primeiro mês de contrato — e norteia toda a comunicação e ações até que se identifique uma mudança de posicionamento da marca do cliente (novo nicho, troca de marca, etc.)</div></div></div>
+    <div class="svc-body"><div class="svc-body-grid"><ul class="lst" style="margin-top:0;"><li style="color:var(--mu2);">Diagnóstico de negócio, mercado e comunicação atual</li><li style="color:var(--mu2);">Brand Platform completa (propósito, posicionamento, tom de voz, território visual)</li></ul><ul class="lst" style="margin-top:0;"><li style="color:var(--mu2);">Brief Estratégico do primeiro ciclo</li><li style="color:var(--mu2);">Reunião de macroplanejamento e alinhamento</li></ul></div></div>
+  </div>
+
+  <div class="svc" style="border-top:3px solid var(--c1);">
+    <div class="svc-head"><div class="svc-icon">📣</div><div class="svc-info"><div class="svc-tag" style="color:var(--c1);">Nonna Publicidade · Mensal</div><div class="svc-name">Gestão Estratégica</div><div class="svc-desc">A gestão contínua do marketing digital — planejamento, tráfego pago e suporte estratégico, tudo derivado do conceito de campanha aprovado a cada ciclo.</div></div></div>
+    <div class="svc-body"><ul class="lst c1" style="margin-top:0;"><li>Reuniões periódicas de planejamento e alinhamentos</li><li>Roadmap trimestral e conceitos de campanhas</li><li>Processo completo de gestão de tráfego pago — criação, execução, otimização de campanhas, gestão de verbas em plataformas, prestação de contas mensais e feedbacks semanais de resultados</li><li>Suporte estratégico e atendimento via canal exclusivo do cliente</li><li>Dashboard de dados e relatórios de campanhas</li></ul></div>
+  </div>
+
+  <div class="svc" style="border-top:3px solid var(--c2);">
+    <div class="svc-head"><div class="svc-icon">✍️</div><div class="svc-info"><div class="svc-tag" style="color:var(--c2);">Nonna Publicidade · Volume variável</div><div class="svc-name">Produção de Conteúdo</div><div class="svc-desc">A produção editorial e visual para social media e anúncios — com volume definido por contrato, sempre dentro do conceito de campanha aprovado.</div></div></div>
+    <div class="svc-body">
+      <div class="svc-body-grid">
+        <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;margin-bottom:10px;">SOCIAL MEDIA</div><ul class="lst c2" style="margin-top:0;"><li>Calendário editorial mensal</li><li>Copy e design de posts para feed e stories</li><li>Reels com roteiro e edição</li></ul></div>
+        <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;margin-bottom:10px;">ANÚNCIOS</div><ul class="lst c2" style="margin-top:0;"><li>Criativos visuais para Meta Ads</li><li>Copy de anúncios para Meta e Google</li><li>Variações de criativo para testes</li></ul></div>
+      </div>
+      <div class="callout c1" style="margin-top:16px;">O volume de produção é definido na proposta de cada cliente e pode ser ajustado conforme o crescimento da conta.</div>
+    </div>
+  </div>
+
+  <div class="svc" style="border-top:3px solid var(--c2);">
+    <div class="svc-head"><div class="svc-icon">🎬</div><div class="svc-info"><div class="svc-tag" style="color:var(--c2);">Nonna Produtora · Por produção</div><div class="svc-name">Produção Audiovisual</div><div class="svc-desc">Contratada conforme a demanda. Cada produção nasce dentro do contexto estratégico da marca — sem precisar explicar o posicionamento do zero.</div></div></div>
+    <div class="svc-body">
+      <table class="t"><thead><tr><th>Formato</th><th>Descrição</th><th>Referência de valor</th></tr></thead>
+      <tbody>
+        <tr><td>Reels / Shorts</td><td>Captação e edição, até 60s, com roteiro</td><td contenteditable="true">A partir de R$ 350</td></tr>
+        <tr><td>Pack de Conteúdo</td><td>8 reels ou 4 vídeos em um dia de captação</td><td contenteditable="true">A partir de R$ 1.800</td></tr>
+        <tr><td>Vídeo Institucional</td><td>Produção completa, até 3 min, roteiro e edição</td><td contenteditable="true">A partir de R$ 2.800</td></tr>
+        <tr><td>Motion Graphics</td><td>Animação de logo, produto ou apresentação</td><td contenteditable="true">A partir de R$ 900</td></tr>
+        <tr><td>Fotografia</td><td>Sessão de produto, ambiente ou equipe</td><td contenteditable="true">A partir de R$ 900</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+
+  <div class="svc" style="border-top:3px solid var(--c3);">
+    <div class="svc-head"><div class="svc-icon">⚙️</div><div class="svc-info"><div class="svc-tag" style="color:var(--c3);">Nonna Tech · Por projeto e recorrência</div><div class="svc-name">Tecnologia &amp; Automação</div><div class="svc-desc">Pode ser contratado junto com a Publicidade ou de forma independente — por projeto, com escopo e prazo definidos.</div></div></div>
+    <div class="svc-body">
+      <ul class="lst c3" style="margin-top:0;">
+        <li>Desenvolvimento de sites institucionais e landing pages</li>
+        <li>E-commerce e lojas digitais</li>
+        <li>Automações de marketing e processos</li>
+        <li>Integrações de sistemas e CRM</li>
+        <li>Agentes de inteligência artificial</li>
+        <li>Hospedagem de sites</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="investimento">
+  <div class="eyebrow">05 &middot; Valores</div>
+  <h2 class="sec-h">Investimento<br><span class="g">do cliente</span></h2>
+  <p class="sec-sub">Adicione os servi&ccedil;os contratados em cada se&ccedil;&atilde;o. A mensalidade efetiva &eacute; calculada automaticamente.</p>
+
+  <style>
+  .isec{margin-bottom:20px;}
+  .isec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.07);}
+  .isec-title{font-family:"Syne",sans-serif;font-size:14px;font-weight:700;}
+  .isec-sub{font-family:"IBM Plex Mono",monospace;font-size:10px;color:rgba(237,237,246,.5);margin-top:2px;}
+  .isec-total{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;}
+  .irow2{display:flex;align-items:center;gap:8px;padding:11px 14px;background:#12121e;border:1px solid rgba(255,255,255,.08);margin-bottom:2px;position:relative;}
+  .irow2:hover{border-color:rgba(255,255,255,.13);}
+  .itxt{background:#181828;border:1px solid rgba(255,255,255,.08);color:#ededf6;font-family:"DM Sans",sans-serif;padding:6px 9px;outline:none;transition:border-color .2s;font-size:12px;}
+  .itxt:focus{border-color:#d63eaa;}
+  .itxt-title{width:160px;font-weight:500;}
+  .itxt-desc{flex:1;color:rgba(237,237,246,.55);font-size:11px;}
+  .itxt-desc::placeholder{color:rgba(237,237,246,.25);}
+  .itxt-val{width:110px;text-align:right;font-family:"Syne",sans-serif;font-size:16px;font-weight:700;background:#181828;border:1px solid rgba(255,255,255,.08);color:#ededf6;padding:6px 9px;outline:none;}
+  .itxt-val:focus{border-color:#d63eaa;}
+  .itxt-val::placeholder{color:rgba(237,237,246,.2);}
+  .irow2-unit{font-family:"IBM Plex Mono",monospace;font-size:9px;color:rgba(237,237,246,.35);white-space:nowrap;flex-shrink:0;}
+  .irow2-rs{font-size:11px;color:rgba(237,237,246,.4);flex-shrink:0;}
+  .irm2{background:none;border:none;color:rgba(237,237,246,.25);cursor:pointer;font-size:12px;padding:2px 5px;flex-shrink:0;transition:color .2s;}
+  .irm2:hover{color:#f87171;}
+  .iadd{font-family:"IBM Plex Mono",monospace;font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:7px 14px;border:1px dashed;background:none;cursor:pointer;transition:all .2s;margin-top:4px;width:100%;}
+  .iadd:hover{opacity:.7;}
+  input[type=number]::-webkit-inner-spin-button{opacity:.3;}
+  </style>
+
+  <!-- ── SECAO MENSAIS ── -->
+  <div class="isec">
+    <div class="isec-head">
+      <div>
+        <div class="isec-title">Servi&ccedil;os Mensais</div>
+        <div class="isec-sub">Recorr&ecirc;ncia mensal durante todo o contrato</div>
+      </div>
+      <div class="isec-total" id="sub-men" style="color:#d63eaa;">R$ 0 / m&ecirc;s</div>
+    </div>
+    <div id="rows-men"></div>
+    <button class="iadd" onclick="CAL.addMen()" style="color:#d63eaa;border-color:rgba(214,62,170,.25);">+ Adicionar servi&ccedil;o mensal</button>
+  </div>
+
+  <!-- ── SECAO FIXOS ── -->
+  <div class="isec">
+    <div class="isec-head">
+      <div>
+        <div class="isec-title">Projetos e Valores Fixos</div>
+        <div class="isec-sub">Valores &uacute;nicos distribu&iacute;dos na mensalidade</div>
+      </div>
+      <div class="isec-total" id="sub-fix" style="color:#7b3fe4;">R$ 0</div>
+    </div>
+    <div id="rows-fix"></div>
+    <button class="iadd" onclick="CAL.addFix()" style="color:#7b3fe4;border-color:rgba(123,63,228,.25);">+ Adicionar projeto ou valor fixo</button>
+  </div>
+
+  <!-- ── INVESTIMENTOS DE TERCEIROS (informativo) ── -->
+  <div class="isec">
+    <div class="isec-head">
+      <div>
+        <div class="isec-title" style="color:rgba(237,237,246,.7);">Investimentos de Terceiros</div>
+        <div class="isec-sub">Sugest&otilde;es e recomenda&ccedil;&otilde;es &mdash; <strong style="color:rgba(237,237,246,.5);">n&atilde;o somados ao total</strong></div>
+      </div>
+    </div>
+    <div style="background:#0f0f1c;border:1px solid rgba(255,255,255,.07);border-left:3px solid rgba(251,191,36,.4);padding:16px 20px;margin-bottom:8px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#fbbf24;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;">Verba recomendada em an&uacute;ncios</div>
+      <textarea id="inv-terceiros" rows="3" placeholder="Ex: Recomendamos um investimento m&iacute;nimo de R$ 2.000/m&ecirc;s em verba de an&uacute;ncios para Meta Ads e Google Ads. Esse valor &eacute; pago diretamente pelo cliente &agrave;s plataformas e n&atilde;o faz parte do contrato com a Nonna..." style="width:100%;background:transparent;border:none;color:rgba(237,237,246,.65);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:vertical;line-height:1.65;"></textarea>
+    </div>
+    <div style="font-size:11px;color:rgba(237,237,246,.25);font-family:'IBM Plex Mono',monospace;padding:4px 2px;">Este campo &eacute; informativo e n&atilde;o entra no c&aacute;lculo do investimento.</div>
+  </div>
+
+  <!-- ── OBSERVACOES ── -->
+  <div style="margin-bottom:20px;">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(237,237,246,.32);letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;">Observa&ccedil;&otilde;es e Negocia&ccedil;&otilde;es</div>
+    <textarea id="inv-obs" rows="3" placeholder="Descreva aqui condi&ccedil;&otilde;es especiais, descontos negociados, servi&ccedil;os extras acordados ou qualquer observa&ccedil;&atilde;o relevante para este contrato..." style="width:100%;background:#12121e;border:1px solid rgba(255,255,255,.08);color:rgba(237,237,246,.7);font-family:'DM Sans',sans-serif;font-size:13px;padding:14px 16px;outline:none;resize:vertical;line-height:1.6;transition:border-color .2s;"></textarea>
+  </div>
+
+  <!-- ── CONFIG ── -->
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;padding:14px 18px;background:#12121e;border:1px solid rgba(255,255,255,.08);">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(237,237,246,.32);letter-spacing:.14em;text-transform:uppercase;">Dura&ccedil;&atilde;o do contrato</div>
+    <input type="number" id="i-meses" value="12" min="1" max="36" oninput="CAL.calc()" style="width:52px;text-align:center;font-size:14px;font-weight:700;background:#181828;border:1px solid rgba(255,255,255,.08);color:#ededf6;padding:5px;outline:none;">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(237,237,246,.32);">meses</span>
+    <div style="margin-left:auto;font-size:11px;color:rgba(237,237,246,.35);font-family:'IBM Plex Mono',monospace;" id="i-formula">R$ 0 / m&ecirc;s &times; 12 meses = R$ 0</div>
+  </div>
+
+  <!-- ── RESULTADO ── -->
+  <div style="background:linear-gradient(135deg,rgba(255,92,77,.05),rgba(123,63,228,.07));border:1px solid rgba(214,62,170,.18);padding:32px;margin-bottom:10px;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:-60px;right:-60px;width:260px;height:260px;background:radial-gradient(circle,rgba(214,62,170,.1) 0%,transparent 65%);pointer-events:none;"></div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(237,237,246,.4);letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px;">Mensalidade efetiva</div>
+    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px;">
+      <div id="r-mensal" style="font-family:'Syne',sans-serif;font-size:clamp(40px,6vw,72px);font-weight:800;line-height:1;background:linear-gradient(135deg,#ff5c4d,#d63eaa,#7b3fe4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">R$ 0</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:rgba(237,237,246,.45);padding-bottom:4px;">/ m&ecirc;s</div>
+    </div>
+    <div id="r-explain" style="font-size:12px;color:rgba(237,237,246,.4);font-family:'IBM Plex Mono',monospace;margin-bottom:18px;">Mensais + distribui&ccedil;&atilde;o dos fixos</div>
+    <div style="height:1px;background:rgba(255,255,255,.07);margin-bottom:16px;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div style="font-size:12px;color:rgba(237,237,246,.5);">Investimento total do contrato</div>
+      <div id="r-total" style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#ededf6;">R$ 0</div>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:12px;">
+    <strong>Forma de pagamento:</strong>
+    <span contenteditable="true" id="f_pagamento">Boleto ou PIX com vencimento no dia 5 de cada m&ecirc;s.</span>
+  </div>
+
+  <script>
+  var CAL = (function() {
+    var mid = 0, fid = 0;
+    var menIds = [], fixIds = [];
+
+    function numVal(id) {
+      var el = document.getElementById(id);
+      return el ? (parseFloat(el.value) || 0) : 0;
+    }
+
+    function fmtBRL(n) {
+      return 'R$ ' + Math.round(n).toLocaleString('pt-BR');
+    }
+
+    function setTxt(id, txt) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = txt;
+    }
+
+    function makeRow(id, unitLabel, color, removeType) {
+      var row = document.createElement('div');
+      row.className = 'irow2';
+      row.id = 'row-' + id;
+      row.style.borderLeft = '3px solid ' + color;
+
+      var titleInp = document.createElement('input');
+      titleInp.type = 'text';
+      titleInp.id = id + '_tit';
+      titleInp.className = 'itxt itxt-title';
+      titleInp.placeholder = 'Nome do serviço';
+
+      var descInp = document.createElement('input');
+      descInp.type = 'text';
+      descInp.id = id + '_dsc';
+      descInp.className = 'itxt itxt-desc';
+      descInp.placeholder = 'Descrição (opcional)';
+
+      var rs = document.createElement('span');
+      rs.className = 'irow2-rs';
+      rs.textContent = 'R$';
+
+      var valInp = document.createElement('input');
+      valInp.type = 'number';
+      valInp.id = id + '_val';
+      valInp.className = 'itxt-val';
+      valInp.placeholder = '0';
+      valInp.setAttribute('oninput', 'CAL.calc()');
+
+      var unit = document.createElement('span');
+      unit.className = 'irow2-unit';
+      unit.textContent = unitLabel;
+
+      var rm = document.createElement('button');
+      rm.className = 'irm2';
+      rm.textContent = '✕';
+      rm.setAttribute('onclick', 'CAL.remove("row-' + id + '","' + removeType + '","' + id + '")');
+
+      row.appendChild(titleInp);
+      row.appendChild(descInp);
+      row.appendChild(rs);
+      row.appendChild(valInp);
+      row.appendChild(unit);
+      row.appendChild(rm);
+      return row;
+    }
+
+    function addMen() {
+      var id = 'mn' + (mid++);
+      menIds.push(id);
+      var row = makeRow(id, '/ mês', '#d63eaa', 'men');
+      document.getElementById('rows-men').appendChild(row);
+      document.getElementById(id + '_tit').focus();
+      calc();
+    }
+
+    function addFix() {
+      var id = 'fx' + (fid++);
+      fixIds.push(id);
+      var row = makeRow(id, 'valor único', '#7b3fe4', 'fix');
+      document.getElementById('rows-fix').appendChild(row);
+      document.getElementById(id + '_tit').focus();
+      calc();
+    }
+
+    function remove(rowId, type, id) {
+      var el = document.getElementById(rowId);
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+      if (type === 'men') menIds = menIds.filter(function(r){ return r !== id; });
+      if (type === 'fix') fixIds = fixIds.filter(function(r){ return r !== id; });
+      calc();
+    }
+
+    function calc() {
+      var totalMen = 0;
+      for (var i = 0; i < menIds.length; i++) {
+        totalMen += numVal(menIds[i] + '_val');
+      }
+
+      var totalFix = 0;
+      for (var j = 0; j < fixIds.length; j++) {
+        totalFix += numVal(fixIds[j] + '_val');
+      }
+
+      var meses = Math.max(1, Math.round(numVal('i-meses')));
+      if (!meses) meses = 12;
+
+      var mensalidadeEfetiva = totalMen + (totalFix / meses);
+      var totalContrato = mensalidadeEfetiva * meses;
+
+      setTxt('sub-men', fmtBRL(totalMen) + ' / mês');
+      setTxt('sub-fix', fmtBRL(totalFix));
+      setTxt('r-mensal', fmtBRL(mensalidadeEfetiva));
+      setTxt('r-total', fmtBRL(totalContrato));
+
+      var explain = '';
+      if (totalFix > 0) {
+        explain = fmtBRL(totalMen) + '/mês + ' + fmtBRL(totalFix) + ' fixo ÷ ' + meses + ' meses';
+      } else if (totalMen > 0) {
+        explain = 'Somente serviços mensais recorrentes';
+      } else {
+        explain = 'Mensais + distribuição dos fixos';
+      }
+      setTxt('r-explain', explain);
+
+      var formula = fmtBRL(mensalidadeEfetiva) + ' / mês × ' + meses + ' meses = ' + fmtBRL(totalContrato);
+      setTxt('i-formula', formula);
+    }
+
+    // Init
+    calc();
+
+    function getState() {
+      var state = { men: [], fix: [] };
+      menIds.forEach(function(id) {
+        var tit = document.getElementById(id + '_tit');
+        var dsc = document.getElementById(id + '_dsc');
+        var val = document.getElementById(id + '_val');
+        if (tit) state.men.push({
+          tit: tit.value || '',
+          dsc: dsc ? dsc.value || '' : '',
+          val: val ? val.value || '' : ''
+        });
+      });
+      fixIds.forEach(function(id) {
+        var tit = document.getElementById(id + '_tit');
+        var dsc = document.getElementById(id + '_dsc');
+        var val = document.getElementById(id + '_val');
+        if (tit) state.fix.push({
+          tit: tit.value || '',
+          dsc: dsc ? dsc.value || '' : '',
+          val: val ? val.value || '' : ''
+        });
+      });
+      return state;
+    }
+
+    function setState(state) {
+      if (!state) return;
+      // Clear existing dynamic rows
+      menIds.slice().forEach(function(id) { remove('row-' + id, 'men', id); });
+      fixIds.slice().forEach(function(id) { remove('row-' + id, 'fix', id); });
+      // Rebuild from state
+      if (state.men) state.men.forEach(function(item) {
+        addMen();
+        var id = menIds[menIds.length - 1];
+        var tit = document.getElementById(id + '_tit');
+        var dsc = document.getElementById(id + '_dsc');
+        var val = document.getElementById(id + '_val');
+        if (tit) tit.value = item.tit || '';
+        if (dsc) dsc.value = item.dsc || '';
+        if (val) { val.value = item.val || ''; }
+      });
+      if (state.fix) state.fix.forEach(function(item) {
+        addFix();
+        var id = fixIds[fixIds.length - 1];
+        var tit = document.getElementById(id + '_tit');
+        var dsc = document.getElementById(id + '_dsc');
+        var val = document.getElementById(id + '_val');
+        if (tit) tit.value = item.tit || '';
+        if (dsc) dsc.value = item.dsc || '';
+        if (val) { val.value = item.val || ''; }
+      });
+      calc();
+    }
+
+    return { addMen: addMen, addFix: addFix, remove: remove, calc: calc, getState: getState, setState: setState };
+  })();
+  </script>
+
+</section>
+
+<section class="sec" id="condicoes">
+  <div class="eyebrow">06 · Condições</div>
+  <h2 class="sec-h">Contrato &amp;<br><span class="g">como trabalhamos</span></h2>
+  <div class="cond-grid">
+    <div class="cond-item"><div class="cond-item-label">Duração do contrato</div><div class="cond-item-val"><span contenteditable="true">12 meses</span><small>Renovação automática salvo aviso prévio de 30 dias</small></div></div>
+    <div class="cond-item"><div class="cond-item-label">Reajuste anual</div><div class="cond-item-val"><span contenteditable="true">IGPM + 5%</span><small>Aplicado na renovação anual do contrato</small></div></div>
+    <div class="cond-item"><div class="cond-item-label">Prazo de aprovação de conteúdo</div><div class="cond-item-val"><span contenteditable="true">48h úteis</span><small>Via plataforma dedicada — sem resposta no prazo, o conteúdo segue conforme planejado</small></div></div>
+    <div class="cond-item"><div class="cond-item-label">Cancelamento antecipado</div><div class="cond-item-val"><span contenteditable="true">Multa de 3 meses</span><small>Sobre o valor mensal de gestão vigente</small></div></div>
+    <div class="cond-item"><div class="cond-item-label">Revisões por entregável</div><div class="cond-item-val"><span contenteditable="true">Até 2 rodadas</span><small>Revisões adicionais sob orçamento específico</small></div></div>
+    <div class="cond-item"><div class="cond-item-label">Início das atividades</div><div class="cond-item-val"><span contenteditable="true">7 dias após assinatura</span><small>Mediante confirmação de pagamento da Plataforma de Marca</small></div></div>
+  </div>
+  <div class="sep"></div>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:.2em;text-transform:uppercase;margin-bottom:16px;">Como trabalhamos</div>
+  <div class="howgrid">
+    <div class="how-item"><div class="how-icon">📐</div><div class="how-title">Sprints quinzenais</div><div class="how-body">Toda a operação roda em ciclos de 2 semanas no ClickUp. Você tem visibilidade de tudo que está em andamento, aprovado ou entregue.</div></div>
+    <div class="how-item"><div class="how-icon">✅</div><div class="how-title">Aprovação via plataforma</div><div class="how-body">Todo conteúdo passa por aprovação antes de publicar. Você recebe notificação, visualiza e aprova — tudo rastreado e com histórico.</div></div>
+    <div class="how-item"><div class="how-icon">💬</div><div class="how-title">Canal dedicado</div><div class="how-body">Comunicação centralizada com o responsável pela sua conta. Sem e-mails perdidos nem mensagens em grupos misturados.</div></div>
+    <div class="how-item"><div class="how-icon">🧠</div><div class="how-title">Estratégia antes de tudo</div><div class="how-body">Nenhuma peça é produzida sem propósito estratégico claro. Tudo parte da Brand Platform e do conceito de campanha aprovado.</div></div>
+    <div class="how-item"><div class="how-icon">📊</div><div class="how-title">Relatório que orienta</div><div class="how-body">Todo mês você recebe uma leitura estratégica dos resultados — não só métricas, mas o que elas significam e o que recomendamos fazer.</div></div>
+    <div class="how-item"><div class="how-icon">📅</div><div class="how-title">Reunião com quem decide</div><div class="how-body">A reunião mensal é com quem tem visão estratégica do negócio — não só com o atendimento. Você fala com quem pensa junto.</div></div>
+  </div>
+  <div class="sig">
+    <div class="sig-block"><div class="sig-label">Nonna Agência Digital</div><div class="sig-line"></div><div class="sig-name" contenteditable="true">Evandro · Direção</div></div>
+    <div class="sig-block"><div class="sig-label">Cliente</div><div class="sig-line"></div><div class="sig-name" contenteditable="true">Nome · Cargo · <span class="f_cliente_ref">Empresa</span></div></div>
+  </div>
+</section>
+
+<section class="sec" id="inicio">
+  <div class="eyebrow">07 · Próximos passos</div>
+  <h2 class="sec-h">Como<br><span class="g">começamos</span></h2>
+  <p class="sec-sub">Da aprovação desta proposta até o início da execução — uma sequência clara sem etapas desnecessárias.</p>
+  <div class="tl" style="max-width:640px;">
+    <div class="tl-step"><div class="tl-dot">01</div><div class="tl-body"><div class="tl-period">Dia 1</div><div class="tl-title">Aprovação e assinatura</div><div class="tl-desc">Proposta aprovada → contrato enviado para assinatura digital. Pagamento da Plataforma de Marca realizado. Acessos e canais de comunicação configurados.</div></div></div>
+    <div class="tl-step"><div class="tl-dot">02</div><div class="tl-body"><div class="tl-period">Dias 2–5</div><div class="tl-title">Onboarding</div><div class="tl-desc">Apresentação da equipe Nonna, configuração de acessos e ferramentas, agendamento da reunião de briefing inicial.</div></div></div>
+    <div class="tl-step"><div class="tl-dot">03</div><div class="tl-body"><div class="tl-period">Semanas 1–2</div><div class="tl-title">Reunião de briefing e diagnóstico</div><div class="tl-desc">Conversa aprofundada sobre o negócio, o mercado e os objetivos. Análise de comunicação atual e levantamento de concorrentes.</div></div></div>
+    <div class="tl-step"><div class="tl-dot">04</div><div class="tl-body"><div class="tl-period">Semanas 2–3</div><div class="tl-title">Apresentação da Brand Platform</div><div class="tl-desc">Diagnóstico completo e Brand Platform apresentados para aprovação. O documento mais importante do contrato — aprovado aqui, tudo que vem depois tem direção.</div></div></div>
+    <div class="tl-step"><div class="tl-dot">05</div><div class="tl-body"><div class="tl-period">Semana 4</div><div class="tl-title">Macroplanejamento aprovado — execução inicia</div><div class="tl-desc">Brief Estratégico e macroplanejamento concluídos. No mês 2, o Roadmap e o Conceito de Campanha do primeiro trimestre são desenvolvidos e a execução começa.</div></div></div>
+  </div>
+  <div style="margin-top:48px;padding:32px;background:linear-gradient(135deg,rgba(255,92,77,.04),rgba(123,63,228,.05));border:1px solid rgba(214,62,170,.14);text-align:center;">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:.2em;text-transform:uppercase;margin-bottom:14px;">Próximo passo</div>
+    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:10px;">Pronto para começar?</div>
+    <div style="font-size:13px;color:var(--mu2);margin-bottom:18px;">Responda esta proposta ou entre em contato direto.</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--c2);" contenteditable="true">contato@nonnaagenciadigital.com.br · (49) 3090-2871</div>
+    <div style="margin-top:20px;"><img src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png" style="height:20px;opacity:.45;" alt="Nonna" onerror="this.style.display='none'"></div>
+  </div>
+</section>
+
+</main>
+<script>
+const secs=document.querySelectorAll('section[id]');
+const navItems=document.querySelectorAll('.sb-item');
+const io=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){navItems.forEach(n=>n.classList.remove('active'));const a=document.querySelector('.sb-item[href="#'+e.target.id+'"]');if(a)a.classList.add('active');}});},{threshold:.25});
+secs.forEach(s=>io.observe(s));
+function syncName(){const n=document.getElementById('f_cliente').textContent.trim()||'Cliente';document.querySelectorAll('.f_cliente_ref').forEach(el=>el.textContent=n);}
+document.getElementById('f_cliente').addEventListener('input',syncName);
+function recalc(){ if(typeof CAL !== 'undefined') CAL.calc(); }
+function saveAll(){
+  var data={};
+  document.querySelectorAll('[contenteditable][id]').forEach(function(el){ data[el.id]=el.innerHTML; });
+  ['i_pub','i_cfee','i_cqtd','i_hfee','i-meses'].forEach(function(id){
+    var el=document.getElementById(id); if(el) data[id]=el.value;
+  });
+  document.querySelectorAll('table.t td[contenteditable]').forEach(function(el,i){ data['td_'+i]=el.innerHTML; });
+  ['inv-obs','inv-terc-desc','inv-terc-val'].forEach(function(id){
+    var el=document.getElementById(id); if(el) data['_v_'+id]=el.value;
+  });
+  if(typeof CAL!=='undefined') data['__cal__']=JSON.stringify(CAL.getState());
+  try{
+    localStorage.setItem('nonna_prop',JSON.stringify(data));
+    var b=document.getElementById('saveBtn');
+    b.textContent='✓ Salvo'; setTimeout(function(){ b.textContent='Salvar'; },2200);
+  }catch(e){ console.error('Erro ao salvar:',e); }
+}
+function loadSaved(){
+  try{
+    var raw=localStorage.getItem('nonna_prop');
+    if(!raw)return;
+    var d=JSON.parse(raw);
+    Object.keys(d).forEach(function(k){
+      if(k==='__cal__') return;
+      if(k.indexOf('_v_')===0){
+        var el=document.getElementById(k.slice(3));
+        if(el) el.value=d[k];
+        return;
+      }
+      var el=document.getElementById(k);
+      if(!el) return;
+      if(el.tagName==='INPUT'||el.tagName==='TEXTAREA') el.value=d[k];
+      else el.innerHTML=d[k];
+    });
+    document.querySelectorAll('table.t td[contenteditable]').forEach(function(el,i){
+      if(d['td_'+i]) el.innerHTML=d['td_'+i];
+    });
+    if(d['__cal__']&&typeof CAL!=='undefined'){
+      try{ CAL.setState(JSON.parse(d['__cal__'])); }catch(e){ console.error('CAL restore:',e); }
+    }
+  }catch(e){ console.error('loadSaved:',e); }
+  if(typeof CAL!=='undefined') CAL.calc();
+  syncName();
+}
+document.addEventListener('input', function(e){
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.isContentEditable){
+    clearTimeout(window._saveTimer);
+    window._saveTimer = setTimeout(saveAll, 800);
+  }
+});
+loadSaved();
+</script>
+
+<script>
+function gerarVersaoCliente() {
+  // Sync all input values to their value attributes before cloning
+  document.querySelectorAll('input, textarea').forEach(function(el){
+    if(el.tagName === 'TEXTAREA') el.setAttribute('value', el.value);
+    else el.setAttribute('value', el.value || '');
+  });
+  document.querySelectorAll('select').forEach(function(el){
+    var opts = el.querySelectorAll('option');
+    opts.forEach(function(o){ o.removeAttribute('selected'); });
+    if(el.selectedIndex >= 0) opts[el.selectedIndex].setAttribute('selected','selected');
+  });
+  // Capture current rendered state
+  var doc = document.documentElement.cloneNode(true);
+
+  // Fix gradient text: browser expands var(--grad) into empty sub-properties when serializing.
+  // Find all elements with -webkit-text-fill-color (gradient text) and force the gradient explicitly.
+  doc.querySelectorAll('[style]').forEach(function(el) {
+    var s = el.getAttribute('style') || '';
+    if (s.indexOf('text-fill-color') !== -1 || s.indexOf('background-clip') !== -1) {
+      el.style.backgroundImage = 'linear-gradient(135deg,#ff5c4d,#d63eaa,#7b3fe4)';
+      el.style.webkitBackgroundClip = 'text';
+      el.style.backgroundClip = 'text';
+      el.style.webkitTextFillColor = 'transparent';
+      el.style.backgroundSize = '';
+      el.style.backgroundColor = '';
+    }
+  });
+
+  // Remove editbar
+  var eb = doc.querySelector('.editbar');
+  if (eb) eb.parentNode.removeChild(eb);
+
+  // Keep sidebar but clean it up for client view
+  var sbFooter = doc.querySelector('.sb-footer');
+  if (sbFooter) {
+    sbFooter.innerHTML = '<p style="font-family:IBM Plex Mono,monospace;font-size:8px;color:rgba(237,237,246,.3);line-height:1.6;">Nonna Ag&ecirc;ncia Digital<br>nonnaagenciadigital.com.br</p>';
+  }
+
+  // Remove all add/remove buttons
+  doc.querySelectorAll('.iadd, .irm2, .abtn').forEach(function(el){ el.parentNode.removeChild(el); });
+
+  // Remove all script tags
+  doc.querySelectorAll('script').forEach(function(el){ el.parentNode.removeChild(el); });
+
+  // Fix main padding (editbar removed, sidebar stays)
+  var main = doc.querySelector('main');
+  if (main) { main.style.paddingTop = '0'; }
+
+  // Make all contenteditable non-editable and clean border
+  doc.querySelectorAll('[contenteditable]').forEach(function(el){
+    el.removeAttribute('contenteditable');
+    el.style.borderBottom = 'none';
+    el.style.borderLeft = 'none';
+    el.style.cursor = 'default';
+  });
+
+  // Make all inputs read-only and style them inline
+  doc.querySelectorAll('input[type=number], input[type=text], input[type=email]').forEach(function(el){
+    var val = el.getAttribute('value') || '';
+    var span = document.createElement('span');
+    span.textContent = val;
+    span.style.cssText = 'color:inherit;font:inherit;background:none;border:none;padding:6px 0;display:inline-block;';
+    if (el.parentNode) el.parentNode.replaceChild(span, el);
+  });
+  doc.querySelectorAll('textarea').forEach(function(el){
+    var val = el.getAttribute('value') || el.textContent || '';
+    var div = document.createElement('div');
+    div.textContent = val;
+    div.style.cssText = 'color:inherit;font:inherit;background:none;border:none;white-space:pre-wrap;line-height:1.6;';
+    if (el.parentNode) el.parentNode.replaceChild(div, el);
+  });
+  doc.querySelectorAll('select').forEach(function(el){
+    var sel = el.querySelector('option[selected]');
+    var span = document.createElement('span');
+    span.textContent = sel ? sel.textContent : (el.options[0] ? el.options[0].textContent : '');
+    span.style.cssText = 'color:inherit;font:inherit;background:none;border:none;';
+    if (el.parentNode) el.parentNode.replaceChild(span, el);
+  });
+
+  // Replace select elements that are already replaced above — handled
+
+  // Inject print-ready override style
+  var styleEl = document.createElement('style');
+  styleEl.textContent = [
+    ':root{',
+    '  --grad:linear-gradient(135deg,#ff5c4d,#d63eaa,#7b3fe4);',
+    '  --bg:#08080d;--s1:#0d0d16;--s2:#12121e;--s3:#181828;--s4:#1f1f30;',
+    '  --b1:rgba(255,255,255,.05);--b2:rgba(255,255,255,.09);--b3:rgba(255,255,255,.15);',
+    '  --ink:#ededf6;--mu:rgba(237,237,246,.32);--mu2:rgba(237,237,246,.6);',
+    '  --c1:#ff5c4d;--c2:#d63eaa;--c3:#7b3fe4;',
+    '  --green:#34d399;--yellow:#fbbf24;--teal:#2dd4bf;',
+    '  --nav:248px;',
+    '}',
+    'body{background:#08080d!important;}',
+    '.editbar,.iadd,.abtn,.irm2{display:none!important;}',
+    'main{margin-left:248px!important;padding-top:0!important;}',
+    'aside{top:0!important;}',
+    '[contenteditable]{border-bottom:none!important;border-left:none!important;cursor:default!important;}',
+    'textarea{border:none!important;resize:none!important;background:transparent!important;}',
+    'input,select{pointer-events:none;}',
+    '*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}',
+    '@media print{',
+    '  aside{display:none!important;}',
+    '  main{margin-left:0!important;}',
+    '  body{background:#08080d!important;}',
+    '  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}',
+    '  .sec{page-break-inside:avoid;min-height:auto!important;}',
+    '  #capa{page-break-after:always;}',
+    '}'
+  ].join('\n');
+  var headEl = doc.querySelector('head'); if(headEl) headEl.insertBefore(styleEl, headEl.firstChild);
+
+  // Update title
+  var titleEl = doc.querySelector('title');
+  var clienteName = document.getElementById('f_cliente') ? document.getElementById('f_cliente').textContent.trim() : 'Cliente';
+  if (titleEl) titleEl.textContent = 'Proposta Nonna · ' + clienteName;
+
+  // Serialize
+  var html = '<!DOCTYPE html>\n' + doc.outerHTML;
+
+  // Replace CSS variables with real values so the exported file renders correctly
+  // in any context without needing variable resolution
+  var cssVarMap = {
+    'var(--grad)': 'linear-gradient(135deg,#ff5c4d,#d63eaa,#7b3fe4)',
+    'var(--bg)':   '#08080d',
+    'var(--s1)':   '#0d0d16',
+    'var(--s2)':   '#12121e',
+    'var(--s3)':   '#181828',
+    'var(--s4)':   '#1f1f30',
+    'var(--ink)':  '#ededf6',
+    'var(--mu)':   'rgba(237,237,246,.32)',
+    'var(--mu2)':  'rgba(237,237,246,.6)',
+    'var(--c1)':   '#ff5c4d',
+    'var(--c2)':   '#d63eaa',
+    'var(--c3)':   '#7b3fe4',
+    'var(--green)':'#34d399',
+    'var(--yellow)':'#fbbf24',
+    'var(--b1)':   'rgba(255,255,255,.05)',
+    'var(--b2)':   'rgba(255,255,255,.09)',
+    'var(--b3)':   'rgba(255,255,255,.15)',
+    'var(--nav)':  '248px'
+  };
+  Object.keys(cssVarMap).forEach(function(key) {
+    while (html.indexOf(key) !== -1) {
+      html = html.split(key).join(cssVarMap[key]);
+    }
+  });
+
+  var blob = new Blob([html], {type: 'text/html;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'Proposta Nonna - ' + clienteName + '.html';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
+}
+</script>
+</body>
+</html>

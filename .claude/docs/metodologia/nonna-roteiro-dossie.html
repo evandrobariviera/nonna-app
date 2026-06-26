@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Nonna · Roteiro de Produção do Dossiê de Marca</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090e;--s1:#0e0e18;--s2:#141422;--s3:#1b1b2c;
+  --b1:rgba(255,255,255,.04);--b2:rgba(255,255,255,.08);--b3:rgba(255,255,255,.14);
+  --ink:#ececf4;--mu:rgba(236,236,244,.3);--mu2:rgba(236,236,244,.58);
+  --b01:#60a5fa;--b02:#fbbf24;--b03:#d63eaa;--b04:#7b3fe4;
+  --green:#34d399;--red:#f87171;
+  --nav:240px;--grad:linear-gradient(135deg,#ff5c4d,#d63eaa,#7b3fe4);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.7;}
+
+aside{position:fixed;top:0;left:0;bottom:0;width:var(--nav);background:var(--s1);border-right:1px solid var(--b1);overflow-y:auto;scrollbar-width:none;z-index:100;display:flex;flex-direction:column;}
+aside::-webkit-scrollbar{display:none;}
+.sb-hd{padding:20px 18px 16px;border-bottom:1px solid var(--b1);}
+.sb-logo img{height:14px;opacity:.6;}
+.sb-logo-fb{font-size:11px;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sb-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;margin-top:8px;line-height:1.3;}
+.sb-sub{font-size:10px;color:var(--mu2);margin-top:3px;}
+.sb-sec{padding:14px 18px 4px;font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--mu);}
+.sb-a{display:flex;align-items:center;gap:8px;padding:7px 18px;text-decoration:none;border-left:2px solid transparent;transition:all .15s;cursor:pointer;}
+.sb-a:hover{background:var(--s2);}
+.sb-a.on{background:var(--s2);}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:var(--b2);flex-shrink:0;}
+.sb-a.on .sb-dot{background:currentColor;}
+.sb-nm{font-size:11px;color:var(--mu2);}
+.sb-a.on .sb-nm{color:var(--ink);}
+.sb-ft{margin-top:auto;padding:14px 18px;border-top:1px solid var(--b1);font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);line-height:1.6;}
+
+main{margin-left:var(--nav);}
+.sec{padding:56px 60px 64px;border-bottom:1px solid var(--b1);}
+.sec:last-child{border-bottom:none;}
+
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:var(--mu);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.eyebrow::before{content:'';width:14px;height:1px;background:var(--b03);}
+h1,h2{font-family:'Syne',sans-serif;font-weight:800;letter-spacing:-.022em;line-height:1.07;}
+h1{font-size:clamp(32px,4vw,52px);margin-bottom:12px;}
+h2{font-size:clamp(20px,2.5vw,30px);margin-bottom:10px;}
+.g{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.lead{font-size:15px;color:var(--mu2);max-width:600px;line-height:1.75;margin-bottom:32px;}
+
+/* PHASE HEADER */
+.phase-hd{
+  display:flex;align-items:flex-start;gap:18px;
+  margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid var(--b2);
+}
+.phase-num{font-family:'Syne',sans-serif;font-size:56px;font-weight:800;line-height:1;opacity:.08;flex-shrink:0;}
+.phase-info .phase-tag{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;margin-bottom:6px;}
+.phase-info h2{margin-bottom:6px;}
+.phase-info p{font-size:13px;color:var(--mu2);line-height:1.65;max-width:520px;}
+
+/* STEP CARD */
+.step{background:var(--s2);border:1px solid var(--b2);margin-bottom:10px;overflow:hidden;}
+.step-head{padding:14px 18px;display:grid;grid-template-columns:32px 1fr auto;gap:12px;align-items:center;cursor:pointer;transition:background .15s;}
+.step-head:hover{background:var(--s3);}
+.step-idx{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;color:var(--mu);text-align:center;}
+.step-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;}
+.step-owner{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--b2);color:var(--mu);white-space:nowrap;}
+.step-body{display:none;padding:0 18px 18px 62px;border-top:1px solid var(--b1);}
+.step-body.open{display:block;padding-top:16px;}
+.step-body p{font-size:13px;color:var(--mu2);line-height:1.7;margin-bottom:12px;}
+.step-body p:last-child{margin-bottom:0;}
+
+/* FIELD MAP - how kickoff maps to dossie section */
+.field-map{background:var(--s3);border:1px solid var(--b1);padding:14px 16px;margin-bottom:10px;}
+.fm-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;}
+.fm-link{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mu2);padding:4px 0;border-bottom:1px solid var(--b1);}
+.fm-link:last-child{border-bottom:none;}
+.fm-arrow{color:var(--b03);flex-shrink:0;font-size:10px;}
+.fm-dest{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mu);}
+
+/* QUESTIONS */
+.q-list{list-style:none;display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.q-item{background:var(--s3);border:1px solid var(--b1);border-left:3px solid;padding:12px 14px;}
+.q-item.essential{border-left-color:var(--b03);}
+.q-item.probe{border-left-color:var(--b02);}
+.q-item.context{border-left-color:var(--b01);}
+.q-text{font-size:12px;color:var(--ink);line-height:1.55;margin-bottom:4px;}
+.q-why{font-size:11px;color:var(--mu);font-style:italic;line-height:1.4;}
+
+/* Q LEGEND */
+.q-legend{display:flex;gap:14px;margin-bottom:14px;flex-wrap:wrap;}
+.ql-item{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--mu2);}
+.ql-dot{width:8px;height:8px;border-radius:1px;flex-shrink:0;}
+
+/* RESEARCH GUIDE */
+.research-box{background:var(--s2);border:1px solid var(--b2);padding:18px 20px;margin-bottom:10px;}
+.rb-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px;}
+.rb-items{list-style:none;display:flex;flex-direction:column;gap:5px;}
+.rb-items li{font-size:12px;color:var(--mu2);display:flex;gap:8px;line-height:1.5;}
+.rb-items li::before{content:'→';color:var(--b03);flex-shrink:0;}
+
+/* OUTPUT SPEC */
+.output{background:var(--s3);border:1px solid rgba(52,211,153,.15);border-left:3px solid var(--green);padding:14px 16px;margin-bottom:10px;}
+.out-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--green);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;}
+.out-text{font-size:12px;color:var(--mu2);line-height:1.6;}
+
+/* WARNING */
+.warn{background:var(--s3);border:1px solid rgba(248,113,113,.15);border-left:3px solid var(--red);padding:12px 14px;margin-bottom:10px;}
+.warn-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--red);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;}
+.warn-text{font-size:12px;color:var(--mu2);line-height:1.6;}
+
+/* SECTION MAP */
+.section-map{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.smap{background:var(--s2);border:1px solid var(--b2);padding:14px 16px;border-top:2px solid;}
+.sm-block{font-family:'IBM Plex Mono',monospace;font-size:7px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;margin-bottom:5px;}
+.sm-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:4px;}
+.sm-source{font-size:10px;color:var(--mu);line-height:1.4;}
+
+/* PROCESS TIMELINE */
+.timeline{display:flex;flex-direction:column;gap:2px;}
+.tl-step{display:grid;grid-template-columns:100px 1fr;gap:16px;align-items:stretch;}
+.tl-time{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--mu2);text-align:right;padding-top:14px;}
+.tl-content{background:var(--s2);border:1px solid var(--b2);border-left:3px solid;padding:12px 16px;}
+.tl-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:4px;}
+.tl-desc{font-size:11px;color:var(--mu2);line-height:1.55;}
+.tl-who{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);margin-top:5px;letter-spacing:.06em;}
+
+/* CALLOUT */
+.callout{background:var(--s3);border:1px solid rgba(214,62,170,.14);border-left:3px solid var(--b03);padding:14px 18px;font-size:13px;color:var(--mu2);line-height:1.65;margin-top:16px;}
+.callout strong{color:var(--ink);}
+
+@media(max-width:800px){
+  aside{display:none;}main{margin-left:0;}
+  .sec{padding:36px 20px 52px;}
+  .section-map,.q-legend{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<aside>
+  <div class="sb-hd">
+    <div class="sb-logo">
+      <img src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png" alt="Nonna" onerror="this.style.display='none';this.nextSibling.style.display='block'">
+      <span class="sb-logo-fb" style="display:none">nonna</span>
+    </div>
+    <div class="sb-title">Roteiro de Produção<br>do Dossiê de Marca</div>
+    <div class="sb-sub">Guia interno · Nonna Publicidade</div>
+  </div>
+
+  <div class="sb-sec">Visão Geral</div>
+  <a class="sb-a on" href="#intro" style="color:var(--b03);"><div class="sb-dot"></div><span class="sb-nm">Como usar este guia</span></a>
+  <a class="sb-a" href="#processo" style="color:var(--b03);"><div class="sb-dot"></div><span class="sb-nm">O processo em etapas</span></a>
+
+  <div class="sb-sec" style="color:var(--b01);">Fase 1 · Antes do Kickoff</div>
+  <a class="sb-a" href="#pre" style="color:var(--b01);"><div class="sb-dot"></div><span class="sb-nm">Pesquisa prévia</span></a>
+
+  <div class="sb-sec" style="color:var(--b02);">Fase 2 · Kickoff</div>
+  <a class="sb-a" href="#kickoff-abertura" style="color:var(--b02);"><div class="sb-dot"></div><span class="sb-nm">Abertura e contexto</span></a>
+  <a class="sb-a" href="#kickoff-negocio" style="color:var(--b02);"><div class="sb-dot"></div><span class="sb-nm">O negócio</span></a>
+  <a class="sb-a" href="#kickoff-mercado" style="color:var(--b02);"><div class="sb-dot"></div><span class="sb-nm">Mercado e competição</span></a>
+  <a class="sb-a" href="#kickoff-cliente" style="color:var(--b02);"><div class="sb-dot"></div><span class="sb-nm">O cliente ideal</span></a>
+  <a class="sb-a" href="#kickoff-comunicacao" style="color:var(--b02);"><div class="sb-dot"></div><span class="sb-nm">Comunicação e objetivos</span></a>
+
+  <div class="sb-sec" style="color:var(--b03);">Fase 3 · Pesquisa Estratégica</div>
+  <a class="sb-a" href="#pesquisa-comp" style="color:var(--b03);"><div class="sb-dot"></div><span class="sb-nm">Análise de concorrentes</span></a>
+  <a class="sb-a" href="#pesquisa-mercado" style="color:var(--b03);"><div class="sb-dot"></div><span class="sb-nm">Contexto de mercado</span></a>
+  <a class="sb-a" href="#pesquisa-insight" style="color:var(--b03);"><div class="sb-dot"></div><span class="sb-nm">Como chegar ao insight</span></a>
+
+  <div class="sb-sec" style="color:var(--b04);">Fase 4 · Redação</div>
+  <a class="sb-a" href="#redacao-bloco1" style="color:var(--b04);"><div class="sb-dot"></div><span class="sb-nm">Bloco 01 · Diagnóstico</span></a>
+  <a class="sb-a" href="#redacao-bloco2" style="color:var(--b04);"><div class="sb-dot"></div><span class="sb-nm">Bloco 02 · Estratégia</span></a>
+  <a class="sb-a" href="#redacao-bloco3" style="color:var(--b04);"><div class="sb-dot"></div><span class="sb-nm">Bloco 03 · Plataforma</span></a>
+  <a class="sb-a" href="#redacao-bloco4" style="color:var(--b04);"><div class="sb-dot"></div><span class="sb-nm">Bloco 04 · Território</span></a>
+
+  <div class="sb-sec">Entrega</div>
+  <a class="sb-a" href="#entrega" style="color:var(--green);"><div class="sb-dot"></div><span class="sb-nm">Revisão e apresentação</span></a>
+
+  <div class="sb-ft">Documento interno · Não compartilhar com clientes</div>
+</aside>
+
+<main>
+
+<!-- ══ INTRO ══ -->
+<section class="sec" id="intro">
+  <div class="eyebrow">Roteiro de Produção · Guia Interno</div>
+  <h1>Do kickoff ao<br><span class="g">Dossiê aprovado</span></h1>
+  <p class="lead">Este guia conduz o processo completo de produção do Dossiê de Marca — da pesquisa prévia à apresentação com o cliente. Cada seção do Dossiê tem uma origem clara: uma pergunta feita no kickoff, uma fonte de pesquisa ou uma análise específica.</p>
+
+  <div class="callout">
+    <strong>Como usar:</strong> Leia o guia completo antes do primeiro kickoff. Em campo, use o bloco de perguntas de cada fase. Após o kickoff, siga a ordem de redação sugerida — ela existe por uma razão: você não pode escrever a Plataforma de Marca sem o Diagnóstico, e não pode escrever o Território sem o Insight.
+  </div>
+
+  <div style="margin-top:28px;">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:.16em;text-transform:uppercase;margin-bottom:14px;">Quem usa este guia</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div style="background:var(--s2);border:1px solid var(--b2);border-top:2px solid var(--b02);padding:14px 16px;">
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--b02);margin-bottom:5px;">Direção Geral</div>
+        <div style="font-size:12px;color:var(--mu2);line-height:1.55;">Conduz o kickoff. Usa o roteiro de perguntas em campo. Transcreve a reunião e entrega o material bruto para a Direção Criativa.</div>
+      </div>
+      <div style="background:var(--s2);border:1px solid var(--b2);border-top:2px solid var(--b04);padding:14px 16px;">
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--b04);margin-bottom:5px;">Direção Criativa</div>
+        <div style="font-size:12px;color:var(--mu2);line-height:1.55;">Recebe a transcrição, faz a pesquisa estratégica de concorrentes e mercado, e redige os Blocos 02, 03 e 04. O Bloco 01 é redigido em conjunto.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ PROCESSO ══ -->
+<section class="sec" id="processo">
+  <div class="eyebrow">Visão Geral</div>
+  <h2>O processo em <span class="g">4 fases</span></h2>
+  <p class="lead" style="margin-bottom:24px;">Do fechamento do contrato até o Dossiê aprovado — 20 dias na Etapa 01 do processo Nonna.</p>
+
+  <div class="timeline">
+    <div class="tl-step">
+      <div class="tl-time">Dias 1–2</div>
+      <div class="tl-content" style="border-left-color:var(--b01);">
+        <div class="tl-name">Fase 1 — Pesquisa prévia</div>
+        <div class="tl-desc">Antes do kickoff, pesquise o cliente: site, redes sociais, notícias, segmento, concorrentes óbvios. Chegue à reunião com contexto — nunca no zero.</div>
+        <div class="tl-who">Direção Geral + Direção Criativa</div>
+      </div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-time">Dias 3–4</div>
+      <div class="tl-content" style="border-left-color:var(--b02);">
+        <div class="tl-name">Fase 2 — Kickoff</div>
+        <div class="tl-desc">Reunião de 2 a 3 horas com o cliente. Coleta de dados do negócio, mercado, cliente ideal e objetivos. Gravada e transcrita — nada depende de memória.</div>
+        <div class="tl-who">Direção Geral conduz · cliente presente</div>
+      </div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-time">Dias 5–10</div>
+      <div class="tl-content" style="border-left-color:var(--b03);">
+        <div class="tl-name">Fase 3 — Pesquisa estratégica</div>
+        <div class="tl-desc">Análise aprofundada de concorrentes, contexto de mercado e comportamento do consumidor. O insight central nasce aqui — é o resultado de comparar o que o cliente disse com o que o mercado mostra.</div>
+        <div class="tl-who">Direção Criativa · Direção Geral revisa</div>
+      </div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-time">Dias 11–16</div>
+      <div class="tl-content" style="border-left-color:var(--b04);">
+        <div class="tl-name">Fase 4 — Redação do Dossiê</div>
+        <div class="tl-desc">Os 4 blocos são redigidos em ordem: Diagnóstico → Estratégia → Plataforma → Território. Cada bloco depende do anterior — não pule etapas.</div>
+        <div class="tl-who">Direção Criativa redige · Direção Geral revisa</div>
+      </div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-time">Dias 17–20</div>
+      <div class="tl-content" style="border-left-color:var(--green);">
+        <div class="tl-name">Apresentação e aprovação</div>
+        <div class="tl-desc">Dossiê + Roadmap apresentados na mesma reunião. O cliente aprova ambos ou solicita ajustes pontuais. Aprovados, viram o norte de tudo que será produzido.</div>
+        <div class="tl-who">Direção Geral conduz · cliente aprova</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FASE 1 — PRÉ-KICKOFF ══ -->
+<section class="sec" id="pre">
+  <div class="phase-hd">
+    <div class="phase-num" style="color:var(--b01);">1</div>
+    <div class="phase-info">
+      <div class="phase-tag" style="color:var(--b01);">Fase 1 · Dias 1–2 · Antes do kickoff</div>
+      <h2>Pesquisa prévia</h2>
+      <p>Chegar ao kickoff preparado é o que separa uma reunião estratégica de uma entrevista genérica. O cliente percebe quando você conhece o negócio dele — e isso cria confiança antes de qualquer argumento.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head" onclick="tog(this)">
+      <div class="step-idx">1.1</div><div class="step-name">Pesquise o cliente</div>
+      <div class="step-owner" style="border-color:rgba(96,165,250,.3);color:var(--b01);">Ambos</div>
+    </div>
+    <div class="step-body">
+      <p>Antes da reunião, passe pelo menos 1h pesquisando o cliente. O objetivo não é saber tudo — é saber o suficiente para fazer perguntas inteligentes e identificar contradições entre o que eles comunicam e o que são de verdade.</p>
+      <ul class="rb-items">
+        <li>Site institucional: o que comunicam na home, na página sobre e nos produtos</li>
+        <li>Redes sociais: tom de voz, frequência, tipo de conteúdo, engajamento</li>
+        <li>Google: o que aparece quando você busca o nome da empresa. Notícias, reviews, menções</li>
+        <li>LinkedIn: tamanho da empresa, cargos, como descrevem o negócio</li>
+        <li>Reclamações e avaliações: Reclame Aqui, Google Maps, App Store se tiver app</li>
+        <li>Produtos ou serviços: entenda o que vendem antes de perguntar</li>
+      </ul>
+      <div class="output"><div class="out-label">Output desta etapa</div><div class="out-text">Uma lista de 5 a 10 observações sobre o cliente — coisas que chamaram sua atenção, contradições percebidas, perguntas que surgiram. Isso vira a pauta de aprofundamento do kickoff.</div></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head" onclick="tog(this)">
+      <div class="step-idx">1.2</div><div class="step-name">Pesquise o setor e os concorrentes óbvios</div>
+      <div class="step-owner" style="border-color:rgba(96,165,250,.3);color:var(--b01);">Dir. Criativa</div>
+    </div>
+    <div class="step-body">
+      <p>Você não precisa fazer a análise competitiva completa antes do kickoff — isso vem depois. Mas você precisa ter uma ideia de quem são os players e como o setor se comunica em geral.</p>
+      <ul class="rb-items">
+        <li>Quem são os 3–5 maiores concorrentes</li>
+        <li>Como o setor se comunica em geral: tom, plataformas, temas recorrentes</li>
+        <li>O que domina a conversa no segmento: preço, tecnologia, tradição, serviço</li>
+        <li>Existe algum player que se destaca pela comunicação — positiva ou negativamente</li>
+      </ul>
+      <div class="warn"><div class="warn-label">Atenção</div><div class="warn-text">Não forme opiniões definitivas antes do kickoff. A pesquisa prévia serve para fazer perguntas melhores, não para chegar com respostas prontas. O cliente vai corrigir percepções que a pesquisa online não consegue captar.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FASE 2 — KICKOFF ══ -->
+<section class="sec" id="kickoff-abertura">
+  <div class="phase-hd">
+    <div class="phase-num" style="color:var(--b02);">2</div>
+    <div class="phase-info">
+      <div class="phase-tag" style="color:var(--b02);">Fase 2 · Dias 3–4 · Reunião</div>
+      <h2>Kickoff — Abertura</h2>
+      <p>Os primeiros 15 minutos do kickoff definem o tom de toda a reunião. O cliente precisa entender o que você está construindo junto com ele e por que as perguntas que virão são importantes.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head" onclick="tog(this)">
+      <div class="step-idx">2.0</div><div class="step-name">Abertura e enquadramento da reunião</div>
+      <div class="step-owner" style="border-color:rgba(251,191,36,.3);color:var(--b02);">Dir. Geral</div>
+    </div>
+    <div class="step-body">
+      <p>Antes de começar as perguntas, explique o que você está fazendo e por que. Isso reduz resistência e faz o cliente responder com mais profundidade.</p>
+      <div class="research-box">
+        <div class="rb-label">Script de abertura sugerido</div>
+        <p style="font-size:13px;color:var(--mu2);line-height:1.7;">"Vamos usar essa reunião para construir juntos a fundação estratégica da comunicação de vocês. Vou fazer perguntas que podem parecer óbvias ou muito abertas — mas cada resposta vai alimentar um campo específico do Dossiê de Marca que vamos entregar. Quanto mais honesto e específico você for, mais preciso e útil vai ser o documento. Não existe resposta errada — o que nos interessa é a realidade, não o que vocês gostariam que fosse."</p>
+      </div>
+      <p>Confirme que a reunião será gravada. A transcrição é parte do processo — não podemos trabalhar de memória.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="kickoff-negocio">
+  <div class="eyebrow">Fase 2 · Kickoff</div>
+  <h2>Bloco de perguntas — <span style="color:var(--b02);">O negócio</span></h2>
+  <p style="font-size:13px;color:var(--mu2);margin-bottom:20px;line-height:1.65;">Objetivo: entender o que a empresa é, como opera e o que a diferencia de verdade. As respostas daqui alimentam o Bloco 01 — Diagnóstico — seções 1.1, 1.2, 1.3 e 1.4 do Dossiê.</p>
+
+  <div class="q-legend">
+    <div class="ql-item"><div class="ql-dot" style="background:var(--b03);"></div>Pergunta essencial — não pode faltar</div>
+    <div class="ql-item"><div class="ql-dot" style="background:var(--b02);"></div>Pergunta de aprofundamento</div>
+    <div class="ql-item"><div class="ql-dot" style="background:var(--b01);"></div>Pergunta de contexto</div>
+  </div>
+
+  <ul class="q-list">
+    <li class="q-item essential">
+      <div class="q-text">"Se você tivesse que explicar o que a empresa faz para alguém que nunca ouviu falar dela, em 3 frases, o que diria?"</div>
+      <div class="q-why">→ Alimenta 1.1 · Captura a auto-percepção do cliente — muitas vezes revela o gap de comunicação</div>
+    </li>
+    <li class="q-item essential">
+      <div class="q-text">"Qual é a principal coisa que vocês fazem que os clientes não conseguem encontrar com facilidade em outra empresa?"</div>
+      <div class="q-why">→ Alimenta 1.3 · Abre o diferencial real — a resposta spontânea aqui é mais honesta que qualquer lista de "diferenciais"</div>
+    </li>
+    <li class="q-item probe">
+      <div class="q-text">"Quando um cliente vai embora, qual costuma ser o motivo real?"</div>
+      <div class="q-why">→ Alimenta 1.4 · Os pontos de atenção raramente são declarados diretamente — esta pergunta indireta costuma trazer a verdade</div>
+    </li>
+    <li class="q-item probe">
+      <div class="q-text">"Tem algum aspecto da empresa que você sabe que é bom, mas que vocês nunca conseguem comunicar bem?"</div>
+      <div class="q-why">→ Alimenta o gap de percepção (1.5) e o insight central (Bloco 02)</div>
+    </li>
+    <li class="q-item context">
+      <div class="q-text">"Conte a história da empresa — não a versão do site. A versão de como realmente aconteceu."</div>
+      <div class="q-why">→ Alimenta 1.2 · A história informal revela ativos narrativos que a versão oficial esconde</div>
+    </li>
+    <li class="q-item context">
+      <div class="q-text">"Qual foi o momento mais difícil que a empresa passou? Como vocês saíram dele?"</div>
+      <div class="q-why">→ Alimenta 1.2 e 1.3 · Crises superadas são provas de capacidade — costumam revelar os pontos fortes reais</div>
+    </li>
+    <li class="q-item probe">
+      <div class="q-text">"Se eu conversasse com seus três melhores clientes agora, o que eles diriam sobre vocês que você mais se orgulha de ouvir?"</div>
+      <div class="q-why">→ Alimenta 1.3 e a Promessa Central (Bloco 03) · A percepção dos melhores clientes revela o posicionamento real</div>
+    </li>
+    <li class="q-item essential">
+      <div class="q-text">"O que você quer ter construído daqui a 3 anos que ainda não existe hoje?"</div>
+      <div class="q-why">→ Alimenta 1.5 e a Visão (Bloco 03) · Define o horizonte estratégico do trabalho</div>
+    </li>
+  </ul>
+
+  <div class="field-map">
+    <div class="fm-label">Como as respostas alimentam o Dossiê</div>
+    <div class="fm-link"><span class="fm-arrow">→</span><span>História da empresa, marcos, como começou</span><span style="flex:1"></span><span class="fm-dest">Dossiê 1.1 + 1.2</span></div>
+    <div class="fm-link"><span class="fm-arrow">→</span><span>O que fazem melhor que concorrentes</span><span style="flex:1"></span><span class="fm-dest">Dossiê 1.3</span></div>
+    <div class="fm-link"><span class="fm-arrow">→</span><span>Limitações, dores, o que não funciona</span><span style="flex:1"></span><span class="fm-dest">Dossiê 1.4</span></div>
+    <div class="fm-link"><span class="fm-arrow">→</span><span>Objetivos dos próximos 12–24 meses</span><span style="flex:1"></span><span class="fm-dest">Dossiê 1.5 + Visão (3.1)</span></div>
+    <div class="fm-link"><span class="fm-arrow">→</span><span>O que os melhores clientes dizem</span><span style="flex:1"></span><span class="fm-dest">Promessa + Razões para acreditar (3.3)</span></div>
+  </div>
+</section>
+
+<section class="sec" id="kickoff-mercado">
+  <div class="eyebrow">Fase 2 · Kickoff</div>
+  <h2>Bloco de perguntas — <span style="color:var(--b02);">Mercado e competição</span></h2>
+  <p style="font-size:13px;color:var(--mu2);margin-bottom:20px;line-height:1.65;">Objetivo: entender como o cliente percebe o mercado, quem são os concorrentes e qual é a posição da empresa nesse cenário. As respostas daqui complementam a análise competitiva que o Vitor fará depois.</p>
+
+  <ul class="q-list">
+    <li class="q-item essential">
+      <div class="q-text">"Quem vocês consideram seus principais concorrentes? Não apenas os que vendem o mesmo produto — os que disputam o mesmo cliente."</div>
+      <div class="q-why">→ Alimenta a lista de concorrentes para a análise competitiva (1.6)</div>
+    </li>
+    <li class="q-item probe">
+      <div class="q-text">"Quando você perde um cliente para um concorrente, para quem costuma perder? E o que você acha que fez o cliente escolher o outro?"</div>
+      <div class="q-why">→ Revela o critério real de decisão de compra no mercado — mais honesto do que qualquer pergunta direta sobre concorrência</div>
+    </li>
+    <li class="q-item essential">
+      <div class="q-text">"O que você acha que falta no mercado? O que nenhum player está oferecendo direito?"</div>
+      <div class="q-why">→ Alimenta diretamente a Oportunidade Estratégica (Bloco 02) — o cliente muitas vezes já viu o espaço disponível</div>
+    </li>
+    <li class="q-item probe">
+      <div class="q-text">"Como os seus clientes descobrem a empresa? De onde vêm as melhores indicações?"</div>
+      <div class="q-why">→ Revela canais de credibilidade reais — onde a marca tem presença orgânica de reputação</div>
+    </li>
+    <li class="q-item context">
+      <div class="q-text">"O que está mudando no mercado de vocês nos últimos anos? O que você sente que vai mudar nos próximos 3?"</div>
+      <div class="q-why">→ Alimenta a Análise de Mercado (2.1) com a visão interna do setor</div>
+    </li>
+    <li class="q-item probe">
+      <div class="q-text">"Tem alguma empresa fora do seu setor — pode ser nacional ou internacional — que você admira pela comunicação ou pelo posicionamento?"</div>
+      <div class="q-why">→ Revela referências de tom e aspiração — útil para o Território Visual e Tom de Voz (Bloco 04)</div>
+    </li>
+  </ul>
+</section>
+
+<section class="sec" id="kickoff-cliente">
+  <div class="eyebrow">Fase 2 · Kickoff</div>
+  <h2>Bloco de perguntas — <span style="color:var(--b02);">O cliente ideal</span></h2>
+  <p style="font-size:13px;color:var(--mu2);margin-bottom:20px;line-height:1.65;">Objetivo: construir a persona. Não é uma pesquisa quantitativa — é uma conversa qualitativa para entender quem é o cliente ideal, como ele pensa e o que o move.</p>
+
+  <ul class="q-list">
+    <li class="q-item essential">
+      <div class="q-text">"Pensa no seu melhor cliente. Não o maior — o melhor. Como ele é? O que o torna diferente dos outros?"</div>
+      <div class="q-why">→ A persona começa aqui — o cliente ideal que o cliente sonha em ter mais</div>
+    </li>
+    <li class="q-item essential">
+      <div class="q-text">"O que esse cliente ideal valoriza que outros clientes não valorizam tanto?"</div>
+      <div class="q-why">→ Revela os critérios de decisão não declarados — o que realmente importa para quem compra por razões corretas</div>
+    </li>
+    <li class="q-item probe">
+      <div class="q-text">"Como esse cliente toma a decisão de comprar? Quem influencia essa decisão dentro da empresa ou família dele?"</div>
+      <div class="q-why">→ Alimenta o processo de compra — quem decide, quem influencia, quanto tempo leva</div>
+    </li>
+    <li class="q-item probe">
+      <div class="q-text">"Qual é a maior dor desse cliente antes de encontrar vocês? O que ele estava tentando resolver?"</div>
+      <div class="q-why">→ Alimenta a persona e o Insight Central — a dor do cliente é a pista para o posicionamento</div>
+    </li>
+    <li class="q-item context">
+      <div class="q-text">"Existe algum tipo de cliente que vocês não querem? Que tipo de cliente não é bom para o negócio?"</div>
+      <div class="q-why">→ Negativo da persona — define os limites do público-alvo e refina o posicionamento</div>
+    </li>
+    <li class="q-item probe">
+      <div class="q-text">"Quando um cliente faz o pedido de volta — depois de ter ido para um concorrente — o que costuma ter acontecido?"</div>
+      <div class="q-why">→ Revela o ativo de retenção real da empresa — o que o cliente só valorizou depois de perder. É frequentemente onde o insight mora.</div>
+    </li>
+  </ul>
+
+  <div class="warn"><div class="warn-label">Armadilha comum</div><div class="warn-text">O cliente tende a descrever seu cliente ideal como "todo mundo" ou de forma muito ampla. Insista na especificidade: "Mas se você tivesse que escolher uma pessoa, não um perfil — quem é essa pessoa?" Personas genéricas não servem para orientar criação.</div></div>
+</section>
+
+<section class="sec" id="kickoff-comunicacao">
+  <div class="eyebrow">Fase 2 · Kickoff</div>
+  <h2>Bloco de perguntas — <span style="color:var(--b02);">Comunicação e objetivos</span></h2>
+  <p style="font-size:13px;color:var(--mu2);margin-bottom:20px;line-height:1.65;">Objetivo: entender como o cliente enxerga sua própria comunicação, quais são as expectativas em relação ao trabalho com a Nonna e o que ele quer que o mercado sinta sobre a marca.</p>
+
+  <ul class="q-list">
+    <li class="q-item essential">
+      <div class="q-text">"Quando você olha para a comunicação atual da empresa, o que te incomoda? O que você sente que não representa bem o que vocês são?"</div>
+      <div class="q-why">→ Alimenta 5.3 · O gap de percepção — a resposta mais honesta sobre o problema de comunicação</div>
+    </li>
+    <li class="q-item essential">
+      <div class="q-text">"Se o mercado pudesse usar 3 palavras para descrever a empresa daqui a 2 anos, quais você gostaria que fossem?"</div>
+      <div class="q-why">→ Alimenta os Objetivos de Comunicação (Bloco 02) e a Essência da Marca (Bloco 03)</div>
+    </li>
+    <li class="q-item probe">
+      <div class="q-text">"Tem alguma empresa — concorrente ou não — cuja comunicação você admira? O que você admira nela especificamente?"</div>
+      <div class="q-why">→ Referências de aspiração — calibra as expectativas e alimenta o Território Visual</div>
+    </li>
+    <li class="q-item probe">
+      <div class="q-text">"O que você já tentou na comunicação que não funcionou? Por que acha que não funcionou?"</div>
+      <div class="q-why">→ Restrições implícitas e lições aprendidas — evita repetir erros já cometidos</div>
+    </li>
+    <li class="q-item essential">
+      <div class="q-text">"Se a comunicação funcionar como esperado daqui a 12 meses, como você vai saber? O que vai ter mudado?"</div>
+      <div class="q-why">→ Define o critério de sucesso — o que vira a métrica de avaliação do Roadmap</div>
+    </li>
+    <li class="q-item context">
+      <div class="q-text">"Tem algo importante sobre a empresa que eu ainda não perguntei e que você acha que eu precisaria saber?"</div>
+      <div class="q-why">→ Sempre faça essa como última pergunta. Frequentemente revela o mais importante.</div>
+    </li>
+  </ul>
+
+  <div class="output"><div class="out-label">Output do kickoff completo</div><div class="out-text">Gravação da reunião + transcrição (pode ser automatizada via IA). Lista de citações diretas do cliente que revelam posicionamento, dores e aspirações. Impressões e contradições observadas pelo estrategista — anotadas imediatamente após a reunião, antes que a memória filtre.</div></div>
+</section>
+
+<!-- ══ FASE 3 — PESQUISA ESTRATÉGICA ══ -->
+<section class="sec" id="pesquisa-comp">
+  <div class="phase-hd">
+    <div class="phase-num" style="color:var(--b03);">3</div>
+    <div class="phase-info">
+      <div class="phase-tag" style="color:var(--b03);">Fase 3 · Dias 5–10 · Pesquisa</div>
+      <h2>Análise competitiva</h2>
+      <p>Vá além de olhar o site dos concorrentes. O que importa não é o que eles têm — é o que eles deixam de comunicar. O espaço disponível é sempre o oposto do que todos estão fazendo.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head" onclick="tog(this)">
+      <div class="step-idx">3.1</div><div class="step-name">Como analisar cada concorrente</div>
+      <div class="step-owner" style="border-color:rgba(214,62,170,.3);color:var(--b03);">Dir. Criativa</div>
+    </div>
+    <div class="step-body">
+      <p>Para cada concorrente relevante, responda as três perguntas da tabela do Dossiê: o que comunicam, como se posicionam e o que não ocupam. A terceira coluna é a mais importante — e a mais difícil.</p>
+      <ul class="rb-items">
+        <li>Site: leia a home, a sobre, os produtos e a página de contato. O que aparece primeiro diz o que eles acham mais importante</li>
+        <li>Redes sociais: 30 últimas publicações. Qual é o padrão? Produto, empresa, valor, entretenimento?</li>
+        <li>Anúncios: use a Meta Ad Library e Google Ads Transparency. O que eles investem para comunicar revela prioridade real</li>
+        <li>Conteúdo: blog, YouTube, LinkedIn. O que produzem fora dos produtos?</li>
+        <li>Tom de voz: técnico ou humano? Formal ou próximo? Falam de produto ou de resultado?</li>
+        <li>Bio e taglines: o que se autodeclaram em uma frase</li>
+      </ul>
+      <div class="warn"><div class="warn-label">A pergunta que revela o espaço disponível</div><div class="warn-text">Depois de analisar todos os concorrentes, faça uma só pergunta: "O que nenhum deles está comunicando?" Se você encontrar algo que todos ignoram e que o seu cliente tem legitimidade para ocupar — esse é o território estratégico.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="pesquisa-mercado">
+  <div class="eyebrow">Fase 3 · Pesquisa Estratégica</div>
+  <h2>Análise de <span style="color:var(--b03);">mercado e contexto</span></h2>
+  <p style="font-size:13px;color:var(--mu2);margin-bottom:20px;line-height:1.65;">O mercado é o contexto onde a estratégia vai funcionar. Tendências, comportamento de compra e o que gera confiança no setor alimentam os Blocos 01 e 02 do Dossiê.</p>
+
+  <div class="step">
+    <div class="step-head" onclick="tog(this)">
+      <div class="step-idx">3.2</div><div class="step-name">Fontes de pesquisa por tipo de mercado</div>
+      <div class="step-owner" style="border-color:rgba(214,62,170,.3);color:var(--b03);">Dir. Criativa</div>
+    </div>
+    <div class="step-body">
+      <div class="research-box">
+        <div class="rb-label">Mercados B2B e industrial</div>
+        <ul class="rb-items">
+          <li>Associações setoriais: publicações, relatórios, anuários</li>
+          <li>LinkedIn: o que os profissionais do setor discutem, publicam, compartilham</li>
+          <li>IBGE, IPEA, Embrapa (agro), CNI (indústria): dados de mercado e tendências</li>
+          <li>Feiras e eventos do setor: quem expõe, o que apresentam, o que atrai atenção</li>
+          <li>Cases e whitepapers de empresas de consultoria: McKinsey, Deloitte, KPMG têm análises setoriais públicas</li>
+        </ul>
+      </div>
+      <div class="research-box">
+        <div class="rb-label">Mercados B2C e varejo</div>
+        <ul class="rb-items">
+          <li>Google Trends: o que o mercado busca, como as buscas evoluíram</li>
+          <li>Comentários em produtos similares (Amazon, Mercado Livre): o que os consumidores elogiam e reclamam</li>
+          <li>Grupos e comunidades: Facebook, Reddit, fóruns do setor — o que as pessoas perguntam e discutem</li>
+          <li>Influenciadores do nicho: o que eles respondem nos comentários revela as dores do público</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="pesquisa-insight">
+  <div class="eyebrow">Fase 3 · Pesquisa Estratégica</div>
+  <h2>Como chegar ao <span style="color:var(--b02);">insight central</span></h2>
+  <p style="font-size:13px;color:var(--mu2);margin-bottom:24px;line-height:1.65;">O insight é o elemento mais difícil de produzir e o mais valioso do Dossiê. Não se encontra em uma pesquisa — emerge da comparação entre o que o cliente disse e o que o mercado mostra.</p>
+
+  <div class="step">
+    <div class="step-head" onclick="tog(this)">
+      <div class="step-idx">3.3</div><div class="step-name">O método para encontrar o insight</div>
+      <div class="step-owner" style="border-color:rgba(251,191,36,.3);color:var(--b02);">Dir. Criativa</div>
+    </div>
+    <div class="step-body">
+      <p>O insight não é uma descoberta — é uma síntese. Ele emerge quando você cruza três elementos:</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0;">
+        <div style="background:var(--s3);border:1px solid var(--b1);border-top:2px solid var(--b02);padding:14px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--b02);letter-spacing:.12em;margin-bottom:6px;">O QUE O CLIENTE DIZ</div>
+          <div style="font-size:11px;color:var(--mu2);line-height:1.55;">O que o cliente disse no kickoff sobre o que os clientes mais valorizam — especialmente as coisas que ele mencionou sem ser perguntado</div>
+        </div>
+        <div style="background:var(--s3);border:1px solid var(--b1);border-top:2px solid var(--b03);padding:14px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--b03);letter-spacing:.12em;margin-bottom:6px;">O QUE O MERCADO MOSTRA</div>
+          <div style="font-size:11px;color:var(--mu2);line-height:1.55;">O que os consumidores/compradores reclamam, elogiam e perguntam nos canais onde falam livremente — sem filtro publicitário</div>
+        </div>
+        <div style="background:var(--s3);border:1px solid var(--b1);border-top:2px solid var(--b04);padding:14px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--b04);letter-spacing:.12em;margin-bottom:6px;">O QUE OS CONCORRENTES IGNORAM</div>
+          <div style="font-size:11px;color:var(--mu2);line-height:1.55;">O espaço que nenhum concorrente está comunicando — a necessidade real que ninguém está nomeando</div>
+        </div>
+      </div>
+      <p>Quando os três apontam para o mesmo lugar, você encontrou o insight.</p>
+      <div class="research-box" style="margin-top:14px;">
+        <div class="rb-label">Teste do insight</div>
+        <ul class="rb-items">
+          <li>É verdadeiro? Posso sustentar isso com evidências do kickoff ou da pesquisa?</li>
+          <li>É não-óbvio? Se qualquer pessoa do mercado já sabe isso, não é insight — é senso comum</li>
+          <li>Muda alguma coisa? Se esse insight não altera como a comunicação seria feita, não é estratégico o suficiente</li>
+          <li>É específico para esta marca? Outro concorrente poderia usar o mesmo insight? Se sim, é genérico demais</li>
+        </ul>
+      </div>
+      <div class="warn"><div class="warn-label">O erro mais comum</div><div class="warn-text">Confundir insight com dado. "70% dos compradores pesquisam online antes de comprar" é um dado. "Quem compra esse produto já tomou a decisão antes de entrar na loja — o que ele busca online é confirmação, não informação" é um insight. O insight explica o comportamento humano por trás do dado.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FASE 4 — REDAÇÃO ══ -->
+<section class="sec" id="redacao-bloco1">
+  <div class="phase-hd">
+    <div class="phase-num" style="color:var(--b04);">4</div>
+    <div class="phase-info">
+      <div class="phase-tag" style="color:var(--b04);">Fase 4 · Dias 11–16 · Redação</div>
+      <h2>Bloco 01 — Diagnóstico</h2>
+      <p>O primeiro bloco a ser redigido. Nunca escreva o Diagnóstico como uma lista de fatos — escreva como uma narrativa que mostra que você entendeu o negócio. O cliente deve se reconhecer no texto.</p>
+    </div>
+  </div>
+
+  <div class="section-map">
+    <div class="smap" style="border-top-color:var(--b01);">
+      <div class="sm-block" style="color:var(--b01);">Dossiê 1.1–1.4 · Análise do Negócio</div>
+      <div class="sm-name">O que escrever</div>
+      <div class="sm-source">Origem: kickoff (perguntas sobre história, diferenciais, dores e objetivos). Tom: factual, direto, sem adjetivos. O cliente não pode contestar o que você escreveu porque ele mesmo disse.</div>
+    </div>
+    <div class="smap" style="border-top-color:var(--b01);">
+      <div class="sm-block" style="color:var(--b01);">Dossiê 1.6 · Análise Competitiva</div>
+      <div class="sm-name">O que escrever</div>
+      <div class="sm-source">Origem: pesquisa própria de concorrentes (fase 3). Complete a tabela com os concorrentes que o cliente mencionou no kickoff + os que você identificou na pesquisa prévia.</div>
+    </div>
+    <div class="smap" style="border-top-color:var(--b01);">
+      <div class="sm-block" style="color:var(--b01);">Dossiê 1.4 · Personas</div>
+      <div class="sm-name">O que escrever</div>
+      <div class="sm-source">Origem: kickoff (perguntas sobre cliente ideal) + pesquisa de comportamento do consumidor. A persona deve ter nome fictício — isso humaniza e facilita a aplicação.</div>
+    </div>
+    <div class="smap" style="border-top-color:var(--b01);">
+      <div class="sm-block" style="color:var(--b01);">Dossiê 1.5 · Diagnóstico de Comunicação</div>
+      <div class="sm-name">O que escrever</div>
+      <div class="sm-source">Origem: pesquisa prévia + impressões do kickoff. Descreva o que você viu na comunicação atual e o que o cliente disse que o incomoda. O gap emerge da comparação entre os dois.</div>
+    </div>
+  </div>
+
+  <div class="callout"><strong>Regra de escrita do Bloco 01:</strong> o Diagnóstico não opina — ele descreve. "A comunicação atual da empresa é centrada em produto" é diagnóstico. "A comunicação atual é fraca" é opinião. Toda afirmação deve poder ser sustentada por algo que você viu ou que o cliente disse.</div>
+</section>
+
+<section class="sec" id="redacao-bloco2">
+  <div class="eyebrow">Fase 4 · Redação</div>
+  <h2>Bloco 02 — <span style="color:var(--b02);">Estratégia</span></h2>
+  <p style="font-size:13px;color:var(--mu2);margin-bottom:20px;line-height:1.65;">O bloco mais curto e o mais valioso. Quatro campos — nenhum pode ser vago. Se o problema central, a oportunidade ou o insight forem genéricos, todo o resto que vem depois será genérico.</p>
+
+  <div class="step">
+    <div class="step-head" onclick="tog(this)">
+      <div class="step-idx">4.2</div><div class="step-name">Como escrever o Problema Central de Comunicação</div>
+      <div class="step-owner" style="border-color:rgba(214,62,170,.3);color:var(--b03);">Dir. Criativa</div>
+    </div>
+    <div class="step-body">
+      <p>Começa com "Como fazer com que..." ou "Como transformar a percepção de...". Deve ser uma pergunta que só existe porque você conhece esse cliente específico — se qualquer empresa do setor poderia ter o mesmo problema, está genérico.</p>
+      <div class="research-box">
+        <div class="rb-label">Teste do problema central</div>
+        <ul class="rb-items">
+          <li>Cabe em uma frase? Se não, ainda não está claro</li>
+          <li>É um problema de percepção, não de produto ou vendas?</li>
+          <li>Se você resolver esse problema, o negócio do cliente melhora de forma mensurável?</li>
+          <li>Outro concorrente do cliente teria o mesmo problema? Se sim, precisa ser mais específico</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head" onclick="tog(this)">
+      <div class="step-idx">4.3</div><div class="step-name">Como escrever o Insight Central</div>
+      <div class="step-owner" style="border-color:rgba(251,191,36,.3);color:var(--b02);">Dir. Criativa</div>
+    </div>
+    <div class="step-body">
+      <p>O insight ocupa a caixa de destaque no Dossiê — a caixa âmbar. Isso existe por uma razão: ele deve ser percebido como o elemento mais valioso do documento. Se o cliente lê o insight e pensa "isso eu já sabia", não é insight suficiente.</p>
+      <div class="research-box">
+        <div class="rb-label">Estrutura de formulação do insight</div>
+        <ul class="rb-items">
+          <li>"[O público] não está comprando [o produto]. Está comprando [o resultado real que o produto entrega]."</li>
+          <li>"Quando [situação específica do mercado], [o público] precisa de [algo que ninguém está entregando bem]."</li>
+          <li>"[Comportamento observado] não acontece por [razão óbvia]. Acontece porque [verdade humana mais profunda]."</li>
+        </ul>
+      </div>
+      <div class="warn"><div class="warn-label">Se você não encontrou o insight ainda</div><div class="warn-text">Volte às respostas do kickoff e busque a resposta que mais te surpreendeu. Busque o momento em que o cliente disse algo e você pensou "isso é interessante — por quê?". O insight mora na surpresa, não no óbvio.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="redacao-bloco3">
+  <div class="eyebrow">Fase 4 · Redação</div>
+  <h2>Bloco 03 — <span style="color:var(--b03);">Plataforma de Marca</span></h2>
+  <p style="font-size:13px;color:var(--mu2);margin-bottom:20px;line-height:1.65;">O bloco mais longo. Cada elemento tem uma fonte específica — nenhum deve ser inventado. Se você não tem dados suficientes para preencher um campo, volte ao kickoff e complemente.</p>
+
+  <div class="section-map">
+    <div class="smap" style="border-top-color:var(--b03);">
+      <div class="sm-block" style="color:var(--b03);">Propósito</div>
+      <div class="sm-name">De onde vem</div>
+      <div class="sm-source">Kickoff: "o que você quer ter contribuído para o mundo", "por que isso importa além do lucro". Frequentemente está implícito em respostas sobre motivação pessoal do fundador.</div>
+    </div>
+    <div class="smap" style="border-top-color:var(--b03);">
+      <div class="sm-block" style="color:var(--b03);">Posicionamento</div>
+      <div class="sm-name">De onde vem</div>
+      <div class="sm-source">Síntese do Bloco 02: o público-alvo vem da persona, a categoria vem do mercado, o diferencial vem da oportunidade estratégica, e a razão para acreditar vem dos pontos fortes reais.</div>
+    </div>
+    <div class="smap" style="border-top-color:var(--b03);">
+      <div class="sm-block" style="color:var(--b03);">Arquétipo</div>
+      <div class="sm-name">Como escolher</div>
+      <div class="sm-source">Compare a personalidade descrita pelo cliente com os 12 arquétipos de Pearson e Mark. O arquétipo certo deve encaixar naturalmente — se você precisar forçar a justificativa, é o arquétipo errado.</div>
+    </div>
+    <div class="smap" style="border-top-color:var(--b03);">
+      <div class="sm-block" style="color:var(--b03);">Essência</div>
+      <div class="sm-name">Como formular</div>
+      <div class="sm-source">A essência é o último campo a ser escrito, não o primeiro. Só depois de ter definido propósito, posicionamento, personalidade e arquétipo você tem o material para sintetizar em uma palavra ou frase curta.</div>
+    </div>
+  </div>
+
+  <div class="callout"><strong>Ordem de redação do Bloco 03:</strong> Propósito → Visão → Missão → Valores → Posicionamento → Promessa → Razões para acreditar → Personalidade → Arquétipo → Essência. A essência é sempre a última — ela sintetiza tudo que veio antes, não o contrário.</div>
+</section>
+
+<section class="sec" id="redacao-bloco4">
+  <div class="eyebrow">Fase 4 · Redação</div>
+  <h2>Bloco 04 — <span style="color:var(--b04);">Território de Comunicação</span></h2>
+  <p style="font-size:13px;color:var(--mu2);margin-bottom:20px;line-height:1.65;">O bloco mais operacional — o que o squad de criação vai consultar antes de produzir qualquer peça. Deve ser específico o suficiente para eliminar dúvidas, mas aberto o suficiente para não engessar a criação.</p>
+
+  <div class="step">
+    <div class="step-head" onclick="tog(this)">
+      <div class="step-idx">4.4</div><div class="step-name">Como escrever o Tom de Voz com exemplos úteis</div>
+      <div class="step-owner" style="border-color:rgba(123,63,228,.3);color:var(--b04);">Dir. Criativa</div>
+    </div>
+    <div class="step-body">
+      <p>A definição de tom de voz não funciona sem exemplos. Dizer "o tom é próximo e direto" não ajuda o designer a escrever uma legenda. Os exemplos certo/errado são o que torna o tom de voz aplicável.</p>
+      <div class="research-box">
+        <div class="rb-label">Como escrever os exemplos certo/errado</div>
+        <ul class="rb-items">
+          <li>Use a mesma mensagem — a diferença deve estar apenas no tom, não no conteúdo</li>
+          <li>O exemplo "errado" deve ser realista — algo que outra agência poderia ter escrito para esse cliente</li>
+          <li>O exemplo "certo" deve parecer inequivocamente da marca — a ponto de ser difícil imaginar vindo de um concorrente</li>
+          <li>Faça pelo menos 2 pares de exemplos — um para post de produto, outro para post institucional</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head" onclick="tog(this)">
+      <div class="step-idx">4.5</div><div class="step-name">Palavras prioritárias vs palavras a evitar</div>
+      <div class="step-owner" style="border-color:rgba(123,63,228,.3);color:var(--b04);">Dir. Criativa</div>
+    </div>
+    <div class="step-body">
+      <p>A lista de palavras não é um exercício de estilo — é um critério de avaliação. Quando uma peça usa palavras da lista "a evitar", é um sinal de que saiu do território da marca.</p>
+      <ul class="rb-items">
+        <li>Prioritárias: termos que carregam o posicionamento. Devem aparecer com frequência mas sem forçar</li>
+        <li>Secundárias: relevantes para a categoria — aparecem como contexto, não como protagonistas</li>
+        <li>A evitar: genéricas, saturadas no setor ou que contradizem o posicionamento. "Excelência", "solução", "inovação", "transformação" quase sempre estão aqui</li>
+      </ul>
+      <div class="warn"><div class="warn-label">Atenção especial</div><div class="warn-text">As palavras a evitar não são proibidas por serem ruins — são evitadas porque qualquer concorrente poderia usá-las. O critério é: "Se um concorrente pudesse dizer exatamente isso, não devemos dizer." A especificidade é o que constrói diferenciação.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ ENTREGA ══ -->
+<section class="sec" id="entrega">
+  <div class="phase-hd">
+    <div class="phase-num" style="color:var(--green);">5</div>
+    <div class="phase-info">
+      <div class="phase-tag" style="color:var(--green);">Entrega · Dias 17–20</div>
+      <h2>Revisão e apresentação</h2>
+      <p>O Dossiê não vai ao cliente por e-mail antes da reunião. Ele é apresentado — e apresentar é diferente de enviar. A apresentação é parte da entrega de valor.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head" onclick="tog(this)">
+      <div class="step-idx">5.1</div><div class="step-name">Checklist de revisão antes de apresentar</div>
+      <div class="step-owner" style="border-color:rgba(52,211,153,.3);color:var(--green);">Dir. Geral</div>
+    </div>
+    <div class="step-body">
+      <ul class="rb-items">
+        <li>O Diagnóstico é factual — toda afirmação tem origem identificável no kickoff ou na pesquisa</li>
+        <li>O Problema Central cabe em uma frase e é específico para este cliente</li>
+        <li>O Insight é não-óbvio e muda algo na forma como a comunicação deve ser construída</li>
+        <li>O Posicionamento usa a fórmula formal e não tem adjetivos vagos</li>
+        <li>Os Valores são específicos — nenhum deles poderia ser de qualquer empresa</li>
+        <li>O Arquétipo tem justificativa — não foi escolhido por gosto, mas por lógica</li>
+        <li>A Essência sintetiza — ela conecta propósito, posicionamento e personalidade</li>
+        <li>Os exemplos de tom de voz são concretos e utilizáveis pelo squad de criação</li>
+        <li>As palavras a evitar são reais — não genéricas demais, não restritivas demais</li>
+        <li>O cliente vai se reconhecer no documento — não vai parecer que foi feito para outra empresa</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head" onclick="tog(this)">
+      <div class="step-idx">5.2</div><div class="step-name">Como conduzir a apresentação</div>
+      <div class="step-owner" style="border-color:rgba(52,211,153,.3);color:var(--green);">Dir. Geral</div>
+    </div>
+    <div class="step-body">
+      <p>A apresentação do Dossiê segue a mesma lógica da redação: diagnóstico → estratégia → plataforma → território. Nunca comece pelo posicionamento — o cliente precisa primeiro concordar com o diagnóstico para aceitar a estratégia.</p>
+      <div class="research-box">
+        <div class="rb-label">Roteiro de apresentação (60–90 minutos)</div>
+        <ul class="rb-items">
+          <li><strong>10min — Diagnóstico:</strong> "O que aprendemos sobre o seu negócio, seu mercado e como você é percebido hoje"</li>
+          <li><strong>15min — Estratégia:</strong> "O problema que precisamos resolver, o espaço que está disponível e o insight que muda tudo"</li>
+          <li><strong>20min — Plataforma:</strong> "Quem é a marca: propósito, posicionamento, promessa, personalidade, arquétipo e essência" — cada elemento apresentado com justificativa</li>
+          <li><strong>15min — Território:</strong> "Como a marca fala e aparece — com exemplos concretos"</li>
+          <li><strong>15min — Roadmap:</strong> apresentado como consequência direta do Dossiê — "agora que sabemos quem é a marca, aqui está o que vamos fazer nos próximos X meses"</li>
+          <li><strong>Restante — Aprovação:</strong> discussão, ajustes e assinatura de aprovação</li>
+        </ul>
+      </div>
+      <div class="callout"><strong>O momento do insight:</strong> quando você apresentar o insight central, pare e aguarde a reação do cliente antes de continuar. Se ele disser "é exatamente isso" — você acertou. Se ele disser "hm, não sei..." — peça para ele explicar. Frequentemente o insight está certo mas a formulação precisa de ajuste.</div>
+    </div>
+  </div>
+
+  <div class="output" style="margin-top:20px;"><div class="out-label">Output final da Etapa 01</div><div class="out-text">Dossiê de Marca aprovado e assinado pelo cliente. Roadmap aprovado na mesma reunião. Os dois documentos juntos são o único insumo necessário para iniciar o Ciclo Recorrente — nenhuma campanha, conceito ou produção começa sem eles.</div></div>
+</section>
+
+</main>
+
+<script>
+function tog(h){const b=h.nextElementSibling;b.classList.toggle('open');}
+const secs=document.querySelectorAll('section[id]');
+const links=document.querySelectorAll('.sb-a');
+const io=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){links.forEach(l=>l.classList.remove('on'));const a=document.querySelector('.sb-a[href="#'+x.target.id+'"]');if(a)a.classList.add('on');}});},{threshold:.3});
+secs.forEach(s=>io.observe(s));
+</script>
+</body>
+</html>

@@ -27,6 +27,7 @@ use App\Http\Controllers\SprintController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\TaskApprovalController;
 use App\Http\Controllers\TaskAttachmentController;
+use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TicketController;
@@ -204,9 +205,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::delete('/tarefas/{task}/anexos/{attachment}', [TaskAttachmentController::class, 'destroy'])
         ->name('task-attachments.destroy');
 
-    // ── IA on-demand na tarefa ──
-    Route::post('/tarefas/{task}/ia', [TaskController::class, 'runAi'])
-        ->name('tasks.run-ai');
+    // ── Chat IA na tarefa ──
+    Route::post('/tarefas/{task}/chat', [AiChatController::class, 'storeForTask'])
+        ->name('tasks.chat');
 
     // ── Comentários da tarefa ──
     Route::post('/tarefas/{task}/comentarios', [TaskCommentController::class, 'store'])

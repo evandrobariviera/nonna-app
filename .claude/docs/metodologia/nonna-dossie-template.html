@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dossiê de Marca</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090e;--s1:#0e0e18;--s2:#141422;--s3:#1b1b2c;
+  --b1:rgba(255,255,255,.04);--b2:rgba(255,255,255,.08);--b3:rgba(255,255,255,.14);
+  --ink:#ececf4;--mu:rgba(236,236,244,.3);--mu2:rgba(236,236,244,.58);
+  /* Block accent colors */
+  --b01:#60a5fa; /* Diagnóstico — azul analítico */
+  --b02:#fbbf24; /* Estratégia — âmbar, insight */
+  --b03:#d63eaa; /* Plataforma — magenta, marca */
+  --b04:#7b3fe4; /* Território — roxo, criativo */
+  --nonna-grad:linear-gradient(135deg,#ff5c4d,#d63eaa,#7b3fe4);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.7;}
+
+/* ── EDIT BAR ── */
+.editbar{
+  position:fixed;top:0;left:0;right:0;z-index:500;
+  background:rgba(9,9,14,.95);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--b2);
+  padding:0 32px;height:44px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.eb-l{display:flex;align-items:center;gap:10px;}
+.eb-logo img{height:15px;opacity:.6;}
+.eb-logo-fb{font-size:11px;font-weight:800;background:var(--nonna-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.eb-sep{width:1px;height:14px;background:var(--b2);}
+.eb-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(236,236,244,.45);letter-spacing:.1em;text-transform:uppercase;}
+.eb-r{display:flex;gap:6px;}
+.eb-btn{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border:1px solid var(--b2);background:none;color:var(--mu2);cursor:pointer;transition:all .2s;}
+.eb-btn:hover{color:var(--ink);border-color:var(--b3);}
+.eb-btn.save{background:var(--nonna-grad);border:none;color:#fff;}
+
+/* ── NAV ── */
+aside{
+  position:fixed;top:44px;left:0;bottom:0;width:220px;
+  background:var(--s1);border-right:1px solid var(--b1);
+  overflow-y:auto;scrollbar-width:none;z-index:200;
+  display:flex;flex-direction:column;
+}
+aside::-webkit-scrollbar{display:none;}
+.sb-brand{padding:20px 18px 14px;border-bottom:1px solid var(--b1);}
+.sb-brand-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.14em;text-transform:uppercase;margin-bottom:5px;}
+.sb-brand-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--ink);line-height:1.2;}
+.sb-block{padding:14px 18px 4px;font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;}
+.sb-link{display:flex;align-items:center;gap:8px;padding:7px 18px;text-decoration:none;border-left:2px solid transparent;transition:all .15s;cursor:pointer;}
+.sb-link:hover{background:var(--s2);}
+.sb-link.on{background:var(--s2);}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:var(--b2);flex-shrink:0;transition:background .2s;}
+.sb-link.on .sb-dot{background:currentColor;}
+.sb-text{font-size:11px;color:var(--mu2);}
+.sb-link.on .sb-text{color:var(--ink);}
+.sb-footer{margin-top:auto;padding:14px 18px;border-top:1px solid var(--b1);}
+.sb-footer p{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);line-height:1.6;}
+
+/* ── MAIN ── */
+main{margin-left:220px;padding-top:44px;}
+
+/* ── CAPA ── */
+.capa{
+  min-height:100vh;padding:60px 64px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  border-bottom:1px solid var(--b1);position:relative;overflow:hidden;
+}
+.capa-glow{position:absolute;border-radius:50%;pointer-events:none;}
+
+/* ── SECTION ── */
+.sec{padding:56px 64px 64px;border-bottom:1px solid var(--b1);}
+.sec:last-child{border-bottom:none;}
+
+/* ── BLOCK HEADER ── */
+.block-header{
+  display:flex;align-items:flex-start;gap:20px;
+  margin-bottom:40px;padding-bottom:24px;
+  border-bottom:1px solid var(--b2);
+}
+.block-number{
+  font-family:'Syne',sans-serif;font-size:clamp(48px,6vw,80px);font-weight:800;
+  line-height:1;opacity:.08;flex-shrink:0;
+}
+.block-meta{}
+.block-eyebrow{
+  font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;
+  letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px;
+}
+.block-title{
+  font-family:'Syne',sans-serif;font-size:clamp(24px,3vw,38px);
+  font-weight:800;letter-spacing:-.02em;line-height:1.06;margin-bottom:8px;
+}
+.block-desc{font-size:13px;color:var(--mu2);line-height:1.7;max-width:560px;}
+
+/* ── FIELD ── */
+.field{margin-bottom:28px;}
+.field:last-child{margin-bottom:0;}
+.field-label{
+  display:flex;align-items:baseline;gap:10px;
+  font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;
+  letter-spacing:.16em;text-transform:uppercase;
+  margin-bottom:8px;
+}
+.field-tag{
+  font-family:'IBM Plex Mono',monospace;font-size:7px;font-weight:500;
+  letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;
+  border:1px solid var(--b2);color:var(--mu);
+}
+.field-guide{
+  font-size:11px;color:var(--mu);font-style:italic;line-height:1.55;
+  margin-bottom:10px;padding:10px 14px;
+  background:var(--s3);border-left:2px solid var(--b2);
+  font-family:'DM Sans',sans-serif;
+}
+.field-input{
+  background:var(--s2);border:1px solid var(--b2);
+  padding:16px 18px;
+  font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);
+  line-height:1.7;min-height:60px;
+  transition:border-color .2s;
+}
+[contenteditable]{outline:none;cursor:text;}
+[contenteditable]:focus .field-input,
+.field-input:focus-within{border-color:var(--b3);}
+.field-input[contenteditable]:hover{border-color:var(--b3);}
+.field-input[contenteditable]:focus{border-color:currentColor;}
+
+/* ── FIELD GRID ── */
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px;}
+.field-grid .field{margin-bottom:0;}
+
+/* ── POSITIONING BOX ── */
+.pos-box{
+  background:var(--s2);border:1px solid var(--b2);
+  padding:20px 22px;margin-bottom:10px;
+}
+.pos-template{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mu2);
+  line-height:1.8;margin-bottom:14px;
+  border-bottom:1px solid var(--b1);padding-bottom:14px;
+}
+.pos-template span{color:var(--ink);font-weight:500;}
+
+/* ── PERSONA CARD ── */
+.persona-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.persona-card{background:var(--s2);border:1px solid var(--b2);padding:16px;}
+.pc-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px;}
+.pc-field{margin-bottom:10px;}
+.pc-field:last-child{margin-bottom:0;}
+.pcf-label{font-size:10px;color:var(--mu);font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;margin-bottom:4px;}
+.pcf-val{font-size:12px;color:var(--ink);}
+
+/* ── COMPETITOR TABLE ── */
+table.comp{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px;}
+table.comp th{
+  text-align:left;padding:9px 14px;
+  background:var(--s3);font-family:'IBM Plex Mono',monospace;
+  font-size:8px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--mu);border-bottom:1px solid var(--b2);
+}
+table.comp td{
+  padding:12px 14px;border-bottom:1px solid var(--b1);
+  color:var(--mu2);vertical-align:top;line-height:1.5;
+}
+table.comp tr:last-child td{border-bottom:none;}
+table.comp td:first-child{color:var(--ink);font-weight:600;}
+table.comp td[contenteditable]:focus{color:var(--ink);}
+
+/* ── VALUES LIST ── */
+.values-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.value-item{
+  background:var(--s2);border:1px solid var(--b2);
+  padding:12px 16px;display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:start;
+}
+.vi-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;}
+.vi-desc{font-size:12px;color:var(--mu2);line-height:1.55;}
+
+/* ── VOICE EXAMPLES ── */
+.voice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.voice-card{background:var(--s2);border:1px solid var(--b2);padding:16px;}
+.vc-label{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px;}
+.vc-label.yes{color:#34d399;}
+.vc-label.no{color:#f87171;}
+.vc-example{font-size:12px;line-height:1.6;}
+.vc-card.yes{border-color:rgba(52,211,153,.15);}
+.vc-card.no{border-color:rgba(248,113,113,.15);}
+
+/* ── LANGUAGE PILLARS ── */
+.lang-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;}
+.lang-item{background:var(--s2);border:1px solid var(--b2);padding:14px 16px;}
+.li-category{font-family:'IBM Plex Mono',monospace;font-size:7px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--mu);margin-bottom:8px;}
+.li-words{font-size:11px;color:var(--mu2);line-height:1.7;}
+
+/* ── INSIGHT HIGHLIGHT ── */
+.insight-box{
+  background:var(--s2);border:1px solid rgba(251,191,36,.2);
+  border-left:4px solid var(--b02);
+  padding:24px 22px;margin-bottom:20px;position:relative;overflow:hidden;
+}
+.insight-box::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:200px;height:200px;
+  background:radial-gradient(circle,rgba(251,191,36,.06) 0%,transparent 65%);
+  pointer-events:none;
+}
+.ib-label{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--b02);margin-bottom:10px;}
+.ib-text{font-family:'Syne',sans-serif;font-size:clamp(16px,2vw,22px);font-weight:700;line-height:1.35;color:var(--ink);}
+
+/* ── ESSENCE HIGHLIGHT ── */
+.essence-box{
+  background:var(--s2);
+  border:1px solid rgba(214,62,170,.2);
+  border-left:4px solid var(--b03);
+  padding:24px 22px;margin-bottom:20px;position:relative;overflow:hidden;
+}
+.essence-box::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:200px;height:200px;
+  background:radial-gradient(circle,rgba(214,62,170,.06) 0%,transparent 65%);
+  pointer-events:none;
+}
+.eb-label{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--b03);margin-bottom:10px;}
+.eb-text{font-family:'Syne',sans-serif;font-size:clamp(24px,3vw,40px);font-weight:800;line-height:1.1;color:var(--ink);}
+.eb-sub{font-size:13px;color:var(--mu2);margin-top:8px;line-height:1.6;}
+
+/* ── ARCHETYPE ── */
+.arch-box{
+  background:var(--s2);border:1px solid var(--b2);
+  padding:20px 22px;display:grid;grid-template-columns:auto 1fr;gap:20px;
+  align-items:start;margin-bottom:10px;
+}
+.arch-icon{font-size:32px;line-height:1;}
+.arch-info{}
+.arch-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:4px;}
+.arch-desc{font-size:12px;color:var(--mu2);line-height:1.6;}
+
+/* ── VISUAL TERRITORY ── */
+.vt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.vt-item{background:var(--s2);border:1px solid var(--b2);padding:16px;}
+.vt-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;}
+.vt-content{font-size:12px;color:var(--mu2);line-height:1.6;}
+
+/* ── SEPARATOR ── */
+.sep{height:1px;background:var(--b2);margin:28px 0;}
+
+/* ── PRINT ── */
+@media print{
+  .editbar,aside{display:none!important;}
+  main{margin-left:0!important;padding-top:0!important;}
+  .sec,.capa{padding:40px!important;page-break-inside:avoid;}
+  .capa{min-height:100vh!important;page-break-after:always;}
+  body{background:#fff!important;color:#111!important;}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+}
+
+@media(max-width:860px){
+  aside{display:none;}main{margin-left:0;}
+  .field-grid,.persona-grid,.vt-grid,.voice-grid,.lang-grid,.arch-box{grid-template-columns:1fr;}
+  .sec,.capa{padding:36px 20px 52px;}
+  table.comp{font-size:11px;}
+}
+</style>
+</head>
+<body>
+
+<!-- EDIT BAR -->
+<div class="editbar">
+  <div class="eb-l">
+    <div class="eb-logo">
+      <img src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png" alt="Nonna" onerror="this.style.display='none';this.nextSibling.style.display='block'">
+      <span class="eb-logo-fb" style="display:none">nonna</span>
+    </div>
+    <div class="eb-sep"></div>
+    <div class="eb-tag">Dossiê de Marca · Template</div>
+  </div>
+  <div class="eb-r">
+    <button class="eb-btn" onclick="window.print()">Exportar PDF</button>
+    <button class="eb-btn save" onclick="salvar()">Salvar</button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside>
+  <div class="sb-brand">
+    <div class="sb-brand-label">Cliente</div>
+    <div class="sb-brand-name" id="sb_cliente">Nome do Cliente</div>
+  </div>
+
+  <div class="sb-block" style="color:var(--b01);">01 · Diagnóstico</div>
+  <a class="sb-link on" href="#d01" style="border-left-color:var(--b01);color:var(--b01);"><div class="sb-dot"></div><span class="sb-text">Análise do Negócio</span></a>
+  <a class="sb-link" href="#d02" style="color:var(--b01);"><div class="sb-dot"></div><span class="sb-text">Análise de Mercado</span></a>
+  <a class="sb-link" href="#d03" style="color:var(--b01);"><div class="sb-dot"></div><span class="sb-text">Análise Competitiva</span></a>
+  <a class="sb-link" href="#d04" style="color:var(--b01);"><div class="sb-dot"></div><span class="sb-text">Personas</span></a>
+  <a class="sb-link" href="#d05" style="color:var(--b01);"><div class="sb-dot"></div><span class="sb-text">Diagnóstico de Comunicação</span></a>
+
+  <div class="sb-block" style="color:var(--b02);">02 · Estratégia</div>
+  <a class="sb-link" href="#e01" style="color:var(--b02);"><div class="sb-dot"></div><span class="sb-text">Problema Central</span></a>
+  <a class="sb-link" href="#e02" style="color:var(--b02);"><div class="sb-dot"></div><span class="sb-text">Oportunidade</span></a>
+  <a class="sb-link" href="#e03" style="color:var(--b02);"><div class="sb-dot"></div><span class="sb-text">Insight Central</span></a>
+  <a class="sb-link" href="#e04" style="color:var(--b02);"><div class="sb-dot"></div><span class="sb-text">Objetivos</span></a>
+
+  <div class="sb-block" style="color:var(--b03);">03 · Plataforma de Marca</div>
+  <a class="sb-link" href="#m01" style="color:var(--b03);"><div class="sb-dot"></div><span class="sb-text">Propósito, Visão e Missão</span></a>
+  <a class="sb-link" href="#m02" style="color:var(--b03);"><div class="sb-dot"></div><span class="sb-text">Valores</span></a>
+  <a class="sb-link" href="#m03" style="color:var(--b03);"><div class="sb-dot"></div><span class="sb-text">Posicionamento</span></a>
+  <a class="sb-link" href="#m04" style="color:var(--b03);"><div class="sb-dot"></div><span class="sb-text">Personalidade e Arquétipo</span></a>
+  <a class="sb-link" href="#m05" style="color:var(--b03);"><div class="sb-dot"></div><span class="sb-text">Essência da Marca</span></a>
+
+  <div class="sb-block" style="color:var(--b04);">04 · Território</div>
+  <a class="sb-link" href="#t01" style="color:var(--b04);"><div class="sb-dot"></div><span class="sb-text">Tom de Voz</span></a>
+  <a class="sb-link" href="#t02" style="color:var(--b04);"><div class="sb-dot"></div><span class="sb-text">Território Visual</span></a>
+  <a class="sb-link" href="#t03" style="color:var(--b04);"><div class="sb-dot"></div><span class="sb-text">Linha de Linguagem</span></a>
+  <a class="sb-link" href="#t04" style="color:var(--b04);"><div class="sb-dot"></div><span class="sb-text">Mandatórios</span></a>
+
+  <div class="sb-footer">
+    <p>Clique em qualquer campo para editar. Todos os dados são salvos no navegador.</p>
+  </div>
+</aside>
+
+<main>
+
+<!-- ══ CAPA ══ -->
+<div class="capa" id="capa">
+  <div class="capa-glow" style="width:500px;height:500px;top:-150px;right:-100px;background:radial-gradient(circle,rgba(123,63,228,.1) 0%,transparent 65%);"></div>
+  <div class="capa-glow" style="width:400px;height:400px;bottom:-100px;left:-80px;background:radial-gradient(circle,rgba(255,92,77,.07) 0%,transparent 65%);"></div>
+
+  <div style="position:relative;z-index:1;">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:.2em;text-transform:uppercase;margin-bottom:40px;">Nonna Publicidade · Dossiê de Marca</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mu);margin-bottom:14px;letter-spacing:.06em;">Desenvolvido para</div>
+    <div style="font-family:'Syne',sans-serif;font-size:clamp(44px,7vw,88px);font-weight:800;line-height:.95;letter-spacing:-.03em;background:var(--nonna-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:16px;" contenteditable="true" id="f_cliente">Nome do Cliente</div>
+    <div style="font-size:16px;color:var(--mu2);max-width:480px;line-height:1.6;" contenteditable="true" id="f_segmento">Segmento · Setor de atuação</div>
+  </div>
+
+  <div style="position:relative;z-index:1;">
+    <div style="height:1px;background:var(--b2);margin-bottom:22px;"></div>
+    <div style="display:grid;grid-template-columns:repeat(4,auto);gap:32px;align-items:start;justify-content:start;">
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;margin-bottom:4px;">ESTRATEGISTA</div><div style="font-size:12px;font-weight:500;" contenteditable="true" id="f_autor">Evandro + Vitor</div></div>
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;margin-bottom:4px;">DATA</div><div style="font-size:12px;font-weight:500;" contenteditable="true" id="f_data">Mês · Ano</div></div>
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;margin-bottom:4px;">VERSÃO</div><div style="font-size:12px;font-weight:500;" contenteditable="true" id="f_versao">1.0</div></div>
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;margin-bottom:4px;">STATUS</div><div style="font-size:12px;font-weight:500;" contenteditable="true" id="f_status">Aprovado</div></div>
+    </div>
+    <div style="height:3px;background:var(--nonna-grad);margin-top:22px;margin-left:-64px;margin-right:-64px;"></div>
+  </div>
+</div>
+
+<!-- ══ BLOCO 01 — DIAGNÓSTICO ══ -->
+<div class="sec" id="d01">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b01);">01</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b01);">Bloco 01 · Diagnóstico</div>
+      <div class="block-title">Análise do Negócio</div>
+      <div class="block-desc">O ponto de partida. Entender quem é a empresa, como opera, o que construiu e onde quer chegar antes de qualquer diagnóstico de comunicação.</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b01);">1.1 · Visão geral do negócio <span class="field-tag">3–5 parágrafos</span></div>
+    <div class="field-guide">O que a empresa faz, há quanto tempo existe, como opera, em quais mercados atua. Evite adjetivos — descreva fatos. Inclua modelo de receita, escala atual e estrutura organizacional relevante para a comunicação.</div>
+    <div class="field-input" contenteditable="true">Descreva o negócio aqui: o que faz, como faz, há quanto tempo, em qual escala e em quais mercados. Seja factual e objetivo — esse parágrafo deve ser compreendido por alguém de fora do setor.</div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b01);">1.2 · Histórico e marcos relevantes <span class="field-tag">linha do tempo</span></div>
+    <div class="field-guide">Momentos que definem quem a empresa é hoje: fundação, expansão, produtos lançados, crises superadas, reconhecimentos. Fatos que têm potencial narrativo para a comunicação.</div>
+    <div class="field-input" contenteditable="true">Liste os marcos da empresa em ordem cronológica: Ano — evento. Foque nos que têm relevância para a percepção de mercado, não apenas os administrativos.</div>
+  </div>
+
+  <div class="field-grid">
+    <div class="field">
+      <div class="field-label" style="color:var(--b01);">1.3 · Pontos fortes reais</div>
+      <div class="field-guide">O que a empresa genuinamente faz melhor que os concorrentes. Comprovado por dados, histórico ou relatos de clientes — não por autodeclaração.</div>
+      <div class="field-input" contenteditable="true">Liste os diferenciais reais da empresa — o que ela genuinamente faz melhor e que pode ser comprovado.</div>
+    </div>
+    <div class="field">
+      <div class="field-label" style="color:var(--b01);">1.4 · Pontos de atenção</div>
+      <div class="field-guide">O que limita o crescimento, cria inconsistência ou gera percepção negativa no mercado. Honestidade aqui é fundamental — o diagnóstico só funciona se enxergar os problemas reais.</div>
+      <div class="field-input" contenteditable="true">Liste os pontos que limitam o crescimento ou criam inconsistência de percepção — sem filtro.</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b01);">1.5 · Objetivos estratégicos do cliente <span class="field-tag">próximos 12–24 meses</span></div>
+    <div class="field-guide">O que o cliente quer construir ou alcançar no horizonte de trabalho com a Nonna. Esses objetivos são o critério de sucesso de tudo que for planejado.</div>
+    <div class="field-input" contenteditable="true">O que a empresa quer alcançar nos próximos 12 a 24 meses — em termos de mercado, receita, percepção ou expansão. Baseado no que o cliente declarou no kickoff.</div>
+  </div>
+</div>
+
+<div class="sec" id="d02">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b01);">01</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b01);">Bloco 01 · Diagnóstico</div>
+      <div class="block-title">Análise de Mercado</div>
+      <div class="block-desc">O contexto em que a empresa opera. Tendências, tamanho do mercado, dinâmicas de compra e fatores que moldam a percepção do consumidor no setor.</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b01);">2.1 · Contexto e tendências do setor</div>
+    <div class="field-guide">O que está acontecendo no mercado que é relevante para a estratégia da marca. Crescimento, mudanças de comportamento, tecnologias emergentes, fatores regulatórios ou econômicos.</div>
+    <div class="field-input" contenteditable="true">Descreva o contexto atual do setor: o que está crescendo, o que está mudando, quais tendências impactam diretamente o negócio e a comunicação do cliente.</div>
+  </div>
+
+  <div class="field-grid">
+    <div class="field">
+      <div class="field-label" style="color:var(--b01);">2.2 · Como o mercado compra</div>
+      <div class="field-guide">O processo de decisão de compra no setor: quem decide, quais critérios usa, que fontes consulta, qual o ciclo de compra. Diferente para B2B e B2C.</div>
+      <div class="field-input" contenteditable="true">Descreva o processo de decisão de compra: quem decide, com base em quê, em quanto tempo e através de quais canais.</div>
+    </div>
+    <div class="field">
+      <div class="field-label" style="color:var(--b01);">2.3 · O que gera confiança neste mercado</div>
+      <div class="field-guide">Os sinais que o mercado interpreta como credibilidade e segurança. Cada setor tem os seus — no agro é presença em campo, no B2B industrial é tempo de relacionamento, etc.</div>
+      <div class="field-input" contenteditable="true">O que o mercado-alvo interpreta como sinal de confiança e credibilidade — os critérios não declarados que influenciam a decisão de compra.</div>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="d03">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b01);">01</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b01);">Bloco 01 · Diagnóstico</div>
+      <div class="block-title">Análise Competitiva</div>
+      <div class="block-desc">O que os concorrentes comunicam, como comunicam e — mais importante — o que não estão comunicando. O espaço disponível no mercado nasce aqui.</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b01);">3.1 · Mapa competitivo</div>
+    <div class="field-guide">Analise de 3 a 5 concorrentes diretos. Para cada um: o que comunicam, como se posicionam e qual é o território que deixam vazio. Seja específico — não generalize.</div>
+  </div>
+  <table class="comp">
+    <thead><tr><th>Concorrente</th><th>O que comunica</th><th>Como se posiciona</th><th>O que não ocupa</th></tr></thead>
+    <tbody>
+      <tr><td contenteditable="true">Concorrente A</td><td contenteditable="true">O que comunicam: produto, tecnologia, atributos técnicos...</td><td contenteditable="true">Como se posicionam no mercado: liderança, inovação, preço...</td><td contenteditable="true">Território deixado vazio: parceria, continuidade, experiência...</td></tr>
+      <tr><td contenteditable="true">Concorrente B</td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+      <tr><td contenteditable="true">Concorrente C</td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+      <tr><td contenteditable="true">Concorrente D</td><td contenteditable="true"></td><td contenteditable="true"></td><td contenteditable="true"></td></tr>
+    </tbody>
+  </table>
+
+  <div class="field" style="margin-top:20px;">
+    <div class="field-label" style="color:var(--b01);">3.2 · Espaço disponível no mercado <span class="field-tag">conclusão da análise</span></div>
+    <div class="field-guide">O território de comunicação que os concorrentes não estão ocupando. Esta é a oportunidade estratégica — o espaço onde a marca pode se posicionar com autenticidade e diferenciação real.</div>
+    <div class="field-input" contenteditable="true">Com base na análise competitiva, qual é o território de comunicação disponível? O que nenhum concorrente está comunicando que esta marca poderia ocupar com credibilidade?</div>
+  </div>
+</div>
+
+<div class="sec" id="d04">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b01);">01</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b01);">Bloco 01 · Diagnóstico</div>
+      <div class="block-title">Personas</div>
+      <div class="block-desc">O cliente ideal da marca. A persona molda o tom de voz, os canais, os formatos e todos os critérios criativos. Focar numa persona não exclui os demais públicos — define o centro do alvo.</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b01);">Persona Principal</div>
+    <div class="field-guide">A idealização do cliente ideal — a pessoa que, com certeza, tem interesse pelo produto ou serviço. Quanto mais específica, mais útil. Generalizações não funcionam.</div>
+  </div>
+
+  <div class="persona-grid">
+    <div class="persona-card">
+      <div class="pc-label">Perfil</div>
+      <div class="pc-field"><div class="pcf-label">Nome fictício</div><div class="pcf-val" contenteditable="true">Ex: Carlos</div></div>
+      <div class="pc-field"><div class="pcf-label">Idade e gênero</div><div class="pcf-val" contenteditable="true">Ex: 42 anos, masculino</div></div>
+      <div class="pc-field"><div class="pcf-label">Cargo e setor</div><div class="pcf-val" contenteditable="true">Ex: Proprietário rural, 400 hectares, MT</div></div>
+      <div class="pc-field"><div class="pcf-label">Renda e contexto</div><div class="pcf-val" contenteditable="true">Ex: Faturamento de R$ 2M/ano, dois filhos em escola particular</div></div>
+      <div class="pc-field"><div class="pcf-label">Como se informa</div><div class="pcf-val" contenteditable="true">Ex: YouTube agrícola, WhatsApp de grupo, revistas do setor, feiras</div></div>
+    </div>
+    <div class="persona-card">
+      <div class="pc-label">Comportamento e motivações</div>
+      <div class="pc-field"><div class="pcf-label">O que valida uma decisão de compra</div><div class="pcf-val" contenteditable="true">Ex: Indicação de conhecido, ver o produto em campo, assistência técnica próxima</div></div>
+      <div class="pc-field"><div class="pcf-label">Principais dores</div><div class="pcf-val" contenteditable="true">Ex: Medo de parar a operação por falta de peça, insegurança com marca nova</div></div>
+      <div class="pc-field"><div class="pcf-label">O que o motiva a comprar</div><div class="pcf-val" contenteditable="true">Ex: Sentimento de progresso, modernização da propriedade, status entre os pares</div></div>
+      <div class="pc-field"><div class="pcf-label">O que ele nunca diria</div><div class="pcf-val" contenteditable="true">Ex: "Vou comprar o mais barato" — para ele, qualidade e suporte valem mais que preço</div></div>
+    </div>
+  </div>
+
+  <div class="field" style="margin-top:14px;">
+    <div class="field-label" style="color:var(--b01);">Insight sobre a persona <span class="field-tag">obrigatório</span></div>
+    <div class="field-guide">A verdade sobre essa pessoa que muda a forma como a comunicação deve ser construída. Uma frase que resume o que você aprendeu sobre ela que a maioria dos concorrentes não percebe.</div>
+    <div class="field-input" contenteditable="true">Ex: "Carlos não compra um trator. Ele compra a prova de que tomou a decisão certa. Para ele, a marca é tão importante quanto o produto — porque ela será o que ele vai mostrar para os vizinhos."</div>
+  </div>
+</div>
+
+<div class="sec" id="d05">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b01);">01</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b01);">Bloco 01 · Diagnóstico</div>
+      <div class="block-title">Diagnóstico de Comunicação Atual</div>
+      <div class="block-desc">Como a marca se comunica hoje versus como ela deveria ser percebida. O gap entre o que existe e o que é necessário é o ponto de partida da estratégia.</div>
+    </div>
+  </div>
+
+  <div class="field-grid">
+    <div class="field">
+      <div class="field-label" style="color:var(--b01);">5.1 · Como a marca se comunica hoje</div>
+      <div class="field-guide">Análise objetiva dos canais e do conteúdo atual. Não avalie se está "certo" ou "errado" — descreva o que existe e o padrão que emerge.</div>
+      <div class="field-input" contenteditable="true">Descrição objetiva da comunicação atual: canais usados, tipo de conteúdo produzido, tom de voz, consistência visual, frequência e qualidade percebida.</div>
+    </div>
+    <div class="field">
+      <div class="field-label" style="color:var(--b01);">5.2 · Como a marca é percebida hoje</div>
+      <div class="field-guide">A impressão que fica em quem vê a comunicação pela primeira vez. Qual é a percepção que o mercado tem antes de qualquer contato direto.</div>
+      <div class="field-input" contenteditable="true">O que alguém de fora do setor perceberia ao entrar em contato com a comunicação atual da marca — sem nenhum contexto prévio sobre a empresa.</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b01);">5.3 · O gap de percepção <span class="field-tag">síntese crítica</span></div>
+    <div class="field-guide">A diferença entre o que a empresa é de verdade e o que parece ser através da comunicação. Este é o problema que precisa ser resolvido.</div>
+    <div class="field-input" contenteditable="true">Qual é a distância entre o que a empresa realmente é (seus ativos, sua história, sua competência) e o que a comunicação atual transmite? Esta é a principal oportunidade de intervenção.</div>
+  </div>
+</div>
+
+<!-- ══ BLOCO 02 — ESTRATÉGIA ══ -->
+<div class="sec" id="e01">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b02);">02</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b02);">Bloco 02 · Estratégia</div>
+      <div class="block-title">Problema Central de Comunicação</div>
+      <div class="block-desc">A pergunta que a estratégia precisa responder. Formulado como um problema de percepção — não de produto, não de vendas, não de mídia. Uma única frase que o time pode repetir como norte.</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b02);">O problema central <span class="field-tag">uma frase</span></div>
+    <div class="field-guide">A formulação mais precisa possível do problema de comunicação. Deve começar com "Como fazer com que..." ou "Como transformar a percepção de...". Se não couber em uma frase, ainda não está suficientemente claro.</div>
+    <div class="field-input" contenteditable="true">Ex: "Como fazer com que o mercado perceba a GOMES como uma rede comercial em expansão planejada, e não como uma empresa procurando revendedores?"</div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b02);">Por que esse é o problema real</div>
+    <div class="field-guide">A justificativa que conecta o problema ao diagnóstico. Por que resolver isso é mais importante do que qualquer outro problema identificado.</div>
+    <div class="field-input" contenteditable="true">Explique por que esse problema específico é o mais relevante — o que trava o crescimento, o que impede conversão, o que cria percepção negativa ou limita o potencial da marca.</div>
+  </div>
+</div>
+
+<div class="sec" id="e02">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b02);">02</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b02);">Bloco 02 · Estratégia</div>
+      <div class="block-title">Oportunidade Estratégica</div>
+      <div class="block-desc">O espaço disponível no mercado — definido pelo que os concorrentes deixaram vazio e pelo que a marca tem credibilidade para ocupar.</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b02);">O território disponível</div>
+    <div class="field-guide">Formulado como uma declaração de oportunidade: "Existe um espaço não ocupado relacionado a [território] que esta marca tem credibilidade para ocupar porque [razão]."</div>
+    <div class="field-input" contenteditable="true">Ex: "Existe um espaço pouco explorado na categoria relacionado à continuidade operacional e previsibilidade de fornecimento. Enquanto os concorrentes falam de produto e tecnologia, nenhum ocupa o território da parceria de longo prazo. A Sulfibra tem legitimidade para fazê-lo porque retém clientes por décadas — mas não comunica isso."</div>
+  </div>
+</div>
+
+<div class="sec" id="e03">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b02);">02</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b02);">Bloco 02 · Estratégia</div>
+      <div class="block-title">Insight Central</div>
+      <div class="block-desc">A verdade humana que destrava a estratégia. Não é um dado, não é uma tendência, não é um problema. É a percepção sobre o comportamento humano que muda a forma como a comunicação deve ser construída.</div>
+    </div>
+  </div>
+
+  <div class="insight-box">
+    <div class="ib-label">Insight Central</div>
+    <div class="ib-text" contenteditable="true">Ex: "Quem compra chapas de fibra de vidro não está comprando matéria-prima. Está comprando a tranquilidade de manter sua operação funcionando. Em ambientes onde uma parada custa mais do que a matéria-prima, previsibilidade vale mais do que tecnologia."</div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b02);">Por que esse insight é verdadeiro</div>
+    <div class="field-guide">A evidência que sustenta o insight. Pode ser algo que o cliente disse no kickoff, um comportamento observado no mercado, um dado da pesquisa ou uma comparação com outra categoria.</div>
+    <div class="field-input" contenteditable="true">Explique o que torna esse insight verdadeiro — de onde vem, o que o sustenta, por que ele não é óbvio e por que a maioria dos concorrentes não o explorou.</div>
+  </div>
+</div>
+
+<div class="sec" id="e04">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b02);">02</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b02);">Bloco 02 · Estratégia</div>
+      <div class="block-title">Objetivos de Comunicação</div>
+      <div class="block-desc">O que precisa mudar na percepção do mercado ao longo do trabalho com a Nonna. Diferentes de objetivos de negócio — são objetivos de percepção, atitude e comportamento.</div>
+    </div>
+  </div>
+
+  <div class="field-grid">
+    <div class="field">
+      <div class="field-label" style="color:var(--b02);">O que o mercado deve pensar</div>
+      <div class="field-guide">A mudança de percepção desejada: "Antes pensava X, depois deve pensar Y."</div>
+      <div class="field-input" contenteditable="true">De: "Essa é uma empresa que vende produto X." Para: "Essa é uma empresa que garante Y para minha operação."</div>
+    </div>
+    <div class="field">
+      <div class="field-label" style="color:var(--b02);">O que o mercado deve sentir</div>
+      <div class="field-guide">O estado emocional que a marca deve provocar — confiança, desejo, identificação, admiração.</div>
+      <div class="field-input" contenteditable="true">Descreva o estado emocional que a comunicação deve gerar no mercado-alvo — a sensação que precede a decisão de compra.</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b02);">O que o mercado deve fazer <span class="field-tag">ação concreta</span></div>
+    <div class="field-guide">O comportamento esperado: buscar, indicar, comprar, voltar, recomendar. Deve ser específico e mensurável.</div>
+    <div class="field-input" contenteditable="true">Qual é o comportamento concreto que a comunicação deve estimular — a ação que indica que a estratégia funcionou.</div>
+  </div>
+</div>
+
+<!-- ══ BLOCO 03 — PLATAFORMA DE MARCA ══ -->
+<div class="sec" id="m01">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b03);">03</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b03);">Bloco 03 · Plataforma de Marca</div>
+      <div class="block-title">Propósito, Visão e Missão</div>
+      <div class="block-desc">A razão de existir da marca além do lucro, para onde quer ir e o que faz dia a dia. Os três são diferentes e complementares — não são sinônimos.</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b03);">Propósito <span class="field-tag">por que existe</span></div>
+    <div class="field-guide">A razão de existir da marca além do lucro — o impacto que quer ter no mundo. Começa com "Existimos para..." ou "Acreditamos que...". Não pode ser sobre o produto.</div>
+    <div class="field-input" contenteditable="true">Ex: "Existimos para que agricultores brasileiros confiem em tecnologia feita para o campo deles — sem precisar importar o que já é produzido aqui com a mesma qualidade."</div>
+  </div>
+
+  <div class="field-grid">
+    <div class="field">
+      <div class="field-label" style="color:var(--b03);">Visão <span class="field-tag">onde quer chegar</span></div>
+      <div class="field-guide">O futuro desejado pela marca. O que ela quer ter construído daqui a 5 ou 10 anos. Deve ser ambicioso mas alcançável.</div>
+      <div class="field-input" contenteditable="true">Ex: "Ser reconhecida como a rede de implementos agrícolas mais confiável do Centro-Oeste, com presença em todas as regiões de expansão do agro brasileiro."</div>
+    </div>
+    <div class="field">
+      <div class="field-label" style="color:var(--b03);">Missão <span class="field-tag">o que faz hoje</span></div>
+      <div class="field-guide">O que a marca faz de concreto, todos os dias, para avançar em direção à visão. Mais operacional que o propósito, mais imediata que a visão.</div>
+      <div class="field-input" contenteditable="true">Ex: "Oferecer implementos agrícolas de alta performance com suporte técnico próximo e entrega confiável para produtores e concessionários de todo o Brasil."</div>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="m02">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b03);">03</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b03);">Bloco 03 · Plataforma de Marca</div>
+      <div class="block-title">Valores</div>
+      <div class="block-desc">As crenças que guiam o comportamento da marca. Cada valor deve ser específico o suficiente para orientar uma decisão real — se qualquer empresa poderia ter o mesmo valor, ele é genérico demais.</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b03);">Valores da marca <span class="field-tag">4 a 6 valores</span></div>
+    <div class="field-guide">Cada valor deve ter nome e definição específica para esta marca. "Qualidade" e "Inovação" são genéricos — especifique o que esses termos significam para esta empresa em particular.</div>
+  </div>
+  <div class="values-list">
+    <div class="value-item"><div class="vi-name" contenteditable="true">Nome do valor 01</div><div class="vi-desc" contenteditable="true">O que esse valor significa na prática para esta marca — como ele se manifesta em decisões, comportamentos e entregas. Seja específico o suficiente para orientar uma decisão real.</div></div>
+    <div class="value-item"><div class="vi-name" contenteditable="true">Nome do valor 02</div><div class="vi-desc" contenteditable="true">Definição específica para esta marca.</div></div>
+    <div class="value-item"><div class="vi-name" contenteditable="true">Nome do valor 03</div><div class="vi-desc" contenteditable="true">Definição específica para esta marca.</div></div>
+    <div class="value-item"><div class="vi-name" contenteditable="true">Nome do valor 04</div><div class="vi-desc" contenteditable="true">Definição específica para esta marca.</div></div>
+  </div>
+</div>
+
+<div class="sec" id="m03">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b03);">03</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b03);">Bloco 03 · Plataforma de Marca</div>
+      <div class="block-title">Posicionamento e Promessa</div>
+      <div class="block-desc">A declaração formal de onde a marca se coloca no mercado e o que ela entrega para quem escolhe ela. O posicionamento é o critério que orienta todas as decisões de comunicação.</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b03);">Declaração de posicionamento <span class="field-tag">fórmula formal</span></div>
+    <div class="field-guide">Siga a estrutura: Para [público], [nome da marca] é a [categoria] que [promessa diferenciada] porque [razão para acreditar]. Esta fórmula existe desde Ries e Trout — ela força precisão e evita vaidades.</div>
+  </div>
+
+  <div class="pos-box">
+    <div class="pos-template">
+      Para <span contenteditable="true">[definição precisa do público-alvo]</span>, a <span contenteditable="true">[nome da marca]</span> é a <span contenteditable="true">[categoria em que a marca compete]</span> que <span contenteditable="true">[o diferencial real — o que a marca faz que nenhum concorrente faz com a mesma credibilidade]</span> porque <span contenteditable="true">[a razão concreta para acreditar — histórico, estrutura, evidência]</span>.
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:.08em;">Posicionamento completo em texto corrido:</div>
+    <div class="field-input" contenteditable="true" style="margin-top:10px;">Escreva o posicionamento em texto corrido, expandido — com o contexto necessário para que qualquer membro do time entenda claramente onde a marca se coloca e por quê.</div>
+  </div>
+
+  <div class="field" style="margin-top:20px;">
+    <div class="field-label" style="color:var(--b03);">Promessa central <span class="field-tag">o benefício mais importante</span></div>
+    <div class="field-guide">O benefício mais importante que a marca entrega. Deve ser único, relevante e comprovável. Não confundir com slogan — a promessa é interna, orienta a criação, não necessariamente vai para a comunicação pública.</div>
+    <div class="field-input" contenteditable="true">Ex: "Você pode confiar que teremos o que você precisa, quando você precisar, sem surpresas."</div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b03);">Razões para acreditar <span class="field-tag">provas da promessa</span></div>
+    <div class="field-guide">Os fatos concretos que tornam a promessa crível. Dados, histórico, certificações, estrutura, comportamento verificável. Uma promessa sem prova é publicidade. Com prova, é posicionamento.</div>
+    <div class="field-input" contenteditable="true">Liste as evidências concretas que sustentam a promessa: anos de mercado, clientes ativos, capacidade produtiva, certificações, casos reais, estrutura de suporte...</div>
+  </div>
+</div>
+
+<div class="sec" id="m04">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b03);">03</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b03);">Bloco 03 · Plataforma de Marca</div>
+      <div class="block-title">Personalidade e Arquétipo</div>
+      <div class="block-desc">Como a marca se comporta e o personagem que ela encarna. A personalidade orienta o tom — o arquétipo orienta a narrativa e o posicionamento emocional.</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b03);">Personalidade da marca <span class="field-tag">5 adjetivos com exemplos</span></div>
+    <div class="field-guide">Cada adjetivo deve vir acompanhado de um exemplo concreto do que isso significa em comunicação. "Confiável" é genérico. "Confiável como um veterinário de zona rural — direto, sem enrolação, fala o que precisa ser feito" é específico.</div>
+    <div class="field-input" contenteditable="true">Liste de 4 a 6 adjetivos que definem como a marca se comporta, cada um com um exemplo do que isso significa na comunicação. Formato: Adjetivo — "o que isso significa na prática para esta marca".</div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b03);">Arquétipo da marca</div>
+    <div class="field-guide">O personagem arquetípico que a marca encarna (Pearson e Mark). Os 12 arquétipos: Herói, Fora-da-lei, Mago, Homem Comum, Inocente, Explorador, Sábio, Amante, Bobo da Corte, Prestativo, Criador, Governante. A escolha do arquétipo define a narrativa de longo prazo da marca.</div>
+  </div>
+  <div class="arch-box">
+    <div class="arch-icon" contenteditable="true">🏛</div>
+    <div class="arch-info">
+      <div class="arch-name" contenteditable="true">Nome do arquétipo</div>
+      <div class="arch-desc" contenteditable="true">Por que este arquétipo é o mais adequado para esta marca — o que ele representa, como se manifesta na comunicação e quais marcas globais o encarnam com sucesso. Explique também como este arquétipo se diferencia dos demais que poderiam ter sido escolhidos.</div>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="m05">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b03);">03</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b03);">Bloco 03 · Plataforma de Marca</div>
+      <div class="block-title">Essência da Marca</div>
+      <div class="block-desc">A síntese de tudo que a marca é — em uma palavra ou frase curta. Não é slogan. É o filtro interno pelo qual todas as decisões criativas passam.</div>
+    </div>
+  </div>
+
+  <div class="essence-box">
+    <div class="eb-label">Essência</div>
+    <div class="eb-text" contenteditable="true">A essência em uma palavra ou frase curta</div>
+    <div class="eb-sub" contenteditable="true">Explique o que essa essência significa e como ela conecta todos os elementos da plataforma de marca — o propósito, o posicionamento, a personalidade e o arquétipo. Esta é a âncora criativa: se uma peça não reflete essa essência, está errada.</div>
+  </div>
+</div>
+
+<!-- ══ BLOCO 04 — TERRITÓRIO ══ -->
+<div class="sec" id="t01">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b04);">04</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b04);">Bloco 04 · Território de Comunicação</div>
+      <div class="block-title">Tom de Voz</div>
+      <div class="block-desc">Como a marca fala. O conjunto de características que torna a comunicação da marca reconhecível, independente do canal ou do formato. O tom de voz é a personalidade em texto.</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b04);">Definição do tom de voz</div>
+    <div class="field-guide">Descreva como a marca fala em 3 a 5 dimensões: registro (formal/informal), velocidade (direto/desenvolvido), emoção (frio/caloroso), autoridade (especialista/próximo). Use contrastes: "É X, mas não é Y".</div>
+    <div class="field-input" contenteditable="true">Descreva o tom de voz em suas dimensões principais. Use a estrutura "É [característica], mas não é [exagero]" para cada dimensão — isso evita ambiguidade e facilita a aplicação.</div>
+  </div>
+
+  <div class="field">
+    <div class="field-label" style="color:var(--b04);">Exemplos de tom correto vs incorreto</div>
+    <div class="field-guide">O exercício mais prático para fixar o tom. Para cada exemplo, use a mesma mensagem escrita de duas formas — a que está dentro e a que está fora do tom.</div>
+  </div>
+  <div class="voice-grid">
+    <div class="voice-card vc-card yes">
+      <div class="vc-label yes">✓ Dentro do tom</div>
+      <div class="vc-example" contenteditable="true">Ex: "Quem escolhe a Sulfibra não está comprando chapa. Está garantindo que sua linha de produção não para amanhã."</div>
+    </div>
+    <div class="voice-card vc-card no">
+      <div class="vc-label no">✗ Fora do tom</div>
+      <div class="vc-example" contenteditable="true">Ex: "A Sulfibra é líder em soluções inovadoras de fibra de vidro com tecnologia de ponta e compromisso com a excelência!"</div>
+    </div>
+    <div class="voice-card vc-card yes">
+      <div class="vc-label yes">✓ Dentro do tom</div>
+      <div class="vc-example" contenteditable="true">Segundo exemplo dentro do tom — outro contexto ou formato de comunicação.</div>
+    </div>
+    <div class="voice-card vc-card no">
+      <div class="vc-label no">✗ Fora do tom</div>
+      <div class="vc-example" contenteditable="true">Segundo exemplo fora do tom — o que acontece quando a comunicação sai do território definido.</div>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="t02">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b04);">04</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b04);">Bloco 04 · Território de Comunicação</div>
+      <div class="block-title">Território Visual</div>
+      <div class="block-desc">O conjunto de referências visuais que define como a marca aparece. Não é identidade visual — é o território dentro do qual toda a produção gráfica deve estar.</div>
+    </div>
+  </div>
+
+  <div class="vt-grid">
+    <div class="vt-item">
+      <div class="vt-label">Paleta de cores</div>
+      <div class="vt-content" contenteditable="true">Cores primárias da marca com seus códigos. Cores de apoio e de acento. Como usar cada uma — contexto e proporção. O que acontece quando as cores são misturadas ou substituídas.</div>
+    </div>
+    <div class="vt-item">
+      <div class="vt-label">Tipografia</div>
+      <div class="vt-content" contenteditable="true">Família tipográfica principal e secundária. Hierarquia de uso: qual fonte para título, corpo, destaque. Pesos e tamanhos recomendados. O que deve ser evitado.</div>
+    </div>
+    <div class="vt-item">
+      <div class="vt-label">Estilo fotográfico</div>
+      <div class="vt-content" contenteditable="true">Como as fotos devem ser: enquadramento, luz, paleta de cor, tipo de cena. O que mostrar (operação real, produto em uso, pessoas) e o que evitar (fotos de banco, encenação óbvia).</div>
+    </div>
+    <div class="vt-item">
+      <div class="vt-label">Linguagem gráfica</div>
+      <div class="vt-content" contenteditable="true">Uso de ícones, ilustrações, grafismos, textura e elementos de apoio. O estilo geral das peças: minimalista, editorial, bold, técnico. Referências visuais de marcas que comunicam no mesmo território.</div>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="t03">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b04);">04</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b04);">Bloco 04 · Território de Comunicação</div>
+      <div class="block-title">Linha de Linguagem</div>
+      <div class="block-desc">As referências verbais que organizam o que a marca diz. Palavras que carregam o posicionamento, frases que ancoram a narrativa e o que a comunicação não deve fazer.</div>
+    </div>
+  </div>
+
+  <div class="lang-grid">
+    <div class="lang-item">
+      <div class="li-category" style="color:var(--b04);">Palavras e conceitos prioritários</div>
+      <div class="li-words" contenteditable="true">Os termos que carregam o posicionamento e devem aparecer com frequência na comunicação. Listados em ordem de importância. Cada termo aqui representa o território que a marca quer ocupar.</div>
+    </div>
+    <div class="lang-item">
+      <div class="li-category" style="color:rgba(123,63,228,.6);">Palavras secundárias</div>
+      <div class="li-words" contenteditable="true">Termos relevantes para a categoria, mas que não são o foco da narrativa. Aparecem como evidência ou contexto — não como centro da comunicação.</div>
+    </div>
+    <div class="lang-item">
+      <div class="li-category" style="color:#f87171;">Palavras a evitar</div>
+      <div class="li-words" contenteditable="true">Termos genéricos, saturados ou que contradizem o posicionamento. Inclui os clichês do setor que todos os concorrentes já usam e que enfraquecem a diferenciação.</div>
+    </div>
+  </div>
+
+  <div class="field" style="margin-top:14px;">
+    <div class="field-label" style="color:var(--b04);">Frases-âncora</div>
+    <div class="field-guide">Frases que encapsulam o posicionamento e podem ser usadas como referência de linha de comunicação. Não são necessariamente slogans — são o padrão que outras frases devem seguir.</div>
+    <div class="field-input" contenteditable="true">Liste de 3 a 5 frases que poderiam representar a marca em qualquer comunicação — curtas, específicas, impossíveis de terem sido ditas por um concorrente.</div>
+  </div>
+</div>
+
+<div class="sec" id="t04">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b04);">04</div>
+    <div class="block-meta">
+      <div class="block-eyebrow" style="color:var(--b04);">Bloco 04 · Território de Comunicação</div>
+      <div class="block-title">Mandatórios e Restrições</div>
+      <div class="block-desc">O que não pode faltar em nenhuma comunicação e o que nunca deve aparecer. Este é o guarda-rails operacional do Dossiê — o que o time consulta antes de publicar qualquer peça.</div>
+    </div>
+  </div>
+
+  <div class="field-grid">
+    <div class="field">
+      <div class="field-label" style="color:var(--b04);">Mandatórios — o que a comunicação deve ter</div>
+      <div class="field-guide">O que não pode faltar em nenhuma peça de comunicação desta marca. Elementos obrigatórios de identidade, mensagem ou formato.</div>
+      <div class="field-input" contenteditable="true">Liste o que toda comunicação desta marca deve incluir — elementos visuais obrigatórios, mensagens que sempre devem estar presentes, critérios de qualidade inegociáveis.</div>
+    </div>
+    <div class="field">
+      <div class="field-label" style="color:var(--b04);">Restrições — o que a comunicação não deve fazer</div>
+      <div class="field-guide">O que nunca deve aparecer. Tanto em conteúdo (temas proibidos) quanto em forma (formatos que contradizem o posicionamento).</div>
+      <div class="field-input" contenteditable="true">Liste o que esta marca nunca deve comunicar — temas, abordagens, formatos, promessas ou associações que contradizem o posicionamento ou comprometem a credibilidade.</div>
+    </div>
+  </div>
+
+  <div class="field" style="margin-top:14px;">
+    <div class="field-label" style="color:var(--b04);">O teste final — como saber se uma peça está certa</div>
+    <div class="field-guide">Uma ou duas perguntas que qualquer pessoa do time pode fazer sobre uma peça para saber se ela está dentro do território da marca.</div>
+    <div class="field-input" contenteditable="true">Ex: "Essa peça poderia ter sido criada por um concorrente? Se a resposta for sim, está errada. Ela reforça o que nos diferencia ou apenas descreve o que fazemos? Se apenas descreve, está incompleta."</div>
+  </div>
+
+  <div style="margin-top:48px;padding:24px;background:var(--s2);border:1px solid rgba(214,62,170,.15);border-left:4px solid var(--b03);">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--b03);letter-spacing:.16em;text-transform:uppercase;margin-bottom:10px;">Nota de aprovação</div>
+    <div style="font-size:13px;color:var(--mu2);line-height:1.7;">Este Dossiê de Marca foi construído a partir da reunião de kickoff realizada em <span contenteditable="true" id="f_data_kickoff">__/__/____</span>, da pesquisa estratégica desenvolvida pela equipe da Nonna e de validações subsequentes com a <span class="f_cliente_ref">Nome do Cliente</span>. Os elementos aqui definidos orientam toda a comunicação da marca a partir desta data — revisão necessária somente em casos de mudança de posicionamento, novo nicho de mercado ou rebranding.</div>
+    <div style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:32px;">
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;">Nonna Agência Digital</div><div style="height:1px;background:var(--b2);margin-bottom:8px;"></div><div style="font-size:11px;color:var(--mu2);" contenteditable="true">Evandro · Direção Estratégica</div></div>
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;">Aprovado por</div><div style="height:1px;background:var(--b2);margin-bottom:8px;"></div><div style="font-size:11px;color:var(--mu2);" contenteditable="true">Nome · Cargo · <span class="f_cliente_ref">Empresa</span></div></div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// Nav sync
+const secs = document.querySelectorAll('.sec[id], .capa[id]');
+const links = document.querySelectorAll('.sb-link');
+const io = new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){links.forEach(l=>l.classList.remove('on'));const a=document.querySelector('.sb-link[href="#'+x.target.id+'"]');if(a)a.classList.add('on');}});},{threshold:.25});
+secs.forEach(s=>io.observe(s));
+
+// Client name sync
+function syncCliente(){
+  const n=document.getElementById('f_cliente').textContent.trim()||'Cliente';
+  document.getElementById('sb_cliente').textContent=n;
+  document.querySelectorAll('.f_cliente_ref').forEach(el=>el.textContent=n);
+}
+document.getElementById('f_cliente').addEventListener('input',syncCliente);
+
+// Save/load
+function salvar(){
+  const d={};
+  document.querySelectorAll('[contenteditable][id]').forEach(el=>d[el.id]=el.innerHTML);
+  document.querySelectorAll('table.comp td[contenteditable]').forEach((el,i)=>d['td_'+i]=el.innerHTML);
+  document.querySelectorAll('.value-item .vi-name[contenteditable],.value-item .vi-desc[contenteditable]').forEach((el,i)=>d['vi_'+i]=el.innerHTML);
+  document.querySelectorAll('.pos-template span[contenteditable]').forEach((el,i)=>d['pos_'+i]=el.innerHTML);
+  document.querySelectorAll('.persona-card .pcf-val[contenteditable]').forEach((el,i)=>d['pc_'+i]=el.innerHTML);
+  document.querySelectorAll('.voice-card .vc-example[contenteditable]').forEach((el,i)=>d['vc_'+i]=el.innerHTML);
+  document.querySelectorAll('.lang-item .li-words[contenteditable]').forEach((el,i)=>d['li_'+i]=el.innerHTML);
+  document.querySelectorAll('.vt-item .vt-content[contenteditable]').forEach((el,i)=>d['vt_'+i]=el.innerHTML);
+  try{localStorage.setItem('nonna_dossie',JSON.stringify(d));}catch(e){}
+  const btn=document.querySelector('.eb-btn.save');btn.textContent='✓ Salvo';setTimeout(()=>btn.textContent='Salvar',2000);
+}
+
+function carregar(){
+  try{
+    const raw=localStorage.getItem('nonna_dossie');if(!raw)return;
+    const d=JSON.parse(raw);
+    document.querySelectorAll('[contenteditable][id]').forEach(el=>{if(d[el.id])el.innerHTML=d[el.id];});
+    document.querySelectorAll('table.comp td[contenteditable]').forEach((el,i)=>{if(d['td_'+i])el.innerHTML=d['td_'+i];});
+    document.querySelectorAll('.value-item .vi-name[contenteditable],.value-item .vi-desc[contenteditable]').forEach((el,i)=>{if(d['vi_'+i])el.innerHTML=d['vi_'+i];});
+    document.querySelectorAll('.pos-template span[contenteditable]').forEach((el,i)=>{if(d['pos_'+i])el.innerHTML=d['pos_'+i];});
+    document.querySelectorAll('.persona-card .pcf-val[contenteditable]').forEach((el,i)=>{if(d['pc_'+i])el.innerHTML=d['pc_'+i];});
+    document.querySelectorAll('.voice-card .vc-example[contenteditable]').forEach((el,i)=>{if(d['vc_'+i])el.innerHTML=d['vc_'+i];});
+    document.querySelectorAll('.lang-item .li-words[contenteditable]').forEach((el,i)=>{if(d['li_'+i])el.innerHTML=d['li_'+i];});
+    document.querySelectorAll('.vt-item .vt-content[contenteditable]').forEach((el,i)=>{if(d['vt_'+i])el.innerHTML=d['vt_'+i];});
+    syncCliente();
+  }catch(e){}
+}
+
+document.addEventListener('input',e=>{
+  if(e.target.isContentEditable){clearTimeout(window._st);window._st=setTimeout(salvar,800);}
+  syncCliente();
+});
+carregar();
+</script>
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nonna · Documentos & Glossário</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08080d;--s1:#0d0d16;--s2:#12121e;--s3:#181828;
+  --b1:rgba(255,255,255,.05);--b2:rgba(255,255,255,.09);
+  --ink:#eeeef6;--mu:rgba(238,238,246,.32);--mu2:rgba(238,238,246,.6);
+  --c1:#ff5c4d;--c2:#d63eaa;--c3:#7b3fe4;
+  --grad:linear-gradient(135deg,#ff5c4d,#d63eaa,#7b3fe4);
+  --green:#34d399;--yellow:#fbbf24;--teal:#2dd4bf;
+  --nav:252px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.65;}
+aside{position:fixed;top:0;left:0;bottom:0;width:var(--nav);background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;z-index:100;overflow-y:auto;scrollbar-width:none;}
+aside::-webkit-scrollbar{display:none;}
+.sb-logo{padding:22px 20px 16px;border-bottom:1px solid var(--b1);}
+.sb-logo img{height:16px;display:block;}
+.sb-logo-fb{font-size:13px;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sb-sec{padding:14px 20px 5px;font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--mu);}
+.sb-a{display:flex;align-items:center;gap:8px;padding:8px 20px;text-decoration:none;border-left:2px solid transparent;transition:all .15s;}
+.sb-a:hover{background:var(--s2);}
+.sb-a.on{background:var(--s2);border-left-color:var(--c2);}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:var(--b2);flex-shrink:0;}
+.sb-a.on .sb-dot{background:var(--c2);}
+.sb-name{font-size:11px;color:var(--mu2);}
+.sb-a.on .sb-name{color:var(--ink);font-weight:500;}
+.sb-foot{margin-top:auto;padding:14px 20px;border-top:1px solid var(--b1);font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);line-height:1.6;}
+main{margin-left:var(--nav);}
+.sec{padding:60px 56px 68px;border-bottom:1px solid var(--b1);}
+.sec:last-child{border-bottom:none;}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:var(--mu);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.eyebrow::before{content:'';width:16px;height:1px;background:var(--c2);}
+.sec-h{font-family:'Syne',sans-serif;font-size:clamp(26px,3vw,40px);font-weight:800;letter-spacing:-.02em;line-height:1.08;margin-bottom:10px;}
+.sec-sub{font-size:14px;color:var(--mu2);max-width:620px;line-height:1.75;margin-bottom:36px;}
+.g{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+/* DOC CARDS */
+.doc-list{display:flex;flex-direction:column;gap:3px;margin-bottom:20px;}
+.doc{background:var(--s2);border:1px solid var(--b2);}
+.doc-head{padding:16px 20px;display:grid;grid-template-columns:36px 1fr auto;gap:14px;align-items:center;cursor:pointer;transition:background .15s;}
+.doc-head:hover{background:var(--s3);}
+.doc-num{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;color:var(--c2);}
+.doc-meta{}
+.doc-tag{font-family:'IBM Plex Mono',monospace;font-size:7px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--mu);margin-bottom:4px;}
+.doc-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+.doc-pill{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border:1px solid;flex-shrink:0;white-space:nowrap;}
+.doc-body{display:none;padding:0 20px 20px 70px;border-top:1px solid var(--b1);}
+.doc-body.open{display:block;padding-top:18px;}
+.doc-desc{font-size:13px;color:var(--mu2);line-height:1.72;margin-bottom:16px;max-width:680px;}
+.doc-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.dc{background:var(--s3);border:1px solid var(--b1);padding:14px 16px;}
+.dc-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px;}
+.dc-val{font-size:12px;color:var(--mu2);line-height:1.6;}
+.dc-val strong{color:var(--ink);font-weight:500;}
+.doc-sections{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:14px;}
+.ds{border:1px solid var(--b2);padding:14px 16px;position:relative;}
+.ds::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.ds-marca::before{background:var(--c2);}
+.ds-strat::before{background:var(--c1);}
+.ds-label{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px;}
+.ds-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:5px;}
+.ds-items{list-style:none;display:flex;flex-direction:column;gap:4px;}
+.ds-items li{font-size:11px;color:var(--mu2);display:flex;gap:6px;}
+.ds-items li::before{content:'›';color:var(--c2);flex-shrink:0;}
+
+/* REGRA OPERACIONAL */
+.rule-box{background:var(--s3);border:1px solid rgba(251,191,36,.15);border-left:3px solid var(--yellow);padding:18px 20px;margin-top:12px;}
+.rule-tag{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--yellow);letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;}
+.rule-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:8px;}
+.rule-desc{font-size:12px;color:var(--mu2);line-height:1.65;}
+.rule-items{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:12px;}
+.rule-items li{font-size:11px;color:var(--mu2);background:var(--s2);border:1px solid var(--b1);padding:8px 10px;display:flex;gap:6px;}
+.rule-items li::before{content:'→';color:var(--yellow);flex-shrink:0;}
+
+/* GLOSSÁRIO */
+.gloss{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:3px;}
+.gt{background:var(--s2);border:1px solid var(--b2);padding:18px 20px;position:relative;overflow:hidden;}
+.gt::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;}
+.gt-doc::before{background:var(--c2);}
+.gt-proc::before{background:var(--c1);}
+.gt-pess::before{background:var(--green);}
+.gt-ops::before{background:var(--c3);}
+.g-cat{font-family:'IBM Plex Mono',monospace;font-size:7px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px;}
+.g-term{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:7px;line-height:1.2;}
+.g-def{font-size:12px;color:var(--mu2);line-height:1.62;}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px;}
+.leg{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mu2);}
+.leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+
+@media(max-width:800px){
+  aside{display:none;}main{margin-left:0;}
+  .gloss,.doc-cols,.doc-sections,.rule-items{grid-template-columns:1fr;}
+  .sec{padding:36px 20px 52px;}
+}
+</style>
+</head>
+<body>
+
+<aside>
+  <div class="sb-logo">
+    <img src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png" alt="Nonna" onerror="this.style.display='none';this.nextSibling.style.display='block'">
+    <span class="sb-logo-fb" style="display:none">nonna</span>
+  </div>
+  <div class="sb-sec">Documentos</div>
+  <a class="sb-a on" href="#docs"><div class="sb-dot"></div><span class="sb-name">Todos os documentos</span></a>
+  <div class="sb-sec">Glossário</div>
+  <a class="sb-a" href="#g-doc"><div class="sb-dot"></div><span class="sb-name">Documentos</span></a>
+  <a class="sb-a" href="#g-proc"><div class="sb-dot"></div><span class="sb-name">Processo</span></a>
+  <a class="sb-a" href="#g-pess"><div class="sb-dot"></div><span class="sb-name">Pessoas & Papéis</span></a>
+  <a class="sb-a" href="#g-ops"><div class="sb-dot"></div><span class="sb-name">Operação</span></a>
+  <div class="sb-foot">Nonna Agência Digital<br>Referência interna · v2025</div>
+</aside>
+
+<main>
+
+<!-- ══ DOCUMENTOS ══ -->
+<section class="sec" id="docs">
+  <div class="eyebrow">Referência interna</div>
+  <h1 class="sec-h">Documentos <span class="g">padrão</span><br>da Nonna</h1>
+  <p class="sec-sub">10 documentos que conduzem todo o trabalho da agência — da estratégia ao operacional. Clique em qualquer um para expandir.</p>
+
+  <div class="doc-list">
+
+    <!-- 01 DOSSIÊ DE MARCA -->
+    <div class="doc">
+      <div class="doc-head" onclick="tog(this)">
+        <div class="doc-num">01</div>
+        <div class="doc-meta">
+          <div class="doc-tag">Estratégico · Uma vez por cliente · Evandro + Vitor</div>
+          <div class="doc-title">Dossiê de Marca</div>
+        </div>
+        <div class="doc-pill" style="color:var(--yellow);border-color:rgba(251,191,36,.3);">Fundação</div>
+      </div>
+      <div class="doc-body">
+        <div class="doc-desc">O documento central da Nonna. Construído no primeiro mês de contrato, é a referência permanente de quem é a marca do cliente — consultado antes de qualquer criação, para sempre. Só é revisado se houver mudança real de posicionamento: novo nicho, rebranding, nova fase do negócio.</div>
+        <div class="doc-sections">
+          <div class="ds ds-marca">
+            <div class="ds-label" style="color:var(--c2);">Seção 01</div>
+            <div class="ds-name">Marca</div>
+            <ul class="ds-items">
+              <li>Propósito e razão de existir</li>
+              <li>Posicionamento no mercado</li>
+              <li>Promessa central para o cliente</li>
+              <li>Personalidade e arquétipo</li>
+              <li>Tom de voz e estilo de comunicação</li>
+              <li>Território visual (cores, tipografia, referências)</li>
+            </ul>
+          </div>
+          <div class="ds ds-strat">
+            <div class="ds-label" style="color:var(--c1);">Seção 02</div>
+            <div class="ds-name">Estratégia Global</div>
+            <ul class="ds-items">
+              <li>Diagnóstico da comunicação atual</li>
+              <li>Análise de mercado e concorrentes</li>
+              <li>Personas detalhadas</li>
+              <li>Problema global de comunicação</li>
+              <li>Cenário ideal que a comunicação deve construir</li>
+              <li>Objetivos estratégicos de longo prazo</li>
+            </ul>
+          </div>
+        </div>
+        <div class="doc-cols" style="margin-top:10px;">
+          <div class="dc">
+            <div class="dc-label">Quem cria</div>
+            <div class="dc-val">Evandro conduz o kickoff e formata o documento. Vitor complementa com pesquisa de mercado, análise de concorrentes e visão estratégica de comunicação.</div>
+          </div>
+          <div class="dc">
+            <div class="dc-label">Aprovação</div>
+            <div class="dc-val">Apresentado e aprovado com o cliente na mesma reunião que o Roadmap, ao final da Etapa 01.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 02 ROADMAP -->
+    <div class="doc">
+      <div class="doc-head" onclick="tog(this)">
+        <div class="doc-num">02</div>
+        <div class="doc-meta">
+          <div class="doc-tag">Estratégico · Bi ou trimestral · Evandro</div>
+          <div class="doc-title">Roadmap</div>
+        </div>
+        <div class="doc-pill" style="color:var(--c2);border-color:rgba(214,62,170,.3);">Recorrente</div>
+      </div>
+      <div class="doc-body">
+        <div class="doc-desc">O mapa do ciclo. Lista todas as campanhas e projetos previstos para o período, com objetivos, responsáveis e ordem de prioridade. Nada entra em execução sem estar no Roadmap. A periodicidade padrão é trimestral, mas pode ser bimestral dependendo do ritmo e do perfil do cliente.</div>
+        <div class="doc-cols">
+          <div class="dc">
+            <div class="dc-label">O que contém</div>
+            <div class="dc-val">Lista de campanhas com objetivo e canal. Lista de projetos com tipo e escopo resumido. Priorização e sequência. Métricas de sucesso do ciclo. ATAs de reunião podem ser anexadas aqui.</div>
+          </div>
+          <div class="dc">
+            <div class="dc-label">Quem cria e aprova</div>
+            <div class="dc-val">Evandro elabora. No primeiro ciclo, aprovado com o cliente junto ao Dossiê. Nos ciclos seguintes, Marlon apresenta e aprova com o cliente.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03 ATA DE REUNIÃO -->
+    <div class="doc">
+      <div class="doc-head" onclick="tog(this)">
+        <div class="doc-num">03</div>
+        <div class="doc-meta">
+          <div class="doc-tag">Registro · Por reunião · Responsável da reunião</div>
+          <div class="doc-title">ATA de Reunião</div>
+        </div>
+        <div class="doc-pill" style="color:var(--teal);border-color:rgba(45,212,191,.3);">Registro</div>
+      </div>
+      <div class="doc-body">
+        <div class="doc-desc">O registro oficial de qualquer reunião da Nonna — interna ou com cliente. Funciona como memória de decisões e pode ser anexada ao Roadmap, a um Projeto Web, a qualquer campanha ou projeto. Substitui o "briefing detalhado" como documento de registro interno.</div>
+        <div class="doc-cols">
+          <div class="dc">
+            <div class="dc-label">O que contém</div>
+            <div class="dc-val"><strong>Data e participantes.</strong> Pauta da reunião. Decisões tomadas. Próximos passos com responsável e prazo. Pendências ou dúvidas em aberto.</div>
+          </div>
+          <div class="dc">
+            <div class="dc-label">Onde é usada</div>
+            <div class="dc-val">Toda reunião gera uma ATA. As ATAs de detalhamento de campanha são anexadas ao Roadmap. As ATAs de projetos, ao Projeto Web. Reuniões de kickoff geram a ATA-base do Dossiê.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04 CONCEITO DE CAMPANHA -->
+    <div class="doc">
+      <div class="doc-head" onclick="tog(this)">
+        <div class="doc-num">04</div>
+        <div class="doc-meta">
+          <div class="doc-tag">Criativo · Por ciclo · Vitor</div>
+          <div class="doc-title">Conceito de Campanha</div>
+        </div>
+        <div class="doc-pill" style="color:var(--c3);border-color:rgba(123,63,228,.3);">Criativo</div>
+      </div>
+      <div class="doc-body">
+        <div class="doc-desc">O motor criativo do ciclo. Define a ideia central que vai guiar toda a produção do período — visual, copy, comunicação e mídia. Tudo que o squad cria deriva deste documento. Um conceito forte gera coerência em todos os pontos de contato da marca.</div>
+        <div class="doc-cols">
+          <div class="dc">
+            <div class="dc-label">O que contém</div>
+            <div class="dc-val">Ideia central com nome e racional criativo. Território visual do período. Linha de linguagem (tom, frases-âncora, o que a marca diz e não diz). Peças base de referência. Desdobramentos por canal e formato.</div>
+          </div>
+          <div class="dc">
+            <div class="dc-label">Quem cria e aprova</div>
+            <div class="dc-val">Vitor. Prazo: 2 dias a partir do recebimento da ATA de detalhamento. Marlon apresenta ao cliente em até 2 dias. Aprovado: tarefas entram na fila. Não aprovado: Vitor ajusta antes de qualquer produção começar.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 05 PLANO DE TRÁFEGO -->
+    <div class="doc">
+      <div class="doc-head" onclick="tog(this)">
+        <div class="doc-num">05</div>
+        <div class="doc-meta">
+          <div class="doc-tag">Operacional · Por ciclo · Marielen</div>
+          <div class="doc-title">Plano de Tráfego</div>
+        </div>
+        <div class="doc-pill" style="color:var(--c2);border-color:rgba(214,62,170,.3);">Operacional</div>
+      </div>
+      <div class="doc-body">
+        <div class="doc-desc">Traduz o Conceito de Campanha em estratégia de mídia paga. Define como a verba será distribuída, quais campanhas rodam, em quais plataformas, com quais audiências e quais métricas de sucesso. É o documento de referência da Marielen para o ciclo — diferente do Conceito (que diz o que comunicar), o Plano define como distribuir.</div>
+        <div class="doc-cols">
+          <div class="dc">
+            <div class="dc-label">O que contém</div>
+            <div class="dc-val">Campanhas ativas por plataforma (Meta, Google). Distribuição de verba. Públicos e segmentações. Formatos e criativos previstos. KPIs e metas por campanha. Cronograma de ativação.</div>
+          </div>
+          <div class="dc">
+            <div class="dc-label">Aprovação</div>
+            <div class="dc-val">Marielen elabora e Marlon aprova internamente antes da ativação das campanhas. Não é obrigatoriamente aprovado pelo cliente, mas pode ser compartilhado quando há dúvidas sobre a distribuição de verba.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 06 CALENDÁRIO DE SOCIAL MEDIA -->
+    <div class="doc">
+      <div class="doc-head" onclick="tog(this)">
+        <div class="doc-num">06</div>
+        <div class="doc-meta">
+          <div class="doc-tag">Operacional · Mensal · Alessandra</div>
+          <div class="doc-title">Calendário de Social Media</div>
+        </div>
+        <div class="doc-pill" style="color:var(--c1);border-color:rgba(255,92,77,.3);">Operacional</div>
+      </div>
+      <div class="doc-body">
+        <div class="doc-desc">O planejamento editorial do mês. Organiza o que vai ser publicado, quando, em qual canal e com qual objetivo — tudo derivado do Conceito de Campanha do ciclo. É o documento que o squad de criação usa como base para produzir e que o cliente consulta para ter visão do período.</div>
+        <div class="doc-cols">
+          <div class="dc">
+            <div class="dc-label">O que contém</div>
+            <div class="dc-val">Data e canal de publicação. Formato (post, story, reel, carrossel). Tema e objetivo de cada publicação. Copy de referência ou direcionamento. Status (a produzir, em aprovação, aprovado, publicado).</div>
+          </div>
+          <div class="dc">
+            <div class="dc-label">Quem cria e aprova</div>
+            <div class="dc-val">Alessandra organiza o calendário com base no Conceito. O squad de design e copy executa. O cliente aprova via Aprovaaí antes da publicação de cada peça.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 07 PROJETO WEB -->
+    <div class="doc">
+      <div class="doc-head" onclick="tog(this)">
+        <div class="doc-num">07</div>
+        <div class="doc-meta">
+          <div class="doc-tag">Operacional · Por projeto · Patrick + Evandro</div>
+          <div class="doc-title">Projeto Web</div>
+        </div>
+        <div class="doc-pill" style="color:var(--c3);border-color:rgba(123,63,228,.3);">Operacional</div>
+      </div>
+      <div class="doc-body">
+        <div class="doc-desc">Documento padrão para qualquer projeto de desenvolvimento — site institucional, landing page, e-commerce ou automação. O desafio é que cada tipo de projeto tem natureza diferente, então o Projeto Web tem campos fixos obrigatórios e uma seção de escopo aberta que se adapta ao tipo de entrega.</div>
+        <div class="doc-cols">
+          <div class="dc">
+            <div class="dc-label">Campos fixos (todos os projetos)</div>
+            <div class="dc-val"><strong>Tipo do projeto</strong> (site, LP, e-commerce, automação). <strong>Objetivo</strong> — o que o projeto precisa resolver. <strong>Público</strong> da entrega. <strong>Referências</strong> aprovadas. <strong>Prazo</strong> de entrega. <strong>Responsáveis</strong> (dev + revisor). <strong>ATA</strong> da reunião de briefing anexada.</div>
+          </div>
+          <div class="dc">
+            <div class="dc-label">Seção de escopo (aberta por tipo)</div>
+            <div class="dc-val">Para sites: mapa de páginas e hierarquia. Para LPs: estrutura de seções e CTA. Para e-commerce: categorias e integrações. Para automações: fluxo de ativação e gatilhos. Cada tipo define o que vai aqui.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 08 ROTEIRO DE VÍDEO -->
+    <div class="doc">
+      <div class="doc-head" onclick="tog(this)">
+        <div class="doc-num">08</div>
+        <div class="doc-meta">
+          <div class="doc-tag">Operacional · Por produção · Vitor + Alessandra</div>
+          <div class="doc-title">Roteiro de Vídeo</div>
+        </div>
+        <div class="doc-pill" style="color:var(--c2);border-color:rgba(214,62,170,.3);">Operacional</div>
+      </div>
+      <div class="doc-body">
+        <div class="doc-desc">O guia de produção audiovisual. Serve para qualquer formato de vídeo — reels, vídeos institucionais, motion ou ads em vídeo. É criado antes da captação e aprovado com o cliente antes de qualquer produção começar. Elimina retrabalho em edição.</div>
+        <div class="doc-cols">
+          <div class="dc">
+            <div class="dc-label">O que contém</div>
+            <div class="dc-val">Objetivo e canal de destino. Duração prevista. Estrutura de cenas (início, meio, fim). Locução ou texto em tela por cena. Indicações visuais (ambiente, ângulo, referência). Música ou estilo sonoro. CTA final.</div>
+          </div>
+          <div class="dc">
+            <div class="dc-label">Quem cria e aprova</div>
+            <div class="dc-val">Vitor ou Alessandra, derivado do Conceito de Campanha. Aprovado internamente por Marlon antes de ir ao cliente. Cliente aprova o roteiro antes da captação — nunca depois.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 09 RELATÓRIO DE OTIMIZAÇÃO -->
+    <div class="doc">
+      <div class="doc-head" onclick="tog(this)">
+        <div class="doc-num">09</div>
+        <div class="doc-meta">
+          <div class="doc-tag">Resultado · Semanal · Marielen + Marlon</div>
+          <div class="doc-title">Relatório de Otimização</div>
+        </div>
+        <div class="doc-pill" style="color:var(--green);border-color:rgba(52,211,153,.3);">Semanal</div>
+      </div>
+      <div class="doc-body">
+        <div class="doc-desc">Enviado semanalmente ao cliente. Foca no desempenho das campanhas de tráfego pago — não é um dump de métricas, é uma leitura do que está acontecendo e o que a Nonna está ajustando. Mantém o cliente informado sem precisar de reunião.</div>
+        <div class="doc-cols">
+          <div class="dc">
+            <div class="dc-label">O que contém</div>
+            <div class="dc-val">Performance das campanhas ativas (alcance, cliques, custo, conversões). O que foi otimizado na semana. O que será ajustado na semana seguinte. Alertas de verba ou anomalias. Observações estratégicas pontuais.</div>
+          </div>
+          <div class="dc">
+            <div class="dc-label">Formato e entrega</div>
+            <div class="dc-val">Documento conciso — não precisa ser longo. Tendência de ser gerado com apoio de IA a partir dos dados das plataformas. Enviado pelo atendimento no canal exclusivo do cliente.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10 RELATÓRIO MENSAL -->
+    <div class="doc">
+      <div class="doc-head" onclick="tog(this)">
+        <div class="doc-num">10</div>
+        <div class="doc-meta">
+          <div class="doc-tag">Resultado · Mensal · Marlon + Marielen</div>
+          <div class="doc-title">Relatório Mensal</div>
+        </div>
+        <div class="doc-pill" style="color:var(--green);border-color:rgba(52,211,153,.3);">Mensal</div>
+      </div>
+      <div class="doc-body">
+        <div class="doc-desc">A leitura estratégica do mês completo. Não é um relatório de métricas — é uma interpretação do que aconteceu, o que a comunicação gerou de percepção e o que a Nonna recomenda para o próximo ciclo. Apresentado na reunião mensal e alimenta o próximo Roadmap.</div>
+        <div class="doc-cols">
+          <div class="dc">
+            <div class="dc-label">O que contém</div>
+            <div class="dc-val">Resultados de tráfego pago e orgânico. Análise qualitativa da comunicação do período. O que funcionou e por quê. O que não funcionou e o diagnóstico. Recomendações para o próximo ciclo. Tendências observadas.</div>
+          </div>
+          <div class="dc">
+            <div class="dc-label">Formato e entrega</div>
+            <div class="dc-val">Documento mais completo que o semanal. Tendência de geração com apoio de IA a partir dos dados consolidados. Apresentado por Marlon na reunião mensal de alinhamento estratégico.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- REGRA OPERACIONAL -->
+  <div class="rule-box">
+    <div class="rule-tag">Regra de operação — não é um documento</div>
+    <div class="rule-title">Padrão de preenchimento de tarefas no ClickUp</div>
+    <div class="rule-desc">O briefing de cada peça individual não é um documento separado — acontece dentro da tarefa no ClickUp. Para funcionar, toda tarefa precisa ter campos obrigatórios preenchidos antes de ser atribuída ao squad.</div>
+    <ul class="rule-items">
+      <li>Título descritivo (formato + tema + canal)</li>
+      <li>Descrição do objetivo da peça</li>
+      <li>Copy aprovado ou direcionamento de texto</li>
+      <li>Formato e dimensões</li>
+      <li>Referência visual (link ou anexo)</li>
+      <li>Prazo de entrega interna</li>
+      <li>Responsável designado</li>
+      <li>Vinculação ao Conceito de Campanha</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══ GLOSSÁRIO DOCUMENTOS ══ -->
+<section class="sec" id="g-doc">
+  <div class="eyebrow">Glossário · Documentos</div>
+  <h2 class="sec-h">Termos que todo mundo<br><span class="g">precisa saber</span></h2>
+  <p class="sec-sub">A linguagem interna da Nonna. Usar os mesmos termos evita ambiguidade, acelera a comunicação e garante que todo mundo está falando da mesma coisa.</p>
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:var(--c2);"></div>Documentos</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--c1);"></div>Processo</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--green);"></div>Pessoas & Papéis</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--c3);"></div>Operação</div>
+  </div>
+  <div class="gloss">
+    <div class="gt gt-doc"><div class="g-cat" style="color:var(--c2);">Documento</div><div class="g-term">Dossiê de Marca</div><div class="g-def">Documento criado no primeiro mês com duas seções: Marca e Estratégia Global. É a referência permanente da identidade e direção do cliente — consultado antes de qualquer criação, revisado só em mudança de posicionamento.</div></div>
+    <div class="gt gt-doc"><div class="g-cat" style="color:var(--c2);">Documento · Seção</div><div class="g-term">Marca</div><div class="g-def">Primeira seção do Dossiê. Define quem é a marca: propósito, posicionamento, promessa, personalidade, arquétipo, tom de voz e território visual. É o "quem somos" da marca.</div></div>
+    <div class="gt gt-doc"><div class="g-cat" style="color:var(--c2);">Documento · Seção</div><div class="g-term">Estratégia Global</div><div class="g-def">Segunda seção do Dossiê. Define o problema de comunicação e o cenário ideal a construir. Inclui diagnóstico, análise de mercado, personas e objetivos estratégicos de longo prazo.</div></div>
+    <div class="gt gt-doc"><div class="g-cat" style="color:var(--c2);">Documento</div><div class="g-term">Roadmap</div><div class="g-def">Mapa do ciclo (bi ou trimestral) com todas as campanhas e projetos previstos. Tudo que é executado está no Roadmap. ATAs de reunião podem ser anexadas a ele.</div></div>
+    <div class="gt gt-doc"><div class="g-cat" style="color:var(--c2);">Documento</div><div class="g-term">ATA de Reunião</div><div class="g-def">Registro oficial de qualquer reunião — interna ou com cliente. Contém decisões tomadas, próximos passos e responsáveis. Pode ser anexada ao Roadmap, a projetos ou a campanhas.</div></div>
+    <div class="gt gt-doc"><div class="g-cat" style="color:var(--c2);">Documento</div><div class="g-term">Conceito de Campanha</div><div class="g-def">Motor criativo do ciclo criado pelo Vitor. Define ideia central, território visual e linha de linguagem. Tudo que o squad produz no período deriva deste documento.</div></div>
+    <div class="gt gt-doc"><div class="g-cat" style="color:var(--c2);">Documento</div><div class="g-term">Plano de Tráfego</div><div class="g-def">Traduz o Conceito em estratégia de mídia paga: quais campanhas rodam, em quais plataformas, com qual verba, quais públicos e quais KPIs. O documento de referência da Marielen para o ciclo.</div></div>
+    <div class="gt gt-doc"><div class="g-cat" style="color:var(--c2);">Documento</div><div class="g-term">Peças Base</div><div class="g-def">As primeiras peças produzidas dentro do Conceito de Campanha. Servem como referência visual e de linguagem para toda a produção do período. Aprovadas antes das demais.</div></div>
+    <div class="gt gt-doc"><div class="g-cat" style="color:var(--c2);">Documento</div><div class="g-term">Calendário de Social Media</div><div class="g-def">Planejamento editorial mensal derivado do Conceito. Organiza o que vai ser publicado, quando, em qual canal e com qual objetivo. Usado pelo squad de criação como guia de produção.</div></div>
+    <div class="gt gt-doc"><div class="g-cat" style="color:var(--c2);">Documento</div><div class="g-term">Roteiro de Vídeo</div><div class="g-def">Guia de produção audiovisual criado antes de qualquer captação. Contém estrutura de cenas, locução, indicações visuais e CTA. Aprovado pelo cliente antes da produção começar.</div></div>
+  </div>
+</section>
+
+<!-- ══ GLOSSÁRIO PROCESSO ══ -->
+<section class="sec" id="g-proc">
+  <div class="eyebrow">Glossário · Processo</div>
+  <h2 class="sec-h">Termos de <span class="g">processo</span></h2>
+  <div class="gloss">
+    <div class="gt gt-proc"><div class="g-cat" style="color:var(--c1);">Processo</div><div class="g-term">Onboarding</div><div class="g-def">Etapa 00. Os primeiros 5 dias. Inclui contrato, setup de canais, apresentação do processo ao cliente e pedido de acessos. Termina com o kickoff agendado. Conduzido inteiramente pelo atendimento.</div></div>
+    <div class="gt gt-proc"><div class="g-cat" style="color:var(--c1);">Processo</div><div class="g-term">Kickoff</div><div class="g-def">A primeira reunião estratégica com o cliente, conduzida pelo Evandro. Coleta os dados do negócio, mercado e objetivos para construir o Dossiê de Marca. Gera a ATA-base da Fundação.</div></div>
+    <div class="gt gt-proc"><div class="g-cat" style="color:var(--c1);">Processo</div><div class="g-term">Fundação</div><div class="g-def">Etapa 01. Os primeiros 20 dias: do kickoff até a aprovação do Dossiê + Roadmap com o cliente. Acontece uma única vez por cliente.</div></div>
+    <div class="gt gt-proc"><div class="g-cat" style="color:var(--c1);">Processo</div><div class="g-term">Ciclo</div><div class="g-def">O período de planejamento e execução (bi ou trimestral). Cada ciclo tem um Roadmap aprovado, um Conceito de Campanha e uma série de sprints. O ciclo seguinte começa antes do atual terminar.</div></div>
+    <div class="gt gt-proc"><div class="g-cat" style="color:var(--c1);">Processo</div><div class="g-term">Reunião de Detalhamento</div><div class="g-def">Reunião interna convocada pelo Marlon após a aprovação do Roadmap. Participam os heads dos setores envolvidos e o Vitor quando necessário. Objetivo: lapidar campanhas e projetos antes de ir ao Vitor.</div></div>
+    <div class="gt gt-proc"><div class="g-cat" style="color:var(--c1);">Processo</div><div class="g-term">Lapidação</div><div class="g-def">Refinar e detalhar campanhas e projetos na reunião de detalhamento. Resolver ambiguidades, tomar decisões pendentes, garantir que o que chega ao Vitor já está completo e resolvido.</div></div>
+    <div class="gt gt-proc"><div class="g-cat" style="color:var(--c1);">Processo</div><div class="g-term">Overlap de Ciclos</div><div class="g-def">A sobreposição intencional entre ciclos: quando o sprint atual ainda está ativo, o próximo já está sendo planejado. Garante que o cliente nunca fica sem comunicação entre um ciclo e outro.</div></div>
+    <div class="gt gt-proc"><div class="g-cat" style="color:var(--c1);">Processo</div><div class="g-term">Setup de Contas</div><div class="g-def">Configuração das plataformas do cliente (Meta Business, Google Ads, Analytics, etc.) feita no onboarding e no primeiro ciclo, enquanto o Dossiê está sendo construído.</div></div>
+    <div class="gt gt-proc"><div class="g-cat" style="color:var(--c1);">Processo</div><div class="g-term">Regra da Sexta</div><div class="g-def">Tarefas entram na sprint toda sexta-feira. Conceito aprovado até quarta entra na sexta da mesma semana. Após quarta, entra na próxima sexta. Sem exceção.</div></div>
+    <div class="gt gt-proc"><div class="g-cat" style="color:var(--c1);">Processo</div><div class="g-term">Janela de Aprovação</div><div class="g-def">As 48 horas úteis que o cliente tem para aprovar qualquer entregável. Sem resposta no prazo: o conteúdo segue conforme planejado ou a tarefa passa para o próximo sprint.</div></div>
+  </div>
+</section>
+
+<!-- ══ GLOSSÁRIO PESSOAS ══ -->
+<section class="sec" id="g-pess">
+  <div class="eyebrow">Glossário · Pessoas & Papéis</div>
+  <h2 class="sec-h">Quem é <span class="g">quem</span></h2>
+  <div class="gloss">
+    <div class="gt gt-pess"><div class="g-cat" style="color:var(--green);">Papel</div><div class="g-term">Direção Estratégica</div><div class="g-def">Evandro e Vitor. Constroem o Dossiê, definem a direção criativa, conduzem o planejamento e originam os conceitos de campanha. Decidem o quê e o porquê — antes de qualquer execução.</div></div>
+    <div class="gt gt-pess"><div class="g-cat" style="color:var(--green);">Papel</div><div class="g-term">Head</div><div class="g-def">Responsável técnico de uma área: Alessandra (criação e copy), Patrick (tecnologia). Participa da reunião de detalhamento quando sua área é afetada. Aloca e prepara o squad para a produção.</div></div>
+    <div class="gt gt-pess"><div class="g-cat" style="color:var(--green);">Papel</div><div class="g-term">Gestor de Campanhas</div><div class="g-def">Marlon. É o dono das entregas — aprova campanhas com o cliente, convoca a reunião de detalhamento, distribui tarefas e acompanha o andamento. Responde pelos resultados perante o cliente.</div></div>
+    <div class="gt gt-pess"><div class="g-cat" style="color:var(--green);">Papel</div><div class="g-term">Guardião do Sprint</div><div class="g-def">Alisson. Garante o ritmo quinzenal: fecha a fila toda quinta, insere na sprint toda sexta e monitora prazos. Acumula atendimento e financeiro enquanto a estrutura não tem mais especialistas.</div></div>
+    <div class="gt gt-pess"><div class="g-cat" style="color:var(--green);">Papel</div><div class="g-term">Squad</div><div class="g-def">Os times de produção: Design (Tiago e Andreo), Dev (Fernando e Marcus), Tráfego (Marielen). Executam dentro do sprint, dentro do território definido pelo Conceito de Campanha.</div></div>
+    <div class="gt gt-pess"><div class="g-cat" style="color:var(--green);">Papel</div><div class="g-term">Atendimento</div><div class="g-def">Ponto de contato direto com o cliente no dia a dia. Gerencia aprovações via Aprovaaí, responde no canal exclusivo e escala para o Marlon quando há decisão estratégica envolvida.</div></div>
+  </div>
+</section>
+
+<!-- ══ GLOSSÁRIO OPERAÇÃO ══ -->
+<section class="sec" id="g-ops">
+  <div class="eyebrow">Glossário · Operação</div>
+  <h2 class="sec-h">Termos de <span class="g">operação</span></h2>
+  <div class="gloss">
+    <div class="gt gt-ops"><div class="g-cat" style="color:var(--c3);">Operação</div><div class="g-term">Sprint</div><div class="g-def">Ciclo quinzenal de execução. Começa toda segunda-feira. É uma organização abstrata de pauta no ClickUp — não é um documento, mas o método que define o ritmo de trabalho do squad.</div></div>
+    <div class="gt gt-ops"><div class="g-cat" style="color:var(--c3);">Operação</div><div class="g-term">Fila de Tarefas</div><div class="g-def">O conjunto de tarefas aprovadas esperando para entrar na sprint. Marlon distribui as tarefas para a fila após a aprovação do Conceito. Alisson fecha e insere na sprint toda sexta.</div></div>
+    <div class="gt gt-ops"><div class="g-cat" style="color:var(--c3);">Operação</div><div class="g-term">ClickUp</div><div class="g-def">Ferramenta de gestão de tarefas e sprints. Fonte de verdade do que está em andamento — toda tarefa precisa estar no ClickUp com os campos obrigatórios preenchidos antes de ser atribuída.</div></div>
+    <div class="gt gt-ops"><div class="g-cat" style="color:var(--c3);">Operação</div><div class="g-term">Aprovaaí</div><div class="g-def">Plataforma de aprovação de conteúdo. Todo material vai ao cliente via Aprovaaí antes de publicar. O cliente tem 48h úteis para aprovar ou solicitar ajuste — tudo rastreado e com histórico.</div></div>
+    <div class="gt gt-ops"><div class="g-cat" style="color:var(--c3);">Operação</div><div class="g-term">Canal Exclusivo</div><div class="g-def">O grupo de WhatsApp dedicado ao cliente, gerenciado pelo atendimento. Único canal oficial de comunicação — evita mensagens perdidas e mantém histórico centralizado.</div></div>
+    <div class="gt gt-ops"><div class="g-cat" style="color:var(--c3);">Operação</div><div class="g-term">Verba de Mídia</div><div class="g-def">O valor investido pelo cliente diretamente nas plataformas de anúncio. Não passa pela Nonna — é pago pelo cliente ao Meta e Google. A Nonna gerencia a estratégia e a execução.</div></div>
+    <div class="gt gt-ops"><div class="g-cat" style="color:var(--c3);">Operação</div><div class="g-term">Território Visual</div><div class="g-def">Referências visuais definidas no Conceito de Campanha: paleta do período, tipografia, estilo fotográfico, elementos gráficos. Todo o design do ciclo deve estar dentro desse território.</div></div>
+    <div class="gt gt-ops"><div class="g-cat" style="color:var(--c3);">Operação</div><div class="g-term">Linha de Linguagem</div><div class="g-def">Referências verbais do Conceito: tom do período, frases-âncora, como o produto é descrito, o que a marca não diz nesse ciclo. Todo texto produzido segue essa linha.</div></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+function tog(h){ var b=h.nextElementSibling; b.classList.toggle('open'); }
+var secs=document.querySelectorAll('section[id]');
+var links=document.querySelectorAll('.sb-a');
+var io=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting){links.forEach(function(l){l.classList.remove('on');});var a=document.querySelector('.sb-a[href="#'+x.target.id+'"]');if(a)a.classList.add('on');}});},{threshold:.3});
+secs.forEach(function(s){io.observe(s);});
+</script>
+</body>
+</html>

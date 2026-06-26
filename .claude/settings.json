@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(herd 2>&1)",
+      "PowerShell(herd stop 2>&1)",
+      "PowerShell(herd start 2>&1)",
+      "PowerShell(herd which 2>&1)",
+      "Bash(grep -n 'return $this->has' app/Models/Client.php)",
+      "Bash(grep -n 'return $this->has\\\\|return $this->belongs' app/Models/MacroPlan.php)",
+      "Bash(grep -n 'return $this->has\\\\|return $this->belongs' app/Models/Project.php)",
+      "Bash(git commit -m ' *)",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\nonna\\\\Herd\\\\nonna-app\\\\resources\\\\views\\\\settings\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('\\\\n'.join\\(d.get\\('require',{}\\).keys\\(\\)\\)\\)\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\nonna\\\\Herd\\\\nonna-app\\\\app\\\\Http\\\\Controllers\\\\Api\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\nonna\\\\Herd\\\\nonna-app\\\\docker\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\nonna\\\\Herd\\\\nonna-app\\\\.github\\\\workflows\")",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(git -C \"c:\\\\Users\\\\nonna\\\\Herd\\\\nonna-app\" log --oneline -10)",
+      "PowerShell(php artisan route:list --name=dossier --columns=method,uri,name 2>&1)",
+      "PowerShell(php artisan route:list --name=dossier 2>&1)",
+      "PowerShell(php artisan config:clear)",
+      "PowerShell(git add app/Http/Controllers/BrandDossierController.php app/Http/Controllers/DossierCompetitorController.php app/Http/Controllers/DossierPersonaController.php app/Models/BrandDossier.php app/Models/DossierCompetitor.php app/Models/DossierPersona.php database/migrations/2026_06_24_000001_replace_diagnostics_with_brand_dossiers.php resources/views/dossiers/ app/Http/Controllers/ClientController.php app/Models/Client.php resources/views/clients/show.blade.php routes/web.php 2>&1)",
+      "Bash(node -e \"const pkg = require\\('./node_modules/@tiptap/starter-kit/package.json'\\); console.log\\(pkg.version\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(awk 'NR>=1047 && NR<=1291' resources/views/dossiers/show.blade.php)"
+    ]
+  }
+}

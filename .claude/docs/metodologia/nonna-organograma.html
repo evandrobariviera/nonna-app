@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nonna · Organograma de Funções</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08080d;--s1:#0d0d16;--s2:#121220;--s3:#181828;
+  --b1:rgba(255,255,255,.05);--b2:rgba(255,255,255,.09);--b3:rgba(255,255,255,.14);
+  --ink:#eeeef6;--mu:rgba(238,238,246,.32);--mu2:rgba(238,238,246,.6);
+  --c2:#d63eaa;--c3:#7b3fe4;
+  --grad:linear-gradient(135deg,#ff5c4d,#d63eaa,#7b3fe4);
+  --green:#34d399;--yellow:#fbbf24;
+  --r-dir:#fbbf24;--r-cri:#7b3fe4;--r-coo:#34d399;
+  --r-ges:#d63eaa;--r-hcr:#ff5c4d;--r-hte:#2dd4bf;
+  --r-des:#ff8c7a;--r-tra:#e879c8;--r-dev:#9d6fff;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh;}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(8,8,13,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--b1);padding:0 40px;height:50px;display:flex;align-items:center;justify-content:space-between;}
+.tb-left{display:flex;align-items:center;gap:12px;}
+.tb-logo img{height:16px;opacity:.7;}
+.tb-logo-fb{font-size:12px;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.tb-sep{width:1px;height:16px;background:var(--b2);}
+.tb-title{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--mu2);letter-spacing:.08em;}
+.tb-right{display:flex;gap:6px;}
+.tb-btn{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border:1px solid var(--b2);background:none;color:var(--mu);cursor:pointer;transition:all .2s;}
+.tb-btn:hover,.tb-btn.on{color:var(--ink);border-color:var(--c2);background:rgba(214,62,170,.06);}
+.wrap{max-width:1200px;margin:0 auto;padding:48px 40px 80px;}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:var(--mu);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.eyebrow::before{content:'';width:14px;height:1px;background:var(--c2);}
+h1{font-family:'Syne',sans-serif;font-size:clamp(28px,3.5vw,44px);font-weight:800;letter-spacing:-.022em;line-height:1.07;margin-bottom:10px;}
+.g{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sub{font-size:14px;color:var(--mu2);max-width:580px;line-height:1.7;margin-bottom:32px;}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:32px;background:var(--s2);border:1px solid var(--b2);padding:16px 20px;}
+.leg-title{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.14em;text-transform:uppercase;width:100%;margin-bottom:8px;}
+.leg-role{display:flex;align-items:center;gap:7px;padding:4px 10px;border:1px solid var(--b1);}
+.leg-color{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.leg-name{font-size:11px;color:var(--mu2);font-family:'IBM Plex Mono',monospace;white-space:nowrap;}
+.leg-note{width:100%;font-size:11px;color:var(--mu);border-top:1px solid var(--b1);padding-top:10px;margin-top:4px;line-height:1.55;}
+#view-layers{display:block;}
+#view-roles{display:none;}
+#view-flow{display:none;}
+/* LAYERS */
+.org{display:flex;flex-direction:column;gap:3px;}
+.layer{display:grid;grid-template-columns:170px 1fr;gap:0;min-height:80px;}
+.layer-label{background:var(--s1);border:1px solid var(--b1);border-right:none;padding:14px 16px;display:flex;flex-direction:column;justify-content:center;}
+.ll-num{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;margin-bottom:4px;}
+.ll-name{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;line-height:1.25;color:var(--mu2);}
+.ll-desc{font-size:10px;color:var(--mu);margin-top:4px;line-height:1.4;}
+.layer-cards{border:1px solid var(--b1);display:flex;align-items:stretch;gap:2px;padding:6px;background:var(--s1);}
+.rcard{background:var(--s2);border:1px solid var(--b2);padding:12px 14px;flex:1;display:flex;flex-direction:column;gap:4px;position:relative;overflow:hidden;min-width:140px;cursor:pointer;transition:border-color .2s,background .2s;}
+.rcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.rcard:hover{border-color:var(--b3);background:var(--s3);}
+.rcard.expanded{border-color:rgba(214,62,170,.3);background:var(--s3);}
+.rc-tag{font-family:'IBM Plex Mono',monospace;font-size:7px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--mu);margin-bottom:2px;}
+.rc-name{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;line-height:1.2;}
+.rc-sub{font-size:10px;color:var(--mu);line-height:1.4;margin-top:2px;}
+.rc-multi{display:inline-flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace;font-size:7px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;border:1px solid;margin-top:5px;align-self:flex-start;}
+.r-dir::before{background:var(--r-dir);} .r-dir .rc-name{color:var(--r-dir);} .r-dir .rc-multi{color:var(--r-dir);border-color:rgba(251,191,36,.3);}
+.r-cri::before{background:var(--r-cri);} .r-cri .rc-name{color:var(--r-cri);} .r-cri .rc-multi{color:var(--r-cri);border-color:rgba(123,63,228,.3);}
+.r-coo::before{background:var(--r-coo);} .r-coo .rc-name{color:var(--r-coo);} .r-coo .rc-multi{color:var(--r-coo);border-color:rgba(52,211,153,.3);}
+.r-ges::before{background:var(--r-ges);} .r-ges .rc-name{color:var(--r-ges);}
+.r-hcr::before{background:var(--r-hcr);} .r-hcr .rc-name{color:var(--r-hcr);}
+.r-hte::before{background:var(--r-hte);} .r-hte .rc-name{color:var(--r-hte);}
+.r-des::before{background:var(--r-des);} .r-des .rc-name{color:var(--r-des);}
+.r-tra::before{background:var(--r-tra);} .r-tra .rc-name{color:var(--r-tra);}
+.r-dev::before{background:var(--r-dev);} .r-dev .rc-name{color:var(--r-dev);}
+.rc-detail{display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--b1);}
+.rc-detail.open{display:block;}
+.rc-detail p{font-size:11px;color:var(--mu2);line-height:1.6;}
+.rc-detail ul{list-style:none;margin-top:6px;display:flex;flex-direction:column;gap:3px;}
+.rc-detail ul li{font-size:10px;color:var(--mu);display:flex;gap:5px;line-height:1.4;}
+.rc-detail ul li::before{content:'→';flex-shrink:0;color:var(--c2);}
+/* ROLES VIEW */
+.roles-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.role-full{background:var(--s2);border:1px solid var(--b2);padding:20px;position:relative;overflow:hidden;}
+.role-full::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.rf-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:6px;}
+.rf-layers{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;}
+.rf-layer{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--b2);color:var(--mu);}
+.rf-desc{font-size:12px;color:var(--mu2);line-height:1.65;margin-bottom:10px;}
+.rf-resp{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;}
+ul.rf-list{list-style:none;display:flex;flex-direction:column;gap:5px;}
+ul.rf-list li{font-size:11px;color:var(--mu2);display:flex;gap:6px;line-height:1.4;}
+ul.rf-list li::before{content:'›';font-weight:700;flex-shrink:0;}
+/* FLOW VIEW */
+.flow-chain{display:flex;flex-direction:column;gap:2px;}
+.fc-step{display:grid;grid-template-columns:40px 1fr;gap:0;min-height:60px;}
+.fc-line{display:flex;flex-direction:column;align-items:center;}
+.fc-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--c2);background:var(--bg);flex-shrink:0;margin-top:18px;}
+.fc-vline{flex:1;width:1px;background:linear-gradient(to bottom,var(--c2),rgba(214,62,170,.1));margin-top:4px;}
+.fc-step:last-child .fc-vline{display:none;}
+.fc-content{background:var(--s2);border:1px solid var(--b2);padding:14px 16px;margin:4px 0;}
+.fc-who{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;}
+.fc-action{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:4px;}
+.fc-desc{font-size:11px;color:var(--mu2);line-height:1.55;}
+.fc-output{display:inline-block;margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--c2);letter-spacing:.08em;border:1px solid rgba(214,62,170,.25);padding:2px 8px;}
+.callout{background:var(--s3);border:1px solid rgba(214,62,170,.14);border-left:3px solid var(--c2);padding:14px 18px;font-size:13px;color:var(--mu2);line-height:1.65;margin-top:16px;}
+.callout strong{color:var(--ink);}
+@media(max-width:860px){
+  .roles-grid{grid-template-columns:1fr 1fr;}
+  .layer{grid-template-columns:1fr;}
+  .layer-label{border-right:1px solid var(--b1);border-bottom:none;}
+  .wrap{padding:32px 20px 60px;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <div class="tb-logo">
+      <img src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png" alt="Nonna" onerror="this.style.display='none';this.nextSibling.style.display='block'">
+      <span class="tb-logo-fb" style="display:none">nonna</span>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-title">Organograma de Funções · 2025</div>
+  </div>
+  <div class="tb-right">
+    <button class="tb-btn on" onclick="setView('layers',this)">Camadas</button>
+    <button class="tb-btn" onclick="setView('roles',this)">Por função</button>
+    <button class="tb-btn" onclick="setView('flow',this)">Fluxo</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="eyebrow">Nonna Agência Digital · Estrutura interna</div>
+  <h1>Organograma de<br><span class="g">Funções</span></h1>
+  <p class="sub">Cargos e funções organizados por camadas de processo. Sem nomes — uma função pode ser ocupada por mais de uma pessoa, e uma pessoa pode ocupar mais de uma função.</p>
+
+  <div class="legend">
+    <div class="leg-title">Identificação por função — a mesma cor em camadas diferentes indica a mesma cadeira</div>
+    <div class="leg-role"><div class="leg-color" style="background:var(--r-dir)"></div><span class="leg-name">Direção Geral</span></div>
+    <div class="leg-role"><div class="leg-color" style="background:var(--r-cri)"></div><span class="leg-name">Direção Criativa</span></div>
+    <div class="leg-role"><div class="leg-color" style="background:var(--r-coo)"></div><span class="leg-name">COO · Operação &amp; Atendimento</span></div>
+    <div class="leg-role"><div class="leg-color" style="background:var(--r-ges)"></div><span class="leg-name">Gestor de Campanhas &amp; Projetos</span></div>
+    <div class="leg-role"><div class="leg-color" style="background:var(--r-hcr)"></div><span class="leg-name">Head Criativa &amp; Copy</span></div>
+    <div class="leg-role"><div class="leg-color" style="background:var(--r-hte)"></div><span class="leg-name">Head de Tecnologia</span></div>
+    <div class="leg-role"><div class="leg-color" style="background:var(--r-des)"></div><span class="leg-name">Design</span></div>
+    <div class="leg-role"><div class="leg-color" style="background:var(--r-tra)"></div><span class="leg-name">Gestão de Tráfego</span></div>
+    <div class="leg-role"><div class="leg-color" style="background:var(--r-dev)"></div><span class="leg-name">Desenvolvimento</span></div>
+    <p class="leg-note">Clique em qualquer função para ver sua descrição. Use os botões no topo para alternar entre as três visões.</p>
+  </div>
+
+  <!-- ══ VIEW 1: CAMADAS ══ -->
+  <div id="view-layers">
+    <div class="org">
+
+      <div class="layer">
+        <div class="layer-label">
+          <div class="ll-num">Camada 01</div>
+          <div class="ll-name">Relacionamento &amp; Entrada</div>
+          <div class="ll-desc">Porta de entrada do cliente</div>
+        </div>
+        <div class="layer-cards">
+          <div class="rcard r-dir" onclick="expand(this)">
+            <div class="rc-tag">Camadas 1 e 2</div>
+            <div class="rc-name">Direção Geral</div>
+            <div class="rc-sub">Comercial · fechamento de contratos</div>
+            <div class="rc-multi">também na camada 2</div>
+            <div class="rc-detail"><p>Responsável pelo fechamento comercial e pela primeira relação com o cliente. Conduz negociações, apresenta propostas e define o contexto estratégico antes do onboarding.</p></div>
+          </div>
+          <div class="rcard r-coo" onclick="expand(this)">
+            <div class="rc-tag">Camadas 1 e 3</div>
+            <div class="rc-name">COO · Operação &amp; Atendimento</div>
+            <div class="rc-sub">Onboarding · setup · apresentação do processo</div>
+            <div class="rc-multi">também na camada 3</div>
+            <div class="rc-detail"><p>Conduz toda a Etapa 00: contrato, setup de canais, apresentação do processo ao cliente e pedido de acessos. Acumula atendimento e financeiro.</p><ul><li>Configuração de grupos e pastas</li><li>Apresentação da Nonna ao cliente</li><li>Pedido e organização de acessos</li><li>Agendamento do kickoff</li></ul></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-label">
+          <div class="ll-num">Camada 02</div>
+          <div class="ll-name">Direção Estratégica</div>
+          <div class="ll-desc">Pensam antes de qualquer execução</div>
+        </div>
+        <div class="layer-cards">
+          <div class="rcard r-dir" onclick="expand(this)">
+            <div class="rc-tag">Camadas 1 e 2</div>
+            <div class="rc-name">Direção Geral</div>
+            <div class="rc-sub">Kickoff · Dossiê de Marca · planejamento periódico</div>
+            <div class="rc-multi">também na camada 1</div>
+            <div class="rc-detail"><p>Conduz o kickoff, formata o Dossiê de Marca e lidera as reuniões periódicas de planejamento. Dá origem aos conceitos de campanha e ao Roadmap.</p><ul><li>Kickoff e coleta de dados do cliente</li><li>Dossiê de Marca (Marca + Estratégia Global)</li><li>Roadmap do ciclo</li><li>Origem dos conceitos de campanha</li></ul></div>
+          </div>
+          <div class="rcard r-cri" onclick="expand(this)">
+            <div class="rc-tag">Camadas 2 e 4</div>
+            <div class="rc-name">Direção Criativa</div>
+            <div class="rc-sub">Pesquisa estratégica · Conceito de Campanha · copy</div>
+            <div class="rc-multi">também na camada 4</div>
+            <div class="rc-detail"><p>Complementa o Dossiê com pesquisa e visão criativa. Elabora o Conceito de Campanha após aprovação do Roadmap. Apoia a camada criativa na produção quando necessário.</p><ul><li>Pesquisa de mercado e concorrentes</li><li>Complemento estratégico do Dossiê</li><li>Conceito de Campanha (2 dias)</li><li>Apoio criativo à produção</li></ul></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-label">
+          <div class="ll-num">Camada 03</div>
+          <div class="ll-name">Aprovação &amp; Ritmo</div>
+          <div class="ll-desc">Aprovam com o cliente e mantêm o sprint</div>
+        </div>
+        <div class="layer-cards">
+          <div class="rcard r-ges" onclick="expand(this)">
+            <div class="rc-tag">Camada 3</div>
+            <div class="rc-name">Gestor de Campanhas &amp; Projetos</div>
+            <div class="rc-sub">Aprovação de roadmap e conceito · distribuição de tarefas</div>
+            <div class="rc-detail"><p>Apresenta e aprova Roadmap e Conceito com o cliente. Convoca a reunião de detalhamento. Distribui as tarefas para a fila do sprint e acompanha a operação de tráfego.</p><ul><li>Aprovação do Roadmap com o cliente</li><li>Reunião de detalhamento com heads</li><li>Aprovação do Conceito de Campanha</li><li>Distribuição de tarefas para a fila</li></ul></div>
+          </div>
+          <div class="rcard r-coo" onclick="expand(this)">
+            <div class="rc-tag">Camadas 1 e 3</div>
+            <div class="rc-name">COO · Operação &amp; Atendimento</div>
+            <div class="rc-sub">Aprovações de peças · gestão da sprint</div>
+            <div class="rc-multi">também na camada 1</div>
+            <div class="rc-detail"><p>Gerencia aprovações de peças com o cliente via Aprovaaí. Fecha a fila toda quinta e insere as tarefas na sprint toda sexta-feira.</p><ul><li>Gestão de aprovações via Aprovaaí</li><li>Fechamento da fila às quintas</li><li>Entrada na sprint às sextas</li><li>Monitoramento de prazos</li></ul></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-label">
+          <div class="ll-num">Camada 04</div>
+          <div class="ll-name">Preparo da Operação</div>
+          <div class="ll-desc">Alocam e preparam o squad</div>
+        </div>
+        <div class="layer-cards">
+          <div class="rcard r-hcr" onclick="expand(this)">
+            <div class="rc-tag">Camada 4</div>
+            <div class="rc-name">Head Criativa &amp; Copy</div>
+            <div class="rc-sub">Curadoria · redação · alocação de design</div>
+            <div class="rc-detail"><p>Garante aderência ao Conceito, escreve os textos e aloca as tarefas para o squad de design dentro da sprint.</p><ul><li>Redação de copy para posts e anúncios</li><li>Curadoria de qualidade do design</li><li>Calendário editorial mensal</li><li>Alocação de tarefas para designers</li></ul></div>
+          </div>
+          <div class="rcard r-cri" onclick="expand(this)">
+            <div class="rc-tag">Camadas 2 e 4</div>
+            <div class="rc-name">Direção Criativa</div>
+            <div class="rc-sub">Apoio criativo à produção quando necessário</div>
+            <div class="rc-multi">também na camada 2</div>
+            <div class="rc-detail"><p>Além do Conceito de Campanha (Camada 2), atua na Camada 4 quando campanhas ou projetos exigem direcionamento criativo mais aprofundado durante a produção.</p></div>
+          </div>
+          <div class="rcard r-hte" onclick="expand(this)">
+            <div class="rc-tag">Camada 4</div>
+            <div class="rc-name">Head de Tecnologia</div>
+            <div class="rc-sub">Code review · alocação de dev</div>
+            <div class="rc-detail"><p>Aloca tarefas técnicas para o squad de dev e garante qualidade técnica das entregas. Não gerencia prazos.</p><ul><li>Fatiamento técnico dos projetos</li><li>Alocação de tarefas para devs</li><li>Code review das entregas</li><li>Padrão técnico e arquitetura</li></ul></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-label">
+          <div class="ll-num">Camada 05</div>
+          <div class="ll-name">Produção</div>
+          <div class="ll-desc">Executam dentro do sprint</div>
+        </div>
+        <div class="layer-cards">
+          <div class="rcard r-des" onclick="expand(this)" style="max-width:180px;">
+            <div class="rc-tag">Camada 5 · ×2 cadeiras</div>
+            <div class="rc-name">Design</div>
+            <div class="rc-sub">Produção de peças visuais</div>
+            <div class="rc-detail"><p>Executa peças visuais dentro do território do Conceito. Recebe tarefas via ClickUp com campos obrigatórios preenchidos pela Head Criativa.</p></div>
+          </div>
+          <div class="rcard r-tra" onclick="expand(this)">
+            <div class="rc-tag">Camada 5</div>
+            <div class="rc-name">Gestão de Tráfego</div>
+            <div class="rc-sub">Campanhas pagas · otimização · relatórios</div>
+            <div class="rc-detail"><p>100% focada em performance de mídia paga. Opera de forma autônoma e recorre ao Gestor de Campanhas apenas em pontos específicos.</p><ul><li>Criação e configuração de campanhas</li><li>Gestão de verbas no Meta e Google</li><li>Otimização contínua</li><li>Relatório de otimização semanal</li></ul></div>
+          </div>
+          <div class="rcard r-dev" onclick="expand(this)" style="max-width:200px;">
+            <div class="rc-tag">Camada 5 · ×2 cadeiras</div>
+            <div class="rc-name">Desenvolvimento</div>
+            <div class="rc-sub">Sites · LPs · automações · 30h/sem por cadeira</div>
+            <div class="rc-detail"><p>Executa projetos técnicos a partir do fatiamento do Head de Tecnologia. Recebe projetos com escopo definido — monta, não inventa.</p></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="callout">
+      <strong>Sobre as duplas cadeiras:</strong> Direção Geral atua nas Camadas 1 e 2. Direção Criativa atua nas Camadas 2 e 4. COO atua nas Camadas 1 e 3. Uma pessoa pode ocupar mais de uma função — e uma função pode ser ocupada por mais de uma pessoa conforme a agência crescer.
+    </div>
+  </div>
+
+  <!-- ══ VIEW 2: POR FUNÇÃO ══ -->
+  <div id="view-roles">
+    <div class="roles-grid">
+      <div class="role-full" style="border-top:3px solid var(--r-dir);">
+        <div class="rf-name" style="color:var(--r-dir);">Direção Geral</div>
+        <div class="rf-layers"><span class="rf-layer">Camada 1</span><span class="rf-layer">Camada 2</span></div>
+        <div class="rf-desc">Comercial, kickoff, Dossiê de Marca, Roadmap e planejamento periódico. Atua desde o fechamento até o ciclo recorrente. Backstop técnico de performance e tecnologia.</div>
+        <div class="rf-resp">Responsabilidades</div>
+        <ul class="rf-list"><li>Fechamento comercial e proposta</li><li>Kickoff e coleta de dados</li><li>Dossiê de Marca (Marca + Estratégia Global)</li><li>Roadmap do ciclo</li><li>Reuniões periódicas de planejamento</li><li>Backstop técnico quando necessário</li></ul>
+      </div>
+      <div class="role-full" style="border-top:3px solid var(--r-cri);">
+        <div class="rf-name" style="color:var(--r-cri);">Direção Criativa</div>
+        <div class="rf-layers"><span class="rf-layer">Camada 2</span><span class="rf-layer">Camada 4</span></div>
+        <div class="rf-desc">Pesquisa estratégica, Conceito de Campanha e apoio criativo à produção. A cadeira que conecta estratégia e execução criativa.</div>
+        <div class="rf-resp">Responsabilidades</div>
+        <ul class="rf-list"><li>Pesquisa de mercado e concorrentes</li><li>Complemento estratégico do Dossiê</li><li>Conceito de Campanha (2 dias)</li><li>Regras de comunicação e peças base</li><li>Apoio criativo à produção quando necessário</li></ul>
+      </div>
+      <div class="role-full" style="border-top:3px solid var(--r-coo);">
+        <div class="rf-name" style="color:var(--r-coo);">COO · Operação &amp; Atendimento</div>
+        <div class="rf-layers"><span class="rf-layer">Camada 1</span><span class="rf-layer">Camada 3</span></div>
+        <div class="rf-desc">Garante que o cliente entra bem (onboarding) e que o time entrega no prazo (sprint). Acumula atendimento e financeiro.</div>
+        <div class="rf-resp">Responsabilidades</div>
+        <ul class="rf-list"><li>Onboarding completo (Etapa 00)</li><li>Atendimento no canal exclusivo</li><li>Gestão de aprovações via Aprovaaí</li><li>Fechamento da fila toda quinta</li><li>Entrada na sprint toda sexta</li><li>Financeiro e administrativo</li></ul>
+      </div>
+      <div class="role-full" style="border-top:3px solid var(--r-ges);">
+        <div class="rf-name" style="color:var(--r-ges);">Gestor de Campanhas &amp; Projetos</div>
+        <div class="rf-layers"><span class="rf-layer">Camada 3</span></div>
+        <div class="rf-desc">Dono das entregas — aprova com o cliente, lapida com os heads e distribui para o squad. Responde pelos resultados perante o cliente.</div>
+        <div class="rf-resp">Responsabilidades</div>
+        <ul class="rf-list"><li>Aprovação do Roadmap com cliente</li><li>Reunião de detalhamento com heads</li><li>Aprovação do Conceito com cliente</li><li>Distribuição de tarefas para a fila</li><li>Acompanhamento da operação de tráfego</li></ul>
+      </div>
+      <div class="role-full" style="border-top:3px solid var(--r-hcr);">
+        <div class="rf-name" style="color:var(--r-hcr);">Head Criativa &amp; Copy</div>
+        <div class="rf-layers"><span class="rf-layer">Camada 4</span></div>
+        <div class="rf-desc">Qualidade criativa e redação. Aloca e prepara o squad de design. Escreve os textos da comunicação dentro do território do Conceito.</div>
+        <div class="rf-resp">Responsabilidades</div>
+        <ul class="rf-list"><li>Redação de copy para posts e anúncios</li><li>Curadoria de qualidade do design</li><li>Calendário editorial mensal</li><li>Alocação de tarefas para designers</li><li>Garantia de aderência ao Conceito</li></ul>
+      </div>
+      <div class="role-full" style="border-top:3px solid var(--r-hte);">
+        <div class="rf-name" style="color:var(--r-hte);">Head de Tecnologia</div>
+        <div class="rf-layers"><span class="rf-layer">Camada 4</span></div>
+        <div class="rf-desc">Padrão técnico e qualidade das entregas de desenvolvimento. Não gerencia prazos — foca exclusivamente na qualidade técnica.</div>
+        <div class="rf-resp">Responsabilidades</div>
+        <ul class="rf-list"><li>Fatiamento técnico dos projetos</li><li>Alocação de tarefas para devs</li><li>Code review das entregas</li><li>Definição de padrão e arquitetura</li></ul>
+      </div>
+      <div class="role-full" style="border-top:3px solid var(--r-des);">
+        <div class="rf-name" style="color:var(--r-des);">Design <span style="font-size:12px;color:var(--mu);font-weight:400;">× 2 cadeiras</span></div>
+        <div class="rf-layers"><span class="rf-layer">Camada 5</span></div>
+        <div class="rf-desc">Executa peças visuais dentro do território do Conceito. Recebe tarefas com campos obrigatórios preenchidos — executa com qualidade e no prazo do sprint.</div>
+        <div class="rf-resp">Responsabilidades</div>
+        <ul class="rf-list"><li>Posts, stories e reels</li><li>Criativos para anúncios pagos</li><li>Materiais de campanha</li><li>Entrega dentro do prazo do sprint</li></ul>
+      </div>
+      <div class="role-full" style="border-top:3px solid var(--r-tra);">
+        <div class="rf-name" style="color:var(--r-tra);">Gestão de Tráfego</div>
+        <div class="rf-layers"><span class="rf-layer">Camada 5</span></div>
+        <div class="rf-desc">100% focada em performance de mídia paga. Opera com autonomia e recorre ao Gestor de Campanhas apenas em pontos específicos ou dúvidas estratégicas.</div>
+        <div class="rf-resp">Responsabilidades</div>
+        <ul class="rf-list"><li>Criação e configuração de campanhas</li><li>Gestão de verbas no Meta e Google</li><li>Otimização contínua</li><li>Relatório de otimização semanal</li><li>Dados para o relatório mensal</li></ul>
+      </div>
+      <div class="role-full" style="border-top:3px solid var(--r-dev);">
+        <div class="rf-name" style="color:var(--r-dev);">Desenvolvimento <span style="font-size:12px;color:var(--mu);font-weight:400;">× 2 cadeiras</span></div>
+        <div class="rf-layers"><span class="rf-layer">Camada 5</span></div>
+        <div class="rf-desc">Executa projetos técnicos a partir do fatiamento do Head de Tecnologia. Monta, não inventa. 30h semanais por cadeira.</div>
+        <div class="rf-resp">Responsabilidades</div>
+        <ul class="rf-list"><li>Desenvolvimento de sites e LPs</li><li>E-commerce e lojas digitais</li><li>Automações de marketing</li><li>Manutenção técnica</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ VIEW 3: FLUXO ══ -->
+  <div id="view-flow">
+    <p style="font-size:13px;color:var(--mu2);margin-bottom:24px;max-width:600px;line-height:1.7;">Como uma campanha passa pelas funções da agência — do planejamento à execução. Cada passo tem um responsável claro e um entregável definido.</p>
+    <div class="flow-chain">
+      <div class="fc-step">
+        <div class="fc-line"><div class="fc-dot"></div><div class="fc-vline"></div></div>
+        <div class="fc-content" style="border-left:3px solid var(--r-dir);">
+          <div class="fc-who" style="color:var(--r-dir);">Direção Geral</div>
+          <div class="fc-action">Planejamento periódico</div>
+          <div class="fc-desc">Conduz reunião de planejamento e define campanhas e projetos do próximo ciclo.</div>
+          <div class="fc-output">→ Roadmap rascunho</div>
+        </div>
+      </div>
+      <div class="fc-step">
+        <div class="fc-line"><div class="fc-dot"></div><div class="fc-vline"></div></div>
+        <div class="fc-content" style="border-left:3px solid var(--r-ges);">
+          <div class="fc-who" style="color:var(--r-ges);">Gestor de Campanhas &amp; Projetos</div>
+          <div class="fc-action">Aprovação do Roadmap com o cliente</div>
+          <div class="fc-desc">Apresenta o Roadmap ao cliente. Aprovado, convoca a reunião de detalhamento.</div>
+          <div class="fc-output">→ Roadmap aprovado + ATA</div>
+        </div>
+      </div>
+      <div class="fc-step">
+        <div class="fc-line"><div class="fc-dot"></div><div class="fc-vline"></div></div>
+        <div class="fc-content" style="border-left:3px solid var(--r-ges);">
+          <div class="fc-who" style="color:var(--r-ges);">Gestor · Heads · Direção Criativa</div>
+          <div class="fc-action">Reunião de detalhamento</div>
+          <div class="fc-desc">Lapida campanhas e projetos. Resolve ambiguidades. Gera a ATA para o Vitor.</div>
+          <div class="fc-output">→ ATA de detalhamento</div>
+        </div>
+      </div>
+      <div class="fc-step">
+        <div class="fc-line"><div class="fc-dot"></div><div class="fc-vline"></div></div>
+        <div class="fc-content" style="border-left:3px solid var(--r-cri);">
+          <div class="fc-who" style="color:var(--r-cri);">Direção Criativa</div>
+          <div class="fc-action">Elabora o Conceito de Campanha</div>
+          <div class="fc-desc">2 dias para criar regras de comunicação, território visual e peças base.</div>
+          <div class="fc-output">→ Conceito de Campanha</div>
+        </div>
+      </div>
+      <div class="fc-step">
+        <div class="fc-line"><div class="fc-dot"></div><div class="fc-vline"></div></div>
+        <div class="fc-content" style="border-left:3px solid var(--r-ges);">
+          <div class="fc-who" style="color:var(--r-ges);">Gestor de Campanhas &amp; Projetos</div>
+          <div class="fc-action">Aprovação do Conceito com o cliente</div>
+          <div class="fc-desc">2 dias para o cliente aprovar. Aprovado: tarefas na fila. Não aprovado: Direção Criativa ajusta.</div>
+          <div class="fc-output">→ Conceito aprovado → fila de tarefas</div>
+        </div>
+      </div>
+      <div class="fc-step">
+        <div class="fc-line"><div class="fc-dot"></div><div class="fc-vline"></div></div>
+        <div class="fc-content" style="border-left:3px solid var(--r-coo);">
+          <div class="fc-who" style="color:var(--r-coo);">COO · Operação &amp; Atendimento</div>
+          <div class="fc-action">Entrada na sprint (toda sexta)</div>
+          <div class="fc-desc">Revisa a fila na quinta. Insere as tarefas na sprint na sexta. Sprint inicia na segunda.</div>
+          <div class="fc-output">→ Sprint quinzenal iniciada</div>
+        </div>
+      </div>
+      <div class="fc-step">
+        <div class="fc-line"><div class="fc-dot"></div><div class="fc-vline"></div></div>
+        <div class="fc-content">
+          <div class="fc-who" style="color:var(--mu2);">Head Criativa &amp; Copy · Head de Tecnologia</div>
+          <div class="fc-action">Preparo e alocação para o squad</div>
+          <div class="fc-desc">Heads alocam tarefas com campos obrigatórios. Design, dev e tráfego executam dentro do Conceito.</div>
+          <div class="fc-output">→ Produção em execução</div>
+        </div>
+      </div>
+      <div class="fc-step">
+        <div class="fc-line"><div class="fc-dot" style="border-color:var(--green);"></div><div class="fc-vline" style="background:linear-gradient(to bottom,var(--green),rgba(52,211,153,.1));"></div></div>
+        <div class="fc-content" style="border-left:3px solid var(--green);">
+          <div class="fc-who" style="color:var(--green);">COO · Operação &amp; Atendimento</div>
+          <div class="fc-action">Aprovação via Aprovaaí</div>
+          <div class="fc-desc">Cada peça passa pelo cliente antes de publicar. Janela de 48h úteis.</div>
+          <div class="fc-output">→ Entregável publicado</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function setView(v,btn){
+  ['layers','roles','flow'].forEach(function(x){document.getElementById('view-'+x).style.display=x===v?'block':'none';});
+  document.querySelectorAll('.tb-btn').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+}
+function expand(card){
+  var d=card.querySelector('.rc-detail');
+  if(!d)return;
+  var wasOpen=d.classList.contains('open');
+  document.querySelectorAll('.rc-detail').forEach(function(x){x.classList.remove('open');});
+  document.querySelectorAll('.rcard').forEach(function(x){x.classList.remove('expanded');});
+  if(!wasOpen){d.classList.add('open');card.classList.add('expanded');}
+}
+</script>
+</body>
+</html>
