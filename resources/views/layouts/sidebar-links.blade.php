@@ -229,7 +229,7 @@
 {{-- ══ INTELIGÊNCIA IA ══ --}}
 <div class="nav-group-label" style="margin-top:8px">Inteligência IA</div>
 
-<div x-data="{ open: false }">
+<div x-data="{ open: {{ request()->routeIs('ai.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -242,9 +242,18 @@
         </svg>
     </button>
     <div x-show="open" x-transition style="display:none">
-        <a href="#" class="nav-sub-item">Meus Agentes (RAG)</a>
-        <a href="#" class="nav-sub-item">Base de Conhecimento</a>
-        <a href="#" class="nav-sub-item">Histórico de Conversas</a>
+        <a href="{{ route('ai.agents.index') }}"
+           class="nav-sub-item {{ request()->routeIs('ai.agents.*') ? 'active' : '' }}">
+            Agentes
+        </a>
+        <a href="{{ route('ai.providers.index') }}"
+           class="nav-sub-item {{ request()->routeIs('ai.providers.*') ? 'active' : '' }}">
+            Providers & Chaves
+        </a>
+        <a href="{{ route('ai.usage.index') }}"
+           class="nav-sub-item {{ request()->routeIs('ai.usage.*') ? 'active' : '' }}">
+            Uso & Custos
+        </a>
     </div>
 </div>
 

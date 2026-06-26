@@ -267,6 +267,39 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('visoes.show')
         ->where('role', 'direcao_geral|direcao_criativa|coo|gestor_campanhas|head_criativa|head_tech|designer|trafego|dev');
 
+    // ── Ecossistema de IA ──
+    Route::prefix('ia')->name('ai.')->group(function () {
+        // Providers & Chaves
+        Route::get('/providers', [\App\Http\Controllers\Ai\AiProviderController::class, 'index'])
+            ->name('providers.index');
+        Route::post('/providers/{provider}/chaves', [\App\Http\Controllers\Ai\AiProviderController::class, 'storeKey'])
+            ->name('providers.keys.store');
+        Route::delete('/providers/{provider}/chaves/{key}', [\App\Http\Controllers\Ai\AiProviderController::class, 'destroyKey'])
+            ->name('providers.keys.destroy');
+        Route::patch('/providers/{provider}/chaves/{key}/toggle', [\App\Http\Controllers\Ai\AiProviderController::class, 'toggleKey'])
+            ->name('providers.keys.toggle');
+
+        // Agentes
+        Route::get('/agentes', [\App\Http\Controllers\Ai\AiAgentController::class, 'index'])
+            ->name('agents.index');
+        Route::get('/agentes/novo', [\App\Http\Controllers\Ai\AiAgentController::class, 'create'])
+            ->name('agents.create');
+        Route::post('/agentes', [\App\Http\Controllers\Ai\AiAgentController::class, 'store'])
+            ->name('agents.store');
+        Route::get('/agentes/{agent}/editar', [\App\Http\Controllers\Ai\AiAgentController::class, 'edit'])
+            ->name('agents.edit');
+        Route::patch('/agentes/{agent}', [\App\Http\Controllers\Ai\AiAgentController::class, 'update'])
+            ->name('agents.update');
+        Route::delete('/agentes/{agent}', [\App\Http\Controllers\Ai\AiAgentController::class, 'destroy'])
+            ->name('agents.destroy');
+        Route::patch('/agentes/{agent}/toggle', [\App\Http\Controllers\Ai\AiAgentController::class, 'toggleActive'])
+            ->name('agents.toggle');
+
+        // Uso & Custos
+        Route::get('/uso', [\App\Http\Controllers\Ai\AiUsageController::class, 'index'])
+            ->name('usage.index');
+    });
+
     // ── Configurações da Organização (somente admin/owner) ──
     Route::middleware('org.admin')->group(function () {
         Route::get('/configuracoes', [OrganizationSettingsController::class, 'index'])
