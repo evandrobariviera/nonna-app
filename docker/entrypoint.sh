@@ -22,5 +22,9 @@ php artisan event:cache
 echo "==> Rodando migrations..."
 php artisan migrate --force
 
+# Seeders idempotentes (insertOrIgnore — seguros para rodar múltiplas vezes)
+echo "==> Populando providers de IA..."
+php artisan db:seed --class=AiProviderSeeder --force
+
 echo "==> Pronto. Iniciando serviços..."
 exec "$@"
