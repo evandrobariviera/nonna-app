@@ -684,90 +684,117 @@
             </div>
 
             {{-- CHAT IA --}}
-            <div class="card card-body" x-data="taskChat()">
-                <div class="flex items-center justify-between mb-3">
+            <script>
+                window._tChat = {
+                    messages: @json($chatMessages),
+                    agents:   @json($agents),
+                    endpoint: '{{ route('tasks.chat', $task) }}',
+                };
+            </script>
+            <div class="card" x-data="taskChat()" style="overflow:hidden">
+
+                {{-- Cabeçalho --}}
+                <button @click="open = !open"
+                        class="w-full flex items-center justify-between px-4 py-3"
+                        style="background:var(--s2); border-bottom:1px solid var(--border2)">
                     <div class="flex items-center gap-2">
                         <svg class="h-3.5 w-3.5 flex-shrink-0" style="color:var(--purple)" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
                         </svg>
-                        <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Chat IA</p>
+                        <span class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Chat IA</span>
                         <span x-show="messages.length > 0" x-cloak
-                              class="px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)"
+                              class="text-xs px-1.5 py-0.5 font-semibold"
+                              style="background:rgba(106,90,205,.1); color:var(--purple); border:1px solid rgba(106,90,205,.2)"
                               x-text="messages.length"></span>
                     </div>
-                    <button @click="open = !open" class="text-xs font-bold" style="color:var(--muted); line-height:1" x-text="open ? '−' : '+'"></button>
-                </div>
+                    <svg class="h-3.5 w-3.5 flex-shrink-0 transition-transform duration-200"
+                         :style="open ? 'transform:rotate(180deg)' : ''"
+                         style="color:var(--muted)" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
+                    </svg>
+                </button>
 
                 <div x-show="open" x-cloak>
-                    {{-- Seletor de especialista --}}
-                    <select x-model="selectedAgent" class="w-full px-2 py-2 text-xs focus:outline-none mb-3"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                        <option value="">Selecione o especialista...</option>
-                        <template x-for="agent in agents" :key="agent.id">
-                            <option :value="agent.id" x-text="agent.name"></option>
-                        </template>
-                    </select>
-
                     @if($agents->isEmpty())
-                        <p class="text-xs py-3 text-center" style="color:var(--muted)">
-                            Nenhum agente ativo. <a href="{{ route('ai.agents.create') }}" style="color:var(--purple)">Criar agente →</a>
-                        </p>
+                        <div class="px-4 py-4 text-center">
+                            <p class="text-xs" style="color:var(--muted)">Nenhum agente ativo.</p>
+                            <a href="{{ route('ai.agents.create') }}" class="text-xs mt-1 block" style="color:var(--purple)">Criar agente →</a>
+                        </div>
                     @else
+                        {{-- Seletor de especialista --}}
+                        <div class="px-3 py-2.5" style="border-bottom:1px solid var(--border2)">
+                            <select x-model="selectedAgent"
+                                    class="w-full px-2.5 py-2 text-xs focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                <option value="">Especialista...</option>
+                                <template x-for="agent in agents" :key="agent.id">
+                                    <option :value="agent.id" x-text="agent.name"></option>
+                                </template>
+                            </select>
+                        </div>
+
                         {{-- Mensagens --}}
                         <div x-ref="msgContainer"
-                             class="flex flex-col gap-2 mb-3 overflow-y-auto"
-                             style="max-height:320px; scroll-behavior:smooth">
+                             class="flex flex-col gap-3 overflow-y-auto px-3 py-3"
+                             style="max-height:280px; scroll-behavior:smooth">
 
                             <template x-if="messages.length === 0">
-                                <p class="text-xs text-center py-6" style="color:var(--muted); border:1px dashed var(--border2)">
-                                    Inicie a conversa com o especialista.
+                                <p class="text-xs text-center py-4" style="color:var(--muted)">
+                                    Inicie a conversa.
                                 </p>
                             </template>
 
                             <template x-for="msg in messages" :key="msg.id">
-                                <div>
-                                    <div class="flex items-baseline gap-1 mb-1"
-                                         :class="msg.role === 'user' ? 'justify-end' : 'justify-start'">
-                                        <span class="text-xs font-semibold" style="color:var(--muted)"
-                                              x-text="msg.role === 'user' ? (msg.user_name || 'Você') : msg.agent_name"></span>
-                                        <span class="text-xs" style="color:var(--muted2); font-size:.7rem" x-text="msg.time"></span>
-                                    </div>
-                                    <div :class="msg.role === 'user' ? 'ml-3' : 'mr-3'"
-                                         class="px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap break-words"
+                                <div :class="msg.role === 'user' ? 'items-end' : 'items-start'"
+                                     class="flex flex-col gap-1">
+                                    <span class="text-xs" style="color:var(--muted); font-size:.68rem"
+                                          x-text="msg.role === 'user'
+                                              ? ((msg.user_name || 'Você') + ' · ' + msg.time)
+                                              : (msg.agent_name + ' · ' + msg.time)"></span>
+                                    <div class="text-xs leading-relaxed whitespace-pre-wrap break-words px-3 py-2"
+                                         :class="msg.role === 'user' ? 'self-end' : 'self-start'"
                                          :style="msg.role === 'user'
-                                             ? 'background:rgba(106,90,205,.1); border:1px solid rgba(106,90,205,.2); color:var(--text)'
-                                             : 'background:var(--s3); border:1px solid var(--border2); color:var(--text)'"
+                                             ? 'background:var(--purple); color:#fff; max-width:90%; border-radius:12px 12px 2px 12px'
+                                             : 'background:var(--s3); border:1px solid var(--border2); color:var(--text); max-width:95%; border-radius:2px 12px 12px 12px'"
                                          x-text="msg.content">
                                     </div>
                                 </div>
                             </template>
 
                             <template x-if="thinking">
-                                <div class="mr-3 px-3 py-2" style="background:var(--s3); border:1px solid var(--border2)">
-                                    <span class="text-xs animate-pulse" style="color:var(--muted)">pensando...</span>
+                                <div class="flex flex-col items-start gap-1">
+                                    <span class="text-xs" style="color:var(--muted); font-size:.68rem"
+                                          x-text="agents.find(a => a.id === selectedAgent)?.name ?? 'IA'"></span>
+                                    <div class="px-3 py-2 text-xs" style="background:var(--s3); border:1px solid var(--border2); border-radius:2px 12px 12px 12px">
+                                        <span class="animate-pulse" style="color:var(--muted)">digitando...</span>
+                                    </div>
                                 </div>
                             </template>
                         </div>
 
                         {{-- Input --}}
-                        <div class="flex gap-1.5">
+                        <div class="px-3 pb-3 pt-2" style="border-top:1px solid var(--border2)">
                             <textarea x-model="input"
                                       @keydown.meta.enter.prevent="send()"
                                       @keydown.ctrl.enter.prevent="send()"
                                       :disabled="!selectedAgent || thinking"
                                       rows="2"
                                       placeholder="Mensagem..."
-                                      class="flex-1 px-2 py-2 text-xs focus:outline-none resize-none"
+                                      class="w-full px-3 py-2 text-xs focus:outline-none resize-none"
                                       style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"></textarea>
-                            <button @click="send()"
-                                    :disabled="!selectedAgent || !input.trim() || thinking"
-                                    class="flex-shrink-0 px-3 text-sm font-bold text-white self-stretch"
-                                    :style="(!selectedAgent || !input.trim() || thinking) ? 'background:var(--purple); opacity:.35; cursor:not-allowed' : 'background:var(--purple)'">
-                                →
-                            </button>
+                            <div class="flex items-center justify-between mt-2">
+                                <span class="text-xs" style="color:var(--muted2); font-size:.68rem">⌘+Enter envia</span>
+                                <button @click="send()"
+                                        :disabled="!selectedAgent || !input.trim() || thinking"
+                                        class="px-3 py-1.5 text-xs font-semibold text-white"
+                                        :style="(!selectedAgent || !input.trim() || thinking)
+                                            ? 'background:var(--purple); opacity:.35; cursor:not-allowed'
+                                            : 'background:var(--purple)'">
+                                    Enviar
+                                </button>
+                            </div>
+                            <p x-show="error" x-cloak class="text-xs mt-1" style="color:var(--red)" x-text="error"></p>
                         </div>
-                        <p class="text-xs mt-1" style="color:var(--muted2)">⌘+Enter para enviar</p>
-                        <p x-show="error" x-cloak class="text-xs mt-1" style="color:var(--red)" x-text="error"></p>
                     @endif
                 </div>
             </div>
@@ -904,10 +931,6 @@
 
 @push('scripts')
 <script>
-window._taskChatMessages = @json($chatMessages);
-window._taskChatAgents   = @json($agents);
-window._taskChatEndpoint = '{{ route('tasks.chat', $task) }}';
-
 function executorPicker(initial = []) {
     return {
         selected: initial,
@@ -924,14 +947,14 @@ function executorPicker(initial = []) {
 
 function taskChat() {
     return {
-        endpoint:      window._taskChatEndpoint,
-        agents:        window._taskChatAgents ?? [],
-        messages:      window._taskChatMessages ?? [],
+        endpoint:      window._tChat?.endpoint ?? '',
+        agents:        window._tChat?.agents   ?? [],
+        messages:      window._tChat?.messages ?? [],
         selectedAgent: '',
         input:         '',
         thinking:      false,
         error:         '',
-        open:          (window._taskChatMessages ?? []).length > 0,
+        open:          (window._tChat?.messages ?? []).length > 0,
 
         scrollBottom() {
             this.$nextTick(() => {
