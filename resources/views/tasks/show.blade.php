@@ -14,13 +14,100 @@
         </div>
     @endif
 
-    {{-- dados do chat inline, antes do Alpine inicializar --}}
+    {{-- Todos os dados e componentes Alpine registrados AQUI antes dos x-data --}}
     <script>
         window._tChat = {
             messages: @json($chatMessages),
             agents:   @json($agents),
             endpoint: '{{ route('tasks.chat', $task) }}',
         };
+
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('ui', { chatOpen: false });
+
+            Alpine.data('executorPicker', (initial = []) => ({
+                selected: initial,
+                add(event) {
+                    const id   = event.target.value;
+                    const name = event.target.selectedOptions[0]?.dataset?.name;
+                    if (!id || this.selected.find(s => s.id == id)) { event.target.value = ''; return; }
+                    this.selected.push({ id, name, role: 'executor' });
+                    event.target.value = '';
+                },
+                remove(idx) { this.selected.splice(idx, 1); }
+            }));
+
+            Alpine.data('taskChat', () => ({
+                endpoint:      window._tChat?.endpoint ?? '',
+                agents:        window._tChat?.agents   ?? [],
+                messages:      window._tChat?.messages ?? [],
+                selectedAgent: '',
+                input:         '',
+                thinking:      false,
+                error:         '',
+
+                init() {
+                    this.$watch('$store.ui.chatOpen', (open) => {
+                        if (open) this.scrollBottom();
+                    });
+                },
+
+                scrollBottom() {
+                    this.$nextTick(() => {
+                        const el = this.$refs.msgContainer;
+                        if (el) el.scrollTop = el.scrollHeight;
+                    });
+                },
+
+                async send() {
+                    if (!this.selectedAgent || !this.input.trim() || this.thinking) return;
+
+                    const text = this.input.trim();
+                    this.input    = '';
+                    this.error    = '';
+                    this.thinking = true;
+
+                    this.messages.push({
+                        id:         Date.now(),
+                        role:       'user',
+                        content:    text,
+                        user_name:  '{{ auth()->user()->name }}',
+                        agent_name: null,
+                        time:       new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                    });
+
+                    this.scrollBottom();
+
+                    try {
+                        const res = await fetch(this.endpoint, {
+                            method:  'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept':       'application/json',
+                            },
+                            body: JSON.stringify({ agent_id: this.selectedAgent, message: text }),
+                        });
+
+                        const data = await res.json();
+
+                        if (!res.ok) {
+                            this.error = data.error || 'Erro ao processar.';
+                            this.messages.pop();
+                            return;
+                        }
+
+                        this.messages.push(data);
+                        this.scrollBottom();
+                    } catch (e) {
+                        this.error = 'Erro de conexão.';
+                        this.messages.pop();
+                    } finally {
+                        this.thinking = false;
+                    }
+                }
+            }));
+        });
     </script>
 
     <div x-data="{ editing: false }" class="flex gap-5" style="align-items: start;">
@@ -834,7 +921,7 @@
     {{-- ══════════════════════════════════════════════════════════
          PAINEL CHAT IA — deslizante pela direita (estilo ClickUp Brain)
     ══════════════════════════════════════════════════════════ --}}
-    <div x-data="taskChat()">
+    <div x-data="taskChat">
 
         {{-- Backdrop --}}
         <div x-show="$store.ui.chatOpen"
@@ -980,97 +1067,3 @@
 
 </x-app-layout>
 
-@push('scripts')
-<script>
-document.addEventListener('alpine:init', () => {
-    Alpine.store('ui', { chatOpen: false });
-});
-
-function executorPicker(initial = []) {
-    return {
-        selected: initial,
-        add(event) {
-            const id   = event.target.value;
-            const name = event.target.selectedOptions[0]?.dataset?.name;
-            if (!id || this.selected.find(s => s.id == id)) { event.target.value = ''; return; }
-            this.selected.push({ id, name, role: 'executor' });
-            event.target.value = '';
-        },
-        remove(idx) { this.selected.splice(idx, 1); }
-    }
-}
-
-function taskChat() {
-    return {
-        endpoint:      window._tChat?.endpoint ?? '',
-        agents:        window._tChat?.agents   ?? [],
-        messages:      window._tChat?.messages ?? [],
-        selectedAgent: '',
-        input:         '',
-        thinking:      false,
-        error:         '',
-
-        init() {
-            this.$watch('$store.ui.chatOpen', (open) => {
-                if (open) this.scrollBottom();
-            });
-        },
-
-        scrollBottom() {
-            this.$nextTick(() => {
-                const el = this.$refs.msgContainer;
-                if (el) el.scrollTop = el.scrollHeight;
-            });
-        },
-
-        async send() {
-            if (!this.selectedAgent || !this.input.trim() || this.thinking) return;
-
-            const text = this.input.trim();
-            this.input    = '';
-            this.error    = '';
-            this.thinking = true;
-
-            this.messages.push({
-                id:         Date.now(),
-                role:       'user',
-                content:    text,
-                user_name:  '{{ auth()->user()->name }}',
-                agent_name: null,
-                time:       new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            });
-
-            this.scrollBottom();
-
-            try {
-                const res = await fetch(this.endpoint, {
-                    method:  'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept':       'application/json',
-                    },
-                    body: JSON.stringify({ agent_id: this.selectedAgent, message: text }),
-                });
-
-                const data = await res.json();
-
-                if (!res.ok) {
-                    this.error = data.error || 'Erro ao processar.';
-                    this.messages.pop();
-                    return;
-                }
-
-                this.messages.push(data);
-                this.scrollBottom();
-            } catch (e) {
-                this.error = 'Erro de conexão.';
-                this.messages.pop();
-            } finally {
-                this.thinking = false;
-            }
-        }
-    }
-}
-</script>
-@endpush
