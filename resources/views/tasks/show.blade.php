@@ -14,6 +14,15 @@
         </div>
     @endif
 
+    {{-- dados do chat inline, antes do Alpine inicializar --}}
+    <script>
+        window._tChat = {
+            messages: @json($chatMessages),
+            agents:   @json($agents),
+            endpoint: '{{ route('tasks.chat', $task) }}',
+        };
+    </script>
+
     <div x-data="{ editing: false }" class="flex gap-5" style="align-items: start;">
 
         {{-- ══════════════════════════════════════════════════════════
@@ -36,12 +45,23 @@
                         </div>
                         <h1 class="text-2xl leading-tight" style="color:var(--text); font-weight:700; letter-spacing:-0.02em">{{ $task->title }}</h1>
                     </div>
-                    <button @click="editing = !editing"
-                        :style="editing ? 'background:var(--purple); color:#fff; border-color:var(--purple)' : ''"
-                        class="flex-shrink-0 px-4 py-2 text-xs font-semibold transition-colors"
-                        style="border:1px solid var(--border2); color:var(--muted2)">
-                        <span x-text="editing ? '✕  Cancelar' : '✎  Editar'"></span>
-                    </button>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button @click="$store.ui.chatOpen = true"
+                                class="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-all"
+                                style="border:1px solid rgba(106,90,205,.35); color:var(--purple); background:rgba(106,90,205,.06)"
+                                onmouseover="this.style.background='rgba(106,90,205,.12)'" onmouseout="this.style.background='rgba(106,90,205,.06)'">
+                            <svg class="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+                            </svg>
+                            Chat IA
+                        </button>
+                        <button @click="editing = !editing"
+                            :style="editing ? 'background:var(--purple); color:#fff; border-color:var(--purple)' : ''"
+                            class="px-4 py-2 text-xs font-semibold transition-colors"
+                            style="border:1px solid var(--border2); color:var(--muted2)">
+                            <span x-text="editing ? '✕  Cancelar' : '✎  Editar'"></span>
+                        </button>
+                    </div>
                 </div>
 
                 {{-- Breadcrumb --}}
@@ -683,122 +703,6 @@
                 </div>
             </div>
 
-            {{-- CHAT IA --}}
-            <script>
-                window._tChat = {
-                    messages: @json($chatMessages),
-                    agents:   @json($agents),
-                    endpoint: '{{ route('tasks.chat', $task) }}',
-                };
-            </script>
-            <div class="card" x-data="taskChat()" style="overflow:hidden">
-
-                {{-- Cabeçalho --}}
-                <button @click="open = !open"
-                        class="w-full flex items-center justify-between px-4 py-3"
-                        style="background:var(--s2); border-bottom:1px solid var(--border2)">
-                    <div class="flex items-center gap-2">
-                        <svg class="h-3.5 w-3.5 flex-shrink-0" style="color:var(--purple)" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
-                        </svg>
-                        <span class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Chat IA</span>
-                        <span x-show="messages.length > 0" x-cloak
-                              class="text-xs px-1.5 py-0.5 font-semibold"
-                              style="background:rgba(106,90,205,.1); color:var(--purple); border:1px solid rgba(106,90,205,.2)"
-                              x-text="messages.length"></span>
-                    </div>
-                    <svg class="h-3.5 w-3.5 flex-shrink-0 transition-transform duration-200"
-                         :style="open ? 'transform:rotate(180deg)' : ''"
-                         style="color:var(--muted)" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
-                    </svg>
-                </button>
-
-                <div x-show="open" x-cloak>
-                    @if($agents->isEmpty())
-                        <div class="px-4 py-4 text-center">
-                            <p class="text-xs" style="color:var(--muted)">Nenhum agente ativo.</p>
-                            <a href="{{ route('ai.agents.create') }}" class="text-xs mt-1 block" style="color:var(--purple)">Criar agente →</a>
-                        </div>
-                    @else
-                        {{-- Seletor de especialista --}}
-                        <div class="px-3 py-2.5" style="border-bottom:1px solid var(--border2)">
-                            <select x-model="selectedAgent"
-                                    class="w-full px-2.5 py-2 text-xs focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                                <option value="">Especialista...</option>
-                                <template x-for="agent in agents" :key="agent.id">
-                                    <option :value="agent.id" x-text="agent.name"></option>
-                                </template>
-                            </select>
-                        </div>
-
-                        {{-- Mensagens --}}
-                        <div x-ref="msgContainer"
-                             class="flex flex-col gap-3 overflow-y-auto px-3 py-3"
-                             style="max-height:280px; scroll-behavior:smooth">
-
-                            <template x-if="messages.length === 0">
-                                <p class="text-xs text-center py-4" style="color:var(--muted)">
-                                    Inicie a conversa.
-                                </p>
-                            </template>
-
-                            <template x-for="msg in messages" :key="msg.id">
-                                <div :class="msg.role === 'user' ? 'items-end' : 'items-start'"
-                                     class="flex flex-col gap-1">
-                                    <span class="text-xs" style="color:var(--muted); font-size:.68rem"
-                                          x-text="msg.role === 'user'
-                                              ? ((msg.user_name || 'Você') + ' · ' + msg.time)
-                                              : (msg.agent_name + ' · ' + msg.time)"></span>
-                                    <div class="text-xs leading-relaxed whitespace-pre-wrap break-words px-3 py-2"
-                                         :class="msg.role === 'user' ? 'self-end' : 'self-start'"
-                                         :style="msg.role === 'user'
-                                             ? 'background:var(--purple); color:#fff; max-width:90%; border-radius:12px 12px 2px 12px'
-                                             : 'background:var(--s3); border:1px solid var(--border2); color:var(--text); max-width:95%; border-radius:2px 12px 12px 12px'"
-                                         x-text="msg.content">
-                                    </div>
-                                </div>
-                            </template>
-
-                            <template x-if="thinking">
-                                <div class="flex flex-col items-start gap-1">
-                                    <span class="text-xs" style="color:var(--muted); font-size:.68rem"
-                                          x-text="agents.find(a => a.id === selectedAgent)?.name ?? 'IA'"></span>
-                                    <div class="px-3 py-2 text-xs" style="background:var(--s3); border:1px solid var(--border2); border-radius:2px 12px 12px 12px">
-                                        <span class="animate-pulse" style="color:var(--muted)">digitando...</span>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-
-                        {{-- Input --}}
-                        <div class="px-3 pb-3 pt-2" style="border-top:1px solid var(--border2)">
-                            <textarea x-model="input"
-                                      @keydown.meta.enter.prevent="send()"
-                                      @keydown.ctrl.enter.prevent="send()"
-                                      :disabled="!selectedAgent || thinking"
-                                      rows="2"
-                                      placeholder="Mensagem..."
-                                      class="w-full px-3 py-2 text-xs focus:outline-none resize-none"
-                                      style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"></textarea>
-                            <div class="flex items-center justify-between mt-2">
-                                <span class="text-xs" style="color:var(--muted2); font-size:.68rem">⌘+Enter envia</span>
-                                <button @click="send()"
-                                        :disabled="!selectedAgent || !input.trim() || thinking"
-                                        class="px-3 py-1.5 text-xs font-semibold text-white"
-                                        :style="(!selectedAgent || !input.trim() || thinking)
-                                            ? 'background:var(--purple); opacity:.35; cursor:not-allowed'
-                                            : 'background:var(--purple)'">
-                                    Enviar
-                                </button>
-                            </div>
-                            <p x-show="error" x-cloak class="text-xs mt-1" style="color:var(--red)" x-text="error"></p>
-                        </div>
-                    @endif
-                </div>
-            </div>
-
             {{-- APROVAÇÃO DO CLIENTE --}}
             <div class="card card-body">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Aprovação</p>
@@ -927,10 +831,161 @@
         </div>{{-- /sidebar --}}
     </div>
 
+    {{-- ══════════════════════════════════════════════════════════
+         PAINEL CHAT IA — deslizante pela direita (estilo ClickUp Brain)
+    ══════════════════════════════════════════════════════════ --}}
+    <div x-data="taskChat()">
+
+        {{-- Backdrop --}}
+        <div x-show="$store.ui.chatOpen"
+             x-cloak
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click="$store.ui.chatOpen = false"
+             class="fixed inset-0 z-40"
+             style="background:rgba(0,0,0,.22)">
+        </div>
+
+        {{-- Painel --}}
+        <div x-show="$store.ui.chatOpen"
+             x-cloak
+             x-transition:enter="transform transition ease-out duration-200"
+             x-transition:enter-start="translate-x-full"
+             x-transition:enter-end="translate-x-0"
+             x-transition:leave="transform transition ease-in duration-150"
+             x-transition:leave-start="translate-x-0"
+             x-transition:leave-end="translate-x-full"
+             class="fixed top-0 right-0 h-screen z-50 flex flex-col"
+             style="width:440px; background:var(--s1); border-left:1px solid var(--border2); box-shadow:-8px 0 40px rgba(0,0,0,.12)">
+
+            {{-- Cabeçalho do painel --}}
+            <div class="flex items-center justify-between px-5 py-4 flex-shrink-0"
+                 style="border-bottom:1px solid var(--border2); background:var(--s2)">
+                <div class="flex items-center gap-2.5">
+                    <svg class="h-4 w-4 flex-shrink-0" style="color:var(--purple)" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+                    </svg>
+                    <span class="text-sm font-semibold" style="color:var(--text)">Chat IA</span>
+                    <span x-show="messages.length > 0" x-cloak x-text="messages.length"
+                          class="text-xs px-1.5 py-0.5 font-semibold"
+                          style="background:rgba(106,90,205,.1); color:var(--purple); border:1px solid rgba(106,90,205,.2)"></span>
+                </div>
+                <button @click="$store.ui.chatOpen = false"
+                        class="flex items-center justify-center h-7 w-7 text-sm transition-colors"
+                        style="color:var(--muted)"
+                        onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                    ✕
+                </button>
+            </div>
+
+            {{-- Seletor de especialista --}}
+            <div class="px-4 py-3.5 flex-shrink-0" style="border-bottom:1px solid var(--border2); background:var(--s2)">
+                <label class="block text-xs font-semibold uppercase tracking-widest mb-2"
+                       style="color:var(--muted); letter-spacing:.08em">Especialista</label>
+                <select x-model="selectedAgent"
+                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
+                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
+                    <option value="">Selecione um especialista...</option>
+                    <template x-for="agent in agents" :key="agent.id">
+                        <option :value="agent.id" x-text="agent.name"></option>
+                    </template>
+                </select>
+                <p x-show="agents.length === 0" x-cloak class="text-xs mt-2" style="color:var(--muted)">
+                    Nenhum agente ativo.
+                    <a href="{{ route('ai.agents.create') }}" style="color:var(--purple)">Criar agente →</a>
+                </p>
+                <p x-show="agents.length > 0 && !selectedAgent" x-cloak class="text-xs mt-1.5" style="color:var(--muted2)">
+                    O contexto desta tarefa é enviado automaticamente.
+                </p>
+            </div>
+
+            {{-- Área de mensagens --}}
+            <div x-ref="msgContainer"
+                 class="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3"
+                 style="scroll-behavior:smooth">
+
+                <template x-if="messages.length === 0">
+                    <div class="flex flex-col items-center justify-center flex-1 py-16 text-center">
+                        <svg class="h-9 w-9 mb-3" style="color:var(--border2)" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                        </svg>
+                        <p class="text-sm font-medium" style="color:var(--muted2)">Inicie a conversa</p>
+                        <p class="text-xs mt-1" style="color:var(--muted)">Selecione um especialista e envie sua mensagem.</p>
+                    </div>
+                </template>
+
+                <template x-for="msg in messages" :key="msg.id">
+                    <div :class="msg.role === 'user' ? 'items-end' : 'items-start'"
+                         class="flex flex-col gap-1">
+                        <span class="text-xs" style="color:var(--muted); font-size:.68rem"
+                              x-text="msg.role === 'user'
+                                  ? ((msg.user_name || 'Você') + ' · ' + msg.time)
+                                  : ((msg.agent_name || 'IA') + ' · ' + msg.time)"></span>
+                        <div class="text-sm leading-relaxed whitespace-pre-wrap break-words px-4 py-2.5"
+                             :class="msg.role === 'user' ? 'self-end' : 'self-start'"
+                             :style="msg.role === 'user'
+                                 ? 'background:var(--purple); color:#fff; max-width:85%; border-radius:14px 14px 2px 14px'
+                                 : 'background:var(--s3); border:1px solid var(--border2); color:var(--text); max-width:92%; border-radius:2px 14px 14px 14px'"
+                             x-text="msg.content">
+                        </div>
+                    </div>
+                </template>
+
+                <template x-if="thinking">
+                    <div class="flex flex-col items-start gap-1">
+                        <span class="text-xs" style="color:var(--muted); font-size:.68rem"
+                              x-text="agents.find(a => a.id === selectedAgent)?.name ?? 'IA'"></span>
+                        <div class="px-4 py-2.5 text-sm"
+                             style="background:var(--s3); border:1px solid var(--border2); border-radius:2px 14px 14px 14px">
+                            <span class="animate-pulse" style="color:var(--muted)">digitando...</span>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            {{-- Área de input --}}
+            <div class="flex-shrink-0 px-4 py-4" style="border-top:1px solid var(--border2); background:var(--s2)">
+                <textarea x-model="input"
+                          @keydown.meta.enter.prevent="send()"
+                          @keydown.ctrl.enter.prevent="send()"
+                          :disabled="!selectedAgent || thinking"
+                          rows="3"
+                          placeholder="Mensagem para o especialista..."
+                          class="w-full px-4 py-3 text-sm focus:outline-none resize-none"
+                          style="background:var(--s3); border:1px solid var(--border2); color:var(--text); line-height:1.6"
+                          onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'"></textarea>
+                <div class="flex items-center justify-between mt-3">
+                    <span class="text-xs" style="color:var(--muted2)">⌘+Enter envia</span>
+                    <button @click="send()"
+                            :disabled="!selectedAgent || !input.trim() || thinking"
+                            class="px-5 py-2 text-sm font-semibold text-white transition-opacity"
+                            :style="(!selectedAgent || !input.trim() || thinking)
+                                ? 'background:var(--purple); opacity:.35; cursor:not-allowed'
+                                : 'background:var(--purple)'"
+                            onmouseover="if(!this.disabled) this.style.opacity='.85'"
+                            onmouseout="if(!this.disabled) this.style.opacity='1'">
+                        Enviar
+                    </button>
+                </div>
+                <p x-show="error" x-cloak class="text-xs mt-2" style="color:var(--red)" x-text="error"></p>
+            </div>
+
+        </div>{{-- /painel --}}
+    </div>{{-- /chat ia wrapper --}}
+
 </x-app-layout>
 
 @push('scripts')
 <script>
+document.addEventListener('alpine:init', () => {
+    Alpine.store('ui', { chatOpen: false });
+});
+
 function executorPicker(initial = []) {
     return {
         selected: initial,
@@ -954,7 +1009,12 @@ function taskChat() {
         input:         '',
         thinking:      false,
         error:         '',
-        open:          (window._tChat?.messages ?? []).length > 0,
+
+        init() {
+            this.$watch('$store.ui.chatOpen', (open) => {
+                if (open) this.scrollBottom();
+            });
+        },
 
         scrollBottom() {
             this.$nextTick(() => {
@@ -970,8 +1030,6 @@ function taskChat() {
             this.input    = '';
             this.error    = '';
             this.thinking = true;
-
-            const agentName = this.agents.find(a => a.id === this.selectedAgent)?.name ?? '';
 
             this.messages.push({
                 id:         Date.now(),
