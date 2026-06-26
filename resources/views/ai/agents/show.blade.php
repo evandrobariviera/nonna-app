@@ -1,6 +1,8 @@
-@extends('layouts.app')
+<x-app-layout>
+<x-slot name="header">
+    <span class="text-sm font-semibold" style="color:var(--text)">Agentes de IA</span>
+</x-slot>
 
-@section('content')
 <div style="max-width:900px">
 
     {{-- Header --}}
@@ -235,4 +237,4 @@
 
     </div>
 </div>
-@endsection
+</x-app-layout>
