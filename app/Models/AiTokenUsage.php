@@ -11,6 +11,7 @@ class AiTokenUsage extends Model
     use HasUuids;
 
     protected $connection = 'pgsql';
+    protected $table = 'ai_token_usage';
 
     public $timestamps = true;
     const UPDATED_AT = null; // só created_at importa aqui
