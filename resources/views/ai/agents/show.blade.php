@@ -83,75 +83,7 @@
         </div>
 
         {{-- Painel de teste --}}
-        <div class="col-span-2"
-             x-data="{
-                 message: '',
-                 contextRaw: '',
-                 response: '',
-                 loading: false,
-                 error: '',
-                 usage: null,
-                 elapsed: 0,
-                 timer: null,
-
-                 async run() {
-                     if (!this.message.trim()) return;
-                     this.loading = true;
-                     this.response = '';
-                     this.error = '';
-                     this.usage = null;
-                     this.elapsed = 0;
-
-                     const start = Date.now();
-                     this.timer = setInterval(() => { this.elapsed = ((Date.now() - start) / 1000).toFixed(1); }, 100);
-
-                     let context = {};
-                     try {
-                         if (this.contextRaw.trim()) {
-                             context = JSON.parse(this.contextRaw);
-                         }
-                     } catch(e) {
-                         this.error = 'Contexto inválido: deve ser JSON válido. Ex: {\"client_name\": \"Nonna\"}';
-                         this.loading = false;
-                         clearInterval(this.timer);
-                         return;
-                     }
-
-                     try {
-                         const res = await fetch('{{ route('ai.run') }}', {
-                             method: 'POST',
-                             headers: {
-                                 'Content-Type': 'application/json',
-                                 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                                 'Accept': 'application/json',
-                             },
-                             body: JSON.stringify({
-                                 agent_id: '{{ $agent->id }}',
-                                 message: this.message,
-                                 context: context,
-                                 trigger: 'test_panel',
-                             })
-                         });
-
-                         const data = await res.json();
-                         if (!res.ok || data.error) {
-                             this.error = data.error || 'Erro desconhecido.';
-                         } else {
-                             this.response = data.response;
-                             this.usage = data.usage ?? null;
-                         }
-                     } catch(e) {
-                         this.error = 'Falha na conexão: ' + e.message;
-                     } finally {
-                         this.loading = false;
-                         clearInterval(this.timer);
-                     }
-                 },
-
-                 copy() {
-                     navigator.clipboard.writeText(this.response);
-                 }
-             }">
+        <div class="col-span-2" x-data="aiTestPanel()">
 
             <div class="rounded-lg p-5" style="background:var(--s1); border:1px solid var(--border1)">
                 <div class="text-xs font-semibold mb-4"
@@ -237,4 +169,79 @@
 
     </div>
 </div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('aiTestPanel', () => ({
+        message: '',
+        contextRaw: '',
+        response: '',
+        loading: false,
+        error: '',
+        elapsed: 0,
+        _timer: null,
+        _agentId: '{{ $agent->id }}',
+        _runUrl: '{{ route('ai.run') }}',
+        _csrf: document.querySelector('meta[name=csrf-token]') ? document.querySelector('meta[name=csrf-token]').content : '',
+
+        async run() {
+            if (!this.message.trim()) return;
+            this.loading = true;
+            this.response = '';
+            this.error = '';
+            this.elapsed = 0;
+
+            const start = Date.now();
+            this._timer = setInterval(() => {
+                this.elapsed = ((Date.now() - start) / 1000).toFixed(1);
+            }, 100);
+
+            let context = {};
+            if (this.contextRaw.trim()) {
+                try {
+                    context = JSON.parse(this.contextRaw);
+                } catch (e) {
+                    this.error = 'Contexto inválido: deve ser JSON válido. Ex: {"client_name": "Nonna"}';
+                    this.loading = false;
+                    clearInterval(this._timer);
+                    return;
+                }
+            }
+
+            try {
+                const res = await fetch(this._runUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': this._csrf,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        agent_id: this._agentId,
+                        message: this.message,
+                        context: context,
+                        trigger: 'test_panel',
+                    }),
+                });
+
+                const data = await res.json();
+                if (!res.ok || data.error) {
+                    this.error = data.error || 'Erro desconhecido.';
+                } else {
+                    this.response = data.response;
+                }
+            } catch (e) {
+                this.error = 'Falha na conexão: ' + e.message;
+            } finally {
+                this.loading = false;
+                clearInterval(this._timer);
+            }
+        },
+
+        copy() {
+            navigator.clipboard.writeText(this.response);
+        },
+    }));
+});
+</script>
 </x-app-layout>
