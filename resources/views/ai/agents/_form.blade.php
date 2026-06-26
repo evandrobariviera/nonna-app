@@ -1,10 +1,14 @@
+<script>
+    window._aiFormProviders = @json($providers);
+</script>
 <div style="max-width:800px"
      x-data="{
          providerId: '{{ old('provider_id', $agent?->provider_id ?? '') }}',
-         providers: @json($providers),
+         providers: window._aiFormProviders ?? [],
          get models() {
-             const p = this.providers.find(p => p.id === this.providerId);
-             return p?.models ?? [];
+             const pid = this.providerId;
+             const p = this.providers.find(function(x) { return x.id === pid; });
+             return p ? (p.models || []) : [];
          }
      }">
 
