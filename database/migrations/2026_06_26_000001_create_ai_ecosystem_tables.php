@@ -30,8 +30,6 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
-
-            $table->foreign('created_by')->references('id')->on('users')->nullOnDelete();
         });
 
         // Agentes configuráveis
@@ -49,8 +47,6 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
-
-            $table->foreign('created_by')->references('id')->on('users')->nullOnDelete();
         });
 
         // Log de uso — cada chamada registrada para controle financeiro
@@ -66,9 +62,7 @@ return new class extends Migration
             $table->unsignedInteger('total_tokens')->default(0);
             $table->decimal('estimated_cost_usd', 10, 6)->default(0);
             $table->string('trigger')->nullable();           // kickoff_extraction | dossier_fill | chat | manual
-            $table->timestamps();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
+            $table->timestamp('created_at')->nullable();
         });
     }
 
