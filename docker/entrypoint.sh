@@ -11,20 +11,20 @@ until php -r "new PDO('pgsql:host=${DB_HOST};port=${DB_PORT:-5432};dbname=${DB_D
 done
 echo "==> Banco disponível."
 
-# Descobre pacotes e gera cache de configurações
+# Migrations automáticas (rodar ANTES dos caches)
+echo "==> Rodando migrations..."
+php artisan migrate --force
+
+# Seeders idempotentes — não fatal, app inicia mesmo se falhar
+echo "==> Populando providers de IA..."
+php artisan db:seed --class=AiProviderSeeder --force || echo "    Seeder ignorado (tabelas podem não existir ainda)"
+
+# Cache de configurações e rotas
 php artisan package:discover --ansi
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 php artisan event:cache
-
-# Migrations automáticas
-echo "==> Rodando migrations..."
-php artisan migrate --force
-
-# Seeders idempotentes (insertOrIgnore — seguros para rodar múltiplas vezes)
-echo "==> Populando providers de IA..."
-php artisan db:seed --class=AiProviderSeeder --force
 
 echo "==> Pronto. Iniciando serviços..."
 exec "$@"
