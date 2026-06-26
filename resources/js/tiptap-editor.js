@@ -17,74 +17,105 @@ function normalizeContent(content) {
 export function registerRichEditor() {
     Alpine.data('richEditor', (initialContent = '') => ({
         editor: null,
+        _observer: null,
         tick: 0, // reactive counter — forces Alpine to re-evaluate active() on every editor change
 
         init() {
-            const el    = this.$refs.editor;
-            const input = this.$refs.input;
-            const self  = this;
-            const html  = normalizeContent(initialContent);
+            const self = this;
 
-            input.value = html;
+            function findHiddenAncestor(el) {
+                let node = el.parentElement;
+                while (node && node !== document.documentElement) {
+                    if (node.style && node.style.display === 'none') return node;
+                    node = node.parentElement;
+                }
+                return null;
+            }
 
-            this.editor = new Editor({
-                element: el,
-                extensions: [
-                    StarterKit.configure({
-                        heading:   { levels: [2, 3] },
-                        codeBlock: false,
-                        code:      false,
-                        // Disabled here because we add them below with custom config
-                        link:      false,
-                        underline: false,
-                    }),
-                    Underline,
-                    Link.configure({
-                        openOnClick: false,
-                        HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' },
-                    }),
-                    Image.configure({ inline: false, allowBase64: true }),
-                    TextAlign.configure({ types: ['heading', 'paragraph'] }),
-                ],
-                content: html,
-                editorProps: {
-                    attributes: { class: 'rich-prose' },
-                    handlePaste(view, event) {
-                        const items = Array.from(event.clipboardData?.items ?? []);
-                        const img   = items.find(i => i.type.startsWith('image/'));
-                        if (!img) return false;
-                        event.preventDefault();
-                        const reader = new FileReader();
-                        reader.onload = e => self.editor.chain().focus().setImage({ src: e.target.result }).run();
-                        reader.readAsDataURL(img.getAsFile());
-                        return true;
-                    },
-                    handleDrop(view, event) {
-                        const files = Array.from(event.dataTransfer?.files ?? []).filter(f => f.type.startsWith('image/'));
-                        if (!files.length) return false;
-                        event.preventDefault();
-                        files.forEach(file => {
+            function doInit() {
+                const el    = self.$refs.editor;
+                const input = self.$refs.input;
+                if (!el || !input || self.editor) return;
+
+                const html  = normalizeContent(initialContent);
+                input.value = html;
+
+                self.editor = new Editor({
+                    element: el,
+                    extensions: [
+                        StarterKit.configure({
+                            heading:   { levels: [2, 3] },
+                            codeBlock: false,
+                            code:      false,
+                            link:      false,
+                            underline: false,
+                        }),
+                        Underline,
+                        Link.configure({
+                            openOnClick: false,
+                            HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' },
+                        }),
+                        Image.configure({ inline: false, allowBase64: true }),
+                        TextAlign.configure({ types: ['heading', 'paragraph'] }),
+                    ],
+                    content: html,
+                    editorProps: {
+                        attributes: { class: 'rich-prose' },
+                        handlePaste(view, event) {
+                            const items = Array.from(event.clipboardData?.items ?? []);
+                            const img   = items.find(i => i.type.startsWith('image/'));
+                            if (!img) return false;
+                            event.preventDefault();
                             const reader = new FileReader();
                             reader.onload = e => self.editor.chain().focus().setImage({ src: e.target.result }).run();
-                            reader.readAsDataURL(file);
-                        });
-                        return true;
+                            reader.readAsDataURL(img.getAsFile());
+                            return true;
+                        },
+                        handleDrop(view, event) {
+                            const files = Array.from(event.dataTransfer?.files ?? []).filter(f => f.type.startsWith('image/'));
+                            if (!files.length) return false;
+                            event.preventDefault();
+                            files.forEach(file => {
+                                const reader = new FileReader();
+                                reader.onload = e => self.editor.chain().focus().setImage({ src: e.target.result }).run();
+                                reader.readAsDataURL(file);
+                            });
+                            return true;
+                        },
                     },
-                },
-                onUpdate({ editor }) {
-                    input.value = editor.getHTML();
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
-                    self.tick++;
-                },
-                onSelectionUpdate() {
-                    // cursor moved — toolbar active states need to refresh
-                    self.tick++;
-                },
-            });
+                    onUpdate({ editor }) {
+                        input.value = editor.getHTML();
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                        self.tick++;
+                    },
+                    onSelectionUpdate() {
+                        self.tick++;
+                    },
+                });
+            }
 
+            const el = this.$refs.editor;
+            const hiddenAncestor = findHiddenAncestor(el);
+
+            if (!hiddenAncestor) {
+                // Already visible — initialize immediately
+                doInit();
+                return;
+            }
+
+            // Defer until the hidden section becomes visible (x-show sets style.display)
+            this._observer = new MutationObserver(() => {
+                if (!findHiddenAncestor(el)) {
+                    this._observer.disconnect();
+                    this._observer = null;
+                    doInit();
+                }
+            });
+            this._observer.observe(hiddenAncestor, { attributes: true, attributeFilter: ['style'] });
         },
 
         destroy() {
+            this._observer?.disconnect();
             this.editor?.destroy();
         },
 
