@@ -28,7 +28,7 @@ return new class extends Migration
             $table->string('label');                         // "Chave Principal", "Dev"…
             $table->text('api_key_encrypted');               // encrypt() do Laravel
             $table->boolean('is_active')->default(true);
-            $table->uuid('created_by')->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
 
             $table->foreign('created_by')->references('id')->on('users')->nullOnDelete();
@@ -47,7 +47,7 @@ return new class extends Migration
             $table->unsignedInteger('max_tokens')->default(4096);
             $table->string('context_scope')->default('global'); // global | client
             $table->boolean('is_active')->default(true);
-            $table->uuid('created_by')->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
 
             $table->foreign('created_by')->references('id')->on('users')->nullOnDelete();
@@ -57,7 +57,7 @@ return new class extends Migration
         Schema::connection('pgsql')->create('ai_token_usage', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('agent_id')->nullable()->constrained('ai_agents')->nullOnDelete();
-            $table->uuid('user_id')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->uuid('client_id')->nullable();
             $table->string('model');
             $table->string('provider');
@@ -68,7 +68,7 @@ return new class extends Migration
             $table->string('trigger')->nullable();           // kickoff_extraction | dossier_fill | chat | manual
             $table->timestamps();
 
-            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 
