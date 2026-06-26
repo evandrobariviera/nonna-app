@@ -79,6 +79,11 @@
                         </div>
 
                         <div class="flex items-center gap-2 flex-shrink-0 ml-4">
+                            <a href="{{ route('ai.agents.show', $agent) }}"
+                               class="text-xs px-3 py-1.5 rounded font-semibold"
+                               style="color:var(--purple); border:1px solid rgba(106,90,205,.3); background:rgba(106,90,205,.07)">
+                                Testar
+                            </a>
                             <form method="POST" action="{{ route('ai.agents.toggle', $agent) }}">
                                 @csrf @method('PATCH')
                                 <button type="submit"

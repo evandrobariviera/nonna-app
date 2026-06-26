@@ -294,6 +294,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
             ->name('agents.destroy');
         Route::patch('/agentes/{agent}/toggle', [\App\Http\Controllers\Ai\AiAgentController::class, 'toggleActive'])
             ->name('agents.toggle');
+        Route::get('/agentes/{agent}', [\App\Http\Controllers\Ai\AiRunController::class, 'show'])
+            ->name('agents.show');
+
+        // Execução (AJAX — chamável de qualquer tela do sistema)
+        Route::post('/run', [\App\Http\Controllers\Ai\AiRunController::class, 'run'])
+            ->name('run');
 
         // Uso & Custos
         Route::get('/uso', [\App\Http\Controllers\Ai\AiUsageController::class, 'index'])
