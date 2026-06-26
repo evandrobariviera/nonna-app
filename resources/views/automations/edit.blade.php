@@ -1,183 +1,225 @@
-@extends('layouts.app')
+<x-app-layout>
+    <x-slot name="header">
+        <span class="text-sm font-semibold" style="color:var(--text)">Editar Automação</span>
+    </x-slot>
 
-@section('content')
-<div class="page-header">
-    <div>
-        <a href="{{ route('automations.index') }}" class="back-link">← Automações</a>
-        <h1 class="page-title">Editar Automação</h1>
+    <div style="max-width:720px" x-data="automationBuilder()">
+
+        <div class="mb-5">
+            <a href="{{ route('automations.index') }}"
+               class="text-xs transition-colors" style="color:var(--muted)"
+               onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                ← Automações
+            </a>
+        </div>
+
+        @if($errors->any())
+            <div class="mb-5 px-4 py-3 text-sm"
+                 style="background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.25); color:var(--red)">
+                @foreach($errors->all() as $e)<div>{{ $e }}</div>@endforeach
+            </div>
+        @endif
+
+        <form action="{{ route('automations.update', $automation) }}" method="POST">
+            @csrf @method('PATCH')
+
+            {{-- Identificação --}}
+            <div class="card" style="padding:1.5rem; margin-bottom:1rem">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Identificação</p>
+
+                <div class="grid gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">NOME *</label>
+                        <input type="text" name="name" value="{{ old('name', $automation->name) }}" required
+                               class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                               style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DESCRIÇÃO</label>
+                        <textarea name="description" rows="2"
+                                  class="w-full px-3 py-2.5 text-sm focus:outline-none resize-none"
+                                  style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ old('description', $automation->description) }}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">ENTIDADE *</label>
+                        <select name="entity_type" x-model="entityType" required
+                                class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            @foreach($entityTypes as $value => $label)
+                                <option value="{{ $value }}" {{ old('entity_type', $automation->entity_type) === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {{-- SE --}}
+            <div class="card" style="padding:1.5rem; margin-bottom:1rem; border-left:3px solid var(--purple)">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--purple); letter-spacing:.1em">SE — Quando disparar</p>
+
+                <div class="grid gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">TIPO DE GATILHO *</label>
+                        <select name="trigger_type" x-model="triggerType" required
+                                class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            @foreach($triggerTypes as $value => $label)
+                                <option value="{{ $value }}" {{ old('trigger_type', $automation->trigger_type) === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div x-show="triggerType === 'status_changed'" x-cloak>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DE (STATUS)</label>
+                                <select name="trigger_config[from]"
+                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                    <option value="*" {{ ($automation->trigger_config['from'] ?? '') === '*' ? 'selected' : '' }}>Qualquer</option>
+                                    @foreach($taskStatuses as $value => $info)
+                                        <option value="{{ $value }}" {{ ($automation->trigger_config['from'] ?? '') === $value ? 'selected' : '' }}>{{ $info['label'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">PARA (STATUS)</label>
+                                <select name="trigger_config[to]"
+                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                    <option value="">Selecione...</option>
+                                    @foreach($taskStatuses as $value => $info)
+                                        <option value="{{ $value }}" {{ ($automation->trigger_config['to'] ?? '') === $value ? 'selected' : '' }}>{{ $info['label'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="triggerType === 'field_updated'" x-cloak>
+                        <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">CAMPO MONITORADO</label>
+                        <input type="text" name="trigger_config[field]"
+                               value="{{ $automation->trigger_config['field'] ?? '' }}"
+                               class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                               style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    </div>
+                </div>
+            </div>
+
+            {{-- ENTÃO --}}
+            <div class="card" style="padding:1.5rem; margin-bottom:1rem; border-left:3px solid var(--orange)">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--orange); letter-spacing:.1em">ENTÃO — O que fazer</p>
+
+                <div class="grid gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">TIPO DE AÇÃO *</label>
+                        <select name="action_type" x-model="actionType" required
+                                class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            @foreach($actionTypes as $value => $label)
+                                <option value="{{ $value }}" {{ old('action_type', $automation->action_type) === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div x-show="actionType === 'run_ai_agent'" x-cloak class="grid gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">AGENTE DE IA</label>
+                            <select name="action_config[agent_id]"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                <option value="">Selecione...</option>
+                                @foreach($agents as $agent)
+                                    <option value="{{ $agent->id }}"
+                                        {{ ($automation->action_config['agent_id'] ?? '') === $agent->id ? 'selected' : '' }}>
+                                        {{ $agent->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">MENSAGEM ADICIONAL</label>
+                            <textarea name="action_config[user_message]" rows="2"
+                                      class="w-full px-3 py-2.5 text-sm focus:outline-none resize-none"
+                                      style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $automation->action_config['user_message'] ?? '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <div x-show="actionType === 'send_webhook'" x-cloak>
+                        <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">URL DO WEBHOOK</label>
+                        <input type="url" name="action_config[url]"
+                               value="{{ $automation->action_config['url'] ?? '' }}"
+                               class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                               style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    </div>
+
+                    <div x-show="actionType === 'update_field'" x-cloak>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">CAMPO</label>
+                                <input type="text" name="action_config[field]"
+                                       value="{{ $automation->action_config['field'] ?? '' }}"
+                                       class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                       style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">NOVO VALOR</label>
+                                <input type="text" name="action_config[value]"
+                                       value="{{ $automation->action_config['value'] ?? '' }}"
+                                       class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                       style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="actionType === 'send_notification'" x-cloak class="grid gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">NOTIFICAR QUEM</label>
+                            <select name="action_config[to]"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                @foreach(['executor' => 'Executor', 'creator' => 'Criador', 'all' => 'Todos'] as $v => $l)
+                                    <option value="{{ $v }}" {{ ($automation->action_config['to'] ?? '') === $v ? 'selected' : '' }}>{{ $l }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">MENSAGEM</label>
+                            <textarea name="action_config[message]" rows="2"
+                                      class="w-full px-3 py-2.5 text-sm focus:outline-none resize-none"
+                                      style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $automation->action_config['message'] ?? '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Rodapé --}}
+            <div class="card" style="padding:1rem 1.5rem">
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center gap-2 cursor-pointer text-sm" style="color:var(--text)">
+                        <input type="hidden" name="is_active" value="0">
+                        <input type="checkbox" name="is_active" value="1"
+                               {{ $automation->is_active ? 'checked' : '' }}
+                               style="width:16px; height:16px; accent-color:var(--purple)">
+                        Automação ativa
+                    </label>
+                    <div class="flex gap-3">
+                        <a href="{{ route('automations.index') }}"
+                           class="px-4 py-2 text-sm font-semibold transition-colors"
+                           style="color:var(--muted)"
+                           onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                            Cancelar
+                        </a>
+                        <button type="submit"
+                                class="px-5 py-2 text-sm font-semibold text-white"
+                                style="background:var(--purple)">
+                            Salvar Alterações
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
-</div>
-
-<div style="max-width:720px">
-    <form action="{{ route('automations.update', $automation) }}" method="POST" x-data="automationBuilder()">
-        @csrf @method('PATCH')
-
-        <div class="card" style="padding:1.5rem; margin-bottom:1rem">
-            <h2 class="section-title" style="margin-bottom:1rem">Identificação</h2>
-
-            <div class="form-group">
-                <label class="form-label">Nome da Automação <span style="color:var(--red)">*</span></label>
-                <input type="text" name="name" class="form-input" value="{{ old('name', $automation->name) }}" required>
-            </div>
-
-            <div class="form-group" style="margin-top:.75rem">
-                <label class="form-label">Descrição (opcional)</label>
-                <textarea name="description" class="form-input" rows="2">{{ old('description', $automation->description) }}</textarea>
-            </div>
-
-            <div class="form-group" style="margin-top:.75rem">
-                <label class="form-label">Entidade <span style="color:var(--red)">*</span></label>
-                <select name="entity_type" x-model="entityType" class="form-select" required>
-                    @foreach($entityTypes as $value => $label)
-                        <option value="{{ $value }}" {{ old('entity_type', $automation->entity_type) === $value ? 'selected' : '' }}>
-                            {{ $label }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-
-        {{-- SE --}}
-        <div class="card" style="padding:1.5rem; margin-bottom:1rem; border-left:3px solid var(--purple)">
-            <h2 class="section-title" style="margin-bottom:1rem; color:var(--purple)">SE — Quando disparar</h2>
-
-            <div class="form-group">
-                <label class="form-label">Tipo de Gatilho</label>
-                <select name="trigger_type" x-model="triggerType" class="form-select" required>
-                    @foreach($triggerTypes as $value => $label)
-                        <option value="{{ $value }}" {{ old('trigger_type', $automation->trigger_type) === $value ? 'selected' : '' }}>
-                            {{ $label }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div x-show="triggerType === 'status_changed'" x-cloak style="margin-top:.75rem">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:.75rem">
-                    <div class="form-group">
-                        <label class="form-label">De (status)</label>
-                        <select name="trigger_config[from]" class="form-select">
-                            <option value="*" {{ ($automation->trigger_config['from'] ?? '') === '*' ? 'selected' : '' }}>Qualquer</option>
-                            @foreach($taskStatuses as $value => $info)
-                                <option value="{{ $value }}" {{ ($automation->trigger_config['from'] ?? '') === $value ? 'selected' : '' }}>
-                                    {{ $info['label'] }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Para (status)</label>
-                        <select name="trigger_config[to]" class="form-select">
-                            <option value="">Selecione...</option>
-                            @foreach($taskStatuses as $value => $info)
-                                <option value="{{ $value }}" {{ ($automation->trigger_config['to'] ?? '') === $value ? 'selected' : '' }}>
-                                    {{ $info['label'] }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div x-show="triggerType === 'field_updated'" x-cloak style="margin-top:.75rem">
-                <div class="form-group">
-                    <label class="form-label">Campo monitorado</label>
-                    <input type="text" name="trigger_config[field]" class="form-input"
-                           value="{{ $automation->trigger_config['field'] ?? '' }}">
-                </div>
-            </div>
-        </div>
-
-        {{-- ENTÃO --}}
-        <div class="card" style="padding:1.5rem; margin-bottom:1rem; border-left:3px solid var(--orange)">
-            <h2 class="section-title" style="margin-bottom:1rem; color:var(--orange)">ENTÃO — O que fazer</h2>
-
-            <div class="form-group">
-                <label class="form-label">Tipo de Ação</label>
-                <select name="action_type" x-model="actionType" class="form-select" required>
-                    @foreach($actionTypes as $value => $label)
-                        <option value="{{ $value }}" {{ old('action_type', $automation->action_type) === $value ? 'selected' : '' }}>
-                            {{ $label }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div x-show="actionType === 'run_ai_agent'" x-cloak style="margin-top:.75rem">
-                <div class="form-group">
-                    <label class="form-label">Agente de IA</label>
-                    <select name="action_config[agent_id]" class="form-select">
-                        <option value="">Selecione...</option>
-                        @foreach($agents as $agent)
-                            <option value="{{ $agent->id }}"
-                                {{ ($automation->action_config['agent_id'] ?? '') === $agent->id ? 'selected' : '' }}>
-                                {{ $agent->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="form-group" style="margin-top:.75rem">
-                    <label class="form-label">Mensagem para o agente (opcional)</label>
-                    <textarea name="action_config[user_message]" class="form-input" rows="2">{{ $automation->action_config['user_message'] ?? '' }}</textarea>
-                </div>
-            </div>
-
-            <div x-show="actionType === 'send_webhook'" x-cloak style="margin-top:.75rem">
-                <div class="form-group">
-                    <label class="form-label">URL do Webhook</label>
-                    <input type="url" name="action_config[url]" class="form-input"
-                           value="{{ $automation->action_config['url'] ?? '' }}">
-                </div>
-            </div>
-
-            <div x-show="actionType === 'update_field'" x-cloak style="margin-top:.75rem">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:.75rem">
-                    <div class="form-group">
-                        <label class="form-label">Campo</label>
-                        <input type="text" name="action_config[field]" class="form-input"
-                               value="{{ $automation->action_config['field'] ?? '' }}">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Novo valor</label>
-                        <input type="text" name="action_config[value]" class="form-input"
-                               value="{{ $automation->action_config['value'] ?? '' }}">
-                    </div>
-                </div>
-            </div>
-
-            <div x-show="actionType === 'send_notification'" x-cloak style="margin-top:.75rem">
-                <div class="form-group">
-                    <label class="form-label">Notificar quem</label>
-                    <select name="action_config[to]" class="form-select">
-                        @foreach(['executor' => 'Executor', 'creator' => 'Criador', 'all' => 'Todos'] as $v => $l)
-                            <option value="{{ $v }}" {{ ($automation->action_config['to'] ?? '') === $v ? 'selected' : '' }}>{{ $l }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="form-group" style="margin-top:.75rem">
-                    <label class="form-label">Mensagem</label>
-                    <textarea name="action_config[message]" class="form-input" rows="2">{{ $automation->action_config['message'] ?? '' }}</textarea>
-                </div>
-            </div>
-        </div>
-
-        <div class="card" style="padding:1rem 1.5rem">
-            <div style="display:flex; align-items:center; justify-content:space-between">
-                <label style="display:flex; align-items:center; gap:.5rem; cursor:pointer; font-size:.9rem">
-                    <input type="hidden" name="is_active" value="0">
-                    <input type="checkbox" name="is_active" value="1"
-                           {{ $automation->is_active ? 'checked' : '' }}
-                           style="width:16px; height:16px; accent-color:var(--purple)">
-                    Automação ativa
-                </label>
-                <div style="display:flex; gap:.75rem">
-                    <a href="{{ route('automations.index') }}" class="btn-secondary">Cancelar</a>
-                    <button type="submit" class="btn-primary">Salvar Alterações</button>
-                </div>
-            </div>
-        </div>
-    </form>
-</div>
 
 @push('scripts')
 <script>
@@ -190,4 +232,4 @@ function automationBuilder() {
 }
 </script>
 @endpush
-@endsection
+</x-app-layout>
