@@ -13,7 +13,7 @@ echo "==> Banco disponível."
 
 # Migrations automáticas (rodar ANTES dos caches)
 echo "==> Rodando migrations..."
-php artisan migrate --force
+php artisan migrate --force || echo "==> Migrate reportou falha — app continua (verifique logs)"
 
 # Seeders idempotentes — não fatal, app inicia mesmo se falhar
 echo "==> Populando providers de IA..."
