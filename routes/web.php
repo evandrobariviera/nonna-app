@@ -204,6 +204,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::delete('/tarefas/{task}/anexos/{attachment}', [TaskAttachmentController::class, 'destroy'])
         ->name('task-attachments.destroy');
 
+    // ── IA on-demand na tarefa ──
+    Route::post('/tarefas/{task}/ia', [TaskController::class, 'runAi'])
+        ->name('tasks.run-ai');
+
     // ── Comentários da tarefa ──
     Route::post('/tarefas/{task}/comentarios', [TaskCommentController::class, 'store'])
         ->name('task-comments.store');
@@ -305,6 +309,24 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         Route::get('/uso', [\App\Http\Controllers\Ai\AiUsageController::class, 'index'])
             ->name('usage.index');
     });
+
+    // ── Automações ──
+    Route::get('/automacoes', [\App\Http\Controllers\AutomationController::class, 'index'])
+        ->name('automations.index');
+    Route::get('/automacoes/nova', [\App\Http\Controllers\AutomationController::class, 'create'])
+        ->name('automations.create');
+    Route::post('/automacoes', [\App\Http\Controllers\AutomationController::class, 'store'])
+        ->name('automations.store');
+    Route::get('/automacoes/{automation}/editar', [\App\Http\Controllers\AutomationController::class, 'edit'])
+        ->name('automations.edit');
+    Route::patch('/automacoes/{automation}', [\App\Http\Controllers\AutomationController::class, 'update'])
+        ->name('automations.update');
+    Route::delete('/automacoes/{automation}', [\App\Http\Controllers\AutomationController::class, 'destroy'])
+        ->name('automations.destroy');
+    Route::patch('/automacoes/{automation}/toggle', [\App\Http\Controllers\AutomationController::class, 'toggleActive'])
+        ->name('automations.toggle');
+    Route::get('/automacoes/{automation}/logs', [\App\Http\Controllers\AutomationController::class, 'logs'])
+        ->name('automations.logs');
 
     // ── Configurações da Organização (somente admin/owner) ──
     Route::middleware('org.admin')->group(function () {

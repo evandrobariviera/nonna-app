@@ -572,6 +572,127 @@
                 </form>
             </div>
 
+            {{-- ══ PAINEL DE IA ══ --}}
+            <div class="card card-body-lg"
+                 x-data="aiPanel('{{ route('tasks.run-ai', $task) }}', {{ $aiLogs->toJson() }}, {{ $agents->toJson() }})">
+
+                {{-- Cabeçalho --}}
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2.5">
+                        <svg class="h-4 w-4 flex-shrink-0" style="color:var(--purple)" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+                        </svg>
+                        <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Inteligência IA</p>
+                        <span x-show="logs.length > 0" x-cloak
+                              class="px-1.5 py-0.5 text-xs"
+                              style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)"
+                              x-text="logs.length"></span>
+                    </div>
+                    <button @click="panelOpen = !panelOpen"
+                            x-show="agents.length > 0"
+                            class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-colors"
+                            :style="panelOpen
+                                ? 'background:var(--purple); color:#fff; border:1px solid var(--purple)'
+                                : 'background:transparent; color:var(--purple); border:1px solid rgba(106,90,205,.3)'">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Acionar Agente
+                    </button>
+                </div>
+
+                {{-- Formulário de acionamento --}}
+                <div x-show="panelOpen" x-cloak x-transition
+                     class="mb-5 p-4"
+                     style="background:rgba(106,90,205,.04); border:1px solid rgba(106,90,205,.15)">
+
+                    <div class="flex flex-col gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Agente</label>
+                            <select x-model="selectedAgent" class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s1); border:1px solid var(--border2); color:var(--text)">
+                                <option value="">Selecione um agente...</option>
+                                <template x-for="agent in agents" :key="agent.id">
+                                    <option :value="agent.id" x-text="agent.name"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Mensagem adicional (opcional)</label>
+                            <textarea x-model="userMessage" rows="2"
+                                      placeholder="Instruções específicas para o agente nesta tarefa..."
+                                      class="w-full px-3 py-2.5 text-sm focus:outline-none resize-none"
+                                      style="background:var(--s1); border:1px solid var(--border2); color:var(--text)"></textarea>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button @click="runAgent()"
+                                    :disabled="!selectedAgent || running"
+                                    class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white transition-opacity"
+                                    style="background:var(--purple)"
+                                    :style="(!selectedAgent || running) ? 'opacity:.5; cursor:not-allowed' : ''">
+                                <svg x-show="running" class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                </svg>
+                                <span x-text="running ? 'Processando...' : 'Executar'"></span>
+                            </button>
+                            <button @click="panelOpen = false" class="text-sm" style="color:var(--muted)">Cancelar</button>
+                            <span x-show="error" x-cloak class="text-xs" style="color:var(--red)" x-text="error"></span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Lista de logs --}}
+                <div x-show="logs.length === 0 && !newResult" x-cloak class="py-6 text-center" style="border:1px dashed var(--border2)">
+                    <p class="text-sm" style="color:var(--muted)">Nenhuma execução de IA ainda.</p>
+                    <p class="text-xs mt-1" style="color:var(--muted2)">Configure automações ou acione um agente manualmente acima.</p>
+                </div>
+
+                {{-- Resultado novo (inline, logo após execução) --}}
+                <template x-if="newResult">
+                    <div class="mb-3 p-4" style="background:rgba(52,211,153,.04); border:1px solid rgba(52,211,153,.2)">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="h-2 w-2 rounded-full flex-shrink-0" style="background:var(--green)"></span>
+                            <span class="text-xs font-semibold" style="color:var(--green)" x-text="newResult.agent_name"></span>
+                            <span class="text-xs" style="color:var(--muted)">manual · agora</span>
+                        </div>
+                        <pre class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.7; font-family:inherit" x-text="newResult.output"></pre>
+                    </div>
+                </template>
+
+                {{-- Logs existentes --}}
+                <div class="flex flex-col gap-2">
+                    <template x-for="log in logs" :key="log.id">
+                        <div x-data="{ open: false }"
+                             style="border:1px solid var(--border2)">
+                            <button @click="open = !open"
+                                    class="w-full flex items-center gap-2.5 px-4 py-3 text-left"
+                                    style="background:var(--s2)">
+                                <span class="h-2 w-2 rounded-full flex-shrink-0"
+                                      :style="log.status === 'success' ? 'background:var(--green)' : (log.status === 'failed' ? 'background:var(--red)' : 'background:var(--orange)')"></span>
+                                <span class="text-xs font-semibold flex-1 min-w-0 truncate"
+                                      style="color:var(--text)"
+                                      x-text="log.automation ? log.automation.name : 'Manual'"></span>
+                                <span class="text-xs flex-shrink-0" style="color:var(--muted)"
+                                      x-text="log.automation ? 'automático' : 'manual'"></span>
+                                <svg class="h-3.5 w-3.5 flex-shrink-0 transition-transform duration-200"
+                                     :style="open ? 'transform:rotate(90deg)' : ''"
+                                     style="color:var(--muted)" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                </svg>
+                            </button>
+                            <div x-show="open" x-cloak class="px-4 pb-4 pt-3">
+                                <template x-if="log.output">
+                                    <pre class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.7; font-family:inherit" x-text="log.output"></pre>
+                                </template>
+                                <template x-if="log.error_message">
+                                    <p class="text-sm" style="color:var(--red)" x-text="log.error_message"></p>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
         </div>{{-- /coluna principal --}}
 
         {{-- ══════════════════════════════════════════════════════════
@@ -826,6 +947,58 @@ function executorPicker(initial = []) {
             event.target.value = '';
         },
         remove(idx) { this.selected.splice(idx, 1); }
+    }
+}
+
+function aiPanel(endpoint, initialLogs, agents) {
+    return {
+        endpoint,
+        agents,
+        logs: initialLogs,
+        panelOpen: false,
+        selectedAgent: '',
+        userMessage: '',
+        running: false,
+        error: '',
+        newResult: null,
+
+        async runAgent() {
+            if (!this.selectedAgent || this.running) return;
+            this.running = true;
+            this.error   = '';
+            this.newResult = null;
+
+            try {
+                const res = await fetch(this.endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        agent_id: this.selectedAgent,
+                        message:  this.userMessage || null,
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    this.error = data.error || 'Erro desconhecido.';
+                    return;
+                }
+
+                this.newResult  = data;
+                this.panelOpen  = false;
+                this.userMessage = '';
+                this.selectedAgent = '';
+            } catch (e) {
+                this.error = 'Erro de conexão.';
+            } finally {
+                this.running = false;
+            }
+        }
     }
 }
 </script>

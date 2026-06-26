@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AiAgent;
+use App\Models\AutomationLog;
 use App\Models\Client;
 use App\Models\MacroPlan;
 use App\Models\Project;
 use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\AiService;
+use App\Services\ContextResolver;
 use App\Services\TaskApprovalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -77,9 +81,59 @@ class TaskController extends Controller
             'approvalRounds.tokens.feedbacks.attachment',
         ]);
 
-        $users = User::orderBy('name')->get(['id', 'name']);
+        $users   = User::orderBy('name')->get(['id', 'name']);
+        $agents  = AiAgent::where('is_active', true)->orderBy('name')->get(['id', 'name', 'description']);
+        $aiLogs  = AutomationLog::with('automation')
+            ->where('entity_type', 'task')
+            ->where('entity_id', $task->id)
+            ->orderByDesc('ran_at')
+            ->limit(20)
+            ->get();
 
-        return view('tasks.show', compact('task', 'users'));
+        return view('tasks.show', compact('task', 'users', 'agents', 'aiLogs'));
+    }
+
+    public function runAi(Request $request, Task $task)
+    {
+        $request->validate([
+            'agent_id' => 'required|uuid|exists:pgsql.ai_agents,id',
+            'message'  => 'nullable|string|max:10000',
+        ]);
+
+        $agent   = AiAgent::with('provider')->findOrFail($request->agent_id);
+        $context = ContextResolver::forTask($task);
+
+        $log = AutomationLog::create([
+            'entity_type'    => 'task',
+            'entity_id'      => $task->id,
+            'status'         => 'running',
+            'input_snapshot' => $context,
+            'ran_at'         => now(),
+        ]);
+
+        try {
+            $output = app(AiService::class)->run(
+                agent:       $agent,
+                userMessage: $request->input('message', 'Analise o contexto desta tarefa e execute sua função.'),
+                context:     $context,
+                userId:      auth()->id(),
+                clientId:    $task->client_id,
+                trigger:     'task:manual',
+            );
+
+            $log->update(['status' => 'success', 'output' => $output]);
+
+            return response()->json([
+                'output'     => $output,
+                'log_id'     => $log->id,
+                'agent_name' => $agent->name,
+                'ran_at'     => $log->ran_at->diffForHumans(),
+            ]);
+        } catch (\Throwable $e) {
+            $log->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
+
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
     }
 
     public function updateInline(Request $request, Task $task)

@@ -229,7 +229,7 @@
 {{-- ══ INTELIGÊNCIA IA ══ --}}
 <div class="nav-group-label" style="margin-top:8px">Inteligência IA</div>
 
-<div x-data="{ open: {{ request()->routeIs('ai.*') ? 'true' : 'false' }} }">
+<div x-data="{ open: {{ request()->routeIs('ai.*') || request()->routeIs('automations.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -253,6 +253,10 @@
         <a href="{{ route('ai.usage.index') }}"
            class="nav-sub-item {{ request()->routeIs('ai.usage.*') ? 'active' : '' }}">
             Uso & Custos
+        </a>
+        <a href="{{ route('automations.index') }}"
+           class="nav-sub-item {{ request()->routeIs('automations.*') ? 'active' : '' }}">
+            Automações
         </a>
     </div>
 </div>
