@@ -29,9 +29,25 @@ class Project extends Model
         'briefing_seo',
         'briefing_email',
         'status',
+        'type',
         'clickup_task_id',
         'launched_at',
     ];
+
+    public static array $types = [
+        'projeto'  => ['label' => 'Projeto',  'color' => 'purple'],
+        'campanha' => ['label' => 'Campanha', 'color' => 'green'],
+    ];
+
+    public function typeLabel(): string
+    {
+        return self::$types[$this->type]['label'] ?? $this->type;
+    }
+
+    public function typeColor(): string
+    {
+        return self::$types[$this->type]['color'] ?? 'muted';
+    }
 
     protected $casts = [
         'disciplines' => 'array',

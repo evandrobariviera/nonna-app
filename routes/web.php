@@ -226,6 +226,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Dashboard global de projetos ──
     Route::get('/projetos', [ProjectController::class, 'dashboard'])
         ->name('projects.dashboard');
+    Route::patch('/projetos/{project}/quick', [ProjectController::class, 'quickUpdate'])
+        ->name('projects.quickUpdate');
 
     // ── Projetos dentro do macroplanejamento ──
     Route::get('/planejamentos/{macroplan}/projetos/{project}', [ProjectController::class, 'show'])

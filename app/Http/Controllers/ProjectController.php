@@ -47,6 +47,9 @@ class ProjectController extends Controller
                 'status'           => $p->status,
                 'status_label'     => $p->statusLabel(),
                 'status_color'     => $p->statusColor(),
+                'type'             => $p->type ?? 'projeto',
+                'type_label'       => $p->typeLabel(),
+                'type_color'       => $p->typeColor(),
                 'client_id'        => $clientId,
                 'client_name'      => $client?->company_name ?? '—',
                 'macroplan_id'     => $p->macro_plan_id,
@@ -66,10 +69,12 @@ class ProjectController extends Controller
                 'macroplan_url'    => $hasPlan
                     ? route('macroplans.edit', [$p->macro_plan_id, 'bloco' => 'bloco3'])
                     : null,
+                'edit_url'         => route('projects.quickUpdate', $p->id),
             ];
         });
 
-        $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $clients    = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $macroplans = MacroPlan::orderBy('title')->get(['id', 'title', 'client_id']);
 
         $stats = [
             'total'       => $data->count(),
@@ -77,12 +82,15 @@ class ProjectController extends Controller
             'overdue'     => $data->where('has_overdue', true)->count(),
             'not_started' => $data->where('not_started', true)->count(),
             'completed'   => $data->where('status', 'completed')->count(),
+            'projetos'    => $data->where('type', 'projeto')->count(),
+            'campanhas'   => $data->where('type', 'campanha')->count(),
         ];
 
         return view('projects.dashboard', [
-            'projectsJson' => $data->values()->toJson(),
-            'clients'      => $clients,
-            'stats'        => $stats,
+            'projectsJson'  => $data->values()->toJson(),
+            'macroplansJson'=> $macroplans->toJson(),
+            'clients'       => $clients,
+            'stats'         => $stats,
         ]);
     }
 
@@ -171,5 +179,36 @@ class ProjectController extends Controller
 
         return redirect()->route('macroplans.edit', [$macroplan, 'bloco' => 'bloco3'])
             ->with('success', 'Projeto removido.');
+    }
+
+    public function quickUpdate(Request $request, Project $project): \Illuminate\Http\JsonResponse
+    {
+        $data = $request->validate([
+            'type'          => 'nullable|in:projeto,campanha',
+            'status'        => 'nullable|in:draft,active,completed,cancelled',
+            'macro_plan_id' => 'nullable|uuid|exists:pgsql.macro_plans,id',
+            'title'         => 'nullable|string|max:200',
+        ]);
+
+        $project->update(array_filter($data, fn($v) => $v !== null));
+
+        $project->refresh()->load(['macroPlan', 'client']);
+        $client  = $project->client ?? $project->macroPlan?->client;
+        $hasPlan = (bool) $project->macro_plan_id;
+
+        return response()->json([
+            'success'        => true,
+            'type'           => $project->type,
+            'type_label'     => $project->typeLabel(),
+            'type_color'     => $project->typeColor(),
+            'status'         => $project->status,
+            'status_label'   => $project->statusLabel(),
+            'status_color'   => $project->statusColor(),
+            'macroplan_id'   => $project->macro_plan_id,
+            'macroplan_title'=> $project->macroPlan?->title ?? '—',
+            'client_name'    => $client?->company_name ?? '—',
+            'url'            => $hasPlan ? route('macroplans.projects.show', [$project->macro_plan_id, $project->id]) : null,
+            'macroplan_url'  => $hasPlan ? route('macroplans.edit', [$project->macro_plan_id, 'bloco' => 'bloco3']) : null,
+        ]);
     }
 }

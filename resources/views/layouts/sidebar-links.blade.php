@@ -135,7 +135,7 @@
         </a>
         <a href="{{ route('projects.dashboard') }}"
            class="nav-sub-item {{ request()->routeIs('projects.*') ? 'active' : '' }}">
-            Projetos (Projects)
+            Projetos & Campanhas
         </a>
         <a href="{{ route('fila.index') }}"
            class="nav-sub-item {{ request()->routeIs('fila.*') ? 'active' : '' }}">
