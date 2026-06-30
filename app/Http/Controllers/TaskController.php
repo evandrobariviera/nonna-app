@@ -173,7 +173,113 @@ class TaskController extends Controller
     {
         abort_unless($project->macro_plan_id === $macroplan->id, 403);
 
-        $data = $request->validate([
+        $data = $request->validate($this->storeRules());
+
+        $task = $project->tasks()->create([
+            ...$data,
+            'macro_plan_id'     => $macroplan->id,
+            'client_id'         => $project->client_id,
+            'status'            => $data['status'] ?? 'backlog',
+            'origin'            => $data['origin'] ?? 'projeto',
+            'internal_approval' => $request->boolean('internal_approval'),
+            'created_by'        => Auth::id(),
+        ]);
+
+        $this->syncExecutors($task, $data);
+
+        return redirect()->route('macroplans.projects.show', [$macroplan, $project])
+            ->with('success', 'Tarefa criada.');
+    }
+
+    public function storeStandalone(Request $request, Project $project)
+    {
+        $data = $request->validate($this->storeRules());
+
+        $task = $project->tasks()->create([
+            ...$data,
+            'macro_plan_id'     => $project->macro_plan_id,
+            'client_id'         => $project->client_id,
+            'status'            => $data['status'] ?? 'backlog',
+            'origin'            => $data['origin'] ?? 'projeto',
+            'internal_approval' => $request->boolean('internal_approval'),
+            'created_by'        => Auth::id(),
+        ]);
+
+        $this->syncExecutors($task, $data);
+
+        return redirect()->route('projects.showDirect', $project)
+            ->with('success', 'Tarefa criada.');
+    }
+
+    public function update(Request $request, MacroPlan $macroplan, Project $project, Task $task)
+    {
+        abort_unless($task->project_id === $project->id, 403);
+
+        $data = $request->validate($this->updateRules());
+
+        $task->update([...$data, 'internal_approval' => $request->boolean('internal_approval')]);
+        $this->syncExecutors($task, $data);
+
+        return redirect()->route('macroplans.projects.show', [$macroplan, $project])
+            ->with('success', 'Tarefa atualizada.');
+    }
+
+    public function updateStandalone(Request $request, Project $project, Task $task)
+    {
+        abort_unless($task->project_id === $project->id, 403);
+
+        $data = $request->validate($this->updateRules());
+
+        $task->update([...$data, 'internal_approval' => $request->boolean('internal_approval')]);
+        $this->syncExecutors($task, $data);
+
+        return redirect()->route('projects.showDirect', $project)
+            ->with('success', 'Tarefa atualizada.');
+    }
+
+    public function updateStatus(Request $request, MacroPlan $macroplan, Project $project, Task $task)
+    {
+        abort_unless($task->project_id === $project->id, 403);
+
+        $task->update(['status' => $request->validate([
+            'status' => 'required|in:' . implode(',', array_keys(Task::$statuses)),
+        ])['status']]);
+
+        return redirect()->back()->with('success', 'Status atualizado.');
+    }
+
+    public function updateStatusStandalone(Request $request, Project $project, Task $task)
+    {
+        abort_unless($task->project_id === $project->id, 403);
+
+        $task->update(['status' => $request->validate([
+            'status' => 'required|in:' . implode(',', array_keys(Task::$statuses)),
+        ])['status']]);
+
+        return redirect()->back()->with('success', 'Status atualizado.');
+    }
+
+    public function destroy(MacroPlan $macroplan, Project $project, Task $task)
+    {
+        abort_unless($task->project_id === $project->id, 403);
+        $task->delete();
+
+        return redirect()->route('macroplans.projects.show', [$macroplan, $project])
+            ->with('success', 'Tarefa removida.');
+    }
+
+    public function destroyStandalone(Project $project, Task $task)
+    {
+        abort_unless($task->project_id === $project->id, 403);
+        $task->delete();
+
+        return redirect()->route('projects.showDirect', $project)
+            ->with('success', 'Tarefa removida.');
+    }
+
+    private function storeRules(): array
+    {
+        return [
             'title'              => 'required|string|max:300',
             'description'        => 'nullable|string',
             'task_type'          => 'required|in:' . implode(',', array_keys(Task::$types)),
@@ -193,29 +299,12 @@ class TaskController extends Controller
             'requester_name'     => 'nullable|string|max:150',
             'requester_whatsapp' => 'nullable|string|max:30',
             'requester_channel'  => 'nullable|in:' . implode(',', array_keys(Task::$requesterChannels)),
-        ]);
-
-        $task = $project->tasks()->create([
-            ...$data,
-            'macro_plan_id'     => $macroplan->id,
-            'client_id'         => $project->client_id,
-            'status'            => $data['status'] ?? 'backlog',
-            'origin'            => $data['origin'] ?? 'projeto',
-            'internal_approval' => $request->boolean('internal_approval'),
-            'created_by'        => Auth::id(),
-        ]);
-
-        $this->syncExecutors($task, $data);
-
-        return redirect()->route('macroplans.projects.show', [$macroplan, $project])
-            ->with('success', 'Tarefa criada.');
+        ];
     }
 
-    public function update(Request $request, MacroPlan $macroplan, Project $project, Task $task)
+    private function updateRules(): array
     {
-        abort_unless($task->project_id === $project->id, 403);
-
-        $data = $request->validate([
+        return [
             'title'              => 'required|string|max:300',
             'description'        => 'nullable|string',
             'task_type'          => 'required|in:' . implode(',', array_keys(Task::$types)),
@@ -235,39 +324,7 @@ class TaskController extends Controller
             'requester_name'     => 'nullable|string|max:150',
             'requester_whatsapp' => 'nullable|string|max:30',
             'requester_channel'  => 'nullable|in:' . implode(',', array_keys(Task::$requesterChannels)),
-        ]);
-
-        $task->update([
-            ...$data,
-            'internal_approval' => $request->boolean('internal_approval'),
-        ]);
-
-        $this->syncExecutors($task, $data);
-
-        return redirect()->route('macroplans.projects.show', [$macroplan, $project])
-            ->with('success', 'Tarefa atualizada.');
-    }
-
-    public function updateStatus(Request $request, MacroPlan $macroplan, Project $project, Task $task)
-    {
-        abort_unless($task->project_id === $project->id, 403);
-
-        $data = $request->validate([
-            'status' => 'required|in:' . implode(',', array_keys(Task::$statuses)),
-        ]);
-
-        $task->update(['status' => $data['status']]);
-
-        return redirect()->back()->with('success', 'Status atualizado.');
-    }
-
-    public function destroy(MacroPlan $macroplan, Project $project, Task $task)
-    {
-        abort_unless($task->project_id === $project->id, 403);
-        $task->delete();
-
-        return redirect()->route('macroplans.projects.show', [$macroplan, $project])
-            ->with('success', 'Tarefa removida.');
+        ];
     }
 
     private function syncExecutors(Task $task, array $data): void

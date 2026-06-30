@@ -229,6 +229,18 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::patch('/projetos/{project}/quick', [ProjectController::class, 'quickUpdate'])
         ->name('projects.quickUpdate');
 
+    // ── Projeto standalone (sem macroplanejamento vinculado) ──
+    Route::get('/projetos/{project}/ver', [ProjectController::class, 'showDirect'])
+        ->name('projects.showDirect');
+    Route::post('/projetos/{project}/tarefas', [TaskController::class, 'storeStandalone'])
+        ->name('tasks.storeStandalone');
+    Route::patch('/projetos/{project}/tarefas/{task}', [TaskController::class, 'updateStandalone'])
+        ->name('tasks.updateStandalone');
+    Route::patch('/projetos/{project}/tarefas/{task}/status', [TaskController::class, 'updateStatusStandalone'])
+        ->name('tasks.updateStatusStandalone');
+    Route::delete('/projetos/{project}/tarefas/{task}', [TaskController::class, 'destroyStandalone'])
+        ->name('tasks.destroyStandalone');
+
     // ── Projetos dentro do macroplanejamento ──
     Route::get('/planejamentos/{macroplan}/projetos/{project}', [ProjectController::class, 'show'])
         ->name('macroplans.projects.show');

@@ -248,17 +248,12 @@
                         </a>
                         <span x-show="!p.macroplan_url" class="text-xs font-mono" style="color:var(--border2)">Sem planejamento</span>
 
-                        <a x-show="p.url" :href="p.url || '#'"
+                        <a :href="p.url"
                            class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white transition-opacity"
                            style="background:var(--purple)"
                            onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
                             Abrir →
                         </a>
-                        <span x-show="!p.url"
-                              class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest"
-                              style="background:var(--border2); color:var(--muted)">
-                            Sem planejamento
-                        </span>
                     </div>
 
                 </div>

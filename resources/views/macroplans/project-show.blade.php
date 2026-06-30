@@ -4,18 +4,23 @@
     {{-- BREADCRUMB + AÇÕES --}}
     <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div class="flex items-center gap-2 flex-wrap text-xs font-semibold">
-            <a href="{{ route('macroplans.index') }}" style="color:var(--muted)"
-               onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Planejamentos</a>
-            <span style="color:var(--border2)">/</span>
-            <a href="{{ route('macroplans.edit', $macroplan) }}" style="color:var(--muted)"
-               onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
-                {{ $macroplan->client->company_name }}
-            </a>
-            <span style="color:var(--border2)">/</span>
-            <a href="{{ route('macroplans.edit', [$macroplan, 'bloco' => 'bloco3']) }}" style="color:var(--muted)"
-               onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
-                {{ $macroplan->title }}
-            </a>
+            @if($macroplan)
+                <a href="{{ route('macroplans.index') }}" style="color:var(--muted)"
+                   onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Planejamentos</a>
+                <span style="color:var(--border2)">/</span>
+                <a href="{{ route('macroplans.edit', $macroplan) }}" style="color:var(--muted)"
+                   onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                    {{ $macroplan->client->company_name }}
+                </a>
+                <span style="color:var(--border2)">/</span>
+                <a href="{{ route('macroplans.edit', [$macroplan, 'bloco' => 'bloco3']) }}" style="color:var(--muted)"
+                   onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                    {{ $macroplan->title }}
+                </a>
+            @else
+                <a href="{{ route('projects.dashboard') }}" style="color:var(--muted)"
+                   onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Projetos & Campanhas</a>
+            @endif
             <span style="color:var(--border2)">/</span>
             <span style="color:var(--text)">{{ $project->title }}</span>
         </div>
@@ -91,7 +96,7 @@
         {{-- ── FORMULÁRIO: NOVA TAREFA ── --}}
         <div x-show="addCol !== null" x-cloak class="card px-5 py-5 mb-4" style="border-left:3px solid var(--purple)">
             <p class="text-xs font-mono uppercase tracking-widest mb-4" style="color:var(--muted)">Nova Tarefa</p>
-            <form method="POST" action="{{ route('tasks.store', [$macroplan, $project]) }}"
+            <form method="POST" action="{{ $standalone ? route('tasks.storeStandalone', $project) : route('tasks.store', [$macroplan, $project]) }}"
                   class="grid grid-cols-2 gap-4 md:grid-cols-3">
                 @csrf
 
@@ -356,7 +361,7 @@
                                 <div class="flex flex-wrap gap-1 mt-2 pt-2" style="border-top:1px solid var(--border2)">
                                     @foreach(\App\Models\Task::$kanbanColumns as $targetKey => $targetCol)
                                         @if($targetKey !== $colKey)
-                                            <form method="POST" action="{{ route('tasks.update-status', [$macroplan, $project, $task]) }}">
+                                            <form method="POST" action="{{ $standalone ? route('tasks.updateStatusStandalone', [$project, $task]) : route('tasks.update-status', [$macroplan, $project, $task]) }}">
                                                 @csrf @method('PATCH')
                                                 <input type="hidden" name="status" value="{{ \App\Models\Task::$kanbanDefaultStatus[$targetKey] }}">
                                                 <button type="submit"
@@ -376,7 +381,7 @@
                                        onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted)'">
                                         Abrir →
                                     </a>
-                                    <form method="POST" action="{{ route('tasks.destroy', [$macroplan, $project, $task]) }}"
+                                    <form method="POST" action="{{ $standalone ? route('tasks.destroyStandalone', [$project, $task]) : route('tasks.destroy', [$macroplan, $project, $task]) }}"
                                           onsubmit="return confirm('Remover?')">
                                         @csrf @method('DELETE')
                                         <button type="submit"
@@ -391,7 +396,7 @@
 
                             {{-- ── FORMULÁRIO DE EDIÇÃO INLINE ── --}}
                             <template x-if="editTaskId === '{{ $task->id }}'">
-                                <form method="POST" action="{{ route('tasks.update', [$macroplan, $project, $task]) }}"
+                                <form method="POST" action="{{ $standalone ? route('tasks.updateStandalone', [$project, $task]) : route('tasks.update', [$macroplan, $project, $task]) }}"
                                       class="space-y-2"
                                       x-data="executorPicker({{ json_encode($task->executors->map(fn($u) => ['id' => $u->id, 'name' => $u->name, 'role' => $u->pivot->role])) }})">
                                     @csrf @method('PATCH')

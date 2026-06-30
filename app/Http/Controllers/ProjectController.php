@@ -65,7 +65,7 @@ class ProjectController extends Controller
                 'not_started'      => $total === 0,
                 'url'              => $hasPlan
                     ? route('macroplans.projects.show', [$p->macro_plan_id, $p->id])
-                    : null,
+                    : route('projects.showDirect', $p->id),
                 'macroplan_url'    => $hasPlan
                     ? route('macroplans.edit', [$p->macro_plan_id, 'bloco' => 'bloco3'])
                     : null,
@@ -101,21 +101,43 @@ class ProjectController extends Controller
         $project->load(['tasks.executor', 'tasks.executors', 'macroPlan.client']);
         $users = User::orderBy('name')->get(['id', 'name']);
 
-        // Agrupar tarefas por coluna do kanban
         $kanban = [];
         foreach (Task::$kanbanColumns as $colKey => $col) {
             $kanban[$colKey] = $project->tasks
                 ->filter(fn($t) => in_array($t->status, $col['statuses']))
                 ->values();
         }
-        $cancelled = $project->tasks->where('status', 'cancelado')->values();
-
-        $progress = $project->progressPercent();
+        $cancelled  = $project->tasks->where('status', 'cancelado')->values();
+        $progress   = $project->progressPercent();
         $totalTasks = $project->tasks->where('status', '!=', 'cancelado')->count();
         $doneTasks  = $project->tasks->where('status', 'concluido')->count();
+        $standalone = false;
 
         return view('macroplans.project-show', compact(
-            'macroplan', 'project', 'users', 'kanban', 'cancelled', 'progress', 'totalTasks', 'doneTasks'
+            'macroplan', 'project', 'users', 'kanban', 'cancelled', 'progress', 'totalTasks', 'doneTasks', 'standalone'
+        ));
+    }
+
+    public function showDirect(Project $project)
+    {
+        $project->load(['tasks.executor', 'tasks.executors', 'macroPlan.client']);
+        $macroplan  = $project->macroPlan;
+        $users      = User::orderBy('name')->get(['id', 'name']);
+
+        $kanban = [];
+        foreach (Task::$kanbanColumns as $colKey => $col) {
+            $kanban[$colKey] = $project->tasks
+                ->filter(fn($t) => in_array($t->status, $col['statuses']))
+                ->values();
+        }
+        $cancelled  = $project->tasks->where('status', 'cancelado')->values();
+        $progress   = $project->progressPercent();
+        $totalTasks = $project->tasks->where('status', '!=', 'cancelado')->count();
+        $doneTasks  = $project->tasks->where('status', 'concluido')->count();
+        $standalone = true;
+
+        return view('macroplans.project-show', compact(
+            'macroplan', 'project', 'users', 'kanban', 'cancelled', 'progress', 'totalTasks', 'doneTasks', 'standalone'
         ));
     }
 
@@ -207,8 +229,12 @@ class ProjectController extends Controller
             'macroplan_id'   => $project->macro_plan_id,
             'macroplan_title'=> $project->macroPlan?->title ?? '—',
             'client_name'    => $client?->company_name ?? '—',
-            'url'            => $hasPlan ? route('macroplans.projects.show', [$project->macro_plan_id, $project->id]) : null,
-            'macroplan_url'  => $hasPlan ? route('macroplans.edit', [$project->macro_plan_id, 'bloco' => 'bloco3']) : null,
+            'url'            => $hasPlan
+                ? route('macroplans.projects.show', [$project->macro_plan_id, $project->id])
+                : route('projects.showDirect', $project->id),
+            'macroplan_url'  => $hasPlan
+                ? route('macroplans.edit', [$project->macro_plan_id, 'bloco' => 'bloco3'])
+                : null,
         ]);
     }
 }
