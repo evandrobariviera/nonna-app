@@ -13,8 +13,7 @@ class ProjectController extends Controller
 {
     public function dashboard(Request $request)
     {
-        $projects = Project::with(['macroPlan.client', 'tasks'])
-            ->whereHas('macroPlan')
+        $projects = Project::with(['macroPlan.client', 'client', 'tasks'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -37,6 +36,10 @@ class ProjectController extends Controller
 
             $progress = $total > 0 ? (int) round(($done / $total) * 100) : 0;
 
+            $client     = $p->client ?? $p->macroPlan?->client;
+            $clientId   = $p->client_id ?? $p->macroPlan?->client_id;
+            $hasPlan    = (bool) $p->macro_plan_id;
+
             return [
                 'id'               => $p->id,
                 'title'            => $p->title,
@@ -44,8 +47,8 @@ class ProjectController extends Controller
                 'status'           => $p->status,
                 'status_label'     => $p->statusLabel(),
                 'status_color'     => $p->statusColor(),
-                'client_id'        => $p->macroPlan?->client_id,
-                'client_name'      => $p->macroPlan?->client?->company_name ?? '—',
+                'client_id'        => $clientId,
+                'client_name'      => $client?->company_name ?? '—',
                 'macroplan_id'     => $p->macro_plan_id,
                 'macroplan_title'  => $p->macroPlan?->title ?? '—',
                 'disciplines'      => $p->disciplines ?? [],
@@ -57,8 +60,12 @@ class ProjectController extends Controller
                 'col_counts'       => $colCounts,
                 'has_overdue'      => $overdue > 0,
                 'not_started'      => $total === 0,
-                'url'              => route('macroplans.projects.show', [$p->macro_plan_id, $p->id]),
-                'macroplan_url'    => route('macroplans.edit', [$p->macro_plan_id, 'bloco' => 'bloco3']),
+                'url'              => $hasPlan
+                    ? route('macroplans.projects.show', [$p->macro_plan_id, $p->id])
+                    : null,
+                'macroplan_url'    => $hasPlan
+                    ? route('macroplans.edit', [$p->macro_plan_id, 'bloco' => 'bloco3'])
+                    : null,
             ];
         });
 

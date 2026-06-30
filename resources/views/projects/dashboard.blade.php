@@ -233,17 +233,26 @@
                     {{-- Card footer --}}
                     <div class="px-4 py-3 flex items-center justify-between gap-2"
                          style="border-top:1px solid var(--border2)">
-                        <a :href="p.macroplan_url"
+                        <a x-show="p.macroplan_url"
+                           :href="p.macroplan_url || '#'"
                            class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                           onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'"
-                           x-text="'↗ Planejamento'">
+                           onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                            ↗ Planejamento
                         </a>
-                        <a :href="p.url"
+                        <span x-show="!p.macroplan_url" class="text-xs font-mono" style="color:var(--border2)">
+                            Sem planejamento
+                        </span>
+                        <a x-show="p.url" :href="p.url || '#'"
                            class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white transition-opacity"
                            style="background:var(--purple)"
                            onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
                             Abrir Projeto →
                         </a>
+                        <span x-show="!p.url"
+                              class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest"
+                              style="background:var(--border2); color:var(--muted)">
+                            Sem planejamento
+                        </span>
                     </div>
 
                 </div>
