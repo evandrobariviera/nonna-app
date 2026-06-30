@@ -81,11 +81,15 @@ class MacroPlanController extends Controller
         if ($block === 'meta') {
             $data = $request->validate([
                 'title'          => 'required|string|max:200',
+                'version'        => 'nullable|string|max:20',
                 'period_start'   => 'required|date',
                 'period_end'     => 'required|date|after:period_start',
                 'responsible_id' => 'nullable|exists:users,id',
                 'status'         => 'required|in:draft,active,closed',
+                'disciplines'    => 'nullable|array',
+                'disciplines.*'  => 'string',
             ]);
+            $data['disciplines'] = $data['disciplines'] ?? [];
             $macroplan->update($data);
 
             return redirect()->route('macroplans.edit', [$macroplan, 'bloco' => 'bloco1'])

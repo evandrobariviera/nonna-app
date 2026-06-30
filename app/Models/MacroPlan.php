@@ -21,9 +21,11 @@ class MacroPlan extends Model
         'responsible_id',
         'created_by',
         'title',
+        'version',
         'period_start',
         'period_end',
         'status',
+        'disciplines',
         'bloco1',
         'bloco2',
         'bloco4',
@@ -35,10 +37,23 @@ class MacroPlan extends Model
         'period_start' => 'date',
         'period_end'   => 'date',
         'launched_at'  => 'datetime',
+        'disciplines'  => 'array',
         'bloco1'       => 'array',
         'bloco2'       => 'array',
         'bloco4'       => 'array',
         'bloco5'       => 'array',
+    ];
+
+    public static array $disciplineOptions = [
+        'criacao'      => 'Criação / Audiovisual',
+        'web'          => 'Web / Dev',
+        'trafego'      => 'Tráfego / Performance',
+        'setup'        => 'Setup / Tracking',
+        'social'       => 'Social Media',
+        'seo'          => 'SEO',
+        'email'        => 'E-mail Marketing',
+        'estrategia'   => 'Estratégia',
+        'relacionamento' => 'Relacionamento / CS',
     ];
 
     public static array $statuses = [

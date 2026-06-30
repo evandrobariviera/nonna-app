@@ -97,47 +97,105 @@
             {{-- ══ BLOCO 1: VISÃO GERAL E METAS ══ --}}
             <div x-show="block === 'bloco1'" x-cloak>
                 @php $b1 = $macroplan->bloco1 ?? []; @endphp
+                @php
+                    $defaultKpis = [
+                        ['label' => 'KPI Principal',     'title' => '', 'desc' => ''],
+                        ['label' => 'KPI de Tráfego',    'title' => '', 'desc' => ''],
+                        ['label' => 'KPI de Marca',      'title' => '', 'desc' => ''],
+                        ['label' => 'KPI de Resultado',  'title' => '', 'desc' => ''],
+                    ];
+                    $kpisJson = json_encode($b1['kpis'] ?? $defaultKpis);
+                @endphp
                 <div class="card">
                     <div class="px-5 py-4" style="border-bottom:1px solid var(--border2)">
                         <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Bloco 01</p>
                         <h2 class="text-base font-bold" style="color:var(--text)">Visão Geral e Metas</h2>
                     </div>
-                    <form method="POST" action="{{ route('macroplans.update', $macroplan) }}" class="px-5 py-5 space-y-5">
+                    <form method="POST" action="{{ route('macroplans.update', $macroplan) }}" class="px-5 py-5 space-y-6">
                         @csrf @method('PATCH')
                         <input type="hidden" name="_block" value="bloco1">
 
+                        {{-- Foco Principal --}}
                         <div>
-                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                                Foco Principal do Ciclo
-                            </label>
-                            <textarea name="foco_principal" rows="4"
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Foco Principal do Ciclo</label>
+                            <textarea name="foco_principal" rows="3"
                                 placeholder="Qual é a grande prioridade deste trimestre?"
                                 class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                                 style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
                                 onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">{{ $b1['foco_principal'] ?? '' }}</textarea>
                         </div>
 
+                        {{-- Contexto Anterior --}}
                         <div>
-                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                                Verba de Anúncios (Budget)
-                            </label>
-                            <input type="text" name="verba_anuncios"
-                                value="{{ $b1['verba_anuncios'] ?? '' }}"
-                                placeholder="Ex: R$ 2.000,00 / mês"
-                                class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
-                                onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                                Metas e Indicadores de Sucesso
-                            </label>
-                            <textarea name="metas_indicadores" rows="5"
-                                placeholder="Como mediremos o sucesso deste ciclo?"
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Contexto Anterior</label>
+                            <textarea name="contexto_anterior" rows="3"
+                                placeholder="O que existia antes? Qual era a situação do cliente?"
                                 class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                                 style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
-                                onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">{{ $b1['metas_indicadores'] ?? '' }}</textarea>
+                                onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">{{ $b1['contexto_anterior'] ?? '' }}</textarea>
+                        </div>
+
+                        {{-- Verba Estruturada --}}
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Verba de Anúncios</label>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <p class="text-xs font-mono mb-1.5" style="color:var(--muted)">Total Mensal (R$)</p>
+                                    <input type="text" name="verba_total"
+                                        value="{{ $b1['verba_total'] ?? ($b1['verba_anuncios'] ?? '') }}"
+                                        placeholder="Ex: 2000"
+                                        class="w-full px-3 py-2 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
+                                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
+                                </div>
+                                <div>
+                                    <p class="text-xs font-mono mb-1.5" style="color:var(--muted)">Meta Ads (%)</p>
+                                    <input type="number" name="meta_pct" min="0" max="100"
+                                        value="{{ $b1['meta_pct'] ?? '' }}"
+                                        placeholder="Ex: 70"
+                                        class="w-full px-3 py-2 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
+                                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
+                                </div>
+                                <div>
+                                    <p class="text-xs font-mono mb-1.5" style="color:var(--muted)">Google Ads (%)</p>
+                                    <input type="number" name="google_pct" min="0" max="100"
+                                        value="{{ $b1['google_pct'] ?? '' }}"
+                                        placeholder="Ex: 30"
+                                        class="w-full px-3 py-2 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
+                                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
+                                </div>
+                            </div>
+                            <p class="text-xs font-mono mt-1.5" style="color:var(--muted)">Observação sobre a verba (distribuição, timing)</p>
+                            <textarea name="verba_obs" rows="2"
+                                placeholder="Ex: Mês 1 = 100% Meta. A partir do Mês 2 = 70/30..."
+                                class="w-full px-3 py-2 text-sm focus:outline-none resize-none mt-1"
+                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
+                                onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">{{ $b1['verba_obs'] ?? '' }}</textarea>
+                        </div>
+
+                        {{-- KPIs estruturados --}}
+                        <div x-data="{ kpis: {{ $kpisJson }} }">
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-3" style="color:var(--muted)">KPIs do Período</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <template x-for="(kpi, i) in kpis" :key="i">
+                                    <div class="px-4 py-3 rounded" style="background:var(--s3); border:1px solid var(--border2)">
+                                        <input type="hidden" :name="'kpis['+i+'][label]'" :value="kpi.label">
+                                        <p class="text-xs font-bold font-mono uppercase tracking-widest mb-2" style="color:var(--purple)" x-text="kpi.label"></p>
+                                        <input type="text" :name="'kpis['+i+'][title]'" x-model="kpi.title"
+                                            placeholder="Nome do KPI..."
+                                            class="w-full px-3 py-1.5 text-sm focus:outline-none mb-1.5"
+                                            style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"
+                                            onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
+                                        <textarea :name="'kpis['+i+'][desc]'" x-model="kpi.desc" rows="2"
+                                            placeholder="Como medir, baseline, meta..."
+                                            class="w-full px-3 py-1.5 text-xs focus:outline-none resize-none"
+                                            style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"
+                                            onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'"></textarea>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
 
                         <div class="flex gap-3 pt-1">
@@ -153,47 +211,109 @@
 
             {{-- ══ BLOCO 2: CONTEXTO E ESTRATÉGIA ══ --}}
             <div x-show="block === 'bloco2'" x-cloak>
-                @php $b2 = $macroplan->bloco2 ?? []; @endphp
+                @php
+                    $b2 = $macroplan->bloco2 ?? [];
+                    $defaultPilares = [['nome' => '', 'desc' => ''], ['nome' => '', 'desc' => ''], ['nome' => '', 'desc' => '']];
+                    $pilaresJson = json_encode($b2['pilares'] ?? (isset($b2['pilares_comunicacao']) ? [] : $defaultPilares));
+                @endphp
                 <div class="card">
                     <div class="px-5 py-4" style="border-bottom:1px solid var(--border2)">
                         <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Bloco 02</p>
                         <h2 class="text-base font-bold" style="color:var(--text)">Contexto e Estratégia</h2>
                     </div>
-                    <form method="POST" action="{{ route('macroplans.update', $macroplan) }}" class="px-5 py-5 space-y-5">
+                    <form method="POST" action="{{ route('macroplans.update', $macroplan) }}" class="px-5 py-5 space-y-6">
                         @csrf @method('PATCH')
                         <input type="hidden" name="_block" value="bloco2">
 
+                        {{-- Desafio Atual --}}
                         <div>
-                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                                O Desafio Atual
-                            </label>
-                            <textarea name="desafio_atual" rows="5"
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">O Desafio Atual</label>
+                            <textarea name="desafio_atual" rows="4"
                                 placeholder="Qual é o principal problema ou oportunidade que estamos endereçando?"
                                 class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                                 style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
                                 onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">{{ $b2['desafio_atual'] ?? '' }}</textarea>
                         </div>
 
+                        {{-- O Que Muda --}}
                         <div>
-                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                                A Nossa Estratégia
-                            </label>
-                            <textarea name="estrategia" rows="6"
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">O Que Muda Neste Ciclo</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <p class="text-xs font-mono mb-1.5" style="color:var(--muted)">Antes (situação atual)</p>
+                                    <textarea name="o_que_muda_antes" rows="4"
+                                        placeholder="Como está hoje..."
+                                        class="w-full px-3 py-2 text-sm focus:outline-none resize-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
+                                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">{{ $b2['o_que_muda_antes'] ?? '' }}</textarea>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-mono mb-1.5" style="color:var(--muted)">Agora (o que queremos)</p>
+                                    <textarea name="o_que_muda_agora" rows="4"
+                                        placeholder="O que mudará com este planejamento..."
+                                        class="w-full px-3 py-2 text-sm focus:outline-none resize-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
+                                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">{{ $b2['o_que_muda_agora'] ?? '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Estratégia --}}
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">A Nossa Estratégia</label>
+                            <textarea name="estrategia" rows="4"
                                 placeholder="Como a equipe vai agir para resolver o desafio?"
                                 class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                                 style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
                                 onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">{{ $b2['estrategia'] ?? '' }}</textarea>
                         </div>
 
-                        <div>
-                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                                Pilares de Comunicação
-                            </label>
-                            <textarea name="pilares_comunicacao" rows="5"
-                                placeholder="Quais são as mensagens-chave que guiarão todas as criações?"
-                                class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
-                                onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">{{ $b2['pilares_comunicacao'] ?? '' }}</textarea>
+                        {{-- Migração do campo legado (se existir) --}}
+                        @if(!empty($b2['pilares_comunicacao']) && empty($b2['pilares']))
+                            <div class="px-4 py-3 text-xs rounded" style="background:rgba(255,140,0,.06); border:1px solid rgba(255,140,0,.2); color:var(--orange)">
+                                Campo antigo "Pilares de Comunicação" ainda em texto livre. Substitua pelos pilares estruturados abaixo e salve para migrar.
+                                <p class="mt-1 font-mono" style="color:var(--muted)">{{ $b2['pilares_comunicacao'] }}</p>
+                            </div>
+                        @endif
+
+                        {{-- Pilares Estruturados --}}
+                        <div x-data="{
+                            pilares: {{ $pilaresJson }},
+                            addPilar() { this.pilares.push({ nome: '', desc: '' }); },
+                            removePilar(i) { this.pilares.splice(i, 1); }
+                        }">
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="block text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Pilares de Comunicação</label>
+                                <button type="button" @click="addPilar()"
+                                    class="text-xs font-mono px-3 py-1.5 transition-colors"
+                                    style="border:1px solid var(--border2); color:var(--muted2)"
+                                    onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
+                                    onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+                                    + Pilar
+                                </button>
+                            </div>
+                            <div class="space-y-3">
+                                <template x-for="(pilar, i) in pilares" :key="i">
+                                    <div class="px-4 py-3 rounded relative" style="background:var(--s3); border:1px solid var(--border2)">
+                                        <button type="button" @click="removePilar(i)"
+                                            class="absolute top-2 right-2 text-xs font-mono transition-colors" style="color:var(--muted)"
+                                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                        <input type="text" :name="'pilares['+i+'][nome]'" x-model="pilar.nome"
+                                            placeholder="Nome do pilar (ex: Autoridade e Prova Social)"
+                                            class="w-full px-3 py-1.5 text-sm font-bold focus:outline-none mb-2"
+                                            style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"
+                                            onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
+                                        <textarea :name="'pilares['+i+'][desc]'" x-model="pilar.desc" rows="2"
+                                            placeholder="Descrição do pilar, mensagem-chave..."
+                                            class="w-full px-3 py-1.5 text-xs focus:outline-none resize-none"
+                                            style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"
+                                            onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'"></textarea>
+                                    </div>
+                                </template>
+                                <p x-show="pilares.length === 0" class="text-xs font-mono py-2" style="color:var(--muted)">
+                                    Nenhum pilar adicionado. Clique em "+ Pilar" para começar.
+                                </p>
+                            </div>
                         </div>
 
                         <div class="flex gap-3 pt-1">
@@ -355,24 +475,51 @@
 
                                 {{-- Formulário de edição inline --}}
                                 <template x-if="editId === '{{ $project->id }}'">
+                                    <div x-data="{
+                                        tags: {{ json_encode($project->tags ?? []) }},
+                                        newTag: '',
+                                        addTag() {
+                                            const t = this.newTag.trim();
+                                            if (t && !this.tags.includes(t)) this.tags.push(t);
+                                            this.newTag = '';
+                                        },
+                                        removeTag(i) { this.tags.splice(i, 1); },
+                                        ideas: {{ json_encode($project->content_ideas ?? []) }},
+                                        addIdea() { this.ideas.push({ formato: 'video', titulo: '', texto: '' }); },
+                                        removeIdea(i) { this.ideas.splice(i, 1); },
+                                        phases: {{ json_encode($project->traffic_phases ?? []) }},
+                                        addPhase() { this.phases.push({ fase: '', titulo: '', periodo: '', objetivo: '', localizacao: '', publico: '', criativos: '', verba: '' }); },
+                                        removePhase(i) { this.phases.splice(i, 1); },
+                                    }" style="background:rgba(106,90,205,.04); border-left:3px solid var(--purple)">
+
                                     <form method="POST" action="{{ route('macroplans.projects.update', [$macroplan, $project]) }}"
-                                          class="px-5 py-5 space-y-4"
-                                          style="background:rgba(106,90,205,.04); border-left:3px solid var(--purple)">
+                                          class="px-5 py-5 space-y-5">
                                         @csrf @method('PATCH')
 
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div>
+                                        {{-- Linha 1: título + tipo + status --}}
+                                        <div class="grid grid-cols-3 gap-3">
+                                            <div class="col-span-1">
                                                 <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                                                    Nome do Projeto <span style="color:var(--orange)">*</span>
+                                                    Nome <span style="color:var(--orange)">*</span>
                                                 </label>
                                                 <input type="text" name="title" value="{{ $project->title }}" required
-                                                    class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                                                    class="w-full px-3 py-2 text-sm focus:outline-none"
                                                     style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Tipo</label>
+                                                <select name="type"
+                                                    class="w-full px-3 py-2 text-sm focus:outline-none"
+                                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                                    @foreach(\App\Models\Project::$types as $key => $t)
+                                                        <option value="{{ $key }}" {{ $project->type === $key ? 'selected' : '' }}>{{ $t['label'] }}</option>
+                                                    @endforeach
+                                                </select>
                                             </div>
                                             <div>
                                                 <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Status</label>
                                                 <select name="status"
-                                                    class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                                                    class="w-full px-3 py-2 text-sm focus:outline-none"
                                                     style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                                                     @foreach(\App\Models\Project::$statuses as $key => $s)
                                                         <option value="{{ $key }}" {{ $project->status === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
@@ -381,13 +528,66 @@
                                             </div>
                                         </div>
 
+                                        {{-- Objetivo --}}
                                         <div>
-                                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Objetivo do Projeto</label>
+                                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Objetivo</label>
                                             <textarea name="objective" rows="2"
                                                 class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                                                 style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $project->objective }}</textarea>
                                         </div>
 
+                                        {{-- Datas + Budget --}}
+                                        <div class="grid grid-cols-3 gap-3">
+                                            <div>
+                                                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Início</label>
+                                                <input type="date" name="start_date"
+                                                    value="{{ $project->start_date?->format('Y-m-d') }}"
+                                                    class="w-full px-3 py-2 text-sm focus:outline-none"
+                                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Término</label>
+                                                <input type="date" name="end_date"
+                                                    value="{{ $project->end_date?->format('Y-m-d') }}"
+                                                    class="w-full px-3 py-2 text-sm focus:outline-none"
+                                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Verba (R$)</label>
+                                                <input type="number" name="budget" min="0" step="0.01"
+                                                    value="{{ $project->budget }}"
+                                                    placeholder="0,00"
+                                                    class="w-full px-3 py-2 text-sm focus:outline-none"
+                                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                            </div>
+                                        </div>
+
+                                        {{-- Tags --}}
+                                        <div>
+                                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Tags</label>
+                                            <div class="flex flex-wrap gap-1.5 mb-2">
+                                                <template x-for="(tag, i) in tags" :key="i">
+                                                    <span class="flex items-center gap-1 px-2.5 py-1 text-xs font-mono rounded-full"
+                                                          style="background:rgba(106,90,205,.12); color:var(--purple)">
+                                                        <input type="hidden" :name="'tags[]'" :value="tag">
+                                                        <span x-text="tag"></span>
+                                                        <button type="button" @click="removeTag(i)"
+                                                            class="ml-0.5 font-bold" style="line-height:1">×</button>
+                                                    </span>
+                                                </template>
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <input type="text" x-model="newTag" @keydown.enter.prevent="addTag()"
+                                                    placeholder="Digite uma tag e pressione Enter..."
+                                                    class="flex-1 px-3 py-1.5 text-xs focus:outline-none"
+                                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                                <button type="button" @click="addTag()"
+                                                    class="px-3 py-1.5 text-xs font-mono"
+                                                    style="border:1px solid var(--border2); color:var(--muted2)">+ Tag</button>
+                                            </div>
+                                        </div>
+
+                                        {{-- Disciplinas --}}
                                         <div>
                                             <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Disciplinas Envolvidas</label>
                                             <div class="flex flex-wrap gap-2">
@@ -418,6 +618,127 @@
                                             @endif
                                         @endforeach
 
+                                        {{-- Ideias de Conteúdo --}}
+                                        <div>
+                                            <div class="flex items-center justify-between mb-3">
+                                                <label class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Ideias de Conteúdo</label>
+                                                <button type="button" @click="addIdea()"
+                                                    class="text-xs font-mono px-3 py-1.5"
+                                                    style="border:1px solid var(--border2); color:var(--muted2)">+ Ideia</button>
+                                            </div>
+                                            <div class="space-y-2">
+                                                <template x-for="(idea, i) in ideas" :key="i">
+                                                    <div class="px-4 py-3 rounded relative" style="background:var(--s3); border:1px solid var(--border2)">
+                                                        <button type="button" @click="removeIdea(i)"
+                                                            class="absolute top-2 right-2 text-xs" style="color:var(--muted)">✕</button>
+                                                        <div class="grid grid-cols-4 gap-2 mb-2">
+                                                            <div>
+                                                                <p class="text-xs font-mono mb-1" style="color:var(--muted)">Formato</p>
+                                                                <select :name="'content_ideas['+i+'][formato]'" x-model="idea.formato"
+                                                                    class="w-full px-2 py-1.5 text-xs focus:outline-none"
+                                                                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                                                                    <option value="video">Vídeo</option>
+                                                                    <option value="card">Card</option>
+                                                                    <option value="carrossel">Carrossel</option>
+                                                                    <option value="stories">Stories</option>
+                                                                    <option value="reels">Reels</option>
+                                                                    <option value="outro">Outro</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-span-3">
+                                                                <p class="text-xs font-mono mb-1" style="color:var(--muted)">Título</p>
+                                                                <input type="text" :name="'content_ideas['+i+'][titulo]'" x-model="idea.titulo"
+                                                                    placeholder="Título da peça..."
+                                                                    class="w-full px-2 py-1.5 text-xs focus:outline-none"
+                                                                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                                                            </div>
+                                                        </div>
+                                                        <textarea :name="'content_ideas['+i+'][texto]'" x-model="idea.texto" rows="2"
+                                                            placeholder="Descrição, roteiro, referências..."
+                                                            class="w-full px-2 py-1.5 text-xs focus:outline-none resize-none"
+                                                            style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"></textarea>
+                                                    </div>
+                                                </template>
+                                                <p x-show="ideas.length === 0" class="text-xs font-mono py-2" style="color:var(--muted)">
+                                                    Nenhuma ideia adicionada.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {{-- Fases de Tráfego --}}
+                                        <div>
+                                            <div class="flex items-center justify-between mb-3">
+                                                <label class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Fases de Tráfego</label>
+                                                <button type="button" @click="addPhase()"
+                                                    class="text-xs font-mono px-3 py-1.5"
+                                                    style="border:1px solid var(--border2); color:var(--muted2)">+ Fase</button>
+                                            </div>
+                                            <div class="space-y-3">
+                                                <template x-for="(ph, i) in phases" :key="i">
+                                                    <div class="px-4 py-4 rounded relative" style="background:var(--s3); border:1px solid var(--border2)">
+                                                        <button type="button" @click="removePhase(i)"
+                                                            class="absolute top-2 right-2 text-xs" style="color:var(--muted)">✕</button>
+                                                        <div class="grid grid-cols-3 gap-2 mb-2">
+                                                            <div>
+                                                                <p class="text-xs font-mono mb-1" style="color:var(--muted)">Fase / Label</p>
+                                                                <input type="text" :name="'traffic_phases['+i+'][fase]'" x-model="ph.fase"
+                                                                    placeholder="Ex: Fase 1 — Reconhecimento"
+                                                                    class="w-full px-2 py-1.5 text-xs focus:outline-none"
+                                                                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                                                            </div>
+                                                            <div>
+                                                                <p class="text-xs font-mono mb-1" style="color:var(--muted)">Período</p>
+                                                                <input type="text" :name="'traffic_phases['+i+'][periodo]'" x-model="ph.periodo"
+                                                                    placeholder="Ex: 01/07 a 31/07"
+                                                                    class="w-full px-2 py-1.5 text-xs focus:outline-none"
+                                                                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                                                            </div>
+                                                            <div>
+                                                                <p class="text-xs font-mono mb-1" style="color:var(--muted)">Verba (R$)</p>
+                                                                <input type="text" :name="'traffic_phases['+i+'][verba]'" x-model="ph.verba"
+                                                                    placeholder="Ex: 800"
+                                                                    class="w-full px-2 py-1.5 text-xs focus:outline-none"
+                                                                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                                                            </div>
+                                                        </div>
+                                                        <div class="grid grid-cols-2 gap-2">
+                                                            <div>
+                                                                <p class="text-xs font-mono mb-1" style="color:var(--muted)">Objetivo</p>
+                                                                <input type="text" :name="'traffic_phases['+i+'][objetivo]'" x-model="ph.objetivo"
+                                                                    placeholder="Reconhecimento, Conversão..."
+                                                                    class="w-full px-2 py-1.5 text-xs focus:outline-none"
+                                                                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                                                            </div>
+                                                            <div>
+                                                                <p class="text-xs font-mono mb-1" style="color:var(--muted)">Localização</p>
+                                                                <input type="text" :name="'traffic_phases['+i+'][localizacao]'" x-model="ph.localizacao"
+                                                                    placeholder="Ex: Belo Horizonte / MG"
+                                                                    class="w-full px-2 py-1.5 text-xs focus:outline-none"
+                                                                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                                                            </div>
+                                                            <div>
+                                                                <p class="text-xs font-mono mb-1" style="color:var(--muted)">Público-Alvo</p>
+                                                                <textarea :name="'traffic_phases['+i+'][publico]'" x-model="ph.publico" rows="2"
+                                                                    placeholder="Interesses, faixa etária, comportamento..."
+                                                                    class="w-full px-2 py-1.5 text-xs focus:outline-none resize-none"
+                                                                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"></textarea>
+                                                            </div>
+                                                            <div>
+                                                                <p class="text-xs font-mono mb-1" style="color:var(--muted)">Criativos</p>
+                                                                <textarea :name="'traffic_phases['+i+'][criativos]'" x-model="ph.criativos" rows="2"
+                                                                    placeholder="Formatos, CTAs, referências..."
+                                                                    class="w-full px-2 py-1.5 text-xs focus:outline-none resize-none"
+                                                                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"></textarea>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                                <p x-show="phases.length === 0" class="text-xs font-mono py-2" style="color:var(--muted)">
+                                                    Nenhuma fase de tráfego adicionada.
+                                                </p>
+                                            </div>
+                                        </div>
+
                                         <div class="flex gap-3">
                                             <button type="submit"
                                                 class="px-5 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
@@ -430,6 +751,7 @@
                                             </button>
                                         </div>
                                     </form>
+                                    </div>
                                 </template>
 
                             </div>
@@ -567,15 +889,26 @@
                         @csrf @method('PATCH')
                         <input type="hidden" name="_block" value="meta">
 
-                        <div>
-                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                                Título <span style="color:var(--orange)">*</span>
-                            </label>
-                            <input type="text" name="title" value="{{ $macroplan->title }}" required
-                                class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        {{-- Título + Versão --}}
+                        <div class="grid grid-cols-4 gap-3">
+                            <div class="col-span-3">
+                                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                                    Título <span style="color:var(--orange)">*</span>
+                                </label>
+                                <input type="text" name="title" value="{{ $macroplan->title }}" required
+                                    class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Versão</label>
+                                <input type="text" name="version" value="{{ $macroplan->version ?? '1.0' }}"
+                                    placeholder="1.0"
+                                    class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            </div>
                         </div>
 
+                        {{-- Período --}}
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Início do Ciclo</label>
@@ -591,6 +924,7 @@
                             </div>
                         </div>
 
+                        {{-- Responsável + Status --}}
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Responsável</label>
@@ -612,6 +946,22 @@
                                         <option value="{{ $key }}" {{ $macroplan->status === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
                                     @endforeach
                                 </select>
+                            </div>
+                        </div>
+
+                        {{-- Disciplinas Ativas --}}
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Disciplinas Ativas neste Ciclo</label>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach(\App\Models\MacroPlan::$disciplineOptions as $key => $label)
+                                    <label class="flex items-center gap-1.5 text-xs cursor-pointer px-3 py-1.5"
+                                           style="border:1px solid var(--border2); color:var(--muted2)">
+                                        <input type="checkbox" name="disciplines[]" value="{{ $key }}"
+                                            {{ in_array($key, $macroplan->disciplines ?? []) ? 'checked' : '' }}
+                                            style="accent-color:var(--purple)">
+                                        {{ $label }}
+                                    </label>
+                                @endforeach
                             </div>
                         </div>
 

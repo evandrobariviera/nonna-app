@@ -30,6 +30,12 @@ class Project extends Model
         'briefing_email',
         'status',
         'type',
+        'tags',
+        'content_ideas',
+        'traffic_phases',
+        'start_date',
+        'end_date',
+        'budget',
         'clickup_task_id',
         'launched_at',
     ];
@@ -50,9 +56,15 @@ class Project extends Model
     }
 
     protected $casts = [
-        'disciplines' => 'array',
-        'launched_at' => 'datetime',
-        'position'    => 'integer',
+        'disciplines'   => 'array',
+        'tags'          => 'array',
+        'content_ideas' => 'array',
+        'traffic_phases'=> 'array',
+        'start_date'    => 'date',
+        'end_date'      => 'date',
+        'budget'        => 'decimal:2',
+        'launched_at'   => 'datetime',
+        'position'      => 'integer',
     ];
 
     public static array $disciplines = [
@@ -68,6 +80,7 @@ class Project extends Model
     public static array $statuses = [
         'draft'     => ['label' => 'Rascunho',  'color' => 'muted'],
         'active'    => ['label' => 'Ativo',     'color' => 'green'],
+        'continua'  => ['label' => 'Contínua',  'color' => 'orange'],
         'completed' => ['label' => 'Concluído', 'color' => 'purple'],
         'cancelled' => ['label' => 'Cancelado', 'color' => 'red'],
     ];

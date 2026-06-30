@@ -172,6 +172,7 @@ class ProjectController extends Controller
         $data = $request->validate([
             'title'             => 'required|string|max:200',
             'objective'         => 'nullable|string',
+            'type'              => 'nullable|in:projeto,campanha',
             'disciplines'       => 'nullable|array',
             'disciplines.*'     => 'in:criacao,web,trafego,setup,social,seo,email',
             'briefing_criacao'  => 'nullable|string',
@@ -181,12 +182,20 @@ class ProjectController extends Controller
             'briefing_social'   => 'nullable|string',
             'briefing_seo'      => 'nullable|string',
             'briefing_email'    => 'nullable|string',
-            'status'            => 'required|in:draft,active,completed,cancelled',
+            'status'            => 'required|in:draft,active,continua,completed,cancelled',
+            'tags'              => 'nullable|array',
+            'tags.*'            => 'nullable|string|max:100',
+            'content_ideas'     => 'nullable|array',
+            'traffic_phases'    => 'nullable|array',
+            'start_date'        => 'nullable|date',
+            'end_date'          => 'nullable|date',
+            'budget'            => 'nullable|numeric|min:0',
         ]);
 
-        if (!isset($data['disciplines'])) {
-            $data['disciplines'] = [];
-        }
+        $data['disciplines']    = $data['disciplines'] ?? [];
+        $data['tags']           = array_values(array_filter($data['tags'] ?? []));
+        $data['content_ideas']  = $data['content_ideas'] ?? [];
+        $data['traffic_phases'] = $data['traffic_phases'] ?? [];
 
         $project->update($data);
 
@@ -207,7 +216,7 @@ class ProjectController extends Controller
     {
         $data = $request->validate([
             'type'          => 'nullable|in:projeto,campanha',
-            'status'        => 'nullable|in:draft,active,completed,cancelled',
+            'status'        => 'nullable|in:draft,active,continua,completed,cancelled',
             'macro_plan_id' => 'nullable|uuid|exists:pgsql.macro_plans,id',
             'title'         => 'nullable|string|max:200',
         ]);
