@@ -431,6 +431,28 @@
                                                     @endforeach
                                                 </div>
                                             @endif
+                                            {{-- Datas + prazo vencido --}}
+                                            @if($project->start_date || $project->end_date)
+                                                @php
+                                                    $isOverdueDeadline = $project->end_date
+                                                        && $project->end_date->isPast()
+                                                        && !in_array($project->status, ['completed', 'cancelled']);
+                                                @endphp
+                                                <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+                                                    <span class="text-xs font-mono" style="color:var(--muted)">
+                                                        @if($project->start_date){{ $project->start_date->format('d/m/Y') }}@endif
+                                                        @if($project->start_date && $project->end_date) → @endif
+                                                        @if($project->end_date){{ $project->end_date->format('d/m/Y') }}@endif
+                                                    </span>
+                                                    @if($isOverdueDeadline)
+                                                        <span class="text-xs font-mono px-2 py-0.5 rounded-full"
+                                                              style="background:rgba(220,38,38,.1); color:var(--red)">
+                                                            prazo vencido
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            @endif
+
                                             {{-- Barra de progresso --}}
                                             @php
                                                 $pct = $project->progressPercent();
