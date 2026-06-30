@@ -382,7 +382,6 @@
 
             urgencyLeftBorder(p) {
                 if (p.has_overdue)    return 'border-left:3px solid var(--red);';
-                if (p.not_started)    return 'border-left:3px solid var(--orange);';
                 if (p.progress===100) return 'border-left:3px solid var(--green);';
                 return '';
             },
