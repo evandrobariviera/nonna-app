@@ -349,28 +349,58 @@
                         <form method="POST" action="{{ route('macroplans.projects.store', $macroplan) }}"
                               class="px-5 py-5 space-y-4">
                             @csrf
-                            <div>
-                                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                                    Nome do Projeto <span style="color:var(--orange)">*</span>
-                                </label>
-                                <input type="text" name="title" required
-                                    placeholder="Ex: Captação B2B — Landing Page"
-                                    class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+
+                            {{-- Tipo + Nome --}}
+                            <div class="grid grid-cols-4 gap-3">
+                                <div>
+                                    <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Tipo</label>
+                                    <select name="type"
+                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                        @foreach(\App\Models\Project::$types as $key => $t)
+                                            <option value="{{ $key }}">{{ $t['label'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-span-3">
+                                    <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                                        Nome <span style="color:var(--orange)">*</span>
+                                    </label>
+                                    <input type="text" name="title" required
+                                        placeholder="Ex: Captação B2B — Landing Page"
+                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                </div>
                             </div>
+
+                            {{-- Objetivo --}}
                             <div>
-                                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                                    Objetivo do Projeto
-                                </label>
+                                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Objetivo</label>
                                 <textarea name="objective" rows="2"
                                     placeholder="O que este projeto precisa alcançar?"
                                     class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                                     style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"></textarea>
                             </div>
+
+                            {{-- Datas --}}
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Início</label>
+                                    <input type="date" name="start_date"
+                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Término</label>
+                                    <input type="date" name="end_date"
+                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                </div>
+                            </div>
+
+                            {{-- Disciplinas --}}
                             <div>
-                                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                                    Disciplinas Envolvidas
-                                </label>
+                                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Disciplinas Envolvidas</label>
                                 <div class="flex flex-wrap gap-2">
                                     @foreach(\App\Models\Project::$disciplines as $key => $label)
                                         <label class="flex items-center gap-1.5 text-xs cursor-pointer px-3 py-1.5"
@@ -382,6 +412,7 @@
                                     @endforeach
                                 </div>
                             </div>
+
                             <div class="flex gap-3">
                                 <button type="submit"
                                     class="px-5 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
@@ -406,93 +437,88 @@
                             <div style="border-bottom:1px solid var(--border2)" x-data="{}">
 
                                 {{-- View do projeto --}}
+                                @php
+                                    $pct   = $project->progressPercent();
+                                    $total = $project->tasks->where('status', '!=', 'cancelado')->count();
+                                    $done  = $project->tasks->where('status', 'concluido')->count();
+                                    $isOverdueDeadline = $project->end_date
+                                        && $project->end_date->isPast()
+                                        && !in_array($project->status, ['completed', 'cancelled']);
+                                    $typeColor = $project->type === 'campanha' ? 'var(--green)' : 'var(--purple)';
+                                @endphp
                                 <div x-show="editId !== '{{ $project->id }}'" class="px-5 py-4">
-                                    <div class="flex items-start justify-between gap-4">
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                                <span class="text-xs font-mono font-bold" style="color:var(--muted)">
-                                                    #{{ $loop->iteration }}
-                                                </span>
-                                                <a href="{{ route('macroplans.projects.show', [$macroplan, $project]) }}"
-                                                   class="font-bold text-sm transition-colors"
-                                                   style="color:var(--text)"
-                                                   onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'">
-                                                    {{ $project->title }}
-                                                </a>
-                                                <span class="badge badge-{{ $project->statusColor() }}">{{ $project->statusLabel() }}</span>
-                                            </div>
-                                            @if($project->objective)
-                                                <p class="text-xs mb-2" style="color:var(--muted2)">{{ $project->objective }}</p>
-                                            @endif
-                                            @if($project->disciplines)
-                                                <div class="flex flex-wrap gap-1 mb-2">
-                                                    @foreach($project->disciplineLabels() as $d)
-                                                        <span class="badge">{{ $d }}</span>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                            {{-- Datas + prazo vencido --}}
-                                            @if($project->start_date || $project->end_date)
-                                                @php
-                                                    $isOverdueDeadline = $project->end_date
-                                                        && $project->end_date->isPast()
-                                                        && !in_array($project->status, ['completed', 'cancelled']);
-                                                @endphp
-                                                <div class="flex items-center gap-2 mb-1.5 flex-wrap">
-                                                    <span class="text-xs font-mono" style="color:var(--muted)">
-                                                        @if($project->start_date){{ $project->start_date->format('d/m/Y') }}@endif
-                                                        @if($project->start_date && $project->end_date) → @endif
-                                                        @if($project->end_date){{ $project->end_date->format('d/m/Y') }}@endif
-                                                    </span>
-                                                    @if($isOverdueDeadline)
-                                                        <span class="text-xs font-mono px-2 py-0.5 rounded-full"
-                                                              style="background:rgba(220,38,38,.1); color:var(--red)">
-                                                            prazo vencido
-                                                        </span>
-                                                    @endif
-                                                </div>
-                                            @endif
 
-                                            {{-- Barra de progresso --}}
-                                            @php
-                                                $pct = $project->progressPercent();
-                                                $total = $project->tasks->where('status', '!=', 'cancelado')->count();
-                                                $done  = $project->tasks->where('status', 'concluido')->count();
-                                            @endphp
-                                            @if($total > 0)
-                                                <div class="flex items-center gap-2 mt-1">
-                                                    <div class="flex-1 h-1.5 rounded-full overflow-hidden" style="background:var(--border2); max-width:160px">
-                                                        <div class="h-1.5 rounded-full"
-                                                             style="width:{{ $pct }}%; background:{{ $pct >= 100 ? 'var(--green)' : 'var(--grad)' }}"></div>
-                                                    </div>
-                                                    <span class="text-xs font-mono" style="color:var(--muted)">{{ $done }}/{{ $total }} · {{ $pct }}%</span>
-                                                </div>
-                                            @else
-                                                <span class="text-xs font-mono" style="color:var(--muted)">Sem tarefas</span>
+                                    {{-- Linha superior: tipo + número + título + status + ações --}}
+                                    <div class="flex items-center justify-between gap-4 mb-2">
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            <span class="text-xs font-mono font-bold flex-shrink-0" style="color:var(--muted)">#{{ $loop->iteration }}</span>
+                                            <span class="text-xs font-mono px-2 py-0.5 rounded flex-shrink-0"
+                                                  style="background:color-mix(in srgb, {{ $typeColor }} 12%, transparent); color:{{ $typeColor }}">
+                                                {{ $project->typeLabel() }}
+                                            </span>
+                                            <a href="{{ route('macroplans.projects.show', [$macroplan, $project]) }}"
+                                               class="font-bold text-sm truncate transition-colors"
+                                               style="color:var(--text)"
+                                               onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'">
+                                                {{ $project->title }}
+                                            </a>
+                                            <span class="badge badge-{{ $project->statusColor() }} flex-shrink-0">{{ $project->statusLabel() }}</span>
+                                            @if($isOverdueDeadline)
+                                                <span class="text-xs font-mono px-2 py-0.5 rounded-full flex-shrink-0"
+                                                      style="background:rgba(220,38,38,.1); color:var(--red)">prazo vencido</span>
                                             @endif
                                         </div>
                                         <div class="flex items-center gap-3 flex-shrink-0">
                                             <a href="{{ route('macroplans.projects.show', [$macroplan, $project]) }}"
                                                class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                                               onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
-                                                Ver →
-                                            </a>
+                                               onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">Ver →</a>
                                             <button type="button" @click="editId = '{{ $project->id }}'"
                                                 class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                                                onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
-                                                Editar
-                                            </button>
+                                                onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">Editar</button>
                                             <form method="POST" action="{{ route('macroplans.projects.destroy', [$macroplan, $project]) }}"
                                                   onsubmit="return confirm('Remover projeto {{ addslashes($project->title) }}?')">
                                                 @csrf @method('DELETE')
-                                                <button type="submit"
-                                                    class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                                                    onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
-                                                    Remover
-                                                </button>
+                                                <button type="submit" class="text-xs font-mono transition-colors" style="color:var(--muted)"
+                                                    onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Remover</button>
                                             </form>
                                         </div>
                                     </div>
+
+                                    {{-- Objetivo --}}
+                                    @if($project->objective)
+                                        <p class="text-xs mb-2.5" style="color:var(--muted2)">{{ $project->objective }}</p>
+                                    @endif
+
+                                    {{-- Linha de metadados: datas · disciplinas · progresso --}}
+                                    <div class="flex items-center gap-4 flex-wrap">
+                                        @if($project->start_date || $project->end_date)
+                                            <span class="text-xs font-mono flex items-center gap-1" style="color:var(--muted)">
+                                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                                @if($project->start_date){{ $project->start_date->format('d/m/y') }}@endif
+                                                @if($project->start_date && $project->end_date)→@endif
+                                                @if($project->end_date){{ $project->end_date->format('d/m/y') }}@endif
+                                            </span>
+                                        @endif
+                                        @if($project->disciplines)
+                                            <div class="flex flex-wrap gap-1">
+                                                @foreach($project->disciplineLabels() as $d)
+                                                    <span class="badge">{{ $d }}</span>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                        @if($total > 0)
+                                            <div class="flex items-center gap-2 ml-auto">
+                                                <div class="h-1.5 rounded-full overflow-hidden" style="background:var(--border2); width:100px">
+                                                    <div class="h-1.5 rounded-full"
+                                                         style="width:{{ $pct }}%; background:{{ $pct >= 100 ? 'var(--green)' : 'var(--grad)' }}"></div>
+                                                </div>
+                                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $done }}/{{ $total }} · {{ $pct }}%</span>
+                                            </div>
+                                        @else
+                                            <span class="text-xs font-mono ml-auto" style="color:var(--muted)">Sem tarefas</span>
+                                        @endif
+                                    </div>
+
                                 </div>
 
                                 {{-- Formulário de edição inline --}}

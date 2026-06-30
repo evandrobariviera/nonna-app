@@ -144,9 +144,12 @@ class ProjectController extends Controller
     public function store(Request $request, MacroPlan $macroplan)
     {
         $data = $request->validate([
-            'title'      => 'required|string|max:200',
-            'objective'  => 'nullable|string',
-            'disciplines'=> 'nullable|array',
+            'title'         => 'required|string|max:200',
+            'type'          => 'nullable|in:projeto,campanha',
+            'objective'     => 'nullable|string',
+            'start_date'    => 'nullable|date',
+            'end_date'      => 'nullable|date',
+            'disciplines'   => 'nullable|array',
             'disciplines.*' => 'in:criacao,web,trafego,setup,social,seo,email',
         ]);
 
@@ -156,7 +159,10 @@ class ProjectController extends Controller
             'client_id'  => $macroplan->client_id,
             'position'   => $position,
             'title'      => $data['title'],
+            'type'       => $data['type'] ?? 'projeto',
             'objective'  => $data['objective'] ?? null,
+            'start_date' => $data['start_date'] ?? null,
+            'end_date'   => $data['end_date'] ?? null,
             'disciplines'=> $data['disciplines'] ?? [],
             'status'     => 'draft',
         ]);
