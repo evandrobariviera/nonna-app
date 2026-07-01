@@ -116,12 +116,23 @@ class Task extends Model
 
     public static array $situations = [
         ''                        => '—',
+        'triagem'                 => 'Triagem',
         'em_producao'             => 'Em Produção',
         'aguardando_referencias'  => 'Aguardando Referências',
         'em_revisao_interna'      => 'Em Revisão Interna',
         'enviar_para_cliente'     => 'Enviar para o Cliente',
         'agendado_publicacao'     => 'Agendado para Publicação',
         'publicado'               => 'Publicado',
+    ];
+
+    public static array $situationColors = [
+        'triagem'                => '#94a3b8',
+        'em_producao'            => '#2563eb',
+        'aguardando_referencias' => '#FF8C00',
+        'em_revisao_interna'     => '#d97706',
+        'enviar_para_cliente'    => '#6A5ACD',
+        'agendado_publicacao'    => '#0d9488',
+        'publicado'              => '#059669',
     ];
 
     public static array $requesterChannels = [
@@ -191,6 +202,35 @@ class Task extends Model
     public function priorityColor(): string
     {
         return self::$priorities[$this->priority ?? 'normal']['color'] ?? 'muted';
+    }
+
+    public static function colorHex(string $color): string
+    {
+        return match($color) {
+            'green'  => '#059669',
+            'blue'   => '#2563eb',
+            'purple' => '#6A5ACD',
+            'orange' => '#FF8C00',
+            'red'    => '#dc2626',
+            'yellow' => '#d97706',
+            'teal'   => '#0d9488',
+            default  => '#94a3b8',
+        };
+    }
+
+    public function statusHex(): string
+    {
+        return self::colorHex($this->statusColor());
+    }
+
+    public function priorityHex(): string
+    {
+        return self::colorHex($this->priorityColor());
+    }
+
+    public function situationColor(): string
+    {
+        return self::$situationColors[$this->situation ?? ''] ?? '#94a3b8';
     }
 
     public function isOverdue(): bool
