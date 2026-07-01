@@ -238,6 +238,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('tasks.updateStandalone');
     Route::patch('/projetos/{project}/tarefas/{task}/status', [TaskController::class, 'updateStatusStandalone'])
         ->name('tasks.updateStatusStandalone');
+    Route::patch('/tarefas/{task}/status', [TaskController::class, 'updateStatusDirect'])
+        ->name('tasks.update-status-direct');
     Route::delete('/projetos/{project}/tarefas/{task}', [TaskController::class, 'destroyStandalone'])
         ->name('tasks.destroyStandalone');
 

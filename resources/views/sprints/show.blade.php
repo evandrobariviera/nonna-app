@@ -192,7 +192,7 @@
                                                     </button>
                                                 </form>
                                             @elseif($task->project)
-                                                <form method="POST" action="{{ route('tasks.update-status', [$task->macroPlan, $task->project, $task]) }}">
+                                                <form method="POST" action="{{ route('tasks.update-status-direct', $task) }}">
                                                     @csrf @method('PATCH')
                                                     <input type="hidden" name="status" value="{{ \App\Models\Task::$kanbanDefaultStatus[$targetKey] }}">
                                                     <button type="submit"

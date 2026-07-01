@@ -34,7 +34,7 @@
              class="absolute left-0 top-full mt-1 z-20 rounded shadow-lg py-1"
              style="background:var(--s1); border:1px solid var(--border2); min-width:190px">
             @foreach(\App\Models\Task::$statuses as $key => $s)
-                @php $route = ($context === 'ticket') ? route('tickets.update-status', $task) : route('tasks.update-status', $task) @endphp
+                @php $route = ($context === 'ticket') ? route('tickets.update-status', $task) : route('tasks.update-status-direct', $task) @endphp
                 <form method="POST" action="{{ $route }}">
                     @csrf @method('PATCH')
                     <input type="hidden" name="status" value="{{ $key }}">

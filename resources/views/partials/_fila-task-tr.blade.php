@@ -5,6 +5,7 @@
         $execList = collect([$task->executor]);
     }
     $respList = $task->executors->filter(fn($u) => $u->pivot->role === 'responsavel');
+    $statusUpdateUrl = route('tasks.update-status-direct', $task);
 @endphp
 
 <tr class="{{ $task->isOverdue() ? 'row-overdue' : '' }}" x-show="groupOpen"
@@ -29,7 +30,7 @@
              class="absolute left-0 top-full mt-1 z-20 rounded shadow-lg py-1"
              style="background:var(--s1); border:1px solid var(--border2); min-width:190px">
             @foreach(\App\Models\Task::$statuses as $key => $s)
-                <form method="POST" action="{{ route('tasks.update-status', $task) }}">
+                <form method="POST" action="{{ $statusUpdateUrl }}">
                     @csrf @method('PATCH')
                     <input type="hidden" name="status" value="{{ $key }}">
                     <button type="submit"

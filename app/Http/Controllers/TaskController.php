@@ -259,6 +259,15 @@ class TaskController extends Controller
         return redirect()->back()->with('success', 'Status atualizado.');
     }
 
+    public function updateStatusDirect(Request $request, Task $task)
+    {
+        $task->update(['status' => $request->validate([
+            'status' => 'required|in:' . implode(',', array_keys(Task::$statuses)),
+        ])['status']]);
+
+        return redirect()->back()->with('success', 'Status atualizado.');
+    }
+
     public function destroy(MacroPlan $macroplan, Project $project, Task $task)
     {
         abort_unless($task->project_id === $project->id, 403);
