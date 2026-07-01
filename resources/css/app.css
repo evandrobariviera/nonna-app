@@ -242,6 +242,8 @@
     .btn-success { background: #059669; color: #fff; border-color: #059669; }
     .btn-ghost { background: transparent; color: var(--muted2); border-color: var(--border2); }
     .btn-ghost:hover { background: var(--s3); color: var(--text); }
+    .btn-danger { background: #dc2626; color: #fff; border-color: #dc2626; }
+    .btn-danger:hover { background: #b91c1c; border-color: #b91c1c; }
     .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 5px; }
     .btn-xs { padding: 3px 10px; font-size: 11px; border-radius: 4px; }
 

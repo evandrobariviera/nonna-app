@@ -424,6 +424,8 @@ Route::middleware(['auth', 'not-client'])->group(function () {
 Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'superadmin'])->group(function () {
     Route::get('/', [SuperAdminDashboard::class, 'index'])->name('dashboard');
     Route::resource('organizations', SuperAdminOrgs::class)->except(['show', 'destroy']);
+    Route::get('/reset-operacional', [App\Http\Controllers\SuperAdmin\ResetOperacionalController::class, 'index'])->name('reset-operacional');
+    Route::post('/reset-operacional', [App\Http\Controllers\SuperAdmin\ResetOperacionalController::class, 'execute'])->name('reset-operacional.execute');
 });
 
 require __DIR__.'/auth.php';
