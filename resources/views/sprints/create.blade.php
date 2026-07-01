@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">Nova Sprint</x-slot>
 
-    <div class="max-w-lg">
+    <div class="max-w-xl mx-auto">
         <div class="card px-6 py-6">
             <form method="POST" action="{{ route('sprints.store') }}" class="space-y-5">
                 @csrf

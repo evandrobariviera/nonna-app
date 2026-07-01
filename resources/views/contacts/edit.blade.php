@@ -12,7 +12,7 @@
         </div>
     </x-slot>
 
-    <div class="py-8 px-6 max-w-2xl">
+    <div class="py-4 max-w-2xl mx-auto">
 
         <form method="POST" action="{{ route('contacts.update', $contact) }}" class="space-y-6">
             @csrf @method('PATCH')

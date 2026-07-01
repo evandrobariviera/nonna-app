@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">Novo Cliente</x-slot>
 
-    <div class="max-w-4xl">
+    <div class="max-w-4xl mx-auto">
         <div class="flex items-center gap-3 mb-6">
             <a href="{{ route('clients.index') }}" class="text-xs font-semibold transition-colors"
                style="color:var(--muted)"

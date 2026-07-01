@@ -10,7 +10,7 @@
         </div>
     </x-slot>
 
-    <div class="max-w-2xl">
+    <div class="max-w-2xl mx-auto">
 
         @if($errors->any())
             <div class="mb-5 px-4 py-3 text-sm"
@@ -109,15 +109,11 @@
 
             </div>
 
-            <div class="flex items-center gap-4 mt-5">
-                <button type="submit"
-                    class="px-6 py-2.5 text-xs font-bold font-mono uppercase tracking-widest text-white transition-opacity hover:opacity-90"
-                    style="background:var(--purple)">
+            <div class="flex items-center gap-3 mt-5">
+                <button type="submit" class="btn btn-primary">
                     Criar e Preencher Blocos →
                 </button>
-                <a href="{{ route('macroplans.index') }}"
-                   class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                   onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                <a href="{{ route('macroplans.index') }}" class="btn btn-ghost">
                     Cancelar
                 </a>
             </div>

@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">Novo Ticket</x-slot>
 
-    <div class="max-w-3xl">
+    <div class="max-w-3xl mx-auto">
         <div class="card px-6 py-6">
             <form method="POST" action="{{ route('tickets.store') }}"
                   class="grid grid-cols-2 gap-4 md:grid-cols-3"
