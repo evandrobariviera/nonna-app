@@ -218,29 +218,76 @@
         padding: 16px 20px;
     }
 
-    /* ── TABLE ── */
+    /* ── BUTTONS ── */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.4;
+        border-radius: 6px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.12s, border-color 0.12s, color 0.12s;
+        white-space: nowrap;
+        font-family: inherit;
+    }
+    .btn-primary { background: var(--purple); color: #fff; border-color: var(--purple); }
+    .btn-primary:hover { background: #5848b0; border-color: #5848b0; }
+    .btn-success { background: #059669; color: #fff; border-color: #059669; }
+    .btn-ghost { background: transparent; color: var(--muted2); border-color: var(--border2); }
+    .btn-ghost:hover { background: var(--s3); color: var(--text); }
+    .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 5px; }
+    .btn-xs { padding: 3px 10px; font-size: 11px; border-radius: 4px; }
+
+    /* ── FILTER SELECT ── */
+    .filter-select {
+        height: 34px;
+        padding: 0 10px;
+        font-size: 13px;
+        font-family: inherit;
+        background: var(--s1);
+        border: 1px solid var(--border2);
+        color: var(--text);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: border-color 0.12s;
+    }
+    .filter-select:focus { outline: none; border-color: var(--purple); }
+
+    /* ── TABLE — Monday style ── */
     .nonna-table { width: 100%; border-collapse: collapse; }
     .nonna-table thead tr {
-        background: var(--s2);
-        border-bottom: 1px solid var(--border2);
+        border-bottom: 2px solid var(--border2);
     }
     .nonna-table th {
-        padding: 9px 16px;
-        font-size: 10px;
+        padding: 0 14px 10px;
+        font-size: 11px;
         font-weight: 700;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
         color: var(--muted);
         text-align: left;
+        white-space: nowrap;
     }
     .nonna-table td {
-        padding: 12px 16px;
-        font-size: 13px;
-        border-bottom: 1px solid var(--border);
+        padding: 0 14px;
+        height: 48px;
+        font-size: 13.5px;
+        border-bottom: 1px solid var(--border2);
         color: var(--text);
+        vertical-align: middle;
     }
+    .nonna-table tbody tr { transition: background 0.08s; }
     .nonna-table tbody tr:hover { background: var(--s2); }
+    .nonna-table tbody tr:hover .row-actions { opacity: 1; }
     .nonna-table tbody tr:last-child td { border-bottom: none; }
+    .row-actions { opacity: 0; transition: opacity 0.12s; }
+    .nonna-table tbody tr:hover .row-actions { opacity: 1; }
+    .row-overdue td:first-child { border-left: 3px solid var(--red); }
 
     /* ── BADGE — neutral pill (labels, disciplines) ── */
     .badge {
