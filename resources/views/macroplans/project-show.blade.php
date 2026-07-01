@@ -57,9 +57,7 @@
                 @foreach(\App\Models\Task::$kanbanColumns as $colKey => $col)
                     @php $count = $kanban[$colKey]->count(); @endphp
                     <div class="text-center">
-                        <div class="text-lg font-black" style="color:var(--{{ $col['color'] === 'muted' ? 'muted2' : $col['color'] }})">
-                            {{ $count }}
-                        </div>
+                        <div class="text-lg font-black" style="color:{{ $col['bg'] }}">{{ $count }}</div>
                         <div class="text-xs font-mono" style="color:var(--muted)">{{ $col['label'] }}</div>
                     </div>
                 @endforeach
@@ -269,18 +267,15 @@
                 @php $colTasks = $kanban[$colKey]; @endphp
                 <div class="flex flex-col gap-2">
 
-                    {{-- Header da coluna --}}
-                    <div class="flex items-center justify-between px-3 py-2 rounded"
-                         style="background:var(--s2); border:1px solid var(--border2)">
-                        <div class="flex items-center gap-2">
-                            <div class="h-2 w-2 rounded-full"
-                                 style="background:var(--{{ $col['color'] === 'muted' ? 'muted' : $col['color'] }})"></div>
-                            <span class="text-xs font-bold font-mono uppercase tracking-widest"
-                                  style="color:var(--{{ $col['color'] === 'muted' ? 'muted2' : $col['color'] }})">
-                                {{ $col['label'] }}
-                            </span>
-                        </div>
-                        <span class="text-xs font-mono font-bold" style="color:var(--muted)">{{ $colTasks->count() }}</span>
+                    {{-- Header da coluna — sólido estilo Monday --}}
+                    <div class="flex items-center justify-between px-3 py-2.5 rounded"
+                         style="background:{{ $col['bg'] }}">
+                        <span class="text-xs font-bold uppercase tracking-wider" style="color:#fff; letter-spacing:.06em">
+                            {{ $col['label'] }}
+                        </span>
+                        <span class="text-xs font-bold" style="color:rgba(255,255,255,.75)">
+                            {{ $colTasks->count() }}
+                        </span>
                     </div>
 
                     {{-- Cards --}}

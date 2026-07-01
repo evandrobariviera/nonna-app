@@ -42,21 +42,25 @@ class Task extends Model
             'label'    => 'Backlog',
             'statuses' => ['backlog'],
             'color'    => 'muted',
+            'bg'       => '#64748b',
         ],
         'em_andamento' => [
             'label'    => 'Em Andamento',
             'statuses' => ['em_copy', 'pronto_producao', 'em_producao'],
             'color'    => 'orange',
+            'bg'       => '#FF8C00',
         ],
         'revisao' => [
             'label'    => 'Revisão',
             'statuses' => ['revisao', 'aguardando_envio', 'aguardando_resposta', 'ajuste'],
             'color'    => 'purple',
+            'bg'       => '#6A5ACD',
         ],
         'concluido' => [
             'label'    => 'Concluído',
             'statuses' => ['concluido'],
             'color'    => 'green',
+            'bg'       => '#059669',
         ],
     ];
 
