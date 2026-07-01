@@ -56,6 +56,8 @@ return [
 
     'domain' => env('APP_DOMAIN', 'localhost'),
 
+    'import_secret' => env('IMPORT_SECRET'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AdAccountController;
+use App\Http\Controllers\Api\ClickupImportController;
 use App\Http\Controllers\Api\SyncController;
 use App\Http\Middleware\SetApiTenant;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,9 @@ use Illuminate\Support\Facades\Route;
 | Toda request resolve o tenant pelo token — não usa subdomínio
 |--------------------------------------------------------------------------
 */
+
+// ── ClickUp Import — n8n envia tarefas para importar (sem Sanctum, autenticado por header X-Import-Secret)
+Route::post('/clickup/import', [ClickupImportController::class, 'import']);
 
 Route::middleware(['auth:sanctum', SetApiTenant::class])->group(function () {
 
