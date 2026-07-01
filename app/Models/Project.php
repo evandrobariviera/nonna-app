@@ -79,9 +79,9 @@ class Project extends Model
 
     public static array $statuses = [
         'draft'     => ['label' => 'Rascunho',  'color' => 'muted'],
-        'active'    => ['label' => 'Ativo',     'color' => 'green'],
-        'continua'  => ['label' => 'Contínua',  'color' => 'orange'],
-        'completed' => ['label' => 'Concluído', 'color' => 'purple'],
+        'active'    => ['label' => 'Ativo',     'color' => 'blue'],
+        'continua'  => ['label' => 'Contínua',  'color' => 'blue'],
+        'completed' => ['label' => 'Concluído', 'color' => 'green'],
         'cancelled' => ['label' => 'Cancelado', 'color' => 'red'],
     ];
 

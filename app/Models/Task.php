@@ -47,8 +47,8 @@ class Task extends Model
         'em_andamento' => [
             'label'    => 'Em Andamento',
             'statuses' => ['em_copy', 'pronto_producao', 'em_producao'],
-            'color'    => 'orange',
-            'bg'       => '#FF8C00',
+            'color'    => 'blue',
+            'bg'       => '#2563eb',
         ],
         'revisao' => [
             'label'    => 'Revisão',
@@ -66,14 +66,14 @@ class Task extends Model
 
     public static array $statuses = [
         'backlog'               => ['label' => 'Backlog',             'col' => 'backlog',      'color' => 'muted'],
-        'em_copy'               => ['label' => 'Em Copy',             'col' => 'em_andamento', 'color' => 'orange'],
-        'pronto_producao'       => ['label' => 'Pronto p/ Produção',  'col' => 'em_andamento', 'color' => 'orange'],
-        'em_producao'           => ['label' => 'Em Produção',         'col' => 'em_andamento', 'color' => 'orange'],
+        'em_copy'               => ['label' => 'Em Copy',             'col' => 'em_andamento', 'color' => 'blue'],
+        'pronto_producao'       => ['label' => 'Pronto p/ Produção',  'col' => 'em_andamento', 'color' => 'blue'],
+        'em_producao'           => ['label' => 'Em Produção',         'col' => 'em_andamento', 'color' => 'blue'],
         'revisao'               => ['label' => 'Em Revisão',          'col' => 'revisao',      'color' => 'purple'],
-        'aguardando_envio'      => ['label' => 'Aguardando Envio',    'col' => 'revisao',      'color' => 'purple'],
-        'aguardando_resposta'   => ['label' => 'Aguardando Resposta', 'col' => 'revisao',      'color' => 'purple'],
-        'ajuste'                    => ['label' => 'Em Ajuste',              'col' => 'revisao',      'color' => 'purple'],
-        'aguardando_aprovacao'      => ['label' => 'Aguardando Aprovação',   'col' => 'revisao',      'color' => 'blue'],
+        'aguardando_envio'      => ['label' => 'Aguardando Envio',    'col' => 'revisao',      'color' => 'orange'],
+        'aguardando_resposta'   => ['label' => 'Aguardando Resposta', 'col' => 'revisao',      'color' => 'orange'],
+        'ajuste'                    => ['label' => 'Em Ajuste',              'col' => 'revisao',      'color' => 'blue'],
+        'aguardando_aprovacao'      => ['label' => 'Aguardando Aprovação',   'col' => 'revisao',      'color' => 'orange'],
         'concluido'                 => ['label' => 'Concluído',              'col' => 'concluido',    'color' => 'green'],
         'aprovado'                  => ['label' => 'Aprovado pelo Cliente',  'col' => 'concluido',    'color' => 'green'],
         'cancelado'                 => ['label' => 'Cancelado',              'col' => 'cancelado',    'color' => 'red'],

@@ -58,8 +58,8 @@ class MacroPlan extends Model
 
     public static array $statuses = [
         'draft'  => ['label' => 'Rascunho', 'color' => 'muted'],
-        'active' => ['label' => 'Ativo',    'color' => 'green'],
-        'closed' => ['label' => 'Encerrado','color' => 'purple'],
+        'active' => ['label' => 'Ativo',    'color' => 'blue'],
+        'closed' => ['label' => 'Encerrado','color' => 'green'],
     ];
 
     public static array $blocks = [
