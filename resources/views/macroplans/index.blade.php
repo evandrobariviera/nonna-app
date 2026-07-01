@@ -5,9 +5,7 @@
                 <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Fluxo de Trabalho</p>
                 <h1 class="text-xl font-black" style="color:var(--text)">Planejamentos</h1>
             </div>
-            <a href="{{ route('macroplans.create') }}"
-               class="flex items-center gap-2 px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
-               style="background:var(--purple)">
+            <a href="{{ route('macroplans.create') }}" class="btn btn-primary">
                 + Novo Planejamento
             </a>
         </div>
@@ -38,11 +36,7 @@
             @endforeach
         </select>
 
-        <button type="submit"
-            class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest transition-colors"
-            style="border:1px solid var(--border2); color:var(--muted2)"
-            onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-            onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+        <button type="submit" class="btn btn-ghost btn-sm">
             Filtrar
         </button>
 
@@ -73,7 +67,7 @@
                             <th>Período</th>
                             <th>Projetos</th>
                             <th>Responsável</th>
-                            <th>Status</th>
+                            <th style="width:120px">Status</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -103,8 +97,12 @@
                                     {{ $plan->projects_count ?? $plan->projects->count() }}
                                 </td>
                                 <td class="text-xs" style="color:var(--muted2)">{{ $plan->responsible->name ?? '—' }}</td>
-                                <td>
-                                    <span class="badge badge-{{ $plan->statusColor() }}">{{ $plan->statusLabel() }}</span>
+                                <td class="monday-fill-td relative" style="width:120px">
+                                    <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+                                                background:{{ \App\Models\Task::colorHex($plan->statusColor()) }}; color:#fff;
+                                                font-size:11px; font-weight:700; overflow:hidden; padding:0 8px">
+                                        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">{{ $plan->statusLabel() }}</span>
+                                    </div>
                                 </td>
                                 <td class="text-right">
                                     <a href="{{ route('macroplans.edit', $plan) }}"

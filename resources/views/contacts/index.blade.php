@@ -5,9 +5,7 @@
                 <p class="text-xs font-mono text-[var(--muted)] uppercase tracking-widest mb-1">CRM</p>
                 <h1 class="text-2xl font-black text-[var(--text)]">Contatos</h1>
             </div>
-            <a href="{{ route('contacts.create') }}"
-               class="flex items-center gap-2 px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
-               style="background: var(--purple);">
+            <a href="{{ route('contacts.create') }}" class="btn btn-primary">
                 + Novo Contato
             </a>
         </div>
@@ -41,8 +39,7 @@
                 @endforeach
             </select>
 
-            <button type="submit"
-                    class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] hover:border-[var(--purple)] transition-colors">
+            <button type="submit" class="btn btn-ghost btn-sm">
                 Filtrar
             </button>
 
@@ -70,7 +67,7 @@
                         <th>Empresa</th>
                         <th>Contato</th>
                         <th>Origem</th>
-                        <th>Status</th>
+                        <th style="width:110px">Status</th>
                         <th>Criado em</th>
                         <th></th>
                     </tr>
@@ -103,10 +100,12 @@
                                     {{ \App\Models\Contact::$sources[$contact->source] ?? $contact->source }}
                                 </span>
                             </td>
-                            <td>
-                                <span class="badge badge-{{ $contact->statusColor() }}">
-                                    {{ $contact->statusLabel() }}
-                                </span>
+                            <td class="monday-fill-td relative" style="width:110px">
+                                <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+                                            background:{{ \App\Models\Task::colorHex($contact->statusColor()) }}; color:#fff;
+                                            font-size:11px; font-weight:700; overflow:hidden; padding:0 8px">
+                                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">{{ $contact->statusLabel() }}</span>
+                                </div>
                             </td>
                             <td class="text-xs text-[var(--muted)] font-mono">
                                 {{ $contact->created_at->format('d/m/Y') }}

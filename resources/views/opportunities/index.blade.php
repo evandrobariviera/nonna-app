@@ -5,9 +5,7 @@
                 <p class="text-xs font-mono text-[var(--muted)] uppercase tracking-widest mb-1">CRM</p>
                 <h1 class="text-2xl font-black text-[var(--text)]">Oportunidades</h1>
             </div>
-            <a href="{{ route('opportunities.create') }}"
-               class="flex items-center gap-2 px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
-               style="background: var(--purple);">
+            <a href="{{ route('opportunities.create') }}" class="btn btn-primary">
                 + Nova Oportunidade
             </a>
         </div>
@@ -98,7 +96,7 @@
                                             $prevStage = $openStages[array_search($stage, $openStages) - 1];
                                         @endphp
                                         <button onclick="moveStage('{{ $opp->id }}', '{{ $prevStage }}')"
-                                                class="text-xs font-mono px-2 py-1 border border-[var(--border2)] text-[var(--muted)] hover:text-[var(--text)] hover:border-[var(--purple)] transition-colors">
+                                                class="btn btn-ghost btn-xs">
                                             ← Voltar
                                         </button>
                                     @endif
@@ -108,7 +106,7 @@
                                             $nextStage = $openStages[array_search($stage, $openStages) + 1];
                                         @endphp
                                         <button onclick="moveStage('{{ $opp->id }}', '{{ $nextStage }}')"
-                                                class="text-xs font-mono px-2 py-1 border border-[var(--border2)] text-[var(--muted)] hover:text-[var(--text)] hover:border-[var(--purple)] transition-colors">
+                                                class="btn btn-ghost btn-xs">
                                             Avançar →
                                         </button>
                                     @endif
@@ -147,7 +145,7 @@
                             <tr>
                                 <th>Oportunidade</th>
                                 <th>Contato</th>
-                                <th>Resultado</th>
+                                <th style="width:110px">Resultado</th>
                                 <th>Valor</th>
                                 <th>Encerrada</th>
                                 <th></th>
@@ -158,15 +156,13 @@
                                 <tr>
                                     <td class="font-semibold text-[var(--text)]">{{ $opp->title }}</td>
                                     <td class="text-sm text-[var(--muted2)]">{{ $opp->contact->name }}</td>
-                                    <td>
-                                        @if($opp->stage === 'ganho')
-                                            <span class="badge badge-green">Ganho</span>
-                                        @else
-                                            <span class="badge badge-red">Perdido</span>
-                                            @if($opp->lost_reason)
-                                                <div class="text-xs text-[var(--muted)] mt-0.5">{{ $opp->lost_reason }}</div>
-                                            @endif
-                                        @endif
+                                    <td class="monday-fill-td relative" style="width:110px"
+                                        title="{{ $opp->stage === 'perdido' && $opp->lost_reason ? $opp->lost_reason : '' }}">
+                                        <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+                                                    background:{{ $opp->stage === 'ganho' ? '#059669' : '#dc2626' }}; color:#fff;
+                                                    font-size:11px; font-weight:700">
+                                            {{ $opp->stage === 'ganho' ? 'Ganho' : 'Perdido' }}
+                                        </div>
                                     </td>
                                     <td class="text-sm font-mono text-[var(--muted2)]">
                                         {{ $opp->proposed_fee ? 'R$ ' . number_format($opp->proposed_fee, 0, ',', '.') : '—' }}

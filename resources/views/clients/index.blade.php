@@ -17,9 +17,7 @@
             </select>
         </form>
 
-        <a href="{{ route('clients.create') }}"
-           class="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white"
-           style="background:var(--grad)">
+        <a href="{{ route('clients.create') }}" class="btn btn-primary flex items-center gap-2">
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
             </svg>
@@ -55,7 +53,7 @@
                             <th>Segmento</th>
                             <th>Contato</th>
                             <th>Serviços</th>
-                            <th>Status</th>
+                            <th style="width:110px">Status</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -97,9 +95,12 @@
                                         <span style="color:var(--muted)">—</span>
                                     @endif
                                 </td>
-                                <td>
-                                    @php $color = $client->statusColor() @endphp
-                                    <span class="badge badge-{{ $color }}">{{ $client->statusLabel() }}</span>
+                                <td class="monday-fill-td relative" style="width:110px">
+                                    <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+                                                background:{{ \App\Models\Task::colorHex($client->statusColor()) }}; color:#fff;
+                                                font-size:11px; font-weight:700; overflow:hidden; padding:0 8px">
+                                        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">{{ $client->statusLabel() }}</span>
+                                    </div>
                                 </td>
                                 <td class="text-right">
                                     <a href="{{ route('clients.edit', $client) }}"

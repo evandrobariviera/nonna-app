@@ -12,9 +12,7 @@
                 <span class="text-xs font-mono" style="color:var(--muted)">Nenhuma sprint ativa no momento</span>
             @endif
         </div>
-        <a href="{{ route('sprints.create') }}"
-           class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
-           style="background:var(--purple)">
+        <a href="{{ route('sprints.create') }}" class="btn btn-primary">
             + Nova Sprint
         </a>
     </div>
@@ -45,11 +43,7 @@
                 <span class="text-xs font-mono" style="color:var(--muted)">
                     {{ $sprint->tasks_count }} tarefa{{ $sprint->tasks_count !== 1 ? 's' : '' }}
                 </span>
-                <a href="{{ route('sprints.show', $sprint) }}"
-                   class="px-3 py-1.5 text-xs font-mono transition-colors"
-                   style="border:1px solid var(--border2); color:var(--muted2)"
-                   onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-                   onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+                <a href="{{ route('sprints.show', $sprint) }}" class="btn btn-ghost btn-xs">
                     Ver Sprint →
                 </a>
             </div>

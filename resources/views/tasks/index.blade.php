@@ -73,7 +73,7 @@
             <table class="nonna-table">
                 <thead>
                     <tr>
-                        <th style="width:130px; padding-left:16px">Status</th>
+                        <th style="width:130px">Status</th>
                         <th>Tarefa</th>
                         <th style="width:200px">Cliente</th>
                         <th style="width:160px">Tipo</th>
@@ -87,10 +87,12 @@
                     <tr class="{{ $task->isOverdue() ? 'row-overdue' : '' }}">
 
                         {{-- Status --}}
-                        <td style="padding-left:16px">
-                            <span class="badge badge-{{ $task->statusColor() }}">
-                                {{ $task->statusLabel() }}
-                            </span>
+                        <td class="monday-fill-td relative" style="width:130px">
+                            <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+                                        background:{{ $task->statusHex() }}; color:#fff;
+                                        font-size:11px; font-weight:700; overflow:hidden; padding:0 8px">
+                                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">{{ $task->statusLabel() }}</span>
+                            </div>
                         </td>
 
                         {{-- Tarefa --}}
