@@ -292,6 +292,9 @@
     .row-actions { opacity: 0; transition: opacity 0.12s; }
     .nonna-table tbody tr:hover .row-actions { opacity: 1; }
     .row-overdue td:first-child { border-left: 3px solid var(--red); }
+    .group-header-row td { height: 40px; border-bottom: 2px solid var(--border2); }
+    .group-header-row:hover { background: var(--s3) !important; }
+    .nonna-table tbody + tbody { border-top: 2px solid var(--border2); }
 
     /* ── BADGE — neutral pill (labels, disciplines) ── */
     .badge {

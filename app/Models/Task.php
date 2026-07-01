@@ -19,6 +19,7 @@ class Task extends Model
     protected $fillable = [
         'project_id', 'macro_plan_id', 'sprint_id', 'client_id',
         'title', 'description', 'task_type', 'destination', 'status', 'situation',
+        'priority',
         'executor_id', 'created_by',
         'due_date', 'approval_date', 'publish_date',
         'approval_location', 'approval_method', 'internal_approval',
@@ -129,6 +130,12 @@ class Task extends Model
         'presencial'=> 'Presencial',
     ];
 
+    public static array $priorities = [
+        'urgente' => ['label' => 'Urgente', 'color' => 'red'],
+        'medio'   => ['label' => 'Médio',   'color' => 'orange'],
+        'normal'  => ['label' => 'Normal',  'color' => 'muted'],
+    ];
+
     public static array $kanbanDefaultStatus = [
         'backlog'      => 'backlog',
         'em_andamento' => 'em_producao',
@@ -174,6 +181,16 @@ class Task extends Model
     public function originLabel(): string
     {
         return self::$origins[$this->origin] ?? $this->origin;
+    }
+
+    public function priorityLabel(): string
+    {
+        return self::$priorities[$this->priority ?? 'normal']['label'] ?? 'Normal';
+    }
+
+    public function priorityColor(): string
+    {
+        return self::$priorities[$this->priority ?? 'normal']['color'] ?? 'muted';
     }
 
     public function isOverdue(): bool
@@ -239,6 +256,14 @@ class Task extends Model
     public function executors(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'task_executors', 'task_id', 'user_id')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    public function responsibles(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'task_executors', 'task_id', 'user_id')
+            ->wherePivot('role', 'responsavel')
             ->withPivot('role')
             ->withTimestamps();
     }

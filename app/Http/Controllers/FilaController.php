@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Sprint;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class FilaController extends Controller
@@ -32,12 +33,19 @@ class FilaController extends Controller
 
         $tasks = $query->get();
 
-        // Agrupa por cliente, ordena pelo grupo com mais tarefas primeiro
-        $byClient = $tasks
-            ->groupBy(fn($t) => $t->client_id ?? '__sem_cliente__')
-            ->sortByDesc->count();
+        $groupBy = $request->get('group_by', 'cliente');
+
+        $grouped = match ($groupBy) {
+            'executor'    => $tasks->groupBy(fn($t) => $this->executorKey($t)),
+            'responsavel' => $tasks->groupBy(fn($t) => $this->responsavelKey($t)),
+            'status'      => $tasks->groupBy(fn($t) => $t->status),
+            default       => $tasks->groupBy(fn($t) => $t->client_id ?? '__sem_cliente__'),
+        };
+
+        $grouped = $grouped->sortByDesc->count();
 
         $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $users   = User::orderBy('name')->get(['id', 'name']);
 
         $sprints = Sprint::whereIn('status', ['active', 'planning'])
             ->orderByRaw("CASE status WHEN 'active' THEN 0 ELSE 1 END")
@@ -47,15 +55,29 @@ class FilaController extends Controller
         $activeSprint = $sprints->firstWhere('status', 'active');
 
         $stats = [
-            'total'    => $tasks->count(),
-            'projetos' => $tasks->where('is_ticket', false)->count(),
-            'tickets'  => $tasks->where('is_ticket', true)->count(),
-            'atrasadas'=> $tasks->filter(fn($t) => $t->isOverdue())->count(),
-            'clientes' => $tasks->pluck('client_id')->filter()->unique()->count(),
+            'total'     => $tasks->count(),
+            'projetos'  => $tasks->where('is_ticket', false)->count(),
+            'tickets'   => $tasks->where('is_ticket', true)->count(),
+            'atrasadas' => $tasks->filter(fn($t) => $t->isOverdue())->count(),
+            'clientes'  => $tasks->pluck('client_id')->filter()->unique()->count(),
         ];
 
         return view('filas.index', compact(
-            'tasks', 'byClient', 'clients', 'sprints', 'activeSprint', 'stats'
+            'tasks', 'grouped', 'groupBy', 'clients', 'users',
+            'sprints', 'activeSprint', 'stats'
         ));
+    }
+
+    private function executorKey(Task $task): string
+    {
+        $exec = $task->executors->first(fn($u) => $u->pivot->role === 'executor')
+            ?? $task->executor;
+        return $exec ? $exec->id . '|' . $exec->name : '__sem_executor__|Sem executor';
+    }
+
+    private function responsavelKey(Task $task): string
+    {
+        $resp = $task->executors->first(fn($u) => $u->pivot->role === 'responsavel');
+        return $resp ? $resp->id . '|' . $resp->name : '__sem_responsavel__|Sem responsável';
     }
 }

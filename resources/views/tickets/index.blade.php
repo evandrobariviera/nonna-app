@@ -54,146 +54,201 @@
             <table class="nonna-table">
                 <thead>
                     <tr>
-                        <th style="width:140px; padding-left:16px">Status</th>
+                        <th style="width:90px; padding-left:16px">Prioridade</th>
+                        <th style="width:150px">Status</th>
                         <th>Ticket</th>
-                        <th style="width:200px">Cliente</th>
-                        <th style="width:170px">Tipo</th>
-                        <th style="width:130px">Executor</th>
-                        <th style="width:110px">Prazo</th>
+                        <th style="width:160px">Cliente</th>
+                        <th style="width:110px">Responsável</th>
+                        <th style="width:110px">Executor</th>
+                        <th style="width:100px">Dt. Aprovação</th>
+                        <th style="width:90px">Origem</th>
+                        <th style="width:130px">Destino</th>
+                        <th style="width:130px">Situação</th>
                         <th style="width:110px"></th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($tickets as $ticket)
-                    <tr class="{{ $ticket->isOverdue() ? 'row-overdue' : '' }}"
-                        x-data="{ statusOpen: false }">
+                        @php
+                            $execList = $ticket->executors->filter(fn($u) => $u->pivot->role === 'executor');
+                            if ($execList->isEmpty() && $ticket->executor) {
+                                $execList = collect([$ticket->executor]);
+                            }
+                            $respList = $ticket->executors->filter(fn($u) => $u->pivot->role === 'responsavel');
+                        @endphp
 
-                        {{-- Status — clicável para alterar --}}
-                        <td style="padding-left:16px" class="relative">
-                            <button @click="statusOpen = !statusOpen"
-                                    class="badge badge-{{ $ticket->statusColor() }} cursor-pointer hover:opacity-80 transition-opacity"
-                                    type="button">
-                                {{ $ticket->statusLabel() }} ▾
-                            </button>
+                        <tr class="{{ $ticket->isOverdue() ? 'row-overdue' : '' }}"
+                            x-data="{ statusOpen: false }">
 
-                            <div x-show="statusOpen" @click.outside="statusOpen = false" x-cloak
-                                 class="absolute left-2 top-full mt-1 z-20 rounded shadow-lg py-1"
-                                 style="background:var(--s1); border:1px solid var(--border2); min-width:180px">
-                                @foreach(\App\Models\Task::$statuses as $key => $s)
-                                    <form method="POST" action="{{ route('tickets.update-status', $ticket) }}">
-                                        @csrf @method('PATCH')
-                                        <input type="hidden" name="status" value="{{ $key }}">
-                                        <button type="submit"
-                                            class="w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors"
-                                            style="color:{{ $ticket->status === $key ? 'var(--purple)' : 'var(--text)' }}"
-                                            onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
-                                            <span class="inline-block w-2 h-2 rounded-full flex-shrink-0"
-                                                  style="background: {{ match($s['color']) {
-                                                      'green' => '#059669', 'blue' => '#2563eb',
-                                                      'purple' => '#6A5ACD', 'orange' => '#FF8C00',
-                                                      'red' => '#dc2626', default => '#94a3b8'
-                                                  } }}"></span>
-                                            {{ $s['label'] }}
+                            {{-- Prioridade --}}
+                            <td style="padding-left:16px">
+                                <span class="badge badge-{{ $ticket->priorityColor() }}" style="font-size:11px">
+                                    {{ $ticket->priorityLabel() }}
+                                </span>
+                            </td>
+
+                            {{-- Status — clicável para alterar --}}
+                            <td class="relative">
+                                <button @click="statusOpen = !statusOpen"
+                                        class="badge badge-{{ $ticket->statusColor() }} cursor-pointer hover:opacity-80 transition-opacity"
+                                        type="button" style="font-size:11px">
+                                    {{ $ticket->statusLabel() }} ▾
+                                </button>
+
+                                <div x-show="statusOpen" @click.outside="statusOpen = false" x-cloak
+                                     class="absolute left-0 top-full mt-1 z-20 rounded shadow-lg py-1"
+                                     style="background:var(--s1); border:1px solid var(--border2); min-width:190px">
+                                    @foreach(\App\Models\Task::$statuses as $key => $s)
+                                        <form method="POST" action="{{ route('tickets.update-status', $ticket) }}">
+                                            @csrf @method('PATCH')
+                                            <input type="hidden" name="status" value="{{ $key }}">
+                                            <button type="submit"
+                                                class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
+                                                style="color:{{ $ticket->status === $key ? 'var(--purple)' : 'var(--text)' }}"
+                                                onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                                                <span class="inline-block w-2 h-2 rounded-full flex-shrink-0"
+                                                      style="background: {{ match($s['color']) {
+                                                          'green' => '#059669', 'blue' => '#2563eb',
+                                                          'purple' => '#6A5ACD', 'orange' => '#FF8C00',
+                                                          'red' => '#dc2626', default => '#94a3b8'
+                                                      } }}"></span>
+                                                {{ $s['label'] }}
+                                            </button>
+                                        </form>
+                                    @endforeach
+                                </div>
+                            </td>
+
+                            {{-- Título + solicitante --}}
+                            <td>
+                                <div class="flex flex-col justify-center gap-0.5">
+                                    <a href="{{ route('tasks.show', $ticket) }}"
+                                       class="font-semibold leading-snug hover:underline"
+                                       style="color:var(--text); font-size:13.5px">
+                                        {{ $ticket->title }}
+                                    </a>
+                                    @if($ticket->requester_name)
+                                        <span style="font-size:11px; color:var(--muted)">
+                                            {{ $ticket->requester_name }}
+                                            @if($ticket->requester_channel)
+                                                · {{ \App\Models\Task::$requesterChannels[$ticket->requester_channel] ?? '' }}
+                                            @endif
+                                        </span>
+                                    @endif
+                                </div>
+                            </td>
+
+                            {{-- Cliente --}}
+                            <td>
+                                <span class="text-sm font-medium" style="color:var(--text)">
+                                    {{ $ticket->client?->company_name ?? '—' }}
+                                </span>
+                            </td>
+
+                            {{-- Responsável --}}
+                            <td>
+                                @if($respList->isNotEmpty())
+                                    <div class="flex items-center gap-1.5">
+                                        <div class="flex h-6 w-6 items-center justify-center rounded-full text-white flex-shrink-0"
+                                             style="background:var(--orange); font-size:10px; font-weight:700"
+                                             title="{{ $respList->first()->name }}">
+                                            {{ strtoupper(substr($respList->first()->name, 0, 2)) }}
+                                        </div>
+                                        <span class="text-xs truncate" style="color:var(--text); max-width:72px">
+                                            {{ explode(' ', $respList->first()->name)[0] }}
+                                        </span>
+                                    </div>
+                                @else
+                                    <span class="text-xs" style="color:var(--muted)">—</span>
+                                @endif
+                            </td>
+
+                            {{-- Executor --}}
+                            <td>
+                                @if($execList->isNotEmpty())
+                                    <div class="flex items-center gap-1.5">
+                                        <div class="flex h-6 w-6 items-center justify-center rounded-full text-white flex-shrink-0"
+                                             style="background:var(--purple); font-size:10px; font-weight:700"
+                                             title="{{ $execList->first()->name }}">
+                                            {{ strtoupper(substr($execList->first()->name, 0, 2)) }}
+                                        </div>
+                                        <span class="text-xs truncate" style="color:var(--text); max-width:72px">
+                                            {{ explode(' ', $execList->first()->name)[0] }}
+                                        </span>
+                                    </div>
+                                @else
+                                    <span class="text-xs" style="color:var(--muted)">—</span>
+                                @endif
+                            </td>
+
+                            {{-- Data de Aprovação (ou prazo como fallback) --}}
+                            <td>
+                                @if($ticket->approval_date)
+                                    <span class="text-xs" style="color:var(--muted2); font-family:'IBM Plex Mono',monospace">
+                                        {{ $ticket->approval_date->format('d/m/Y') }}
+                                    </span>
+                                @elseif($ticket->due_date)
+                                    <span class="text-xs {{ $ticket->isOverdue() ? 'font-semibold' : '' }}"
+                                          style="color:{{ $ticket->isOverdue() ? 'var(--red)' : 'var(--muted2)' }}; font-family:'IBM Plex Mono',monospace">
+                                        {{ $ticket->due_date->format('d/m/Y') }}
+                                    </span>
+                                @else
+                                    <span class="text-xs" style="color:var(--muted)">—</span>
+                                @endif
+                            </td>
+
+                            {{-- Origem --}}
+                            <td>
+                                <span class="badge badge-muted" style="font-size:10px">{{ $ticket->originLabel() }}</span>
+                            </td>
+
+                            {{-- Destino --}}
+                            <td>
+                                <span class="text-xs" style="color:var(--muted2)">
+                                    {{ $ticket->destinationLabel() ?: '—' }}
+                                </span>
+                            </td>
+
+                            {{-- Situação --}}
+                            <td>
+                                <span class="text-xs" style="color:var(--muted2)">
+                                    @if($ticket->situation && $ticket->situationLabel() !== '—')
+                                        {{ $ticket->situationLabel() }}
+                                    @else
+                                        <span style="color:var(--muted)">—</span>
+                                    @endif
+                                </span>
+                            </td>
+
+                            {{-- Ações --}}
+                            <td>
+                                <div class="row-actions flex items-center gap-1.5">
+                                    <a href="{{ route('tasks.show', $ticket) }}" class="btn btn-primary btn-xs">
+                                        Abrir
+                                    </a>
+                                    <form method="POST" action="{{ route('tickets.destroy', $ticket) }}"
+                                          onsubmit="return confirm('Cancelar este ticket?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn btn-ghost btn-xs"
+                                                style="color:var(--red); border-color:rgba(220,38,38,.2)"
+                                                onmouseover="this.style.background='rgba(220,38,38,.06)'"
+                                                onmouseout="this.style.background='transparent'">
+                                            Cancelar
                                         </button>
                                     </form>
-                                @endforeach
-                            </div>
-                        </td>
-
-                        {{-- Ticket title + solicitante --}}
-                        <td>
-                            <div class="flex flex-col justify-center gap-0.5">
-                                <a href="{{ route('tasks.show', $ticket) }}"
-                                   class="font-semibold leading-snug hover:underline"
-                                   style="color:var(--text); font-size:13.5px">
-                                    {{ $ticket->title }}
-                                </a>
-                                @if($ticket->requester_name)
-                                    <span style="font-size:11px; color:var(--muted)">
-                                        {{ $ticket->requester_name }}
-                                        @if($ticket->requester_channel)
-                                            · {{ \App\Models\Task::$requesterChannels[$ticket->requester_channel] ?? '' }}
-                                        @endif
-                                    </span>
-                                @endif
-                            </div>
-                        </td>
-
-                        {{-- Cliente --}}
-                        <td>
-                            <span class="text-sm font-medium" style="color:var(--text)">
-                                {{ $ticket->client?->company_name ?? '—' }}
-                            </span>
-                        </td>
-
-                        {{-- Tipo --}}
-                        <td>
-                            <span class="text-sm" style="color:var(--muted2)">{{ $ticket->typeLabel() }}</span>
-                        </td>
-
-                        {{-- Executor --}}
-                        <td>
-                            @php
-                                $execList = $ticket->executors->count() > 0
-                                    ? $ticket->executors
-                                    : ($ticket->executor ? collect([$ticket->executor]) : collect());
-                            @endphp
-                            @if($execList->isNotEmpty())
-                                <div class="flex items-center gap-1.5">
-                                    <div class="flex h-6 w-6 items-center justify-center rounded-full text-white flex-shrink-0"
-                                         style="background:var(--purple); font-size:10px; font-weight:700">
-                                        {{ strtoupper(substr($execList->first()->name, 0, 2)) }}
-                                    </div>
-                                    <span class="text-sm" style="color:var(--text)">
-                                        {{ explode(' ', $execList->first()->name)[0] }}
-                                    </span>
                                 </div>
-                            @else
-                                <span class="text-sm" style="color:var(--muted)">—</span>
-                            @endif
-                        </td>
-
-                        {{-- Prazo --}}
-                        <td>
-                            @if($ticket->due_date)
-                                <span class="text-sm {{ $ticket->isOverdue() ? 'font-semibold' : '' }}"
-                                      style="color:{{ $ticket->isOverdue() ? 'var(--red)' : 'var(--muted2)' }}">
-                                    {{ $ticket->due_date->format('d/m/Y') }}
-                                </span>
-                            @else
-                                <span class="text-sm" style="color:var(--muted)">—</span>
-                            @endif
-                        </td>
-
-                        {{-- Ações --}}
-                        <td>
-                            <div class="row-actions flex items-center gap-1.5">
-                                <a href="{{ route('tasks.show', $ticket) }}" class="btn btn-primary btn-xs">
-                                    Abrir
-                                </a>
-                                <form method="POST" action="{{ route('tickets.destroy', $ticket) }}"
-                                      onsubmit="return confirm('Cancelar este ticket?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-ghost btn-xs"
-                                            style="color:var(--red); border-color:rgba(220,38,38,.2)"
-                                            onmouseover="this.style.background='rgba(220,38,38,.06)'"
-                                            onmouseout="this.style.background='transparent'">
-                                        Cancelar
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
+                            </td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td colspan="7">
-                            <div class="tab-placeholder">
-                                <div class="tab-placeholder-icon">🎫</div>
-                                <div class="tab-placeholder-title">Nenhum ticket encontrado</div>
-                                <div class="tab-placeholder-desc">Ajuste os filtros ou crie um novo ticket.</div>
-                            </div>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td colspan="11">
+                                <div class="tab-placeholder">
+                                    <div class="tab-placeholder-icon">🎫</div>
+                                    <div class="tab-placeholder-title">Nenhum ticket encontrado</div>
+                                    <div class="tab-placeholder-desc">Ajuste os filtros ou crie um novo ticket.</div>
+                                </div>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
