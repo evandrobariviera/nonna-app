@@ -132,7 +132,7 @@ class TaskController extends Controller
             'sprint_id'          => 'nullable|uuid|exists:sprints,id',
         ]);
 
-        $triggerApproval = $data['situation'] === 'enviar_para_cliente'
+        $triggerApproval = ($data['situation'] ?? null) === 'enviar_para_cliente'
             && $task->situation !== 'enviar_para_cliente'
             && $task->status !== 'aguardando_aprovacao';
 
