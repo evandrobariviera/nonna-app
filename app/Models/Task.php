@@ -307,4 +307,12 @@ class Task extends Model
             ->withPivot('role')
             ->withTimestamps();
     }
+
+    public function observers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'task_executors', 'task_id', 'user_id')
+            ->wherePivot('role', 'observador')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
 }

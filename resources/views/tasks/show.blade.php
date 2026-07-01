@@ -25,13 +25,13 @@
         document.addEventListener('alpine:init', () => {
             Alpine.store('ui', { chatOpen: false });
 
-            Alpine.data('executorPicker', (initial = []) => ({
+            Alpine.data('observerPicker', (initial = []) => ({
                 selected: initial,
                 add(event) {
                     const id   = event.target.value;
                     const name = event.target.selectedOptions[0]?.dataset?.name;
                     if (!id || this.selected.find(s => s.id == id)) { event.target.value = ''; return; }
-                    this.selected.push({ id, name, role: 'executor' });
+                    this.selected.push({ id, name });
                     event.target.value = '';
                 },
                 remove(idx) { this.selected.splice(idx, 1); }
@@ -192,11 +192,12 @@
                     <div class="grid grid-cols-2 gap-4 md:grid-cols-3">
                         @php
                             $editFields = [
-                                ['name'=>'status',          'label'=>'Status',              'opts'=>\App\Models\Task::$statuses,        'val'=>$task->status,          'map'=>fn($k,$v)=>['v'=>$k,'l'=>$v['label']]],
-                                ['name'=>'task_type',       'label'=>'Tipo',                'opts'=>\App\Models\Task::$types,           'val'=>$task->task_type,       'map'=>fn($k,$v)=>['v'=>$k,'l'=>$v]],
-                                ['name'=>'destination',     'label'=>'Destino',             'opts'=>\App\Models\Task::$destinations,    'val'=>$task->destination,     'map'=>fn($k,$v)=>['v'=>$k,'l'=>$v], 'blank'=>true],
-                                ['name'=>'origin',          'label'=>'Origem',              'opts'=>\App\Models\Task::$origins,         'val'=>$task->origin,          'map'=>fn($k,$v)=>['v'=>$k,'l'=>$v]],
-                                ['name'=>'approval_method', 'label'=>'Método de Aprovação', 'opts'=>\App\Models\Task::$approvalMethods, 'val'=>$task->approval_method, 'map'=>fn($k,$v)=>['v'=>$k,'l'=>$v], 'blank'=>true],
+                                ['name'=>'status',          'label'=>'Status',              'opts'=>\App\Models\Task::$statuses,        'val'=>$task->status,              'map'=>fn($k,$v)=>['v'=>$k,'l'=>$v['label']]],
+                                ['name'=>'task_type',       'label'=>'Tipo',                'opts'=>\App\Models\Task::$types,           'val'=>$task->task_type,           'map'=>fn($k,$v)=>['v'=>$k,'l'=>$v]],
+                                ['name'=>'priority',        'label'=>'Prioridade',          'opts'=>\App\Models\Task::$priorities,      'val'=>$task->priority ?? 'normal','map'=>fn($k,$v)=>['v'=>$k,'l'=>$v['label']]],
+                                ['name'=>'destination',     'label'=>'Destino',             'opts'=>\App\Models\Task::$destinations,    'val'=>$task->destination,         'map'=>fn($k,$v)=>['v'=>$k,'l'=>$v], 'blank'=>true],
+                                ['name'=>'origin',          'label'=>'Origem',              'opts'=>\App\Models\Task::$origins,         'val'=>$task->origin,              'map'=>fn($k,$v)=>['v'=>$k,'l'=>$v]],
+                                ['name'=>'approval_method', 'label'=>'Método de Aprovação', 'opts'=>\App\Models\Task::$approvalMethods, 'val'=>$task->approval_method,     'map'=>fn($k,$v)=>['v'=>$k,'l'=>$v], 'blank'=>true],
                             ];
                         @endphp
                         @foreach($editFields as $f)
@@ -239,22 +240,43 @@
                         @endforeach
                     </div>
 
-                    {{-- Executores --}}
-                    <div x-data="executorPicker({{ json_encode($task->executors->map(fn($u) => ['id' => $u->id, 'name' => $u->name, 'role' => $u->pivot->role])) }})">
-                        <label class="block text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Executores</label>
+                    {{-- Pessoas --}}
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Responsável</label>
+                            <select name="responsavel_id" class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                <option value="">— nenhum —</option>
+                                @foreach($users as $u)
+                                    <option value="{{ $u->id }}" {{ $task->responsibles->first()?->id === $u->id ? 'selected' : '' }}>
+                                        {{ $u->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Executor</label>
+                            <select name="executor_id" class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                <option value="">— nenhum —</option>
+                                @foreach($users as $u)
+                                    <option value="{{ $u->id }}" {{ $task->executor?->id === $u->id ? 'selected' : '' }}>
+                                        {{ $u->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Observadores --}}
+                    <div x-data="observerPicker({{ json_encode($task->observers->map(fn($u) => ['id' => $u->id, 'name' => $u->name])) }})">
+                        <label class="block text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Observadores</label>
                         <div class="flex flex-wrap gap-2 mb-2" x-show="selected.length > 0">
                             <template x-for="(item, idx) in selected" :key="item.id">
                                 <div class="flex items-center gap-2 px-3 py-1.5 text-sm"
                                      style="background:var(--s3); border:1px solid var(--border2)">
                                     <span x-text="item.name" style="color:var(--text); font-weight:500"></span>
-                                    <select :name="'executor_roles[' + item.id + ']'"
-                                        class="text-xs focus:outline-none"
-                                        style="background:transparent; color:var(--muted); border:none">
-                                        <option value="executor"    :selected="item.role==='executor'">Executor</option>
-                                        <option value="responsavel" :selected="item.role==='responsavel'">Responsável</option>
-                                        <option value="aprovador"   :selected="item.role==='aprovador'">Aprovador</option>
-                                    </select>
-                                    <input type="hidden" :name="'executor_ids[]'" :value="item.id">
+                                    <input type="hidden" :name="'observer_ids[]'" :value="item.id">
                                     <button type="button" @click="remove(idx)"
                                         class="text-xs transition-colors" style="color:var(--muted)"
                                         onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
@@ -263,7 +285,7 @@
                         </div>
                         <select @change="add($event)" class="w-full px-3 py-2.5 text-sm focus:outline-none"
                             style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                            <option value="">+ Adicionar executor</option>
+                            <option value="">+ Adicionar observador</option>
                             @foreach($users as $u)
                                 <option value="{{ $u->id }}" data-name="{{ $u->name }}">{{ $u->name }}</option>
                             @endforeach
@@ -349,29 +371,63 @@
                 </div>
             @endif
 
-            {{-- EXECUTORES --}}
+            {{-- PESSOAS --}}
             <div x-show="!editing" class="card card-body-lg">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Executores</p>
-                @if($task->executors->count() > 0)
-                    <div class="flex flex-col gap-3">
-                        @foreach($task->executors as $exec)
-                            <div class="flex items-center gap-3">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Pessoas</p>
+                <div class="flex flex-col gap-4">
+                    @php
+                        $responsavel = $task->responsibles->first();
+                        $executor    = $task->executor;
+                        $observers   = $task->observers;
+                    @endphp
+
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Responsável</p>
+                        @if($responsavel)
+                            <div class="flex items-center gap-2.5">
                                 <div class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0"
-                                     style="background:var(--grad)">
-                                    {{ strtoupper(substr($exec->name, 0, 2)) }}
+                                     style="background:var(--orange)">
+                                    {{ strtoupper(substr($responsavel->name, 0, 2)) }}
                                 </div>
-                                <div>
-                                    <p class="text-sm" style="color:var(--text); font-weight:600">{{ $exec->name }}</p>
-                                    <p class="text-xs" style="color:var(--muted)">
-                                        {{ \App\Models\TaskExecutor::$roles[$exec->pivot->role] ?? $exec->pivot->role }}
-                                    </p>
-                                </div>
+                                <p class="text-sm font-semibold" style="color:var(--text)">{{ $responsavel->name }}</p>
                             </div>
-                        @endforeach
+                        @else
+                            <p class="text-sm" style="color:var(--muted)">—</p>
+                        @endif
                     </div>
-                @else
-                    <p class="text-sm" style="color:var(--muted)">Nenhum executor atribuído.</p>
-                @endif
+
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Executor</p>
+                        @if($executor)
+                            <div class="flex items-center gap-2.5">
+                                <div class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0"
+                                     style="background:var(--purple)">
+                                    {{ strtoupper(substr($executor->name, 0, 2)) }}
+                                </div>
+                                <p class="text-sm font-semibold" style="color:var(--text)">{{ $executor->name }}</p>
+                            </div>
+                        @else
+                            <p class="text-sm" style="color:var(--muted)">—</p>
+                        @endif
+                    </div>
+
+                    @if($observers->count() > 0)
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Observadores</p>
+                            <div class="flex flex-col gap-2">
+                                @foreach($observers as $obs)
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0"
+                                             style="background:var(--slate, #64748b)">
+                                            {{ strtoupper(substr($obs->name, 0, 2)) }}
+                                        </div>
+                                        <p class="text-sm" style="color:var(--muted2)">{{ $obs->name }}</p>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
             </div>
 
             {{-- ANEXOS --}}
@@ -722,6 +778,116 @@
                         @endforeach
                     </div>
                 </div>
+            </div>
+
+            {{-- PRIORIDADE --}}
+            <div class="card card-body" x-data="{ open: false }">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Prioridade</p>
+                <div class="relative">
+                    <button @click="open = !open"
+                        class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        <span class="flex items-center gap-2">
+                            <span class="h-2 w-2 rounded-full flex-shrink-0"
+                                  style="background:{{ $task->priorityHex() }}"></span>
+                            {{ $task->priorityLabel() }}
+                        </span>
+                        <span style="color:var(--muted); font-size:10px">▾</span>
+                    </button>
+                    <div x-show="open" @click.outside="open = false" x-cloak
+                         class="absolute left-0 right-0 mt-1 z-20 py-1"
+                         style="background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
+                        @foreach(\App\Models\Task::$priorities as $key => $p)
+                            <form method="POST" action="{{ route('tasks.update-priority', $task) }}">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="priority" value="{{ $key }}">
+                                <button type="submit" @click="open = false"
+                                    class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
+                                    style="color:{{ ($task->priority ?? 'normal') === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ ($task->priority ?? 'normal') === $key ? '600' : '400' }}"
+                                    onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                    <span class="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                                          style="background:{{ \App\Models\Task::colorHex($p['color']) }}"></span>
+                                    {{ $p['label'] }}
+                                </button>
+                            </form>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            {{-- SITUAÇÃO --}}
+            <div class="card card-body" x-data="{ open: false }">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Situação</p>
+                <div class="relative">
+                    <button @click="open = !open"
+                        class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        <span class="flex items-center gap-2">
+                            @if($task->situation)
+                                <span class="h-2 w-2 rounded-full flex-shrink-0"
+                                      style="background:{{ $task->situationColor() }}"></span>
+                            @endif
+                            {{ $task->situationLabel() !== '—' ? $task->situationLabel() : 'Sem situação' }}
+                        </span>
+                        <span style="color:var(--muted); font-size:10px">▾</span>
+                    </button>
+                    <div x-show="open" @click.outside="open = false" x-cloak
+                         class="absolute left-0 right-0 mt-1 z-20 py-1"
+                         style="background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
+                        @foreach(\App\Models\Task::$situations as $key => $label)
+                            <form method="POST" action="{{ route('tasks.update-situation', $task) }}">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="situation" value="{{ $key }}">
+                                <button type="submit" @click="open = false"
+                                    class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
+                                    style="color:{{ ($task->situation ?? '') === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ ($task->situation ?? '') === $key ? '600' : '400' }}"
+                                    onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                    @if($key)
+                                        <span class="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                                              style="background:{{ \App\Models\Task::$situationColors[$key] ?? '#94a3b8' }}"></span>
+                                    @endif
+                                    {{ $label }}
+                                </button>
+                            </form>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            {{-- RESPONSÁVEL --}}
+            <div class="card card-body">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Responsável</p>
+                <form method="POST" action="{{ route('tasks.update-responsavel', $task) }}">
+                    @csrf @method('PATCH')
+                    <select name="responsavel_id" onchange="this.form.submit()"
+                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        <option value="">— nenhum —</option>
+                        @foreach($users as $u)
+                            <option value="{{ $u->id }}" {{ $task->responsibles->first()?->id === $u->id ? 'selected' : '' }}>
+                                {{ $u->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+            </div>
+
+            {{-- EXECUTOR --}}
+            <div class="card card-body">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Executor</p>
+                <form method="POST" action="{{ route('tasks.update-executor', $task) }}">
+                    @csrf @method('PATCH')
+                    <select name="executor_id" onchange="this.form.submit()"
+                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        <option value="">— nenhum —</option>
+                        @foreach($users as $u)
+                            <option value="{{ $u->id }}" {{ $task->executor?->id === $u->id ? 'selected' : '' }}>
+                                {{ $u->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
             </div>
 
             {{-- CONTEXTO --}}

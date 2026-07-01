@@ -9,6 +9,7 @@ use App\Models\MacroPlan;
 use App\Models\Project;
 use App\Models\Sprint;
 use App\Models\Task;
+use App\Models\TaskExecutor;
 use App\Models\User;
 use App\Services\TaskApprovalService;
 use Illuminate\Http\Request;
@@ -71,6 +72,8 @@ class TaskController extends Controller
             'sprint',
             'executor',
             'executors',
+            'responsibles',
+            'observers',
             'attachments.uploadedBy',
             'comments.user',
             'createdBy',
@@ -117,15 +120,16 @@ class TaskController extends Controller
             'situation'          => 'nullable|in:' . implode(',', $situationKeys),
             'status'             => 'required|in:' . implode(',', array_keys(Task::$statuses)),
             'origin'             => 'nullable|in:' . implode(',', array_keys(Task::$origins)),
+            'priority'           => 'nullable|in:urgente,medio,normal',
             'approval_method'    => 'nullable|in:' . implode(',', array_keys(Task::$approvalMethods)),
             'internal_approval'  => 'nullable|boolean',
             'due_date'           => 'nullable|date',
             'approval_date'      => 'nullable|date',
             'publish_date'       => 'nullable|date',
             'executor_id'        => 'nullable|exists:users,id',
-            'executor_ids'       => 'nullable|array',
-            'executor_ids.*'     => 'exists:users,id',
-            'executor_roles'     => 'nullable|array',
+            'responsavel_id'     => 'nullable|exists:users,id',
+            'observer_ids'       => 'nullable|array',
+            'observer_ids.*'     => 'exists:users,id',
             'requester_name'     => 'nullable|string|max:150',
             'requester_whatsapp' => 'nullable|string|max:30',
             'requester_channel'  => 'nullable|in:' . implode(',', array_keys(Task::$requesterChannels)),
@@ -141,7 +145,9 @@ class TaskController extends Controller
             'internal_approval' => $request->boolean('internal_approval'),
         ]);
 
-        $this->syncExecutors($task, $data);
+        if ($request->hasAny(['executor_id', 'responsavel_id', 'observer_ids'])) {
+            $this->syncPersonnel($task, $data);
+        }
 
         if ($triggerApproval) {
             $task->load('attachments');
@@ -235,6 +241,55 @@ class TaskController extends Controller
 
         return redirect()->route('projects.showDirect', $project)
             ->with('success', 'Tarefa atualizada.');
+    }
+
+    public function updatePriority(Request $request, Task $task)
+    {
+        $task->update(['priority' => $request->validate([
+            'priority' => 'required|in:urgente,medio,normal',
+        ])['priority']]);
+
+        return redirect()->back()->with('success', 'Prioridade atualizada.');
+    }
+
+    public function updateSituation(Request $request, Task $task)
+    {
+        $situationKeys = array_keys(array_filter(Task::$situations, fn($k) => $k !== '', ARRAY_FILTER_USE_KEY));
+
+        $task->update(['situation' => $request->validate([
+            'situation' => 'nullable|in:' . implode(',', $situationKeys),
+        ])['situation']]);
+
+        return redirect()->back()->with('success', 'Situação atualizada.');
+    }
+
+    public function updateResponsavel(Request $request, Task $task)
+    {
+        $data = $request->validate(['responsavel_id' => 'nullable|exists:users,id']);
+
+        TaskExecutor::where('task_id', $task->id)->where('role', 'responsavel')->delete();
+
+        if ($data['responsavel_id']) {
+            $task->executors()->attach($data['responsavel_id'], ['role' => 'responsavel']);
+        }
+
+        return redirect()->back()->with('success', 'Responsável atualizado.');
+    }
+
+    public function updateExecutorDirect(Request $request, Task $task)
+    {
+        $data = $request->validate(['executor_id' => 'nullable|exists:users,id']);
+
+        TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->delete();
+
+        if ($data['executor_id']) {
+            $task->executors()->attach($data['executor_id'], ['role' => 'executor']);
+            $task->updateQuietly(['executor_id' => $data['executor_id']]);
+        } else {
+            $task->updateQuietly(['executor_id' => null]);
+        }
+
+        return redirect()->back()->with('success', 'Executor atualizado.');
     }
 
     public function updateStatus(Request $request, MacroPlan $macroplan, Project $project, Task $task)
@@ -334,6 +389,35 @@ class TaskController extends Controller
             'requester_whatsapp' => 'nullable|string|max:30',
             'requester_channel'  => 'nullable|in:' . implode(',', array_keys(Task::$requesterChannels)),
         ];
+    }
+
+    private function syncPersonnel(Task $task, array $data): void
+    {
+        TaskExecutor::where('task_id', $task->id)
+            ->whereIn('role', ['executor', 'responsavel', 'observador'])
+            ->delete();
+
+        $synced = [];
+
+        if (!empty($data['executor_id'])) {
+            $task->executors()->attach($data['executor_id'], ['role' => 'executor']);
+            $task->updateQuietly(['executor_id' => $data['executor_id']]);
+            $synced[] = $data['executor_id'];
+        } else {
+            $task->updateQuietly(['executor_id' => null]);
+        }
+
+        if (!empty($data['responsavel_id']) && !in_array($data['responsavel_id'], $synced)) {
+            $task->executors()->attach($data['responsavel_id'], ['role' => 'responsavel']);
+            $synced[] = $data['responsavel_id'];
+        }
+
+        foreach ($data['observer_ids'] ?? [] as $uid) {
+            if (!in_array($uid, $synced)) {
+                $task->executors()->attach($uid, ['role' => 'observador']);
+                $synced[] = $uid;
+            }
+        }
     }
 
     private function syncExecutors(Task $task, array $data): void

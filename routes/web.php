@@ -240,6 +240,14 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('tasks.updateStatusStandalone');
     Route::patch('/tarefas/{task}/status', [TaskController::class, 'updateStatusDirect'])
         ->name('tasks.update-status-direct');
+    Route::patch('/tarefas/{task}/prioridade', [TaskController::class, 'updatePriority'])
+        ->name('tasks.update-priority');
+    Route::patch('/tarefas/{task}/situacao', [TaskController::class, 'updateSituation'])
+        ->name('tasks.update-situation');
+    Route::patch('/tarefas/{task}/responsavel', [TaskController::class, 'updateResponsavel'])
+        ->name('tasks.update-responsavel');
+    Route::patch('/tarefas/{task}/executor-direto', [TaskController::class, 'updateExecutorDirect'])
+        ->name('tasks.update-executor');
     Route::delete('/projetos/{project}/tarefas/{task}', [TaskController::class, 'destroyStandalone'])
         ->name('tasks.destroyStandalone');
 

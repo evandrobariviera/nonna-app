@@ -23,6 +23,7 @@ class TaskExecutor extends Model
     public static array $roles = [
         'executor'    => 'Executor',
         'responsavel' => 'Responsável',
+        'observador'  => 'Observador',
         'aprovador'   => 'Aprovador',
     ];
 
