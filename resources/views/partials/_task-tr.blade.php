@@ -14,18 +14,15 @@
     $statusUrl    = ($context === 'ticket')
         ? route('tickets.update-status', $task)
         : route('tasks.update-status-direct', $task);
+    $priorityClass = match($task->priority ?? 'normal') {
+        'urgente' => 'priority-urgente',
+        'medio'   => 'priority-medio',
+        default   => '',
+    };
 @endphp
 
-<tr class="{{ $task->isOverdue() ? 'row-overdue' : '' }}"
+<tr class="{{ $priorityClass }} {{ $task->isOverdue() ? 'row-overdue' : '' }}"
     x-data="{ statusOpen: false }">
-
-    {{-- Prioridade (Monday fill) --}}
-    <td class="monday-fill-td relative" style="width:80px">
-        <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-                    background:{{ $task->priorityHex() }}; color:#fff; font-size:11px; font-weight:700">
-            {{ $task->priorityLabel() }}
-        </div>
-    </td>
 
     {{-- Status (Monday fill clicável + dropdown) --}}
     <td class="monday-fill-td relative" style="width:140px">
@@ -63,6 +60,9 @@
             <a href="{{ route('tasks.show', $task) }}"
                class="font-semibold leading-snug hover:underline"
                style="color:var(--text); font-size:13.5px">
+                @if(($task->priority ?? 'normal') === 'urgente')
+                    <span style="color:#dc2626; font-size:12px; margin-right:3px">🚩</span>
+                @endif
                 {{ $task->title }}
             </a>
             @if($task->is_ticket && $task->requester_name)

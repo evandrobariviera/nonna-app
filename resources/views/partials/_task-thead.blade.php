@@ -1,8 +1,7 @@
 {{-- Cabeçalho padrão da tabela de tarefas --}}
 <thead>
     <tr>
-        <th style="width:80px; padding-left:16px">Prioridade</th>
-        <th style="width:140px">Status</th>
+        <th style="width:140px; padding-left:16px">Status</th>
         <th>Tarefa</th>
         <th style="width:150px">Cliente</th>
         <th style="width:44px; text-align:center">Resp.</th>
