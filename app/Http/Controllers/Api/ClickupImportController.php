@@ -90,9 +90,8 @@ class ClickupImportController extends Controller
             // Usa DB::table() em todos os lookups para bypassar qualquer Eloquent scope
             $usersByEmail = $db->table('users')->pluck('id', 'email')->all();
 
-            $fallbackUser   = $db->table('users')->whereNull('client_id')->first(['id', 'organization_id']);
-            $fallbackUserId = $fallbackUser?->id;
-            $organizationId = $fallbackUser?->organization_id;
+            $fallbackUserId = $db->table('users')->whereNull('client_id')->value('id');
+            $organizationId = $db->table('organizations')->value('id');
 
             $projectsByList = $db->table('projects')
                 ->whereNotNull('clickup_list_id')
