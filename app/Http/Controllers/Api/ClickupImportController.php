@@ -16,9 +16,20 @@ class ClickupImportController extends Controller
 {
     // ClickUp status name → app status key
     private const STATUS_MAP = [
+        // Genéricos
         'backlog'                 => 'backlog',
         'a fazer'                 => 'backlog',
         'to do'                   => 'backlog',
+        // Status específicos da Nonna no ClickUp
+        'triagem'                 => 'backlog',
+        'em atendimento'          => 'em_producao',
+        'em criação'              => 'em_producao',
+        'em criacao'              => 'em_producao',
+        'aprovação'               => 'aguardando_aprovacao',
+        'aprovacao'               => 'aguardando_aprovacao',
+        'alteração'               => 'ajuste',
+        'alteracao'               => 'ajuste',
+        // Outros
         'em copy'                 => 'em_copy',
         'copy'                    => 'em_copy',
         'pronto p/ produção'      => 'pronto_producao',
