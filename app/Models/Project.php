@@ -15,6 +15,7 @@ class Project extends Model
     protected $connection = 'pgsql';
 
     protected $fillable = [
+        'organization_id',
         'macro_plan_id',
         'client_id',
         'position',
@@ -37,6 +38,8 @@ class Project extends Model
         'end_date',
         'budget',
         'clickup_task_id',
+        'clickup_list_id',
+        'clickup_attachments',
         'launched_at',
     ];
 
@@ -62,9 +65,10 @@ class Project extends Model
         'traffic_phases'=> 'array',
         'start_date'    => 'date',
         'end_date'      => 'date',
-        'budget'        => 'decimal:2',
-        'launched_at'   => 'datetime',
-        'position'      => 'integer',
+        'budget'              => 'decimal:2',
+        'launched_at'         => 'datetime',
+        'position'            => 'integer',
+        'clickup_attachments' => 'array',
     ];
 
     public static array $disciplines = [

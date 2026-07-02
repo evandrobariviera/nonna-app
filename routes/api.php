@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\AdAccountController;
 use App\Http\Controllers\Api\ClickupImportController;
+use App\Http\Controllers\Api\ClickupMacroPlanImportController;
+use App\Http\Controllers\Api\ClickupProjectImportController;
 use App\Http\Controllers\Api\SyncController;
 use App\Http\Middleware\SetApiTenant;
 use Illuminate\Support\Facades\Route;
@@ -15,8 +17,10 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// ── ClickUp Import — n8n envia tarefas para importar (sem Sanctum, autenticado por header X-Import-Secret)
-Route::post('/clickup/import', [ClickupImportController::class, 'import']);
+// ── ClickUp Import — n8n envia dados para importar (sem Sanctum, autenticado por header X-Import-Secret)
+Route::post('/clickup/import',            [ClickupImportController::class,         'import']);
+Route::post('/clickup/import-macroplans', [ClickupMacroPlanImportController::class, 'import']);
+Route::post('/clickup/import-projects',   [ClickupProjectImportController::class,   'import']);
 
 Route::middleware(['auth:sanctum', SetApiTenant::class])->group(function () {
 

@@ -17,6 +17,7 @@ class MacroPlan extends Model
     protected $table = 'macro_plans';
 
     protected $fillable = [
+        'organization_id',
         'client_id',
         'responsible_id',
         'created_by',
@@ -30,18 +31,21 @@ class MacroPlan extends Model
         'bloco2',
         'bloco4',
         'bloco5',
+        'clickup_task_id',
+        'clickup_attachments',
         'launched_at',
     ];
 
     protected $casts = [
-        'period_start' => 'date',
-        'period_end'   => 'date',
-        'launched_at'  => 'datetime',
-        'disciplines'  => 'array',
-        'bloco1'       => 'array',
-        'bloco2'       => 'array',
-        'bloco4'       => 'array',
-        'bloco5'       => 'array',
+        'period_start'        => 'date',
+        'period_end'          => 'date',
+        'launched_at'         => 'datetime',
+        'disciplines'         => 'array',
+        'bloco1'              => 'array',
+        'bloco2'              => 'array',
+        'bloco4'              => 'array',
+        'bloco5'              => 'array',
+        'clickup_attachments' => 'array',
     ];
 
     public static array $disciplineOptions = [
