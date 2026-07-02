@@ -4,9 +4,10 @@
     if ($execList->isEmpty() && $task->executor) {
         $execList = collect([$task->executor]);
     }
-    $respList     = $task->executors->filter(fn($u) => $u->pivot->role === 'responsavel');
-    $statusUrl    = route('tasks.update-status-direct', $task);
-    $hasSituation = $task->situation && $task->situation !== '';
+    $respList      = $task->executors->filter(fn($u) => $u->pivot->role === 'responsavel');
+    $hasSituation  = $task->situation && $task->situation !== '';
+    $statusUrl     = route('tasks.update-status-direct', $task);
+    $situacaoUrl   = route('tasks.update-situation', $task);
     $priorityClass = match($task->priority ?? 'normal') {
         'urgente' => 'priority-urgente',
         'medio'   => 'priority-medio',
@@ -15,37 +16,7 @@
 @endphp
 
 <tr class="{{ $priorityClass }} {{ $task->isOverdue() ? 'row-overdue' : '' }}"
-    x-show="groupOpen" x-data="{ statusOpen: false }">
-
-    {{-- Status (Monday fill clicável + dropdown) --}}
-    <td class="monday-fill-td relative" style="width:140px">
-        <button @click="statusOpen = !statusOpen" type="button"
-                style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-                       gap:4px; background:{{ $task->statusHex() }}; color:#fff; font-size:11px;
-                       font-weight:700; cursor:pointer; border:none; overflow:hidden">
-            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:calc(100% - 20px)">{{ $task->statusLabel() }}</span>
-            <span style="opacity:.8; flex-shrink:0">▾</span>
-        </button>
-
-        <div x-show="statusOpen" @click.outside="statusOpen = false" x-cloak
-             class="absolute left-0 top-full mt-1 z-20 rounded shadow-lg py-1"
-             style="background:var(--s1); border:1px solid var(--border2); min-width:190px">
-            @foreach(\App\Models\Task::$statuses as $key => $s)
-                <form method="POST" action="{{ $statusUrl }}">
-                    @csrf @method('PATCH')
-                    <input type="hidden" name="status" value="{{ $key }}">
-                    <button type="submit"
-                        class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
-                        style="color:{{ $task->status === $key ? 'var(--purple)' : 'var(--text)' }}"
-                        onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
-                        <span class="inline-block w-2 h-2 rounded-full flex-shrink-0"
-                              style="background:{{ \App\Models\Task::colorHex($s['color']) }}"></span>
-                        {{ $s['label'] }}
-                    </button>
-                </form>
-            @endforeach
-        </div>
-    </td>
+    x-show="groupOpen" x-data="{ statusOpen: false, situacaoOpen: false }">
 
     {{-- Título --}}
     <td>
@@ -68,7 +39,7 @@
         </div>
     </td>
 
-    {{-- Cliente (truncado com tooltip) --}}
+    {{-- Cliente --}}
     <td style="width:150px; max-width:150px">
         <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:136px"
              title="{{ $task->client?->company_name }}">
@@ -78,7 +49,7 @@
         </div>
     </td>
 
-    {{-- Responsável (avatar only) --}}
+    {{-- Responsável --}}
     <td style="width:44px; text-align:center; padding:0 4px">
         @if($respList->isNotEmpty())
             <div class="flex h-7 w-7 items-center justify-center rounded-full text-white mx-auto"
@@ -91,7 +62,7 @@
         @endif
     </td>
 
-    {{-- Executor (avatar only) --}}
+    {{-- Executor --}}
     <td style="width:44px; text-align:center; padding:0 4px">
         @if($execList->isNotEmpty())
             <div class="flex h-7 w-7 items-center justify-center rounded-full text-white mx-auto"
@@ -134,20 +105,74 @@
         <span class="text-xs" style="color:var(--muted2)">{{ $task->destinationLabel() ?: '—' }}</span>
     </td>
 
-    {{-- Situação (Monday fill quando há valor) --}}
-    <td class="{{ $hasSituation ? 'monday-fill-td relative' : '' }}" style="width:130px">
-        @if($hasSituation)
-            <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-                        background:{{ $task->situationColor() }}; color:#fff; font-size:11px; font-weight:700;
-                        overflow:hidden; padding:0 8px">
-                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">{{ $task->situationLabel() }}</span>
-            </div>
-        @else
-            <span class="text-xs" style="color:var(--muted)">—</span>
-        @endif
+    {{-- Status (Monday fill clicável + dropdown) --}}
+    <td class="monday-fill-td relative" style="width:140px">
+        <button @click="statusOpen = !statusOpen; situacaoOpen = false" type="button"
+                style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+                       gap:4px; background:{{ $task->statusHex() }}; color:#fff; font-size:11px;
+                       font-weight:700; cursor:pointer; border:none; overflow:hidden">
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:calc(100% - 20px)">{{ $task->statusLabel() }}</span>
+            <span style="opacity:.8; flex-shrink:0">▾</span>
+        </button>
+
+        <div x-show="statusOpen" @click.outside="statusOpen = false" x-cloak
+             class="absolute left-0 top-full mt-1 z-20 rounded shadow-lg py-1"
+             style="background:var(--s1); border:1px solid var(--border2); min-width:190px">
+            @foreach(\App\Models\Task::$statuses as $key => $s)
+                <form method="POST" action="{{ $statusUrl }}">
+                    @csrf @method('PATCH')
+                    <input type="hidden" name="status" value="{{ $key }}">
+                    <button type="submit"
+                        class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
+                        style="color:{{ $task->status === $key ? 'var(--purple)' : 'var(--text)' }}"
+                        onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                        <span class="inline-block w-2 h-2 rounded-full flex-shrink-0"
+                              style="background:{{ \App\Models\Task::colorHex($s['color']) }}"></span>
+                        {{ $s['label'] }}
+                    </button>
+                </form>
+            @endforeach
+        </div>
     </td>
 
-    {{-- Ações: Sprint apenas --}}
+    {{-- Situação (Monday fill clicável + dropdown) --}}
+    <td class="{{ $hasSituation ? 'monday-fill-td' : '' }} relative" style="width:150px">
+        <button @click="situacaoOpen = !situacaoOpen; statusOpen = false" type="button"
+                style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+                       gap:4px; {{ $hasSituation ? 'background:' . $task->situationColor() . '; color:#fff;' : 'background:transparent; color:var(--muted);' }}
+                       font-size:11px; font-weight:{{ $hasSituation ? '700' : '400' }};
+                       cursor:pointer; border:none; overflow:hidden; width:100%">
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:calc(100% - 20px)">
+                {{ $hasSituation ? $task->situationLabel() : '—' }}
+            </span>
+            <span style="opacity:.6; flex-shrink:0">▾</span>
+        </button>
+
+        <div x-show="situacaoOpen" @click.outside="situacaoOpen = false" x-cloak
+             class="absolute left-0 top-full mt-1 z-20 rounded shadow-lg py-1"
+             style="background:var(--s1); border:1px solid var(--border2); min-width:210px">
+            @foreach(\App\Models\Task::$situations as $key => $label)
+                <form method="POST" action="{{ $situacaoUrl }}">
+                    @csrf @method('PATCH')
+                    <input type="hidden" name="situation" value="{{ $key }}">
+                    <button type="submit"
+                        class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
+                        style="color:{{ ($task->situation ?? '') === $key ? 'var(--purple)' : 'var(--text)' }}"
+                        onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                        @if($key !== '')
+                            <span class="inline-block w-2 h-2 rounded-full flex-shrink-0"
+                                  style="background:{{ \App\Models\Task::$situationColors[$key] ?? '#94a3b8' }}"></span>
+                        @else
+                            <span class="inline-block w-2 h-2 flex-shrink-0"></span>
+                        @endif
+                        {{ $label ?: '— Limpar —' }}
+                    </button>
+                </form>
+            @endforeach
+        </div>
+    </td>
+
+    {{-- Ações: Sprint --}}
     <td style="width:110px">
         <div class="row-actions flex items-center gap-1.5">
             @if($sprints->count() > 0)
