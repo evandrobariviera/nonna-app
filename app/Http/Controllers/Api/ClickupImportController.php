@@ -84,31 +84,32 @@ class ClickupImportController extends Controller
         $tasks  = $request->input('tasks', []);
         $result = ['imported' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []];
 
-        // Cache de usuários por email para evitar N+1
-        $usersByEmail = User::on('pgsql')->pluck('id', 'email')->all();
+        try {
+            $db = DB::connection('pgsql');
 
-        // Fallback de created_by: primeiro usuário não-cliente do sistema
-        $fallbackUserId = User::on('pgsql')
-            ->whereNull('client_id')
-            ->value('id');
+            // Usa DB::table() em todos os lookups para bypassar qualquer Eloquent scope
+            $usersByEmail = $db->table('users')->pluck('id', 'email')->all();
 
-        // organization_id: resolve pelo primeiro usuário interno (sem Eloquent scope)
-        $organizationId = DB::connection('pgsql')
-            ->table('users')
-            ->whereNull('client_id')
-            ->value('organization_id');
+            $fallbackUser   = $db->table('users')->whereNull('client_id')->first(['id', 'organization_id']);
+            $fallbackUserId = $fallbackUser?->id;
+            $organizationId = $fallbackUser?->organization_id;
 
-        // Cache de projetos por clickup_list_id
-        $projectsByList = Project::on('pgsql')
-            ->whereNotNull('clickup_list_id')
-            ->pluck('id', 'clickup_list_id')
-            ->all();
+            $projectsByList = $db->table('projects')
+                ->whereNotNull('clickup_list_id')
+                ->pluck('id', 'clickup_list_id')
+                ->all();
 
-        // Cache de clientes por clickup_task_id
-        $clientsByClickup = Client::on('pgsql')
-            ->whereNotNull('clickup_task_id')
-            ->pluck('id', 'clickup_task_id')
-            ->all();
+            $clientsByClickup = $db->table('clients')
+                ->whereNotNull('clickup_task_id')
+                ->pluck('id', 'clickup_task_id')
+                ->all();
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => 'Falha ao inicializar lookups: ' . $e->getMessage(),
+                'file'  => basename($e->getFile()) . ':' . $e->getLine(),
+            ], 500);
+        }
 
         foreach ($tasks as $index => $row) {
             try {
