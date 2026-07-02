@@ -48,12 +48,22 @@
             @endforeach
         </select>
 
-        @if(request()->hasAny(['status','client_id','executor_id','sprint_id','sem_sprint']))
+        @if(request()->hasAny(['status','client_id','executor_id','sprint_id','sem_sprint','mostrar_concluidos']))
             <a href="{{ route('tasks.index') }}"
                class="btn btn-ghost btn-sm">
                 ✕ Limpar
             </a>
         @endif
+
+        @php
+            $toggleParams = request()->except('mostrar_concluidos', 'page');
+            if (!request()->boolean('mostrar_concluidos')) $toggleParams['mostrar_concluidos'] = '1';
+        @endphp
+        <a href="{{ route('tasks.index', $toggleParams) }}"
+           class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 transition-all"
+           style="border:1px solid var(--border2); color:{{ request()->boolean('mostrar_concluidos') ? 'var(--purple)' : 'var(--muted)' }}">
+            {{ request()->boolean('mostrar_concluidos') ? '⊙ Ocultar finalizados' : '○ Mostrar finalizados' }}
+        </a>
 
         <span class="ml-auto text-sm" style="color:var(--muted)">
             {{ $tasks->total() }} tarefa{{ $tasks->total() !== 1 ? 's' : '' }}

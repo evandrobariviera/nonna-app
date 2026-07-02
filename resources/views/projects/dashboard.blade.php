@@ -124,6 +124,14 @@
                 </div>
             </div>
 
+            <button @click="showClosed = !showClosed; applyFilters()"
+                class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 transition-all"
+                :style="showClosed
+                    ? 'border:1px solid var(--purple); color:var(--purple)'
+                    : 'border:1px solid var(--border2); color:var(--muted)'">
+                <span x-text="showClosed ? '⊙ Ocultar finalizados' : '○ Mostrar finalizados'"></span>
+            </button>
+
             <button @click="resetFilters()" x-show="hasActiveFilters()"
                 class="text-xs font-mono transition-colors ml-auto" style="color:var(--muted)"
                 onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
@@ -354,6 +362,7 @@
             filterDiscipline: '',
             filterOverdue: false,
             filterNotStarted: false,
+            showClosed: false,
             sortBy: 'urgency',
 
             editOpen: false,
@@ -400,6 +409,9 @@
                 if (this.filterDiscipline) result = result.filter(p => p.disciplines.includes(this.filterDiscipline));
                 if (this.filterOverdue)    result = result.filter(p => p.has_overdue);
                 if (this.filterNotStarted) result = result.filter(p => p.not_started);
+                if (!this.showClosed && !['completed','cancelled'].includes(this.filterStatus)) {
+                    result = result.filter(p => !['completed','cancelled'].includes(p.status));
+                }
                 this.filtered = this.sortProjects(result);
             },
 
@@ -436,6 +448,7 @@
                 this.search = ''; this.filterType = ''; this.filterStatus = '';
                 this.filterClient = ''; this.filterDiscipline = '';
                 this.filterOverdue = false; this.filterNotStarted = false;
+                this.showClosed = false;
                 this.sortBy = 'urgency';
                 this.applyFilters();
             },

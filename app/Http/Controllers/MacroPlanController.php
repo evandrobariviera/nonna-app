@@ -23,6 +23,11 @@ class MacroPlanController extends Controller
             $query->where('client_id', $request->client_id);
         }
 
+        // Oculta encerrados por padrão — a menos que o usuário filtre por status específico ou ative o toggle
+        if (!$request->boolean('mostrar_concluidos') && !$request->filled('status')) {
+            $query->where('status', '!=', 'closed');
+        }
+
         $macroplans = $query->paginate(20)->withQueryString();
         $clients    = Client::orderBy('company_name')->get(['id', 'company_name']);
 

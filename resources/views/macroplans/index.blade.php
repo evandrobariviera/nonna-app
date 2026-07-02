@@ -40,13 +40,23 @@
             Filtrar
         </button>
 
-        @if(request()->hasAny(['status','client_id']))
+        @if(request()->hasAny(['status','client_id','mostrar_concluidos']))
             <a href="{{ route('macroplans.index') }}"
                class="text-xs font-mono transition-colors" style="color:var(--muted)"
                onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
                 Limpar
             </a>
         @endif
+
+        @php
+            $toggleParams = request()->except('mostrar_concluidos', 'page');
+            if (!request()->boolean('mostrar_concluidos')) $toggleParams['mostrar_concluidos'] = '1';
+        @endphp
+        <a href="{{ route('macroplans.index', $toggleParams) }}"
+           class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 transition-all"
+           style="border:1px solid var(--border2); color:{{ request()->boolean('mostrar_concluidos') ? 'var(--purple)' : 'var(--muted)' }}">
+            {{ request()->boolean('mostrar_concluidos') ? '⊙ Ocultar encerrados' : '○ Mostrar encerrados' }}
+        </a>
     </form>
 
     <div class="card">

@@ -78,17 +78,26 @@
     </div>
 
     {{-- KANBAN --}}
-    <div x-data="{ addCol: null, editTaskId: null }">
+    <div x-data="{ addCol: null, editTaskId: null, showDone: false }">
 
         <div class="flex items-center justify-between mb-4">
             <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Tarefas</p>
-            <button @click="addCol = addCol === 'backlog' ? null : 'backlog'"
+            <div class="flex items-center gap-2">
+                <button @click="showDone = !showDone"
+                    class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 transition-all"
+                    :style="showDone
+                        ? 'border:1px solid var(--purple); color:var(--purple)'
+                        : 'border:1px solid var(--border2); color:var(--muted)'">
+                    <span x-text="showDone ? '⊙ Ocultar finalizadas' : '○ Mostrar finalizadas'"></span>
+                </button>
+                <button @click="addCol = addCol === 'backlog' ? null : 'backlog'"
                 class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest transition-colors"
                 style="border:1px solid var(--border2); color:var(--muted2)"
                 onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
                 onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
-                + Nova Tarefa
-            </button>
+                    + Nova Tarefa
+                </button>
+            </div>
         </div>
 
         {{-- ── FORMULÁRIO: NOVA TAREFA ── --}}
@@ -261,11 +270,12 @@
         </div>
 
         {{-- ── COLUNAS KANBAN ── --}}
-        <div class="grid gap-4" style="grid-template-columns: repeat(4, 1fr); align-items: start;">
+        <div class="grid gap-4" style="align-items: start;"
+             :style="showDone ? 'grid-template-columns: repeat(4, 1fr)' : 'grid-template-columns: repeat(3, 1fr)'">
 
             @foreach(\App\Models\Task::$kanbanColumns as $colKey => $col)
                 @php $colTasks = $kanban[$colKey]; @endphp
-                <div class="flex flex-col gap-2">
+                <div class="flex flex-col gap-2" @if($colKey === 'concluido') x-show="showDone" x-cloak @endif>
 
                     {{-- Header da coluna — sólido estilo Monday --}}
                     <div class="flex items-center justify-between px-3 py-2.5 rounded"
@@ -550,7 +560,8 @@
 
         {{-- Tarefas canceladas --}}
         @if($cancelled->count() > 0)
-            <div x-data="{ open: false }" class="mt-5">
+            <div x-show="showDone" x-cloak class="mt-5">
+            <div x-data="{ open: false }">
                 <button @click="open = !open"
                     class="text-xs font-mono transition-colors flex items-center gap-2" style="color:var(--muted)"
                     onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
@@ -565,6 +576,7 @@
                     @endforeach
                 </div>
             </div>
+            </div>{{-- /x-show showDone --}}
         @endif
 
     </div>{{-- /x-data kanban --}}

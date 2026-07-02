@@ -55,6 +55,11 @@ class TaskController extends Controller
             $query->whereNull('sprint_id');
         }
 
+        // Oculta status finais por padrão — a menos que o usuário filtre por status específico ou ative o toggle
+        if (!$request->boolean('mostrar_concluidos') && !$request->filled('status')) {
+            $query->whereNotIn('status', ['concluido', 'aprovado', 'cancelado']);
+        }
+
         $tasks   = $query->paginate(40)->withQueryString();
         $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
         $users   = User::orderBy('name')->get(['id', 'name']);
