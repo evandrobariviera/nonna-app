@@ -92,6 +92,12 @@ class ClickupImportController extends Controller
             ->whereNull('client_id')
             ->value('id');
 
+        // organization_id: resolve pelo primeiro usuário interno (sem Eloquent scope)
+        $organizationId = DB::connection('pgsql')
+            ->table('users')
+            ->whereNull('client_id')
+            ->value('organization_id');
+
         // Cache de projetos por clickup_list_id
         $projectsByList = Project::on('pgsql')
             ->whereNotNull('clickup_list_id')
@@ -106,7 +112,7 @@ class ClickupImportController extends Controller
 
         foreach ($tasks as $index => $row) {
             try {
-                $this->importTask($row, $usersByEmail, $projectsByList, $clientsByClickup, $fallbackUserId, $result);
+                $this->importTask($row, $usersByEmail, $projectsByList, $clientsByClickup, $fallbackUserId, $organizationId, $result);
             } catch (\Throwable $e) {
                 $result['errors'][] = [
                     'index'          => $index,
@@ -125,6 +131,7 @@ class ClickupImportController extends Controller
         array $projectsByList,
         array $clientsByClickup,
         ?string $fallbackUserId,
+        ?string $organizationId,
         array &$result
     ): void {
         $clickupTaskId = $row['clickup_task_id'] ?? null;
@@ -189,6 +196,7 @@ class ClickupImportController extends Controller
                 'requester_whatsapp' => $row['requester_whatsapp'] ?? null,
                 'requester_channel'  => $row['requester_channel'] ?? null,
                 'created_by'      => $createdBy,
+                'organization_id' => $organizationId,
                 'launched_at'     => now(),
             ]
         );

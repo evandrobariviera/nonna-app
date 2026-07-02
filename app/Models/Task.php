@@ -17,7 +17,7 @@ class Task extends Model
     protected $connection = 'pgsql';
 
     protected $fillable = [
-        'project_id', 'macro_plan_id', 'sprint_id', 'client_id',
+        'organization_id', 'project_id', 'macro_plan_id', 'sprint_id', 'client_id',
         'title', 'description', 'task_type', 'destination', 'status', 'situation',
         'priority',
         'executor_id', 'created_by',
