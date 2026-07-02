@@ -174,9 +174,11 @@ class ClickupImportController extends Controller
                   ?? $usersByEmail[$row['executor_email'] ?? '']
                   ?? $fallbackUserId;
 
-        $exists = Task::on('pgsql')->where('clickup_task_id', $clickupTaskId)->exists();
+        // withoutGlobalScopes: evita que OrganizationScope filtre tasks com organization_id=null
+        $exists = Task::on('pgsql')->withoutGlobalScopes()
+            ->where('clickup_task_id', $clickupTaskId)->exists();
 
-        $task = Task::on('pgsql')->updateOrCreate(
+        $task = Task::on('pgsql')->withoutGlobalScopes()->updateOrCreate(
             ['clickup_task_id' => $clickupTaskId],
             [
                 'project_id'      => $projectId,
