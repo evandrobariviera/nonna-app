@@ -497,6 +497,41 @@
                         @endforeach
                     </div>
                 @endif
+
+                {{-- Arquivos importados do ClickUp --}}
+                @if(!empty($task->clickup_attachments))
+                    <div class="mt-4 pt-4" style="border-top:1px solid var(--border2)">
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">
+                            Arquivos do ClickUp
+                            <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ count($task->clickup_attachments) }}</span>
+                        </p>
+                        <div class="flex flex-col gap-1.5">
+                            @foreach($task->clickup_attachments as $file)
+                                <div class="flex items-center justify-between gap-3 px-4 py-3"
+                                     style="background:var(--s2); border:1px solid var(--border2)">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <span class="text-lg flex-shrink-0">🔗</span>
+                                        <div class="min-w-0">
+                                            <a href="{{ $file['url'] }}" target="_blank" rel="noopener"
+                                               class="text-sm font-medium truncate block hover:underline"
+                                               style="color:var(--text)">
+                                                {{ $file['name'] ?? 'Arquivo' }}
+                                            </a>
+                                            @if(!empty($file['type']))
+                                                <p class="text-xs mt-0.5" style="color:var(--muted)">{{ strtoupper($file['type']) }}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <a href="{{ $file['url'] }}" target="_blank" rel="noopener"
+                                       class="text-xs flex-shrink-0 transition-colors" style="color:var(--muted)"
+                                       onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                                        Abrir →
+                                    </a>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
 
             {{-- ══ RETORNO DO CLIENTE ══ --}}

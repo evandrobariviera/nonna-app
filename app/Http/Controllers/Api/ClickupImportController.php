@@ -197,9 +197,10 @@ class ClickupImportController extends Controller
                 'requester_name'  => $row['requester_name'] ?? null,
                 'requester_whatsapp' => $row['requester_whatsapp'] ?? null,
                 'requester_channel'  => $row['requester_channel'] ?? null,
-                'created_by'      => $createdBy,
-                'organization_id' => $organizationId,
-                'launched_at'     => now(),
+                'created_by'           => $createdBy,
+                'organization_id'      => $organizationId,
+                'clickup_attachments'  => !empty($row['attachments']) ? $row['attachments'] : null,
+                'launched_at'          => now(),
             ]
         );
 
