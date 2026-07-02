@@ -87,6 +87,11 @@ class ClickupImportController extends Controller
         // Cache de usuários por email para evitar N+1
         $usersByEmail = User::on('pgsql')->pluck('id', 'email')->all();
 
+        // Fallback de created_by: primeiro usuário não-cliente do sistema
+        $fallbackUserId = User::on('pgsql')
+            ->whereNull('client_id')
+            ->value('id');
+
         // Cache de projetos por clickup_list_id
         $projectsByList = Project::on('pgsql')
             ->whereNotNull('clickup_list_id')
@@ -101,7 +106,7 @@ class ClickupImportController extends Controller
 
         foreach ($tasks as $index => $row) {
             try {
-                $this->importTask($row, $usersByEmail, $projectsByList, $clientsByClickup, $result);
+                $this->importTask($row, $usersByEmail, $projectsByList, $clientsByClickup, $fallbackUserId, $result);
             } catch (\Throwable $e) {
                 $result['errors'][] = [
                     'index'          => $index,
@@ -119,6 +124,7 @@ class ClickupImportController extends Controller
         array $usersByEmail,
         array $projectsByList,
         array $clientsByClickup,
+        ?string $fallbackUserId,
         array &$result
     ): void {
         $clickupTaskId = $row['clickup_task_id'] ?? null;
@@ -156,6 +162,11 @@ class ClickupImportController extends Controller
             $taskType = 'criacao';
         }
 
+        // Resolver created_by: criador do ClickUp → executor → fallback sistema
+        $createdBy = $usersByEmail[$row['creator_email'] ?? '']
+                  ?? $usersByEmail[$row['executor_email'] ?? '']
+                  ?? $fallbackUserId;
+
         $exists = Task::on('pgsql')->where('clickup_task_id', $clickupTaskId)->exists();
 
         $task = Task::on('pgsql')->updateOrCreate(
@@ -177,6 +188,7 @@ class ClickupImportController extends Controller
                 'requester_name'  => $row['requester_name'] ?? null,
                 'requester_whatsapp' => $row['requester_whatsapp'] ?? null,
                 'requester_channel'  => $row['requester_channel'] ?? null,
+                'created_by'      => $createdBy,
                 'launched_at'     => now(),
             ]
         );
