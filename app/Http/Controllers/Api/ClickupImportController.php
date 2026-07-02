@@ -21,6 +21,7 @@ class ClickupImportController extends Controller
         'a fazer'                 => 'backlog',
         'to do'                   => 'backlog',
         // Status específicos da Nonna no ClickUp
+        'em planejamento'         => 'backlog',
         'triagem'                 => 'backlog',
         'em atendimento'          => 'em_producao',
         'em criação'              => 'em_producao',
