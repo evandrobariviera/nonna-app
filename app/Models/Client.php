@@ -164,6 +164,11 @@ class Client extends Model
         return $this->hasMany(MacroPlan::class)->orderByDesc('period_start');
     }
 
+    public function contracts(): HasMany
+    {
+        return $this->hasMany(Contract::class)->orderByDesc('start_date');
+    }
+
     public function primaryContact()
     {
         return $this->contacts()->wherePivot('is_primary', true)->first();

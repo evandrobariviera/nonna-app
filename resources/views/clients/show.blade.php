@@ -65,6 +65,12 @@
             <button class="tab-btn" :class="{ active: tab === 'contas' }" @click="tab = 'contas'">
                 Contas de Anúncios
             </button>
+            <button class="tab-btn" :class="{ active: tab === 'contratos' }" @click="tab = 'contratos'">
+                Contratos
+                @if($client->contracts->count())
+                    <span class="tab-count">{{ $client->contracts->count() }}</span>
+                @endif
+            </button>
             <button class="tab-btn" :class="{ active: tab === 'dossies' }" @click="tab = 'dossies'">
                 Dossiê de Marca
             </button>
@@ -995,6 +1001,67 @@
                                             @csrf
                                             @method('PATCH')
                                         </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+
+        {{-- TAB: CONTRATOS --}}
+        <div x-show="tab === 'contratos'" x-cloak>
+
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">
+                    Contratos
+                </h3>
+                <form method="POST" action="{{ route('clients.contracts.store', $client) }}">
+                    @csrf
+                    <button type="submit"
+                            class="px-4 py-1.5 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                            style="background: var(--purple);">
+                        + Novo Contrato
+                    </button>
+                </form>
+            </div>
+
+            @if($client->contracts->isEmpty())
+                <div class="tab-placeholder">
+                    <div class="tab-placeholder-icon">📃</div>
+                    <div class="tab-placeholder-title">Nenhum contrato cadastrado</div>
+                    <div class="tab-placeholder-desc">Clique em "Novo Contrato" para registrar vigência, valor e anexos do contrato deste cliente.</div>
+                </div>
+            @else
+                <div class="card">
+                    <table class="nonna-table">
+                        <thead>
+                            <tr>
+                                <th>Título</th>
+                                <th>Status</th>
+                                <th>Vigência</th>
+                                <th>Fee</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($client->contracts as $contract)
+                                <tr>
+                                    <td class="font-semibold text-[var(--text)]">{{ $contract->title }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ $contract->statusColor() }}">{{ $contract->statusLabel() }}</span>
+                                    </td>
+                                    <td class="text-xs text-[var(--muted)]">{{ $contract->periodLabel() }}</td>
+                                    <td class="text-xs font-mono text-[var(--muted2)]">
+                                        {{ $contract->fee_value ? 'R$ ' . number_format($contract->fee_value, 2, ',', '.') : '—' }}
+                                    </td>
+                                    <td class="text-right">
+                                        <a href="{{ route('clients.contracts.show', [$client, $contract]) }}"
+                                           class="text-xs font-mono hover:underline"
+                                           style="color:var(--purple)">
+                                            Abrir
+                                        </a>
                                     </td>
                                 </tr>
                             @endforeach

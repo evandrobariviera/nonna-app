@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Client;
+use App\Models\Contract;
+use Illuminate\Http\Request;
+
+class ContractController extends Controller
+{
+    public function store(Request $request, Client $client)
+    {
+        $contract = $client->contracts()->create([
+            'title'      => 'Novo Contrato',
+            'status'     => 'rascunho',
+            'created_by' => auth()->id(),
+        ]);
+
+        return redirect()->route('clients.contracts.show', [$client, $contract])
+            ->with('success', 'Contrato criado.');
+    }
+
+    public function show(Client $client, Contract $contract)
+    {
+        $contract->load(['attachments.uploadedBy']);
+
+        return view('contracts.show', compact('client', 'contract'));
+    }
+
+    public function update(Request $request, Client $client, Contract $contract)
+    {
+        $data = $request->validate([
+            'title'               => 'required|string|max:255',
+            'status'              => 'required|in:' . implode(',', array_keys(Contract::$statuses)),
+            'start_date'          => 'nullable|date',
+            'end_date'            => 'nullable|date|after_or_equal:start_date',
+            'signed_at'           => 'nullable|date',
+            'fee_value'           => 'nullable|numeric|min:0',
+            'fee_type'            => 'nullable|in:' . implode(',', array_keys(Contract::$feeTypes)),
+            'payment_method'      => 'nullable|in:pix,cartao,boleto',
+            'billing_day'         => 'nullable|integer|in:10,15,20',
+            'renewal_type'        => 'nullable|in:' . implode(',', array_keys(Contract::$renewalTypes)),
+            'notice_period_days'  => 'nullable|integer|min:0',
+            'notes'               => 'nullable|string',
+            'line_items'          => 'nullable|string',
+        ]);
+
+        if (isset($data['line_items'])) {
+            $decoded = json_decode($data['line_items'], true);
+            $data['line_items'] = json_last_error() === JSON_ERROR_NONE ? $decoded : null;
+        }
+
+        $contract->update($data);
+
+        return back()->with('success', 'Contrato atualizado.');
+    }
+
+    public function destroy(Client $client, Contract $contract)
+    {
+        $contract->delete();
+
+        return redirect()->route('clients.show', [$client, 'tab' => 'contratos'])
+            ->with('success', 'Contrato removido.');
+    }
+}

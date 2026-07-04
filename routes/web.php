@@ -16,6 +16,8 @@ use App\Http\Controllers\ClientContactController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientCredentialController;
 use App\Http\Controllers\BrandDossierController;
+use App\Http\Controllers\ContractController;
+use App\Http\Controllers\ContractAttachmentController;
 use App\Http\Controllers\DossierCompetitorController;
 use App\Http\Controllers\DossierPersonaController;
 use App\Http\Controllers\ContactController;
@@ -121,6 +123,22 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('dossiers.personas.update');
     Route::delete('/clientes/{client}/dossies/{dossier}/personas/{persona}', [DossierPersonaController::class, 'destroy'])
         ->name('dossiers.personas.destroy');
+
+    // ── Contratos do cliente ──
+    Route::post('/clientes/{client}/contratos', [ContractController::class, 'store'])
+        ->name('clients.contracts.store');
+    Route::get('/clientes/{client}/contratos/{contract}', [ContractController::class, 'show'])
+        ->name('clients.contracts.show');
+    Route::patch('/clientes/{client}/contratos/{contract}', [ContractController::class, 'update'])
+        ->name('clients.contracts.update');
+    Route::delete('/clientes/{client}/contratos/{contract}', [ContractController::class, 'destroy'])
+        ->name('clients.contracts.destroy');
+
+    // ── Anexos do contrato ──
+    Route::post('/contratos/{contract}/anexos', [ContractAttachmentController::class, 'store'])
+        ->name('contract-attachments.store');
+    Route::delete('/contratos/{contract}/anexos/{attachment}', [ContractAttachmentController::class, 'destroy'])
+        ->name('contract-attachments.destroy');
 
     // ── CRM: Contatos ──
     Route::resource('contatos', ContactController::class)->parameters([
