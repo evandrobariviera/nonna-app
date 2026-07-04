@@ -113,6 +113,7 @@ Ver [.claude/docs/architecture.md](.claude/docs/architecture.md) para schema com
 - [.claude/docs/architecture.md](.claude/docs/architecture.md) — arquitetura interna do App: tabelas, campos, fluxos
 - [.claude/docs/database-schema.md](.claude/docs/database-schema.md) — schema PostgreSQL completo dos 4 ecossistemas ClickUp/IA/Tráfego/Gamificação
 - [.claude/docs/business-context.md](.claude/docs/business-context.md) — glossário, equipe, regras de negócio, lei das cores, fluxos operacionais
+- [.claude/docs/campaign-sync-api.md](.claude/docs/campaign-sync-api.md) — contrato da API que o n8n usa para sincronizar campanhas/métricas de anúncios (Meta/Google Ads) com o App
 - [.claude/docs/templates/](.claude/docs/templates/) — HTMLs de diagnóstico, planejamento e apresentação (referência de UX/campos)
 
 ## Convenções
