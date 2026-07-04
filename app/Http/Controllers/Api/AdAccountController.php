@@ -15,8 +15,8 @@ class AdAccountController extends Controller
         $org = app('currentOrganization');
 
         $accounts = ClientAdAccount::query()
-            ->where('organization_id', $org->id)
-            ->where('status', 'active')
+            ->whereHas('client', fn ($q) => $q->where('organization_id', $org->id))
+            ->where('status', 'ativo')
             ->with('client:id,company_name,status')
             ->get()
             ->map(fn ($account) => [
