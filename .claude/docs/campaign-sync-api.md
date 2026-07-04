@@ -49,6 +49,26 @@ Retorna as contas de anúncio ativas (`status = 'ativo'`) da organização do to
 
 **Atenção:** `platform` aqui vem no formato do cadastro (`meta_ads`, `google_ads`, `tiktok_ads`, `outros`) — é só informativo. Nos endpoints de sync abaixo, `platform` é enviado no formato **curto** (`meta` ou `google`), independente do valor acima.
 
+## `GET /api/integrations/{provider}`
+
+Busca as credenciais da organização para um provider (`meta`, `google`, etc.), cadastradas em Configurações → Integrações no App. **As credenciais vivem só no App, criptografadas** — o n8n busca o token em tempo de execução em vez de guardar cópia própria. Isso evita duplicar segredos em dois lugares e mantém o App como fonte única por organização (importante já que o App é multi-tenant).
+
+**Resposta 200** (integração conectada com credenciais salvas):
+```json
+{
+  "provider": "meta",
+  "label": "BM Principal",
+  "external_id": "123456789",
+  "credentials": { "access_token": "EAAB..." },
+  "expires_at": null,
+  "last_verified_at": null
+}
+```
+
+Para `google`, `credentials` inclui `developer_token`, `customer_id`, `login_customer_id`, `refresh_token`, `client_id`, `client_secret`.
+
+**Resposta 404**: provider não cadastrado, sem status `connected`, ou sem credenciais salvas ainda.
+
 ## `POST /api/sync/campaigns`
 
 Cria ou atualiza a estrutura de campanhas → adsets → ads de uma conta. Idempotente — pode ser chamado quantas vezes for preciso; a chave de identidade é `(client_ad_account_id, external_id)`.
@@ -147,6 +167,32 @@ Payload fora do formato esperado retorna `422` no formato padrão do Laravel:
 ```json
 { "message": "The campaigns.0.external_id field is required.", "errors": { "campaigns.0.external_id": ["..."] } }
 ```
+
+## Workflow pronto para importar no n8n
+
+Existe um workflow de referência em [`.claude/docs/n8n-workflows/campaign-sync.json`](n8n-workflows/campaign-sync.json), cobrindo Meta Ads e Google Ads. **Não foi testado contra um n8n real** (só validado como JSON bem-formado e com todas as conexões íntegras) — trate como um ponto de partida sólido, não como produto final pronto para ativar sem revisão.
+
+### Como importar
+1. No n8n: **Workflows → Import from File** (ou copiar o JSON e **Import from URL/Clipboard**).
+2. Criar a credencial **HTTP Header Auth** chamada `Nonna App API Token`:
+   - Name: `Authorization`
+   - Value: `Bearer {token gerado em Configurações → API no App}`
+3. Abrir o node **Config** e trocar `app_url` pela URL real do App.
+4. Cadastrar as credenciais reais do Meta/Google **no App** (Configurações → Integrações), não no n8n — ver seção de autenticação acima.
+
+### Estrutura do workflow
+- **Schedule Trigger** (06h, antes do `campaigns:generate-insights` das 08h) → **Config** → busca em paralelo: contas de anúncio (`GET /api/ad-accounts`), credenciais Meta e credenciais Google.
+- **Merge Config + Accounts** (Code node): junta tudo em uma lista, um item por conta de anúncio.
+- **Loop Accounts** (Split In Batches, 1 por vez) → **Route By Platform** (Switch): direciona para o branch Meta ou Google conforme o campo `platform` de cada conta.
+- **Branch Meta**: busca campanhas + insights de D-1 na Graph API, transforma e envia para `/sync/campaigns` e `/sync/snapshots`.
+- **Branch Google**: renova o access_token via `refresh_token`, consulta a Google Ads API (GAQL) e envia da mesma forma.
+- Ambos os branches retornam pro **Loop Accounts** para processar a próxima conta.
+
+### O que provavelmente vai precisar de ajuste na primeira execução real
+- **Meta**: os `action_type` usados para calcular `revenue`/`conversions` (`purchase`, `omni_purchase`, `lead`) dependem do objetivo real das campanhas do cliente — confira contra a resposta real de `/insights`.
+- **Google Ads**: a API exige `developer_token` aprovado pela Google (nível de acesso "Standard", não "Test") para puxar dados de contas reais fora da conta de teste. `customer_id` e `login_customer_id` devem ir sem traços.
+- Versões de API (`v20.0` do Meta, `v17` do Google Ads) mudam com o tempo — confira se ainda são as versões suportadas quando for ativar.
+- O Switch node ("Route By Platform") usa `fallbackOutput` para tratar plataformas ainda não suportadas (TikTok, LinkedIn, Pinterest) — hoje elas só caem num `NoOp` e não sincronizam.
 
 ## O que acontece depois de sincronizar
 

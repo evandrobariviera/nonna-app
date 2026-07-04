@@ -1,0 +1,519 @@
+{
+  "name": "Nonna - Sync Campanhas (Meta + Google Ads)",
+  "nodes": [
+    {
+      "id": "sticky-setup",
+      "name": "LEIA ANTES DE ATIVAR",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -260],
+      "parameters": {
+        "width": 620,
+        "height": 300,
+        "content": "## Antes de ativar\n\n1. Crie a credencial **HTTP Header Auth** chamada `Nonna App API Token`:\n   - Name: `Authorization`\n   - Value: `Bearer SEU_TOKEN` (gerado em Configurações → API no App)\n2. Edite o node **Config** e troque `app_url` pela URL real do App.\n3. Cadastre as credenciais Meta/Google em Configurações → Integrações no App (não aqui no n8n).\n4. Rode manualmente uma vez, item por item, antes de ativar o Schedule Trigger.\n5. Campos exatos das respostas do Meta/Google podem variar por versão de API - confira os Sticky Notes ao lado de cada branch."
+      }
+    },
+    {
+      "id": "trigger",
+      "name": "Schedule Trigger (diário)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 6 * * *" }]
+        }
+      }
+    },
+    {
+      "id": "config",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 300],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "app_url",
+              "name": "app_url",
+              "type": "string",
+              "value": "https://app.nonnaagenciadigital.com.br"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "get-ad-accounts",
+      "name": "Get Ad Accounts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 220],
+      "parameters": {
+        "url": "={{ $json.app_url }}/api/ad-accounts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App API Token" }
+      }
+    },
+    {
+      "id": "get-meta-credentials",
+      "name": "Get Meta Credentials",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 380],
+      "parameters": {
+        "url": "={{ $('Config').item.json.app_url }}/api/integrations/meta",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {},
+        "onError": "continueRegularOutput"
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App API Token" }
+      }
+    },
+    {
+      "id": "get-google-credentials",
+      "name": "Get Google Credentials",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 520],
+      "parameters": {
+        "url": "={{ $('Config').item.json.app_url }}/api/integrations/google",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {},
+        "onError": "continueRegularOutput"
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App API Token" }
+      }
+    },
+    {
+      "id": "merge-config-accounts",
+      "name": "Merge Config + Accounts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const accounts = $('Get Ad Accounts').first().json.data || [];\n\nlet metaToken = null;\ntry {\n  const metaResp = $('Get Meta Credentials').first().json;\n  metaToken = metaResp && metaResp.credentials ? metaResp.credentials.access_token : null;\n} catch (e) { metaToken = null; }\n\nlet google = null;\ntry {\n  const googleResp = $('Get Google Credentials').first().json;\n  google = googleResp && googleResp.credentials ? googleResp.credentials : null;\n} catch (e) { google = null; }\n\nreturn accounts.map(account => ({\n  json: {\n    ...account,\n    app_url: $('Config').first().json.app_url,\n    meta_access_token: metaToken,\n    google_credentials: google,\n  }\n}));\n"
+      }
+    },
+    {
+      "id": "loop-accounts",
+      "name": "Loop Accounts",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [900, 300],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "sticky-loop",
+      "name": "Sobre o loop",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [900, 460],
+      "parameters": {
+        "width": 320,
+        "height": 180,
+        "content": "**Loop Accounts** processa uma conta de anúncio por vez. A saída \"done\" (esquerda, quando acabam os itens) fica sem conexão - o workflow simplesmente termina ali. A saída \"loop\" (direita) segue pro Switch abaixo, e os branches Meta/Google devem retornar pra este node no final (ver conexões)."
+      }
+    },
+    {
+      "id": "route-platform",
+      "name": "Route By Platform",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [1120, 300],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.platform }}",
+                    "rightValue": "meta",
+                    "operator": { "type": "string", "operation": "startsWith" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "meta"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.platform }}",
+                    "rightValue": "google_ads",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "google"
+            }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      }
+    },
+    {
+      "id": "noop-unsupported",
+      "name": "Plataforma não suportada ainda",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1340, 460],
+      "parameters": {}
+    },
+    {
+      "id": "sticky-meta",
+      "name": "Sobre o branch Meta",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1340, -260],
+      "parameters": {
+        "width": 620,
+        "height": 220,
+        "content": "## Branch Meta Ads\n\nUsa Graph API v20.0. `access_token` já vem pronto de Configurações → Integrações (token de longa duração de um System User do Business Manager - não expira em horas como token de usuário comum).\n\nConfira o campo `actions`/`action_values` da resposta de insights - os `action_type` usados aqui (`purchase`, `omni_purchase`, `lead`) podem precisar de ajuste conforme o objetivo real das campanhas do cliente."
+      }
+    },
+    {
+      "id": "meta-get-campaigns",
+      "name": "Meta - Get Campaigns",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 80],
+      "parameters": {
+        "url": "=https://graph.facebook.com/v20.0/act_{{ $('Merge Config + Accounts').item.json.account_id }}/campaigns",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "fields", "value": "id,name,status,objective,start_time,stop_time" },
+            { "name": "limit", "value": "200" },
+            { "name": "access_token", "value": "={{ $('Merge Config + Accounts').item.json.meta_access_token }}" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "meta-get-insights",
+      "name": "Meta - Get Insights (D-1)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 80],
+      "parameters": {
+        "url": "=https://graph.facebook.com/v20.0/act_{{ $('Merge Config + Accounts').item.json.account_id }}/insights",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "level", "value": "campaign" },
+            { "name": "fields", "value": "campaign_id,campaign_name,spend,impressions,clicks,actions,action_values,reach" },
+            { "name": "time_range", "value": "={{ JSON.stringify({ since: $today.minus({ days: 1 }).toFormat('yyyy-MM-dd'), until: $today.minus({ days: 1 }).toFormat('yyyy-MM-dd') }) }}" },
+            { "name": "limit", "value": "500" },
+            { "name": "access_token", "value": "={{ $('Merge Config + Accounts').item.json.meta_access_token }}" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "meta-build-campaigns",
+      "name": "Meta - Build Campaigns Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 20],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const account = $('Merge Config + Accounts').item.json;\nconst resp = $('Meta - Get Campaigns').first().json;\nconst campaigns = (resp.data || []).map(c => ({\n  external_id: c.id,\n  name: c.name,\n  status: (c.status || 'ACTIVE').toLowerCase(),\n  objective: c.objective || null,\n  start_date: c.start_time ? c.start_time.substring(0, 10) : null,\n  end_date: c.stop_time ? c.stop_time.substring(0, 10) : null,\n  raw_data: c,\n}));\n\nreturn [{\n  json: {\n    client_ad_account_id: account.id,\n    platform: 'meta',\n    campaigns,\n  }\n}];\n"
+      }
+    },
+    {
+      "id": "meta-build-snapshots",
+      "name": "Meta - Build Snapshots Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 180],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const account = $('Merge Config + Accounts').item.json;\nconst resp = $('Meta - Get Insights (D-1)').first().json;\nconst yesterday = $today.minus({ days: 1 }).toFormat('yyyy-MM-dd');\n\nfunction sumActions(list, types) {\n  if (!list) return 0;\n  return list.filter(a => types.includes(a.action_type)).reduce((sum, a) => sum + parseFloat(a.value || 0), 0);\n}\n\nconst snapshots = (resp.data || []).map(row => ({\n  entity_level: 'campaign',\n  entity_id: row.campaign_id,\n  entity_name: row.campaign_name,\n  spend: parseFloat(row.spend || 0),\n  revenue: sumActions(row.action_values, ['purchase', 'omni_purchase']),\n  impressions: parseInt(row.impressions || 0, 10),\n  clicks: parseInt(row.clicks || 0, 10),\n  conversions: Math.round(sumActions(row.actions, ['purchase', 'omni_purchase', 'lead', 'offsite_conversion.fb_pixel_purchase'])),\n  reach: parseInt(row.reach || 0, 10),\n  raw_data: row,\n}));\n\nreturn [{\n  json: {\n    client_ad_account_id: account.id,\n    platform: 'meta',\n    snapshot_date: yesterday,\n    snapshots,\n  }\n}];\n"
+      }
+    },
+    {
+      "id": "meta-post-campaigns",
+      "name": "POST Sync Campaigns (Meta)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2000, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Merge Config + Accounts').item.json.app_url }}/api/sync/campaigns",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App API Token" }
+      }
+    },
+    {
+      "id": "meta-post-snapshots",
+      "name": "POST Sync Snapshots (Meta)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2000, 180],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Merge Config + Accounts').item.json.app_url }}/api/sync/snapshots",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Meta - Build Snapshots Payload').item.json) }}",
+        "options": {},
+        "onError": "continueRegularOutput"
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App API Token" }
+      }
+    },
+    {
+      "id": "sticky-google",
+      "name": "Sobre o branch Google",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1340, 560],
+      "parameters": {
+        "width": 620,
+        "height": 260,
+        "content": "## Branch Google Ads\n\nUsa Google Ads API REST v17 + endpoint `:search` (não `:searchStream`, mais simples de parsear). `customer_id`/`login_customer_id` precisam ir SEM traço (\"1234567890\", não \"123-456-7890\") - por isso o `.replace(/-/g,'')`.\n\nO access_token do OAuth2 expira em ~1h, por isso este branch sempre gera um novo via refresh_token antes de chamar a API - não usa access_token salvo no App.\n\nCampos da resposta vêm em camelCase (`campaign.advertisingChannelType`, `metrics.costMicros`) mesmo a query GAQL usando snake_case - confira contra a resposta real."
+      }
+    },
+    {
+      "id": "google-refresh-token",
+      "name": "Google - Refresh Access Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 700],
+      "parameters": {
+        "method": "POST",
+        "url": "https://oauth2.googleapis.com/token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "client_id", "value": "={{ $('Merge Config + Accounts').item.json.google_credentials.client_id }}" },
+            { "name": "client_secret", "value": "={{ $('Merge Config + Accounts').item.json.google_credentials.client_secret }}" },
+            { "name": "refresh_token", "value": "={{ $('Merge Config + Accounts').item.json.google_credentials.refresh_token }}" },
+            { "name": "grant_type", "value": "refresh_token" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "google-search",
+      "name": "Google - Search (Campaigns + Metrics D-1)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 700],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://googleads.googleapis.com/v17/customers/' + $('Merge Config + Accounts').item.json.google_credentials.customer_id.replace(/-/g, '') + '/googleAds:search' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "developer-token", "value": "={{ $('Merge Config + Accounts').item.json.google_credentials.developer_token }}" },
+            { "name": "login-customer-id", "value": "={{ ($('Merge Config + Accounts').item.json.google_credentials.login_customer_id || $('Merge Config + Accounts').item.json.google_credentials.customer_id).replace(/-/g, '') }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ query: \"SELECT campaign.id, campaign.name, campaign.status, campaign.advertising_channel_type, campaign.start_date, campaign.end_date, metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions, metrics.conversions_value FROM campaign WHERE segments.date = 'YESTERDAY'\" }) }}",
+        "authentication": "predefinedCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "headers": {
+            "Authorization": "={{ 'Bearer ' + $('Google - Refresh Access Token').item.json.access_token }}"
+          }
+        }
+      }
+    },
+    {
+      "id": "sticky-google-auth",
+      "name": "Nota sobre auth do node Search",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1560, 900],
+      "parameters": {
+        "width": 320,
+        "height": 160,
+        "content": "O header `Authorization: Bearer ...` deste node é montado manualmente na aba Headers (não usa credencial fixa do n8n, já que o token muda a cada execução via refresh_token). Se o n8n reclamar do campo `authentication`, apague-o e deixe só os headers manuais - `developer-token`, `login-customer-id` e `Authorization`."
+      }
+    },
+    {
+      "id": "google-build-campaigns",
+      "name": "Google - Build Campaigns Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 640],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const account = $('Merge Config + Accounts').item.json;\nconst resp = $input.first().json;\nconst results = resp.results || [];\n\nconst campaigns = results.map(r => ({\n  external_id: String(r.campaign.id),\n  name: r.campaign.name,\n  status: (r.campaign.status || 'ENABLED').toLowerCase(),\n  objective: r.campaign.advertisingChannelType || null,\n  start_date: r.campaign.startDate || null,\n  end_date: r.campaign.endDate || null,\n  raw_data: r.campaign,\n}));\n\nreturn [{\n  json: {\n    client_ad_account_id: account.id,\n    platform: 'google',\n    campaigns,\n  }\n}];\n"
+      }
+    },
+    {
+      "id": "google-build-snapshots",
+      "name": "Google - Build Snapshots Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 800],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const account = $('Merge Config + Accounts').item.json;\nconst resp = $('Google - Search (Campaigns + Metrics D-1)').first().json;\nconst results = resp.results || [];\nconst yesterday = $today.minus({ days: 1 }).toFormat('yyyy-MM-dd');\n\nconst snapshots = results.map(r => ({\n  entity_level: 'campaign',\n  entity_id: String(r.campaign.id),\n  entity_name: r.campaign.name,\n  spend: parseInt(r.metrics.costMicros || 0, 10) / 1000000,\n  revenue: parseFloat(r.metrics.conversionsValue || 0),\n  impressions: parseInt(r.metrics.impressions || 0, 10),\n  clicks: parseInt(r.metrics.clicks || 0, 10),\n  conversions: Math.round(parseFloat(r.metrics.conversions || 0)),\n  reach: 0,\n  raw_data: r.metrics,\n}));\n\nreturn [{\n  json: {\n    client_ad_account_id: account.id,\n    platform: 'google',\n    snapshot_date: yesterday,\n    snapshots,\n  }\n}];\n"
+      }
+    },
+    {
+      "id": "google-post-campaigns",
+      "name": "POST Sync Campaigns (Google)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2000, 640],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Merge Config + Accounts').item.json.app_url }}/api/sync/campaigns",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App API Token" }
+      }
+    },
+    {
+      "id": "google-post-snapshots",
+      "name": "POST Sync Snapshots (Google)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2000, 800],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Merge Config + Accounts').item.json.app_url }}/api/sync/snapshots",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Google - Build Snapshots Payload').item.json) }}",
+        "options": {},
+        "onError": "continueRegularOutput"
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App API Token" }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger (diário)": {
+      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+    },
+    "Config": {
+      "main": [[
+        { "node": "Get Ad Accounts", "type": "main", "index": 0 },
+        { "node": "Get Meta Credentials", "type": "main", "index": 0 },
+        { "node": "Get Google Credentials", "type": "main", "index": 0 }
+      ]]
+    },
+    "Get Ad Accounts": {
+      "main": [[{ "node": "Merge Config + Accounts", "type": "main", "index": 0 }]]
+    },
+    "Get Meta Credentials": {
+      "main": [[]]
+    },
+    "Get Google Credentials": {
+      "main": [[]]
+    },
+    "Merge Config + Accounts": {
+      "main": [[{ "node": "Loop Accounts", "type": "main", "index": 0 }]]
+    },
+    "Loop Accounts": {
+      "main": [
+        [],
+        [{ "node": "Route By Platform", "type": "main", "index": 0 }]
+      ]
+    },
+    "Route By Platform": {
+      "main": [
+        [{ "node": "Meta - Get Campaigns", "type": "main", "index": 0 }],
+        [{ "node": "Google - Refresh Access Token", "type": "main", "index": 0 }],
+        [{ "node": "Plataforma não suportada ainda", "type": "main", "index": 0 }]
+      ]
+    },
+    "Meta - Get Campaigns": {
+      "main": [[{ "node": "Meta - Get Insights (D-1)", "type": "main", "index": 0 }]]
+    },
+    "Meta - Get Insights (D-1)": {
+      "main": [[
+        { "node": "Meta - Build Campaigns Payload", "type": "main", "index": 0 },
+        { "node": "Meta - Build Snapshots Payload", "type": "main", "index": 0 }
+      ]]
+    },
+    "Meta - Build Campaigns Payload": {
+      "main": [[{ "node": "POST Sync Campaigns (Meta)", "type": "main", "index": 0 }]]
+    },
+    "Meta - Build Snapshots Payload": {
+      "main": [[{ "node": "POST Sync Snapshots (Meta)", "type": "main", "index": 0 }]]
+    },
+    "POST Sync Campaigns (Meta)": {
+      "main": [[]]
+    },
+    "POST Sync Snapshots (Meta)": {
+      "main": [[{ "node": "Loop Accounts", "type": "main", "index": 0 }]]
+    },
+    "Google - Refresh Access Token": {
+      "main": [[{ "node": "Google - Search (Campaigns + Metrics D-1)", "type": "main", "index": 0 }]]
+    },
+    "Google - Search (Campaigns + Metrics D-1)": {
+      "main": [[
+        { "node": "Google - Build Campaigns Payload", "type": "main", "index": 0 },
+        { "node": "Google - Build Snapshots Payload", "type": "main", "index": 0 }
+      ]]
+    },
+    "Google - Build Campaigns Payload": {
+      "main": [[{ "node": "POST Sync Campaigns (Google)", "type": "main", "index": 0 }]]
+    },
+    "Google - Build Snapshots Payload": {
+      "main": [[{ "node": "POST Sync Snapshots (Google)", "type": "main", "index": 0 }]]
+    },
+    "POST Sync Campaigns (Google)": {
+      "main": [[]]
+    },
+    "POST Sync Snapshots (Google)": {
+      "main": [[{ "node": "Loop Accounts", "type": "main", "index": 0 }]]
+    },
+    "Plataforma não suportada ainda": {
+      "main": [[{ "node": "Loop Accounts", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
