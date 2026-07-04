@@ -8,6 +8,35 @@ use Illuminate\Http\Request;
 
 class ContractController extends Controller
 {
+    public function index(Request $request)
+    {
+        $query = Contract::with('client');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->boolean('vencidos')) {
+            $query->whereDate('end_date', '<', now())
+                ->whereNotIn('status', ['encerrado', 'cancelado']);
+        }
+
+        $contracts = $query->orderByDesc('start_date')->get();
+
+        $activeContracts = Contract::whereNotIn('status', ['encerrado', 'cancelado'])->get();
+
+        $stats = [
+            'total_ativos'      => $activeContracts->count(),
+            'fee_mensal_total'  => $activeContracts->where('fee_type', 'mensal')->sum('fee_value'),
+            'valor_total'       => $activeContracts->sum(fn (Contract $c) => (float) $c->fee_value + $c->lineItemsTotal()),
+            'vencidos'          => Contract::whereDate('end_date', '<', now())
+                                        ->whereNotIn('status', ['encerrado', 'cancelado'])
+                                        ->count(),
+        ];
+
+        return view('contracts.index', compact('contracts', 'stats'));
+    }
+
     public function store(Request $request, Client $client)
     {
         $contract = $client->contracts()->create([

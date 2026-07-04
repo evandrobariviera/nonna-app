@@ -124,6 +124,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::delete('/clientes/{client}/dossies/{dossier}/personas/{persona}', [DossierPersonaController::class, 'destroy'])
         ->name('dossiers.personas.destroy');
 
+    // ── Contratos (dashboard geral da agência) ──
+    Route::get('/contratos', [ContractController::class, 'index'])
+        ->name('contracts.index');
+
     // ── Contratos do cliente ──
     Route::post('/clientes/{client}/contratos', [ContractController::class, 'store'])
         ->name('clients.contracts.store');

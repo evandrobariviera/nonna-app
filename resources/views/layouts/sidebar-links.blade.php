@@ -20,7 +20,7 @@
 <div class="nav-group-label">CRM</div>
 
 {{-- Comercial --}}
-<div x-data="{ open: {{ request()->routeIs('opportunities.*') ? 'true' : 'false' }} }">
+<div x-data="{ open: {{ request()->routeIs('opportunities.*') || request()->routeIs('contracts.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -34,7 +34,7 @@
     </button>
     <div x-show="open" x-transition style="display:none">
         <a href="{{ route('opportunities.index') }}" class="nav-sub-item {{ request()->routeIs('opportunities.*') ? 'active' : '' }}">Oportunidades</a>
-        <a href="#" class="nav-sub-item">Contratos</a>
+        <a href="{{ route('contracts.index') }}" class="nav-sub-item {{ request()->routeIs('contracts.*') ? 'active' : '' }}">Contratos</a>
     </div>
 </div>
 
