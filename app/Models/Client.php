@@ -180,6 +180,16 @@ class Client extends Model
         return $this->adBudgets()->where('start_date', '<=', now())->first();
     }
 
+    public function insights(): HasMany
+    {
+        return $this->hasMany(CampaignInsight::class)->orderByDesc('generated_at');
+    }
+
+    public function openInsightsCount(): int
+    {
+        return $this->insights()->whereIn('status', ['novo', 'lido'])->count();
+    }
+
     public function currentMonthAdSpend(): float
     {
         $adAccountIds = $this->adAccounts()->pluck('id');

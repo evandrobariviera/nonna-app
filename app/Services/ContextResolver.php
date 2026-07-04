@@ -6,6 +6,7 @@ use App\Models\Task;
 use App\Models\Project;
 use App\Models\AdCampaign;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class ContextResolver
 {
@@ -75,14 +76,65 @@ class ContextResolver
 
     public static function forCampaign(AdCampaign $campaign): array
     {
-        $campaign->loadMissing(['client']);
+        $campaign->loadMissing(['adAccount.client']);
+        $client = $campaign->adAccount?->client;
+
+        $context = [
+            'campaign_id'        => $campaign->id,
+            'campaign_name'      => $campaign->name ?? '',
+            'campaign_status'    => $campaign->status ?? '',
+            'campaign_objective' => $campaign->objective ?? '',
+            'client_name'        => $client?->company_name ?? '',
+        ];
+
+        $last7d = self::campaignMetrics($campaign, 7, 0);
+        $prev7d = self::campaignMetrics($campaign, 14, 7);
+
+        return array_merge($context, [
+            'spend_last_7_days'  => number_format($last7d['spend'], 2, ',', '.'),
+            'cpa_last_7_days'    => $last7d['cpa'] !== null ? number_format($last7d['cpa'], 2, ',', '.') : '—',
+            'ctr_last_7_days'    => $last7d['ctr'] !== null ? number_format($last7d['ctr'], 2, ',', '.') . '%' : '—',
+            'roas_last_7_days'   => $last7d['roas'] !== null ? number_format($last7d['roas'], 2, ',', '.') . 'x' : '—',
+            'spend_previous_7_days' => number_format($prev7d['spend'], 2, ',', '.'),
+            'cpa_previous_7_days'   => $prev7d['cpa'] !== null ? number_format($prev7d['cpa'], 2, ',', '.') : '—',
+        ]);
+    }
+
+    /**
+     * Agrega métricas de ad_daily_snapshots para uma campanha numa janela de dias
+     * terminando `$daysAgoEnd` dias atrás (ex: janela 7..0 = últimos 7 dias).
+     */
+    public static function campaignMetrics(AdCampaign $campaign, int $daysAgoStart, int $daysAgoEnd): array
+    {
+        $start = now()->subDays($daysAgoStart)->toDateString();
+        $end = now()->subDays($daysAgoEnd)->toDateString();
+
+        $agg = DB::connection('pgsql')
+            ->table('ad_daily_snapshots')
+            ->where('client_ad_account_id', $campaign->client_ad_account_id)
+            ->where('entity_level', 'campaign')
+            ->where('entity_id', $campaign->external_id)
+            ->whereBetween('snapshot_date', [$start, $end])
+            ->selectRaw('
+                COALESCE(SUM(spend), 0) AS spend,
+                COALESCE(SUM(revenue), 0) AS revenue,
+                COALESCE(SUM(clicks), 0) AS clicks,
+                COALESCE(SUM(impressions), 0) AS impressions,
+                COALESCE(SUM(conversions), 0) AS conversions
+            ')
+            ->first();
+
+        $spend = (float) ($agg->spend ?? 0);
+        $clicks = (int) ($agg->clicks ?? 0);
+        $impressions = (int) ($agg->impressions ?? 0);
+        $conversions = (int) ($agg->conversions ?? 0);
+        $revenue = (float) ($agg->revenue ?? 0);
 
         return [
-            'campaign_id'      => $campaign->id,
-            'campaign_name'    => $campaign->name ?? '',
-            'campaign_status'  => $campaign->status ?? '',
-            'campaign_objective' => $campaign->objective ?? '',
-            'client_name'      => $campaign->client?->name ?? '',
+            'spend' => $spend,
+            'cpa'   => $conversions > 0 ? $spend / $conversions : null,
+            'ctr'   => $impressions > 0 ? round(($clicks / $impressions) * 100, 2) : null,
+            'roas'  => $spend > 0 ? round($revenue / $spend, 2) : null,
         ];
     }
 }

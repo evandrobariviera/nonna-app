@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AiAgent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -14,8 +15,9 @@ class OrganizationSettingsController extends Controller
         $integrations = $org->integrations()->orderBy('provider')->orderBy('label')->get();
         $members      = $org->users()->withPivot(['role', 'function_roles'])->orderBy('name')->get();
         $apiTokens    = $org->tokens()->orderByDesc('created_at')->get();
+        $aiAgents     = AiAgent::where('is_active', true)->orderBy('name')->get();
 
-        return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens'));
+        return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens', 'aiAgents'));
     }
 
     public function createToken(Request $request): RedirectResponse
@@ -44,16 +46,18 @@ class OrganizationSettingsController extends Controller
         $org = app('currentOrganization');
 
         $data = $request->validate([
-            'name'            => ['required', 'string', 'max:120'],
-            'primary_color'   => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'secondary_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'logo_url'        => ['nullable', 'url', 'max:500'],
+            'name'                       => ['required', 'string', 'max:120'],
+            'primary_color'              => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'secondary_color'            => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'logo_url'                   => ['nullable', 'url', 'max:500'],
+            'campaign_insights_agent_id' => ['nullable', 'uuid', 'exists:ai_agents,id'],
         ]);
 
         $settings = $org->settings ?? [];
         $settings['branding']['primary_color']   = $data['primary_color']   ?? '#6A5ACD';
         $settings['branding']['secondary_color'] = $data['secondary_color'] ?? '#FF8C00';
         $settings['branding']['logo_url']        = $data['logo_url'] ?? null;
+        $settings['campaign_insights']['agent_id'] = $data['campaign_insights_agent_id'] ?? null;
 
         $org->update([
             'name'     => $data['name'],

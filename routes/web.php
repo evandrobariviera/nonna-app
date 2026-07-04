@@ -17,6 +17,8 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientCredentialController;
 use App\Http\Controllers\BrandDossierController;
 use App\Http\Controllers\ClientAdBudgetController;
+use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\CampaignInsightController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractAttachmentController;
 use App\Http\Controllers\DossierCompetitorController;
@@ -134,6 +136,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Contratos (dashboard geral da agência) ──
     Route::get('/contratos', [ContractController::class, 'index'])
         ->name('contracts.index');
+
+    // ── Campanhas (dashboard interno + insights de IA) ──
+    Route::get('/campanhas', [CampaignController::class, 'index'])
+        ->name('campaigns.index');
+    Route::patch('/insights/{insight}/status', [CampaignInsightController::class, 'updateStatus'])
+        ->name('campaign-insights.update-status');
 
     // ── Contratos do cliente ──
     Route::post('/clientes/{client}/contratos', [ContractController::class, 'store'])

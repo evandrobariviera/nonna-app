@@ -14,6 +14,8 @@
     $_ticketsCount = \App\Models\Task::where('is_ticket', true)
         ->whereNotIn('status', ['concluido', 'cancelado'])
         ->count();
+
+    $_campaignInsightsCount = \App\Models\CampaignInsight::whereIn('status', ['novo', 'lido'])->count();
 @endphp
 
 {{-- ══ CRM ══ --}}
@@ -206,7 +208,7 @@
 </a>
 
 {{-- Rotina --}}
-<div x-data="{ open: false }">
+<div x-data="{ open: {{ request()->routeIs('campaigns.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -219,7 +221,19 @@
         </svg>
     </button>
     <div x-show="open" x-transition style="display:none">
-        <a href="#" class="nav-sub-item">Campanhas</a>
+        <a href="{{ route('campaigns.index') }}" class="nav-sub-item {{ request()->routeIs('campaigns.*') ? 'active' : '' }}">
+            <span class="flex items-center justify-between w-full">
+                <span>Campanhas</span>
+                @if($_campaignInsightsCount > 0)
+                    <span class="text-xs px-1.5 py-px rounded-full font-semibold"
+                          style="background:{{ request()->routeIs('campaigns.*') ? 'rgba(106,90,205,.15)' : 'var(--s3)' }};
+                                 color:{{ request()->routeIs('campaigns.*') ? 'var(--purple)' : 'var(--muted)' }};
+                                 border:1px solid {{ request()->routeIs('campaigns.*') ? 'rgba(106,90,205,.25)' : 'var(--border2)' }}">
+                        {{ $_campaignInsightsCount }}
+                    </span>
+                @endif
+            </span>
+        </a>
         <a href="#" class="nav-sub-item">Orçamentos</a>
         <a href="#" class="nav-sub-item">Prestação de Contas</a>
         <a href="#" class="nav-sub-item">Suporte e Manutenção</a>

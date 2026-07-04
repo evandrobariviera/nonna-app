@@ -155,6 +155,33 @@
                     </div>
                 </div>
 
+                <div class="card p-6">
+                    <h2 class="text-sm font-bold mb-1" style="color:var(--text)">Inteligência de Campanhas</h2>
+                    <p class="text-xs mb-4" style="color:var(--muted)">
+                        Agente de IA usado para gerar a narrativa dos insights automáticos de campanha (orçamento, CPA, ROAS). Sem um agente configurado, os insights são criados só com os números, sem recomendação em texto.
+                    </p>
+
+                    <div>
+                        <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">
+                            Agente de IA
+                        </label>
+                        <select name="campaign_insights_agent_id"
+                                class="w-full rounded-lg border px-3 py-2 text-sm"
+                                style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                            <option value="">Nenhum (sem narrativa de IA)</option>
+                            @foreach($aiAgents as $agent)
+                                <option value="{{ $agent->id }}"
+                                    {{ old('campaign_insights_agent_id', data_get($org->settings, 'campaign_insights.agent_id')) === $agent->id ? 'selected' : '' }}>
+                                    {{ $agent->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('campaign_insights_agent_id')
+                            <p class="mt-1 text-xs" style="color:var(--red)">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
                 <div class="flex justify-end">
                     <button type="submit"
                             class="btn-primary px-5 py-2 text-sm rounded-lg font-semibold">
