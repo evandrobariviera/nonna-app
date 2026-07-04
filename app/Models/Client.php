@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class Client extends Model
@@ -167,6 +168,34 @@ class Client extends Model
     public function contracts(): HasMany
     {
         return $this->hasMany(Contract::class)->orderByDesc('start_date');
+    }
+
+    public function adBudgets(): HasMany
+    {
+        return $this->hasMany(ClientAdBudget::class)->orderByDesc('start_date');
+    }
+
+    public function currentAdBudget(): ?ClientAdBudget
+    {
+        return $this->adBudgets()->where('start_date', '<=', now())->first();
+    }
+
+    public function currentMonthAdSpend(): float
+    {
+        $adAccountIds = $this->adAccounts()->pluck('id');
+
+        if ($adAccountIds->isEmpty()) {
+            return 0.0;
+        }
+
+        $total = DB::connection('pgsql')
+            ->table('ad_daily_snapshots')
+            ->whereIn('client_ad_account_id', $adAccountIds)
+            ->where('entity_level', 'campaign')
+            ->where('snapshot_date', '>=', now()->startOfMonth()->toDateString())
+            ->sum('spend');
+
+        return (float) $total;
     }
 
     public function primaryContact()

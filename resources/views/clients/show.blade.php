@@ -797,7 +797,121 @@
         </div>
 
         {{-- TAB: CONTAS DE ANÚNCIOS --}}
-        <div x-show="tab === 'contas'" x-cloak x-data="{ addForm: false, editId: null }">
+        <div x-show="tab === 'contas'" x-cloak x-data="{ addForm: false, editId: null, budgetForm: false, budgetHistory: false }">
+
+            {{-- ORÇAMENTO DE ANÚNCIOS --}}
+            @php
+                $currentBudget = $client->currentAdBudget();
+                $monthSpend = $client->currentMonthAdSpend();
+                $budgetPct = $currentBudget && (float) $currentBudget->monthly_budget > 0
+                    ? round(($monthSpend / (float) $currentBudget->monthly_budget) * 100, 1)
+                    : null;
+                $budgetColor = $budgetPct === null ? 'muted' : ($budgetPct > 110 ? 'red' : ($budgetPct >= 90 ? 'orange' : 'green'));
+            @endphp
+            <div class="card p-5 mb-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">
+                        Orçamento de Anúncios (mês vigente)
+                    </h3>
+                    <div class="flex items-center gap-3">
+                        @if($client->adBudgets->count() > 1)
+                            <button @click="budgetHistory = !budgetHistory"
+                                    class="text-xs font-mono transition-colors" style="color:var(--muted)"
+                                    onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                                Histórico ({{ $client->adBudgets->count() }})
+                            </button>
+                        @endif
+                        <button @click="budgetForm = !budgetForm"
+                                class="text-xs font-bold font-mono uppercase tracking-widest"
+                                style="color:var(--purple)">
+                            {{ $currentBudget ? 'Ajustar orçamento' : '+ Definir orçamento' }}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <p class="text-xs font-mono uppercase tracking-widest mb-1" style="color:var(--muted)">Combinado / mês</p>
+                        <p class="text-xl font-black" style="color:var(--text)">
+                            {{ $currentBudget ? 'R$ ' . number_format($currentBudget->monthly_budget, 2, ',', '.') : '—' }}
+                        </p>
+                        @if($currentBudget)
+                            <p class="text-xs mt-0.5" style="color:var(--muted)">desde {{ $currentBudget->start_date->format('d/m/Y') }}</p>
+                        @endif
+                    </div>
+                    <div>
+                        <p class="text-xs font-mono uppercase tracking-widest mb-1" style="color:var(--muted)">Gasto no mês</p>
+                        <p class="text-xl font-black" style="color:var(--text)">
+                            R$ {{ number_format($monthSpend, 2, ',', '.') }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-mono uppercase tracking-widest mb-1" style="color:var(--muted)">% utilizado</p>
+                        @if($budgetPct !== null)
+                            <p class="text-xl font-black" style="color:var(--{{ $budgetColor }})">{{ $budgetPct }}%</p>
+                        @else
+                            <p class="text-xl font-black" style="color:var(--muted)">—</p>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Formulário de novo orçamento --}}
+                <div x-show="budgetForm" x-cloak class="mt-4 pt-4" style="border-top:1px solid var(--border2)">
+                    <form method="POST" action="{{ route('clients.ad-budgets.store', $client) }}" class="grid grid-cols-3 gap-4 items-end">
+                        @csrf
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                                Valor mensal (R$) <span class="text-[var(--orange)]">*</span>
+                            </label>
+                            <input type="number" step="0.01" min="0" name="monthly_budget" required
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 font-mono focus:outline-none focus:border-[var(--purple)]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                                Vigente a partir de <span class="text-[var(--orange)]">*</span>
+                            </label>
+                            <input type="date" name="start_date" required value="{{ now()->toDateString() }}"
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit"
+                                    class="px-4 py-2.5 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                                    style="background: var(--purple);">
+                                Salvar
+                            </button>
+                            <button type="button" @click="budgetForm = false"
+                                    class="px-3 py-2.5 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)]">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                {{-- Histórico --}}
+                @if($client->adBudgets->count() > 1)
+                    <div x-show="budgetHistory" x-cloak class="mt-4 pt-4" style="border-top:1px solid var(--border2)">
+                        <div class="flex flex-col gap-1.5">
+                            @foreach($client->adBudgets as $budget)
+                                <div class="flex items-center justify-between px-3 py-2 text-xs" style="background:var(--s2)">
+                                    <span style="color:var(--text)">
+                                        R$ {{ number_format($budget->monthly_budget, 2, ',', '.') }}
+                                        <span style="color:var(--muted)">desde {{ $budget->start_date->format('d/m/Y') }}</span>
+                                    </span>
+                                    <div class="flex items-center gap-3">
+                                        <span style="color:var(--muted)">{{ $budget->createdBy?->name }}</span>
+                                        <form method="POST" action="{{ route('clients.ad-budgets.destroy', [$client, $budget]) }}"
+                                              onsubmit="return confirm('Remover este registro de orçamento?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" style="color:var(--muted)"
+                                                onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            </div>
 
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">

@@ -16,6 +16,7 @@ use App\Http\Controllers\ClientContactController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientCredentialController;
 use App\Http\Controllers\BrandDossierController;
+use App\Http\Controllers\ClientAdBudgetController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractAttachmentController;
 use App\Http\Controllers\DossierCompetitorController;
@@ -95,6 +96,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('clients.ad-accounts.update');
     Route::delete('/clientes/{client}/contas-anuncios/{adAccount}', [ClientAdAccountController::class, 'destroy'])
         ->name('clients.ad-accounts.destroy');
+
+    // ── Orçamento de Anúncios (com histórico) ──
+    Route::post('/clientes/{client}/orcamento-anuncios', [ClientAdBudgetController::class, 'store'])
+        ->name('clients.ad-budgets.store');
+    Route::delete('/clientes/{client}/orcamento-anuncios/{adBudget}', [ClientAdBudgetController::class, 'destroy'])
+        ->name('clients.ad-budgets.destroy');
 
     // ── Dossiê de Marca ──
     Route::post('/clientes/{client}/dossies', [BrandDossierController::class, 'store'])
