@@ -13,6 +13,9 @@ class OrganizationIntegration extends Model
 
     protected $connection = 'pgsql';
 
+    // Nunca serializar credenciais para views/JSON - só acessíveis via credential() no servidor
+    protected $hidden = ['credentials'];
+
     protected $fillable = [
         'organization_id',
         'provider',
@@ -92,6 +95,11 @@ class OrganizationIntegration extends Model
     public function statusLabel(): string
     {
         return data_get(self::$statuses, "{$this->status}.label", $this->status);
+    }
+
+    public function hasCredentials(): bool
+    {
+        return !empty($this->attributes['credentials'] ?? null);
     }
 
     public function isConnected(): bool

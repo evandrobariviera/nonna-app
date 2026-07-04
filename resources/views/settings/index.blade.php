@@ -196,7 +196,8 @@
              x-data="{
                 modal: false,
                 editing: null,
-                form: { provider: '', label: '', external_id: '', status: 'pending' },
+                emptyCredentials: { access_token: '', refresh_token: '', developer_token: '', customer_id: '', login_customer_id: '', client_id: '', client_secret: '' },
+                form: { provider: '', label: '', external_id: '', status: 'pending', credentials: {} },
                 open(integration) {
                     if (integration) {
                         this.editing = integration;
@@ -205,10 +206,11 @@
                             label:       integration.label,
                             external_id: integration.external_id ?? '',
                             status:      integration.status,
+                            credentials: { ...this.emptyCredentials },
                         };
                     } else {
                         this.editing = null;
-                        this.form = { provider: '', label: '', external_id: '', status: 'pending' };
+                        this.form = { provider: '', label: '', external_id: '', status: 'pending', credentials: { ...this.emptyCredentials } };
                     }
                     this.modal = true;
                 },
@@ -284,6 +286,11 @@
                                 </div>
                             @endif
 
+                            <p class="text-xs flex items-center gap-1.5" style="color:{{ $integration->hasCredentials() ? 'var(--green)' : 'var(--muted)' }}">
+                                <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:currentColor"></span>
+                                {{ $integration->hasCredentials() ? 'Credenciais configuradas' : 'Sem credenciais salvas' }}
+                            </p>
+
                             <div class="flex items-center gap-2 pt-1 border-t" style="border-color:var(--border2)">
                                 <button type="button"
                                         @click="open({{ $integration->toJson() }})"
@@ -293,6 +300,7 @@
                                         onmouseout="this.style.color='var(--muted)'">
                                     Editar
                                 </button>
+                                {{-- credentials nunca vem no toJson() (hidden no model) - segredo nunca chega ao browser --}}
                                 <span style="color:var(--border2)">·</span>
                                 <form method="POST"
                                       action="{{ route('settings.integrations.destroy', $integration) }}"
@@ -400,6 +408,72 @@
                                     <option value="{{ $key }}">{{ $info['label'] }}</option>
                                 @endforeach
                             </select>
+                        </div>
+
+                        {{-- Credenciais --}}
+                        <div class="pt-2 border-t" style="border-color:var(--border2)">
+                            <p class="text-xs font-semibold mb-1.5" style="color:var(--muted)">Credenciais</p>
+                            <p class="text-xs mb-3" style="color:var(--muted)" x-show="editing">
+                                Deixe em branco para manter o valor já salvo. Os campos nunca são pré-preenchidos por segurança.
+                            </p>
+
+                            {{-- Meta / TikTok / LinkedIn / Pinterest: token único --}}
+                            <div x-show="['meta','tiktok','linkedin','pinterest'].includes(form.provider)" class="mb-3">
+                                <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Access Token</label>
+                                <input type="password" name="credentials[access_token]" x-model="form.credentials.access_token"
+                                       placeholder="{{ '' }}" autocomplete="off"
+                                       class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
+                                       style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                            </div>
+
+                            {{-- Google Ads --}}
+                            <div x-show="form.provider === 'google'" class="space-y-3 mb-3">
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Developer Token</label>
+                                    <input type="password" name="credentials[developer_token]" x-model="form.credentials.developer_token" autocomplete="off"
+                                           class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
+                                           style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Customer ID (conta MCC ou direta)</label>
+                                    <input type="text" name="credentials[customer_id]" x-model="form.credentials.customer_id"
+                                           placeholder="Ex: 123-456-7890"
+                                           class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
+                                           style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Login Customer ID (MCC, se aplicável)</label>
+                                    <input type="text" name="credentials[login_customer_id]" x-model="form.credentials.login_customer_id"
+                                           class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
+                                           style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Refresh Token (OAuth2)</label>
+                                    <input type="password" name="credentials[refresh_token]" x-model="form.credentials.refresh_token" autocomplete="off"
+                                           class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
+                                           style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">OAuth Client ID</label>
+                                    <input type="text" name="credentials[client_id]" x-model="form.credentials.client_id"
+                                           class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
+                                           style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">OAuth Client Secret</label>
+                                    <input type="password" name="credentials[client_secret]" x-model="form.credentials.client_secret" autocomplete="off"
+                                           class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
+                                           style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                </div>
+                            </div>
+
+                            {{-- Demais providers: token genérico --}}
+                            <div x-show="form.provider && !['meta','tiktok','linkedin','pinterest','google'].includes(form.provider)" class="mb-3">
+                                <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Access Token / API Key</label>
+                                <input type="password" name="credentials[access_token]" x-model="form.credentials.access_token" autocomplete="off"
+                                       class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
+                                       style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                            </div>
                         </div>
 
                         <div class="flex justify-end gap-3 pt-2">

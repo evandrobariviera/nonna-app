@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AdAccountController;
 use App\Http\Controllers\Api\ClickupImportController;
 use App\Http\Controllers\Api\ClickupMacroPlanImportController;
 use App\Http\Controllers\Api\ClickupProjectImportController;
+use App\Http\Controllers\Api\IntegrationCredentialController;
 use App\Http\Controllers\Api\SyncController;
 use App\Http\Middleware\SetApiTenant;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +28,10 @@ Route::middleware(['auth:sanctum', SetApiTenant::class])->group(function () {
     // ── Contas de anúncios ──
     // n8n chama para saber quais contas sincronizar
     Route::get('/ad-accounts', [AdAccountController::class, 'index']);
+
+    // ── Credenciais de integração ──
+    // n8n busca o token/credencial da organização para chamar a API externa diretamente
+    Route::get('/integrations/{provider}', [IntegrationCredentialController::class, 'show']);
 
     // ── Sync de dados do n8n ──
     Route::prefix('sync')->group(function () {
