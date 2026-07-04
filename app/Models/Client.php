@@ -172,7 +172,7 @@ class Client extends Model
 
     public function adBudgets(): HasMany
     {
-        return $this->hasMany(ClientAdBudget::class)->orderByDesc('start_date');
+        return $this->hasMany(ClientAdBudget::class)->orderByDesc('start_date')->orderByDesc('created_at');
     }
 
     public function currentAdBudget(): ?ClientAdBudget

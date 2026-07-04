@@ -138,15 +138,24 @@
                         {{-- Verba Estruturada --}}
                         <div>
                             <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Verba de Anúncios</label>
+                            @php $currentBudget = $macroplan->client->currentAdBudget(); @endphp
+                            @if($currentBudget)
+                                <p class="text-xs mb-2" style="color:var(--muted)">
+                                    Orçamento atual cadastrado no cliente:
+                                    <span style="color:var(--text)">R$ {{ number_format($currentBudget->monthly_budget, 2, ',', '.') }}</span>
+                                    <span>(desde {{ $currentBudget->start_date->format('d/m/Y') }})</span>
+                                </p>
+                            @endif
                             <div class="grid grid-cols-3 gap-3">
                                 <div>
                                     <p class="text-xs font-mono mb-1.5" style="color:var(--muted)">Total Mensal (R$)</p>
                                     <input type="text" name="verba_total"
-                                        value="{{ $b1['verba_total'] ?? ($b1['verba_anuncios'] ?? '') }}"
+                                        value="{{ $b1['verba_total'] ?? ($b1['verba_anuncios'] ?? ($currentBudget->monthly_budget ?? '')) }}"
                                         placeholder="Ex: 2000"
                                         class="w-full px-3 py-2 text-sm focus:outline-none"
                                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
                                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
+                                    <p class="text-xs mt-1" style="color:var(--muted)">Se mudar este valor, o histórico de orçamento do cliente é atualizado automaticamente ao salvar.</p>
                                 </div>
                                 <div>
                                     <p class="text-xs font-mono mb-1.5" style="color:var(--muted)">Meta Ads (%)</p>
