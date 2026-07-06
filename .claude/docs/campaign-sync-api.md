@@ -65,7 +65,7 @@ Busca as credenciais da organização para um provider (`meta`, `google`, etc.),
 }
 ```
 
-Para `google`, `credentials` inclui `developer_token`, `customer_id`, `login_customer_id`, `refresh_token`, `client_id`, `client_secret`.
+Para `google`, `credentials` inclui `developer_token`, `customer_id`, `login_customer_id`. O OAuth2 (Client ID/Secret, renovação de token) **não** fica guardado aqui — vive numa credencial nativa "Google OAuth2 API" configurada direto no n8n (o n8n renova o access_token sozinho).
 
 **MCC vs conta direta:** se a agência acessa via conta MCC (gerenciadora) — o caso mais comum —, `login_customer_id` é o ID dessa MCC e vale pra todas as chamadas; `customer_id` fica vazio, porque a conta de cada cliente já vem de `GET /api/ad-accounts` (`account_id`, cadastrado individualmente em "Contas de Anúncios"). Só preencha `customer_id` aqui se a agência acessa uma conta Google Ads direta, sem hierarquia MCC.
 
@@ -180,7 +180,8 @@ Existe um workflow de referência em [`.claude/docs/n8n-workflows/campaign-sync.
    - Name: `Authorization`
    - Value: `Bearer {token gerado em Configurações → API no App}`
 3. Abrir o node **Config** e trocar `app_url` pela URL real do App.
-4. Cadastrar as credenciais reais do Meta/Google **no App** (Configurações → Integrações), não no n8n — ver seção de autenticação acima.
+4. Cadastrar as credenciais reais do Meta **no App** (Configurações → Integrações) — ver seção de autenticação acima.
+5. Pro Google Ads, criar no próprio n8n uma credencial nativa **Google OAuth2 API** ("Google Ads OAuth2"): Client ID/Secret do Google Cloud Console, campo Scope sobrescrito para `https://www.googleapis.com/auth/adwords`, e conectar a conta uma vez ("Connect my account"). Selecionar essa credencial no node "Google - Search". `developer_token`/`customer_id`/`login_customer_id` continuam cadastrados no App normalmente (Configurações → Integrações → Google Ads).
 
 ### Estrutura do workflow
 - **Schedule Trigger** (06h, antes do `campaigns:generate-insights` das 08h) → **Config** → busca em paralelo: contas de anúncio (`GET /api/ad-accounts`), credenciais Meta e credenciais Google.

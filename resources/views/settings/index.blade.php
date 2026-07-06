@@ -466,24 +466,9 @@
                                            class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
                                            style="background:var(--s2); border-color:var(--border2); color:var(--text)">
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Refresh Token (OAuth2)</label>
-                                    <input type="password" name="credentials[refresh_token]" x-model="form.credentials.refresh_token" autocomplete="off"
-                                           class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
-                                           style="background:var(--s2); border-color:var(--border2); color:var(--text)">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">OAuth Client ID</label>
-                                    <input type="text" name="credentials[client_id]" x-model="form.credentials.client_id"
-                                           class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
-                                           style="background:var(--s2); border-color:var(--border2); color:var(--text)">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">OAuth Client Secret</label>
-                                    <input type="password" name="credentials[client_secret]" x-model="form.credentials.client_secret" autocomplete="off"
-                                           class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
-                                           style="background:var(--s2); border-color:var(--border2); color:var(--text)">
-                                </div>
+                                <p class="text-xs" style="color:var(--muted)">
+                                    O login/OAuth com o Google (Client ID, Client Secret, renovação de token) fica configurado direto no n8n, numa credencial nativa "Google OAuth2 API" — não precisa ser cadastrado aqui.
+                                </p>
                             </div>
 
                             {{-- Demais providers: token genérico --}}

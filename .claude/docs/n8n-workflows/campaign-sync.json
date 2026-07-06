@@ -302,29 +302,7 @@
       "parameters": {
         "width": 620,
         "height": 260,
-        "content": "## Branch Google Ads\n\nUsa Google Ads API REST v17 + endpoint `:search` (não `:searchStream`, mais simples de parsear).\n\n**MCC (conta gerenciadora):** a URL usa o `account_id` de CADA conta (vindo de `/api/ad-accounts`, cadastrado por cliente) - não o `customer_id` da integração. O header `login-customer-id` é sempre a MCC (`google_credentials.login_customer_id`), usada pra autenticar \"em nome de\" cada conta cliente. Se a agência não usa MCC (conta direta, sem hierarquia), deixe `login_customer_id` vazio na integração e cadastre o `customer_id` direto como `account_id` da conta do cliente.\n\n`account_id`/`login_customer_id` precisam ir SEM traço (\"1234567890\", não \"123-456-7890\") - por isso o `.replace(/-/g,'')`.\n\nO access_token do OAuth2 expira em ~1h, por isso este branch sempre gera um novo via refresh_token antes de chamar a API - não usa access_token salvo no App.\n\nCampos da resposta vêm em camelCase (`campaign.advertisingChannelType`, `metrics.costMicros`) mesmo a query GAQL usando snake_case - confira contra a resposta real."
-      }
-    },
-    {
-      "id": "google-refresh-token",
-      "name": "Google - Refresh Access Token",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [1340, 700],
-      "parameters": {
-        "method": "POST",
-        "url": "https://oauth2.googleapis.com/token",
-        "sendBody": true,
-        "contentType": "form-urlencoded",
-        "bodyParameters": {
-          "parameters": [
-            { "name": "client_id", "value": "={{ $('Merge Config + Accounts').item.json.google_credentials.client_id }}" },
-            { "name": "client_secret", "value": "={{ $('Merge Config + Accounts').item.json.google_credentials.client_secret }}" },
-            { "name": "refresh_token", "value": "={{ $('Merge Config + Accounts').item.json.google_credentials.refresh_token }}" },
-            { "name": "grant_type", "value": "refresh_token" }
-          ]
-        },
-        "options": {}
+        "content": "## Branch Google Ads\n\nUsa Google Ads API REST v17 + endpoint `:search` (não `:searchStream`, mais simples de parsear). Autenticação via credencial nativa **Google OAuth2 API** do n8n (ver Sticky Note ao lado) - o n8n gera e renova o access_token sozinho, não depende de refresh_token guardado no App.\n\n**MCC (conta gerenciadora):** a URL usa o `account_id` de CADA conta (vindo de `/api/ad-accounts`, cadastrado por cliente) - não o `customer_id` da integração. O header `login-customer-id` é sempre a MCC (`google_credentials.login_customer_id`), usada pra autenticar \"em nome de\" cada conta cliente. Se a agência não usa MCC (conta direta, sem hierarquia), deixe `login_customer_id` vazio na integração e cadastre o `customer_id` direto como `account_id` da conta do cliente.\n\n`account_id`/`login_customer_id` precisam ir SEM traço (\"1234567890\", não \"123-456-7890\") - por isso o `.replace(/-/g,'')`.\n\nCampos da resposta vêm em camelCase (`campaign.advertisingChannelType`, `metrics.costMicros`) mesmo a query GAQL usando snake_case - confira contra a resposta real."
       }
     },
     {
@@ -332,10 +310,12 @@
       "name": "Google - Search (Campaigns + Metrics D-1)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1560, 700],
+      "position": [1340, 700],
       "parameters": {
         "method": "POST",
         "url": "={{ 'https://googleads.googleapis.com/v17/customers/' + $('Merge Config + Accounts').item.json.account_id.replace(/-/g, '') + '/googleAds:search' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleOAuth2Api",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -346,13 +326,10 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ query: \"SELECT campaign.id, campaign.name, campaign.status, campaign.advertising_channel_type, campaign.start_date, campaign.end_date, metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions, metrics.conversions_value FROM campaign WHERE segments.date = 'YESTERDAY'\" }) }}",
-        "authentication": "predefinedCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "options": {
-          "headers": {
-            "Authorization": "={{ 'Bearer ' + $('Google - Refresh Access Token').item.json.access_token }}"
-          }
-        }
+        "options": {}
+      },
+      "credentials": {
+        "googleOAuth2Api": { "id": "", "name": "Google Ads OAuth2" }
       }
     },
     {
@@ -360,11 +337,11 @@
       "name": "Nota sobre auth do node Search",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [1560, 900],
+      "position": [1340, 900],
       "parameters": {
-        "width": 320,
-        "height": 160,
-        "content": "O header `Authorization: Bearer ...` deste node é montado manualmente na aba Headers (não usa credencial fixa do n8n, já que o token muda a cada execução via refresh_token). Se o n8n reclamar do campo `authentication`, apague-o e deixe só os headers manuais - `developer-token`, `login-customer-id` e `Authorization`."
+        "width": 340,
+        "height": 220,
+        "content": "## Credencial \"Google Ads OAuth2\"\n\nCrie no n8n uma credencial do tipo **Google OAuth2 API** (Credentials → New → Google OAuth2 API):\n1. Client ID / Client Secret: os mesmos do OAuth Client do Google Cloud Console (pode reaproveitar um já existente, tipo \"Aplicativo da Web\", desde que o redirect URI aponte pro callback do n8n).\n2. No campo **Scope**, sobrescreva o padrão e coloque: `https://www.googleapis.com/auth/adwords`\n3. Clique em \"Connect my account\" e faça o login/consentimento uma vez.\n\nO n8n cuida de renovar o token sozinho depois disso - não precisa de refresh_token/client_secret guardado no App."
       }
     },
     {
@@ -463,7 +440,7 @@
     "Route By Platform": {
       "main": [
         [{ "node": "Meta - Get Campaigns", "type": "main", "index": 0 }],
-        [{ "node": "Google - Refresh Access Token", "type": "main", "index": 0 }],
+        [{ "node": "Google - Search (Campaigns + Metrics D-1)", "type": "main", "index": 0 }],
         [{ "node": "Plataforma não suportada ainda", "type": "main", "index": 0 }]
       ]
     },
@@ -487,9 +464,6 @@
     },
     "POST Sync Snapshots (Meta)": {
       "main": [[{ "node": "Loop Accounts", "type": "main", "index": 0 }]]
-    },
-    "Google - Refresh Access Token": {
-      "main": [[{ "node": "Google - Search (Campaigns + Metrics D-1)", "type": "main", "index": 0 }]]
     },
     "Google - Search (Campaigns + Metrics D-1)": {
       "main": [[
