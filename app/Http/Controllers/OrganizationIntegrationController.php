@@ -51,10 +51,6 @@ class OrganizationIntegrationController extends Controller
             'label'       => ['required', 'string', 'max:120'],
             'external_id' => ['nullable', 'string', 'max:255'],
             'status'      => ['required', 'string', 'in:pending,connected,disconnected,error'],
-        ], [
-            // Mensagem temporaria mais detalhada pra diagnosticar um problema em producao
-            'provider.in' => 'Provider recebido: "' . $request->input('provider') . '" — permitidos: '
-                . implode(', ', array_keys(OrganizationIntegration::$providers)),
         ]);
     }
 

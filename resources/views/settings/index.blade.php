@@ -366,7 +366,7 @@
                                 <option value="">Selecione...</option>
                                 @php
                                     $grouped = collect(\App\Models\OrganizationIntegration::$providers)
-                                        ->groupBy(fn($p) => $p['category']);
+                                        ->groupBy(fn($p) => $p['category'], true);
                                     $categoryLabels = [
                                         'ads'          => 'Mídia Paga',
                                         'automation'   => 'Automação',
