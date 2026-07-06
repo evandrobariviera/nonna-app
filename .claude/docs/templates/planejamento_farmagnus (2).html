@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farmagnus — Macroplanejamento Jul–Out 2026 | Nonna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#080810; --bg2:#0f0f1a; --bg3:#14141f;
+    --border:rgba(255,255,255,0.07); --text:#e8e8f5; --muted:#7a7a9a; --faint:#5f5f75;
+    --accent1:#ff5c4d; --accent2:#d63eaa; --accent3:#7b3fe4;
+    --grad:linear-gradient(135deg,#ff5c4d,#d63eaa,#7b3fe4);
+    --ok:#3ed6a0; --warn:#ffb84d;
+    --sidebar:268px; --header:56px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:'Fraunces',serif; font-weight:500;}
+
+  header.top{position:fixed; top:0; left:var(--sidebar); right:0; height:var(--header); z-index:20; background:rgba(8,8,16,0.9); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 28px;}
+  header.top .brand{font-family:'Syne',sans-serif; font-weight:800; font-size:14px; letter-spacing:0.5px;}
+  header.top .brand span{background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  header.top .doctitle{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted);}
+
+  nav.sidebar{position:fixed; top:0; left:0; bottom:0; width:var(--sidebar); z-index:30; background:var(--bg2); border-right:1px solid var(--border); padding:22px 0; overflow-y:auto;}
+  nav.sidebar .logo{padding:0 22px 20px 22px; font-family:'Syne',sans-serif; font-weight:800; font-size:17px; border-bottom:1px solid var(--border); margin-bottom:14px;}
+  nav.sidebar .logo span{background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  nav.sidebar .group-label{font-family:'IBM Plex Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:1.5px; color:var(--faint); padding:14px 22px 7px 22px;}
+  .nav-item{display:flex; align-items:center; gap:9px; padding:8px 22px; color:var(--muted); text-decoration:none; font-size:12.5px; border-left:2px solid transparent; transition:all .15s; cursor:pointer;}
+  .nav-item:hover{color:var(--text); background:var(--bg3);}
+  .nav-item.active{color:var(--text); border-left:2px solid var(--accent1); background:var(--bg3);}
+  .nav-num{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--faint); min-width:20px;}
+  .nav-item.active .nav-num{color:var(--accent1);}
+  .nav-label{flex:1; font-family:'Inter',sans-serif; font-weight:500;}
+  .nav-tag{font-family:'IBM Plex Mono',monospace; font-size:8.5px; padding:2px 6px; border-radius:4px; border:1px solid var(--border); color:var(--faint); text-transform:uppercase; letter-spacing:0.5px;}
+  .nav-tag.projeto{border-color:rgba(123,63,228,0.4); color:#b79dff;}
+  .nav-tag.campanha{border-color:rgba(214,62,170,0.4); color:#ff9fd6;}
+  .nav-tag.detalhada{border-color:var(--accent1) !important; color:var(--accent1) !important; background:rgba(255,92,77,0.1);}
+
+  main{margin-left:var(--sidebar); padding:calc(var(--header) + 40px) 48px 80px 48px; max-width:1120px;}
+  .page{display:none;}
+  .page.active{display:block; animation:fade .3s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+  .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--accent1); margin-bottom:10px;}
+  .page h1{font-size:34px; font-weight:500; margin-bottom:8px;}
+  .page .subtitle{color:var(--muted); font-size:14px; margin-bottom:30px; max-width:700px;}
+
+  .section-title{font-family:'IBM Plex Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:2px; color:var(--accent2); margin:32px 0 16px 0; display:flex; align-items:center; gap:10px;}
+  .section-title::after{content:''; flex:1; height:1px; background:var(--border);}
+
+  .prose{font-size:15px; line-height:1.75; color:var(--text); max-width:800px;}
+  .prose.dim{color:var(--muted);}
+  .prose + .prose{margin-top:12px;}
+
+  /* Capa */
+  .capa-grid{display:grid; grid-template-columns:1.25fr 1fr; gap:44px; margin-top:36px;}
+  .capa-hero{border:1px solid var(--border); border-radius:16px; padding:38px; background:linear-gradient(160deg, rgba(255,92,77,0.08), rgba(123,63,228,0.08)); position:relative; overflow:hidden;}
+  .capa-hero::before{content:''; position:absolute; inset:0; background:var(--grad); opacity:0.05;}
+  .capa-hero .cli-name{font-family:'Fraunces',serif; font-size:42px; font-weight:500; margin-bottom:10px; position:relative;}
+  .capa-hero .cli-seg{font-family:'IBM Plex Mono',monospace; color:var(--muted); font-size:12px; position:relative;}
+  .capa-cells{display:flex; flex-direction:column; gap:16px;}
+  .capa-cell{border-bottom:1px solid var(--border); padding-bottom:13px;}
+  .capa-cell-label{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--faint); margin-bottom:5px;}
+  .capa-cell-val{font-size:14.5px; font-weight:500;}
+  .chips{display:flex; flex-wrap:wrap; gap:7px; margin-top:24px;}
+  .chip{font-family:'IBM Plex Mono',monospace; font-size:10px; padding:5px 11px; border-radius:20px; background:var(--bg2); border:1px solid var(--border); color:var(--muted);}
+
+  /* Cards */
+  .card{border:1px solid var(--border); border-radius:12px; padding:22px 24px; background:var(--bg2); margin-bottom:14px;}
+  .card-title{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--accent1); margin-bottom:10px;}
+  .card-body{font-size:15px; line-height:1.72;}
+
+  .antes-agora{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;}
+  .aa-box{border:1px solid var(--border); border-radius:12px; padding:20px 22px; background:var(--bg2);}
+  .aa-box.antes{border-left:3px solid var(--faint);}
+  .aa-box.agora{border-left:3px solid var(--accent1);}
+  .aa-label{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--faint); margin-bottom:8px;}
+  .aa-box.agora .aa-label{color:var(--accent1);}
+  .aa-text{font-size:14px; line-height:1.65; color:var(--muted);}
+
+  /* Verba */
+  .alert-info{border-radius:10px; padding:13px 18px; font-size:12.5px; margin:14px 0; border:1px solid rgba(123,63,228,0.35); background:rgba(123,63,228,0.08); color:#b79dff; line-height:1.6;}
+  .alert-warn{border-radius:10px; padding:13px 18px; font-size:12.5px; margin:14px 0; border:1px solid rgba(255,184,77,0.35); background:rgba(255,184,77,0.08); color:var(--warn); line-height:1.6;}
+  .verba-section{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:16px 0;}
+  .verba-box{border:1px solid var(--border); border-radius:12px; padding:18px; background:var(--bg2);}
+  .verba-label{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--faint); margin-bottom:8px;}
+  .verba-val{font-family:'Syne',sans-serif; font-weight:700; font-size:19px;}
+  .verba-note{font-size:11px; color:var(--muted); margin-top:6px;}
+  .verba-bar{display:flex; height:32px; border-radius:8px; overflow:hidden; border:1px solid var(--border); margin-top:8px;}
+  .verba-bar div{display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:#fff;}
+  .vb-meta{background:linear-gradient(90deg,#1877f2,#0e5fc4); width:50%;}
+  .vb-google{background:linear-gradient(90deg,#34a853,#1e7e39); width:50%;}
+
+  /* KPIs */
+  .kpi-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:16px 0;}
+  .kpi-card{border:1px solid var(--border); border-radius:12px; padding:20px; background:var(--bg2);}
+  .kpi-label{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--accent3); margin-bottom:8px;}
+  .kpi-title{font-family:'Syne',sans-serif; font-weight:700; font-size:15px; margin-bottom:6px;}
+  .kpi-desc{font-size:12.5px; color:var(--muted); line-height:1.55;}
+  .kpi-desc.pend{color:var(--warn); font-style:italic;}
+
+  /* Pilares */
+  .pilar{border-left:2px solid var(--border); padding-left:16px; margin-bottom:14px;}
+  .pilar-num{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--accent1); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;}
+  .pilar-name{font-family:'Syne',sans-serif; font-weight:700; font-size:14px; margin-bottom:4px;}
+  .pilar-desc{font-size:13px; color:var(--muted); line-height:1.6;}
+
+  /* Timeline */
+  .timeline{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:20px 0;}
+  .tl-col{border:1px solid var(--border); border-radius:12px; padding:16px; background:var(--bg2); min-height:170px;}
+  .tl-month{font-family:'Syne',sans-serif; font-weight:700; font-size:13px; color:var(--accent1); margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border);}
+  .tl-item{font-size:11.5px; color:var(--muted); margin-bottom:8px; padding-left:12px; position:relative; line-height:1.4;}
+  .tl-item::before{content:''; position:absolute; left:0; top:5px; width:5px; height:5px; border-radius:50%; background:var(--accent2);}
+  .tl-item.proj::before{background:var(--accent3);}
+
+  /* Resumo */
+  .resumo-row{display:flex; align-items:flex-start; gap:12px; padding:11px 0; border-bottom:1px solid var(--border);}
+  .resumo-row:last-child{border-bottom:none;}
+  .resumo-tag{font-family:'IBM Plex Mono',monospace; font-size:9px; padding:3px 8px; border-radius:5px; white-space:nowrap; text-transform:uppercase; letter-spacing:0.5px; margin-top:1px;}
+  .resumo-tag.p{background:rgba(123,63,228,0.15); color:#b79dff; border:1px solid rgba(123,63,228,0.4);}
+  .resumo-tag.c{background:rgba(214,62,170,0.15); color:#ff9fd6; border:1px solid rgba(214,62,170,0.4);}
+  .resumo-name{font-family:'Syne',sans-serif; font-weight:700; font-size:13px; min-width:210px;}
+  .resumo-desc{font-size:12.5px; color:var(--muted); line-height:1.5;}
+
+  /* Projeto/Campanha header */
+  .pc-header{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:20px; padding-bottom:18px; border-bottom:1px solid var(--border);}
+  .pc-badge{font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:1px; padding:4px 10px; border-radius:20px; border:1px solid var(--border); white-space:nowrap;}
+  .pc-badge.projeto{border-color:rgba(123,63,228,0.4); color:#b79dff;}
+  .pc-badge.campanha{border-color:rgba(214,62,170,0.4); color:#ff9fd6;}
+  .status-pill{font-family:'IBM Plex Mono',monospace; font-size:9px; padding:3px 9px; border-radius:20px; text-transform:uppercase; letter-spacing:0.5px; background:var(--bg3); border:1px solid var(--border); color:var(--muted);}
+  .pc-tags{display:flex; flex-wrap:wrap; gap:7px; margin-top:10px;}
+  .pc-tags .t{font-family:'IBM Plex Mono',monospace; font-size:10px; padding:4px 9px; border-radius:6px; background:var(--bg3); border:1px solid var(--border); color:var(--muted);}
+  .obj-box{font-size:14.5px; line-height:1.7; color:var(--muted); margin-bottom:20px;}
+
+  .disc-block{border-left:2px solid var(--border); padding-left:16px; margin-bottom:14px;}
+  .disc-label{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--accent1); margin-bottom:6px;}
+  .disc-text{font-size:13.5px; color:var(--muted); line-height:1.7;}
+
+  .tasks-title{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--faint); margin:20px 0 10px 0;}
+  .task-item{display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px;}
+  .task-item:last-child{border-bottom:none;}
+  .task-dot{width:5px; height:5px; border-radius:50%; background:var(--accent2); margin-top:7px; flex-shrink:0;}
+  .task-text{flex:1;}
+  .task-setor{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--faint); white-space:nowrap;}
+
+  /* Content ideas */
+  .content-ideas{display:grid; grid-template-columns:repeat(3,1fr); gap:13px; margin-top:14px;}
+  .idea-card{border:1px solid var(--border); border-radius:10px; padding:15px; background:var(--bg3);}
+  .badge{font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:1px; padding:3px 8px; border-radius:20px; margin-bottom:9px; display:inline-block;}
+  .badge-video{background:rgba(255,92,77,0.15); color:var(--accent1); border:1px solid rgba(255,92,77,0.4);}
+  .badge-card{background:rgba(214,62,170,0.15); color:var(--accent2); border:1px solid rgba(214,62,170,0.4);}
+  .badge-carrossel{background:rgba(123,63,228,0.15); color:#b79dff; border:1px solid rgba(123,63,228,0.4);}
+  .idea-title{font-family:'Syne',sans-serif; font-weight:700; font-size:12.5px; margin-bottom:7px;}
+  .idea-desc{font-size:11.5px; color:var(--muted); line-height:1.55;}
+
+  /* Trafego */
+  .trafego-box{border:1px dashed var(--border); border-radius:12px; padding:20px; margin-top:18px; background:rgba(255,255,255,0.015);}
+  .tb-title{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--ok); margin-bottom:14px;}
+  .tb-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:14px;}
+  .tb-field{font-size:12.5px; color:var(--muted); line-height:1.55;}
+  .tb-label{font-family:'IBM Plex Mono',monospace; color:var(--faint); font-size:10px; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;}
+  .kw-tags{display:flex; flex-wrap:wrap; gap:7px; margin-top:9px;}
+  .kw-tag{font-family:'IBM Plex Mono',monospace; font-size:11px; padding:5px 10px; border-radius:6px; background:var(--bg2); border:1px solid var(--border); color:var(--muted);}
+
+  /* Big idea + criativo (para C5 detalhada) */
+  .bigidea-hero{border:1px solid var(--border); border-radius:18px; padding:40px 38px; margin:20px 0; position:relative; overflow:hidden; background:linear-gradient(160deg, rgba(255,92,77,0.08), rgba(123,63,228,0.08));}
+  .bigidea-hero::before{content:''; position:absolute; inset:0; background:var(--grad); opacity:0.05;}
+  .bi-label{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--accent1); margin-bottom:14px; position:relative;}
+  .bi-idea{font-family:'Fraunces',serif; font-size:38px; font-weight:500; line-height:1.15; margin-bottom:20px; position:relative;}
+  .bi-manifesto{font-size:15px; line-height:1.8; position:relative; max-width:760px;}
+  .terr-card{border:1px solid var(--border); border-left:3px solid var(--accent3); border-radius:12px; padding:18px 20px; margin:14px 0; background:var(--bg2);}
+  .terr-name{font-family:'Syne',sans-serif; font-weight:700; font-size:14px; margin-bottom:7px; color:#b79dff;}
+  .terr-desc{font-size:13px; line-height:1.6; color:var(--muted);}
+  .stat-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:20px 0;}
+  .stat-card{border:1px solid var(--border); border-radius:12px; padding:18px; background:var(--bg2);}
+  .stat-val{font-family:'Syne',sans-serif; font-weight:800; font-size:24px; background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent; line-height:1.1;}
+  .stat-desc{font-size:12px; color:var(--muted); margin-top:8px; line-height:1.5;}
+  .stat-src{font-family:'IBM Plex Mono',monospace; font-size:9px; color:var(--faint); margin-top:8px; text-transform:uppercase; letter-spacing:0.5px;}
+  .voice-example{font-family:'Fraunces',serif; font-style:italic; font-size:17px; border-left:3px solid var(--accent1); padding-left:18px; margin:16px 0; line-height:1.5;}
+  .angle{border-left:2px solid var(--border); padding-left:16px; margin-bottom:12px;}
+  .angle-num{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--accent1); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;}
+  .angle-text{font-size:13px; color:var(--muted); line-height:1.6;}
+  .assinatura-box{border:1px solid var(--border); border-radius:12px; padding:20px; margin:14px 0; background:var(--bg3); text-align:center;}
+  .ass-line{font-family:'Fraunces',serif; font-size:24px; font-weight:600; background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .ass-note{font-size:12px; color:var(--muted); margin-top:8px;}
+  .steps{margin:16px 0;}
+  .step{display:flex; gap:16px; margin-bottom:16px;}
+  .step-num{flex-shrink:0; width:34px; height:34px; border-radius:50%; background:var(--grad); display:flex; align-items:center; justify-content:center; font-family:'Syne',sans-serif; font-weight:800; font-size:14px; color:#fff;}
+  .step-title{font-family:'Syne',sans-serif; font-weight:700; font-size:14px; margin-bottom:5px; padding-top:4px;}
+  .step-desc{font-size:13px; color:var(--muted); line-height:1.6;}
+  .lp-flow{display:flex; flex-direction:column; gap:9px; margin:14px 0;}
+  .lp-block{border:1px solid var(--border); border-radius:10px; padding:14px 16px; background:var(--bg2); display:flex; gap:14px; align-items:flex-start;}
+  .lp-tag{font-family:'IBM Plex Mono',monospace; font-size:9px; color:var(--accent3); text-transform:uppercase; letter-spacing:1px; white-space:nowrap; padding-top:2px; min-width:60px;}
+  .lp-content{font-size:12.5px; color:var(--muted); line-height:1.6;}
+  .lp-content strong{color:var(--text); font-weight:600;}
+  .mood-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:14px 0;}
+  .mood-card{border:1px solid var(--border); border-radius:12px; padding:18px; background:var(--bg2);}
+  .mood-label{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--accent2); margin-bottom:8px;}
+  .mood-text{font-size:12.5px; color:var(--muted); line-height:1.6;}
+  .palette{display:flex; gap:7px; margin-top:11px;}
+  .swatch{width:36px; height:36px; border-radius:8px; border:1px solid var(--border);}
+  .piece-list{list-style:none; margin:14px 0;}
+  .piece-list li{padding:12px 0; border-bottom:1px solid var(--border);}
+  .piece-list li:last-child{border-bottom:none;}
+  .piece-name{font-family:'Syne',sans-serif; font-weight:700; font-size:13px; margin-bottom:4px;}
+  .piece-dir{font-size:12.5px; color:var(--muted); line-height:1.5;}
+  .crea-divider{height:1px; background:var(--border); margin:28px 0 18px 0;}
+  .crea-anchor{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:2px; color:var(--accent2); margin-bottom:14px;}
+
+  /* Checklist */
+  .check-item{display:flex; align-items:flex-start; gap:12px; padding:12px 15px; border:1px solid var(--border); border-radius:10px; margin-bottom:8px; cursor:pointer; background:var(--bg2); transition:all .15s;}
+  .check-item:hover{border-color:var(--faint);}
+  .check-box{width:17px; height:17px; border-radius:5px; border:1.5px solid var(--faint); display:flex; align-items:center; justify-content:center; font-size:10px; flex-shrink:0; margin-top:1px;}
+  .check-item.done{color:var(--faint);}
+  .check-item.done .check-name{text-decoration:line-through;}
+  .check-item.done .check-box{background:var(--ok); border-color:var(--ok); color:#000;}
+  .check-name{font-family:'Syne',sans-serif; font-weight:700; font-size:13px; margin-bottom:3px;}
+  .check-desc{font-size:12px; color:var(--muted); line-height:1.5;}
+
+  .note{font-size:12px; color:var(--faint); font-style:italic; margin-top:8px;}
+  footer.docfooter{font-family:'IBM Plex Mono',monospace; margin-top:56px; padding-top:20px; border-top:1px solid var(--border); font-size:11px; color:var(--faint); display:flex; justify-content:space-between;}
+
+  @media (max-width:900px){
+    nav.sidebar{transform:translateX(-100%);}
+    header.top{left:0;}
+    main{margin-left:0; padding:80px 20px 60px 20px;}
+    .capa-grid,.antes-agora,.verba-section,.kpi-grid,.timeline,.content-ideas,.tb-grid,.stat-grid,.mood-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="logo"><span>Nonna</span> Agência Digital</div>
+  <div class="group-label">Configurações</div>
+  <div class="nav-item active" data-page="b00"><span class="nav-num">00</span><span class="nav-label">Capa &amp; Identificação</span></div>
+  <div class="nav-item" data-page="b01"><span class="nav-num">01</span><span class="nav-label">Visão Geral &amp; Metas</span></div>
+  <div class="nav-item" data-page="b02"><span class="nav-num">02</span><span class="nav-label">Contexto &amp; Estratégia</span></div>
+  <div class="group-label">Projetos e Campanhas</div>
+  <div class="nav-item" data-page="p1"><span class="nav-num">P1</span><span class="nav-label">Atualizações do Website</span><span class="nav-tag projeto">Proj</span></div>
+  <div class="nav-item" data-page="p2"><span class="nav-num">P2</span><span class="nav-label">Treinamento Online</span><span class="nav-tag projeto">Proj</span></div>
+  <div class="nav-item" data-page="p3"><span class="nav-num">P3</span><span class="nav-label">Programa de Engajamento</span><span class="nav-tag projeto">Proj</span></div>
+  <div class="nav-item" data-page="p4"><span class="nav-num">P4</span><span class="nav-label">Expofarmagnus Online</span><span class="nav-tag projeto">Proj</span></div>
+  <div class="nav-item" data-page="c1"><span class="nav-num">C1</span><span class="nav-label">7 Anos de Premiação</span><span class="nav-tag detalhada">✦ Detalhada</span></div>
+  <div class="nav-item" data-page="c2"><span class="nav-num">C2</span><span class="nav-label">Dia dos Pais</span><span class="nav-tag detalhada">✦ Detalhada</span></div>
+  <div class="nav-item" data-page="c3"><span class="nav-num">C3</span><span class="nav-label">15 Anos Farmagnus</span><span class="nav-tag detalhada">✦ Detalhada</span></div>
+  <div class="nav-item" data-page="c4"><span class="nav-num">C4</span><span class="nav-label">Dia das Crianças</span><span class="nav-tag detalhada">✦ Detalhada</span></div>
+  <div class="nav-item" data-page="c5"><span class="nav-num">C5</span><span class="nav-label">Captação de Leads</span><span class="nav-tag detalhada">✦ Detalhada</span></div>
+  <div class="group-label">Operacional</div>
+  <div class="nav-item" data-page="b04"><span class="nav-num">04</span><span class="nav-label">Rotina &amp; Demandas Contínuas</span></div>
+  <div class="nav-item" data-page="b05"><span class="nav-num">05</span><span class="nav-label">Infraestrutura &amp; Acessos</span></div>
+</nav>
+
+<header class="top">
+  <div class="brand"><span>Nonna</span> Agência Digital</div>
+  <div class="doctitle">Farmagnus — Macroplanejamento Jul–Out 2026 · v2.0</div>
+</header>
+
+<main>
+  <!-- BLOCO 00 -->
+  <div class="page active" id="b00">
+    <div class="eyebrow">Documento de Referência · v2.0</div>
+    <h1>Macroplanejamento</h1>
+    <div class="subtitle">Documento estratégico e operacional do ciclo Julho–Outubro de 2026, alinhado ao Nonna OS.</div>
+    <div class="capa-grid">
+      <div class="capa-hero">
+        <div class="cli-name">Farmagnus</div>
+        <div class="cli-seg">Rede de franquias de farmácias · Varejo farmacêutico</div>
+        <div class="chips">
+          <span class="chip">Criação / Audiovisual</span>
+          <span class="chip">Web / Dev</span>
+          <span class="chip">Tráfego / Performance</span>
+          <span class="chip">Setup / Tracking</span>
+          <span class="chip">Social Media</span>
+          <span class="chip">Estratégia</span>
+        </div>
+      </div>
+      <div class="capa-cells">
+        <div class="capa-cell"><div class="capa-cell-label">Responsável Nonna</div><div class="capa-cell-val">Evandro</div></div>
+        <div class="capa-cell"><div class="capa-cell-label">Período de Execução</div><div class="capa-cell-val">Julho a Outubro de 2026</div></div>
+        <div class="capa-cell"><div class="capa-cell-label">Site / Canal Principal</div><div class="capa-cell-val">farmagnus.com.br</div></div>
+        <div class="capa-cell"><div class="capa-cell-label">Status</div><div class="capa-cell-val">Rascunho</div></div>
+        <div class="capa-cell"><div class="capa-cell-label">Versão do Documento</div><div class="capa-cell-val">v2.0</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOCO 01 -->
+  <div class="page" id="b01">
+    <div class="eyebrow">Bloco 01</div>
+    <h1>Visão Geral &amp; Metas</h1>
+    <div class="subtitle">Foco do ciclo, ponto de partida, verba e os indicadores de sucesso.</div>
+
+    <div class="section-title">Foco Principal do Ciclo</div>
+    <div class="card"><div class="card-body">O ciclo se organiza em torno de dois eixos paralelos: fortalecer o orgulho e a percepção de valor da marca Farmagnus junto aos franqueados — apoiado nas conquistas do 7º prêmio PEGN e no aniversário de 15 anos — e acelerar a captação de novos franqueados e investidores, frente que concentra toda a verba de mídia paga. Em paralelo, avançam as atualizações do website, o programa contínuo de capacitação (iniciado pelo Treinamento Online) e a estruturação da Expofarmagnus em versão digital.</div></div>
+
+    <div class="section-title">Ponto de Partida</div>
+    <div class="card"><div class="card-body">A campanha da Copa foi bem avaliada pela rede, com boa adesão dos franqueados e engajamento real de clientes nas farmácias. Esse modelo de participação — mecânicas que levam o consumidor ao ponto físico — é a referência adotada para as campanhas sazonais deste ciclo. A rede chega ao período com conquistas institucionais fortes (7x premiada, 15 anos) ainda subaproveitadas na comunicação, e com uma frente de captação de franqueados já ativa que será potencializada.</div></div>
+
+    <div class="section-title">Verba de Anúncios</div>
+    <div class="alert-info">A verba de mídia paga é de uso exclusivo da campanha de Captação de Leads (C5). As demais campanhas do ciclo rodam 100% orgânicas, sustentadas por conteúdo e pela base própria dos franqueados.</div>
+    <div class="verba-section">
+      <div class="verba-box"><div class="verba-label">Total Mensal</div><div class="verba-val">R$ 2.000,00</div><div class="verba-note">Exclusivo da Captação de Leads</div></div>
+      <div class="verba-box"><div class="verba-label">Meta Ads (%)</div><div class="verba-val">50%</div><div class="verba-note">R$ 1.000 · formulário nativo</div></div>
+      <div class="verba-box"><div class="verba-label">Google Ads (%)</div><div class="verba-val">50%</div><div class="verba-note">R$ 1.000 · LP do site</div></div>
+    </div>
+    <div class="verba-bar"><div class="vb-meta">Meta Ads · 50%</div><div class="vb-google">Google Ads · 50%</div></div>
+    <div class="tb-field" style="margin-top:12px;"><div class="tb-label">Observação sobre a verba</div>Divisão fixa 50/50 desde o início do ciclo, sem mudança de estratégia entre meses. Cobertura geográfica mantida conforme campanhas atuais (SC, MS, PR).</div>
+
+    <div class="section-title">KPIs do Período</div>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-label">KPI Principal</div><div class="kpi-title">Aderência dos franqueados</div><div class="kpi-desc">Participação ativa dos franqueados nas campanhas da rede. <span class="kpi-desc pend">Métrica de apuração a calibrar após o Mês 1.</span></div></div>
+      <div class="kpi-card"><div class="kpi-label">KPI de Tráfego</div><div class="kpi-title">CPL &amp; Volume de Leads</div><div class="kpi-desc">Custo por lead e quantidade de leads qualificados gerados na Captação (C5). <span class="kpi-desc pend">Baseline a calibrar após o Mês 1.</span></div></div>
+      <div class="kpi-card"><div class="kpi-label">KPI de Marca</div><div class="kpi-title">Visibilidade &amp; Alcance</div><div class="kpi-desc">Alcance e reconhecimento da narrativa institucional (7 Anos, 15 Anos). <span class="kpi-desc pend">Métrica a calibrar após o Mês 1.</span></div></div>
+      <div class="kpi-card"><div class="kpi-label">KPI de Negócio</div><div class="kpi-title">Conversão de Leads em Franquias</div><div class="kpi-desc"><span class="kpi-desc pend">A calibrar após o Mês 1 — depende do ciclo comercial de fechamento de franquia, mais longo que o período.</span></div></div>
+    </div>
+  </div>
+
+  <!-- BLOCO 02 -->
+  <div class="page" id="b02">
+    <div class="eyebrow">Bloco 02</div>
+    <h1>Contexto &amp; Estratégia</h1>
+    <div class="subtitle">O desafio, o movimento do ciclo, a resposta da Nonna e a linha do tempo.</div>
+
+    <div class="section-title">O Desafio Atual</div>
+    <div class="card"><div class="card-body">Os franqueados têm pouca autonomia estratégica para tocar campanhas e conteúdo local. Ao mesmo tempo, a rede acumula conquistas institucionais relevantes (7º prêmio PEGN, 15 anos) que precisam ser traduzidas em orgulho real e benefício percebido para quem está na ponta. As campanhas de data comemorativa precisam gerar movimento físico nas farmácias, não só números digitais. Soma-se o risco climático (El Niño) ameaçando a Expofarmagnus presencial, e a necessidade de manter uma frente eficiente de captação de novos franqueados com verba enxuta.</div></div>
+
+    <div class="section-title">O que Muda neste Ciclo</div>
+    <div class="antes-agora">
+      <div class="aa-box antes"><div class="aa-label">Antes (situação atual)</div><div class="aa-text">O dono de farmácia independente enfrenta o mercado sozinho, e as conquistas da rede ficam restritas ao institucional — sem chegar como argumento de venda ou orgulho ao franqueado. A captação acontece, mas sem uma narrativa forte que traduza o valor de estar em rede.</div></div>
+      <div class="aa-box agora"><div class="aa-label">Agora (o que queremos)</div><div class="aa-text">Posicionar a rede como o caminho de crescimento — "em rede, você cresce" — com foco na captação de novos franqueados sustentada por dados de mercado, e as conquistas institucionais convertidas em orgulho e benefício percebido na ponta.</div></div>
+    </div>
+
+    <div class="section-title">A Nossa Estratégia</div>
+    <div class="card"><div class="card-body">A resposta se apoia em cinco frentes: criar narrativa de marca em torno das conquistas (selos comemorativos aplicáveis em toda a rede); estruturar capacitação contínua dos franqueados (Treinamento Online); criar um programa de engajamento com ranking para aumentar aderência; desenhar mecânicas híbridas (digital + presença física) nas datas comemorativas; e projetar a Expofarmagnus digital como estrutura paralela ao evento físico. Com a verba concentrada na Captação de Leads, as demais frentes são sustentadas por orgânico e pela base própria dos franqueados.</div></div>
+
+    <div class="section-title">Pilares de Comunicação</div>
+    <div class="pilar"><div class="pilar-num">Pilar 01</div><div class="pilar-name">Orgulho e conquista de marca</div><div class="pilar-desc">As premiações e o aniversário como prova de solidez, traduzidos em benefício para o franqueado.</div></div>
+    <div class="pilar"><div class="pilar-num">Pilar 02</div><div class="pilar-name">Capacitação estratégica do franqueado</div><div class="pilar-desc">Dar autonomia e direcionamento criativo a quem está na ponta.</div></div>
+    <div class="pilar"><div class="pilar-num">Pilar 03</div><div class="pilar-name">Saúde e prática esportiva</div><div class="pilar-desc">Linha condutora da campanha de Dia dos Pais.</div></div>
+    <div class="pilar"><div class="pilar-num">Pilar 04</div><div class="pilar-name">Cultura, educação e solidariedade</div><div class="pilar-desc">Base da ação social de Dia das Crianças.</div></div>
+    <div class="pilar"><div class="pilar-num">Pilar 05</div><div class="pilar-name">Comunidade e pertencimento</div><div class="pilar-desc">Crescer em rede — eixo da captação e do programa de engajamento.</div></div>
+
+    <div class="section-title">Linha do Tempo</div>
+    <div class="timeline">
+      <div class="tl-col"><div class="tl-month">Julho</div>
+        <div class="tl-item">Lançamento — 7 Anos de Premiação</div>
+        <div class="tl-item">Treinamento Online (14/07)</div>
+        <div class="tl-item proj">Kickoff — Atualizações do Website</div>
+        <div class="tl-item">Início contínuo — Captação de Leads</div>
+        <div class="tl-item proj">Início — Programa de Engajamento</div>
+      </div>
+      <div class="tl-col"><div class="tl-month">Agosto</div>
+        <div class="tl-item">Campanha — Dia dos Pais</div>
+        <div class="tl-item proj">Desenvolvimento — Website</div>
+        <div class="tl-item">Captação de Leads (contínuo)</div>
+      </div>
+      <div class="tl-col"><div class="tl-month">Setembro</div>
+        <div class="tl-item">Produção — kit 15 Anos</div>
+        <div class="tl-item proj">Alinhamento — Expofarmagnus (Bianca)</div>
+        <div class="tl-item proj">Reta final — Website</div>
+        <div class="tl-item">Captação de Leads (contínuo)</div>
+      </div>
+      <div class="tl-col"><div class="tl-month">Outubro</div>
+        <div class="tl-item">Expofarmagnus + sorteio 15 Anos</div>
+        <div class="tl-item">Campanha — Dia das Crianças</div>
+        <div class="tl-item">Captação de Leads (contínuo)</div>
+      </div>
+    </div>
+
+    <div class="section-title">Resumo do Período</div>
+    <div class="card">
+      <div class="resumo-row"><span class="resumo-tag p">Projeto</span><span class="resumo-name">Atualizações do Website</span><span class="resumo-desc">Evolução do site + LP de captação.</span></div>
+      <div class="resumo-row"><span class="resumo-tag p">Projeto</span><span class="resumo-name">Treinamento Online</span><span class="resumo-desc">Capacitação ao vivo dos franqueados (14/07).</span></div>
+      <div class="resumo-row"><span class="resumo-tag p">Projeto</span><span class="resumo-name">Programa de Engajamento</span><span class="resumo-desc">Ranking/gamificação contínua de aderência.</span></div>
+      <div class="resumo-row"><span class="resumo-tag p">Projeto</span><span class="resumo-name">Expofarmagnus Online</span><span class="resumo-desc">Plataforma digital da feira (outubro).</span></div>
+      <div class="resumo-row"><span class="resumo-tag c">Campanha</span><span class="resumo-name">7 Anos de Premiação</span><span class="resumo-desc">Orgulho de marca, selo comemorativo (julho).</span></div>
+      <div class="resumo-row"><span class="resumo-tag c">Campanha</span><span class="resumo-name">Dia dos Pais</span><span class="resumo-desc">Sorteio de bicicleta, saúde/esporte (agosto).</span></div>
+      <div class="resumo-row"><span class="resumo-tag c">Campanha</span><span class="resumo-name">15 Anos Farmagnus</span><span class="resumo-desc">Campanha cultural, sorteio na Expo (outubro).</span></div>
+      <div class="resumo-row"><span class="resumo-tag c">Campanha</span><span class="resumo-name">Dia das Crianças</span><span class="resumo-desc">Ação social, doação + histórias (outubro).</span></div>
+      <div class="resumo-row"><span class="resumo-tag c">Campanha</span><span class="resumo-name">Captação de Leads</span><span class="resumo-desc">Contínua, única com tráfego pago. ✦ Detalhada.</span></div>
+    </div>
+  </div>
+
+  <!-- P1 -->
+  <div class="page" id="p1">
+    <div class="eyebrow">Projeto 1</div>
+    <h1>Atualizações do Website</h1>
+    <div class="pc-header">
+      <div><span class="pc-badge projeto">Projeto</span></div>
+      <div><span class="status-pill">Planejado</span></div>
+    </div>
+    <div class="pc-tags"><span class="t">Web / Dev</span><span class="t">Criação</span><span class="t">Setup / Tracking</span><span class="t">Início: Jul</span><span class="t">Término: Set</span></div>
+    <div class="obj-box" style="margin-top:16px;">Atualizar o site institucional e comercial da Farmagnus, incluindo uma landing page dedicada à captação de leads de investidores e franqueados, que serve como principal destino do tráfego pago do Google Ads e vitrine institucional das conquistas da rede. O trabalho é de evolução sobre o site atual, não de recriação.</div>
+    <div class="disc-block"><div class="disc-label">Web / Dev</div><div class="disc-text">Revisar e atualizar as páginas existentes (institucional, história, prêmios) e criar/ajustar a LP de captação com formulário integrado, otimizada para conversão e velocidade, sem refazer o site do zero.</div></div>
+    <div class="disc-block"><div class="disc-label">Criação</div><div class="disc-text">Aplicar os selos comemorativos (7 Anos, 15 Anos) nas páginas; revisar e atualizar copy institucional e redigir a copy de conversão da LP.</div></div>
+    <div class="disc-block"><div class="disc-label">Setup / Tracking</div><div class="disc-text">Configurar pixel de conversão e Analytics na LP; validar a página como destino das campanhas de Google Ads da Captação de Leads.</div></div>
+    <div class="tasks-title">Tarefas</div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Mapear páginas existentes e pontos de atualização</span><span class="task-setor">[Web]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Atualizar páginas institucionais do site atual</span><span class="task-setor">[Web]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Criar/ajustar LP de captação integrada a formulário</span><span class="task-setor">[Web]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Revisar copy institucional e redigir copy da LP</span><span class="task-setor">[Criação]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Aplicar selos comemorativos nas páginas</span><span class="task-setor">[Criação]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Configurar Analytics e pixel de conversão</span><span class="task-setor">[Setup]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Testar e publicar atualizações</span><span class="task-setor">[Web]</span></div>
+  </div>
+
+  <!-- P2 -->
+  <div class="page" id="p2">
+    <div class="eyebrow">Projeto 2</div>
+    <h1>Treinamento Online</h1>
+    <div class="pc-header">
+      <div><span class="pc-badge projeto">Projeto</span></div>
+      <div><span class="status-pill">Planejado</span></div>
+    </div>
+    <div class="pc-tags"><span class="t">Estratégia</span><span class="t">Web / Dev</span><span class="t">Criação</span><span class="t">Data: 14/07</span><span class="t">Ao vivo · Meet</span></div>
+    <div class="obj-box" style="margin-top:16px;">Capacitar os franqueados em direcionamento criativo-estratégico de campanhas — o que publicar, como montar uma campanha local, como usar os materiais da rede — em sessão ao vivo pelo Meet, apresentada por Evandro em 14/07, com potencial de se tornar um formato recorrente de capacitação.</div>
+    <div class="disc-block"><div class="disc-label">Web / Dev</div><div class="disc-text">Criar formulário de inscrição para o treinamento, com campos de identificação da farmácia e confirmação de presença.</div></div>
+    <div class="disc-block"><div class="disc-label">Criação</div><div class="disc-text">Estruturar a pauta e o roteiro do treinamento ao vivo junto com Evandro, cobrindo insights de campanhas, montagem de campanhas locais e diretrizes de conteúdo; produzir peça de convite/divulgação.</div></div>
+    <div class="disc-block"><div class="disc-label">Estratégia</div><div class="disc-text">Conduzir a sessão ao vivo pelo Meet, com espaço para dúvidas dos franqueados, e definir a cadência das próximas edições caso o formato se consolide.</div></div>
+    <div class="tasks-title">Tarefas</div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Criar formulário de inscrição</span><span class="task-setor">[Web]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Estruturar pauta e roteiro com Evandro</span><span class="task-setor">[Criação]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Produzir convite e divulgação aos franqueados</span><span class="task-setor">[Criação]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Realizar treinamento ao vivo pelo Meet (14/07)</span><span class="task-setor">[Estratégia]</span></div>
+  </div>
+
+  <!-- P3 -->
+  <div class="page" id="p3">
+    <div class="eyebrow">Projeto 3</div>
+    <h1>Programa de Engajamento</h1>
+    <div class="pc-header">
+      <div><span class="pc-badge projeto">Projeto</span></div>
+      <div><span class="status-pill">Contínuo</span></div>
+    </div>
+    <div class="pc-tags"><span class="t">Estratégia</span><span class="t">Criação</span><span class="t">Setup / Tracking</span><span class="t">Contínuo Jul–Out</span></div>
+    <div class="obj-box" style="margin-top:16px;">Criar um mecanismo contínuo de ranking/gamificação que aumente a aderência dos franqueados às campanhas da rede, premiando de forma justa quem mais participa e engaja com as ações institucionais.</div>
+    <div class="disc-block"><div class="disc-label">Estratégia</div><div class="disc-text">Definir as métricas de pontuação por campanha (uso do selo, postagem de conteúdo, cadastro de cupons, participação em treinamentos) e a periodicidade de apuração do ranking.</div></div>
+    <div class="disc-block"><div class="disc-label">Setup / Tracking</div><div class="disc-text">Estruturar um painel ou planilha de acompanhamento do ranking, alimentado pelas métricas definidas, com visibilidade para a diretoria da rede.</div></div>
+    <div class="disc-block"><div class="disc-label">Criação</div><div class="disc-text">Desenvolver identidade visual própria do programa e a comunicação de lançamento e resultados periódicos aos franqueados.</div></div>
+    <div class="tasks-title">Tarefas</div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Definir métricas de pontuação por campanha</span><span class="task-setor">[Estratégia]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Criar identidade visual do Programa</span><span class="task-setor">[Criação]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Estruturar painel/planilha de ranking</span><span class="task-setor">[Setup]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Comunicar lançamento aos franqueados</span><span class="task-setor">[Criação]</span></div>
+    <div class="note">Programa segue ativo continuamente ao longo do ciclo, servindo de camada de aderência para todas as campanhas do documento.</div>
+  </div>
+
+  <!-- P4 -->
+  <div class="page" id="p4">
+    <div class="eyebrow">Projeto 4</div>
+    <h1>Expofarmagnus Online</h1>
+    <div class="pc-header">
+      <div><span class="pc-badge projeto">Projeto</span></div>
+      <div><span class="status-pill">Planejado</span></div>
+    </div>
+    <div class="pc-tags"><span class="t">Estratégia</span><span class="t">Web / Dev</span><span class="t">Criação</span><span class="t">Evento: Outubro</span></div>
+    <div class="obj-box" style="margin-top:16px;">Estruturar uma alternativa digital para a Expofarmagnus (outubro/2026), permitindo que franqueados visitem virtualmente os expositores da feira, façam pedidos e mantenham o valor de investimento dos expositores mesmo diante do risco de El Niño para a edição física.</div>
+    <div class="disc-block"><div class="disc-label">Estratégia</div><div class="disc-text">Alinhar com Bianca a organização das demandas físicas e digitais da feira; confirmar retorno do Angelo sobre a existência de plataforma de terceiros apta para esse formato de evento.</div></div>
+    <div class="disc-block"><div class="disc-label">Web / Dev</div><div class="disc-text">Definir e desenvolver o escopo do ambiente digital: cadastro de produtos e filtros por fornecedor, mecânica de liberação de expositores por horário (para gerar escassez e garantir que franqueados visitem todos os estandes), e contador de visitas por expositor como métrica de entrega ao patrocinador. Fluxo de pedidos simplificado, sem boleto ou pagamento online.</div></div>
+    <div class="disc-block"><div class="disc-label">Criação</div><div class="disc-text">Desenvolver a identidade visual do ambiente digital, garantindo clareza de navegação para o franqueado dentro da estrutura de horários e expositores.</div></div>
+    <div class="tasks-title">Tarefas</div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Contatar Bianca para organizar demandas da Expo</span><span class="task-setor">[Estratégia]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Confirmar retorno do Angelo sobre plataforma</span><span class="task-setor">[Estratégia]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Definir escopo (cadastro, filtros, horários, contador)</span><span class="task-setor">[Web]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Desenvolver ambiente da Expofarmagnus Online</span><span class="task-setor">[Web]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Criar identidade visual do ambiente digital</span><span class="task-setor">[Criação]</span></div>
+  </div>
+
+  <!-- C1 -->
+  <div class="page" id="c1">
+    <!-- CAMPANHA:INICIO id=c1 nome="7 Anos de Premiação" estado="detalhada" -->
+    <div class="campanha-conteudo" data-estado="detalhada">
+    <div class="eyebrow">Campanha 1 · Julho · ✦ Estratégia detalhada</div>
+    <h1>7 Anos de Premiação</h1>
+    <div class="subtitle">Aprofundamento criativo — campanha institucional voltada ao franqueado. Registro emocional, sem tráfego pago; o selo é o eixo.</div>
+
+    <div class="bigidea-hero">
+      <div class="bi-label">Big Idea</div>
+      <div class="bi-idea">"Esse prêmio tem<br>a sua digital."</div>
+      <div class="bi-manifesto">Sete vezes seguidas entre as melhores franquias do Brasil. Mas prêmio não se ganha em sala de reunião — se ganha no balcão, no "bom dia" que o cliente lembra, na farmácia que virou parte do bairro. Cada uma das 7 premiações tem a digital de quem está na ponta. Este selo não é um troféu da marca: é o reconhecimento de que, juntos, a gente construiu a rede mais premiada do país. Vista o selo. Ele é seu também.</div>
+    </div>
+
+    <div class="terr-card"><div class="terr-name">Território alternativo (rota B)</div><div class="terr-desc">"7 anos. E foi você quem ganhou." Mais direto e menos poético, mesmo eixo de deslocar a posse do prêmio para o franqueado. Fica de reserva — a rota principal aprovada é a Big Idea acima. Nota criativa: a "digital" é dupla — impressão digital (a marca de cada um) e o esforço concreto que fica registrado; funciona como imagem central do selo e da campanha.</div></div>
+
+    <div class="section-title">Racional Estratégico</div>
+    <p class="prose" style="margin-bottom:8px;">Um prêmio institucional, por si só, não emociona quem está na ponta. "A rede ganhou um prêmio" é notícia da diretoria — distante. A virada é deslocar a posse: o prêmio não é da marca, é de cada franqueado que faz a marca acontecer todo dia no balcão.</p>
+    <p class="prose dim">O franqueado responde a <strong>pertencimento e orgulho</strong>, não a comunicado institucional. Ao dar a ele a autoria do prêmio ("tem a sua digital"), a campanha transforma uma conquista corporativa em conquista pessoal — e conquista pessoal, a pessoa quer mostrar. É isso que faz o selo ser adotado espontaneamente: não porque a rede mandou aplicar, mas porque o franqueado quer ostentar que faz parte da rede mais premiada do país. O benefício percebido vem por consequência: quanto mais ele exibe o selo com orgulho, mais o consumidor associa aquela farmácia à autoridade da premiação — e isso volta em confiança e venda. O orgulho interno vira ativo comercial na ponta, sem precisar "vender" isso de forma explícita.</p>
+
+    <div class="section-title">Linha de Comunicação</div>
+    <div class="chips"><span class="chip">caloroso</span><span class="chip">orgulhoso</span><span class="chip">de reconhecimento</span><span class="chip">de igual para igual</span><span class="chip">um abraço, não um comunicado</span></div>
+    <div class="voice-example">"Você não trabalha numa rede premiada. Você é o motivo dela ser premiada."</div>
+    <div class="angle"><div class="angle-num">Ângulo 01 — O reveal do selo</div><div class="angle-text">O conceito da digital, o momento de orgulho. A revelação do selo dos 7 anos como símbolo de pertencimento, não como carimbo institucional.</div></div>
+    <div class="angle"><div class="angle-num">Ângulo 02 — A autoria compartilhada</div><div class="angle-text">Histórias reais de franqueados, o rosto por trás do prêmio. Quem construiu a conquista, atendimento por atendimento.</div></div>
+    <div class="angle"><div class="angle-num">Ângulo 03 — O convite a vestir o selo</div><div class="angle-text">Como e onde aplicar o selo, transformando a adoção em ato de orgulho, não em obrigação. Vestir o selo é dizer "eu faço parte disso".</div></div>
+    <div class="assinatura-box"><div class="ass-line">Esse prêmio tem a sua digital.</div><div class="ass-note">Fecha com a assinatura institucional "Rede Farmagnus — a rede do coração".</div></div>
+
+    <div class="section-title">Mecânica da Campanha</div>
+    <p class="prose dim" style="margin-bottom:14px;">Diferente da captação, aqui a mecânica é de <strong>mobilização interna</strong>, não de conversão.</p>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div><div class="step-title">Anúncio com posse</div><div class="step-desc">O franqueado recebe o anúncio da 7ª premiação já com o enquadramento "isso é seu" — não como notícia da diretoria, mas como reconhecimento do seu trabalho.</div></div></div>
+      <div class="step"><div class="step-num">2</div><div><div class="step-title">Kit do selo + o porquê</div><div class="step-desc">Recebe o kit do selo (versões para vitrine, sacola, redes, assinatura) junto com o material que explica o orgulho por trás — o significado, não só o arquivo.</div></div></div>
+      <div class="step"><div class="step-num">3</div><div><div class="step-title">Vestir o selo</div><div class="step-desc">É convidado a "vestir o selo" e compartilhar. O Programa de Engajamento (P3) reconhece quem adota e divulga, transformando orgulho em ação.</div></div></div>
+      <div class="step"><div class="step-num">4</div><div><div class="step-title">A autoridade se espalha</div><div class="step-desc">O consumidor final passa a ver o selo em toda parte, e a autoridade da premiação se espalha organicamente pela rede. O selo conecta o orgulho interno à percepção externa.</div></div></div>
+    </div>
+    <div class="alert-warn">Ponto de atenção: o selo precisa nascer com TODAS as aplicações prontas no dia do lançamento (vitrine, sacola, redes, assinatura, PDV). Se o impulso de orgulho chega antes do material, ele esfria antes de virar adoção.</div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Disciplina · Criação &amp; Social</div>
+    <div class="disc-block"><div class="disc-label">Direcionamento geral</div><div class="disc-text">O selo dos 7 Anos é o eixo — peça central e obrigatória, com um sistema de aplicações completo. A comunicação é sempre de dentro para dentro primeiro (franqueado), e só depois transborda para o consumidor. Tom emocional e de reconhecimento, nunca corporativo.</div></div>
+    <div class="disc-block"><div class="disc-label">Social Media</div><div class="disc-text">Sequência de lançamento que começa pelo reveal do selo, passa pelas histórias de franqueados e culmina no convite a vestir e compartilhar. Conteúdo pensado para gerar repost espontâneo dos próprios franqueados.</div></div>
+    <div class="content-ideas">
+      <div class="idea-card"><span class="badge badge-video">Vídeo</span><div class="idea-title">"A digital de quem faz"</div><div class="idea-desc">Vídeo institucional que mostra as mãos, os rostos e os balcões reais dos franqueados, costurando que cada premiação tem a digital de quem está na ponta. Fecha com o reveal do selo e "Esse prêmio tem a sua digital". (Evolui a antiga "7 anos, 7 motivos".)</div></div>
+      <div class="idea-card"><span class="badge badge-card">Card</span><div class="idea-title">"Vista o selo. Ele é seu."</div><div class="idea-desc">Card de convite direto ao franqueado para aplicar o selo, com o conceito da digital em destaque. Orgulho, não obrigação.</div></div>
+      <div class="idea-card"><span class="badge badge-carrossel">Carrossel</span><div class="idea-title">"7 anos construídos no balcão"</div><div class="idea-desc">Carrossel com histórias reais de franqueados — o rosto por trás do prêmio — mostrando que a conquista foi feita atendimento por atendimento. Gera identificação e repost.</div></div>
+    </div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Referências Visuais &amp; Direção de Arte</div>
+    <div class="mood-grid">
+      <div class="mood-card"><div class="mood-label">O selo (peça central)</div><div class="mood-text">Selo comemorativo dos 7 Anos com o conceito da digital incorporado — a impressão digital como elemento gráfico que remete à autoria de cada franqueado. Sistema completo de aplicações: vitrine, sacola, redes, assinatura de e-mail, PDV. Deve funcionar em cor e em versão monocromática.</div></div>
+      <div class="mood-card"><div class="mood-label">Paleta</div><div class="mood-text">Identidade Farmagnus (verde e vermelho) com um acento premium — dourado ou metálico sutil — para evocar a premiação sem cair no clichê de troféu. Quente e humano, não corporativo frio.</div><div class="palette"><div class="swatch" style="background:#1a7a3f;"></div><div class="swatch" style="background:#d3202a;"></div><div class="swatch" style="background:#c9a227;"></div><div class="swatch" style="background:#0f0f1a;"></div></div></div>
+      <div class="mood-card"><div class="mood-label">Estilo de imagem</div><div class="mood-text">Fotografia real e próxima: mãos, rostos, balcões de franqueados de verdade — o orgulho precisa ter rosto. Nada de banco de imagem genérico. Luz quente, clima de reconhecimento.</div></div>
+      <div class="mood-card"><div class="mood-label">Inspiração</div><div class="mood-text">A linguagem de "selo de qualidade" das grandes redes, porém com calor humano — como um troféu que se veste, não que se guarda na parede. O prêmio como identidade, não como enfeite.</div></div>
+    </div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Desdobramento em Peças</div>
+    <ul class="piece-list">
+      <li><div class="piece-name">Selo comemorativo 7 Anos — sistema completo</div><div class="piece-dir">Versões para vitrine, sacola, redes, assinatura de e-mail e PDV; cor e monocromático. A peça central e obrigatória da campanha.</div></li>
+      <li><div class="piece-name">Vídeo "A digital de quem faz"</div><div class="piece-dir">Institucional emocional com franqueados reais, reveal do selo no fim.</div></li>
+      <li><div class="piece-name">Card "Vista o selo. Ele é seu."</div><div class="piece-dir">Convite ao franqueado para adotar o selo, conceito da digital em destaque.</div></li>
+      <li><div class="piece-name">Carrossel "7 anos construídos no balcão"</div><div class="piece-dir">Histórias reais de franqueados, o rosto por trás do prêmio.</div></li>
+      <li><div class="piece-name">Manifesto em texto</div><div class="piece-dir">Base narrativa da campanha, para abrir o kit e servir de referência a todos os materiais.</div></li>
+      <li><div class="piece-name">Kit de aplicação do selo (guia)</div><div class="piece-dir">Material que acompanha o selo explicando o significado e como/onde aplicar — orgulho, não obrigação.</div></li>
+    </ul>
+    </div>
+    <!-- CAMPANHA:FIM id=c1 -->
+  </div>
+
+  <!-- C2 -->
+  <div class="page" id="c2">
+    <!-- CAMPANHA:INICIO id=c2 nome="Dia dos Pais" estado="detalhada" -->
+    <div class="campanha-conteudo" data-estado="detalhada">
+    <div class="eyebrow">Campanha 2 · Agosto · ✦ Estratégia detalhada</div>
+    <h1>Dia dos Pais</h1>
+    <div class="subtitle">Aprofundamento criativo — sorteio de bicicleta com mecânica híbrida (cupom presencial + confirmação online), sem compra obrigatória, sob o pilar de saúde e movimento. Conteúdo pensado para escala de rede franqueada.</div>
+
+    <div class="bigidea-hero">
+      <div class="bi-label">Big Idea</div>
+      <div class="bi-idea">"Pai Que Se Move,<br>Fica Por Perto."</div>
+      <div class="bi-manifesto">Atividade física não é sobre estética ou performance — é sobre tempo e presença. Cada pedalada, cada caminhada, cada hábito de movimento é, na prática, um "fica por perto" concreto: a próxima pescaria, o próximo churrasco, o próximo jogo de bola com o neto. A Farmagnus entra nessa conversa não como quem vende remédio, mas como quem sustenta essa continuidade — parceira de saúde da família, não só ponto de venda na urgência. A bicicleta sorteada não é o presente em si; é o símbolo do movimento que a família quer ver o pai manter.</div>
+    </div>
+
+    <div class="terr-card"><div class="terr-name">Território alternativo (rota B)</div><div class="terr-desc">"O Presente Que Não Para de Rodar" — rota mais conceitual, que usa a bicicleta como metáfora de continuidade em vez do vínculo pai-filho direto. Fica de reserva; a rota principal aprovada e validada pelo cliente é a Big Idea acima. Nota criativa: o insight foi ajustado deliberadamente para ficar em <strong>presença e vínculo ativo</strong>, nunca em finitude ou tempo que se esgota — tom sempre leve e comemorativo, como um Dia dos Pais deve ser.</div></div>
+
+    <div class="section-title">Racional Estratégico</div>
+    <p class="prose" style="margin-bottom:8px;">O insight não é esportivo, é emocional: filhos não querem que o pai "faça exercício" — querem fazer coisas <strong>com</strong> ele. Jogar bola, caminhar, pedalar junto. Movimento físico vira sinônimo de participação ativa na vida da família, não de obrigação de saúde.</p>
+    <p class="prose dim">Isso desloca a Farmagnus de "farmácia que vende remédio na urgência" para "parceira da continuidade saudável da família" — um posicionamento de longo prazo, não de data comemorativa isolada. A mecânica sem compra obrigatória reforça essa postura: a farmácia está oferecendo cuidado e reconhecimento, não vendendo oportunidade. E por exigir ida física à loja, gera fluxo real de PDV com um ponto de contato direto (cupom + confirmação online) sem parecer promoção comercial forçada.</p>
+
+    <div class="section-title">Linha de Comunicação</div>
+    <div class="chips"><span class="chip">afetuoso</span><span class="chip">leve</span><span class="chip">presente</span><span class="chip">comemorativo</span><span class="chip">sem apelo dramático</span></div>
+    <div class="voice-example">"Pai que se move, tá sempre por perto pro que der e vier."</div>
+    <div class="angle"><div class="angle-num">Ângulo 01 — Kit de posts para toda a rede</div><div class="angle-text">Peças prontas e padronizadas (arte + legenda) que qualquer unidade publica localmente, sem depender de captação de testemunho individual. Cobrem o conceito da campanha, os benefícios de movimento na rotina do pai, e o convite à participação.</div></div>
+    <div class="angle"><div class="angle-num">Ângulo 02 — Saúde prática, sem depoimento</div><div class="angle-text">Conteúdo leve e genérico sobre atividade física para o público 40+, reforçando o pilar saúde da campanha sem exigir história real de cliente — 100% replicável em qualquer unidade.</div></div>
+    <div class="angle"><div class="angle-num">Ângulo 03 — Mecânica explicada</div><div class="angle-text">Peça focada em deixar claríssimo como participar (sem compra obrigatória), pensada para ser republicada por todas as unidades da rede sem retrabalho.</div></div>
+    <div class="assinatura-box"><div class="ass-line">Pai Que Se Move, Fica Por Perto.</div><div class="ass-note">Assinatura reduzida da campanha: #PaiEmMovimento.</div></div>
+
+    <div class="section-title">Mecânica da Campanha</div>
+    <p class="prose dim" style="margin-bottom:14px;">Mecânica híbrida — presença física obrigatória, sem exigência de compra, com confirmação digital do cupom.</p>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div><div class="step-title">Visita à farmácia</div><div class="step-desc">Cliente vai a uma farmácia Farmagnus participante — sem necessidade de compra.</div></div></div>
+      <div class="step"><div class="step-num">2</div><div><div class="step-title">Cupom físico</div><div class="step-desc">Preenche o cupom no balcão. Equipe orientada pelo material de PDV a conduzir o preenchimento sem fricção.</div></div></div>
+      <div class="step"><div class="step-num">3</div><div><div class="step-title">Confirmação online</div><div class="step-desc">Confirma o cupom no site/formulário, vinculando a presença física ao registro digital.</div></div></div>
+      <div class="step"><div class="step-num">4</div><div><div class="step-title">Sorteio</div><div class="step-desc">Sorteio simples, não meritocrático — <em>hipótese: última semana de agosto, data a confirmar com o cliente.</em></div></div></div>
+      <div class="step"><div class="step-num">5</div><div><div class="step-title">Resultado</div><div class="step-desc">Anúncio nas redes e contato direto com o ganhador.</div></div></div>
+    </div>
+    <div class="alert-warn">Ponto de atenção: valor/modelo da bicicleta e data exata de apuração ainda não definidos pelo cliente — tratados como hipótese até confirmação.</div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Disciplina · Criação &amp; Social</div>
+    <div class="disc-block"><div class="disc-label">Direcionamento geral</div><div class="disc-text">Toda a produção de conteúdo é pensada para escala de rede — nenhuma peça depende de captação de testemunho individual de cliente, o que seria inviável de coordenar entre franqueados. O conceito é padronizado e replicável; cada unidade só localiza (nome/endereço da farmácia participante).</div></div>
+    <div class="disc-block"><div class="disc-label">Social Media</div><div class="disc-text">Sequência: apresentação do conceito → dicas de saúde/movimento → reforço de mecânica → contagem regressiva pro sorteio. Tom leve e comemorativo do início ao fim.</div></div>
+    <div class="content-ideas">
+      <div class="idea-card"><span class="badge badge-video">Vídeo</span><div class="idea-title">"Pai Que Se Move, Fica Por Perto"</div><div class="idea-desc">Vídeo curto (15-30s) com cenas cotidianas de movimento — pedalar, caminhar, jogar bola — sem narrativa de urgência. Ritmo ágil, trilha animada, fecha com convite à participação e #PaiEmMovimento.</div></div>
+      <div class="idea-card"><span class="badge badge-card">Card</span><div class="idea-title">"Todo movimento é mais um tempo por perto"</div><div class="idea-desc">Card de conceito para publicação padronizada em toda a rede, sem depender de história individual.</div></div>
+      <div class="idea-card"><span class="badge badge-carrossel">Carrossel</span><div class="idea-title">"Como concorrer à bicicleta"</div><div class="idea-desc">Passo a passo — ir à farmácia, preencher cupom, confirmar no site — reforçando "sem compra obrigatória".</div></div>
+      <div class="idea-card"><span class="badge badge-card">Card</span><div class="idea-title">Kit de dicas de movimento 40+</div><div class="idea-desc">Série de cards com dicas leves de atividade física para a faixa etária do público-alvo, reforçando o pilar saúde sem depoimento.</div></div>
+    </div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Disciplina · Audiovisual</div>
+    <div class="disc-block"><div class="disc-label">Conceito</div><div class="disc-text">Cenas simples e reais de movimento no cotidiano — sem produção de estúdio, sem tom sentimental. A ideia é sensação de "instante real", não comercial roteirizado.</div></div>
+    <div class="disc-block"><div class="disc-label">Estrutura narrativa</div><div class="disc-text">Abertura com o pai em movimento (bicicleta/caminhada) → corte para o motivo do movimento (a família, o encontro) → fechamento com o convite à participação e a assinatura #PaiEmMovimento.</div></div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Disciplina · Web (camada de comunicação)</div>
+    <div class="disc-block"><div class="disc-label">Jornada do formulário</div><div class="disc-text">O visitante chega já sabendo que está confirmando participação — não é uma landing de venda. Preenche os dados vinculados ao cupom físico e recebe confirmação clara de que está concorrendo. Sem fricção, sem pedir informação além do necessário.</div></div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Disciplina · Estratégia &amp; Operação</div>
+    <div class="disc-block"><div class="disc-label">Material informativo de PDV</div><div class="disc-text">Documento enxuto para as equipes de balcão de toda a rede: o que é a campanha, como orientar o cliente, onde fica o cupom físico, como funciona a confirmação online, e respostas prontas para as perguntas mais prováveis sobre o sorteio. Garante padronização de atendimento sem depender de treinamento presencial.</div></div>
+    <div class="disc-block"><div class="disc-label">Regulamento</div><div class="disc-text">Redação simples do critério de apuração (sorteio simples, não meritocrático), elegibilidade e data — linguagem clara, não juridiquês pesado.</div></div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Referências Visuais &amp; Direção de Arte</div>
+    <div class="mood-grid">
+      <div class="mood-card"><div class="mood-label">Mood</div><div class="mood-text">Fotografia natural, luz de dia, cenas cotidianas de movimento (bicicleta, caminhada, brincadeira com filhos/netos) — nunca still de estúdio ou pose forçada.</div></div>
+      <div class="mood-card"><div class="mood-label">Paleta</div><div class="mood-text">Identidade Farmagnus, com reforço de um verde/azul "movimento" como cor de apoio da campanha — transmite atividade e saúde sem fugir da marca.</div><div class="palette"><div class="swatch" style="background:#1a7a3f;"></div><div class="swatch" style="background:#2a8fd6;"></div><div class="swatch" style="background:#d3202a;"></div><div class="swatch" style="background:#0f0f1a;"></div></div></div>
+      <div class="mood-card"><div class="mood-label">Estilo de imagem</div><div class="mood-text">Sensação de "instante real" — leve desfoque de movimento (motion blur sutil) reforça o conceito sem precisar de texto explicando.</div></div>
+      <div class="mood-card"><div class="mood-label">Tipografia</div><div class="mood-text">A assinatura #PaiEmMovimento ganha destaque tipográfico consistente em todas as peças, como elemento de marca da campanha.</div></div>
+    </div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Desdobramento em Peças</div>
+    <ul class="piece-list">
+      <li><div class="piece-name">Kit de posts (feed + stories)</div><div class="piece-dir">Conceito da campanha, padronizado para publicação em toda a rede.</div></li>
+      <li><div class="piece-name">Peça de mecânica</div><div class="piece-dir">Passo a passo de participação — ir à farmácia, cupom, confirmação online.</div></li>
+      <li><div class="piece-name">Kit de cards — dicas de saúde/movimento</div><div class="piece-dir">Conteúdo leve para o público 40+, sem depender de depoimento.</div></li>
+      <li><div class="piece-name">Vídeo curto (15-30s)</div><div class="piece-dir">Conceito de movimento contínuo, cenas cotidianas, fecha com #PaiEmMovimento.</div></li>
+      <li><div class="piece-name">Cupom físico de PDV</div><div class="piece-dir">Material de balcão para preenchimento presencial.</div></li>
+      <li><div class="piece-name">Formulário de confirmação online</div><div class="piece-dir">Vincula presença física ao registro digital, sem fricção.</div></li>
+      <li><div class="piece-name">Material informativo de PDV</div><div class="piece-dir">Orientação padronizada para a equipe de balcão de toda a rede.</div></li>
+      <li><div class="piece-name">Regulamento do sorteio</div><div class="piece-dir">Critério de apuração, elegibilidade e data, em linguagem clara.</div></li>
+    </ul>
+    </div>
+    <!-- CAMPANHA:FIM id=c2 -->
+  </div>
+
+  <!-- C3 -->
+  <div class="page" id="c3">
+    <!-- CAMPANHA:INICIO id=c3 nome="15 Anos Farmagnus" estado="detalhada" -->
+    <div class="campanha-conteudo" data-estado="detalhada">
+    <div class="eyebrow">Campanha 3 · Outubro · ✦ Estratégia detalhada</div>
+    <h1>15 Anos Farmagnus</h1>
+    <div class="subtitle">Aprofundamento criativo — campanha cultural de aniversário com sorteio de 15 vale-compras de R$ 1.000,00 ao vivo na Expofarmagnus. Narrativa de maturidade e autoridade, com leitura B2C, B2B e endomarketing.</div>
+
+    <div class="bigidea-hero">
+      <div class="bi-label">Big Idea</div>
+      <div class="bi-idea">"15 Anos,<br>15 Chances de Ganhar."</div>
+      <div class="bi-manifesto">O gancho é promocional e direto — mas o manifesto por trás dele carrega a mensagem real da campanha: a Farmagnus não chegou ao mercado ontem, e os 15 anos da marca não começam do zero. A rede nasceu de gente que já tinha décadas de vivência no ramo farmacêutico antes mesmo de abrir a primeira loja — o que está sendo celebrado não é só o tempo de marca, é a experiência acumulada que veio embutida desde o primeiro dia. Cada um dos 15 anos carrega isso dentro: maturidade que se constrói, não se compra. O sorteio de 15 vale-compras é o gesto de celebração; a autoridade de quem sabe o que faz é o que sustenta a celebração.</div>
+    </div>
+
+    <div class="section-title">Racional Estratégico</div>
+    <p class="prose" style="margin-bottom:8px;">O insight central: <strong>experiência não se declara, se demonstra através do tempo</strong> — e 15 anos é o argumento concreto disso. O racional trabalha em três frentes ao mesmo tempo:</p>
+    <p class="prose dim" style="margin-bottom:8px;"><strong>B2C (consumidor):</strong> 15 anos + origem em quem já entendia do ramo = confiança. Não é "farmácia nova testando a sorte", é rede madura, com know-how real por trás do balcão.</p>
+    <p class="prose dim" style="margin-bottom:8px;"><strong>B2B (prospecção de franqueados):</strong> a mensagem funciona como prova de solidez do modelo de negócio — quem entra na rede está entrando em algo validado por 15 anos e sustentado por conhecimento setorial de verdade, não um franchising recém-criado sem lastro.</p>
+    <p class="prose dim">Endomarketing (franqueados atuais): reforça orgulho de pertencimento — "eu faço parte de uma rede que nasceu com experiência de verdade, não de um projeto especulativo". Reforço institucional que dialoga com a campanha C1 (7 Anos de Premiação), mas aqui pela ótica de raiz/origem, não de prêmio. A mecânica cultural (pergunta + resposta) vira ponte pedagógica: a pergunta é construída em torno de fatos reais da origem/trajetória da rede, fazendo o consumidor "aprender" essa autoridade no processo de participar — sem parecer aula de história corporativa.</p>
+
+    <div class="section-title">Linha de Comunicação</div>
+    <div class="chips"><span class="chip">confiante</span><span class="chip">maduro</span><span class="chip">sem arrogância</span><span class="chip">autoridade pelo fato, não pelo adjetivo</span></div>
+    <div class="voice-example">"Quinze anos de marca. Décadas de experiência por trás dela."</div>
+    <div class="angle"><div class="angle-num">Ângulo 01 — Origem/autoridade (institucional, todos os públicos)</div><div class="angle-text">Conteúdo contando que a rede nasceu de gente que já vivia o ramo farmacêutico havia décadas antes da Farmagnus existir; ângulo de "raiz", não de trajetória cronológica genérica.</div></div>
+    <div class="angle"><div class="angle-num">Ângulo 02 — Convite a participar (B2C)</div><div class="angle-text">Mecânica cultural explicada, cupom + pergunta ligada à história da marca.</div></div>
+    <div class="angle"><div class="angle-num">Ângulo 03 — Orgulho de pertencer (endomarketing)</div><div class="angle-text">Peça voltada à rede interna, reforçando que fazer parte da Farmagnus é fazer parte de algo com raiz sólida — prepara terreno pra sinergia com o selo da campanha C1.</div></div>
+    <div class="angle"><div class="angle-num">Ângulo 04 — Momento do sorteio (evento)</div><div class="angle-text">Construção de expectativa para o sorteio ao vivo na Expofarmagnus, que reúne público final e rede franqueada no mesmo palco simbólico.</div></div>
+    <div class="assinatura-box"><div class="ass-line">15 Anos, 15 Chances de Ganhar.</div><div class="ass-note">Rota validada pelo cliente — sem território de reserva.</div></div>
+
+    <div class="section-title">Mecânica da Campanha</div>
+    <p class="prose dim" style="margin-bottom:14px;">Mecânica cultural (pergunta + resposta), que dispensa registro na Caixa, com apuração ao vivo em evento.</p>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div><div class="step-title">Retirada do cupom</div><div class="step-desc">Cliente retira o cupom em uma farmácia Farmagnus participante.</div></div></div>
+      <div class="step"><div class="step-num">2</div><div><div class="step-title">Pergunta cultural</div><div class="step-desc">Responde a uma pergunta simples ligada à origem/trajetória da marca — formato cultural, dispensa registro na Caixa.</div></div></div>
+      <div class="step"><div class="step-num">3</div><div><div class="step-title">Entrega</div><div class="step-desc">Entrega o cupom preenchido na própria farmácia.</div></div></div>
+      <div class="step"><div class="step-num">4</div><div><div class="step-title">Sorteio ao vivo</div><div class="step-desc">Apuração ao vivo, na Expofarmagnus — momento tratado como evento, reunindo público final e rede franqueada.</div></div></div>
+      <div class="step"><div class="step-num">5</div><div><div class="step-title">Resultado</div><div class="step-desc">15 ganhadores anunciados no evento, cada um recebendo vale-compras de R$ 1.000,00.</div></div></div>
+    </div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Disciplina · Criação &amp; Social</div>
+    <div class="disc-block"><div class="disc-label">Direcionamento geral</div><div class="disc-text">Selo comemorativo "15 Anos Farmagnus" com identidade visual completa do kit: cupons, cartaz de cheque gigante de R$ 1.000,00, testeira de prateleira — todos carregando o conceito de maturidade/autoridade, não só festividade.</div></div>
+    <div class="disc-block"><div class="disc-label">Peça de origem/autoridade</div><div class="disc-text">Conteúdo institucional sobre a fundação da rede por gente com décadas de experiência prévia no ramo farmacêutico.</div></div>
+    <div class="disc-block"><div class="disc-label">Peça de endomarketing</div><div class="disc-text">Voltada à rede interna de franqueados, reforçando orgulho de pertencer a uma marca com raiz sólida — linguagem que já conversa com o selo da campanha C1.</div></div>
+    <div class="content-ideas">
+      <div class="idea-card"><span class="badge badge-video">Vídeo</span><div class="idea-title">"Nascemos com décadas de experiência"</div><div class="idea-desc">Vídeo institucional contando a origem da rede — fundada por quem já vivia o ramo farmacêutico — fechando com o convite ao sorteio dos 15 anos.</div></div>
+      <div class="idea-card"><span class="badge badge-card">Card</span><div class="idea-title">"Concorra a R$ 1.000 em compras"</div><div class="idea-desc">Card de divulgação com o selo dos 15 anos, chamando o consumidor a retirar o cupom na farmácia participante.</div></div>
+      <div class="idea-card"><span class="badge badge-carrossel">Carrossel</span><div class="idea-title">"Como participar em 3 passos"</div><div class="idea-desc">Carrossel didático explicando a mecânica cultural — retirar cupom, responder a pergunta, entregar.</div></div>
+      <div class="idea-card"><span class="badge badge-card">Card</span><div class="idea-title">"15 anos, uma rede que já nasceu experiente" (endomarketing)</div><div class="idea-desc">Peça interna para franqueados, reforçando orgulho de pertencer a uma marca com raiz sólida.</div></div>
+    </div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Disciplina · Audiovisual</div>
+    <div class="disc-block"><div class="disc-label">Vídeo institucional</div><div class="disc-text">Conta a origem da rede — fundada por quem já tinha décadas de vivência no ramo — tom confiante, sem nostalgia piegas, fechando com o convite ao sorteio.</div></div>
+    <div class="disc-block"><div class="disc-label">Cobertura do sorteio</div><div class="disc-text">Vídeo/cobertura do momento ao vivo na Expofarmagnus, pensado para viralizar como conteúdo de evento — recorte pra redes logo após a apuração.</div></div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Disciplina · Estratégia &amp; Operação</div>
+    <div class="disc-block"><div class="disc-label">Pergunta cultural e regulamento</div><div class="disc-text">Redação da pergunta (ancorada em fato real da origem/trajetória da marca) e do regulamento — formato dispensa registro na Caixa.</div></div>
+    <div class="disc-block"><div class="disc-label">Distribuição do kit</div><div class="disc-text">Coordenação de produção e distribuição física do kit às franquias.</div></div>
+    <div class="disc-block"><div class="disc-label">Mecânica do evento</div><div class="disc-text">Planejamento do sorteio ao vivo na Expofarmagnus — roteiro do momento, ordem de chamada dos 15 ganhadores, integração com o palco do evento.</div></div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Referências Visuais &amp; Direção de Arte</div>
+    <div class="mood-grid">
+      <div class="mood-card"><div class="mood-label">Paleta</div><div class="mood-text">Identidade Farmagnus (verde e vermelho), com acento dourado/metálico sutil — o mesmo território de "premiação" já usado na C1, criando consistência visual entre as duas campanhas institucionais da rede.</div><div class="palette"><div class="swatch" style="background:#1a7a3f;"></div><div class="swatch" style="background:#d3202a;"></div><div class="swatch" style="background:#c9a227;"></div><div class="swatch" style="background:#0f0f1a;"></div></div></div>
+      <div class="mood-card"><div class="mood-label">Selo comemorativo</div><div class="mood-text">Deve comunicar solidez, não só festa — tipografia mais robusta que um selo de aniversário comum, evitando confete/balão; símbolos de raiz, tempo, construção.</div></div>
+      <div class="mood-card"><div class="mood-label">Estilo de imagem</div><div class="mood-text">Mistura de fotografia de arquivo real da rede (se houver material de anos anteriores) com fotografia atual de loja/equipe — sensação de "trajetória visível", não still genérico.</div></div>
+      <div class="mood-card"><div class="mood-label">Cartaz do cheque gigante</div><div class="mood-text">Tratamento de peça de evento — grande, celebrativo, mas com o selo dos 15 anos aplicado com destaque, reforçando marca mesmo no momento mais "promocional" da campanha.</div></div>
+    </div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Desdobramento em Peças</div>
+    <ul class="piece-list">
+      <li><div class="piece-name">Selo comemorativo "15 Anos Farmagnus"</div><div class="piece-dir">Sistema de aplicação: cupom, cartaz, testeira, redes.</div></li>
+      <li><div class="piece-name">Kit de campanha físico</div><div class="piece-dir">Cupons + cartaz cheque gigante R$1.000 + testeira de prateleira.</div></li>
+      <li><div class="piece-name">Vídeo institucional</div><div class="piece-dir">Origem e experiência herdada da rede.</div></li>
+      <li><div class="piece-name">Peça de mecânica</div><div class="piece-dir">Passo a passo do cupom cultural.</div></li>
+      <li><div class="piece-name">Peça de endomarketing</div><div class="piece-dir">Orgulho de pertencer à rede, público interno.</div></li>
+      <li><div class="piece-name">Card/carrossel de convite</div><div class="piece-dir">Participação B2C, com o selo dos 15 anos.</div></li>
+      <li><div class="piece-name">Cobertura em vídeo do sorteio</div><div class="piece-dir">Momento ao vivo na Expofarmagnus, recorte pra redes.</div></li>
+      <li><div class="piece-name">Regulamento da campanha cultural</div><div class="piece-dir">Critérios e mecânica em linguagem clara.</div></li>
+    </ul>
+    </div>
+    <!-- CAMPANHA:FIM id=c3 -->
+  </div>
+
+  <!-- C4 -->
+  <div class="page" id="c4">
+    <!-- CAMPANHA:INICIO id=c4 nome="Dia das Crianças" estado="detalhada" -->
+    <div class="campanha-conteudo" data-estado="detalhada">
+    <div class="eyebrow">Campanha 4 · Outubro · ✦ Estratégia detalhada</div>
+    <h1>Dia das Crianças</h1>
+    <div class="subtitle">Aprofundamento criativo — campanha em duas frentes: doação de brinquedos e participação por compra com prêmios educacionais, sem exposição pública de crianças e sem comparação de mérito.</div>
+
+    <div class="bigidea-hero">
+      <div class="bi-label">Big Idea</div>
+      <div class="bi-idea">"Duas Formas de Investir<br>no Futuro de uma Criança."</div>
+      <div class="bi-manifesto">A campanha não escolhe entre doação e educação — reconhece que os dois são a mesma coisa vista de ângulos diferentes: brincar desenvolve, e uma ferramenta educacional impulsiona. Por isso caminha em duas frentes paralelas, ambas 100% positivas, nenhuma comparando crianças entre si: doação de brinquedos, aberta a qualquer cliente, e participação por compra, onde o cliente indica o nome de uma criança e concorre a um prêmio educacional para ela, por sorteio simples — nunca por avaliação de mérito ou história de vida. A marca entra como quem acredita que investir na infância, pelo brincar ou pela ferramenta certa, é investir em futuro.</div>
+    </div>
+
+    <div class="section-title">Racional Estratégico</div>
+    <p class="prose" style="margin-bottom:8px;">O ponto de partida do briefing original pedia que o doador contasse a história de uma criança "que merece o prêmio" — mecânica que, na prática, transforma necessidade em disputa e expõe vulnerabilidade como argumento de campanha. O racional foi deliberadamente reconstruído para evitar isso.</p>
+    <p class="prose dim" style="margin-bottom:8px;">A frente de doação preserva o gesto simples de generosidade, sem exigir narrativa de ninguém — o ato de doar já carrega o peso emocional necessário. A frente de participação por compra segue o padrão operacional já validado em outras campanhas da rede (compra → cupom → cadastro → sorteio), o que reduz fricção, facilita replicação em toda a rede dentro do prazo de outubro, e tira a Farmagnus da posição desconfortável de avaliar qual criança "merece mais".</p>
+    <p class="prose dim">Documento e validação de identidade são solicitados apenas do ganhador, no momento da entrega do prêmio — nunca no cadastro geral —, o que protege dado sensível de menor sem comprometer a lisura do sorteio.</p>
+
+    <div class="section-title">Linha de Comunicação</div>
+    <div class="chips"><span class="chip">positivo</span><span class="chip">celebrativo</span><span class="chip">sem apelo emocional forçado</span><span class="chip">sem exposição de criança</span></div>
+    <div class="voice-example">"Uma compra pode virar uma ferramenta pro futuro de uma criança."</div>
+    <div class="angle"><div class="angle-num">Ângulo 01 — A importância do brincar/aprender</div><div class="angle-text">Conteúdo institucional positivo sobre como brincar e aprender contribuem para o desenvolvimento infantil, sem qualquer menção a carência ou comparação.</div></div>
+    <div class="angle"><div class="angle-num">Ângulo 02 — Convite único de participação</div><div class="angle-text">"Participe comprando qualquer valor e/ou doando um brinquedo" — uma peça só, explicando as duas formas de entrar na campanha, sem fragmentar o convite em duas comunicações separadas.</div></div>
+    <div class="angle"><div class="angle-num">Ângulo 03 — Agradecimento coletivo</div><div class="angle-text">Conteúdo de fechamento celebrando o volume total arrecadado e o número de participações, sem individualizar nenhuma criança.</div></div>
+    <div class="assinatura-box"><div class="ass-line">Duas Formas de Investir no Futuro de uma Criança.</div><div class="ass-note">A seleção do prêmio educacional é sempre por sorteio aleatório — nunca por avaliação de mérito ou história.</div></div>
+
+    <div class="section-title">Mecânica da Campanha</div>
+    <p class="prose dim" style="margin-bottom:14px;">Duas frentes paralelas, ambas ativas em todas as farmácias participantes.</p>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div><div class="step-title">Frente A — Doação</div><div class="step-desc">Cliente doa um brinquedo na farmácia participante, recebe cupom de participação e confirma a doação em canal digital. Sorteio simples entre doadores participantes; brinquedos destinados com discrição.</div></div></div>
+      <div class="step"><div class="step-num">2</div><div><div class="step-title">Frente B — Compra e cadastro</div><div class="step-desc">Cliente compra na farmácia participante (qualquer valor) e recebe cupom.</div></div></div>
+      <div class="step"><div class="step-num">3</div><div><div class="step-title">Cadastro na página</div><div class="step-desc">Cadastra-se na página da promoção, indicando o nome da criança que vai concorrer ao prêmio educacional. Cartaz com QR code na farmácia direciona direto pro formulário.</div></div></div>
+      <div class="step"><div class="step-num">4</div><div><div class="step-title">Sorteio</div><div class="step-desc">Sorteio simples entre os cadastros — sem avaliação de mérito ou história, só sorteio aleatório.</div></div></div>
+      <div class="step"><div class="step-num">5</div><div><div class="step-title">Validação do ganhador</div><div class="step-desc">Documento e validação de identidade solicitados apenas do ganhador, no momento da entrega do prêmio educacional (hipótese: computador, tablet ou mochila — a confirmar com o cliente).</div></div></div>
+    </div>
+    <div class="alert-warn">Ponto de atenção: política de privacidade rígida é obrigatória, dado o uso de nome de menor no cadastro — armazenamento restrito ao necessário para validar e entregar o prêmio. Comunicação da página deve deixar explícito que a seleção é 100% sorteio aleatório, para não reabrir a percepção de disputa por mérito.</div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Disciplina · Criação &amp; Social</div>
+    <div class="disc-block"><div class="disc-label">Direcionamento geral</div><div class="disc-text">Identidade visual da campanha com tom acolhedor e celebrativo, aplicada de forma consistente nas duas frentes, deixando claro que são parte da mesma campanha.</div></div>
+    <div class="disc-block"><div class="disc-label">Convite único</div><div class="disc-text">Peça central de convite explicando as duas formas de participar (compra e/ou doação) numa única comunicação, sem fragmentar em duas peças separadas.</div></div>
+    <div class="content-ideas">
+      <div class="idea-card"><span class="badge badge-video">Vídeo</span><div class="idea-title">"Duas formas de investir no futuro"</div><div class="idea-desc">Vídeo curto e positivo mostrando as duas formas de participar (doar brinquedo / comprar e indicar uma criança), sem qualquer cena que sugira comparação de mérito ou carência.</div></div>
+      <div class="idea-card"><span class="badge badge-card">Card</span><div class="idea-title">"Participe comprando ou doando"</div><div class="idea-desc">Card de convite único, explicando as duas formas de entrar na campanha numa só peça.</div></div>
+      <div class="idea-card"><span class="badge badge-carrossel">Carrossel</span><div class="idea-title">"Como participar em poucos passos"</div><div class="idea-desc">Carrossel didático explicando cadastro, QR code e sorteio — reforçando que a seleção é aleatória.</div></div>
+    </div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Disciplina · Audiovisual</div>
+    <div class="disc-block"><div class="disc-label">Conceito</div><div class="disc-text">Tom de celebração e generosidade simples — cores vivas, ritmo leve, sem qualquer narrativa comparativa entre crianças.</div></div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Disciplina · Web (camada de comunicação)</div>
+    <div class="disc-block"><div class="disc-label">Jornada do formulário</div><div class="disc-text">Cadastro curto: cliente confirma a compra, indica o nome da criança, e pronto — nenhum campo de "história" ou justificativa. Documento e validação de identidade ficam reservados a uma etapa separada, acionada apenas para o ganhador. A página comunica com clareza que a seleção é 100% sorteio aleatório entre os cadastros.</div></div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Disciplina · Estratégia &amp; Operação</div>
+    <div class="disc-block"><div class="disc-label">Regulamento</div><div class="disc-text">Define mecânica de doação, mecânica de participação por compra, critério de sorteio (aleatório, sem avaliação) e o momento exato em que documento é solicitado (só do ganhador).</div></div>
+    <div class="disc-block"><div class="disc-label">Privacidade e dado de menor</div><div class="disc-text">Política de privacidade rígida, com armazenamento restrito ao necessário para validar e entregar o prêmio.</div></div>
+    <div class="disc-block"><div class="disc-label">Lista de prêmios</div><div class="disc-text">Definição final junto ao cliente (hipótese: computador, tablet ou mochila).</div></div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Referências Visuais &amp; Direção de Arte</div>
+    <div class="mood-grid">
+      <div class="mood-card"><div class="mood-label">Paleta</div><div class="mood-text">Cores vivas e alegres, associadas ao universo infantil, mas sem infantilizar a comunicação institucional — equilíbrio entre lúdico e credibilidade de marca.</div></div>
+      <div class="mood-card"><div class="mood-label">Mood</div><div class="mood-text">Ilustrações ou fotografia com sensação de leveza e brincadeira — brinquedos, cores, elementos gráficos de "futuro" (livros, lápis, formas geométricas lúdicas) — nunca fotografia de criança em situação de carência.</div></div>
+      <div class="mood-card"><div class="mood-label">Cartaz de PDV / QR code</div><div class="mood-text">Design limpo, com hierarquia clara — as duas formas de participar (comprar e/ou doar) em um único bloco visual coeso.</div></div>
+      <div class="mood-card"><div class="mood-label">Tipografia</div><div class="mood-text">A assinatura "Duas Formas de Investir no Futuro de uma Criança" ganha destaque tipográfico nas peças-chave, reforçando a dualidade da campanha.</div></div>
+    </div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Desdobramento em Peças</div>
+    <ul class="piece-list">
+      <li><div class="piece-name">Identidade visual da campanha</div><div class="piece-dir">Aplicada de forma consistente nas duas frentes.</div></li>
+      <li><div class="piece-name">Peça de convite único</div><div class="piece-dir">Participação por compra e/ou doação, numa só comunicação.</div></li>
+      <li><div class="piece-name">Cartaz de PDV com QR code</div><div class="piece-dir">Direciona ao formulário de cadastro.</div></li>
+      <li><div class="piece-name">Página da promoção</div><div class="piece-dir">Formulário de cadastro curto, sem campo de história.</div></li>
+      <li><div class="piece-name">Vídeo curto institucional</div><div class="piece-dir">As duas frentes, tom de celebração simples.</div></li>
+      <li><div class="piece-name">Regulamento da campanha</div><div class="piece-dir">Mecânica, critério de sorteio e momento de validação de documento.</div></li>
+      <li><div class="piece-name">Política de privacidade/uso de dado de menor</div><div class="piece-dir">Armazenamento restrito, uso limitado à validação e entrega do prêmio.</div></li>
+    </ul>
+    </div>
+    <!-- CAMPANHA:FIM id=c4 -->
+  </div>
+
+  <!-- C5 DETALHADA -->
+  <div class="page" id="c5">
+    <!-- CAMPANHA:INICIO id=c5 nome="Captação de Leads" estado="detalhada" -->
+    <div class="campanha-conteudo" data-estado="detalhada">
+    <div class="eyebrow">Campanha 5 · Contínua Jul–Out · ✦ Estratégia detalhada</div>
+    <h1>Captação de Leads</h1>
+    <div class="subtitle">Aprofundamento criativo — franqueados e investidores. Única frente de mídia paga do ciclo, sustentada nos dados de mercado IQVIA/Febrafar.</div>
+
+    <div class="bigidea-hero">
+      <div class="bi-label">Big Idea</div>
+      <div class="bi-idea">"Sozinho, você segura.<br>Em rede, você cresce."</div>
+      <div class="bi-manifesto">O dono de farmácia independente foi criado numa lógica em que autonomia era força. Mas o mercado virou: hoje o independente encolhe enquanto quem está em rede avança. "Segurar sozinho" deixou de ser liberdade e virou risco. A Farmagnus não pede que ninguém abra mão do seu negócio — ela entrega o que faltava: escala de compra, ferramentas de gestão e um time de consultoria que nenhuma farmácia constrói sozinha. Segurar é resistir. Em rede, é crescer.</div>
+    </div>
+
+    <div class="terr-card"><div class="terr-name">Território alternativo (rota B) — foco investidor</div><div class="terr-desc">"O melhor setor pra investir em 2026 tem 240 lojas e cresce 75%." Ancorado no retorno (crescimento de 75,3% em faturamento vs. 56,5% do mercado nacional). Reserva para o investidor que ainda não é do ramo — a rota principal aprovada é a Big Idea acima.</div></div>
+
+    <div class="section-title">Racional Estratégico</div>
+    <p class="prose" style="margin-bottom:8px;">O eixo é <strong>ganho e rentabilidade</strong> — o gatilho de decisão real do investidor — ancorado na <strong>segurança do ecossistema Febrafar</strong>, que derruba a objeção mais forte: o medo de não saber tocar um negócio maior. A força da campanha está em não pedir confiança: cada afirmação é sustentada por dado público IQVIA/Febrafar, sempre com a fonte citada.</p>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-val">−10,3%</div><div class="stat-desc">Evolução de lojas das farmácias independentes em SC nos últimos 5 anos. O independente está encolhendo.</div><div class="stat-src">Fonte: IQVIA · MAT Fev 2026</div></div>
+      <div class="stat-card"><div class="stat-val">+23,6%</div><div class="stat-desc">Crescimento de lojas da Rede Farmagnus em SC no mesmo período. Quem está em rede avança.</div><div class="stat-src">Fonte: IQVIA · MAT Fev 2026</div></div>
+      <div class="stat-card"><div class="stat-val">+R$ 4.024</div><div class="stat-desc">Faturamento médio mensal a mais de uma loja Farmagnus sobre uma independente em SC. Em MS/PR, o gap sobe para R$ 5.518.</div><div class="stat-src">Fonte: IQVIA · MAT Fev 2026</div></div>
+    </div>
+    <p class="prose dim">Para o <strong>investidor novo no ramo</strong>, o argumento é retorno e setor em alta. Para o <strong>dono de independente querendo migrar de bandeira</strong> — o lead mais quente, porque a dor já existe — o argumento é direto: você já está perdendo terreno; a rede reverte isso. A consultoria e as ferramentas Febrafar (PEC, Fideliza Mais, e.delivery, aceleração) entram como prova de que o crescimento é estruturado, não sorte.</p>
+
+    <div class="section-title">Linha de Comunicação</div>
+    <div class="chips"><span class="chip">direto</span><span class="chip">confiante</span><span class="chip">adulto</span><span class="chip">baseado em dado</span><span class="chip">sem euforia de vendedor</span></div>
+    <div class="voice-example">"Enquanto a farmácia independente encolhe, a nossa cresce 75%. Os números são públicos."</div>
+    <div class="angle"><div class="angle-num">Ângulo 01 — O dado que incomoda</div><div class="angle-text">Independente encolhendo vs. rede crescendo; o gap de faturamento. Provoca dor e oportunidade. Topo de funil.</div></div>
+    <div class="angle"><div class="angle-num">Ângulo 02 — A máquina por trás</div><div class="angle-text">O ecossistema Febrafar (consultoria, PEC, Fideliza Mais, e.delivery, aceleração). A segurança que o dono sozinho nunca monta. Responde à objeção de gestão.</div></div>
+    <div class="angle"><div class="angle-num">Ângulo 03 — Prova de rede</div><div class="angle-text">240 lojas, +R$ 268Mi de faturamento, 7x premiada PEGN. Autoridade e solidez. Segurança final ao lead.</div></div>
+    <div class="assinatura-box"><div class="ass-line">Cresça em rede.</div><div class="ass-note">Convive com a assinatura institucional "Rede Farmagnus — a rede do coração".</div></div>
+
+    <div class="section-title">Mecânica da Campanha</div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div><div class="step-title">Impacto — o dado-âncora</div><div class="step-desc">Investidor ou dono de farmácia é impactado por um criativo com o número que provoca (gap de faturamento ou crescimento de 75%). Mensagem diferente por público desde o primeiro contato.</div></div></div>
+      <div class="step"><div class="step-num">2</div><div><div class="step-title">Meta Ads → Formulário nativo</div><div class="step-desc">No Meta, o clique cai no formulário nativo já qualificado com 2–3 perguntas de perfil: já tem farmácia? qual UF? interesse em abrir ou migrar de bandeira?</div></div></div>
+      <div class="step"><div class="step-num">3</div><div><div class="step-title">Google Ads → Landing Page</div><div class="step-desc">A busca de intenção leva à LP, que abre com a promessa de ganho, prova com os números IQVIA, apresenta o ecossistema de suporte e fecha com formulário.</div></div></div>
+      <div class="step"><div class="step-num">4</div><div><div class="step-title">Segmentação e handoff</div><div class="step-desc">O lead entra e é segmentado por perfil (investidor novo vs. conversão de independente) e recebe o material e a abordagem comercial correspondentes.</div></div></div>
+    </div>
+    <div class="alert-warn">Ponto de atenção: separar as duas mensagens por público desde o criativo. A dor do dono de independente ("estou perdendo terreno") é diferente do apetite do investidor novo ("quero entrar num setor que cresce"). Misturar enfraquece as duas.</div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Disciplina · Criação &amp; Social</div>
+    <div class="disc-block"><div class="disc-label">Direcionamento geral</div><div class="disc-text">Todo criativo carrega um dado com fonte citada (rodapé "Fonte: IQVIA/Febrafar · MAT Fev 2026"). A prova social do selo 7 Anos PEGN reforça autoridade. A separação por público guia o texto de cada peça.</div></div>
+    <div class="content-ideas">
+      <div class="idea-card"><span class="badge badge-video">Vídeo</span><div class="idea-title">"Os números são públicos"</div><div class="idea-desc">Confronta na tela a linha do independente caindo (−10,3%) e a da Farmagnus subindo (+23,6%). Fecha com "Cresça em rede" e o gap de faturamento. Tom de dado, não de propaganda.</div></div>
+      <div class="idea-card"><span class="badge badge-card">Card</span><div class="idea-title">"R$ 4.024 a mais. Por mês."</div><div class="idea-desc">Impacto direto ao dono de independente, com o gap de faturamento médio em SC. Fonte citada no rodapé.</div></div>
+      <div class="idea-card"><span class="badge badge-carrossel">Carrossel</span><div class="idea-title">"O que você não monta sozinho"</div><div class="idea-desc">O ecossistema Febrafar como resposta ao medo de gestão. Cada card = uma ferramenta = uma dor resolvida. CTA para a LP.</div></div>
+    </div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Disciplina · Web (camada de comunicação)</div>
+    <div class="lp-flow">
+      <div class="lp-block"><div class="lp-tag">Dobra 1</div><div class="lp-content"><strong>Promessa de ganho.</strong> Headline com a Big Idea e subheadline com o dado de crescimento. CTA primário acima da dobra.</div></div>
+      <div class="lp-block"><div class="lp-tag">Dobra 2</div><div class="lp-content"><strong>A prova.</strong> Os números IQVIA lado a lado: independente vs. Farmagnus. Fonte citada visível.</div></div>
+      <div class="lp-block"><div class="lp-tag">Dobra 3</div><div class="lp-content"><strong>O diferencial.</strong> O ecossistema de suporte Febrafar como resposta à objeção de gestão.</div></div>
+      <div class="lp-block"><div class="lp-tag">Dobra 4</div><div class="lp-content"><strong>Autoridade.</strong> 240 lojas, R$ 268Mi, 7x premiada PEGN. Selo dos 7 Anos aplicado.</div></div>
+      <div class="lp-block"><div class="lp-tag">Dobra 5</div><div class="lp-content"><strong>Conversão.</strong> Formulário com as perguntas de qualificação. CTA de fechamento reforçando "Cresça em rede".</div></div>
+    </div>
+    <div class="alert-info">A LP é o destino do tráfego de Google Ads. A copy de conversão e a integração do formulário são executadas dentro do projeto de Atualizações do Website. O escopo técnico (plataforma, stack) não é tratado aqui.</div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Disciplina · Tráfego Pago</div>
+    <div class="trafego-box">
+      <div class="tb-title">Estrutura de Campanhas — Tráfego Pago</div>
+      <div class="tb-grid">
+        <div class="tb-field"><div class="tb-label">Fase</div>Única e contínua — Jul a Out/2026, sem mudança de estratégia entre meses</div>
+        <div class="tb-field"><div class="tb-label">Localização</div>Mesma cobertura geográfica já configurada (SC, MS, PR — mantida)</div>
+        <div class="tb-field"><div class="tb-label">Público principal</div>Empresários e investidores interessados em abrir negócio no ramo farmacêutico</div>
+        <div class="tb-field"><div class="tb-label">Público secundário</div>Donos de farmácia independente buscando upgrade para bandeira — lead mais quente</div>
+      </div>
+      <div class="tb-field" style="margin-bottom:14px;"><div class="tb-label">Objetivo &amp; destino do clique</div>Meta Ads — objetivo Leads, clique para formulário nativo qualificado · Google Ads — objetivo conversão, clique para LP do site</div>
+      <div class="tb-field"><div class="tb-label">Distribuição de verba — R$ 2.000/mês</div></div>
+      <div class="verba-bar"><div class="vb-meta">Meta Ads · R$ 1.000</div><div class="vb-google">Google Ads · R$ 1.000</div></div>
+      <div class="tb-field" style="margin-top:14px;"><div class="tb-label">Palavras-chave sugeridas — Google Search</div></div>
+      <div class="kw-tags">
+        <span class="kw-tag">franquia de farmácia</span>
+        <span class="kw-tag">como abrir uma farmácia</span>
+        <span class="kw-tag">migrar farmácia para rede</span>
+        <span class="kw-tag">investir em farmácia</span>
+        <span class="kw-tag">franquia farmagnus</span>
+        <span class="kw-tag">bandeira de farmácia franquia</span>
+        <span class="kw-tag">franquia farmácia rentável</span>
+      </div>
+    </div>
+    <div class="tasks-title">Tarefas</div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Manter campanhas ativas no Meta Ads (formulário nativo)</span><span class="task-setor">[Tráfego]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Manter campanhas ativas no Google Ads (LP do site)</span><span class="task-setor">[Tráfego]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Acompanhar CPL e volume de leads semanalmente</span><span class="task-setor">[Tráfego]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Atualizar criativos de captação mensalmente</span><span class="task-setor">[Criação]</span></div>
+    <div class="task-item"><span class="task-dot"></span><span class="task-text">Integrar LP do site ao fluxo de campanhas do Google</span><span class="task-setor">[Web]</span></div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Referências Visuais &amp; Direção de Arte</div>
+    <div class="mood-grid">
+      <div class="mood-card"><div class="mood-label">Paleta</div><div class="mood-text">Base na identidade Farmagnus (verde e vermelho da marca), com acento de dado — verde de alta e vermelho de queda, usados literalmente na comparação independente vs. rede.</div><div class="palette"><div class="swatch" style="background:#1a7a3f;"></div><div class="swatch" style="background:#d3202a;"></div><div class="swatch" style="background:#0f0f1a;"></div><div class="swatch" style="background:#f2f2f2;"></div></div></div>
+      <div class="mood-card"><div class="mood-label">Estilo de imagem</div><div class="mood-text">Fotografia real de donos de farmácia e fachadas — gente de negócio, não banco de imagem. Tom de empresário confiante. Complementado por dataviz limpo e legível.</div></div>
+      <div class="mood-card"><div class="mood-label">Tipografia</div><div class="mood-text">Display forte e numérico para os dados — o número é o herói visual. Sans-serif limpa no corpo. Hierarquia clara entre o dado (grande) e a fonte citada (pequena, sempre presente).</div></div>
+      <div class="mood-card"><div class="mood-label">Inspiração</div><div class="mood-text">A linguagem de relatório de mercado (como o próprio material IQVIA/Febrafar) traduzida para peça de campanha: credibilidade de consultoria com força de publicidade.</div></div>
+    </div>
+
+    <div class="crea-divider"></div>
+    <div class="crea-anchor">Desdobramento em Peças</div>
+    <ul class="piece-list">
+      <li><div class="piece-name">Vídeo "Os números são públicos" (Meta)</div><div class="piece-dir">Confronto visual independente × Farmagnus, fecha em "Cresça em rede". Topo de funil.</div></li>
+      <li><div class="piece-name">Card "R$ 4.024 a mais. Por mês." (Meta)</div><div class="piece-dir">Impacto direto ao dono de independente, com o gap de faturamento e fonte citada.</div></li>
+      <li><div class="piece-name">Carrossel "O que você não monta sozinho" (Meta)</div><div class="piece-dir">Ecossistema Febrafar como resposta à objeção de gestão. Meio/remarketing.</div></li>
+      <li><div class="piece-name">Landing Page de captação</div><div class="piece-dir">5 dobras (promessa → prova → diferencial → autoridade → conversão). Destino do Google Ads.</div></li>
+      <li><div class="piece-name">Copy de anúncios Google Search</div><div class="piece-dir">Texto ancorado em intenção de busca, por grupo de palavra-chave.</div></li>
+      <li><div class="piece-name">Formulário de qualificação (Meta nativo + LP)</div><div class="piece-dir">Perguntas de perfil para segmentar investidor novo vs. conversão de independente.</div></li>
+      <li><div class="piece-name">Kit de dados-âncora com fontes</div><div class="piece-dir">Biblioteca de números IQVIA/Febrafar aprovados, com a fonte formatada, garantindo consistência entre as peças.</div></li>
+    </ul>
+    </div>
+    <!-- CAMPANHA:FIM id=c5 -->
+  </div>
+
+  <!-- BLOCO 04 -->
+  <div class="page" id="b04">
+    <div class="eyebrow">Bloco 04</div>
+    <h1>Rotina &amp; Demandas Contínuas</h1>
+    <div class="subtitle">O que roda continuamente ao longo do ciclo, fora do escopo de projetos e campanhas.</div>
+    <div class="section-title">Tráfego Contínuo</div>
+    <div class="card"><div class="card-body">Acompanhamento e otimização das campanhas de Captação de Leads (a única com verba), com gestão de budget e monitoramento semanal de CPL e volume. Sem outras frentes de mídia paga no ciclo.</div></div>
+    <div class="section-title">Social Media Contínuo</div>
+    <div class="card"><div class="card-body">Publicações, stories e engajamento institucional da rede já rodam e seguem sem alteração neste ciclo. As campanhas do período (7 Anos, Dia dos Pais, 15 Anos, Dia das Crianças) alimentam o calendário editorial com seus conteúdos específicos.</div></div>
+    <div class="section-title">Outras Demandas Recorrentes</div>
+    <div class="card"><div class="card-body">Relatórios de acompanhamento, calls de alinhamento e revisões seguem a rotina já estabelecida com a Farmagnus, sem novas demandas a estruturar neste ciclo.</div></div>
+  </div>
+
+  <!-- BLOCO 05 -->
+  <div class="page" id="b05">
+    <div class="eyebrow">Bloco 05</div>
+    <h1>Infraestrutura &amp; Acessos</h1>
+    <div class="subtitle">Acessos, materiais e alinhamentos necessários para a execução do ciclo.</div>
+    <div class="section-title">Acessos e Integrações Necessárias</div>
+    <div class="card"><div class="card-body">Todos os acessos necessários (Meta Business Manager, Google Ads, site/hospedagem) já estão concedidos à Nonna e ativos — não há pendências de acesso para este ciclo.</div></div>
+    <div class="section-title">Reuniões e Alinhamentos Pendentes</div>
+    <div class="check-item"><div class="check-box">✓</div><div><div class="check-name">Reunião de kickoff do ciclo Jul–Out/2026</div><div class="check-desc">Alinhamento inicial com a Farmagnus.</div></div></div>
+    <div class="check-item"><div class="check-box">✓</div><div><div class="check-name">Reunião com Bianca — Expofarmagnus</div><div class="check-desc">Organizar as demandas físicas e digitais da feira.</div></div></div>
+    <div class="check-item"><div class="check-box">✓</div><div><div class="check-name">Retorno do Angelo — plataforma da expo online</div><div class="check-desc">Confirmar existência de plataforma de terceiros apta ao formato.</div></div></div>
+    <div class="section-title">Materiais e Insumos Necessários</div>
+    <div class="card"><div class="card-body">Definição final de fornecedor e prazos de produção do kit físico da campanha 15 Anos (cupons, cartaz cheque gigante, testeira de prateleira), e validação da pauta do Treinamento Online junto a Evandro antes de 14/07.</div></div>
+    <footer class="docfooter"><span>Nonna Agência Digital · Farmagnus</span><span>v2.0 · Jul–Out 2026 · Alinhado ao Nonna OS</span></footer>
+  </div>
+
+</main>
+
+<script>
+  const items = document.querySelectorAll('.nav-item');
+  const pages = document.querySelectorAll('.page');
+  items.forEach(item => {
+    item.addEventListener('click', () => {
+      const target = item.getAttribute('data-page');
+      pages.forEach(p => p.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+      items.forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      window.scrollTo(0,0);
+    });
+  });
+  document.querySelectorAll('.check-item').forEach(c => c.addEventListener('click', () => c.classList.toggle('done')));
+</script>
+
+</body>
+</html>

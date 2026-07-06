@@ -125,11 +125,11 @@
                                 onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">{{ $b1['foco_principal'] ?? '' }}</textarea>
                         </div>
 
-                        {{-- Contexto Anterior --}}
+                        {{-- Ponto de Partida --}}
                         <div>
-                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Contexto Anterior</label>
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Ponto de Partida</label>
                             <textarea name="contexto_anterior" rows="3"
-                                placeholder="O que existia antes? Qual era a situação do cliente?"
+                                placeholder="Histórico recente relevante que embasa as decisões deste ciclo (ex: resultado da campanha anterior, situação de mercado do cliente)"
                                 class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                                 style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
                                 onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">{{ $b1['contexto_anterior'] ?? '' }}</textarea>
@@ -325,6 +325,67 @@
                             </div>
                         </div>
 
+                        {{-- Linha do Tempo --}}
+                        @php $linhaTempoJson = json_encode($b2['linha_tempo'] ?? []); @endphp
+                        <div x-data="{
+                            meses: {{ $linhaTempoJson }},
+                            addMes() { this.meses.push({ mes: '', itens: [] }); },
+                            removeMes(i) { this.meses.splice(i, 1); },
+                            addItem(i) { this.meses[i].itens.push({ texto: '', tipo: 'geral' }); },
+                            removeItem(i, j) { this.meses[i].itens.splice(j, 1); }
+                        }">
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="block text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Linha do Tempo</label>
+                                <button type="button" @click="addMes()"
+                                    class="text-xs font-mono px-3 py-1.5 transition-colors"
+                                    style="border:1px solid var(--border2); color:var(--muted2)"
+                                    onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
+                                    onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+                                    + Mês
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <template x-for="(mesItem, i) in meses" :key="i">
+                                    <div class="px-4 py-3 rounded relative" style="background:var(--s3); border:1px solid var(--border2)">
+                                        <button type="button" @click="removeMes(i)"
+                                            class="absolute top-2 right-2 text-xs font-mono transition-colors" style="color:var(--muted)"
+                                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                        <input type="text" :name="'linha_tempo['+i+'][mes]'" x-model="mesItem.mes"
+                                            placeholder="Ex: Julho"
+                                            class="w-full px-3 py-1.5 text-sm font-bold focus:outline-none mb-2"
+                                            style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"
+                                            onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
+                                        <template x-for="(item, j) in mesItem.itens" :key="j">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <select :name="'linha_tempo['+i+'][itens]['+j+'][tipo]'" x-model="item.tipo"
+                                                    class="text-xs px-2 py-1.5 focus:outline-none"
+                                                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                                                    <option value="geral">Geral</option>
+                                                    <option value="projeto">Projeto</option>
+                                                    <option value="campanha">Campanha</option>
+                                                </select>
+                                                <input type="text" :name="'linha_tempo['+i+'][itens]['+j+'][texto]'" x-model="item.texto"
+                                                    placeholder="Ex: Lançamento da campanha X"
+                                                    class="flex-1 px-3 py-1.5 text-xs focus:outline-none"
+                                                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"
+                                                    onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
+                                                <button type="button" @click="removeItem(i, j)"
+                                                    class="text-xs font-mono flex-shrink-0" style="color:var(--muted)"
+                                                    onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                            </div>
+                                        </template>
+                                        <button type="button" @click="addItem(i)"
+                                            class="text-xs font-mono" style="color:var(--purple)">
+                                            + Item
+                                        </button>
+                                    </div>
+                                </template>
+                                <p x-show="meses.length === 0" class="text-xs font-mono py-2" style="color:var(--muted)">
+                                    Nenhum mês adicionado. Clique em "+ Mês" para começar.
+                                </p>
+                            </div>
+                        </div>
+
                         <div class="flex gap-3 pt-1">
                             <button type="submit"
                                 class="px-5 py-2.5 text-xs font-bold font-mono uppercase tracking-widest text-white"
@@ -333,6 +394,22 @@
                             </button>
                         </div>
                     </form>
+
+                    {{-- Resumo do Período (read-only, derivado dos projetos/campanhas já cadastrados) --}}
+                    @if($macroplan->projects->isNotEmpty())
+                        <div class="px-5 pb-5">
+                            <p class="text-xs font-mono uppercase tracking-widest mb-3" style="color:var(--muted)">Resumo do Período</p>
+                            <div class="flex flex-col gap-1" style="border-top:1px solid var(--border2)">
+                                @foreach($macroplan->projects as $proj)
+                                    <div class="flex items-start gap-3 py-2.5" style="border-bottom:1px solid var(--border2)">
+                                        <span class="badge badge-{{ $proj->typeColor() }} flex-shrink-0">{{ $proj->typeLabel() }}</span>
+                                        <span class="text-xs font-bold flex-shrink-0" style="color:var(--text); min-width:180px">{{ $proj->title }}</span>
+                                        <span class="text-xs" style="color:var(--muted)">{{ \Illuminate\Support\Str::limit($proj->objective, 100) }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
 
