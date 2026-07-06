@@ -1,17 +1,21 @@
-# API de Sincronização de Campanhas (n8n → App)
+# API de Sincronização de Campanhas
 
-## Objetivo
+## Objetivo (atualizado 2026-07)
 
-O App **não integra diretamente** com Meta Ads / Google Ads (regra de ouro do projeto — ver `CLAUDE.md`). Quem consulta as APIs de anúncios e envia os dados para cá é o **n8n**. Este documento é o contrato que o workflow do n8n precisa seguir.
+**A sincronização automática roda por dentro do App**, sem n8n no meio — `app/Console/Commands/SyncAdPlatforms.php` (`campaigns:sync-ad-platforms`, agendado todo dia às 05:30 via Laravel Scheduler) chama Meta Graph API / Google Ads API diretamente usando os serviços em `app/Services/AdSync/` (`MetaAdsFetcher`, `GoogleAdsFetcher`, `AdDataUpserter`).
 
-Fluxo esperado (diário, por conta de anúncio):
+Essa mudança substitui o desenho anterior (n8n como orquestrador obrigatório) — ver `CLAUDE.md` § Arquitetura de integrações. Motivo: depurar um workflow do n8n remotamente (sem poder testar/rodar localmente) gerava muita fricção; o código Laravel pode ser escrito e verificado diretamente.
+
+Os endpoints HTTP abaixo (`GET /api/ad-accounts`, `POST /api/sync/campaigns`, `POST /api/sync/snapshots`) **continuam existindo e funcionando** — não são mais o caminho principal, mas ficam disponíveis como via alternativa/externa ("portas abertas") caso outra ferramenta precise empurrar dados pro App no futuro. O workflow de referência do n8n (`n8n-workflows/campaign-sync.json`) também continua no repositório como alternativa, mas não é mais o caminho recomendado.
+
+Fluxo atual (diário, automático):
 
 ```
-n8n (Schedule Trigger diário)
-  → GET /api/ad-accounts                    (descobre quais contas sincronizar)
-  → para cada conta: chama Meta Graph API / Google Ads API
-  → POST /api/sync/campaigns                (estrutura: campanhas → adsets → ads)
-  → POST /api/sync/snapshots                (métricas do dia anterior, por campanha/adset/ad)
+Laravel Scheduler (05:30) → campaigns:sync-ad-platforms
+  → por organização conectada (Meta e/ou Google em Configurações → Integrações)
+  → por conta de anúncio ativa (client_ad_accounts)
+  → MetaAdsFetcher / GoogleAdsFetcher chamam a API da plataforma direto
+  → AdDataUpserter grava em ad_campaigns / ad_daily_snapshots
 ```
 
 ## Pré-requisito: cadastro das contas de anúncio
@@ -65,7 +69,7 @@ Busca as credenciais da organização para um provider (`meta`, `google`, etc.),
 }
 ```
 
-Para `google`, `credentials` inclui `developer_token`, `customer_id`, `login_customer_id`. O OAuth2 (Client ID/Secret, renovação de token) **não** fica guardado aqui — vive numa credencial nativa "Google OAuth2 API" configurada direto no n8n (o n8n renova o access_token sozinho).
+Para `google`, `credentials` inclui `developer_token`, `customer_id`, `login_customer_id`, `client_id`, `client_secret`, `refresh_token`, `access_token`, `token_expires_at`. O OAuth2 completo (autorização + renovação automática do token) é feito pelo próprio App — ver `GoogleOAuthController` (`app/Http/Controllers/GoogleOAuthController.php`) e `GoogleAdsFetcher::ensureFreshToken()` (`app/Services/AdSync/GoogleAdsFetcher.php`). Fluxo: cadastrar Client ID/Secret em Configurações → Integrações → clicar em "Conectar com Google Ads" → autorizar no Google uma vez. `access_token`/`token_expires_at` são geridos automaticamente a partir daí, nunca precisam ser editados manualmente.
 
 **MCC vs conta direta:** se a agência acessa via conta MCC (gerenciadora) — o caso mais comum —, `login_customer_id` é o ID dessa MCC e vale pra todas as chamadas; `customer_id` fica vazio, porque a conta de cada cliente já vem de `GET /api/ad-accounts` (`account_id`, cadastrado individualmente em "Contas de Anúncios"). Só preencha `customer_id` aqui se a agência acessa uma conta Google Ads direta, sem hierarquia MCC.
 
@@ -170,9 +174,9 @@ Payload fora do formato esperado retorna `422` no formato padrão do Laravel:
 { "message": "The campaigns.0.external_id field is required.", "errors": { "campaigns.0.external_id": ["..."] } }
 ```
 
-## Workflow pronto para importar no n8n
+## Workflow n8n (alternativa, não é mais o caminho recomendado)
 
-Existe um workflow de referência em [`.claude/docs/n8n-workflows/campaign-sync.json`](n8n-workflows/campaign-sync.json), cobrindo Meta Ads e Google Ads. **Não foi testado contra um n8n real** (só validado como JSON bem-formado e com todas as conexões íntegras) — trate como um ponto de partida sólido, não como produto final pronto para ativar sem revisão.
+**A sincronização automática hoje roda dentro do App** (`campaigns:sync-ad-platforms`, ver topo deste documento) — não é mais necessário ativar isto. Existe um workflow de referência em [`.claude/docs/n8n-workflows/campaign-sync.json`](n8n-workflows/campaign-sync.json), cobrindo Meta Ads e Google Ads, mantido como alternativa caso um dia faça sentido reintroduzir n8n nesse fluxo. **Não foi testado contra um n8n real** (só validado como JSON bem-formado e com todas as conexões íntegras) — trate como um ponto de partida sólido, não como produto final pronto para ativar sem revisão.
 
 ### Como importar
 1. No n8n: **Workflows → Import from File** (ou copiar o JSON e **Import from URL/Clipboard**).

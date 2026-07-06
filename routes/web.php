@@ -418,6 +418,11 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         Route::delete('/configuracoes/integracoes/{integration}', [OrganizationIntegrationController::class, 'destroy'])
             ->name('settings.integrations.destroy');
 
+        Route::get('/configuracoes/integracoes/{integration}/google/conectar', [\App\Http\Controllers\GoogleOAuthController::class, 'connect'])
+            ->name('settings.integrations.google.connect');
+        Route::get('/configuracoes/integracoes/google/callback', [\App\Http\Controllers\GoogleOAuthController::class, 'callback'])
+            ->name('settings.integrations.google.callback');
+
         Route::post('/configuracoes/api/tokens', [OrganizationSettingsController::class, 'createToken'])
             ->name('settings.tokens.create');
         Route::delete('/configuracoes/api/tokens/{tokenId}', [OrganizationSettingsController::class, 'deleteToken'])

@@ -26,14 +26,14 @@ Route::post('/clickup/import-projects',   [ClickupProjectImportController::class
 Route::middleware(['auth:sanctum', SetApiTenant::class])->group(function () {
 
     // ── Contas de anúncios ──
-    // n8n chama para saber quais contas sincronizar
+    // A sincronização diária roda dentro do App (campaigns:sync-ad-platforms).
+    // Endpoint disponível como via alternativa/externa (n8n ou outra ferramenta).
     Route::get('/ad-accounts', [AdAccountController::class, 'index']);
 
     // ── Credenciais de integração ──
-    // n8n busca o token/credencial da organização para chamar a API externa diretamente
     Route::get('/integrations/{provider}', [IntegrationCredentialController::class, 'show']);
 
-    // ── Sync de dados do n8n ──
+    // ── Sync de dados (endpoint HTTP alternativo — a rotina principal usa AdDataUpserter direto) ──
     Route::prefix('sync')->group(function () {
         Route::post('/campaigns', [SyncController::class, 'campaigns']);
         Route::post('/snapshots', [SyncController::class, 'snapshots']);
