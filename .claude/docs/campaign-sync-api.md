@@ -67,6 +67,8 @@ Busca as credenciais da organização para um provider (`meta`, `google`, etc.),
 
 Para `google`, `credentials` inclui `developer_token`, `customer_id`, `login_customer_id`, `refresh_token`, `client_id`, `client_secret`.
 
+**MCC vs conta direta:** se a agência acessa via conta MCC (gerenciadora) — o caso mais comum —, `login_customer_id` é o ID dessa MCC e vale pra todas as chamadas; `customer_id` fica vazio, porque a conta de cada cliente já vem de `GET /api/ad-accounts` (`account_id`, cadastrado individualmente em "Contas de Anúncios"). Só preencha `customer_id` aqui se a agência acessa uma conta Google Ads direta, sem hierarquia MCC.
+
 **Resposta 404**: provider não cadastrado, sem status `connected`, ou sem credenciais salvas ainda.
 
 ## `POST /api/sync/campaigns`
@@ -190,7 +192,7 @@ Existe um workflow de referência em [`.claude/docs/n8n-workflows/campaign-sync.
 
 ### O que provavelmente vai precisar de ajuste na primeira execução real
 - **Meta**: os `action_type` usados para calcular `revenue`/`conversions` (`purchase`, `omni_purchase`, `lead`) dependem do objetivo real das campanhas do cliente — confira contra a resposta real de `/insights`.
-- **Google Ads**: a API exige `developer_token` aprovado pela Google (nível de acesso "Standard", não "Test") para puxar dados de contas reais fora da conta de teste. `customer_id` e `login_customer_id` devem ir sem traços.
+- **Google Ads**: a API exige `developer_token` aprovado pela Google (nível de acesso "Standard", não "Test") para puxar dados de contas reais fora da conta de teste. `account_id`/`login_customer_id` devem ir sem traços na chamada (o workflow já remove).
 - Versões de API (`v20.0` do Meta, `v17` do Google Ads) mudam com o tempo — confira se ainda são as versões suportadas quando for ativar.
 - O Switch node ("Route By Platform") usa `fallbackOutput` para tratar plataformas ainda não suportadas (TikTok, LinkedIn, Pinterest) — hoje elas só caem num `NoOp` e não sincronizam.
 

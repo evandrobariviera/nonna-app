@@ -447,15 +447,22 @@
                                            style="background:var(--s2); border-color:var(--border2); color:var(--text)">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Customer ID (conta MCC ou direta)</label>
+                                    <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Customer ID</label>
+                                    <p class="text-xs mb-1.5" style="color:var(--muted)">
+                                        Só preencha se a agência acessa o Google Ads <strong>direto, sem conta MCC</strong>. Se usa MCC (o caso mais comum), deixe em branco — a conta de cada cliente já vem do cadastro de "Contas de Anúncios".
+                                    </p>
                                     <input type="text" name="credentials[customer_id]" x-model="form.credentials.customer_id"
                                            placeholder="Ex: 123-456-7890"
                                            class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
                                            style="background:var(--s2); border-color:var(--border2); color:var(--text)">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Login Customer ID (MCC, se aplicável)</label>
+                                    <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Login Customer ID (MCC)</label>
+                                    <p class="text-xs mb-1.5" style="color:var(--muted)">
+                                        O ID da conta MCC (gerenciadora) da agência. Usado em toda chamada, pra acessar a conta de cada cliente "em nome" dela.
+                                    </p>
                                     <input type="text" name="credentials[login_customer_id]" x-model="form.credentials.login_customer_id"
+                                           placeholder="Ex: 123-456-7890"
                                            class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
                                            style="background:var(--s2); border-color:var(--border2); color:var(--text)">
                                 </div>

@@ -302,7 +302,7 @@
       "parameters": {
         "width": 620,
         "height": 260,
-        "content": "## Branch Google Ads\n\nUsa Google Ads API REST v17 + endpoint `:search` (não `:searchStream`, mais simples de parsear). `customer_id`/`login_customer_id` precisam ir SEM traço (\"1234567890\", não \"123-456-7890\") - por isso o `.replace(/-/g,'')`.\n\nO access_token do OAuth2 expira em ~1h, por isso este branch sempre gera um novo via refresh_token antes de chamar a API - não usa access_token salvo no App.\n\nCampos da resposta vêm em camelCase (`campaign.advertisingChannelType`, `metrics.costMicros`) mesmo a query GAQL usando snake_case - confira contra a resposta real."
+        "content": "## Branch Google Ads\n\nUsa Google Ads API REST v17 + endpoint `:search` (não `:searchStream`, mais simples de parsear).\n\n**MCC (conta gerenciadora):** a URL usa o `account_id` de CADA conta (vindo de `/api/ad-accounts`, cadastrado por cliente) - não o `customer_id` da integração. O header `login-customer-id` é sempre a MCC (`google_credentials.login_customer_id`), usada pra autenticar \"em nome de\" cada conta cliente. Se a agência não usa MCC (conta direta, sem hierarquia), deixe `login_customer_id` vazio na integração e cadastre o `customer_id` direto como `account_id` da conta do cliente.\n\n`account_id`/`login_customer_id` precisam ir SEM traço (\"1234567890\", não \"123-456-7890\") - por isso o `.replace(/-/g,'')`.\n\nO access_token do OAuth2 expira em ~1h, por isso este branch sempre gera um novo via refresh_token antes de chamar a API - não usa access_token salvo no App.\n\nCampos da resposta vêm em camelCase (`campaign.advertisingChannelType`, `metrics.costMicros`) mesmo a query GAQL usando snake_case - confira contra a resposta real."
       }
     },
     {
@@ -335,12 +335,12 @@
       "position": [1560, 700],
       "parameters": {
         "method": "POST",
-        "url": "={{ 'https://googleads.googleapis.com/v17/customers/' + $('Merge Config + Accounts').item.json.google_credentials.customer_id.replace(/-/g, '') + '/googleAds:search' }}",
+        "url": "={{ 'https://googleads.googleapis.com/v17/customers/' + $('Merge Config + Accounts').item.json.account_id.replace(/-/g, '') + '/googleAds:search' }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             { "name": "developer-token", "value": "={{ $('Merge Config + Accounts').item.json.google_credentials.developer_token }}" },
-            { "name": "login-customer-id", "value": "={{ ($('Merge Config + Accounts').item.json.google_credentials.login_customer_id || $('Merge Config + Accounts').item.json.google_credentials.customer_id).replace(/-/g, '') }}" }
+            { "name": "login-customer-id", "value": "={{ ($('Merge Config + Accounts').item.json.google_credentials.login_customer_id || $('Merge Config + Accounts').item.json.google_credentials.customer_id || '').replace(/-/g, '') }}" }
           ]
         },
         "sendBody": true,
