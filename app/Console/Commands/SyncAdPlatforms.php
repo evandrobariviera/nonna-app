@@ -10,6 +10,7 @@ use App\Services\AdSync\AdDataUpserter;
 use App\Services\AdSync\GoogleAdsFetcher;
 use App\Services\AdSync\MetaAdsFetcher;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class SyncAdPlatforms extends Command
@@ -69,6 +70,11 @@ class SyncAdPlatforms extends Command
                         'platform'   => $account->platform,
                         'error'      => $e->getMessage(),
                     ]);
+
+                    // Uma queda de conexão com o Postgres deixa a conexão pgsql presa em
+                    // estado de transação; sem isso, todas as contas seguintes falham em
+                    // cascata com "There is already an active transaction".
+                    DB::purge('pgsql');
                 }
             }
         }

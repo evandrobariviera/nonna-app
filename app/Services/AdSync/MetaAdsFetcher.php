@@ -4,7 +4,6 @@ namespace App\Services\AdSync;
 
 use App\Models\ClientAdAccount;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class MetaAdsFetcher
 {
@@ -19,12 +18,9 @@ class MetaAdsFetcher
         ]);
 
         if ($response->failed()) {
-            Log::warning('MetaAdsFetcher::fetchCampaigns falhou', [
-                'account_id' => $account->id,
-                'status'     => $response->status(),
-                'body'       => $response->body(),
-            ]);
-            return [];
+            throw new \RuntimeException(
+                "MetaAdsFetcher::fetchCampaigns falhou para conta {$account->id} - HTTP {$response->status()}: {$response->body()}"
+            );
         }
 
         $campaigns = $response->json('data', []);
@@ -51,12 +47,9 @@ class MetaAdsFetcher
         ]);
 
         if ($response->failed()) {
-            Log::warning('MetaAdsFetcher::fetchInsights falhou', [
-                'account_id' => $account->id,
-                'status'     => $response->status(),
-                'body'       => $response->body(),
-            ]);
-            return [];
+            throw new \RuntimeException(
+                "MetaAdsFetcher::fetchInsights falhou para conta {$account->id} - HTTP {$response->status()}: {$response->body()}"
+            );
         }
 
         $rows = $response->json('data', []);

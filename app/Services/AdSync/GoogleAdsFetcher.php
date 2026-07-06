@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class GoogleAdsFetcher
 {
-    private const API_VERSION = 'v17';
+    private const API_VERSION = 'v24';
 
     /**
      * Garante um access_token válido, renovando via refresh_token se estiver
@@ -78,12 +78,9 @@ class GoogleAdsFetcher
         ]);
 
         if ($response->failed()) {
-            Log::warning('GoogleAdsFetcher::fetchCampaignsAndMetrics falhou', [
-                'account_id' => $account->id,
-                'status'     => $response->status(),
-                'body'       => $response->body(),
-            ]);
-            return ['campaigns' => [], 'snapshots' => []];
+            throw new \RuntimeException(
+                "GoogleAdsFetcher: falha ao buscar conta {$account->id} - HTTP {$response->status()}: {$response->body()}"
+            );
         }
 
         $rows = $response->json('results', []);
