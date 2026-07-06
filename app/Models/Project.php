@@ -31,6 +31,7 @@ class Project extends Model
         'briefing_email',
         'status',
         'type',
+        'brief_status',
         'tags',
         'content_ideas',
         'traffic_phases',
@@ -41,11 +42,29 @@ class Project extends Model
         'clickup_list_id',
         'clickup_attachments',
         'launched_at',
+        // Brief criativo de campanha
+        'big_idea_titulo',
+        'big_idea_manifesto',
+        'territorio_alternativo',
+        'racional_estrategico',
+        'frase_voz',
+        'assinatura',
+        'ponto_atencao',
+        'tom_comunicacao',
+        'angulos',
+        'mecanica',
+        'referencias_visuais',
+        'pecas',
     ];
 
     public static array $types = [
         'projeto'  => ['label' => 'Projeto',  'color' => 'purple'],
         'campanha' => ['label' => 'Campanha', 'color' => 'green'],
+    ];
+
+    public static array $briefStatuses = [
+        'basico'    => ['label' => 'Básico',    'color' => 'muted'],
+        'detalhado' => ['label' => 'Detalhado', 'color' => 'orange'],
     ];
 
     public function typeLabel(): string
@@ -56,6 +75,21 @@ class Project extends Model
     public function typeColor(): string
     {
         return self::$types[$this->type]['color'] ?? 'muted';
+    }
+
+    public function briefStatusLabel(): string
+    {
+        return self::$briefStatuses[$this->brief_status]['label'] ?? $this->brief_status;
+    }
+
+    public function briefStatusColor(): string
+    {
+        return self::$briefStatuses[$this->brief_status]['color'] ?? 'muted';
+    }
+
+    public function isCampaignDetailed(): bool
+    {
+        return $this->type === 'campanha' && $this->brief_status === 'detalhado';
     }
 
     protected $casts = [
@@ -69,6 +103,11 @@ class Project extends Model
         'launched_at'         => 'datetime',
         'position'            => 'integer',
         'clickup_attachments' => 'array',
+        'tom_comunicacao'     => 'array',
+        'angulos'             => 'array',
+        'mecanica'            => 'array',
+        'referencias_visuais' => 'array',
+        'pecas'               => 'array',
     ];
 
     public static array $disciplines = [

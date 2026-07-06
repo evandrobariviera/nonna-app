@@ -607,6 +607,127 @@
         </div>
     @endif
 
+    {{-- BRIEF CRIATIVO (campanhas com brief detalhado) --}}
+    @if($project->isCampaignDetailed())
+        <div x-data="{ open: true }" class="mt-6">
+            <button @click="open = !open"
+                class="text-xs font-mono uppercase tracking-widest transition-colors flex items-center gap-2"
+                style="color:var(--muted)"
+                onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                <span :class="open ? 'rotate-90' : ''" class="transition-transform">▶</span>
+                Brief Criativo
+            </button>
+            <div x-show="open" x-cloak class="mt-3 space-y-4">
+                @if($project->big_idea_titulo || $project->big_idea_manifesto)
+                    <div class="card px-5 py-4">
+                        <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--purple)">Big Idea</p>
+                        @if($project->big_idea_titulo)
+                            <p class="text-base font-bold mb-2" style="color:var(--text)">{{ $project->big_idea_titulo }}</p>
+                        @endif
+                        @if($project->big_idea_manifesto)
+                            <p class="text-sm whitespace-pre-wrap leading-relaxed" style="color:var(--muted2)">{{ $project->big_idea_manifesto }}</p>
+                        @endif
+                    </div>
+                @endif
+
+                @if($project->territorio_alternativo)
+                    <div class="card px-5 py-4">
+                        <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Território Alternativo (rota B)</p>
+                        <p class="text-sm whitespace-pre-wrap leading-relaxed" style="color:var(--muted2)">{{ $project->territorio_alternativo }}</p>
+                    </div>
+                @endif
+
+                @if($project->racional_estrategico)
+                    <div class="card px-5 py-4">
+                        <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Racional Estratégico</p>
+                        <p class="text-sm whitespace-pre-wrap leading-relaxed" style="color:var(--text)">{{ $project->racional_estrategico }}</p>
+                    </div>
+                @endif
+
+                @if(!empty($project->tom_comunicacao) || $project->frase_voz)
+                    <div class="card px-5 py-4">
+                        <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Linha de Comunicação</p>
+                        @if(!empty($project->tom_comunicacao))
+                            <div class="flex flex-wrap gap-1.5 mb-2">
+                                @foreach($project->tom_comunicacao as $tom)
+                                    <span class="px-2.5 py-1 text-xs font-mono rounded-full" style="background:rgba(106,90,205,.12); color:var(--purple)">{{ $tom }}</span>
+                                @endforeach
+                            </div>
+                        @endif
+                        @if($project->frase_voz)
+                            <p class="text-sm italic" style="color:var(--muted2)">"{{ $project->frase_voz }}"</p>
+                        @endif
+                    </div>
+                @endif
+
+                @if(!empty($project->angulos))
+                    <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr))">
+                        @foreach($project->angulos as $ang)
+                            <div class="card px-4 py-4">
+                                <p class="text-xs font-bold mb-1" style="color:var(--purple)">{{ $ang['titulo'] ?? '' }}</p>
+                                <p class="text-xs leading-relaxed" style="color:var(--muted2)">{{ $ang['texto'] ?? '' }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                @if($project->assinatura)
+                    <div class="card px-5 py-4 text-center">
+                        <p class="text-base font-bold" style="color:var(--text)">{{ $project->assinatura }}</p>
+                    </div>
+                @endif
+
+                @if(!empty($project->mecanica))
+                    <div class="card px-5 py-4">
+                        <p class="text-xs font-mono uppercase tracking-widest mb-3" style="color:var(--muted)">Mecânica da Campanha</p>
+                        <div class="space-y-3">
+                            @foreach($project->mecanica as $i => $passo)
+                                <div class="flex gap-3">
+                                    <span class="text-xs font-mono flex-shrink-0" style="color:var(--purple)">{{ $i + 1 }}.</span>
+                                    <div>
+                                        <p class="text-sm font-bold" style="color:var(--text)">{{ $passo['titulo'] ?? '' }}</p>
+                                        <p class="text-xs leading-relaxed" style="color:var(--muted2)">{{ $passo['texto'] ?? '' }}</p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                @if($project->ponto_atencao)
+                    <div class="px-4 py-3 text-xs rounded" style="background:rgba(255,140,0,.06); border:1px solid rgba(255,140,0,.2); color:var(--orange)">
+                        {{ $project->ponto_atencao }}
+                    </div>
+                @endif
+
+                @if(!empty($project->referencias_visuais))
+                    <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr))">
+                        @foreach($project->referencias_visuais as $ref)
+                            <div class="card px-4 py-4">
+                                <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">{{ $ref['label'] ?? '' }}</p>
+                                <p class="text-xs leading-relaxed" style="color:var(--muted2)">{{ $ref['texto'] ?? '' }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                @if(!empty($project->pecas))
+                    <div class="card px-5 py-4">
+                        <p class="text-xs font-mono uppercase tracking-widest mb-3" style="color:var(--muted)">Desdobramento em Peças</p>
+                        <ul class="space-y-2">
+                            @foreach($project->pecas as $peca)
+                                <li style="border-bottom:1px solid var(--border2)" class="pb-2">
+                                    <p class="text-sm font-bold" style="color:var(--text)">{{ $peca['nome'] ?? '' }}</p>
+                                    <p class="text-xs leading-relaxed" style="color:var(--muted2)">{{ $peca['direcionamento'] ?? '' }}</p>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
+
 </x-app-layout>
 
 @push('scripts')

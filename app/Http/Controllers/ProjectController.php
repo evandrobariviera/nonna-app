@@ -196,12 +196,31 @@ class ProjectController extends Controller
             'start_date'        => 'nullable|date',
             'end_date'          => 'nullable|date',
             'budget'            => 'nullable|numeric|min:0',
+            // Brief criativo de campanha
+            'brief_status'           => 'nullable|in:basico,detalhado',
+            'big_idea_titulo'        => 'nullable|string|max:255',
+            'big_idea_manifesto'     => 'nullable|string',
+            'territorio_alternativo' => 'nullable|string',
+            'racional_estrategico'   => 'nullable|string',
+            'frase_voz'              => 'nullable|string|max:255',
+            'assinatura'             => 'nullable|string|max:255',
+            'ponto_atencao'          => 'nullable|string',
+            'tom_comunicacao'        => 'nullable|array',
+            'angulos'                => 'nullable|array',
+            'mecanica'               => 'nullable|array',
+            'referencias_visuais'    => 'nullable|array',
+            'pecas'                  => 'nullable|array',
         ]);
 
         $data['disciplines']    = $data['disciplines'] ?? [];
         $data['tags']           = array_values(array_filter($data['tags'] ?? []));
         $data['content_ideas']  = $data['content_ideas'] ?? [];
         $data['traffic_phases'] = $data['traffic_phases'] ?? [];
+        $data['tom_comunicacao']     = array_values(array_filter($data['tom_comunicacao'] ?? []));
+        $data['angulos']             = $data['angulos'] ?? [];
+        $data['mecanica']            = $data['mecanica'] ?? [];
+        $data['referencias_visuais'] = $data['referencias_visuais'] ?? [];
+        $data['pecas']               = $data['pecas'] ?? [];
 
         $project->update($data);
 

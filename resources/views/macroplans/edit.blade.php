@@ -624,6 +624,23 @@
                                         phases: {{ json_encode($project->traffic_phases ?? []) }},
                                         addPhase() { this.phases.push({ fase: '', titulo: '', periodo: '', objetivo: '', localizacao: '', publico: '', criativos: '', verba: '' }); },
                                         removePhase(i) { this.phases.splice(i, 1); },
+                                        briefDetalhado: {{ $project->brief_status === 'detalhado' ? 'true' : 'false' }},
+                                        tomChips: {{ json_encode($project->tom_comunicacao ?? []) }},
+                                        newTom: '',
+                                        addTom() { const t = this.newTom.trim(); if (t && !this.tomChips.includes(t)) this.tomChips.push(t); this.newTom = ''; },
+                                        removeTom(i) { this.tomChips.splice(i, 1); },
+                                        angulos: {{ json_encode($project->angulos ?? []) }},
+                                        addAngulo() { this.angulos.push({ titulo: '', texto: '' }); },
+                                        removeAngulo(i) { this.angulos.splice(i, 1); },
+                                        passos: {{ json_encode($project->mecanica ?? []) }},
+                                        addPasso() { this.passos.push({ titulo: '', texto: '' }); },
+                                        removePasso(i) { this.passos.splice(i, 1); },
+                                        refsVisuais: {{ json_encode($project->referencias_visuais ?? []) }},
+                                        addRef() { this.refsVisuais.push({ label: '', texto: '' }); },
+                                        removeRef(i) { this.refsVisuais.splice(i, 1); },
+                                        pecas: {{ json_encode($project->pecas ?? []) }},
+                                        addPeca() { this.pecas.push({ nome: '', direcionamento: '' }); },
+                                        removePeca(i) { this.pecas.splice(i, 1); },
                                     }" style="background:rgba(106,90,205,.04); border-left:3px solid var(--purple)">
 
                                     <form method="POST" action="{{ route('macroplans.projects.update', [$macroplan, $project]) }}"
@@ -872,6 +889,210 @@
                                                 </p>
                                             </div>
                                         </div>
+
+                                        {{-- Brief Criativo (só campanhas) --}}
+                                        @if($project->type === 'campanha')
+                                            <div style="border-top:1px solid var(--border2)" class="pt-5">
+                                                <input type="hidden" name="brief_status" :value="briefDetalhado ? 'detalhado' : 'basico'">
+                                                <label class="flex items-center gap-2 mb-4 cursor-pointer">
+                                                    <input type="checkbox" x-model="briefDetalhado" style="accent-color:var(--purple)">
+                                                    <span class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
+                                                        Ativar Brief Detalhado (Big Idea, racional, mecânica, moodboard...)
+                                                    </span>
+                                                </label>
+
+                                                <div x-show="briefDetalhado" x-cloak class="space-y-5">
+                                                    {{-- Big Idea --}}
+                                                    <div class="grid grid-cols-3 gap-3">
+                                                        <div class="col-span-1">
+                                                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Big Idea — Título</label>
+                                                            <input type="text" name="big_idea_titulo" value="{{ $project->big_idea_titulo }}"
+                                                                placeholder="A frase-conceito da campanha"
+                                                                class="w-full px-3 py-2 text-sm focus:outline-none"
+                                                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                                        </div>
+                                                        <div class="col-span-2">
+                                                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Big Idea — Manifesto</label>
+                                                            <textarea name="big_idea_manifesto" rows="3"
+                                                                placeholder="O parágrafo que expande a Big Idea..."
+                                                                class="w-full px-3 py-2 text-sm focus:outline-none resize-none"
+                                                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $project->big_idea_manifesto }}</textarea>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Território Alternativo --}}
+                                                    <div>
+                                                        <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Território Alternativo (rota B)</label>
+                                                        <textarea name="territorio_alternativo" rows="2"
+                                                            placeholder="Rota criativa de reserva, caso a principal não seja aprovada..."
+                                                            class="w-full px-3 py-2 text-sm focus:outline-none resize-none"
+                                                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $project->territorio_alternativo }}</textarea>
+                                                    </div>
+
+                                                    {{-- Racional Estratégico --}}
+                                                    <div>
+                                                        <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Racional Estratégico</label>
+                                                        <textarea name="racional_estrategico" rows="4"
+                                                            placeholder="Por que essa ideia funciona para esse público/desafio..."
+                                                            class="w-full px-3 py-2 text-sm focus:outline-none resize-none"
+                                                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $project->racional_estrategico }}</textarea>
+                                                    </div>
+
+                                                    {{-- Linha de Comunicação --}}
+                                                    <div class="grid grid-cols-2 gap-3">
+                                                        <div>
+                                                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Tom de Comunicação</label>
+                                                            <div class="flex flex-wrap gap-1.5 mb-2">
+                                                                <template x-for="(tom, i) in tomChips" :key="i">
+                                                                    <span class="flex items-center gap-1 px-2.5 py-1 text-xs font-mono rounded-full"
+                                                                          style="background:rgba(106,90,205,.12); color:var(--purple)">
+                                                                        <input type="hidden" :name="'tom_comunicacao[]'" :value="tom">
+                                                                        <span x-text="tom"></span>
+                                                                        <button type="button" @click="removeTom(i)" class="ml-0.5 font-bold" style="line-height:1">×</button>
+                                                                    </span>
+                                                                </template>
+                                                            </div>
+                                                            <div class="flex gap-2">
+                                                                <input type="text" x-model="newTom" @keydown.enter.prevent="addTom()"
+                                                                    placeholder="Ex: caloroso, direto..."
+                                                                    class="flex-1 px-3 py-1.5 text-xs focus:outline-none"
+                                                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                                                <button type="button" @click="addTom()"
+                                                                    class="px-3 py-1.5 text-xs font-mono" style="border:1px solid var(--border2); color:var(--muted2)">+ Tom</button>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Frase de Voz (exemplo)</label>
+                                                            <input type="text" name="frase_voz" value="{{ $project->frase_voz }}"
+                                                                placeholder="Uma frase que ilustra o tom da campanha"
+                                                                class="w-full px-3 py-2 text-sm focus:outline-none"
+                                                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Ângulos --}}
+                                                    <div>
+                                                        <div class="flex items-center justify-between mb-3">
+                                                            <label class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Ângulos de Comunicação</label>
+                                                            <button type="button" @click="addAngulo()"
+                                                                class="text-xs font-mono px-3 py-1.5" style="border:1px solid var(--border2); color:var(--muted2)">+ Ângulo</button>
+                                                        </div>
+                                                        <div class="space-y-2">
+                                                            <template x-for="(ang, i) in angulos" :key="i">
+                                                                <div class="px-4 py-3 rounded relative" style="background:var(--s3); border:1px solid var(--border2)">
+                                                                    <button type="button" @click="removeAngulo(i)" class="absolute top-2 right-2 text-xs" style="color:var(--muted)">✕</button>
+                                                                    <input type="text" :name="'angulos['+i+'][titulo]'" x-model="ang.titulo"
+                                                                        placeholder="Ex: Ângulo 01 — O dado que incomoda"
+                                                                        class="w-full px-2 py-1.5 text-xs font-bold focus:outline-none mb-2"
+                                                                        style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                                                                    <textarea :name="'angulos['+i+'][texto]'" x-model="ang.texto" rows="2"
+                                                                        placeholder="O que esse ângulo explora..."
+                                                                        class="w-full px-2 py-1.5 text-xs focus:outline-none resize-none"
+                                                                        style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"></textarea>
+                                                                </div>
+                                                            </template>
+                                                            <p x-show="angulos.length === 0" class="text-xs font-mono py-2" style="color:var(--muted)">Nenhum ângulo adicionado.</p>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Assinatura --}}
+                                                    <div>
+                                                        <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Assinatura</label>
+                                                        <input type="text" name="assinatura" value="{{ $project->assinatura }}"
+                                                            placeholder="A linha de fechamento da campanha"
+                                                            class="w-full px-3 py-2 text-sm focus:outline-none"
+                                                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                                    </div>
+
+                                                    {{-- Mecânica --}}
+                                                    <div>
+                                                        <div class="flex items-center justify-between mb-3">
+                                                            <label class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Mecânica da Campanha</label>
+                                                            <button type="button" @click="addPasso()"
+                                                                class="text-xs font-mono px-3 py-1.5" style="border:1px solid var(--border2); color:var(--muted2)">+ Passo</button>
+                                                        </div>
+                                                        <div class="space-y-2">
+                                                            <template x-for="(passo, i) in passos" :key="i">
+                                                                <div class="px-4 py-3 rounded relative flex gap-3" style="background:var(--s3); border:1px solid var(--border2)">
+                                                                    <span class="text-xs font-mono flex-shrink-0 pt-1.5" style="color:var(--purple)" x-text="(i + 1) + '.'"></span>
+                                                                    <div class="flex-1">
+                                                                        <input type="text" :name="'mecanica['+i+'][titulo]'" x-model="passo.titulo"
+                                                                            placeholder="Nome do passo"
+                                                                            class="w-full px-2 py-1.5 text-xs font-bold focus:outline-none mb-2"
+                                                                            style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                                                                        <textarea :name="'mecanica['+i+'][texto]'" x-model="passo.texto" rows="2"
+                                                                            placeholder="O que acontece nesse passo..."
+                                                                            class="w-full px-2 py-1.5 text-xs focus:outline-none resize-none"
+                                                                            style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"></textarea>
+                                                                    </div>
+                                                                    <button type="button" @click="removePasso(i)" class="text-xs flex-shrink-0" style="color:var(--muted)">✕</button>
+                                                                </div>
+                                                            </template>
+                                                            <p x-show="passos.length === 0" class="text-xs font-mono py-2" style="color:var(--muted)">Nenhum passo adicionado.</p>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Ponto de Atenção --}}
+                                                    <div>
+                                                        <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Ponto de Atenção</label>
+                                                        <textarea name="ponto_atencao" rows="2"
+                                                            placeholder="Algo que precisa de decisão/confirmação do cliente antes de executar..."
+                                                            class="w-full px-3 py-2 text-sm focus:outline-none resize-none"
+                                                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $project->ponto_atencao }}</textarea>
+                                                    </div>
+
+                                                    {{-- Referências Visuais --}}
+                                                    <div>
+                                                        <div class="flex items-center justify-between mb-3">
+                                                            <label class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Referências Visuais / Moodboard</label>
+                                                            <button type="button" @click="addRef()"
+                                                                class="text-xs font-mono px-3 py-1.5" style="border:1px solid var(--border2); color:var(--muted2)">+ Referência</button>
+                                                        </div>
+                                                        <div class="space-y-2">
+                                                            <template x-for="(ref, i) in refsVisuais" :key="i">
+                                                                <div class="px-4 py-3 rounded relative" style="background:var(--s3); border:1px solid var(--border2)">
+                                                                    <button type="button" @click="removeRef(i)" class="absolute top-2 right-2 text-xs" style="color:var(--muted)">✕</button>
+                                                                    <input type="text" :name="'referencias_visuais['+i+'][label]'" x-model="ref.label"
+                                                                        placeholder="Ex: Paleta, Estilo de imagem, Tipografia..."
+                                                                        class="w-full px-2 py-1.5 text-xs font-bold focus:outline-none mb-2"
+                                                                        style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                                                                    <textarea :name="'referencias_visuais['+i+'][texto]'" x-model="ref.texto" rows="2"
+                                                                        placeholder="Descrição da referência..."
+                                                                        class="w-full px-2 py-1.5 text-xs focus:outline-none resize-none"
+                                                                        style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"></textarea>
+                                                                </div>
+                                                            </template>
+                                                            <p x-show="refsVisuais.length === 0" class="text-xs font-mono py-2" style="color:var(--muted)">Nenhuma referência adicionada.</p>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Peças / Desdobramento --}}
+                                                    <div>
+                                                        <div class="flex items-center justify-between mb-3">
+                                                            <label class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Desdobramento em Peças</label>
+                                                            <button type="button" @click="addPeca()"
+                                                                class="text-xs font-mono px-3 py-1.5" style="border:1px solid var(--border2); color:var(--muted2)">+ Peça</button>
+                                                        </div>
+                                                        <div class="space-y-2">
+                                                            <template x-for="(peca, i) in pecas" :key="i">
+                                                                <div class="px-4 py-3 rounded relative" style="background:var(--s3); border:1px solid var(--border2)">
+                                                                    <button type="button" @click="removePeca(i)" class="absolute top-2 right-2 text-xs" style="color:var(--muted)">✕</button>
+                                                                    <input type="text" :name="'pecas['+i+'][nome]'" x-model="peca.nome"
+                                                                        placeholder="Nome da peça (ex: Vídeo institucional)"
+                                                                        class="w-full px-2 py-1.5 text-xs font-bold focus:outline-none mb-2"
+                                                                        style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                                                                    <textarea :name="'pecas['+i+'][direcionamento]'" x-model="peca.direcionamento" rows="2"
+                                                                        placeholder="Direcionamento dessa peça..."
+                                                                        class="w-full px-2 py-1.5 text-xs focus:outline-none resize-none"
+                                                                        style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"></textarea>
+                                                                </div>
+                                                            </template>
+                                                            <p x-show="pecas.length === 0" class="text-xs font-mono py-2" style="color:var(--muted)">Nenhuma peça adicionada.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
 
                                         <div class="flex gap-3">
                                             <button type="submit"
