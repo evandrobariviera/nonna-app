@@ -13,6 +13,18 @@
             </div>
         @endif
 
+        @if($errors->any())
+            <div class="mb-4 rounded-lg px-4 py-3 text-sm font-semibold"
+                 style="background:rgba(239,68,68,.1); color:var(--red); border:1px solid rgba(239,68,68,.2)">
+                <p class="mb-1">Não foi possível salvar — corrija e tente novamente:</p>
+                <ul class="list-disc pl-4 font-normal">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         {{-- Tabs --}}
         <div class="flex gap-1 mb-6 border-b" style="border-color:var(--border)">
             @foreach(['geral' => 'Geral', 'integracoes' => 'Integrações', 'equipe' => 'Equipe', 'api' => 'API & Tokens'] as $key => $label)
