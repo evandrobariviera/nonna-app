@@ -113,4 +113,9 @@ class MacroPlan extends Model
     {
         return $this->hasMany(Project::class)->orderBy('position');
     }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(MacroPlanAttachment::class)->latest();
+    }
 }

@@ -67,7 +67,7 @@ class MacroPlanController extends Controller
 
     public function edit(MacroPlan $macroplan, Request $request)
     {
-        $macroplan->load(['client', 'responsible', 'projects.tasks']);
+        $macroplan->load(['client', 'responsible', 'projects.tasks', 'attachments.uploadedBy']);
         $users          = User::orderBy('name')->get(['id', 'name']);
         $currentBlock   = $request->get('bloco', 'bloco1');
 

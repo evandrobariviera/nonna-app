@@ -30,6 +30,18 @@
         </div>
     @endif
 
+    @if(session('import_warnings') && count(session('import_warnings')) > 0)
+        <div class="mb-5 px-4 py-3 text-xs"
+             style="background:rgba(255,140,0,.06); border:1px solid rgba(255,140,0,.25); color:var(--orange)">
+            <p class="font-semibold mb-2">Itens do HTML que não foram importados automaticamente — revise e adicione manualmente onde fizer sentido:</p>
+            <ul class="space-y-1 list-disc pl-4">
+                @foreach(session('import_warnings') as $warning)
+                    <li>{{ $warning }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     {{-- LAYOUT: SIDEBAR + CONTEÚDO --}}
     <div x-data="{ block: '{{ $currentBlock }}' }" class="flex gap-6">
 
@@ -73,6 +85,38 @@
                     <span class="text-xs font-mono font-bold opacity-40">⚙</span>
                     <span class="text-xs font-semibold">Configurações</span>
                 </button>
+            </div>
+
+            {{-- Anexos --}}
+            <div class="card mt-3 p-3">
+                <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                    Anexos
+                    @if($macroplan->attachments->count() > 0)
+                        <span class="ml-1 px-1.5 py-0.5" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $macroplan->attachments->count() }}</span>
+                    @endif
+                </p>
+                <form method="POST" action="{{ route('macroplans.attachments.store', $macroplan) }}"
+                      enctype="multipart/form-data" class="mb-2">
+                    @csrf
+                    <label class="flex items-center justify-center w-full py-3 cursor-pointer text-center transition-colors"
+                           style="border:1px dashed var(--border2); color:var(--muted); font-size:11px">
+                        + Anexar arquivo (ex: HTML de origem)
+                        <input type="file" name="file" class="hidden" @change="$el.closest('form').submit()">
+                    </label>
+                </form>
+                @foreach($macroplan->attachments as $attachment)
+                    <div class="flex items-center justify-between gap-2 px-2 py-1.5 text-xs" style="background:var(--s2)">
+                        <a href="{{ $attachment->url() }}" target="_blank" class="truncate hover:underline" style="color:var(--text)">
+                            {{ $attachment->icon() }} {{ $attachment->filename }}
+                        </a>
+                        <form method="POST" action="{{ route('macroplans.attachments.destroy', [$macroplan, $attachment]) }}"
+                              onsubmit="return confirm('Remover anexo?')">
+                            @csrf @method('DELETE')
+                            <button type="submit" style="color:var(--muted)"
+                                onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                        </form>
+                    </div>
+                @endforeach
             </div>
 
             {{-- Remover --}}

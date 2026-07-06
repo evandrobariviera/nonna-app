@@ -25,6 +25,8 @@ use App\Http\Controllers\DossierCompetitorController;
 use App\Http\Controllers\DossierPersonaController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\MacroPlanController;
+use App\Http\Controllers\MacroPlanAttachmentController;
+use App\Http\Controllers\MacroPlanImportController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\OpportunityController;
 use App\Http\Controllers\ProjectController;
@@ -221,6 +223,18 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('macroplans.update');
     Route::delete('/planejamentos/{macroplan}', [MacroPlanController::class, 'destroy'])
         ->name('macroplans.destroy');
+
+    // ── Import de macroplanejamento via HTML aprovado ──
+    Route::get('/planejamentos/importar', [MacroPlanImportController::class, 'create'])
+        ->name('macroplans.import.create');
+    Route::post('/planejamentos/importar', [MacroPlanImportController::class, 'store'])
+        ->name('macroplans.import.store');
+
+    // ── Anexos do macroplanejamento ──
+    Route::post('/planejamentos/{macroplan}/anexos', [MacroPlanAttachmentController::class, 'store'])
+        ->name('macroplans.attachments.store');
+    Route::delete('/planejamentos/{macroplan}/anexos/{attachment}', [MacroPlanAttachmentController::class, 'destroy'])
+        ->name('macroplans.attachments.destroy');
 
     // ── Filas (backlog aguardando sprint) ──
     Route::get('/filas', [FilaController::class, 'index'])

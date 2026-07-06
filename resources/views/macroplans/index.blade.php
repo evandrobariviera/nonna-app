@@ -5,9 +5,14 @@
                 <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Fluxo de Trabalho</p>
                 <h1 class="text-xl font-black" style="color:var(--text)">Planejamentos</h1>
             </div>
-            <a href="{{ route('macroplans.create') }}" class="btn btn-primary">
-                + Novo Planejamento
-            </a>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('macroplans.import.create') }}" class="btn btn-ghost">
+                    Importar HTML
+                </a>
+                <a href="{{ route('macroplans.create') }}" class="btn btn-primary">
+                    + Novo Planejamento
+                </a>
+            </div>
         </div>
     </x-slot>
 
