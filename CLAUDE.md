@@ -17,23 +17,28 @@ O **Nonna App** é o "Sistema Operacional" da Nonna Agência Digital. Centraliza
 - **Banco local:** SQLite (desenvolvimento)
 - **Banco remoto:** PostgreSQL (Hetzner) — Fonte da verdade
 - **Autenticação:** Laravel Breeze
-- **Orquestrador de integrações:** n8n (ClickUp, Google ecosystem, PostgreSQL)
+- **Automação/orquestração (quando fizer sentido):** n8n (ClickUp, fluxos que se beneficiam de orquestração visual)
 
 ## Arquitetura de integrações
 
-O Laravel **não integra diretamente** com APIs externas. O n8n é o único responsável pela orquestração.
+**Atualizado (2026-07):** o App pode integrar diretamente com APIs externas quando fizer sentido (ex: Meta Ads, Google Ads) — não é mais regra obrigatória passar tudo pelo n8n. Credenciais de integração ficam guardadas criptografadas em `organization_integrations`; agendamento de sincronizações roda pelo Laravel Scheduler (processo `scheduler` do supervisord).
 
+O n8n continua disponível e é usado (a) pra automações que já funcionam bem assim (ex: ClickUp), e (b) como gatilho/agendador externo quando fizer sentido acionar o App de fora — o App expõe endpoints de API (`routes/api.php`, autenticados por token Sanctum por Organização) exatamente pra isso, "portas abertas" pra ferramentas externas se comunicarem com o App quando necessário.
+
+Fluxo ClickUp (mantido como está):
 ```
 App (fonte da verdade)
         ↓
    PostgreSQL       ← fonte da verdade de tudo (diagnósticos, planos, projetos, tarefas)
         ↓
-       n8n          ← orquestração, webhook de lançamento, sync, automações
+       n8n          ← orquestração do lançamento/sync com o ClickUp
         ↓
     ClickUp         ← camada operacional de tarefas (espelho do que o App lança)
 ```
 
-**Regra de ouro:** O App escreve primeiro no banco. O n8n lê o banco e sincroniza com o ClickUp. O ClickUp **não** é fonte da verdade — é camada de execução.
+**Regra de ouro (ClickUp):** O App escreve primeiro no banco. O n8n lê o banco e sincroniza com o ClickUp. O ClickUp **não** é fonte da verdade — é camada de execução.
+
+**Integrações de mídia/dados (Meta Ads, Google Ads, etc.):** o App chama essas APIs diretamente, sem n8n no meio, usando as credenciais de `organization_integrations`.
 
 ## Pipeline CRM completo
 
@@ -127,7 +132,7 @@ Ver [.claude/docs/architecture.md](.claude/docs/architecture.md) para schema com
 
 ## O que NÃO fazer
 
-- Não integrar diretamente com APIs externas — sempre usar n8n como intermediário
+- Não presumir que toda integração externa precisa passar pelo n8n — o App pode integrar diretamente com APIs externas quando fizer sentido (ex: Meta/Google Ads). O n8n continua valendo pra automações que já funcionam bem assim (ex: ClickUp) ou quando orquestração visual/cross-tool realmente ajuda
 - Não usar Livewire ou Inertia — o projeto usa Blade puro
 - Não deletar clientes ou contatos — usar status `inactive`
 - Não buscar dados do ClickUp diretamente — consultar tabelas `clickup_*` do PostgreSQL
