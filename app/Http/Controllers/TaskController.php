@@ -74,7 +74,7 @@ class TaskController extends Controller
     public function show(Task $task)
     {
         $task->load([
-            'client',
+            'client.links',
             'project.macroPlan.client',
             'macroPlan',
             'sprint',

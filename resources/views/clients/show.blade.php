@@ -62,6 +62,12 @@
                     <span class="tab-count">{{ $client->credentials->count() }}</span>
                 @endif
             </button>
+            <button class="tab-btn" :class="{ active: tab === 'links' }" @click="tab = 'links'">
+                Links
+                @if($client->links->count())
+                    <span class="tab-count">{{ $client->links->count() }}</span>
+                @endif
+            </button>
             <button class="tab-btn" :class="{ active: tab === 'contas' }" @click="tab = 'contas'">
                 Contas de Anúncios
             </button>
@@ -491,6 +497,123 @@
                                         <form method="POST"
                                               action="{{ route('clients.credentials.destroy', [$client, $cred]) }}"
                                               onsubmit="return confirm('Remover esta credencial?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="text-xs font-mono text-[var(--muted)] hover:text-[var(--red)] transition-colors">
+                                                Remover
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+
+        {{-- TAB: LINKS --}}
+        <div x-show="tab === 'links'" x-cloak x-data="{ addForm: false }">
+
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">
+                    Links Importantes
+                </h3>
+                <button @click="addForm = !addForm"
+                        class="px-4 py-1.5 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                        style="background: var(--purple);">
+                    + Adicionar
+                </button>
+            </div>
+
+            {{-- Formulário de novo link --}}
+            <div x-show="addForm" x-cloak class="card p-5 mb-6">
+                <h4 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-4">Novo Link</h4>
+                <form method="POST" action="{{ route('clients.links.store', $client) }}" class="space-y-4">
+                    @csrf
+                    <div class="grid grid-cols-2 gap-4">
+                        <div x-data="{ type: '' }">
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                Tipo <span class="text-[var(--orange)]">*</span>
+                            </label>
+                            <select name="type" x-model="type" required
+                                    class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                <option value="">Selecione...</option>
+                                @foreach(\App\Models\ClientLink::$types as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <div x-show="type === 'outros'" class="mt-2">
+                                <input type="text" name="type_custom"
+                                       placeholder="Qual tipo de link?"
+                                       class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2 focus:outline-none focus:border-[var(--purple)]">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                URL <span class="text-[var(--orange)]">*</span>
+                            </label>
+                            <input type="url" name="url" placeholder="https://..." required
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Observações</label>
+                            <input type="text" name="notes" placeholder="Ex: pasta de criativos do cliente..."
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button type="submit"
+                                class="px-5 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                                style="background: var(--purple);">
+                            Salvar
+                        </button>
+                        <button type="button" @click="addForm = false"
+                                class="px-4 py-2 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] transition-colors">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {{-- Lista de links --}}
+            @if($client->links->isEmpty())
+                <div class="tab-placeholder">
+                    <div class="tab-placeholder-icon">🔗</div>
+                    <div class="tab-placeholder-title">Nenhum link cadastrado</div>
+                    <div class="tab-placeholder-desc">Adicione o Drive, contratos e demais links importantes do cliente para centralizar tudo aqui.</div>
+                </div>
+            @else
+                <div class="card">
+                    <table class="nonna-table">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Link</th>
+                                <th>Obs</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($client->links as $link)
+                                <tr>
+                                    <td class="font-semibold text-[var(--text)]">
+                                        {{ $link->typeLabel() }}
+                                    </td>
+                                    <td class="text-sm">
+                                        <a href="{{ $link->url }}" target="_blank" rel="noopener"
+                                           class="text-[var(--purple)] hover:underline font-mono text-xs truncate block max-w-[220px]">
+                                            {{ $link->url }}
+                                        </a>
+                                    </td>
+                                    <td class="text-xs text-[var(--muted)] max-w-[150px] truncate">
+                                        {{ $link->notes ?: '—' }}
+                                    </td>
+                                    <td class="text-right">
+                                        <form method="POST"
+                                              action="{{ route('clients.links.destroy', [$client, $link]) }}"
+                                              onsubmit="return confirm('Remover este link?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"

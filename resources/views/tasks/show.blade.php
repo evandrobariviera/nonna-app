@@ -993,6 +993,23 @@
                 </div>
             </div>
 
+            {{-- LINKS DO CLIENTE --}}
+            @if($task->client?->links->count())
+                <div class="card card-body">
+                    <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Links do Cliente</p>
+                    <div class="flex flex-col gap-2.5">
+                        @foreach($task->client->links as $link)
+                            <a href="{{ $link->url }}" target="_blank" rel="noopener"
+                               class="flex items-center justify-between gap-2 text-sm font-medium transition-colors" style="color:var(--text)"
+                               onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'">
+                                <span>{{ $link->typeLabel() }}</span>
+                                <span style="color:var(--muted); font-size:11px">↗</span>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             {{-- APROVAÇÃO DO CLIENTE --}}
             <div class="card card-body">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Aprovação</p>

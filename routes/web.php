@@ -15,6 +15,7 @@ use App\Http\Controllers\OrganizationSettingsController;
 use App\Http\Controllers\ClientContactController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientCredentialController;
+use App\Http\Controllers\ClientLinkController;
 use App\Http\Controllers\BrandDossierController;
 use App\Http\Controllers\ClientAdBudgetController;
 use App\Http\Controllers\CampaignController;
@@ -82,6 +83,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('clients.credentials.update');
     Route::delete('/clientes/{client}/credenciais/{credential}', [ClientCredentialController::class, 'destroy'])
         ->name('clients.credentials.destroy');
+
+    // ── Links do cliente (Drive, contrato, briefing, etc.) ──
+    Route::post('/clientes/{client}/links', [ClientLinkController::class, 'store'])
+        ->name('clients.links.store');
+    Route::delete('/clientes/{client}/links/{link}', [ClientLinkController::class, 'destroy'])
+        ->name('clients.links.destroy');
 
     // ── Contatos vinculados ao cliente ──
     Route::post('/clientes/{client}/contatos/vincular', [ClientContactController::class, 'link'])
