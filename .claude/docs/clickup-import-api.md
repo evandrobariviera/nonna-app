@@ -170,20 +170,20 @@ Antes de rodar uma carga em massa, vale checar manualmente se não há **cards f
 
 ## Workflow n8n de referência
 
-Existe um workflow de referência em [`.claude/docs/n8n-workflows/clickup-import.json`](n8n-workflows/clickup-import.json), com 4 branches (Planejamentos, Projetos, Chamados, Tarefas de Execução) já ligadas nos endpoints acima. **Não foi testado contra um ClickUp/n8n real** — os nomes de custom field usados nos Code nodes (`cliente_relacionado`, `deadline`, etc.) são suposições baseadas na convenção dos comandos artisan `clickup:import-*`; confira contra a resposta real da API antes de confiar no resultado.
+Existe um workflow de referência em [`.claude/docs/n8n-workflows/clickup-import.json`](n8n-workflows/clickup-import.json), com 4 branches (Planejamentos, Projetos, Chamados, Tarefas de Execução) já ligadas nos endpoints acima. As 4 leituras do ClickUp usam o **node nativo `ClickUp`** (Resource: Task, Operation: Get All, `Return All` ligado) em vez de HTTP Request cru — resolve paginação sozinho. **Não foi testado contra um ClickUp/n8n real** — os nomes de custom field usados nos Code nodes (`cliente_relacionado`, `deadline`, etc.) são suposições baseadas na convenção dos comandos artisan `clickup:import-*`, e os nomes exatos dos campos internos do node nativo (`List`, `Filters`) podem variar por versão do n8n — confira ambos antes de confiar no resultado.
 
 ### Como importar
 1. No n8n: **Workflows → Import from File**.
-2. Criar a credencial **HTTP Header Auth** `ClickUp API Token` (`Authorization: {seu token pessoal do ClickUp}`, sem prefixo `Bearer`).
+2. Criar a credencial nativa **ClickUp API** `ClickUp API Token` (Credentials → New → ClickUp API): cole seu personal API token do ClickUp.
 3. Criar a credencial **HTTP Header Auth** `Nonna App Import Secret` (`X-Import-Secret: {IMPORT_SECRET do Portainer}`).
 4. Conferir `app_url` e os 3 List IDs no node **Config**.
-5. Rodar manualmente, branch por branch, antes de ativar o Schedule Trigger.
+5. Depois de conectar a credencial ClickUp, abrir cada node **Get ClickUp Tasks** e confirmar que o campo **List** carregou o ID certo (costuma virar um seletor visual assim que a credencial autentica) — se não, reselecionar manualmente.
+6. Rodar manualmente, branch por branch, antes de ativar o Schedule Trigger.
 
 ### Filtro de status (só tarefas ativas)
 
-As 4 branches trazem **só o que está ativo** — concluído/cancelado/finalizado/encerrado ficam de fora, com dupla proteção: `include_closed=false` no parâmetro da API do ClickUp, e um filtro explícito por nome de status dentro de cada node "Build ...Payload" (mesma lista de status usada pelos comandos artisan `clickup:import-*`). O filtro explícito existe porque "o que conta como fechado" no ClickUp depende de como cada status foi configurado no workspace — não dá pra confiar só no parâmetro da API.
+As 4 branches trazem **só o que está ativo** — concluído/cancelado/finalizado/encerrado ficam de fora, com dupla proteção: `Include Closed = false` no filtro do node nativo, e um filtro explícito por nome de status dentro de cada node "Build ...Payload" (mesma lista de status usada pelos comandos artisan `clickup:import-*`). O filtro explícito existe porque "o que conta como fechado" no ClickUp depende de como cada status foi configurado no workspace — não dá pra confiar só no filtro do node.
 
 ### Limitações conhecidas (ver Sticky Notes no próprio workflow)
-- **Paginação não implementada** — a API do ClickUp devolve no máximo 100 tarefas por página; a lista de Chamados sozinha tem ~670 tarefas no total. Precisa configurar manualmente no node HTTP Request (Options → Pagination) antes de rodar uma carga completa.
 - **Lista de execução por projeto (branch D) depende de um custom field que pode não existir ainda** — como a única hierarquia nativa do ClickUp é "cliente relacionado" (não existe "projeto relacionado"), a branch de Tarefas de Execução só funciona se cada card de Projeto tiver um campo apontando para sua própria Lista de tarefas. Se esse campo não existir no ClickUp, precisa ser criado antes.
 - **Detecção de `deleted` não implementada** — os endpoints já sabem tratar `deleted: true` (cancela em vez de apagar), mas nenhuma branch deste workflow envia isso ainda. Detectar exclusão exigiria comparar os IDs retornados contra os já conhecidos no App.
