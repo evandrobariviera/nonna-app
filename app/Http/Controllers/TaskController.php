@@ -21,7 +21,6 @@ class TaskController extends Controller
     {
         $query = Task::with(['client', 'executor', 'executors', 'project.macroPlan', 'sprint'])
             ->where('is_ticket', false)
-            ->whereNotNull('project_id')
             ->orderByRaw("CASE status
                 WHEN 'em_producao'        THEN 1
                 WHEN 'em_copy'            THEN 2
@@ -54,18 +53,22 @@ class TaskController extends Controller
         if ($request->boolean('sem_sprint')) {
             $query->whereNull('sprint_id');
         }
+        if ($request->boolean('sem_projeto')) {
+            $query->whereNull('project_id');
+        }
 
         // Oculta status finais por padrão — a menos que o usuário filtre por status específico ou ative o toggle
         if (!$request->boolean('mostrar_concluidos') && !$request->filled('status')) {
             $query->whereNotIn('status', ['concluido', 'aprovado', 'cancelado']);
         }
 
-        $tasks   = $query->paginate(40)->withQueryString();
-        $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
-        $users   = User::orderBy('name')->get(['id', 'name']);
-        $sprints = Sprint::orderByDesc('starts_at')->get(['id', 'title', 'status']);
+        $tasks    = $query->paginate(40)->withQueryString();
+        $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $users    = User::orderBy('name')->get(['id', 'name']);
+        $sprints  = Sprint::orderByDesc('starts_at')->get(['id', 'title', 'status']);
+        $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
 
-        return view('tasks.index', compact('tasks', 'clients', 'users', 'sprints'));
+        return view('tasks.index', compact('tasks', 'clients', 'users', 'sprints', 'projects'));
     }
 
     public function show(Task $task)
@@ -326,6 +329,65 @@ class TaskController extends Controller
         ])['status']]);
 
         return redirect()->back()->with('success', 'Status atualizado.');
+    }
+
+    public function bulkUpdate(Request $request)
+    {
+        $situationKeys = array_keys(array_filter(Task::$situations, fn($k) => $k !== '', ARRAY_FILTER_USE_KEY));
+
+        $data = $request->validate([
+            'task_ids'    => 'required|array|min:1',
+            'task_ids.*'  => 'uuid|exists:pgsql.tasks,id',
+            'action'      => 'required|in:status,executor,situation,project,delete',
+            'status'      => 'required_if:action,status|in:' . implode(',', array_keys(Task::$statuses)),
+            'executor_id' => 'nullable|exists:pgsql.users,id',
+            'situation'   => 'nullable|in:' . implode(',', $situationKeys),
+            'project_id'  => 'required_if:action,project|uuid|exists:pgsql.projects,id',
+        ]);
+
+        $tasks = Task::whereIn('id', $data['task_ids'])->get();
+        $skipped = [];
+
+        switch ($data['action']) {
+            case 'status':
+                Task::whereIn('id', $data['task_ids'])->update(['status' => $data['status']]);
+                break;
+
+            case 'situation':
+                Task::whereIn('id', $data['task_ids'])->update(['situation' => $data['situation'] ?? null]);
+                break;
+
+            case 'executor':
+                foreach ($tasks as $task) {
+                    TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->delete();
+                    if (!empty($data['executor_id'])) {
+                        $task->executors()->attach($data['executor_id'], ['role' => 'executor']);
+                    }
+                    $task->updateQuietly(['executor_id' => $data['executor_id'] ?? null]);
+                }
+                break;
+
+            case 'project':
+                $project = Project::findOrFail($data['project_id']);
+                foreach ($tasks as $task) {
+                    if ((string) $task->client_id !== (string) $project->client_id) {
+                        $skipped[] = ['id' => $task->id, 'title' => $task->title, 'reason' => 'cliente diferente do projeto'];
+                        continue;
+                    }
+                    $task->update(['project_id' => $project->id]);
+                }
+                break;
+
+            case 'delete':
+                Task::whereIn('id', $data['task_ids'])->delete();
+                break;
+        }
+
+        return response()->json([
+            'success' => true,
+            'updated' => $tasks->count() - count($skipped),
+            'skipped' => $skipped,
+        ]);
     }
 
     public function destroy(MacroPlan $macroplan, Project $project, Task $task)

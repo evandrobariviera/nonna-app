@@ -243,6 +243,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Lista global de tarefas ──
     Route::get('/tarefas', [TaskController::class, 'index'])
         ->name('tasks.index');
+    Route::post('/tarefas/lote', [TaskController::class, 'bulkUpdate'])
+        ->name('tasks.bulkUpdate');
 
     // ── Detalhe da tarefa ──
     Route::get('/tarefas/{task}', [TaskController::class, 'show'])
@@ -277,6 +279,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Dashboard global de projetos ──
     Route::get('/projetos', [ProjectController::class, 'dashboard'])
         ->name('projects.dashboard');
+    Route::post('/projetos/lote', [ProjectController::class, 'bulkUpdate'])
+        ->name('projects.bulkUpdate');
     Route::patch('/projetos/{project}/quick', [ProjectController::class, 'quickUpdate'])
         ->name('projects.quickUpdate');
 

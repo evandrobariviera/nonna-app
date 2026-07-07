@@ -65,6 +65,16 @@
             {{ request()->boolean('mostrar_concluidos') ? '⊙ Ocultar finalizados' : '○ Mostrar finalizados' }}
         </a>
 
+        @php
+            $semProjetoParams = request()->except('sem_projeto', 'page');
+            if (!request()->boolean('sem_projeto')) $semProjetoParams['sem_projeto'] = '1';
+        @endphp
+        <a href="{{ route('tasks.index', $semProjetoParams) }}"
+           class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 transition-all"
+           style="border:1px solid var(--border2); color:{{ request()->boolean('sem_projeto') ? 'var(--purple)' : 'var(--muted)' }}">
+            {{ request()->boolean('sem_projeto') ? '⊙ Só sem projeto' : '○ Só sem projeto' }}
+        </a>
+
         <span class="ml-auto text-sm" style="color:var(--muted)">
             {{ $tasks->total() }} tarefa{{ $tasks->total() !== 1 ? 's' : '' }}
         </span>
@@ -77,12 +87,67 @@
         </div>
     @endif
 
-    {{-- TABELA ESTILO MONDAY --}}
-    <div class="card overflow-hidden">
+    <div x-data="taskBulk()" x-cloak>
+
+        {{-- BARRA DE AÇÕES EM MASSA --}}
+        <div x-show="selected.length > 0"
+             class="card px-4 py-3 mb-4 flex flex-wrap items-center gap-2"
+             style="border-color:var(--purple)">
+
+            <span class="text-xs font-mono font-semibold" style="color:var(--purple)">
+                <span x-text="selected.length"></span> selecionada<span x-show="selected.length !== 1">s</span>
+            </span>
+
+            <div class="h-5" style="border-left:1px solid var(--border2)"></div>
+
+            <select x-model="bulkStatus" class="filter-select">
+                <option value="">Status…</option>
+                @foreach(\App\Models\Task::$statuses as $key => $s)
+                    <option value="{{ $key }}">{{ $s['label'] }}</option>
+                @endforeach
+            </select>
+            <button @click="apply('status', { status: bulkStatus })" :disabled="!bulkStatus || applying" class="btn btn-ghost btn-xs">Aplicar</button>
+
+            <select x-model="bulkExecutor" class="filter-select">
+                <option value="">Executor…</option>
+                <option value="null">— Remover executor —</option>
+                @foreach($users as $u)
+                    <option value="{{ $u->id }}">{{ $u->name }}</option>
+                @endforeach
+            </select>
+            <button @click="apply('executor', { executor_id: bulkExecutor === 'null' ? null : bulkExecutor })" :disabled="!bulkExecutor || applying" class="btn btn-ghost btn-xs">Aplicar</button>
+
+            <select x-model="bulkSituation" class="filter-select">
+                <option value="">Situação…</option>
+                @foreach(\App\Models\Task::$situations as $key => $label)
+                    @if($key !== '')
+                        <option value="{{ $key }}">{{ $label }}</option>
+                    @endif
+                @endforeach
+            </select>
+            <button @click="apply('situation', { situation: bulkSituation })" :disabled="!bulkSituation || applying" class="btn btn-ghost btn-xs">Aplicar</button>
+
+            <select x-model="bulkProject" class="filter-select">
+                <option value="">Vincular a projeto…</option>
+                @foreach($projects as $p)
+                    <option value="{{ $p->id }}">{{ $p->title }} — {{ $p->client?->company_name ?? '—' }}</option>
+                @endforeach
+            </select>
+            <button @click="apply('project', { project_id: bulkProject })" :disabled="!bulkProject || applying" class="btn btn-ghost btn-xs">Vincular</button>
+
+            <button @click="if (confirm('Excluir ' + selected.length + ' tarefa(s) selecionada(s)? Essa ação não pode ser desfeita.')) apply('delete', {})"
+                    :disabled="applying" class="btn btn-xs ml-auto" style="color:var(--red); border:1px solid var(--red)">
+                Excluir selecionadas
+            </button>
+        </div>
+
+        {{-- TABELA ESTILO MONDAY --}}
+        <div class="card overflow-hidden">
         <div class="overflow-x-auto">
             <table class="nonna-table">
                 <thead>
                     <tr>
+                        <th style="width:36px"><input type="checkbox" @click="toggleAll($event.target.checked)"></th>
                         <th style="width:130px">Status</th>
                         <th>Tarefa</th>
                         <th style="width:200px">Cliente</th>
@@ -95,6 +160,11 @@
                 <tbody>
                     @forelse($tasks as $task)
                     <tr class="{{ $task->isOverdue() ? 'row-overdue' : '' }}">
+
+                        {{-- Checkbox --}}
+                        <td class="text-center">
+                            <input type="checkbox" value="{{ $task->id }}" x-model="selected">
+                        </td>
 
                         {{-- Status --}}
                         <td class="monday-fill-td relative" style="width:130px">
@@ -208,7 +278,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7">
+                        <td colspan="8">
                             <div class="tab-placeholder">
                                 <div class="tab-placeholder-icon">📋</div>
                                 <div class="tab-placeholder-title">Nenhuma tarefa encontrada</div>
@@ -220,10 +290,69 @@
                 </tbody>
             </table>
         </div>
-    </div>
+        </div>
+
+    </div>{{-- /x-data taskBulk --}}
 
     <div class="mt-4">
         {{ $tasks->links() }}
     </div>
+
+    <script>
+    function taskBulk() {
+        return {
+            selected: [],
+            bulkStatus: '',
+            bulkExecutor: '',
+            bulkSituation: '',
+            bulkProject: '',
+            applying: false,
+
+            toggleAll(checked) {
+                this.selected = checked
+                    ? Array.from(document.querySelectorAll('tbody input[type=checkbox]')).map(el => el.value)
+                    : [];
+            },
+
+            async apply(action, extra) {
+                if (this.selected.length === 0) return;
+                this.applying = true;
+                try {
+                    const res = await fetch('{{ route('tasks.bulkUpdate') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ task_ids: this.selected, action, ...extra }),
+                    });
+                    if (!res.ok) {
+                        let msg = 'Não foi possível aplicar a ação (erro ' + res.status + ').';
+                        try {
+                            const errJson = await res.json();
+                            if (errJson.message) msg = errJson.message;
+                        } catch (e) { /* resposta não era JSON */ }
+                        alert(msg);
+                        return;
+                    }
+
+                    const json = await res.json();
+                    if (json.success) {
+                        if (json.skipped && json.skipped.length > 0) {
+                            alert(json.skipped.length + ' tarefa(s) pulada(s):\n' +
+                                json.skipped.map(s => '- ' + s.title + ' (' + s.reason + ')').join('\n'));
+                        }
+                        window.location.reload();
+                    }
+                } catch (e) {
+                    alert('Erro de rede ao aplicar a ação. Tente novamente.');
+                } finally {
+                    this.applying = false;
+                }
+            },
+        };
+    }
+    </script>
 
 </x-app-layout>
