@@ -198,7 +198,7 @@
                                     Abrir
                                 </a>
                                 @if($task->project)
-                                    <a href="{{ route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) }}"
+                                    <a href="{{ $task->project->macro_plan_id ? route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) : route('projects.showDirect', $task->project) }}"
                                        class="btn btn-ghost btn-xs">
                                         Projeto
                                     </a>

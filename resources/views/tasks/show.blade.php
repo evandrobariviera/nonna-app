@@ -159,14 +159,16 @@
                            onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
                             {{ $task->client?->company_name }}
                         </a>
+                        @if($task->project->macro_plan_id)
+                            <span style="color:var(--border2)">›</span>
+                            <a href="{{ route('macroplans.edit', $task->project->macro_plan_id) }}"
+                               style="color:var(--muted2)"
+                               onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted2)'">
+                                {{ $task->project->macroPlan?->title }}
+                            </a>
+                        @endif
                         <span style="color:var(--border2)">›</span>
-                        <a href="{{ route('macroplans.edit', $task->project->macro_plan_id) }}"
-                           style="color:var(--muted2)"
-                           onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted2)'">
-                            {{ $task->project->macroPlan?->title }}
-                        </a>
-                        <span style="color:var(--border2)">›</span>
-                        <a href="{{ route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) }}"
+                        <a href="{{ $task->project->macro_plan_id ? route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) : route('projects.showDirect', $task->project) }}"
                            style="color:var(--muted2)"
                            onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted2)'">
                             {{ $task->project->title }}
@@ -942,13 +944,13 @@
                         @endif
                     </div>
 
-                    @if($task->project?->macroPlan)
+                    @if($task->project?->macro_plan_id)
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Planejamento</p>
                             <a href="{{ route('macroplans.edit', $task->project->macro_plan_id) }}"
                                class="text-sm font-medium leading-snug block transition-colors" style="color:var(--text)"
                                onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'">
-                                {{ $task->project->macroPlan->title }}
+                                {{ $task->project->macroPlan?->title }}
                             </a>
                         </div>
                     @endif
@@ -956,7 +958,7 @@
                     @if($task->project)
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Projeto</p>
-                            <a href="{{ route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) }}"
+                            <a href="{{ $task->project->macro_plan_id ? route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) : route('projects.showDirect', $task->project) }}"
                                class="text-sm font-medium leading-snug block transition-colors" style="color:var(--text)"
                                onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'">
                                 {{ $task->project->title }}
