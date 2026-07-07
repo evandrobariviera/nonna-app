@@ -1,0 +1,426 @@
+{
+  "name": "Nonna - Import ClickUp (Planejamentos + Projetos + Chamados + Execução)",
+  "nodes": [
+    {
+      "id": "sticky-setup",
+      "name": "LEIA ANTES DE ATIVAR",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -420],
+      "parameters": {
+        "width": 680,
+        "height": 380,
+        "content": "## Antes de ativar\n\n1. Crie a credencial **HTTP Header Auth** chamada `ClickUp API Token`:\n   - Name: `Authorization`\n   - Value: seu personal API token do ClickUp (Configurações → Apps no ClickUp) — SEM prefixo `Bearer `, o ClickUp espera o token puro.\n2. Crie a credencial **HTTP Header Auth** chamada `Nonna App Import Secret`:\n   - Name: `X-Import-Secret`\n   - Value: o mesmo valor cadastrado como `IMPORT_SECRET` no Portainer/produção.\n3. Edite o node **Config** e confira `app_url` e os 3 List IDs (Planejamentos/Projetos/Chamados) — são os mesmos usados pelos comandos artisan `clickup:import-*`.\n4. Rode manualmente uma branch de cada vez (clique nos 3 pontos do primeiro node de cada branch → Execute) antes de ativar o Schedule Trigger.\n5. Ver os Sticky Notes ao lado de cada branch — há pontos que dependem de conferir o nome exato dos custom fields contra o ClickUp real, e a branch de Tarefas de Execução (D) depende de um campo que pode ainda não existir no ClickUp (ver nota específica)."
+      }
+    },
+    {
+      "id": "trigger",
+      "name": "Schedule Trigger (diário)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 5 * * *" }]
+        }
+      }
+    },
+    {
+      "id": "config",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 300],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "app_url", "name": "app_url", "type": "string", "value": "https://app.nonnaagenciadigital.com.br" },
+            { "id": "list_planejamentos", "name": "list_planejamentos", "type": "string", "value": "901326341797" },
+            { "id": "list_projetos", "name": "list_projetos", "type": "string", "value": "901326341887" },
+            { "id": "list_chamados", "name": "list_chamados", "type": "string", "value": "900701505618" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "sticky-pagination",
+      "name": "Sobre paginação",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [440, -420],
+      "parameters": {
+        "width": 460,
+        "height": 220,
+        "content": "## Paginação não implementada nesta v1\n\nA API do ClickUp devolve no máximo 100 tarefas por página (`page=0,1,2...`, resposta traz `last_page: true` quando acabou). A lista de Chamados sozinha já tem ~670 tarefas no total — ou seja, **precisa paginar** pra trazer tudo.\n\nConfigure isso manualmente em cada node \"Get ClickUp Tasks\": aba **Options → Pagination**, incrementando o parâmetro `page` até `last_page` vir `true`. Não coloquei a config pronta aqui porque o formato exato varia por versão do node HTTP Request — confira contra a documentação do n8n instalado."
+      }
+    },
+    {
+      "id": "sticky-custom-fields",
+      "name": "Sobre custom fields",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [440, -180],
+      "parameters": {
+        "width": 460,
+        "height": 200,
+        "content": "## Custom fields — confira os nomes reais\n\nOs Code nodes abaixo procuram custom fields por trecho do nome (`cliente_relacionado`, `deadline`, etc.), case-insensitive. Isso é uma suposição baseada nos nomes usados pelos comandos artisan `clickup:import-*` — **confira contra a resposta real da API** (`custom_fields` de qualquer task) antes de confiar no resultado, principalmente o tipo do campo (relationship/date/drop down mudam o formato de `value`)."
+      }
+    },
+    {
+      "id": "get-planejamentos",
+      "name": "Get ClickUp Tasks (Planejamentos)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 60],
+      "parameters": {
+        "url": "={{ 'https://api.clickup.com/api/v2/list/' + $('Config').item.json.list_planejamentos + '/task' }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "archived", "value": "false" },
+            { "name": "include_closed", "value": "false" }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "ClickUp API Token" }
+      }
+    },
+    {
+      "id": "build-macroplans",
+      "name": "Build Macroplans Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 60],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const tasks = $input.first().json.tasks || [];\n\nfunction getCustomField(task, pattern) {\n  return (task.custom_fields || []).find(f => (f.name || '').toLowerCase().includes(pattern));\n}\n\nfunction getRelatedClientId(task) {\n  const cf = getCustomField(task, 'cliente_relacionado');\n  const val = cf ? cf.value : null;\n  if (Array.isArray(val) && val.length > 0) {\n    return val[0].id || val[0].task_id || null;\n  }\n  return null;\n}\n\nconst macroplans = tasks.map(t => ({\n  clickup_task_id: t.id,\n  client_clickup_id: getRelatedClientId(t),\n  title: t.name,\n  clickup_status: (t.status && t.status.status) || 'draft',\n  description: t.text_content || t.description || null,\n  period_start: null,\n  period_end: null,\n  creator_email: t.creator ? t.creator.email : null,\n  responsible_email: (t.assignees && t.assignees[0]) ? t.assignees[0].email : null,\n  attachments: [],\n  deleted: false,\n}));\n\nreturn [{ json: { macroplans } }];\n"
+      }
+    },
+    {
+      "id": "post-macroplans",
+      "name": "POST Import Macroplans",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 60],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').item.json.app_url }}/api/clickup/import-macroplans",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App Import Secret" }
+      }
+    },
+    {
+      "id": "get-projetos",
+      "name": "Get ClickUp Tasks (Projetos)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 260],
+      "parameters": {
+        "url": "={{ 'https://api.clickup.com/api/v2/list/' + $('Config').item.json.list_projetos + '/task' }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "archived", "value": "false" },
+            { "name": "include_closed", "value": "false" }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "ClickUp API Token" }
+      }
+    },
+    {
+      "id": "build-projects",
+      "name": "Build Projects Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 260],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const tasks = $input.first().json.tasks || [];\n\nfunction getCustomField(task, pattern) {\n  return (task.custom_fields || []).find(f => (f.name || '').toLowerCase().includes(pattern));\n}\n\nfunction getRelatedId(task, pattern) {\n  const cf = getCustomField(task, pattern);\n  const val = cf ? cf.value : null;\n  if (Array.isArray(val) && val.length > 0) {\n    return val[0].id || val[0].task_id || null;\n  }\n  return null;\n}\n\n// ATENÇÃO (ver Sticky Note \"Lista de execução por projeto\"): isto tenta ler\n// a Lista de EXECUÇÃO do projeto (onde ficam as tarefas do dia a dia) de um\n// custom field no card do Projeto. Ajuste o padrão do nome ('lista_execucao'\n// / 'lista de tarefas') pro nome real, ou crie esse campo no ClickUp se\n// ainda não existir - sem ele a branch D (tarefas de execução) não localiza\n// as tarefas deste projeto.\nfunction getExecutionListId(task) {\n  const cf = getCustomField(task, 'lista_execucao') || getCustomField(task, 'lista de tarefas');\n  return cf ? cf.value : null;\n}\n\nconst projects = tasks.map(t => ({\n  clickup_task_id: t.id,\n  client_clickup_id: getRelatedId(t, 'cliente_relacionado'),\n  macro_plan_clickup_id: getRelatedId(t, 'roadmap') || getRelatedId(t, 'planejamento'),\n  clickup_list_id: getExecutionListId(t),\n  title: t.name,\n  objective: t.text_content || t.description || null,\n  clickup_status: (t.status && t.status.status) || 'draft',\n  attachments: [],\n  deleted: false,\n}));\n\nreturn [{ json: { projects } }];\n"
+      }
+    },
+    {
+      "id": "post-projects",
+      "name": "POST Import Projects",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 260],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').item.json.app_url }}/api/clickup/import-projects",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App Import Secret" }
+      }
+    },
+    {
+      "id": "sticky-execution-list",
+      "name": "Lista de execução por projeto",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [880, 380],
+      "parameters": {
+        "width": 420,
+        "height": 240,
+        "content": "## Ponto em aberto: de onde vem a Lista de execução?\n\nA branch D (Tarefas de Execução) precisa saber, pra cada Projeto, qual Lista do ClickUp guarda suas tarefas do dia a dia (`projects.clickup_list_id`). Como no ClickUp a única hierarquia nativa entre tarefas é \"cliente relacionado\" (não existe \"projeto relacionado\"), essa informação provavelmente **ainda não existe** como custom field.\n\nDuas opções antes de ativar a branch D:\n1. Criar um custom field no card do Projeto (ex: \"Lista de Execução\") guardando o List ID correspondente, e ajustar o padrão de nome no node **Build Projects Payload**.\n2. Ou definir esse valor manualmente direto no App depois que o projeto for importado (hoje não existe campo na UI pra isso — precisaria adicionar)."
+      }
+    },
+    {
+      "id": "get-chamados",
+      "name": "Get ClickUp Tasks (Chamados)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 460],
+      "parameters": {
+        "url": "={{ 'https://api.clickup.com/api/v2/list/' + $('Config').item.json.list_chamados + '/task' }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "archived", "value": "false" },
+            { "name": "include_closed", "value": "false" }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "ClickUp API Token" }
+      }
+    },
+    {
+      "id": "build-chamados",
+      "name": "Build Chamados Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 460],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const tasks = $input.first().json.tasks || [];\n\nfunction getCustomField(task, pattern) {\n  return (task.custom_fields || []).find(f => (f.name || '').toLowerCase().includes(pattern));\n}\n\nfunction getFieldValue(task, pattern) {\n  const cf = getCustomField(task, pattern);\n  return cf ? cf.value : null;\n}\n\nfunction getRelatedClientId(task) {\n  const val = getFieldValue(task, 'cliente_relacionado');\n  if (Array.isArray(val) && val.length > 0) return val[0].id || val[0].task_id || null;\n  return null;\n}\n\nfunction getDateField(task, pattern) {\n  const val = getFieldValue(task, pattern);\n  if (!val) return null;\n  const ms = typeof val === 'string' ? parseInt(val, 10) : val;\n  if (!ms) return null;\n  return new Date(ms).toISOString().substring(0, 10);\n}\n\nconst tasksPayload = tasks.map(t => ({\n  clickup_task_id: t.id,\n  project_id: null,\n  list_id: t.list ? t.list.id : null,\n  client_clickup_id: getRelatedClientId(t),\n  title: t.name,\n  description: t.text_content || t.description || null,\n  clickup_status: (t.status && t.status.status) || 'backlog',\n  clickup_priority: t.priority ? t.priority.priority : 'normal',\n  task_type: 'administrativo',\n  origin: 'ticket',\n  destination: null,\n  situation: (t.status && t.status.status) || null,\n  due_date: getDateField(t, 'deadline'),\n  approval_date: null,\n  is_ticket: true,\n  requester_name: getFieldValue(t, 'solicitante_nome'),\n  requester_whatsapp: getFieldValue(t, 'solicitante_whatsapp'),\n  requester_channel: null,\n  creator_email: t.creator ? t.creator.email : null,\n  executor_email: (t.assignees && t.assignees[0]) ? t.assignees[0].email : null,\n  responsavel_email: null,\n  attachments: [],\n  deleted: false,\n}));\n\nreturn [{ json: { tasks: tasksPayload } }];\n"
+      }
+    },
+    {
+      "id": "post-chamados",
+      "name": "POST Import Chamados",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 460],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').item.json.app_url }}/api/clickup/import",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App Import Secret" }
+      }
+    },
+    {
+      "id": "get-project-lists",
+      "name": "GET App Project Lists",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 700],
+      "parameters": {
+        "url": "={{ $('Config').item.json.app_url }}/api/clickup/project-lists",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App Import Secret" }
+      }
+    },
+    {
+      "id": "split-project-lists",
+      "name": "Split Into Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 700],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const data = $input.first().json.data || [];\nreturn data.map(d => ({ json: d }));\n"
+      }
+    },
+    {
+      "id": "loop-projects",
+      "name": "Loop Projects",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [880, 700],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "sticky-loop",
+      "name": "Sobre o loop",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [880, 860],
+      "parameters": {
+        "width": 320,
+        "height": 160,
+        "content": "**Loop Projects** processa um projeto por vez (um GET na Lista de execução dele por iteração). A saída \"done\" (esquerda) fica sem conexão - o workflow termina ali quando acabam os projetos. A saída \"loop\" (direita) segue pro GET de tarefas, e o POST no final retorna pra este node."
+      }
+    },
+    {
+      "id": "sticky-deleted",
+      "name": "Sobre exclusão/arquivamento",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1100, 860],
+      "parameters": {
+        "width": 380,
+        "height": 180,
+        "content": "## \"deleted\" não é detectado nesta v1\n\nOs 3 endpoints já sabem tratar `\"deleted\": true` (cancela em vez de apagar - ver `clickup-import-api.md`), mas nenhuma branch deste workflow envia esse campo como `true` hoje. Detectar exclusão/arquivamento exige comparar os IDs retornados agora contra os já conhecidos no App (o que sumiu = candidato a `deleted`) - fica como próximo passo, não implementado aqui."
+      }
+    },
+    {
+      "id": "get-execution-tasks",
+      "name": "Get ClickUp Tasks (Execução do Projeto)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 700],
+      "parameters": {
+        "url": "={{ 'https://api.clickup.com/api/v2/list/' + $json.clickup_list_id + '/task' }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "archived", "value": "false" },
+            { "name": "include_closed", "value": "false" }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {},
+        "onError": "continueRegularOutput"
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "ClickUp API Token" }
+      }
+    },
+    {
+      "id": "build-execution-tasks",
+      "name": "Build Execution Tasks Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 700],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const project = $('Loop Projects').item.json;\nconst tasks = $input.first().json.tasks || [];\n\nfunction getCustomField(task, pattern) {\n  return (task.custom_fields || []).find(f => (f.name || '').toLowerCase().includes(pattern));\n}\n\nfunction getDateField(task, pattern) {\n  const cf = getCustomField(task, pattern);\n  const val = cf ? cf.value : null;\n  if (!val) return null;\n  const ms = typeof val === 'string' ? parseInt(val, 10) : val;\n  if (!ms) return null;\n  return new Date(ms).toISOString().substring(0, 10);\n}\n\nconst tasksPayload = tasks.map(t => ({\n  clickup_task_id: t.id,\n  project_id: null,\n  list_id: project.clickup_list_id,\n  client_clickup_id: project.client_clickup_id,\n  title: t.name,\n  description: t.text_content || t.description || null,\n  clickup_status: (t.status && t.status.status) || 'backlog',\n  clickup_priority: t.priority ? t.priority.priority : 'normal',\n  task_type: 'criacao',\n  origin: 'projeto',\n  destination: null,\n  situation: null,\n  due_date: getDateField(t, 'deadline'),\n  approval_date: null,\n  is_ticket: false,\n  requester_name: null,\n  requester_whatsapp: null,\n  requester_channel: null,\n  creator_email: t.creator ? t.creator.email : null,\n  executor_email: (t.assignees && t.assignees[0]) ? t.assignees[0].email : null,\n  responsavel_email: (t.assignees && t.assignees[1]) ? t.assignees[1].email : null,\n  attachments: [],\n  deleted: false,\n}));\n\nreturn [{ json: { tasks: tasksPayload } }];\n"
+      }
+    },
+    {
+      "id": "post-execution-tasks",
+      "name": "POST Import Execution Tasks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, 700],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').item.json.app_url }}/api/clickup/import",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {},
+        "onError": "continueRegularOutput"
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App Import Secret" }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger (diário)": {
+      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+    },
+    "Config": {
+      "main": [[
+        { "node": "Get ClickUp Tasks (Planejamentos)", "type": "main", "index": 0 },
+        { "node": "Get ClickUp Tasks (Projetos)", "type": "main", "index": 0 },
+        { "node": "Get ClickUp Tasks (Chamados)", "type": "main", "index": 0 },
+        { "node": "GET App Project Lists", "type": "main", "index": 0 }
+      ]]
+    },
+    "Get ClickUp Tasks (Planejamentos)": {
+      "main": [[{ "node": "Build Macroplans Payload", "type": "main", "index": 0 }]]
+    },
+    "Build Macroplans Payload": {
+      "main": [[{ "node": "POST Import Macroplans", "type": "main", "index": 0 }]]
+    },
+    "POST Import Macroplans": {
+      "main": [[]]
+    },
+    "Get ClickUp Tasks (Projetos)": {
+      "main": [[{ "node": "Build Projects Payload", "type": "main", "index": 0 }]]
+    },
+    "Build Projects Payload": {
+      "main": [[{ "node": "POST Import Projects", "type": "main", "index": 0 }]]
+    },
+    "POST Import Projects": {
+      "main": [[]]
+    },
+    "Get ClickUp Tasks (Chamados)": {
+      "main": [[{ "node": "Build Chamados Payload", "type": "main", "index": 0 }]]
+    },
+    "Build Chamados Payload": {
+      "main": [[{ "node": "POST Import Chamados", "type": "main", "index": 0 }]]
+    },
+    "POST Import Chamados": {
+      "main": [[]]
+    },
+    "GET App Project Lists": {
+      "main": [[{ "node": "Split Into Items", "type": "main", "index": 0 }]]
+    },
+    "Split Into Items": {
+      "main": [[{ "node": "Loop Projects", "type": "main", "index": 0 }]]
+    },
+    "Loop Projects": {
+      "main": [
+        [],
+        [{ "node": "Get ClickUp Tasks (Execução do Projeto)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get ClickUp Tasks (Execução do Projeto)": {
+      "main": [[{ "node": "Build Execution Tasks Payload", "type": "main", "index": 0 }]]
+    },
+    "Build Execution Tasks Payload": {
+      "main": [[{ "node": "POST Import Execution Tasks", "type": "main", "index": 0 }]]
+    },
+    "POST Import Execution Tasks": {
+      "main": [[{ "node": "Loop Projects", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
