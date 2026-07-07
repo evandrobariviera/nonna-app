@@ -18,6 +18,11 @@
 <tr class="{{ $priorityClass }} {{ $task->isOverdue() ? 'row-overdue' : '' }}"
     x-show="groupOpen" x-data="{ statusOpen: false, situacaoOpen: false }">
 
+    {{-- Checkbox --}}
+    <td class="text-center">
+        <input type="checkbox" value="{{ $task->id }}" data-task-id="{{ $task->id }}" x-model="selected">
+    </td>
+
     {{-- Título --}}
     <td>
         <div class="flex flex-col justify-center gap-0.5">

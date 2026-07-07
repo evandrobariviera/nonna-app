@@ -48,29 +48,33 @@
         </div>
     @endif
 
-    {{-- TABELA --}}
-    <div class="card overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="nonna-table">
-                @include('partials._task-thead')
-                <tbody>
-                    @forelse($tickets as $ticket)
-                        @include('partials._task-tr', ['task' => $ticket, 'context' => 'ticket'])
-                    @empty
-                        <tr>
-                            <td colspan="11">
-                                <div class="tab-placeholder">
-                                    <div class="tab-placeholder-icon">🎫</div>
-                                    <div class="tab-placeholder-title">Nenhum ticket encontrado</div>
-                                    <div class="tab-placeholder-desc">Ajuste os filtros ou crie um novo ticket.</div>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+    <div x-data="taskBulk()" x-cloak>
+        @include('partials._task-bulk-bar')
+
+        {{-- TABELA --}}
+        <div class="card overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="nonna-table">
+                    @include('partials._task-thead')
+                    <tbody>
+                        @forelse($tickets as $ticket)
+                            @include('partials._task-tr', ['task' => $ticket, 'context' => 'ticket'])
+                        @empty
+                            <tr>
+                                <td colspan="11">
+                                    <div class="tab-placeholder">
+                                        <div class="tab-placeholder-icon">🎫</div>
+                                        <div class="tab-placeholder-title">Nenhum ticket encontrado</div>
+                                        <div class="tab-placeholder-desc">Ajuste os filtros ou crie um novo ticket.</div>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
+    </div>{{-- /x-data taskBulk --}}
 
     <div class="mt-4">{{ $tickets->links() }}</div>
 

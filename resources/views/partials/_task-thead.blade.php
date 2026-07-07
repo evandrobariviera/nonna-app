@@ -1,6 +1,7 @@
 {{-- Cabeçalho padrão da tabela de tarefas --}}
 <thead>
     <tr>
+        <th style="width:36px"><input type="checkbox" @click="toggleAll($event.target.checked)" title="Selecionar todos"></th>
         <th>Tarefa</th>
         <th style="width:150px">Cliente</th>
         <th style="width:44px; text-align:center">Resp.</th>

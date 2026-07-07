@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\Project;
 use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\User;
@@ -65,10 +66,11 @@ class SprintController extends Controller
             ->orderBy('due_date')
             ->get();
 
-        $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
-        $users   = User::orderBy('name')->get(['id', 'name']);
+        $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $users    = User::orderBy('name')->get(['id', 'name']);
+        $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
 
-        return view('sprints.show', compact('sprint', 'kanban', 'backlogTasks', 'clients', 'users'));
+        return view('sprints.show', compact('sprint', 'kanban', 'backlogTasks', 'clients', 'users', 'projects'));
     }
 
     public function update(Request $request, Sprint $sprint)

@@ -135,6 +135,8 @@
             <p class="tab-placeholder-desc">Todas as tarefas foram alocadas em sprints ou não há tarefas no backlog.</p>
         </div>
     @else
+        <div x-data="taskBulk()" x-cloak>
+        @include('partials._task-bulk-bar')
         <div class="card overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="nonna-table">
@@ -223,6 +225,7 @@
                 </table>
             </div>
         </div>
+        </div>{{-- /x-data taskBulk --}}
     @endif
 
 </x-app-layout>

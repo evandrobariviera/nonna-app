@@ -144,44 +144,6 @@
 
         </div>
 
-        {{-- ── BARRA DE AÇÕES EM MASSA ─────────────────────────────────────── --}}
-        <div x-show="selected.length > 0" class="card px-4 py-3 mb-5 flex flex-wrap items-center gap-3" style="border-color:var(--purple)">
-            <span class="text-xs font-mono font-semibold" style="color:var(--purple)">
-                <span x-text="selected.length"></span> selecionado<span x-show="selected.length !== 1">s</span>
-            </span>
-
-            <div class="h-5" style="border-left:1px solid var(--border2)"></div>
-
-            <template x-if="bulkClientIds().length > 1">
-                <span class="text-xs font-mono" style="color:var(--orange)">
-                    Selecione projetos de um único cliente para vincular a um planejamento em massa.
-                </span>
-            </template>
-
-            <template x-if="bulkClientIds().length <= 1">
-                <div class="flex items-center gap-2">
-                    <select x-model="bulkMacroplanId"
-                        class="px-3 py-2 text-xs focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text); min-width:200px">
-                        <option value="">Vincular a planejamento…</option>
-                        <template x-for="mp in bulkMacroplanOptions()" :key="mp.id">
-                            <option :value="mp.id" x-text="mp.title"></option>
-                        </template>
-                    </select>
-                    <button @click="applyBulkMacroplan()" :disabled="!bulkMacroplanId || bulkApplying"
-                        class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white transition-opacity"
-                        style="background:var(--purple)">
-                        <span x-show="!bulkApplying">Vincular</span>
-                        <span x-show="bulkApplying">Aplicando…</span>
-                    </button>
-                </div>
-            </template>
-
-            <button @click="selected = []" class="text-xs font-mono ml-auto" style="color:var(--muted)">
-                ✕ Limpar seleção
-            </button>
-        </div>
-
         {{-- ── GRID DE CARDS ───────────────────────────────────────────────── --}}
         <div x-show="filtered.length === 0" class="card px-5 py-12 text-center">
             <p class="text-sm" style="color:var(--muted)">Nenhum item encontrado com os filtros aplicados.</p>
@@ -191,10 +153,6 @@
             <template x-for="p in filtered" :key="p.id">
                 <div class="card flex flex-col relative"
                      :style="typeTopBorder(p) + urgencyLeftBorder(p)">
-
-                    {{-- Checkbox de seleção em massa --}}
-                    <input type="checkbox" :value="p.id" x-model="selected"
-                        class="absolute top-2 left-2 z-10" style="width:16px; height:16px">
 
                     {{-- Lápis de edição rápida --}}
                     <button @click="openEdit(p)"
@@ -412,10 +370,6 @@
             editTarget: null,
             editForm: { type: 'projeto', status: 'active', macro_plan_id: '' },
 
-            selected: [],
-            bulkMacroplanId: '',
-            bulkApplying: false,
-
             sortOptions: [
                 { key: 'urgency',       label: 'Urgência' },
                 { key: 'progress_asc',  label: 'Menos avançado' },
@@ -548,61 +502,6 @@
                     }
                 } finally {
                     this.editSaving = false;
-                }
-            },
-
-            bulkClientIds() {
-                const ids = this.all.filter(p => this.selected.includes(p.id)).map(p => p.client_id);
-                return [...new Set(ids)];
-            },
-
-            bulkMacroplanOptions() {
-                const clientIds = this.bulkClientIds();
-                if (clientIds.length !== 1) return [];
-                return this.macroplans.filter(mp => mp.client_id === clientIds[0]);
-            },
-
-            async applyBulkMacroplan() {
-                if (!this.bulkMacroplanId || this.selected.length === 0) return;
-                this.bulkApplying = true;
-                try {
-                    const res = await fetch('{{ route('projects.bulkUpdate') }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json',
-                        },
-                        body: JSON.stringify({ project_ids: this.selected, macro_plan_id: this.bulkMacroplanId }),
-                    });
-                    if (!res.ok) {
-                        let msg = 'Não foi possível vincular (erro ' + res.status + ').';
-                        try {
-                            const errJson = await res.json();
-                            if (errJson.message) msg = errJson.message;
-                        } catch (e) { /* resposta não era JSON */ }
-                        alert(msg);
-                        return;
-                    }
-
-                    const json = await res.json();
-                    if (json.success) {
-                        json.updated.forEach(u => {
-                            const p = this.all.find(item => item.id === u.id);
-                            if (p) Object.assign(p, u);
-                        });
-                        if (json.skipped.length > 0) {
-                            alert(json.skipped.length + ' projeto(s) pulado(s):\n' +
-                                json.skipped.map(s => '- ' + s.title + ' (' + s.reason + ')').join('\n'));
-                        }
-                        this.selected = [];
-                        this.bulkMacroplanId = '';
-                        this.applyFilters();
-                    }
-                } catch (e) {
-                    alert('Erro de rede ao vincular. Tente novamente.');
-                } finally {
-                    this.bulkApplying = false;
                 }
             },
         };

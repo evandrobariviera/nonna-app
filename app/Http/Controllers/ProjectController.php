@@ -272,40 +272,4 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function bulkUpdate(Request $request): \Illuminate\Http\JsonResponse
-    {
-        $data = $request->validate([
-            'project_ids'   => 'required|array|min:1',
-            'project_ids.*' => 'uuid|exists:pgsql.projects,id',
-            'macro_plan_id' => 'required|uuid|exists:pgsql.macro_plans,id',
-        ]);
-
-        $macroplan = MacroPlan::findOrFail($data['macro_plan_id']);
-        $projects  = Project::whereIn('id', $data['project_ids'])->get();
-
-        $updated = [];
-        $skipped = [];
-
-        foreach ($projects as $project) {
-            if ((string) $project->client_id !== (string) $macroplan->client_id) {
-                $skipped[] = ['id' => $project->id, 'title' => $project->title, 'reason' => 'cliente diferente do macroplanejamento'];
-                continue;
-            }
-
-            $project->update(['macro_plan_id' => $macroplan->id]);
-            $updated[] = [
-                'id'              => $project->id,
-                'macroplan_id'    => $macroplan->id,
-                'macroplan_title' => $macroplan->title,
-                'macroplan_url'   => route('macroplans.edit', [$macroplan->id, 'bloco' => 'bloco3']),
-                'url'             => route('macroplans.projects.show', [$macroplan->id, $project->id]),
-            ];
-        }
-
-        return response()->json([
-            'success' => true,
-            'updated' => $updated,
-            'skipped' => $skipped,
-        ]);
-    }
 }

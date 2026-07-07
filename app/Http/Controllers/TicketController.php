@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\Project;
 use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\User;
@@ -27,11 +28,12 @@ class TicketController extends Controller
             $query->where('executor_id', $request->executor_id);
         }
 
-        $tickets = $query->paginate(30)->withQueryString();
-        $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
-        $users   = User::orderBy('name')->get(['id', 'name']);
+        $tickets  = $query->paginate(30)->withQueryString();
+        $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $users    = User::orderBy('name')->get(['id', 'name']);
+        $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
 
-        return view('tickets.index', compact('tickets', 'clients', 'users'));
+        return view('tickets.index', compact('tickets', 'clients', 'users', 'projects'));
     }
 
     public function create()

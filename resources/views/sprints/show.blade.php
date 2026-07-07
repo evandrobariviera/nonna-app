@@ -87,7 +87,7 @@
         </div>
     </div>
 
-    <div x-data="{ tab: 'board', clientFilter: '' }">
+    <div x-data="{ tab: 'board', clientFilter: '', ...taskBulk() }" x-cloak>
 
         {{-- TABS --}}
         <div class="flex gap-1 mb-5" style="border-bottom:1px solid var(--border2)">
@@ -107,6 +107,8 @@
                 @endif
             </button>
         </div>
+
+        @include('partials._task-bulk-bar')
 
         {{-- ── TAB BOARD ── --}}
         <div x-show="tab === 'board'" x-cloak>
@@ -129,8 +131,11 @@
                         </div>
 
                         @forelse($colTasks as $task)
-                            <div class="card px-4 py-3"
+                            <div class="card px-4 py-3 relative"
                                  style="{{ $task->isOverdue() ? 'border-left:3px solid var(--red)' : '' }}">
+
+                                <input type="checkbox" value="{{ $task->id }}" data-task-id="{{ $task->id }}" x-model="selected"
+                                    class="absolute top-2 right-2" style="width:14px; height:14px">
 
                                 {{-- Cliente --}}
                                 <p class="text-xs font-mono mb-1" style="color:var(--purple)">
@@ -258,6 +263,9 @@
                     <div class="flex items-center justify-between gap-4 px-4 py-3 mb-2"
                          style="background:var(--s2); border:1px solid var(--border2)"
                          x-show="clientFilter === '' || clientFilter === '{{ $task->client_id }}'">
+
+                        <input type="checkbox" value="{{ $task->id }}" data-task-id="{{ $task->id }}" x-model="selected"
+                            style="width:14px; height:14px; flex-shrink:0">
 
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">
