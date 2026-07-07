@@ -2,11 +2,20 @@
 
 ## Objetivo
 
-O n8n lê o ClickUp (API própria ou as tabelas `clickup_*` espelhadas no Postgres), **valida e normaliza os campos** — é o n8n quem lida com custom fields mal preenchidos, texto solto onde deveria ter estrutura, etc. — e envia o resultado já limpo para os 3 endpoints abaixo.
+O n8n lê o ClickUp e envia os dados já limpos/normalizados para os endpoints abaixo — é o n8n quem lida com custom fields mal preenchidos, texto solto onde deveria ter estrutura, etc.
 
 Direção do fluxo: **ClickUp → App**. Isso é o inverso da "regra de ouro" (App escreve primeiro, n8n sincroniza pro ClickUp) — aqui é o caminho de leitura/espelhamento do que já existe/mudou no ClickUp. O App nunca consulta a API do ClickUp diretamente (ver `CLAUDE.md` § O que NÃO fazer).
 
-Os comandos artisan `clickup:import-planejamentos` / `clickup:import-projetos` / `clickup:import-chamados` fazem algo parecido, mas lendo direto do jsonb bruto da tabela `clickup_tasks` via SQL — ficam como caminho alternativo/legado (útil pra backfill pontual), não o caminho principal. **O caminho recomendado é sempre via n8n + estes 3 endpoints**, porque o n8n consegue tratar inconsistência de dado de origem de forma mais robusta que uma query SQL contra JSON bruto.
+## Incidente (2026-07-06) — leia antes de rodar qualquer import em massa
+
+Uma primeira tentativa de automatizar a importação (workflow com 4 branches, resolvendo `project_id` automaticamente via `list_id`) deu errado: um custom field mal identificado no ClickUp fez um projeto (`clickup_list_id`) apontar para a própria lista "Projetos (Projects)" em vez de sua lista de execução — o workflow então leu todos os outros cards de Projeto como se fossem tarefas de execução daquele projeto, criando 53 tarefas fantasma linkadas ao cliente errado. Isso também expôs um bug real e independente: a tela de tarefa (`tasks/show.blade.php`) quebrava com 500 sempre que o projeto da tarefa não tinha macroplano vinculado (`route()` com parâmetro obrigatório nulo) — corrigido separadamente, caindo em `projects.showDirect` quando não há macroplano.
+
+**Dados remediados:** as 53 tarefas fantasma foram apagadas e o `clickup_list_id` incorreto foi zerado.
+
+**Mudança de estratégia daqui pra frente:**
+- **Migração de baixo pra cima, controlada, lista por lista.** Primeiro só tarefas operacionais — nenhum vínculo automático com Projeto. Projetos e Macroplanos **já foram lançados manualmente no App** (não precisam ser reimportados, só conferidos depois).
+- **Nenhuma resolução automática de `project_id` via `list_id`.** O vínculo Tarefa → Projeto (e Projeto → Macroplano) é feito **manualmente, em lote, dentro do App** — ver funcionalidade de edição em massa (roadmap).
+- O workflow de referência agora é deliberadamente simples: uma lista por vez, escolhida manualmente, sem automação de agendamento.
 
 ## Autenticação
 
@@ -18,9 +27,9 @@ X-Import-Secret: {valor de IMPORT_SECRET no .env}
 
 Sem esse header (ou com valor errado, quando `IMPORT_SECRET` está configurado): `401 Unauthorized`.
 
-## `POST /api/clickup/import` — Tarefas (execução E tickets avulsos)
+## `POST /api/clickup/import` — Tarefas (execução E tickets avulsos) — endpoint em uso ativo
 
-Endpoint **genérico** — não é só para chamados/tickets. `is_ticket` é apenas mais um campo do payload; o mesmo endpoint recebe tanto tarefa de execução dentro de um Projeto quanto ticket avulso.
+Endpoint **genérico** — não é só para chamados/tickets. `is_ticket` é apenas mais um campo do payload.
 
 **Payload:**
 ```json
@@ -29,7 +38,7 @@ Endpoint **genérico** — não é só para chamados/tickets. `is_ticket` é ape
     {
       "clickup_task_id": "86adp72n3",
       "project_id": null,
-      "list_id": "901326341887",
+      "list_id": null,
       "client_clickup_id": "86ax9y2ab",
       "title": "Criar 3 criativos para campanha de julho",
       "description": "Briefing: ...",
@@ -55,13 +64,9 @@ Endpoint **genérico** — não é só para chamados/tickets. `is_ticket` é ape
 }
 ```
 
-**Resolução de `project_id`:** se vier `project_id` direto no payload, usa ele. Senão, resolve por `list_id` batendo contra `projects.clickup_list_id` já cadastrado no App. Se nenhum dos dois resolver, a tarefa fica com `project_id = null` (avulsa/ticket).
+**Na migração controlada atual, `project_id` e `list_id` vão sempre `null`.** O vínculo com Projeto é feito depois, manualmente, em lote, dentro do App — nunca inferido durante o import (ver Incidente acima). `list_id` só deveria voltar a ser enviado se/quando essa resolução automática for reintroduzida com salvaguardas melhores.
 
-**Resolução de `client_id`:** por `client_clickup_id` (bate contra `clients.clickup_task_id`) ou, se ausente, herda do `client_id` do projeto resolvido.
-
-**Tarefa de execução (dentro de um Projeto)** — o caso comum: enviar `list_id` (a `clickup_list_id` do projeto), `is_ticket: false`, `origin: "projeto"`.
-
-**Ticket avulso** — o caso do antigo `clickup:import-chamados`: enviar `is_ticket: true`, `origin: "ticket"`, e os campos `requester_*` preenchidos (quem solicitou fora da equipe).
+**Resolução de `client_id`:** por `client_clickup_id` (bate contra `clients.clickup_task_id`) ou, se ausente, herda do `client_id` do projeto resolvido (só relevante se `project_id` vier preenchido).
 
 **`clickup_status` aceitos** (case-insensitive, mapeados internamente — outros valores caem em `backlog`):
 `backlog`/`a fazer`/`to do`/`em planejamento`/`triagem` → `backlog` · `em atendimento`/`em criação` → `em_producao` · `aprovação` → `aguardando_aprovacao` · `alteração`/`ajuste` → `ajuste` · `em copy`/`copy` → `em_copy` · `pronto p/ produção` → `pronto_producao` · `em produção`/`in progress`/`em andamento` → `em_producao` · `em revisão`/`review` → `revisao` · `aguardando envio` → `aguardando_envio` · `aguardando resposta`/`aguardando cliente` → `aguardando_resposta` · `concluído`/`done`/`complete` → `concluido` · `aprovado`/`approved` → `aprovado` · `cancelado`/`cancelled` → `cancelado`
@@ -77,113 +82,35 @@ Endpoint **genérico** — não é só para chamados/tickets. `is_ticket` é ape
 { "imported": 1, "updated": 0, "skipped": 0, "errors": [] }
 ```
 
-## `POST /api/clickup/import-macroplans` — Macroplanejamentos (Roadmaps)
+## `POST /api/clickup/import-macroplans` e `POST /api/clickup/import-projects` — não usados na migração atual
 
-**Payload:**
-```json
-{
-  "macroplans": [
-    {
-      "clickup_task_id": "86adp99xx",
-      "client_clickup_id": "86ax9y2ab",
-      "title": "[ROADMAP] Sulfibra",
-      "clickup_status": "em execução",
-      "description": "Contexto e estratégia do ciclo...",
-      "period_start": null,
-      "period_end": null,
-      "creator_email": "evandro@nonna.com",
-      "responsible_email": "estrategista@nonna.com",
-      "attachments": [],
-      "deleted": false
-    }
-  ]
-}
-```
-
-- `client_clickup_id` é **obrigatório** (bate contra `clients.clickup_task_id`) — sem ele, a linha vira `skipped` com erro em `errors[]`, não é criada com cliente nulo.
-- `period_start`/`period_end`: se ausentes (comum — Roadmap no ClickUp raramente tem datas), o App usa `hoje` → `hoje + 90 dias` como fallback.
-- `description` vira o campo `bloco2.conteudo` do macroplano (bloco "Contexto e Estratégia").
-- `clickup_status` aceitos: `em planejamento`/`rascunho`/`draft` → `draft` · `ativo`/`active`/`in progress`/`em andamento` → `active` · `concluído`/`done`/`complete`/`encerrado`/`closed` → `closed`. **Não existe status "cancelado" neste model** — o mirror de exclusão usa `closed`.
-- `deleted: true` → marca `status: closed`, não apaga a linha.
-
-**Resposta 200:** mesmo formato de `import`.
-
-## `POST /api/clickup/import-projects` — Projetos (= Campanhas)
-
-No vocabulário de negócio da Nonna, **"Projeto" e "campanha" são a mesma coisa** — "grande campanha ou iniciativa que nasce a partir de um Roadmap" (`.claude/docs/business-context.md`). Não confundir com um nível hierárquico à parte.
-
-**Payload:**
-```json
-{
-  "projects": [
-    {
-      "clickup_task_id": "86adp88yy",
-      "client_clickup_id": "86ax9y2ab",
-      "macro_plan_clickup_id": "86adp99xx",
-      "clickup_list_id": "901326341887",
-      "title": "{Sulfibra} — Aquecimento Julho",
-      "objective": "Aquecer a base antes do lançamento de agosto",
-      "clickup_status": "em execução",
-      "attachments": [],
-      "deleted": false
-    }
-  ]
-}
-```
-
-- `client_clickup_id` obrigatório, mesma regra do macroplano.
-- `macro_plan_clickup_id` é **opcional** — se não vier ou não resolver, o projeto entra com `macro_plan_id = null` e pode ser linkado manualmente depois no App.
-- `clickup_list_id`: importante gravar este campo — é ele que permite ao endpoint `/clickup/import` resolver `project_id` automaticamente a partir do `list_id` de uma tarefa de execução (ver acima). Sem isso, tarefas dessa lista não conseguem ser auto-linkadas ao projeto.
-- `clickup_status` aceitos: `em planejamento`/`rascunho`/`draft` → `draft` · `ativo`/`active`/`in progress`/`em andamento` → `active` · `contínuo`/`continuous` → `continua` · `concluído`/`done`/`complete` → `completed` · `cancelado`/`cancelled`/`canceled` → `cancelled`.
-- `deleted: true` → marca `status: cancelled`, não apaga a linha.
-
-**Resposta 200:** mesmo formato de `import`.
-
-## `GET /api/clickup/project-lists` — Descobrir a Lista de execução de cada Projeto
-
-No ClickUp, a única hierarquia nativa entre tarefas é o campo "cliente relacionado" — não existe um campo "projeto relacionado" nas tarefas de execução. Por isso, cada Projeto tem sua própria Lista dedicada no ClickUp (`clickup_list_id`), e as tarefas de execução vivem dentro dela. Este endpoint devolve, para cada projeto já sincronizado, qual Lista o n8n deve consultar para puxar as tarefas de execução correspondentes.
-
-**Resposta 200:**
-```json
-{
-  "data": [
-    {
-      "project_id": "uuid-do-projeto-no-app",
-      "clickup_list_id": "901987654321",
-      "client_clickup_id": "86ax9y2ab",
-      "title": "{Sulfibra} — Aquecimento Julho"
-    }
-  ]
-}
-```
-
-Só retorna projetos com `clickup_list_id` preenchido (ou seja, que já passaram por `import-projects` com esse campo enviado). Fluxo esperado no n8n: chamar este GET → loop por item → `GET https://api.clickup.com/api/v2/list/{clickup_list_id}/task` no ClickUp → transformar → `POST /api/clickup/import` com `list_id` = o mesmo `clickup_list_id` (o App resolve `project_id` e herda `client_id` do projeto automaticamente).
+Esses dois endpoints continuam existindo e funcionando (contrato inalterado — ver histórico deste arquivo se precisar), mas **não fazem parte do fluxo de migração atual**: Macroplanos e Projetos já foram lançados manualmente no App e só precisam ser conferidos, não reimportados. Só voltam a ser relevantes se um dia for necessário resincronizar Macroplanos/Projetos em massa a partir do ClickUp — nesse caso, revisitar este documento e aplicar as mesmas cautelas do Incidente acima (nada de resolução automática de vínculo sem dupla checagem).
 
 ## Erros
 
 - Falha ao montar os lookups iniciais (conexão, etc.): `500` com `error` e `file` (arquivo:linha).
 - Erro ao processar uma linha específica (ex: cliente não resolvido): não interrompe o lote — a linha entra em `errors[]` com `index`/`clickup_task_id`/`error`, e o processamento continua para as próximas linhas.
 
-## Cuidado com qualidade do dado de origem
-
-Antes de rodar uma carga em massa, vale checar manualmente se não há **cards fora de lugar** nas listas do ClickUp (ex.: encontramos dois cards `BLOCO 1: VISÃO GERAL E METAS` / `BLOCO 2: CONTEXTO E ESTRATÉGIA` soltos dentro da lista "Projetos (Projects)" — nomes que baten com os blocos internos de um Macroplanejamento, sugerindo que foram criados na lista errada por engano). Esse tipo de card viraria um "Projeto" fantasma no App se importado sem filtro.
-
 ## Workflow n8n de referência
 
-Existe um workflow de referência em [`.claude/docs/n8n-workflows/clickup-import.json`](n8n-workflows/clickup-import.json), com 4 branches (Planejamentos, Projetos, Chamados, Tarefas de Execução) já ligadas nos endpoints acima. As 4 leituras do ClickUp usam o **node nativo `ClickUp`** (Resource: Task, Operation: Get All, `Return All` ligado) em vez de HTTP Request cru — resolve paginação sozinho. **Não foi testado contra um ClickUp/n8n real** — os nomes de custom field usados nos Code nodes (`cliente_relacionado`, `deadline`, etc.) são suposições baseadas na convenção dos comandos artisan `clickup:import-*`, e os nomes exatos dos campos internos do node nativo (`List`, `Filters`) podem variar por versão do n8n — confira ambos antes de confiar no resultado.
+Existe um workflow de referência em [`.claude/docs/n8n-workflows/clickup-import.json`](n8n-workflows/clickup-import.json) — **deliberadamente simples**: um único fluxo, trigger manual, uma Lista por execução (selecionada à mão no seletor nativo do node ClickUp), sem nenhum vínculo automático de Projeto. Usa o **node nativo `ClickUp`** (Resource: Task, Operation: Get All, `Return All` ligado) — resolve paginação sozinho. **Não foi testado contra um ClickUp/n8n real** — os nomes de custom field usados no Code node (`cliente_relacionado`, `deadline`, etc.) são suposições baseadas na convenção dos comandos artisan `clickup:import-*`; confira contra a resposta real antes de confiar no resultado (o próprio workflow orienta rodar só o node de leitura primeiro e inspecionar `custom_fields`).
 
 ### Como importar
 1. No n8n: **Workflows → Import from File**.
 2. Criar a credencial nativa **ClickUp API** `ClickUp API Token` (Credentials → New → ClickUp API): cole seu personal API token do ClickUp.
 3. Criar a credencial **HTTP Header Auth** `Nonna App Import Secret` (`X-Import-Secret: {IMPORT_SECRET do Portainer}`).
-4. Conferir `app_url` e os 3 List IDs no node **Config**.
-5. Depois de conectar a credencial ClickUp, abrir cada node **Get ClickUp Tasks** e confirmar que o campo **List** carregou o ID certo (costuma virar um seletor visual assim que a credencial autentica) — se não, reselecionar manualmente.
-6. Rodar manualmente, branch por branch, antes de ativar o Schedule Trigger.
+4. Abrir o node **Get ClickUp Tasks**, conectar a credencial e selecionar a Lista pelo seletor nativo — **uma lista de cada vez**.
+5. Rodar só esse node primeiro, conferir os `custom_fields` do resultado, ajustar o Code node se os nomes reais forem diferentes.
+6. Só então rodar o workflow completo pra aquela lista.
 
 ### Filtro de status (só tarefas ativas)
 
-As 4 branches trazem **só o que está ativo** — concluído/cancelado/finalizado/encerrado ficam de fora, com dupla proteção: `Include Closed = false` no filtro do node nativo, e um filtro explícito por nome de status dentro de cada node "Build ...Payload" (mesma lista de status usada pelos comandos artisan `clickup:import-*`). O filtro explícito existe porque "o que conta como fechado" no ClickUp depende de como cada status foi configurado no workspace — não dá pra confiar só no filtro do node.
+Traz **só o que está ativo** — concluído/cancelado/finalizado/encerrado ficam de fora, com dupla proteção: `Include Closed = false` no filtro do node nativo, e um filtro explícito por nome de status dentro do Code node (mesma lista de status usada pelos comandos artisan `clickup:import-*`).
 
 ### Limitações conhecidas (ver Sticky Notes no próprio workflow)
-- **Lista de execução por projeto (branch D) depende de um custom field que pode não existir ainda** — como a única hierarquia nativa do ClickUp é "cliente relacionado" (não existe "projeto relacionado"), a branch de Tarefas de Execução só funciona se cada card de Projeto tiver um campo apontando para sua própria Lista de tarefas. Se esse campo não existir no ClickUp, precisa ser criado antes.
-- **Detecção de `deleted` não implementada** — os endpoints já sabem tratar `deleted: true` (cancela em vez de apagar), mas nenhuma branch deste workflow envia isso ainda. Detectar exclusão exigiria comparar os IDs retornados contra os já conhecidos no App.
+- **Detecção de `deleted` não implementada** — o endpoint já sabe tratar `deleted: true` (cancela em vez de apagar), mas o workflow não envia isso ainda. Detectar exclusão exigiria comparar os IDs retornados contra os já conhecidos no App — fica pra depois, quando a migração inicial estiver estável.
+- **Vínculo com Projeto é 100% manual** — por desenho, depois do Incidente acima. Ver roadmap da funcionalidade de edição em massa no App.
+
+## Cuidado com qualidade do dado de origem
+
+Vale checar manualmente se não há **cards fora de lugar** nas listas do ClickUp antes de importar uma lista (ex.: encontramos dois cards `BLOCO 1: VISÃO GERAL E METAS` / `BLOCO 2: CONTEXTO E ESTRATÉGIA` soltos dentro da lista "Projetos (Projects)" — nomes que batem com os blocos internos de um Macroplanejamento, sugerindo que foram criados na lista errada por engano).

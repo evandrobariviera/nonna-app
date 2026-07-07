@@ -22,7 +22,6 @@ use Illuminate\Support\Facades\Route;
 Route::post('/clickup/import',            [ClickupImportController::class,         'import']);
 Route::post('/clickup/import-macroplans', [ClickupMacroPlanImportController::class, 'import']);
 Route::post('/clickup/import-projects',   [ClickupProjectImportController::class,   'import']);
-Route::get('/clickup/project-lists',      [ClickupProjectImportController::class,   'lists']);
 
 Route::middleware(['auth:sanctum', SetApiTenant::class])->group(function () {
 

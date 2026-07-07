@@ -30,30 +30,6 @@ class ClickupProjectImportController extends Controller
         'canceled'        => 'cancelled',
     ];
 
-    // Expõe os projetos já sincronizados com sua clickup_list_id, para o n8n
-    // descobrir de qual Lista puxar as tarefas de execução de cada projeto.
-    public function lists(Request $request): JsonResponse
-    {
-        $secret = config('app.import_secret');
-        if ($secret && !hash_equals($secret, (string) $request->header('X-Import-Secret'))) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-
-        $projects = Project::on('pgsql')->withoutGlobalScopes()
-            ->whereNotNull('clickup_list_id')
-            ->with('client:id,clickup_task_id')
-            ->get(['id', 'client_id', 'clickup_list_id', 'clickup_task_id', 'title']);
-
-        return response()->json([
-            'data' => $projects->map(fn (Project $project) => [
-                'project_id'        => $project->id,
-                'clickup_list_id'   => $project->clickup_list_id,
-                'client_clickup_id' => $project->client?->clickup_task_id,
-                'title'             => $project->title,
-            ]),
-        ]);
-    }
-
     public function import(Request $request): JsonResponse
     {
         $secret = config('app.import_secret');
