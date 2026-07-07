@@ -33,7 +33,7 @@ class ClickupProjectImportController extends Controller
     public function import(Request $request): JsonResponse
     {
         $secret = config('app.import_secret');
-        if ($secret && $request->header('X-Import-Secret') !== $secret) {
+        if ($secret && !hash_equals($secret, (string) $request->header('X-Import-Secret'))) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
@@ -87,6 +87,23 @@ class ClickupProjectImportController extends Controller
 
         if (!$clickupTaskId) {
             $result['skipped']++;
+            return;
+        }
+
+        // Mirror de exclusão/arquivamento no ClickUp: só cancela, não deleta a linha
+        if (!empty($row['deleted'])) {
+            $exists = Project::on('pgsql')->withoutGlobalScopes()
+                ->where('clickup_task_id', $clickupTaskId)->exists();
+
+            if ($exists) {
+                Project::on('pgsql')->withoutGlobalScopes()
+                    ->where('clickup_task_id', $clickupTaskId)
+                    ->update(['status' => 'cancelled']);
+                $result['updated']++;
+            } else {
+                $result['skipped']++;
+            }
+
             return;
         }
 
