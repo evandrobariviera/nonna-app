@@ -179,6 +179,10 @@ Existe um workflow de referência em [`.claude/docs/n8n-workflows/clickup-import
 4. Conferir `app_url` e os 3 List IDs no node **Config**.
 5. Rodar manualmente, branch por branch, antes de ativar o Schedule Trigger.
 
+### Filtro de status (só tarefas ativas)
+
+As 4 branches trazem **só o que está ativo** — concluído/cancelado/finalizado/encerrado ficam de fora, com dupla proteção: `include_closed=false` no parâmetro da API do ClickUp, e um filtro explícito por nome de status dentro de cada node "Build ...Payload" (mesma lista de status usada pelos comandos artisan `clickup:import-*`). O filtro explícito existe porque "o que conta como fechado" no ClickUp depende de como cada status foi configurado no workspace — não dá pra confiar só no parâmetro da API.
+
 ### Limitações conhecidas (ver Sticky Notes no próprio workflow)
 - **Paginação não implementada** — a API do ClickUp devolve no máximo 100 tarefas por página; a lista de Chamados sozinha tem ~670 tarefas no total. Precisa configurar manualmente no node HTTP Request (Options → Pagination) antes de rodar uma carga completa.
 - **Lista de execução por projeto (branch D) depende de um custom field que pode não existir ainda** — como a única hierarquia nativa do ClickUp é "cliente relacionado" (não existe "projeto relacionado"), a branch de Tarefas de Execução só funciona se cada card de Projeto tiver um campo apontando para sua própria Lista de tarefas. Se esse campo não existir no ClickUp, precisa ser criado antes.
