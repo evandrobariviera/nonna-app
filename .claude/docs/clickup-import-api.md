@@ -127,13 +127,16 @@ Se for migrar uma Lista diferente de "Chamados", **confira de novo antes de conf
 1. No n8n: **Workflows → Import from File**.
 2. Criar a credencial nativa **ClickUp API** `ClickUp API Token` (Credentials → New → ClickUp API): cole seu personal API token do ClickUp.
 3. Criar a credencial **HTTP Header Auth** `Nonna App Import Secret` (`X-Import-Secret: {IMPORT_SECRET do Portainer}`).
-4. Abrir o node **Get ClickUp Tasks**, conectar a credencial e selecionar a Lista pelo seletor nativo — **uma lista de cada vez**.
-5. Rodar só esse node primeiro, conferir os `custom_fields` do resultado, ajustar o Code node se os nomes reais forem diferentes.
-6. Só então rodar o workflow completo pra aquela lista.
+4. Abrir o node **Config** (roda logo depois do trigger), conferir `app_url` e definir `incluir_fechados` (ver seção abaixo).
+5. Abrir o node **Get ClickUp Tasks**, conectar a credencial e selecionar a Lista pelo seletor nativo — **uma lista de cada vez**.
+6. Rodar só esse node primeiro, conferir os `custom_fields` do resultado, ajustar o Code node se os nomes reais forem diferentes.
+7. Só então rodar o workflow completo pra aquela lista.
 
-### Filtro de status (só tarefas ativas)
+### Filtro de status — `incluir_fechados` (2026-07-07)
 
-Traz **só o que está ativo** — concluído/cancelado/finalizado/encerrado ficam de fora, com dupla proteção: `Include Closed = false` no filtro do node nativo, e um filtro explícito por nome de status dentro do Code node (mesma lista de status usada pelos comandos artisan `clickup:import-*`).
+Por padrão (`incluir_fechados: false` no node **Config**) o workflow traz **só o que está ativo** — concluído/cancelado/finalizado/encerrado ficam de fora, com dupla proteção: `Include Closed` no filtro do node nativo (agora uma expressão lendo o Config) e um filtro explícito por nome de status dentro do Code node.
+
+**Sprints e Listas já encerradas precisam de `incluir_fechados: true`.** Na primeira tentativa de migrar uma Sprint antiga, o workflow rodou sem erro mas **não importou nada** — o node "Get ClickUp Tasks" trouxe 82 itens, mas "Build Tasks Payload" devolveu `tasks: []`, porque a Sprint inteira já estava com status fechado e o filtro "só ativas" removeu tudo. Pra trazer o histórico de sprints encerradas, mude `incluir_fechados` pra `true` no Config antes de rodar aquela lista — isso desliga os dois filtros (o da API do ClickUp e o do código) só para aquela execução.
 
 ### Limitações conhecidas (ver Sticky Notes no próprio workflow)
 - **Detecção de `deleted` não implementada** — o endpoint já sabe tratar `deleted: true` (cancela em vez de apagar), mas o workflow não envia isso ainda. Detectar exclusão exigiria comparar os IDs retornados contra os já conhecidos no App — fica pra depois, quando a migração inicial estiver estável.

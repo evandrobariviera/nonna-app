@@ -6,11 +6,14 @@
       "name": "LEIA ANTES DE RODAR",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [0, -360],
+      "position": [
+        0,
+        -360
+      ],
       "parameters": {
         "width": 680,
         "height": 400,
-        "content": "## Migração controlada, lista por lista\n\nEste workflow importa **só tarefas operacionais** — nenhum Projeto, Macroplano ou vínculo automático com Projeto. Projetos e Macroplanos já foram lançados manualmente no App (só precisam ser conferidos depois). O vínculo Tarefa → Projeto e Projeto → Macroplano é feito **manualmente, em lote, dentro do App** (ver funcionalidade de edição em massa em /tarefas, /filas, /tickets e /sprints).\n\n### Antes de rodar\n1. Crie a credencial nativa **ClickUp API** chamada `ClickUp API Token` (Credentials → New → ClickUp API): cole seu personal API token do ClickUp.\n2. Crie a credencial **HTTP Header Auth** `Nonna App Import Secret` (`X-Import-Secret: {IMPORT_SECRET do Portainer}`).\n3. O node **Get ClickUp Tasks** já vem pré-preenchido com a Lista \"Filas (Backlog)\" (901326341944) — a primeira a migrar, já validada com 2 amostras reais (ver Sticky Note ao lado). Pra migrar a próxima lista depois, troque o ID (ou use o seletor nativo).\n4. Rode só o node **Get ClickUp Tasks** primeiro (botão \"Execute step\"), sozinho, e confira no painel de resultado quantas tarefas vieram e se os `custom_fields` ainda batem com o que o node **Build Tasks Payload** espera — principalmente se for uma lista diferente de \"Filas (Backlog)\"/\"Chamados\".\n5. Só depois disso, rode o workflow completo (▶ Execute Workflow) pra aquela lista."
+        "content": "## Migração controlada, lista por lista\n\nEste workflow importa **só tarefas operacionais** — nenhum Projeto, Macroplano ou vínculo automático com Projeto. Projetos e Macroplanos já foram lançados manualmente no App (só precisam ser conferidos depois). O vínculo Tarefa → Projeto e Projeto → Macroplano é feito **manualmente, em lote, dentro do App** (ver funcionalidade de edição em massa em /tarefas, /filas, /tickets e /sprints).\n\n### Antes de rodar\n1. Crie a credencial nativa **ClickUp API** chamada `ClickUp API Token` (Credentials → New → ClickUp API): cole seu personal API token do ClickUp.\n2. Crie a credencial **HTTP Header Auth** `Nonna App Import Secret` (`X-Import-Secret: {IMPORT_SECRET do Portainer}`).\n3. Abra o node **Config** (agora é o 2º node, roda antes do Get Tasks): confira `app_url`, e defina `incluir_fechados`:\n   - `false` (padrão) pra listas de trabalho corrente (Filas/Chamados) — só traz tarefas ativas.\n   - `true` pra Listas de Sprint/histórico já encerradas — senão o node \"Build Tasks Payload\" descarta TODAS as tarefas (é exatamente isso que causou a primeira tentativa de rodar uma Sprint não salvar nada — a lista inteira já estava concluída e o filtro de \"só ativas\" removeu tudo).\n4. O node **Get ClickUp Tasks** já vem pré-preenchido com a Lista \"Filas (Backlog)\" (901326341944) — a primeira a migrar, já validada com 2 amostras reais (ver Sticky Note ao lado). Pra migrar a próxima lista depois, troque o ID (ou use o seletor nativo).\n5. Rode só o node **Get ClickUp Tasks** primeiro (botão \"Execute step\"), sozinho, e confira no painel de resultado quantas tarefas vieram e se os `custom_fields` ainda batem com o que o node **Build Tasks Payload** espera — principalmente se for uma lista diferente de \"Filas (Backlog)\"/\"Chamados\".\n6. Só depois disso, rode o workflow completo (▶ Execute Workflow) pra aquela lista."
       }
     },
     {
@@ -18,14 +21,20 @@
       "name": "Trigger Manual",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [0, 60]
+      "position": [
+        0,
+        60
+      ]
     },
     {
       "id": "sticky-no-autolink",
       "name": "Por que não linka Projeto automaticamente",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [220, -360],
+      "position": [
+        220,
+        -360
+      ],
       "parameters": {
         "width": 420,
         "height": 220,
@@ -37,7 +46,10 @@
       "name": "Get ClickUp Tasks",
       "type": "n8n-nodes-base.clickUp",
       "typeVersion": 1,
-      "position": [220, 60],
+      "position": [
+        440,
+        60
+      ],
       "parameters": {
         "resource": "task",
         "operation": "getAll",
@@ -45,14 +57,17 @@
         "returnAll": true,
         "filters": {
           "archived": false,
-          "includeClosed": false,
+          "includeClosed": "={{ $('Config').item.json.incluir_fechados }}",
           "subtasks": false
         }
       },
       "notesInFlow": true,
       "notes": "Pré-preenchido com \"Filas (Backlog)\" (901326341944), já validada com 2 amostras reais. Pra migrar outra Lista depois, troque o valor de \"list\" (ou selecione pelo seletor nativo, que também funciona).",
       "credentials": {
-        "clickUpApi": { "id": "", "name": "ClickUp API Token" }
+        "clickUpApi": {
+          "id": "",
+          "name": "ClickUp API Token"
+        }
       }
     },
     {
@@ -60,7 +75,10 @@
       "name": "Sobre custom fields",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [440, -360],
+      "position": [
+        440,
+        -360
+      ],
       "parameters": {
         "width": 460,
         "height": 260,
@@ -72,10 +90,13 @@
       "name": "Build Tasks Payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [440, 60],
+      "position": [
+        660,
+        60
+      ],
       "parameters": {
         "language": "javaScript",
-        "jsCode": "const CLOSED_STATUSES = ['concluído','concluido','finalizado','encerrado','encerrada','cancelado','cancelada','realizado','realizada','fechado','closed','done'];\nconst allTasks = $input.all().map(item => item.json);\nconst tasks = allTasks.filter(t => !CLOSED_STATUSES.includes(((t.status && t.status.status) || '').toLowerCase()));\n\n// ── Helpers de custom field ──────────────────────────────────────────\nfunction findField(task, pattern, type) {\n  return (task.custom_fields || []).find(f => {\n    const nameMatch = (f.name || '').toLowerCase().includes(pattern);\n    return type ? (nameMatch && f.type === type) : nameMatch;\n  });\n}\n\n// drop_down: value é um índice numérico dentro de type_config.options\nfunction resolveDropdown(field) {\n  if (!field || field.value === undefined || field.value === null) return null;\n  const opts = (field.type_config && field.type_config.options) || [];\n  const opt = opts[field.value];\n  return opt ? opt.name : null;\n}\n\n// labels: value é um array de IDs de option, resolvido contra type_config.options[].label\nfunction resolveLabels(field) {\n  if (!field || !Array.isArray(field.value)) return [];\n  const opts = (field.type_config && field.type_config.options) || [];\n  return field.value\n    .map(id => { const o = opts.find(o => o.id === id); return o ? o.label : null; })\n    .filter(Boolean);\n}\n\n// tasks (relacionamento): value é array de tarefas vinculadas\nfunction resolveRelatedId(field) {\n  if (!field || !Array.isArray(field.value) || field.value.length === 0) return null;\n  return field.value[0].id || null;\n}\n\n// date: value é epoch em ms (string ou número)\nfunction resolveDate(value) {\n  if (!value) return null;\n  const ms = typeof value === 'string' ? parseInt(value, 10) : value;\n  if (!ms) return null;\n  return new Date(ms).toISOString().substring(0, 10);\n}\n\n// ── Mapas de label do ClickUp → chave do App (Task model) ────────────\nconst TASK_TYPE_MAP = {\n  'criação/audiovisual': 'criacao',\n  'setup/tracking': 'setup',\n  'tráfego/performance': 'trafego',\n  'web/dev': 'web',\n  'estratégia/planejamento': 'estrategia',\n  'reuniões/atendimento': 'reunioes',\n  'administrativo/financeiro': 'administrativo',\n};\nconst ORIGIN_MAP = {\n  'onboarding': 'onboarding',\n  'roadmap': 'roadmap',\n  'ticket': 'ticket',\n  'projeto': 'projeto',\n};\nconst DESTINATION_MAP = {\n  'publicação orgânica': 'publicacao_organica',\n  'campanhas patrocinadas': 'campanhas_patrocinadas',\n  'projeto web': 'projeto_web',\n  'administrativo / financeiro': 'administrativo_financeiro',\n  'envio / resposta para cliente': 'envio_resposta_cliente',\n  'envio / resposta ao cliente': 'envio_resposta_cliente',\n};\nconst APPROVAL_METHOD_MAP = {\n  'aprova aí': 'aprovaaí',\n  'whatsapp': 'whatsapp',\n  'email': 'email',\n};\n\n// ── Anexos: viram uma seção em markdown no final da descrição ────────\nfunction appendAttachments(description, attachments) {\n  if (!attachments || attachments.length === 0) return description || '';\n  const lines = attachments.map(a => `- ${a.title || 'arquivo'}: ${a.url}`);\n  const base = (description || '').trim();\n  const section = '--- Anexos ---\\n' + lines.join('\\n');\n  return base ? base + '\\n\\n' + section : section;\n}\n\n// project_id e list_id ficam SEMPRE null aqui de propósito - ver Sticky Note\n// \"Por que não linka Projeto automaticamente\". O vínculo com Projeto é feito\n// depois, manualmente, em lote, dentro do App.\nconst tasksPayload = tasks.map(t => {\n  const clienteField = findField(t, 'cliente_relacionado');\n  const clientClickupId = resolveRelatedId(clienteField);\n\n  const tipoTarefaLabel = (resolveDropdown(findField(t, 'tipo de tarefa')) || '').toLowerCase();\n  const taskType = TASK_TYPE_MAP[tipoTarefaLabel] || 'criacao';\n\n  const origemLabel = (resolveDropdown(findField(t, 'origem')) || '').toLowerCase();\n  const origin = ORIGIN_MAP[origemLabel] || 'projeto';\n\n  const destinoLabels = resolveLabels(findField(t, 'destino'));\n  const destination = DESTINATION_MAP[(destinoLabels[0] || '').toLowerCase()] || null;\n\n  const situationLabel = resolveDropdown(findField(t, 'situa'));\n\n  const metodoLabels = resolveLabels(findField(t, 'todo de aprova'));\n  const approvalMethod = APPROVAL_METHOD_MAP[(metodoLabels[0] || '').toLowerCase()] || null;\n\n  const aprovacaoInternaField = findField(t, 'interna');\n  const internalApproval = !!(aprovacaoInternaField && aprovacaoInternaField.value);\n\n  const dataAprovacaoField = findField(t, 'data de aprova');\n  const approvalDate = resolveDate(dataAprovacaoField ? dataAprovacaoField.value : null);\n\n  const dataPublicacaoField = findField(t, 'data de publica');\n  const publishDate = resolveDate(dataPublicacaoField ? dataPublicacaoField.value : null);\n\n  const requesterNameField = findField(t, 'solicitante', 'short_text');\n  const requesterWhatsField = findField(t, 'solicitante', 'phone');\n\n  return {\n    clickup_task_id: t.id,\n    project_id: null,\n    list_id: null,\n    client_clickup_id: clientClickupId,\n    title: t.name,\n    description: appendAttachments(t.description, t.attachments),\n    clickup_status: (t.status && t.status.status) || 'backlog',\n    clickup_priority: t.priority ? t.priority.priority : 'normal',\n    task_type: taskType,\n    origin: origin,\n    destination: destination,\n    situation: situationLabel,\n    due_date: resolveDate(t.due_date),\n    approval_date: approvalDate,\n    publish_date: publishDate,\n    approval_method: approvalMethod,\n    internal_approval: internalApproval,\n    is_ticket: origin === 'ticket',\n    requester_name: requesterNameField ? requesterNameField.value : null,\n    requester_whatsapp: requesterWhatsField ? requesterWhatsField.value : null,\n    requester_channel: null,\n    creator_email: t.creator ? t.creator.email : null,\n    executor_email: (t.assignees && t.assignees[0]) ? t.assignees[0].email : null,\n    responsavel_email: (t.assignees && t.assignees[1]) ? t.assignees[1].email : null,\n    attachments: [],\n    deleted: false,\n  };\n});\n\nreturn [{ json: { tasks: tasksPayload } }];\n"
+        "jsCode": "const CLOSED_STATUSES = ['concluído','concluido','finalizado','encerrado','encerrada','cancelado','cancelada','realizado','realizada','fechado','closed','done'];\nconst incluirFechados = $('Config').first().json.incluir_fechados === true;\nconst allTasks = $input.all().map(item => item.json);\nconst tasks = incluirFechados\n  ? allTasks\n  : allTasks.filter(t => !CLOSED_STATUSES.includes(((t.status && t.status.status) || '').toLowerCase()));\n\n// ── Helpers de custom field ──────────────────────────────────────────\nfunction findField(task, pattern, type) {\n  return (task.custom_fields || []).find(f => {\n    const nameMatch = (f.name || '').toLowerCase().includes(pattern);\n    return type ? (nameMatch && f.type === type) : nameMatch;\n  });\n}\n\n// drop_down: value é um índice numérico dentro de type_config.options\nfunction resolveDropdown(field) {\n  if (!field || field.value === undefined || field.value === null) return null;\n  const opts = (field.type_config && field.type_config.options) || [];\n  const opt = opts[field.value];\n  return opt ? opt.name : null;\n}\n\n// labels: value é um array de IDs de option, resolvido contra type_config.options[].label\nfunction resolveLabels(field) {\n  if (!field || !Array.isArray(field.value)) return [];\n  const opts = (field.type_config && field.type_config.options) || [];\n  return field.value\n    .map(id => { const o = opts.find(o => o.id === id); return o ? o.label : null; })\n    .filter(Boolean);\n}\n\n// tasks (relacionamento): value é array de tarefas vinculadas\nfunction resolveRelatedId(field) {\n  if (!field || !Array.isArray(field.value) || field.value.length === 0) return null;\n  return field.value[0].id || null;\n}\n\n// date: value é epoch em ms (string ou número)\nfunction resolveDate(value) {\n  if (!value) return null;\n  const ms = typeof value === 'string' ? parseInt(value, 10) : value;\n  if (!ms) return null;\n  return new Date(ms).toISOString().substring(0, 10);\n}\n\n// ── Mapas de label do ClickUp → chave do App (Task model) ────────────\nconst TASK_TYPE_MAP = {\n  'criação/audiovisual': 'criacao',\n  'setup/tracking': 'setup',\n  'tráfego/performance': 'trafego',\n  'web/dev': 'web',\n  'estratégia/planejamento': 'estrategia',\n  'reuniões/atendimento': 'reunioes',\n  'administrativo/financeiro': 'administrativo',\n};\nconst ORIGIN_MAP = {\n  'onboarding': 'onboarding',\n  'roadmap': 'roadmap',\n  'ticket': 'ticket',\n  'projeto': 'projeto',\n};\nconst DESTINATION_MAP = {\n  'publicação orgânica': 'publicacao_organica',\n  'campanhas patrocinadas': 'campanhas_patrocinadas',\n  'projeto web': 'projeto_web',\n  'administrativo / financeiro': 'administrativo_financeiro',\n  'envio / resposta para cliente': 'envio_resposta_cliente',\n  'envio / resposta ao cliente': 'envio_resposta_cliente',\n};\nconst APPROVAL_METHOD_MAP = {\n  'aprova aí': 'aprovaaí',\n  'whatsapp': 'whatsapp',\n  'email': 'email',\n};\n\n// ── Anexos: viram uma seção em markdown no final da descrição ────────\nfunction appendAttachments(description, attachments) {\n  if (!attachments || attachments.length === 0) return description || '';\n  const lines = attachments.map(a => `- ${a.title || 'arquivo'}: ${a.url}`);\n  const base = (description || '').trim();\n  const section = '--- Anexos ---\\n' + lines.join('\\n');\n  return base ? base + '\\n\\n' + section : section;\n}\n\n// project_id e list_id ficam SEMPRE null aqui de propósito - ver Sticky Note\n// \"Por que não linka Projeto automaticamente\". O vínculo com Projeto é feito\n// depois, manualmente, em lote, dentro do App.\nconst tasksPayload = tasks.map(t => {\n  const clienteField = findField(t, 'cliente_relacionado');\n  const clientClickupId = resolveRelatedId(clienteField);\n\n  const tipoTarefaLabel = (resolveDropdown(findField(t, 'tipo de tarefa')) || '').toLowerCase();\n  const taskType = TASK_TYPE_MAP[tipoTarefaLabel] || 'criacao';\n\n  const origemLabel = (resolveDropdown(findField(t, 'origem')) || '').toLowerCase();\n  const origin = ORIGIN_MAP[origemLabel] || 'projeto';\n\n  const destinoLabels = resolveLabels(findField(t, 'destino'));\n  const destination = DESTINATION_MAP[(destinoLabels[0] || '').toLowerCase()] || null;\n\n  const situationLabel = resolveDropdown(findField(t, 'situa'));\n\n  const metodoLabels = resolveLabels(findField(t, 'todo de aprova'));\n  const approvalMethod = APPROVAL_METHOD_MAP[(metodoLabels[0] || '').toLowerCase()] || null;\n\n  const aprovacaoInternaField = findField(t, 'interna');\n  const internalApproval = !!(aprovacaoInternaField && aprovacaoInternaField.value);\n\n  const dataAprovacaoField = findField(t, 'data de aprova');\n  const approvalDate = resolveDate(dataAprovacaoField ? dataAprovacaoField.value : null);\n\n  const dataPublicacaoField = findField(t, 'data de publica');\n  const publishDate = resolveDate(dataPublicacaoField ? dataPublicacaoField.value : null);\n\n  const requesterNameField = findField(t, 'solicitante', 'short_text');\n  const requesterWhatsField = findField(t, 'solicitante', 'phone');\n\n  return {\n    clickup_task_id: t.id,\n    project_id: null,\n    list_id: null,\n    client_clickup_id: clientClickupId,\n    title: t.name,\n    description: appendAttachments(t.description, t.attachments),\n    clickup_status: (t.status && t.status.status) || 'backlog',\n    clickup_priority: t.priority ? t.priority.priority : 'normal',\n    task_type: taskType,\n    origin: origin,\n    destination: destination,\n    situation: situationLabel,\n    due_date: resolveDate(t.due_date),\n    approval_date: approvalDate,\n    publish_date: publishDate,\n    approval_method: approvalMethod,\n    internal_approval: internalApproval,\n    is_ticket: origin === 'ticket',\n    requester_name: requesterNameField ? requesterNameField.value : null,\n    requester_whatsapp: requesterWhatsField ? requesterWhatsField.value : null,\n    requester_channel: null,\n    creator_email: t.creator ? t.creator.email : null,\n    executor_email: (t.assignees && t.assignees[0]) ? t.assignees[0].email : null,\n    responsavel_email: (t.assignees && t.assignees[1]) ? t.assignees[1].email : null,\n    attachments: [],\n    deleted: false,\n  };\n});\n\nreturn [{ json: { tasks: tasksPayload } }];\n"
       }
     },
     {
@@ -83,11 +104,25 @@
       "name": "Config",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [660, 60],
+      "position": [
+        220,
+        60
+      ],
       "parameters": {
         "assignments": {
           "assignments": [
-            { "id": "app_url", "name": "app_url", "type": "string", "value": "https://app.nonnaagenciadigital.com.br" }
+            {
+              "id": "app_url",
+              "name": "app_url",
+              "type": "string",
+              "value": "https://app.nonnaagenciadigital.com.br"
+            },
+            {
+              "id": "incluir_fechados",
+              "name": "incluir_fechados",
+              "type": "boolean",
+              "value": false
+            }
           ]
         }
       }
@@ -97,10 +132,13 @@
       "name": "POST Import Tasks",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [880, 60],
+      "position": [
+        880,
+        60
+      ],
       "parameters": {
         "method": "POST",
-        "url": "={{ $json.app_url }}/api/clickup/import",
+        "url": "={{ $('Config').item.json.app_url }}/api/clickup/import",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -109,7 +147,10 @@
         "options": {}
       },
       "credentials": {
-        "httpHeaderAuth": { "id": "", "name": "Nonna App Import Secret" }
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Nonna App Import Secret"
+        }
       }
     },
     {
@@ -117,7 +158,10 @@
       "name": "Sobre exclusão/arquivamento",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [880, -220],
+      "position": [
+        880,
+        -220
+      ],
       "parameters": {
         "width": 380,
         "height": 160,
@@ -127,19 +171,53 @@
   ],
   "connections": {
     "Trigger Manual": {
-      "main": [[{ "node": "Get ClickUp Tasks", "type": "main", "index": 0 }]]
-    },
-    "Get ClickUp Tasks": {
-      "main": [[{ "node": "Build Tasks Payload", "type": "main", "index": 0 }]]
-    },
-    "Build Tasks Payload": {
-      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Config": {
-      "main": [[{ "node": "POST Import Tasks", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Get ClickUp Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get ClickUp Tasks": {
+      "main": [
+        [
+          {
+            "node": "Build Tasks Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Tasks Payload": {
+      "main": [
+        [
+          {
+            "node": "POST Import Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
-  "settings": { "executionOrder": "v1" },
+  "settings": {
+    "executionOrder": "v1"
+  },
   "pinData": {}
 }
