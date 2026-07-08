@@ -15,9 +15,12 @@ class FilaController extends Controller
     {
         $query = Task::with(['client', 'project.macroPlan', 'executor', 'executors'])
             ->whereNull('sprint_id')
-            ->whereNotIn('status', ['concluido', 'cancelado'])
             ->orderByRaw("due_date NULLS LAST")
             ->orderBy('created_at');
+
+        if (!$request->boolean('mostrar_fechados')) {
+            $query->whereNotIn('status', ['concluido', 'cancelado']);
+        }
 
         if ($request->filled('client_id')) {
             $query->where('client_id', $request->client_id);

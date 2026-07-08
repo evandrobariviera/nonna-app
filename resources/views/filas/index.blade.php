@@ -119,9 +119,18 @@
             </label>
         </div>
 
+        <div class="flex items-center gap-2 pb-0.5">
+            <input type="checkbox" name="mostrar_fechados" value="1" id="chk_mostrar_fechados"
+                {{ request()->boolean('mostrar_fechados') ? 'checked' : '' }}
+                class="w-4 h-4" style="accent-color:var(--purple)">
+            <label for="chk_mostrar_fechados" class="text-sm font-medium cursor-pointer" style="color:var(--muted)">
+                Mostrar concluídas/canceladas
+            </label>
+        </div>
+
         <div class="flex gap-2">
             <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
-            @if(request()->hasAny(['client_id','origin','task_type','atrasadas']))
+            @if(request()->hasAny(['client_id','origin','task_type','atrasadas','mostrar_fechados']))
                 <a href="{{ route('fila.index', ['group_by' => $groupBy]) }}" class="btn btn-ghost btn-sm">✕ Limpar</a>
             @endif
         </div>
