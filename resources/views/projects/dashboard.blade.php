@@ -138,18 +138,95 @@
                 ✕ Limpar filtros
             </button>
 
-            <span class="text-xs font-mono ml-auto" style="color:var(--muted)">
+            <span class="text-xs font-mono" :class="hasActiveFilters() ? '' : 'ml-auto'" style="color:var(--muted)">
                 <span x-text="filtered.length"></span> resultado<span x-show="filtered.length !== 1">s</span>
             </span>
 
+            <div class="flex gap-1 p-0.5" style="background:var(--s3); border:1px solid var(--border2)">
+                <button @click="setViewMode('cards')"
+                    class="px-3 py-1.5 text-xs font-mono transition-all"
+                    :style="viewMode === 'cards'
+                        ? 'background:var(--purple); color:#fff'
+                        : 'background:transparent; color:var(--muted2)'"
+                    title="Ver como cards">
+                    ▦ Cards
+                </button>
+                <button @click="setViewMode('table')"
+                    class="px-3 py-1.5 text-xs font-mono transition-all"
+                    :style="viewMode === 'table'
+                        ? 'background:var(--purple); color:#fff'
+                        : 'background:transparent; color:var(--muted2)'"
+                    title="Ver como tabela">
+                    ☰ Tabela
+                </button>
+            </div>
+
         </div>
 
-        {{-- ── GRID DE CARDS ───────────────────────────────────────────────── --}}
+        {{-- ── SEM RESULTADOS ──────────────────────────────────────────────── --}}
         <div x-show="filtered.length === 0" class="card px-5 py-12 text-center">
             <p class="text-sm" style="color:var(--muted)">Nenhum item encontrado com os filtros aplicados.</p>
         </div>
 
-        <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr))">
+        {{-- ── TABELA COMPACTA ─────────────────────────────────────────────── --}}
+        <div x-show="viewMode === 'table' && filtered.length > 0" class="card overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="nonna-table">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Projeto</th>
+                            <th>Planejamento</th>
+                            <th>Status</th>
+                            <th>Progresso</th>
+                            <th>Tarefas</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="p in filtered" :key="p.id">
+                            <tr :class="p.has_overdue ? 'row-overdue' : ''">
+                                <td class="font-mono" x-text="p.client_name" style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap"></td>
+                                <td style="max-width:320px">
+                                    <div class="flex items-center gap-2">
+                                        <span class="badge text-xs font-bold flex-shrink-0" :class="'badge-' + p.type_color" x-text="p.type_label"></span>
+                                        <a :href="p.url" class="font-semibold truncate" style="color:var(--text)" x-text="p.title"
+                                           onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'"></a>
+                                        <span x-show="p.has_overdue" title="Tem tarefas atrasadas">⚠</span>
+                                    </div>
+                                </td>
+                                <td class="truncate" style="max-width:180px; color:var(--muted2)" x-text="p.macroplan_title !== '—' ? p.macroplan_title : '—'"></td>
+                                <td><span class="badge text-xs" :class="'badge-' + p.status_color" x-text="p.status_label"></span></td>
+                                <td style="min-width:120px">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-16 h-1.5 rounded-full overflow-hidden flex-shrink-0" style="background:var(--border2)">
+                                            <div class="h-1.5 rounded-full" :style="'width:' + p.progress + '%; background:' + (p.progress === 100 ? 'var(--green)' : 'var(--grad)')"></div>
+                                        </div>
+                                        <span class="text-xs font-mono" style="color:var(--muted)" x-text="p.progress + '%'"></span>
+                                    </div>
+                                </td>
+                                <td class="text-xs font-mono" style="color:var(--muted)" x-text="p.done_tasks + '/' + p.total_tasks"></td>
+                                <td class="row-actions">
+                                    <div class="flex items-center gap-2 justify-end">
+                                        <button @click="openEdit(p)" style="color:var(--muted)"
+                                            onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'"
+                                            title="Editar">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                            </svg>
+                                        </button>
+                                        <a :href="p.url" class="text-xs font-bold font-mono" style="color:var(--purple)">Abrir →</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- ── GRID DE CARDS ───────────────────────────────────────────────── --}}
+        <div x-show="viewMode === 'cards' && filtered.length > 0" class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr))">
             <template x-for="p in filtered" :key="p.id">
                 <div class="card flex flex-col relative"
                      :style="typeTopBorder(p) + urgencyLeftBorder(p)">
@@ -364,6 +441,7 @@
             filterNotStarted: false,
             showClosed: false,
             sortBy: 'urgency',
+            viewMode: localStorage.getItem('projectsViewMode') || 'cards',
 
             editOpen: false,
             editSaving: false,
@@ -392,6 +470,11 @@
             },
 
             init() { this.applyFilters(); },
+
+            setViewMode(mode) {
+                this.viewMode = mode;
+                localStorage.setItem('projectsViewMode', mode);
+            },
 
             applyFilters() {
                 let result = [...this.all];
