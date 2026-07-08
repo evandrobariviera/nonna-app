@@ -10,7 +10,7 @@
       "parameters": {
         "width": 680,
         "height": 400,
-        "content": "## Migração controlada, lista por lista\n\nEste workflow importa **só tarefas operacionais** — nenhum Projeto, Macroplano ou vínculo automático com Projeto. Projetos e Macroplanos já foram lançados manualmente no App (só precisam ser conferidos depois). O vínculo Tarefa → Projeto e Projeto → Macroplano é feito **manualmente, em lote, dentro do App** (ver funcionalidade de edição em massa).\n\n### Antes de rodar\n1. Crie a credencial nativa **ClickUp API** chamada `ClickUp API Token` (Credentials → New → ClickUp API): cole seu personal API token do ClickUp.\n2. Crie a credencial **HTTP Header Auth** `Nonna App Import Secret` (`X-Import-Secret: {IMPORT_SECRET do Portainer}`).\n3. Abra o node **Get ClickUp Tasks** e selecione a Lista pelo seletor nativo do node (dropdown, carrega sozinho assim que a credencial conecta) — rode **uma lista de cada vez**, nunca todas de uma vez.\n4. Clique em Execute no node **Get ClickUp Tasks** primeiro, sozinho, e confira no painel de resultado se os `custom_fields` batem com o que o node **Build Tasks Payload** espera (ver Sticky Note ao lado). Ajuste os padrões de nome se necessário ANTES de deixar seguir pro POST.\n5. Só depois disso, rode o workflow completo pra aquela lista."
+        "content": "## Migração controlada, lista por lista\n\nEste workflow importa **só tarefas operacionais** — nenhum Projeto, Macroplano ou vínculo automático com Projeto. Projetos e Macroplanos já foram lançados manualmente no App (só precisam ser conferidos depois). O vínculo Tarefa → Projeto e Projeto → Macroplano é feito **manualmente, em lote, dentro do App** (ver funcionalidade de edição em massa em /tarefas, /filas, /tickets e /sprints).\n\n### Antes de rodar\n1. Crie a credencial nativa **ClickUp API** chamada `ClickUp API Token` (Credentials → New → ClickUp API): cole seu personal API token do ClickUp.\n2. Crie a credencial **HTTP Header Auth** `Nonna App Import Secret` (`X-Import-Secret: {IMPORT_SECRET do Portainer}`).\n3. O node **Get ClickUp Tasks** já vem pré-preenchido com a Lista \"Filas (Backlog)\" (901326341944) — a primeira a migrar, já validada com 2 amostras reais (ver Sticky Note ao lado). Pra migrar a próxima lista depois, troque o ID (ou use o seletor nativo).\n4. Rode só o node **Get ClickUp Tasks** primeiro (botão \"Execute step\"), sozinho, e confira no painel de resultado quantas tarefas vieram e se os `custom_fields` ainda batem com o que o node **Build Tasks Payload** espera — principalmente se for uma lista diferente de \"Filas (Backlog)\"/\"Chamados\".\n5. Só depois disso, rode o workflow completo (▶ Execute Workflow) pra aquela lista."
       }
     },
     {
@@ -41,7 +41,7 @@
       "parameters": {
         "resource": "task",
         "operation": "getAll",
-        "list": "",
+        "list": "901326341944",
         "returnAll": true,
         "filters": {
           "archived": false,
@@ -50,7 +50,7 @@
         }
       },
       "notesInFlow": true,
-      "notes": "Selecione a Lista manualmente pelo seletor nativo antes de executar.",
+      "notes": "Pré-preenchido com \"Filas (Backlog)\" (901326341944), já validada com 2 amostras reais. Pra migrar outra Lista depois, troque o valor de \"list\" (ou selecione pelo seletor nativo, que também funciona).",
       "credentials": {
         "clickUpApi": { "id": "", "name": "ClickUp API Token" }
       }
