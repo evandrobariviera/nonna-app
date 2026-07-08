@@ -50,6 +50,9 @@ Endpoint **genérico** — não é só para chamados/tickets. `is_ticket` é ape
       "situation": null,
       "due_date": "2026-07-15",
       "approval_date": null,
+      "publish_date": null,
+      "approval_method": null,
+      "internal_approval": false,
       "is_ticket": false,
       "requester_name": null,
       "requester_whatsapp": null,
@@ -75,6 +78,12 @@ Endpoint **genérico** — não é só para chamados/tickets. `is_ticket` é ape
 
 **`task_type`:** precisa bater com uma chave de `Task::$types` (`app/Models/Task.php`) — senão cai em `criacao`.
 
+**`publish_date`** (`YYYY-MM-DD` ou vazio): data de publicação, coluna própria (`tasks.publish_date`), separada de `due_date`/`approval_date`.
+
+**`approval_method`:** precisa bater com uma chave de `Task::$approvalMethods` (`aprovaaí`, `whatsapp`, `email`) — senão vira `null` (não quebra o import).
+
+**`internal_approval`** (boolean): `false` se ausente.
+
 **Exclusão/arquivamento no ClickUp:** enviar `"deleted": true` (só precisa de `clickup_task_id` junto). O App **não apaga a linha** — atualiza `status` para `cancelado` e preserva o histórico. Se a tarefa não existir ainda no App, é apenas contada como `skipped`.
 
 **Resposta 200:**
@@ -93,7 +102,26 @@ Esses dois endpoints continuam existindo e funcionando (contrato inalterado — 
 
 ## Workflow n8n de referência
 
-Existe um workflow de referência em [`.claude/docs/n8n-workflows/clickup-import.json`](n8n-workflows/clickup-import.json) — **deliberadamente simples**: um único fluxo, trigger manual, uma Lista por execução (selecionada à mão no seletor nativo do node ClickUp), sem nenhum vínculo automático de Projeto. Usa o **node nativo `ClickUp`** (Resource: Task, Operation: Get All, `Return All` ligado) — resolve paginação sozinho. **Não foi testado contra um ClickUp/n8n real** — os nomes de custom field usados no Code node (`cliente_relacionado`, `deadline`, etc.) são suposições baseadas na convenção dos comandos artisan `clickup:import-*`; confira contra a resposta real antes de confiar no resultado (o próprio workflow orienta rodar só o node de leitura primeiro e inspecionar `custom_fields`).
+Existe um workflow de referência em [`.claude/docs/n8n-workflows/clickup-import.json`](n8n-workflows/clickup-import.json) — **deliberadamente simples**: um único fluxo, trigger manual, uma Lista por execução (selecionada à mão no seletor nativo do node ClickUp), sem nenhum vínculo automático de Projeto. Usa o **node nativo `ClickUp`** (Resource: Task, Operation: Get All, `Return All` ligado) — resolve paginação sozinho.
+
+**Mapeamento de custom fields confirmado (2026-07-07)** contra um JSON real de tarefa da lista "Chamados (Tickets)" — não é mais suposição. Descobertas que corrigiram a v1 (que nunca tinha sido validada contra dado real):
+
+| Campo do App | Origem no ClickUp | Como resolver |
+|---|---|---|
+| `client_clickup_id` | custom field `🤝 cliente_relacionado` (tipo `tasks`) | `value[0].id` |
+| `due_date` | campo **nativo** `due_date` da tarefa (não é custom field — "Deadline" não existe) | epoch ms → `YYYY-MM-DD` |
+| `approval_date` | custom field "Data de aprovação" (tipo `date`) | epoch ms → `YYYY-MM-DD` |
+| `publish_date` | custom field "Data de publicação" (tipo `date`) | epoch ms → `YYYY-MM-DD` |
+| `task_type` | custom field "Tipo de Tarefa" (tipo `drop_down`) | `value` é **índice numérico** em `type_config.options` → `options[value].name`, mapeado por tabela pro key do App |
+| `origin` | custom field "Origem" (tipo `drop_down`) | mesma mecânica de índice; valores batem quase 1:1 com `Task::$origins` |
+| `destination` | custom field "Destino" (tipo `labels`) | `value` é **array de IDs de option** → resolvido via `options.find(o => o.id === id).label` (repare: `.label`, não `.name` — `labels` e `drop_down` usam propriedades diferentes), mapeado por tabela |
+| `situation` | custom field "Situação" (tipo `drop_down`) | resolvido do mesmo jeito, mas guardado **como texto livre** (coluna `situation` não é enum fechado) — sem mapeamento pra chave |
+| `approval_method` | custom field "Método de Aprovação" (tipo `labels`) | mesma mecânica de `destination`, mapeado por tabela |
+| `internal_approval` | custom field "Aprovação Interna" (tipo `checkbox`) | `!!value` (ausente = `false`) |
+| `requester_name` | custom field contendo "Solicitante" **com `type === 'short_text'`** | há 3 campos diferentes com "Solicitante" no nome (e-mail, nome, whats) — só dá pra diferenciar pelo `type` |
+| `requester_whatsapp` | custom field contendo "Solicitante" **com `type === 'phone'`** | idem |
+
+Se for migrar uma Lista diferente de "Chamados", **confira de novo antes de confiar** — nomes de campo podem variar entre listas mesmo para o mesmo tipo de dado (execute só o node **Get ClickUp Tasks** e inspecione `custom_fields` de uma tarefa real antes de deixar rodar até o POST).
 
 ### Como importar
 1. No n8n: **Workflows → Import from File**.
