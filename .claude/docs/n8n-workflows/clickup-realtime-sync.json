@@ -1,0 +1,266 @@
+{
+  "name": "Nonna - ClickUp Sync Tempo Real (webhook)",
+  "nodes": [
+    {
+      "id": "sticky-setup",
+      "name": "LEIA ANTES DE ATIVAR",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -460],
+      "parameters": {
+        "width": 700,
+        "height": 420,
+        "content": "## Sincronização contínua (webhook), separada da migração em lote\n\nEste workflow é diferente do `clickup-import.json` (que é manual, sob demanda, lista por lista). Aqui é **automático**: qualquer criação/atualização de tarefa no ClickUp workspace inteiro dispara o fluxo, que descobre sozinho se é Macroplanejamento, Projeto ou Tarefa (pelo List ID de origem) e atualiza o App em tempo real.\n\n### Antes de ativar\n1. Reaproveita as mesmas credenciais do workflow de migração: **ClickUp API Token** e **Nonna App Import Secret**. Se ainda não existem, crie como descrito em `clickup-import.json`.\n2. Abra o node **ClickUp Trigger** e confira/selecione o Team (workspace) — veio pré-preenchido com `9007109877` (o mesmo `team_id` visto nas amostras reais), mas confirme pelo seletor nativo.\n3. **Não testado contra um n8n/ClickUp real** — os parâmetros exatos do node ClickUp Trigger (nomes de campo pra Team/eventos) podem variar por versão. Depois de importar, abra o node e confira se \"Team\" e os eventos (Task Created, Task Updated) carregaram certo.\n4. Rode manualmente uma vez (criando/editando uma tarefa de teste no ClickUp) antes de deixar o trigger ativo de verdade — confira o resultado em cada branch."
+      }
+    },
+    {
+      "id": "sticky-routing",
+      "name": "Como o roteamento funciona",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [660, -460],
+      "parameters": {
+        "width": 460,
+        "height": 260,
+        "content": "## Roteamento por List ID fixo\n\n`901326341797` = Planejamentos (Roadmaps) → Macroplano\n`901326341887` = Projetos (Projects) → Projeto\nQualquer outra Lista (Filas, Chamados, qualquer Sprint) → Tarefa\n\nMesmos IDs usados desde os comandos artisan `clickup:import-planejamentos`/`clickup:import-projetos` originais. Escopo do webhook é o workspace inteiro de propósito — tarefas de sprints futuras (ainda não criadas) também precisam cair na branch certa, então não dá pra restringir a uma lista fixa aqui."
+      }
+    },
+    {
+      "id": "sticky-macro-project-warning",
+      "name": "Macroplano/Projeto — nunca validados contra amostra real",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1360, 180],
+      "parameters": {
+        "width": 420,
+        "height": 220,
+        "content": "## ⚠️ Diferente da branch de Tarefa\n\nOs Code nodes \"Build Macroplan Payload\" e \"Build Project Payload\" foram recuperados do design anterior à simplificação da migração — **nunca testados contra um JSON real** de tarefa dessas listas (só a branch de Tarefa passou por esse teste, contra Chamados e Filas/Backlog).\n\nDe propósito, `clickup_list_id` e `macro_plan_clickup_id` do Projeto ficam sempre `null` — foi tentar adivinhar exatamente esses dois campos que causou o incidente anterior. Vínculo com Macroplano continua manual (lápis de edição em `/projetos`).\n\nAntes de confiar: rode manualmente criando/editando um Planejamento e um Projeto de teste no ClickUp, e confira o resultado em cada branch."
+      }
+    },
+    {
+      "id": "sticky-sprint-match",
+      "name": "Match de Sprint por nome",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1360, 620],
+      "parameters": {
+        "width": 420,
+        "height": 200,
+        "content": "## sprint_id é resolvido no App, não aqui\n\nO campo `list_name` (nome da Lista de origem no ClickUp) é só repassado no payload — quem resolve `sprint_id` é o `ClickupImportController::importTask()`, comparando `list_name` contra o título das Sprints já cadastradas no App (case-insensitive).\n\n**Só vincula se a tarefa ainda não tiver `sprint_id`** — nunca sobrescreve organização manual já feita no App. Isso não afeta o workflow de migração em lote (`clickup-import.json`), que não manda `list_name`."
+      }
+    },
+    {
+      "id": "clickup-trigger",
+      "name": "ClickUp Trigger",
+      "type": "n8n-nodes-base.clickUpTrigger",
+      "typeVersion": 1,
+      "position": [0, 60],
+      "parameters": {
+        "team": "9007109877",
+        "events": ["taskCreated", "taskUpdated"]
+      },
+      "notesInFlow": true,
+      "notes": "Confira o Team pelo seletor nativo e os eventos marcados (Task Created + Task Updated) antes de ativar.",
+      "credentials": {
+        "clickUpApi": { "id": "", "name": "ClickUp API Token" }
+      }
+    },
+    {
+      "id": "config",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 60],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "app_url", "name": "app_url", "type": "string", "value": "https://app.nonnaagenciadigital.com.br" },
+            { "id": "incluir_fechados", "name": "incluir_fechados", "type": "boolean", "value": true }
+          ]
+        }
+      }
+    },
+    {
+      "id": "get-task",
+      "name": "Get Task by ID",
+      "type": "n8n-nodes-base.clickUp",
+      "typeVersion": 1,
+      "position": [440, 60],
+      "parameters": {
+        "resource": "task",
+        "operation": "get",
+        "task": "={{ $('ClickUp Trigger').item.json.task_id }}"
+      },
+      "notesInFlow": true,
+      "notes": "O webhook só avisa QUAL tarefa mudou (task_id) — este node busca os dados completos (custom_fields, descrição, anexos etc).",
+      "credentials": {
+        "clickUpApi": { "id": "", "name": "ClickUp API Token" }
+      }
+    },
+    {
+      "id": "route-by-list",
+      "name": "Route by List",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [660, 60],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.list.id }}",
+                    "rightValue": "901326341797",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "macroplano"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.list.id }}",
+                    "rightValue": "901326341887",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "projeto"
+            }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      }
+    },
+    {
+      "id": "build-macroplan-payload",
+      "name": "Build Macroplan Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, -180],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// ⚠️ Diferente da branch de Tarefa, esta lógica NUNCA foi validada contra um\n// JSON real de tarefa da lista \"Planejamentos (Roadmaps)\" — só o padrão de\n// 'cliente_relacionado' foi confirmado (é o mesmo campo reaproveitado em\n// todo o workspace). Rode manualmente e confira o resultado antes de confiar.\n\nfunction findField(task, pattern, type) {\n  return (task.custom_fields || []).find(f => {\n    const nameMatch = (f.name || '').toLowerCase().includes(pattern);\n    return type ? (nameMatch && f.type === type) : nameMatch;\n  });\n}\n\nfunction resolveRelatedId(field) {\n  if (!field || !Array.isArray(field.value) || field.value.length === 0) return null;\n  return field.value[0].id || null;\n}\n\nconst allTasks = $input.all().map(item => item.json);\n\nconst macroplans = allTasks.map(t => {\n  const clienteField = findField(t, 'cliente_relacionado');\n\n  return {\n    clickup_task_id: t.id,\n    client_clickup_id: resolveRelatedId(clienteField),\n    title: t.name,\n    clickup_status: (t.status && t.status.status) || 'draft',\n    description: t.text_content || t.description || null,\n    period_start: null,\n    period_end: null,\n    creator_email: t.creator ? t.creator.email : null,\n    responsible_email: (t.assignees && t.assignees[0]) ? t.assignees[0].email : null,\n    attachments: [],\n    deleted: false,\n  };\n});\n\nreturn [{ json: { macroplans } }];\n"
+      }
+    },
+    {
+      "id": "post-macroplan",
+      "name": "POST Import Macroplan",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, -180],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').item.json.app_url }}/api/clickup/import-macroplans",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ macroplans: $('Build Macroplan Payload').item.json.macroplans }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App Import Secret" }
+      }
+    },
+    {
+      "id": "build-project-payload",
+      "name": "Build Project Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 60],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// ⚠️ Diferente da branch de Tarefa, esta lógica NUNCA foi validada contra um\n// JSON real de tarefa da lista \"Projetos (Projects)\" — só o padrão de\n// 'cliente_relacionado' foi confirmado. Rode manualmente e confira antes de\n// confiar. clickup_list_id e macro_plan_clickup_id ficam sempre null de\n// propósito — foi tentar adivinhar exatamente isso que causou o incidente\n// anterior (ver clickup-import-api.md). Vínculo com Macroplano continua\n// manual, pelo lápis de edição rápida em /projetos.\n\nfunction findField(task, pattern, type) {\n  return (task.custom_fields || []).find(f => {\n    const nameMatch = (f.name || '').toLowerCase().includes(pattern);\n    return type ? (nameMatch && f.type === type) : nameMatch;\n  });\n}\n\nfunction resolveRelatedId(field) {\n  if (!field || !Array.isArray(field.value) || field.value.length === 0) return null;\n  return field.value[0].id || null;\n}\n\nconst allTasks = $input.all().map(item => item.json);\n\nconst projects = allTasks.map(t => {\n  const clienteField = findField(t, 'cliente_relacionado');\n\n  return {\n    clickup_task_id: t.id,\n    client_clickup_id: resolveRelatedId(clienteField),\n    macro_plan_clickup_id: null,\n    clickup_list_id: null,\n    title: t.name,\n    objective: t.text_content || t.description || null,\n    clickup_status: (t.status && t.status.status) || 'draft',\n    attachments: [],\n    deleted: false,\n  };\n});\n\nreturn [{ json: { projects } }];\n"
+      }
+    },
+    {
+      "id": "post-project",
+      "name": "POST Import Project",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 60],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').item.json.app_url }}/api/clickup/import-projects",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ projects: $('Build Project Payload').item.json.projects }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App Import Secret" }
+      }
+    },
+    {
+      "id": "build-task-payload",
+      "name": "Build Task Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 300],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const CLOSED_STATUSES = ['concluído','concluido','finalizado','encerrado','encerrada','cancelado','cancelada','realizado','realizada','fechado','closed','done'];\nconst incluirFechados = $('Config').first().json.incluir_fechados === true;\nconst allTasks = $input.all().map(item => item.json);\nconst tasks = incluirFechados\n  ? allTasks\n  : allTasks.filter(t => !CLOSED_STATUSES.includes(((t.status && t.status.status) || '').toLowerCase()));\n\n// ── Helpers de custom field ──────────────────────────────────────────\nfunction findField(task, pattern, type) {\n  return (task.custom_fields || []).find(f => {\n    const nameMatch = (f.name || '').toLowerCase().includes(pattern);\n    return type ? (nameMatch && f.type === type) : nameMatch;\n  });\n}\n\n// drop_down: value é um índice numérico dentro de type_config.options\nfunction resolveDropdown(field) {\n  if (!field || field.value === undefined || field.value === null) return null;\n  const opts = (field.type_config && field.type_config.options) || [];\n  const opt = opts[field.value];\n  return opt ? opt.name : null;\n}\n\n// labels: value é um array de IDs de option, resolvido contra type_config.options[].label\nfunction resolveLabels(field) {\n  if (!field || !Array.isArray(field.value)) return [];\n  const opts = (field.type_config && field.type_config.options) || [];\n  return field.value\n    .map(id => { const o = opts.find(o => o.id === id); return o ? o.label : null; })\n    .filter(Boolean);\n}\n\n// tasks (relacionamento): value é array de tarefas vinculadas\nfunction resolveRelatedId(field) {\n  if (!field || !Array.isArray(field.value) || field.value.length === 0) return null;\n  return field.value[0].id || null;\n}\n\n// date: value é epoch em ms (string ou número)\nfunction resolveDate(value) {\n  if (!value) return null;\n  const ms = typeof value === 'string' ? parseInt(value, 10) : value;\n  if (!ms) return null;\n  return new Date(ms).toISOString().substring(0, 10);\n}\n\n// ── Mapas de label do ClickUp → chave do App (Task model) ────────────\nconst TASK_TYPE_MAP = {\n  'criação/audiovisual': 'criacao',\n  'setup/tracking': 'setup',\n  'tráfego/performance': 'trafego',\n  'web/dev': 'web',\n  'estratégia/planejamento': 'estrategia',\n  'reuniões/atendimento': 'reunioes',\n  'administrativo/financeiro': 'administrativo',\n};\nconst ORIGIN_MAP = {\n  'onboarding': 'onboarding',\n  'roadmap': 'roadmap',\n  'ticket': 'ticket',\n  'projeto': 'projeto',\n};\nconst DESTINATION_MAP = {\n  'publicação orgânica': 'publicacao_organica',\n  'campanhas patrocinadas': 'campanhas_patrocinadas',\n  'projeto web': 'projeto_web',\n  'administrativo / financeiro': 'administrativo_financeiro',\n  'envio / resposta para cliente': 'envio_resposta_cliente',\n  'envio / resposta ao cliente': 'envio_resposta_cliente',\n};\nconst APPROVAL_METHOD_MAP = {\n  'aprova aí': 'aprovaaí',\n  'whatsapp': 'whatsapp',\n  'email': 'email',\n};\n\n// ── Anexos: viram uma seção em markdown no final da descrição ────────\nfunction appendAttachments(description, attachments) {\n  if (!attachments || attachments.length === 0) return description || '';\n  const lines = attachments.map(a => `- ${a.title || 'arquivo'}: ${a.url}`);\n  const base = (description || '').trim();\n  const section = '--- Anexos ---\\n' + lines.join('\\n');\n  return base ? base + '\\n\\n' + section : section;\n}\n\n// project_id e list_id ficam SEMPRE null aqui de propósito - ver Sticky Note\n// \"Por que não linka Projeto automaticamente\". O vínculo com Projeto é feito\n// depois, manualmente, em lote, dentro do App.\nconst tasksPayload = tasks.map(t => {\n  const clienteField = findField(t, 'cliente_relacionado');\n  const clientClickupId = resolveRelatedId(clienteField);\n\n  const tipoTarefaLabel = (resolveDropdown(findField(t, 'tipo de tarefa')) || '').toLowerCase();\n  const taskType = TASK_TYPE_MAP[tipoTarefaLabel] || 'criacao';\n\n  const origemLabel = (resolveDropdown(findField(t, 'origem')) || '').toLowerCase();\n  const origin = ORIGIN_MAP[origemLabel] || 'projeto';\n\n  const destinoLabels = resolveLabels(findField(t, 'destino'));\n  const destination = DESTINATION_MAP[(destinoLabels[0] || '').toLowerCase()] || null;\n\n  const situationLabel = resolveDropdown(findField(t, 'situa'));\n\n  const metodoLabels = resolveLabels(findField(t, 'todo de aprova'));\n  const approvalMethod = APPROVAL_METHOD_MAP[(metodoLabels[0] || '').toLowerCase()] || null;\n\n  const aprovacaoInternaField = findField(t, 'interna');\n  const internalApproval = !!(aprovacaoInternaField && aprovacaoInternaField.value);\n\n  const dataAprovacaoField = findField(t, 'data de aprova');\n  const approvalDate = resolveDate(dataAprovacaoField ? dataAprovacaoField.value : null);\n\n  const dataPublicacaoField = findField(t, 'data de publica');\n  const publishDate = resolveDate(dataPublicacaoField ? dataPublicacaoField.value : null);\n\n  const requesterNameField = findField(t, 'solicitante', 'short_text');\n  const requesterWhatsField = findField(t, 'solicitante', 'phone');\n\n  return {\n    clickup_task_id: t.id,\n    project_id: null,\n    list_id: null,\n    list_name: t.list ? t.list.name : null,\n    client_clickup_id: clientClickupId,\n    title: t.name,\n    description: appendAttachments(t.description, t.attachments),\n    clickup_status: (t.status && t.status.status) || 'backlog',\n    clickup_priority: t.priority ? t.priority.priority : 'normal',\n    task_type: taskType,\n    origin: origin,\n    destination: destination,\n    situation: situationLabel,\n    due_date: resolveDate(t.due_date),\n    approval_date: approvalDate,\n    publish_date: publishDate,\n    approval_method: approvalMethod,\n    internal_approval: internalApproval,\n    is_ticket: origin === 'ticket',\n    requester_name: requesterNameField ? requesterNameField.value : null,\n    requester_whatsapp: requesterWhatsField ? requesterWhatsField.value : null,\n    requester_channel: null,\n    creator_email: t.creator ? t.creator.email : null,\n    executor_email: (t.assignees && t.assignees[0]) ? t.assignees[0].email : null,\n    responsavel_email: (t.assignees && t.assignees[1]) ? t.assignees[1].email : null,\n    attachments: [],\n    deleted: false,\n  };\n});\n\nreturn [{ json: { tasks: tasksPayload } }];\n"
+      }
+    },
+    {
+      "id": "post-task",
+      "name": "POST Import Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').item.json.app_url }}/api/clickup/import",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tasks: $('Build Task Payload').item.json.tasks }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App Import Secret" }
+      }
+    }
+  ],
+  "connections": {
+    "ClickUp Trigger": {
+      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+    },
+    "Config": {
+      "main": [[{ "node": "Get Task by ID", "type": "main", "index": 0 }]]
+    },
+    "Get Task by ID": {
+      "main": [[{ "node": "Route by List", "type": "main", "index": 0 }]]
+    },
+    "Route by List": {
+      "main": [
+        [{ "node": "Build Macroplan Payload", "type": "main", "index": 0 }],
+        [{ "node": "Build Project Payload", "type": "main", "index": 0 }],
+        [{ "node": "Build Task Payload", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Macroplan Payload": {
+      "main": [[{ "node": "POST Import Macroplan", "type": "main", "index": 0 }]]
+    },
+    "Build Project Payload": {
+      "main": [[{ "node": "POST Import Project", "type": "main", "index": 0 }]]
+    },
+    "Build Task Payload": {
+      "main": [[{ "node": "POST Import Task", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

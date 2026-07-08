@@ -104,6 +104,12 @@ class ClickupImportController extends Controller
                 ->pluck('id', 'clickup_task_id')
                 ->all();
 
+            // Match de Sprint pelo nome da Lista de origem no ClickUp (sincronização em tempo real)
+            $sprintsByTitle = $db->table('sprints')
+                ->get(['id', 'title'])
+                ->mapWithKeys(fn ($s) => [mb_strtolower(trim($s->title)) => $s->id])
+                ->all();
+
         } catch (\Throwable $e) {
             return response()->json([
                 'error' => 'Falha ao inicializar lookups: ' . $e->getMessage(),
@@ -113,7 +119,7 @@ class ClickupImportController extends Controller
 
         foreach ($tasks as $index => $row) {
             try {
-                $this->importTask($row, $usersByEmail, $projectsByList, $clientsByClickup, $fallbackUserId, $organizationId, $result);
+                $this->importTask($row, $usersByEmail, $projectsByList, $clientsByClickup, $sprintsByTitle, $fallbackUserId, $organizationId, $result);
             } catch (\Throwable $e) {
                 $result['errors'][] = [
                     'index'          => $index,
@@ -131,6 +137,7 @@ class ClickupImportController extends Controller
         array $usersByEmail,
         array $projectsByList,
         array $clientsByClickup,
+        array $sprintsByTitle,
         ?string $fallbackUserId,
         ?string $organizationId,
         array &$result
@@ -227,6 +234,16 @@ class ClickupImportController extends Controller
 
         // Sincronizar executor e responsável
         $this->syncPersonnel($task, $row, $usersByEmail);
+
+        // Vincula à Sprint pelo nome da Lista de origem no ClickUp — só se a
+        // tarefa ainda não tiver sprint_id, pra nunca sobrescrever organização
+        // manual já feita no App (mesma cautela aplicada a project_id).
+        if (!$task->sprint_id && !empty($row['list_name'])) {
+            $sprintId = $sprintsByTitle[mb_strtolower(trim($row['list_name']))] ?? null;
+            if ($sprintId) {
+                $task->update(['sprint_id' => $sprintId]);
+            }
+        }
 
         $exists ? $result['updated']++ : $result['imported']++;
     }

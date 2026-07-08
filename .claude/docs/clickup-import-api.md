@@ -69,6 +69,10 @@ Endpoint **genérico** — não é só para chamados/tickets. `is_ticket` é ape
 
 **Na migração controlada atual, `project_id` e `list_id` vão sempre `null`.** O vínculo com Projeto é feito depois, manualmente, em lote, dentro do App — nunca inferido durante o import (ver Incidente acima). `list_id` só deveria voltar a ser enviado se/quando essa resolução automática for reintroduzida com salvaguardas melhores.
 
+**`list_name` (opcional, 2026-07-08):** nome da Lista de origem no ClickUp — só enviado pela sincronização em tempo real (`clickup-realtime-sync.json`), o workflow de migração em lote não manda esse campo. Serve **exclusivamente** para vincular `sprint_id` automaticamente (ver seção abaixo); não tem nenhum outro efeito.
+
+**Vínculo automático de Sprint via `list_name`:** se `list_name` vier preenchido e a tarefa **ainda não tiver `sprint_id`**, o App compara (case-insensitive, com `trim`) contra o `title` de todas as Sprints cadastradas e, se bater, vincula. **Só vincula na primeira vez** — nunca sobrescreve uma organização manual já feita no App (mesma cautela já aplicada a `project_id`). Sem match: `sprint_id` continua `null`, sem erro. Depende de usar os mesmos nomes dos dois lados (Sprint no App = nome da Lista no ClickUp) — é o mecanismo confirmado com o usuário, não uma convenção nova.
+
 **Resolução de `client_id`:** por `client_clickup_id` (bate contra `clients.clickup_task_id`) ou, se ausente, herda do `client_id` do projeto resolvido (só relevante se `project_id` vier preenchido).
 
 **`clickup_status` aceitos** (case-insensitive, mapeados internamente — outros valores caem em `backlog`):
@@ -91,9 +95,34 @@ Endpoint **genérico** — não é só para chamados/tickets. `is_ticket` é ape
 { "imported": 1, "updated": 0, "skipped": 0, "errors": [] }
 ```
 
-## `POST /api/clickup/import-macroplans` e `POST /api/clickup/import-projects` — não usados na migração atual
+## Workflow n8n de sincronização em tempo real (webhook, 2026-07-08)
 
-Esses dois endpoints continuam existindo e funcionando (contrato inalterado — ver histórico deste arquivo se precisar), mas **não fazem parte do fluxo de migração atual**: Macroplanos e Projetos já foram lançados manualmente no App e só precisam ser conferidos, não reimportados. Só voltam a ser relevantes se um dia for necessário resincronizar Macroplanos/Projetos em massa a partir do ClickUp — nesse caso, revisitar este documento e aplicar as mesmas cautelas do Incidente acima (nada de resolução automática de vínculo sem dupla checagem).
+Separado do workflow de migração em lote (manual, lista por lista): [`.claude/docs/n8n-workflows/clickup-realtime-sync.json`](n8n-workflows/clickup-realtime-sync.json) reage a eventos de criação/atualização de tarefa no ClickUp inteiro, em tempo real, via **ClickUp Trigger** (webhook nativo, eventos Task Created + Task Updated no Team todo).
+
+```
+ClickUp Trigger (webhook) → Config → Get Task by ID → Route by List (Switch)
+    ├─ list.id = 901326341797 (Planejamentos)  → Build Macroplan Payload → POST /api/clickup/import-macroplans
+    ├─ list.id = 901326341887 (Projetos)       → Build Project Payload   → POST /api/clickup/import-projects
+    └─ qualquer outra Lista (Tarefa/Sprint/…) → Build Task Payload      → POST /api/clickup/import
+```
+
+**Por que precisa de "Get Task by ID":** o payload do webhook do ClickUp só traz `task_id` + tipo de evento, não os `custom_fields` completos — por isso todo evento dispara uma busca da tarefa inteira antes de decidir a branch.
+
+**Roteamento por List ID fixo:** os mesmos IDs usados desde os comandos artisan originais (`901326341797` = Planejamentos/Roadmaps, `901326341887` = Projetos). Qualquer outra lista (Filas, Chamados, qualquer Sprint) cai na branch de Tarefa — de propósito, já que sincronização em tempo real precisa cobrir o workspace inteiro, não só as listas já migradas manualmente.
+
+**`incluir_fechados: true` por padrão** neste workflow (diferente do workflow de migração, que é `false` por padrão) — sincronização contínua deve sempre refletir o status atual da tarefa no ClickUp, incluindo concluído/cancelado.
+
+**Branch Tarefa:** reaproveita exatamente a mesma lógica de mapeamento de campos já validada contra amostras reais (ver tabela na seção anterior), só adicionando `list_name` ao payload.
+
+**Branches Macroplano/Projeto: ⚠️ nunca validadas contra um JSON real** de tarefa dessas listas — só o padrão do custom field `cliente_relacionado` foi confirmado (é reaproveitado em todo o workspace). Antes de confiar, rode manualmente criando/editando um Planejamento e um Projeto de teste no ClickUp e confira o resultado, mesma cautela já aplicada à branch de Tarefa quando ela ainda era nova.
+
+**`clickup_list_id` e `macro_plan_clickup_id` do Projeto ficam sempre `null`**, nunca adivinhados via custom field — foi tentar adivinhar exatamente esses dois campos que causou o Incidente descrito no topo deste documento. Vínculo com lista de execução e com Macroplano continuam manuais no App (lápis de edição rápida em `/projetos`).
+
+**Parâmetros do node ClickUp Trigger não testados contra uma instância real** — depois de importar o workflow, abra o node e confirme que o Team e os eventos (Task Created, Task Updated) carregaram certo antes de ativar.
+
+## `POST /api/clickup/import-macroplans` e `POST /api/clickup/import-projects` — não usados na migração em lote atual, usados pela sincronização em tempo real
+
+Contrato inalterado (ver histórico deste arquivo se precisar). Não fazem parte do workflow de **migração em lote** (`clickup-import.json`) — Macroplanos e Projetos já foram lançados manualmente no App e só precisam ser conferidos, não reimportados em massa. São, no entanto, chamados pelo workflow de **sincronização em tempo real** (`clickup-realtime-sync.json`, ver seção acima) sempre que um evento do ClickUp cai nas listas de Planejamentos/Projetos — com as mesmas cautelas do Incidente acima (nada de resolução automática de vínculo sem dupla checagem).
 
 ## Erros
 
