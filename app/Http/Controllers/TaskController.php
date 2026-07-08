@@ -338,11 +338,12 @@ class TaskController extends Controller
         $data = $request->validate([
             'task_ids'    => 'required|array|min:1',
             'task_ids.*'  => 'uuid|exists:pgsql.tasks,id',
-            'action'      => 'required|in:status,executor,situation,project,delete',
+            'action'      => 'required|in:status,executor,situation,project,sprint,delete',
             'status'      => 'required_if:action,status|in:' . implode(',', array_keys(Task::$statuses)),
             'executor_id' => 'nullable|exists:pgsql.users,id',
             'situation'   => 'nullable|in:' . implode(',', $situationKeys),
             'project_id'  => 'required_if:action,project|uuid|exists:pgsql.projects,id',
+            'sprint_id'   => 'required_if:action,sprint|uuid|exists:pgsql.sprints,id',
         ]);
 
         $tasks = Task::whereIn('id', $data['task_ids'])->get();
@@ -376,6 +377,14 @@ class TaskController extends Controller
                     }
                     $task->update(['project_id' => $project->id]);
                 }
+                break;
+
+            case 'sprint':
+                $sprint = Sprint::findOrFail($data['sprint_id']);
+                if ($sprint->status === 'closed') {
+                    return response()->json(['success' => false, 'message' => 'Essa sprint está encerrada.'], 422);
+                }
+                Task::whereIn('id', $data['task_ids'])->update(['sprint_id' => $sprint->id]);
                 break;
 
             case 'delete':

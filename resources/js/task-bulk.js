@@ -5,6 +5,7 @@ export function registerTaskBulk() {
         bulkExecutor: '',
         bulkSituation: '',
         bulkProject: '',
+        bulkSprint: '',
         applying: false,
 
         toggleAll(checked, scopeSelector) {

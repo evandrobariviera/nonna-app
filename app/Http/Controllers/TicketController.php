@@ -32,8 +32,9 @@ class TicketController extends Controller
         $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);
         $users    = User::orderBy('name')->get(['id', 'name']);
         $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
+        $sprints  = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get(['id', 'title', 'status']);
 
-        return view('tickets.index', compact('tickets', 'clients', 'users', 'projects'));
+        return view('tickets.index', compact('tickets', 'clients', 'users', 'projects', 'sprints'));
     }
 
     public function create()
