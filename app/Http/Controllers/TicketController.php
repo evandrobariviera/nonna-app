@@ -18,6 +18,10 @@ class TicketController extends Controller
             ->where('is_ticket', true)
             ->orderByDesc('created_at');
 
+        if (!$request->boolean('mostrar_fechados')) {
+            $query->whereNotIn('status', ['concluido', 'cancelado']);
+        }
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }

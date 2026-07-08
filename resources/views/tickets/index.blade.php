@@ -32,7 +32,17 @@
             @endforeach
         </select>
 
-        @if(request()->hasAny(['status','client_id','executor_id']))
+        <div class="flex items-center gap-2 pb-0.5">
+            <input type="checkbox" name="mostrar_fechados" value="1" id="chk_mostrar_fechados"
+                onchange="this.form.submit()"
+                {{ request()->boolean('mostrar_fechados') ? 'checked' : '' }}
+                class="w-4 h-4" style="accent-color:var(--purple)">
+            <label for="chk_mostrar_fechados" class="text-sm font-medium cursor-pointer" style="color:var(--muted)">
+                Mostrar concluídos/cancelados
+            </label>
+        </div>
+
+        @if(request()->hasAny(['status','client_id','executor_id','mostrar_fechados']))
             <a href="{{ route('tickets.index') }}" class="btn btn-ghost btn-sm">✕ Limpar</a>
         @endif
 
