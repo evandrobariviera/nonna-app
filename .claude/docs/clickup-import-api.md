@@ -120,6 +120,26 @@ ClickUp Trigger (webhook) → Config → Get Task by ID → Route by List (Switc
 
 **Parâmetros do node ClickUp Trigger não testados contra uma instância real** — depois de importar o workflow, abra o node e confirme que o Team e os eventos (Task Created, Task Updated) carregaram certo antes de ativar.
 
+## Workflow n8n de resync agendado — stopgap temporário (2026-07-08)
+
+[`.claude/docs/n8n-workflows/clickup-scheduled-resync.json`](n8n-workflows/clickup-scheduled-resync.json) existe porque a sincronização em tempo real (seção acima) ainda não foi validada/ativada, e isso já deixou o App um dia inteiro sem receber nenhuma atualização do ClickUp. Enquanto isso não é resolvido, esse workflow roda num **Schedule Trigger** (padrão: a cada 30min) e repete a mesma busca já validada na migração manual, mas cobrindo várias Listas conhecidas de uma vez (não só uma por execução):
+
+```
+Schedule Trigger (30min) / Trigger Manual (teste) → Config
+    ├─ Get Tasks: Chamados (Tickets)        (900701505618)
+    ├─ Get Tasks: Filas (Backlog)           (901326341944)
+    └─ Get Tasks: Sprint Ativa (editar Lista) — vem em branco, precisa selecionar manualmente
+         ↓ (3 ramos) → Merge (append) → Build Tasks Payload → POST /api/clickup/import
+```
+
+**`incluir_fechados: true` sempre** — mesmo princípio da sincronização em tempo real: resync deve sempre refletir o status atual do ClickUp.
+
+**Manutenção manual da Lista de Sprint:** como Sprints no ClickUp são Listas que mudam com frequência (nova sprint aberta = nova Lista), o node "Get Tasks: Sprint Ativa" não vem pré-preenchido — é preciso abrir e selecionar a Lista certa pelo seletor nativo antes de ativar, e atualizar sempre que uma nova sprint abrir (ou duplicar o node, ajustando `numberInputs` do Merge, se houver mais de uma sprint aberta ao mesmo tempo).
+
+**⚠️ Limitação conhecida — sprint_id só vincula na 1ª vez:** o match de sprint por `list_name` (ver seção anterior) nunca sobrescreve um `sprint_id` já preenchido. Isso cobre bem "tarefa entrou numa Sprint", mas não cobre "tarefa saiu de uma Sprint de volta pra Filas/Chamados" nem "tarefa mudou de uma Sprint pra outra" — nesses casos o App fica desatualizado até um ajuste manual. Mudar esse comportamento é uma decisão de design que afeta também a sincronização em tempo real — não foi alterado aqui de propósito.
+
+**É temporário:** quando a sincronização em tempo real estiver validada e ativa, desative (ou apague) este workflow — ele existe só como ponte até lá.
+
 ## `POST /api/clickup/import-macroplans` e `POST /api/clickup/import-projects` — não usados na migração em lote atual, usados pela sincronização em tempo real
 
 Contrato inalterado (ver histórico deste arquivo se precisar). Não fazem parte do workflow de **migração em lote** (`clickup-import.json`) — Macroplanos e Projetos já foram lançados manualmente no App e só precisam ser conferidos, não reimportados em massa. São, no entanto, chamados pelo workflow de **sincronização em tempo real** (`clickup-realtime-sync.json`, ver seção acima) sempre que um evento do ClickUp cai nas listas de Planejamentos/Projetos — com as mesmas cautelas do Incidente acima (nada de resolução automática de vínculo sem dupla checagem).
