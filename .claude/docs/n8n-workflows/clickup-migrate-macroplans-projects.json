@@ -1,0 +1,187 @@
+{
+  "name": "Nonna - Migração ClickUp: Macroplanejamentos + Projetos (dedicado, não validado)",
+  "nodes": [
+    {
+      "id": "sticky-setup",
+      "name": "LEIA ANTES DE RODAR",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -420],
+      "parameters": {
+        "width": 720,
+        "height": 400,
+        "content": "## Migração dedicada, separada da de Tarefas — ⚠️ lógica ainda não validada\n\nEste workflow existe porque `clickup-import.json` só migra Tarefas — Macroplanos e Projetos nunca tiveram um workflow de migração dedicado e testado (só existiam as branches equivalentes dentro de `clickup-realtime-sync.json`, escritas recuperando lógica antiga, **nunca confirmadas contra um JSON real** de tarefa das listas \"Planejamentos (Roadmaps)\" ou \"Projetos (Projects)\").\n\n### Ordem importa: Planejamentos ANTES de Projetos\nO endpoint de Projetos resolve `macro_plan_id` a partir de `macro_plan_clickup_id`, casando contra macroplanos **já existentes no banco** no momento da chamada. Se você rodar a branch de Projetos antes da de Macroplanos (ou em paralelo), os vínculos ficam todos `null` — dá pra corrigir depois rodando de novo (é idempotente), mas economiza um passo rodar na ordem certa desde já.\n\n### Antes de rodar\n1. Reaproveita as credenciais já criadas: **ClickUp API Token** e **Nonna App Import Secret**.\n2. Rode **só o node \"Get Tasks: Planejamentos\"** primeiro (Execute step) e inspecione o resultado: confira se `custom_fields` tem um campo `cliente_relacionado` (tipo `tasks`) igual ao que já validamos pras Tarefas — é a única suposição que este workflow faz. Se os nomes/tipos forem diferentes, ajuste o Code node \"Build Macroplan Payload\" antes de continuar.\n3. Rode \"Build Macroplan Payload\" sozinho e confira o JSON de saída antes de deixar ir pro POST.\n4. Só depois disso, rode \"POST Import Macroplans\".\n5. Repita os passos 2-4 pra Projetos (\"Get Tasks: Projetos\" → \"Build Project Payload\" → \"POST Import Projects\").\n\n**`client_clickup_id` precisa resolver contra um Cliente já existente no App** (`clients.clickup_task_id`) — como os Clientes não foram apagados na limpeza, isso deve funcionar, mas se um card não tiver o campo `cliente_relacionado` preenchido no ClickUp, a linha cai em `errors[]` com aviso claro, não quebra o lote."
+      }
+    },
+    {
+      "id": "sticky-no-autolink",
+      "name": "clickup_list_id e macro_plan_clickup_id nunca adivinhados",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [900, -420],
+      "parameters": {
+        "width": 420,
+        "height": 200,
+        "content": "## Mesma cautela do Incidente\n\n`macro_plan_clickup_id` do Projeto só vem preenchido se o Code node conseguir identificar isso a partir de um custom field real — hoje ele **não tenta adivinhar nada**, fica sempre `null` (vínculo fica pra fazer manualmente no App, lápis de edição em `/projetos`, depois de conferir). O mesmo vale pra `clickup_list_id`. Ver `clickup-import-api.md` pro histórico completo do Incidente que motivou essa regra."
+      }
+    },
+    {
+      "id": "trigger",
+      "name": "Trigger Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 60]
+    },
+    {
+      "id": "config",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 60],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "app_url", "name": "app_url", "type": "string", "value": "https://app.nonnaagenciadigital.com.br" },
+            { "id": "incluir_fechados", "name": "incluir_fechados", "type": "boolean", "value": true }
+          ]
+        }
+      },
+      "notesInFlow": true,
+      "notes": "incluir_fechados=true por padrão: é uma migração histórica completa, queremos TODOS os Macroplanos/Projetos (inclusive já concluídos/cancelados), não só os ativos."
+    },
+    {
+      "id": "get-tasks-planejamentos",
+      "name": "Get Tasks: Planejamentos",
+      "type": "n8n-nodes-base.clickUp",
+      "typeVersion": 1,
+      "position": [440, 60],
+      "parameters": {
+        "resource": "task",
+        "operation": "getAll",
+        "list": "901326341797",
+        "returnAll": true,
+        "filters": {
+          "archived": false,
+          "includeClosed": "={{ $('Config').item.json.incluir_fechados }}",
+          "subtasks": false
+        }
+      },
+      "notesInFlow": true,
+      "notes": "Lista \"Planejamentos (Roadmaps)\" (901326341797). Rode sozinho primeiro (Execute step) e confira custom_fields antes de continuar.",
+      "credentials": {
+        "clickUpApi": { "id": "", "name": "ClickUp API Token" }
+      }
+    },
+    {
+      "id": "build-macroplan-payload",
+      "name": "Build Macroplan Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 60],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// ⚠️ Diferente da migração de Tarefas, esta lógica NUNCA foi validada contra um\n// JSON real de tarefa da lista \"Planejamentos (Roadmaps)\" — só o padrão de\n// 'cliente_relacionado' foi confirmado (é o mesmo campo reaproveitado em\n// todo o workspace). Rode manualmente e confira o resultado antes de confiar.\n\nfunction findField(task, pattern, type) {\n  return (task.custom_fields || []).find(f => {\n    const nameMatch = (f.name || '').toLowerCase().includes(pattern);\n    return type ? (nameMatch && f.type === type) : nameMatch;\n  });\n}\n\nfunction resolveRelatedId(field) {\n  if (!field || !Array.isArray(field.value) || field.value.length === 0) return null;\n  return field.value[0].id || null;\n}\n\nconst allTasks = $input.all().map(item => item.json);\n\nconst macroplans = allTasks.map(t => {\n  const clienteField = findField(t, 'cliente_relacionado');\n\n  return {\n    clickup_task_id: t.id,\n    client_clickup_id: resolveRelatedId(clienteField),\n    title: t.name,\n    clickup_status: (t.status && t.status.status) || 'draft',\n    description: t.text_content || t.description || null,\n    period_start: null,\n    period_end: null,\n    creator_email: t.creator ? t.creator.email : null,\n    responsible_email: (t.assignees && t.assignees[0]) ? t.assignees[0].email : null,\n    attachments: [],\n    deleted: false,\n  };\n});\n\nreturn [{ json: { macroplans } }];\n"
+      }
+    },
+    {
+      "id": "post-macroplans",
+      "name": "POST Import Macroplans",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 60],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').item.json.app_url }}/api/clickup/import-macroplans",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ macroplans: $('Build Macroplan Payload').item.json.macroplans }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App Import Secret" }
+      }
+    },
+    {
+      "id": "get-tasks-projetos",
+      "name": "Get Tasks: Projetos",
+      "type": "n8n-nodes-base.clickUp",
+      "typeVersion": 1,
+      "position": [1120, 60],
+      "parameters": {
+        "resource": "task",
+        "operation": "getAll",
+        "list": "901326341887",
+        "returnAll": true,
+        "filters": {
+          "archived": false,
+          "includeClosed": "={{ $('Config').item.json.incluir_fechados }}",
+          "subtasks": false
+        }
+      },
+      "notesInFlow": true,
+      "notes": "Lista \"Projetos (Projects)\" (901326341887). Só rode depois de confirmar que \"POST Import Macroplans\" já rodou com sucesso — senão macro_plan_id fica null pra todos (idempotente, dá pra corrigir depois rodando de novo).",
+      "credentials": {
+        "clickUpApi": { "id": "", "name": "ClickUp API Token" }
+      }
+    },
+    {
+      "id": "build-project-payload",
+      "name": "Build Project Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 60],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// ⚠️ Diferente da migração de Tarefas, esta lógica NUNCA foi validada contra um\n// JSON real de tarefa da lista \"Projetos (Projects)\" — só o padrão de\n// 'cliente_relacionado' foi confirmado. Rode manualmente e confira antes de\n// confiar. clickup_list_id e macro_plan_clickup_id ficam sempre null de\n// propósito — foi tentar adivinhar exatamente isso que causou o incidente\n// anterior (ver clickup-import-api.md). Vínculo com Macroplano continua\n// manual, pelo lápis de edição rápida em /projetos.\n\nfunction findField(task, pattern, type) {\n  return (task.custom_fields || []).find(f => {\n    const nameMatch = (f.name || '').toLowerCase().includes(pattern);\n    return type ? (nameMatch && f.type === type) : nameMatch;\n  });\n}\n\nfunction resolveRelatedId(field) {\n  if (!field || !Array.isArray(field.value) || field.value.length === 0) return null;\n  return field.value[0].id || null;\n}\n\nconst allTasks = $input.all().map(item => item.json);\n\nconst projects = allTasks.map(t => {\n  const clienteField = findField(t, 'cliente_relacionado');\n\n  return {\n    clickup_task_id: t.id,\n    client_clickup_id: resolveRelatedId(clienteField),\n    macro_plan_clickup_id: null,\n    clickup_list_id: null,\n    title: t.name,\n    objective: t.text_content || t.description || null,\n    clickup_status: (t.status && t.status.status) || 'draft',\n    attachments: [],\n    deleted: false,\n  };\n});\n\nreturn [{ json: { projects } }];\n"
+      }
+    },
+    {
+      "id": "post-projects",
+      "name": "POST Import Projects",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 60],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').item.json.app_url }}/api/clickup/import-projects",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ projects: $('Build Project Payload').item.json.projects }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App Import Secret" }
+      }
+    }
+  ],
+  "connections": {
+    "Trigger Manual": {
+      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+    },
+    "Config": {
+      "main": [[{ "node": "Get Tasks: Planejamentos", "type": "main", "index": 0 }]]
+    },
+    "Get Tasks: Planejamentos": {
+      "main": [[{ "node": "Build Macroplan Payload", "type": "main", "index": 0 }]]
+    },
+    "Build Macroplan Payload": {
+      "main": [[{ "node": "POST Import Macroplans", "type": "main", "index": 0 }]]
+    },
+    "POST Import Macroplans": {
+      "main": [[{ "node": "Get Tasks: Projetos", "type": "main", "index": 0 }]]
+    },
+    "Get Tasks: Projetos": {
+      "main": [[{ "node": "Build Project Payload", "type": "main", "index": 0 }]]
+    },
+    "Build Project Payload": {
+      "main": [[{ "node": "POST Import Projects", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
