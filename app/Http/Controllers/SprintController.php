@@ -49,13 +49,14 @@ class SprintController extends Controller
             'tasks.executors',
             'tasks.client',
             'tasks.project',
+            'tasks.attachments',
         ]);
 
-        // Agrupar por coluna kanban
+        // Agrupar por status (a coluna do board é o próprio status)
         $kanban = [];
-        foreach (Task::$kanbanColumns as $colKey => $col) {
-            $kanban[$colKey] = $sprint->tasks
-                ->filter(fn($t) => in_array($t->status, $col['statuses']))
+        foreach (Task::$statuses as $statusKey => $meta) {
+            $kanban[$statusKey] = $sprint->tasks
+                ->where('status', $statusKey)
                 ->values();
         }
 

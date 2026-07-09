@@ -41,19 +41,15 @@
                 <div class="divide-y" style="--tw-divide-opacity:1">
                     @foreach($tasks as $task)
                         @php
-                            $isDone = in_array($task->status, ['concluido', 'aprovado']);
+                            $isDone = $task->status === 'concluido';
                             $statusMap = [
                                 'backlog'               => ['label' => 'Backlog',              'color' => 'var(--muted)'],
-                                'em_copy'               => ['label' => 'Em Copy',              'color' => 'var(--orange)'],
-                                'pronto_producao'       => ['label' => 'Pronto p/ Produção',   'color' => 'var(--orange)'],
                                 'em_producao'           => ['label' => 'Em Produção',          'color' => 'var(--orange)'],
-                                'revisao'               => ['label' => 'Em Revisão',           'color' => 'var(--purple)'],
-                                'aguardando_envio'      => ['label' => 'Aguardando Envio',     'color' => 'var(--purple)'],
-                                'aguardando_resposta'   => ['label' => 'Aguardando Resposta',  'color' => 'var(--purple)'],
-                                'ajuste'                => ['label' => 'Em Ajuste',            'color' => 'var(--purple)'],
-                                'aguardando_aprovacao'  => ['label' => 'Ag. Aprovação',        'color' => 'var(--orange)'],
+                                'revisao_interna'       => ['label' => 'Em Revisão',           'color' => 'var(--purple)'],
+                                'ajuste_alteracao'      => ['label' => 'Em Ajuste',            'color' => 'var(--purple)'],
+                                'aprovacao'             => ['label' => 'Ag. Aprovação',        'color' => 'var(--orange)'],
+                                'despacho_agendamento'  => ['label' => 'Aprovada — Agendando', 'color' => 'var(--green)'],
                                 'concluido'             => ['label' => 'Concluída',            'color' => 'var(--green)'],
-                                'aprovado'              => ['label' => 'Aprovada pelo Cliente','color' => 'var(--green)'],
                                 'cancelado'             => ['label' => 'Cancelada',            'color' => 'var(--red)'],
                             ];
                             $st = $statusMap[$task->status] ?? ['label' => $task->status, 'color' => 'var(--muted)'];

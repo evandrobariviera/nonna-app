@@ -38,47 +38,16 @@ class Task extends Model
         'clickup_attachments'    => 'array',
     ];
 
-    // ── Kanban: 4 colunas visuais ──────────────────────────────────────────
-    public static array $kanbanColumns = [
-        'backlog' => [
-            'label'    => 'Backlog',
-            'statuses' => ['backlog'],
-            'color'    => 'muted',
-            'bg'       => '#64748b',
-        ],
-        'em_andamento' => [
-            'label'    => 'Em Andamento',
-            'statuses' => ['em_copy', 'pronto_producao', 'em_producao'],
-            'color'    => 'blue',
-            'bg'       => '#2563eb',
-        ],
-        'revisao' => [
-            'label'    => 'Revisão',
-            'statuses' => ['revisao', 'aguardando_envio', 'aguardando_resposta', 'ajuste'],
-            'color'    => 'purple',
-            'bg'       => '#6A5ACD',
-        ],
-        'concluido' => [
-            'label'    => 'Concluído',
-            'statuses' => ['concluido'],
-            'color'    => 'green',
-            'bg'       => '#059669',
-        ],
-    ];
-
+    // ── Status: espelha 1:1 os status reais da lista de Produção/Sprint no ClickUp ──
     public static array $statuses = [
-        'backlog'               => ['label' => 'Backlog',             'col' => 'backlog',      'color' => 'muted'],
-        'em_copy'               => ['label' => 'Em Copy',             'col' => 'em_andamento', 'color' => 'blue'],
-        'pronto_producao'       => ['label' => 'Pronto p/ Produção',  'col' => 'em_andamento', 'color' => 'blue'],
-        'em_producao'           => ['label' => 'Em Produção',         'col' => 'em_andamento', 'color' => 'blue'],
-        'revisao'               => ['label' => 'Em Revisão',          'col' => 'revisao',      'color' => 'purple'],
-        'aguardando_envio'      => ['label' => 'Aguardando Envio',    'col' => 'revisao',      'color' => 'orange'],
-        'aguardando_resposta'   => ['label' => 'Aguardando Resposta', 'col' => 'revisao',      'color' => 'orange'],
-        'ajuste'                    => ['label' => 'Em Ajuste',              'col' => 'revisao',      'color' => 'blue'],
-        'aguardando_aprovacao'      => ['label' => 'Aguardando Aprovação',   'col' => 'revisao',      'color' => 'orange'],
-        'concluido'                 => ['label' => 'Concluído',              'col' => 'concluido',    'color' => 'green'],
-        'aprovado'                  => ['label' => 'Aprovado pelo Cliente',  'col' => 'concluido',    'color' => 'green'],
-        'cancelado'                 => ['label' => 'Cancelado',              'col' => 'cancelado',    'color' => 'red'],
+        'backlog'               => ['label' => 'Backlog / A Fazer',    'color' => 'muted'],
+        'em_producao'           => ['label' => 'Em Produção',          'color' => 'blue'],
+        'revisao_interna'       => ['label' => 'Revisão Interna',      'color' => 'purple'],
+        'ajuste_alteracao'      => ['label' => 'Ajuste / Alteração',   'color' => 'blue'],
+        'aprovacao'             => ['label' => 'Aprovação',            'color' => 'orange'],
+        'despacho_agendamento'  => ['label' => 'Despacho / Agendamento', 'color' => 'blue'],
+        'concluido'             => ['label' => 'Concluído',            'color' => 'green'],
+        'cancelado'             => ['label' => 'Cancelado',            'color' => 'red'],
     ];
 
     public static array $types = [
@@ -148,13 +117,6 @@ class Task extends Model
         'normal'  => ['label' => 'Normal',  'color' => 'muted'],
     ];
 
-    public static array $kanbanDefaultStatus = [
-        'backlog'      => 'backlog',
-        'em_andamento' => 'em_producao',
-        'revisao'      => 'revisao',
-        'concluido'    => 'concluido',
-    ];
-
     public function statusLabel(): string
     {
         return self::$statuses[$this->status]['label'] ?? $this->status;
@@ -167,7 +129,7 @@ class Task extends Model
 
     public function kanbanColumn(): string
     {
-        return self::$statuses[$this->status]['col'] ?? 'backlog';
+        return $this->status ?? 'backlog';
     }
 
     public function typeLabel(): string
@@ -277,6 +239,24 @@ class Task extends Model
     public function attachments(): HasMany
     {
         return $this->hasMany(TaskAttachment::class)->orderBy('created_at');
+    }
+
+    public function firstImageAttachmentUrl(): ?string
+    {
+        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+        foreach ($this->clickup_attachments ?? [] as $file) {
+            $url = $file['url'] ?? null;
+            if ($url && in_array(strtolower(pathinfo(parse_url($url, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION)), $imageExtensions)) {
+                return $url;
+            }
+        }
+
+        $local = $this->relationLoaded('attachments')
+            ? $this->attachments->first(fn ($a) => $a->isImage())
+            : $this->attachments()->get()->first(fn ($a) => $a->isImage());
+
+        return $local?->url();
     }
 
     public function comments(): HasMany

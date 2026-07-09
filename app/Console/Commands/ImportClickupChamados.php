@@ -22,8 +22,8 @@ class ImportClickupChamados extends Command
         'triagem'          => 'backlog',
         'em atendimento'   => 'em_producao',
         'em criação'       => 'em_producao',
-        'aprovação'        => 'aguardando_resposta',
-        'alteração'        => 'ajuste',
+        'aprovação'        => 'aprovacao',
+        'alteração'        => 'ajuste_alteracao',
         'finalizado'       => 'concluido',
     ];
 

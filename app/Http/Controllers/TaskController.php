@@ -22,17 +22,15 @@ class TaskController extends Controller
         $query = Task::with(['client', 'executor', 'executors', 'project.macroPlan', 'sprint'])
             ->where('is_ticket', false)
             ->orderByRaw("CASE status
-                WHEN 'em_producao'        THEN 1
-                WHEN 'em_copy'            THEN 2
-                WHEN 'pronto_producao'    THEN 3
-                WHEN 'revisao'            THEN 4
-                WHEN 'aguardando_envio'   THEN 5
-                WHEN 'aguardando_resposta'THEN 6
-                WHEN 'ajuste'             THEN 7
-                WHEN 'backlog'            THEN 8
-                WHEN 'concluido'          THEN 9
-                WHEN 'cancelado'          THEN 10
-                ELSE 11 END")
+                WHEN 'em_producao'           THEN 1
+                WHEN 'revisao_interna'       THEN 2
+                WHEN 'ajuste_alteracao'      THEN 3
+                WHEN 'aprovacao'             THEN 4
+                WHEN 'despacho_agendamento'  THEN 5
+                WHEN 'backlog'               THEN 6
+                WHEN 'concluido'             THEN 7
+                WHEN 'cancelado'             THEN 8
+                ELSE 9 END")
             ->orderBy('due_date');
 
         if ($request->filled('status')) {
@@ -62,7 +60,7 @@ class TaskController extends Controller
 
         // Oculta status finais por padrão — a menos que o usuário filtre por status específico ou ative o toggle
         if (!$request->boolean('mostrar_concluidos') && !$request->filled('status')) {
-            $query->whereNotIn('status', ['concluido', 'aprovado', 'cancelado']);
+            $query->whereNotIn('status', ['concluido', 'cancelado']);
         }
 
         $tasks    = $query->paginate(40)->withQueryString();
@@ -149,7 +147,7 @@ class TaskController extends Controller
 
         $triggerApproval = ($data['situation'] ?? null) === 'enviar_para_cliente'
             && $task->situation !== 'enviar_para_cliente'
-            && $task->status !== 'aguardando_aprovacao';
+            && $task->status !== 'aprovacao';
 
         $task->update([
             ...$data,

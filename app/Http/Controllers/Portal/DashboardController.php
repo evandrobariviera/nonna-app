@@ -26,7 +26,7 @@ class DashboardController extends Controller
             'projects_active' => $allProjects->whereIn('status', ['active'])->count(),
             'tasks_total'     => $allTasks->count(),
             'tasks_done'      => $allTasks->where('status', 'concluido')->count(),
-            'tasks_progress'  => $allTasks->whereIn('status', ['em_copy', 'pronto_producao', 'em_producao', 'revisao', 'aguardando_envio', 'aguardando_resposta', 'ajuste'])->count(),
+            'tasks_progress'  => $allTasks->whereIn('status', ['em_producao', 'revisao_interna', 'ajuste_alteracao', 'aprovacao', 'despacho_agendamento'])->count(),
             'tasks_cancelled' => $allTasks->where('status', 'cancelado')->count(),
         ];
 

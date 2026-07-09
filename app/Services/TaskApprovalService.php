@@ -38,7 +38,7 @@ class TaskApprovalService
             'notes'        => $notes,
         ]);
 
-        $task->update(['status' => 'aguardando_aprovacao']);
+        $task->update(['status' => 'aprovacao']);
 
         $contacts = $this->getApprovalContacts($task);
 
@@ -105,7 +105,7 @@ class TaskApprovalService
 
         $round->update(['status' => $status, 'resolved_at' => now()]);
 
-        $round->task->update(['status' => $hasChanges ? 'revisao' : 'aprovado']);
+        $round->task->update(['status' => $hasChanges ? 'ajuste_alteracao' : 'despacho_agendamento']);
     }
 
     private function dispatchWebhook(TaskApprovalRound $round, TaskApprovalToken $approvalToken, Contact $contact): void

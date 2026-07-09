@@ -53,12 +53,13 @@
                     {{ $doneTasks }} de {{ $totalTasks }} tarefa{{ $totalTasks !== 1 ? 's' : '' }} concluída{{ $doneTasks !== 1 ? 's' : '' }}
                 </p>
             </div>
-            <div class="flex items-center gap-4">
-                @foreach(\App\Models\Task::$kanbanColumns as $colKey => $col)
-                    @php $count = $kanban[$colKey]->count(); @endphp
+            <div class="flex items-center gap-4 flex-wrap">
+                @foreach(\App\Models\Task::$statuses as $statusKey => $meta)
+                    @continue($statusKey === 'cancelado')
+                    @php $count = $kanban[$statusKey]->count(); @endphp
                     <div class="text-center">
-                        <div class="text-lg font-black" style="color:{{ $col['bg'] }}">{{ $count }}</div>
-                        <div class="text-xs font-mono" style="color:var(--muted)">{{ $col['label'] }}</div>
+                        <div class="text-lg font-black" style="color:{{ \App\Models\Task::colorHex($meta['color']) }}">{{ $count }}</div>
+                        <div class="text-xs font-mono" style="color:var(--muted)">{{ $meta['label'] }}</div>
                     </div>
                 @endforeach
             </div>
@@ -270,16 +271,16 @@
         </div>
 
         {{-- ── COLUNAS KANBAN ── --}}
-        <div class="grid gap-4" style="align-items: start;"
-             :style="showDone ? 'grid-template-columns: repeat(4, 1fr)' : 'grid-template-columns: repeat(3, 1fr)'">
+        <div class="flex gap-4 overflow-x-auto pb-2" style="align-items: start;">
 
-            @foreach(\App\Models\Task::$kanbanColumns as $colKey => $col)
+            @foreach(\App\Models\Task::$statuses as $colKey => $col)
+                @continue($colKey === 'cancelado')
                 @php $colTasks = $kanban[$colKey]; @endphp
-                <div class="flex flex-col gap-2" @if($colKey === 'concluido') x-show="showDone" x-cloak @endif>
+                <div class="flex flex-col gap-2 flex-shrink-0" style="width:270px" @if($colKey === 'concluido') x-show="showDone" x-cloak @endif>
 
                     {{-- Header da coluna — sólido estilo Monday --}}
                     <div class="flex items-center justify-between px-3 py-2.5 rounded"
-                         style="background:{{ $col['bg'] }}">
+                         style="background:{{ \App\Models\Task::colorHex($col['color']) }}">
                         <span class="text-xs font-bold uppercase tracking-wider" style="color:#fff; letter-spacing:.06em">
                             {{ $col['label'] }}
                         </span>
@@ -364,11 +365,11 @@
 
                                 {{-- Mover entre colunas --}}
                                 <div class="flex flex-wrap gap-1 mt-2 pt-2" style="border-top:1px solid var(--border2)">
-                                    @foreach(\App\Models\Task::$kanbanColumns as $targetKey => $targetCol)
+                                    @foreach(\App\Models\Task::$statuses as $targetKey => $targetCol)
                                         @if($targetKey !== $colKey)
                                             <form method="POST" action="{{ $standalone ? route('tasks.updateStatusStandalone', [$project, $task]) : route('tasks.update-status', [$macroplan, $project, $task]) }}">
                                                 @csrf @method('PATCH')
-                                                <input type="hidden" name="status" value="{{ \App\Models\Task::$kanbanDefaultStatus[$targetKey] }}">
+                                                <input type="hidden" name="status" value="{{ $targetKey }}">
                                                 <button type="submit"
                                                     class="text-xs px-2 py-0.5 font-mono transition-colors"
                                                     style="border:1px solid var(--border2); color:var(--muted)"

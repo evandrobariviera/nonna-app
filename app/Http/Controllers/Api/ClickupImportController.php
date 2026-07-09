@@ -14,50 +14,62 @@ use Illuminate\Support\Facades\DB;
 
 class ClickupImportController extends Controller
 {
-    // ClickUp status name → app status key
+    // ClickUp status name → app status key (espelho 1:1 dos 8 status reais da lista de Produção/Sprint)
     private const STATUS_MAP = [
-        // Genéricos
+        // Backlog / A Fazer
         'backlog'                 => 'backlog',
         'a fazer'                 => 'backlog',
+        'backlog / a fazer'       => 'backlog',
+        'backlog/a fazer'         => 'backlog',
         'to do'                   => 'backlog',
-        // Status específicos da Nonna no ClickUp
         'em planejamento'         => 'backlog',
         'triagem'                 => 'backlog',
-        'em atendimento'          => 'em_producao',
-        'em criação'              => 'em_producao',
-        'em criacao'              => 'em_producao',
-        'aprovação'               => 'aguardando_aprovacao',
-        'aprovacao'               => 'aguardando_aprovacao',
-        'alteração'               => 'ajuste',
-        'alteracao'               => 'ajuste',
-        // Outros
-        'em copy'                 => 'em_copy',
-        'copy'                    => 'em_copy',
-        'pronto p/ produção'      => 'pronto_producao',
-        'pronto producao'         => 'pronto_producao',
-        'pronto p/produção'       => 'pronto_producao',
+        // Em Produção
         'em produção'             => 'em_producao',
         'em producao'             => 'em_producao',
         'in progress'             => 'em_producao',
         'em andamento'            => 'em_producao',
-        'em revisão'              => 'revisao',
-        'em revisao'              => 'revisao',
-        'revisão'                 => 'revisao',
-        'revisao'                 => 'revisao',
-        'review'                  => 'revisao',
-        'aguardando envio'        => 'aguardando_envio',
-        'aguardando resposta'     => 'aguardando_resposta',
-        'aguardando cliente'      => 'aguardando_resposta',
-        'em ajuste'               => 'ajuste',
-        'ajuste'                  => 'ajuste',
-        'aguardando aprovação'    => 'aguardando_aprovacao',
-        'aguardando aprovacao'    => 'aguardando_aprovacao',
+        'em atendimento'          => 'em_producao',
+        'em criação'              => 'em_producao',
+        'em criacao'              => 'em_producao',
+        'em copy'                 => 'em_producao',
+        'copy'                    => 'em_producao',
+        // Revisão Interna
+        'revisão interna'         => 'revisao_interna',
+        'revisao interna'         => 'revisao_interna',
+        'em revisão'              => 'revisao_interna',
+        'em revisao'              => 'revisao_interna',
+        'revisão'                 => 'revisao_interna',
+        'revisao'                 => 'revisao_interna',
+        'review'                  => 'revisao_interna',
+        // Ajuste / Alteração
+        'ajuste'                  => 'ajuste_alteracao',
+        'ajuste / alteração'      => 'ajuste_alteracao',
+        'ajuste/alteração'        => 'ajuste_alteracao',
+        'alteração'               => 'ajuste_alteracao',
+        'alteracao'               => 'ajuste_alteracao',
+        'em ajuste'               => 'ajuste_alteracao',
+        // Aprovação
+        'aprovação'               => 'aprovacao',
+        'aprovacao'               => 'aprovacao',
+        'aguardando aprovação'    => 'aprovacao',
+        'aguardando aprovacao'    => 'aprovacao',
+        'aguardando envio'        => 'aprovacao',
+        'aguardando resposta'     => 'aprovacao',
+        'aguardando cliente'      => 'aprovacao',
+        // Despacho / Agendamento
+        'despacho'                       => 'despacho_agendamento',
+        'agendamento'                    => 'despacho_agendamento',
+        'despacho / agendamento'         => 'despacho_agendamento',
+        'despacho/agendamento'           => 'despacho_agendamento',
+        // Concluído
         'concluído'               => 'concluido',
         'concluido'               => 'concluido',
         'done'                    => 'concluido',
         'complete'                => 'concluido',
-        'aprovado'                => 'aprovado',
-        'approved'                => 'aprovado',
+        'aprovado'                => 'concluido',
+        'approved'                => 'concluido',
+        // Cancelado
         'cancelado'               => 'cancelado',
         'cancelled'               => 'cancelado',
     ];

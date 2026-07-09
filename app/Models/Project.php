@@ -183,10 +183,8 @@ class Project extends Model
     {
         $counts = [];
         $tasks = $this->tasks()->where('status', '!=', 'cancelado')->get(['status']);
-        foreach (Task::$kanbanColumns as $colKey => $col) {
-            $counts[$colKey] = $tasks->filter(
-                fn($t) => in_array($t->status, $col['statuses'])
-            )->count();
+        foreach (Task::$statuses as $statusKey => $meta) {
+            $counts[$statusKey] = $tasks->where('status', $statusKey)->count();
         }
         return $counts;
     }

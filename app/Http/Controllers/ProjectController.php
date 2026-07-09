@@ -30,8 +30,8 @@ class ProjectController extends Controller
                 ->count();
 
             $colCounts = [];
-            foreach (Task::$kanbanColumns as $colKey => $col) {
-                $colCounts[$colKey] = $tasks->filter(fn($t) => in_array($t->status, $col['statuses']))->count();
+            foreach (Task::$statuses as $statusKey => $meta) {
+                $colCounts[$statusKey] = $tasks->where('status', $statusKey)->count();
             }
 
             $progress = $total > 0 ? (int) round(($done / $total) * 100) : 0;
@@ -102,9 +102,9 @@ class ProjectController extends Controller
         $users = User::orderBy('name')->get(['id', 'name']);
 
         $kanban = [];
-        foreach (Task::$kanbanColumns as $colKey => $col) {
-            $kanban[$colKey] = $project->tasks
-                ->filter(fn($t) => in_array($t->status, $col['statuses']))
+        foreach (Task::$statuses as $statusKey => $meta) {
+            $kanban[$statusKey] = $project->tasks
+                ->where('status', $statusKey)
                 ->values();
         }
         $cancelled  = $project->tasks->where('status', 'cancelado')->values();
@@ -125,9 +125,9 @@ class ProjectController extends Controller
         $users      = User::orderBy('name')->get(['id', 'name']);
 
         $kanban = [];
-        foreach (Task::$kanbanColumns as $colKey => $col) {
-            $kanban[$colKey] = $project->tasks
-                ->filter(fn($t) => in_array($t->status, $col['statuses']))
+        foreach (Task::$statuses as $statusKey => $meta) {
+            $kanban[$statusKey] = $project->tasks
+                ->where('status', $statusKey)
                 ->values();
         }
         $cancelled  = $project->tasks->where('status', 'cancelado')->values();

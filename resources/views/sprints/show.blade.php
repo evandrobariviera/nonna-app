@@ -77,11 +77,11 @@
                 </div>
                 <p class="text-xs mt-1 font-mono" style="color:var(--muted)">{{ $done }} / {{ $total }} concluídas</p>
             </div>
-            @foreach(\App\Models\Task::$kanbanColumns as $colKey => $col)
-                @php $cnt = $kanban[$colKey]->count(); @endphp
+            @foreach(\App\Models\Task::$statuses as $statusKey => $meta)
+                @php $cnt = $kanban[$statusKey]->count(); @endphp
                 <div class="text-center">
-                    <div class="text-lg font-black" style="color:var(--{{ $col['color'] === 'muted' ? 'muted2' : $col['color'] }})">{{ $cnt }}</div>
-                    <div class="text-xs font-mono" style="color:var(--muted)">{{ $col['label'] }}</div>
+                    <div class="text-lg font-black" style="color:var(--{{ $meta['color'] === 'muted' ? 'muted2' : $meta['color'] }})">{{ $cnt }}</div>
+                    <div class="text-xs font-mono" style="color:var(--muted)">{{ $meta['label'] }}</div>
                 </div>
             @endforeach
         </div>
@@ -112,118 +112,132 @@
 
         {{-- ── TAB BOARD ── --}}
         <div x-show="tab === 'board'" x-cloak>
-            <div class="grid gap-4" style="grid-template-columns: repeat(4, 1fr); align-items: start;">
+            <div class="flex gap-4 overflow-x-auto pb-2" style="align-items: start;">
 
-                @foreach(\App\Models\Task::$kanbanColumns as $colKey => $col)
-                    @php $colTasks = $kanban[$colKey]; @endphp
-                    <div class="flex flex-col gap-2">
+                @foreach(\App\Models\Task::$statuses as $statusKey => $meta)
+                    @php $colTasks = $kanban[$statusKey]; @endphp
+                    <div class="flex flex-col gap-2 flex-shrink-0" style="width:270px">
                         <div class="flex items-center justify-between px-3 py-2"
                              style="background:var(--s2); border:1px solid var(--border2)">
                             <div class="flex items-center gap-2">
                                 <div class="h-2 w-2 rounded-full"
-                                     style="background:var(--{{ $col['color'] === 'muted' ? 'muted' : $col['color'] }})"></div>
+                                     style="background:var(--{{ $meta['color'] === 'muted' ? 'muted' : $meta['color'] }})"></div>
                                 <span class="text-xs font-bold font-mono uppercase tracking-widest"
-                                      style="color:var(--{{ $col['color'] === 'muted' ? 'muted2' : $col['color'] }})">
-                                    {{ $col['label'] }}
+                                      style="color:var(--{{ $meta['color'] === 'muted' ? 'muted2' : $meta['color'] }})">
+                                    {{ $meta['label'] }}
                                 </span>
                             </div>
                             <span class="text-xs font-mono font-bold" style="color:var(--muted)">{{ $colTasks->count() }}</span>
                         </div>
 
                         @forelse($colTasks as $task)
-                            <div class="card px-4 py-3 relative"
+                            @php
+                                $execList = $task->executors->filter(fn($u) => $u->pivot->role === 'executor');
+                                if ($execList->isEmpty() && $task->executor) {
+                                    $execList = collect([$task->executor]);
+                                }
+                                $respList   = $task->executors->filter(fn($u) => $u->pivot->role === 'responsavel');
+                                $statusUrl  = $task->is_ticket ? route('tickets.update-status', $task) : route('tasks.update-status-direct', $task);
+                                $thumbUrl   = $task->firstImageAttachmentUrl();
+                            @endphp
+                            <div class="card px-0 py-0 relative overflow-hidden" x-data="{ statusOpen: false }"
                                  style="{{ $task->isOverdue() ? 'border-left:3px solid var(--red)' : '' }}">
 
                                 <input type="checkbox" value="{{ $task->id }}" data-task-id="{{ $task->id }}" x-model="selected"
-                                    class="absolute top-2 right-2" style="width:14px; height:14px">
+                                    class="absolute top-2 right-2 z-10" style="width:14px; height:14px">
 
-                                {{-- Cliente --}}
-                                <p class="text-xs font-mono mb-1" style="color:var(--purple)">
-                                    {{ $task->client?->company_name ?? '—' }}
-                                    @if($task->project)
-                                        <span style="color:var(--border2)"> / </span>
-                                        <span style="color:var(--muted)">{{ $task->project->title }}</span>
-                                    @elseif($task->is_ticket)
-                                        <span style="color:var(--border2)"> / </span>
-                                        <span style="color:var(--orange)">Ticket</span>
-                                    @endif
-                                </p>
-
-                                <p class="text-xs font-semibold leading-snug mb-2" style="color:var(--text)">
-                                    {{ $task->title }}
-                                </p>
-
-                                {{-- Executores --}}
-                                @if($task->executors->count() > 0)
-                                    <div class="flex flex-wrap gap-1 mb-1.5">
-                                        @foreach($task->executors as $exec)
-                                            <span class="text-xs px-1.5 py-0.5 font-mono"
-                                                  style="background:var(--s3); border:1px solid var(--border2); color:var(--orange)">
-                                                {{ explode(' ', $exec->name)[0] }}
-                                            </span>
-                                        @endforeach
-                                    </div>
-                                @elseif($task->executor)
-                                    <p class="text-xs font-mono mb-1.5" style="color:var(--muted)">
-                                        {{ explode(' ', $task->executor->name)[0] }}
-                                    </p>
+                                @if($thumbUrl)
+                                    <img src="{{ $thumbUrl }}" alt="" class="w-full object-cover" style="height:80px">
                                 @endif
 
-                                {{-- Datas + status --}}
-                                <div class="flex items-center flex-wrap gap-1.5">
-                                    <span class="badge badge-{{ $task->statusColor() }}" style="font-size:10px">
-                                        {{ $task->statusLabel() }}
-                                    </span>
-                                    @if($task->due_date)
-                                        <span class="text-xs font-mono"
-                                              style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">
-                                            {{ $task->due_date->format('d/m') }}
-                                        </span>
-                                    @endif
-                                </div>
-
-                                {{-- Mover status --}}
-                                <div class="flex flex-wrap gap-1 mt-2 pt-2" style="border-top:1px solid var(--border2)">
-                                    @foreach(\App\Models\Task::$kanbanColumns as $targetKey => $targetCol)
-                                        @if($targetKey !== $colKey)
-                                            @if($task->is_ticket)
-                                                <form method="POST" action="{{ route('tickets.update-status', $task) }}">
-                                                    @csrf @method('PATCH')
-                                                    <input type="hidden" name="status" value="{{ \App\Models\Task::$kanbanDefaultStatus[$targetKey] }}">
-                                                    <button type="submit"
-                                                        class="text-xs px-2 py-0.5 font-mono"
-                                                        style="border:1px solid var(--border2); color:var(--muted)">
-                                                        → {{ $targetCol['label'] }}
-                                                    </button>
-                                                </form>
-                                            @elseif($task->project)
-                                                <form method="POST" action="{{ route('tasks.update-status-direct', $task) }}">
-                                                    @csrf @method('PATCH')
-                                                    <input type="hidden" name="status" value="{{ \App\Models\Task::$kanbanDefaultStatus[$targetKey] }}">
-                                                    <button type="submit"
-                                                        class="text-xs px-2 py-0.5 font-mono"
-                                                        style="border:1px solid var(--border2); color:var(--muted)">
-                                                        → {{ $targetCol['label'] }}
-                                                    </button>
-                                                </form>
-                                            @endif
+                                <div class="px-4 py-3">
+                                    {{-- Cliente --}}
+                                    <p class="text-xs font-mono mb-1" style="color:var(--purple)">
+                                        {{ $task->client?->company_name ?? '—' }}
+                                        @if($task->project)
+                                            <span style="color:var(--border2)"> / </span>
+                                            <span style="color:var(--muted)">{{ $task->project->title }}</span>
+                                        @elseif($task->is_ticket)
+                                            <span style="color:var(--border2)"> / </span>
+                                            <span style="color:var(--orange)">Ticket</span>
                                         @endif
-                                    @endforeach
+                                    </p>
 
-                                    @if($sprint->status !== 'closed' && !$sprint->isLocked())
-                                        <form method="POST" action="{{ route('sprints.remove-task', [$sprint, $task]) }}"
-                                              onsubmit="return confirm('Remover da sprint?')">
-                                            @csrf @method('DELETE')
-                                            <button type="submit"
-                                                class="text-xs px-2 py-0.5 font-mono"
-                                                style="border:1px solid var(--border2); color:var(--muted)"
-                                                onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
-                                                − Sprint
-                                            </button>
-                                        </form>
+                                    <p class="text-xs font-semibold leading-snug mb-2" style="color:var(--text)">
+                                        {{ $task->title }}
+                                    </p>
+
+                                    {{-- Avatares: responsável (laranja) + executor (roxo) --}}
+                                    @if($respList->isNotEmpty() || $execList->isNotEmpty())
+                                        <div class="flex items-center gap-1 mb-2">
+                                            @foreach($respList as $resp)
+                                                <div class="flex h-6 w-6 items-center justify-center rounded-full text-white flex-shrink-0"
+                                                     style="background:var(--orange); font-size:9px; font-weight:700"
+                                                     title="{{ $resp->name }} (Responsável)">
+                                                    {{ strtoupper(substr($resp->name, 0, 2)) }}
+                                                </div>
+                                            @endforeach
+                                            @foreach($execList as $exec)
+                                                <div class="flex h-6 w-6 items-center justify-center rounded-full text-white flex-shrink-0"
+                                                     style="background:var(--purple); font-size:9px; font-weight:700"
+                                                     title="{{ $exec->name }} (Executor)">
+                                                    {{ strtoupper(substr($exec->name, 0, 2)) }}
+                                                </div>
+                                            @endforeach
+                                        </div>
                                     @endif
-                                </div>
 
+                                    {{-- Data --}}
+                                    @if($task->due_date)
+                                        <p class="text-xs font-mono mb-2"
+                                           style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">
+                                            {{ $task->due_date->format('d/m') }}
+                                        </p>
+                                    @endif
+
+                                    {{-- Mover status + remover da sprint --}}
+                                    <div class="flex items-center gap-1.5 pt-2 relative" style="border-top:1px solid var(--border2)">
+                                        <button @click="statusOpen = !statusOpen" @click.stop type="button"
+                                            class="text-xs px-2 py-0.5 font-mono flex items-center gap-1"
+                                            style="border:1px solid var(--border2); color:var(--muted)">
+                                            Mover <span style="opacity:.7">▾</span>
+                                        </button>
+
+                                        <div x-show="statusOpen" @click.outside="statusOpen = false" x-cloak
+                                             class="absolute left-0 bottom-full mb-1 z-20 rounded shadow-lg py-1"
+                                             style="background:var(--s1); border:1px solid var(--border2); min-width:190px">
+                                            @foreach(\App\Models\Task::$statuses as $targetKey => $targetMeta)
+                                                @if($targetKey !== $statusKey)
+                                                    <form method="POST" action="{{ $statusUrl }}">
+                                                        @csrf @method('PATCH')
+                                                        <input type="hidden" name="status" value="{{ $targetKey }}">
+                                                        <button type="submit"
+                                                            class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
+                                                            style="color:var(--text)"
+                                                            onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                                                            <span class="inline-block w-2 h-2 rounded-full flex-shrink-0"
+                                                                  style="background:{{ \App\Models\Task::colorHex($targetMeta['color']) }}"></span>
+                                                            {{ $targetMeta['label'] }}
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            @endforeach
+                                        </div>
+
+                                        @if($sprint->status !== 'closed' && !$sprint->isLocked())
+                                            <form method="POST" action="{{ route('sprints.remove-task', [$sprint, $task]) }}"
+                                                  onsubmit="return confirm('Remover da sprint?')">
+                                                @csrf @method('DELETE')
+                                                <button type="submit"
+                                                    class="text-xs px-2 py-0.5 font-mono"
+                                                    style="border:1px solid var(--border2); color:var(--muted)"
+                                                    onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+                                                    − Sprint
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
                         @empty
                             <div class="px-4 py-5 text-center text-xs"
