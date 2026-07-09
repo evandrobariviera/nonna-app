@@ -17,6 +17,14 @@ Uma primeira tentativa de automatizar a importação (workflow com 4 branches, r
 - **Nenhuma resolução automática de `project_id` via `list_id`.** O vínculo Tarefa → Projeto (e Projeto → Macroplano) é feito **manualmente, em lote, dentro do App** — ver funcionalidade de edição em massa (roadmap).
 - O workflow de referência agora é deliberadamente simples: uma lista por vez, escolhida manualmente, sem automação de agendamento.
 
+## Incidente 2 (2026-07-09) — tarefas antigas caindo na Fila como "backlog"
+
+Depois de habilitar o fallback de cliente (ver seção de `client_clickup_id` abaixo) e rodar a sincronização contra Listas/Sprints antigas, ~1033 tarefas entraram no App com status `backlog` — a maioria (816) tarefas de 2025, sem cliente relacionado no ClickUp (título tipo "teste", "TESTE ANEXOS"), claramente sobras de antes do workspace do ClickUp ser reestruturado (2026-03). Causa: o `STATUS_MAP` do App tinha fallback `'backlog'` pra qualquer status sem mapeamento — como essas tarefas usavam nomes de status de uma convenção antiga (não existe mais no workspace atual), todas caíram no fallback e foram tratadas como ativas, poluindo a Fila.
+
+**Duas correções (não uma):**
+1. **Fallback de status agora é `concluido`, não `backlog`** (`ClickupImportController::importTask()`). Um status sem mapeamento é tratado como legado/encerrado, não como "precisa de atenção agora". Isso corrige retroativamente qualquer tarefa já importada com esse problema — basta rodar o import de novo (idempotente).
+2. **Filtro de data nos 3 workflows** (`clickup-import.json`, `clickup-realtime-sync.json`, `clickup-scheduled-resync.json`, node "Build Task(s) Payload"): tarefas com `date_created` anterior a **2025-01-01** são **excluídas antes de montar o payload** — nem chegam a ser enviadas pro App. Tarefa sem `date_created` (não deveria acontecer, mas por segurança) **não é excluída** (fail-open, pra nunca perder tarefa válida por falta desse campo).
+
 ## Autenticação
 
 Não usa Sanctum. Autenticação simples por header, comparado em tempo constante (`hash_equals`):
@@ -73,9 +81,9 @@ Endpoint **genérico** — não é só para chamados/tickets. `is_ticket` é ape
 
 **Vínculo automático de Sprint via `list_name`:** se `list_name` vier preenchido e a tarefa **ainda não tiver `sprint_id`**, o App compara (case-insensitive, com `trim`) contra o `title` de todas as Sprints cadastradas e, se bater, vincula. **Só vincula na primeira vez** — nunca sobrescreve uma organização manual já feita no App (mesma cautela já aplicada a `project_id`). Sem match: `sprint_id` continua `null`, sem erro. Depende de usar os mesmos nomes dos dois lados (Sprint no App = nome da Lista no ClickUp) — é o mecanismo confirmado com o usuário, não uma convenção nova.
 
-**Resolução de `client_id`:** por `client_clickup_id` (bate contra `clients.clickup_task_id`) ou, se ausente, herda do `client_id` do projeto resolvido (só relevante se `project_id` vier preenchido).
+**Resolução de `client_id`:** por `client_clickup_id` (bate contra `clients.clickup_task_id`) ou, se ausente, herda do `client_id` do projeto resolvido (só relevante se `project_id` vier preenchido). `client_id` é `NOT NULL` em `tasks` (regra de negócio — toda tarefa tem cliente) — **se nenhuma das duas resolver, cai no fallback do cliente interno "Nonna Agência Digital"** (2026-07-09), pra tarefas administrativas/internas ou tarefas antigas sem `cliente_relacionado` preenchido no ClickUp.
 
-**`clickup_status` aceitos** (case-insensitive, mapeados internamente — outros valores caem em `backlog`):
+**`clickup_status` aceitos** (case-insensitive, mapeados internamente — outros valores caem em `concluido`, não em `backlog`, ver Incidente 2 acima):
 `backlog`/`a fazer`/`to do`/`em planejamento`/`triagem` → `backlog` · `em atendimento`/`em criação` → `em_producao` · `aprovação` → `aguardando_aprovacao` · `alteração`/`ajuste` → `ajuste` · `em copy`/`copy` → `em_copy` · `pronto p/ produção` → `pronto_producao` · `em produção`/`in progress`/`em andamento` → `em_producao` · `em revisão`/`review` → `revisao` · `aguardando envio` → `aguardando_envio` · `aguardando resposta`/`aguardando cliente` → `aguardando_resposta` · `concluído`/`done`/`complete` → `concluido` · `aprovado`/`approved` → `aprovado` · `cancelado`/`cancelled` → `cancelado`
 
 **`clickup_priority` aceitos:** `urgent`/`1` → `urgente` · `high`/`2` → `medio` · `normal`/`3`/`low`/`4` → `normal`
@@ -186,6 +194,12 @@ Se for migrar uma Lista diferente de "Chamados", **confira de novo antes de conf
 Por padrão (`incluir_fechados: false` no node **Config**) o workflow traz **só o que está ativo** — concluído/cancelado/finalizado/encerrado ficam de fora, com dupla proteção: `Include Closed` no filtro do node nativo (agora uma expressão lendo o Config) e um filtro explícito por nome de status dentro do Code node.
 
 **Sprints e Listas já encerradas precisam de `incluir_fechados: true`.** Na primeira tentativa de migrar uma Sprint antiga, o workflow rodou sem erro mas **não importou nada** — o node "Get ClickUp Tasks" trouxe 82 itens, mas "Build Tasks Payload" devolveu `tasks: []`, porque a Sprint inteira já estava com status fechado e o filtro "só ativas" removeu tudo. Pra trazer o histórico de sprints encerradas, mude `incluir_fechados` pra `true` no Config antes de rodar aquela lista — isso desliga os dois filtros (o da API do ClickUp e o do código) só para aquela execução.
+
+### Filtro de data — `date_created >= 2025-01-01` (2026-07-09)
+
+Presente nos 3 workflows (`clickup-import.json`, `clickup-realtime-sync.json`, `clickup-scheduled-resync.json`), dentro do Code node "Build Task(s) Payload", **antes** do filtro de status. Tarefas com `date_created` anterior a `2025-01-01` são excluídas e **nem chegam a ser enviadas** pro App (não é uma questão de status — mesmo com `incluir_fechados: true` elas não passam). Motivo: ver Incidente 2 acima. Tarefa sem `date_created` (não deveria acontecer, campo nativo do ClickUp) não é excluída — fail-open, pra nunca perder tarefa válida por um campo faltando.
+
+Se um dia precisar trazer histórico anterior a 2025 de propósito, é só remover/ajustar o `DATE_CUTOFF_MS` no Code node — não tem toggle no Config pra isso ainda (foi pensado como filtro permanente de higiene, não um modo liga/desliga por execução como o `incluir_fechados`).
 
 ### Limitações conhecidas (ver Sticky Notes no próprio workflow)
 - **Detecção de `deleted` não implementada** — o endpoint já sabe tratar `deleted: true` (cancela em vez de apagar), mas o workflow não envia isso ainda. Detectar exclusão exigiria comparar os IDs retornados contra os já conhecidos no App — fica pra depois, quando a migração inicial estiver estável.

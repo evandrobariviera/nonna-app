@@ -192,9 +192,11 @@ class ClickupImportController extends Controller
             $clientId = $fallbackClientId;
         }
 
-        // Mapear status
-        $rawStatus = mb_strtolower(trim($row['clickup_status'] ?? 'backlog'));
-        $status    = self::STATUS_MAP[$rawStatus] ?? 'backlog';
+        // Mapear status. Fallback é 'concluido', não 'backlog': um status sem mapeamento
+        // normalmente vem de convenção antiga do ClickUp (workspace foi refeito em 2026-03),
+        // e assumir "ativo"/backlog jogaria tarefa legada pra dentro da Fila corrente.
+        $rawStatus = mb_strtolower(trim($row['clickup_status'] ?? 'concluido'));
+        $status    = self::STATUS_MAP[$rawStatus] ?? 'concluido';
 
         // Mapear priority
         $rawPriority = mb_strtolower(trim($row['clickup_priority'] ?? 'normal'));
