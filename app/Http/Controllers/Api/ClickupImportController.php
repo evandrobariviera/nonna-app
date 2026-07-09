@@ -94,6 +94,12 @@ class ClickupImportController extends Controller
             $fallbackUserId = $db->table('users')->whereNull('client_id')->value('id');
             $organizationId = $db->table('organizations')->value('id');
 
+            // client_id é NOT NULL em tasks (regra de negócio: toda tarefa tem cliente).
+            // Se a tarefa do ClickUp não tiver 'cliente_relacionado' preenchido, cai aqui.
+            $fallbackClientId = $db->table('clients')
+                ->where('company_name', 'Nonna Agência Digital')
+                ->value('id');
+
             $projectsByList = $db->table('projects')
                 ->whereNotNull('clickup_list_id')
                 ->pluck('id', 'clickup_list_id')
@@ -119,7 +125,7 @@ class ClickupImportController extends Controller
 
         foreach ($tasks as $index => $row) {
             try {
-                $this->importTask($row, $usersByEmail, $projectsByList, $clientsByClickup, $sprintsByTitle, $fallbackUserId, $organizationId, $result);
+                $this->importTask($row, $usersByEmail, $projectsByList, $clientsByClickup, $sprintsByTitle, $fallbackUserId, $fallbackClientId, $organizationId, $result);
             } catch (\Throwable $e) {
                 $result['errors'][] = [
                     'index'          => $index,
@@ -139,6 +145,7 @@ class ClickupImportController extends Controller
         array $clientsByClickup,
         array $sprintsByTitle,
         ?string $fallbackUserId,
+        ?string $fallbackClientId,
         ?string $organizationId,
         array &$result
     ): void {
@@ -178,6 +185,11 @@ class ClickupImportController extends Controller
         }
         if (!$clientId && $projectId) {
             $clientId = Project::on('pgsql')->find($projectId)?->client_id;
+        }
+        // Fallback: client_id é NOT NULL — tarefa sem 'cliente_relacionado' no ClickUp
+        // (tipicamente interna/administrativa) vai pro cliente interno da própria agência.
+        if (!$clientId) {
+            $clientId = $fallbackClientId;
         }
 
         // Mapear status
