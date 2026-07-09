@@ -80,6 +80,12 @@
 
         <div class="w-px self-stretch" style="background:var(--border2)"></div>
 
+        <div class="flex-1 min-w-44">
+            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Buscar</label>
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar por título…"
+                class="filter-select w-full" style="cursor:text">
+        </div>
+
         <div class="flex-1 min-w-36">
             <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Cliente</label>
             <select name="client_id" class="filter-select w-full">
@@ -130,7 +136,7 @@
 
         <div class="flex gap-2">
             <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
-            @if(request()->hasAny(['client_id','origin','task_type','atrasadas','mostrar_fechados']))
+            @if(request()->hasAny(['search','client_id','origin','task_type','atrasadas','mostrar_fechados']))
                 <a href="{{ route('fila.index', ['group_by' => $groupBy]) }}" class="btn btn-ghost btn-sm">✕ Limpar</a>
             @endif
         </div>

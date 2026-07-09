@@ -56,6 +56,9 @@ class TaskController extends Controller
         if ($request->boolean('sem_projeto')) {
             $query->whereNull('project_id');
         }
+        if ($request->filled('search')) {
+            $query->where('title', 'ilike', '%' . $request->search . '%');
+        }
 
         // Oculta status finais por padrão — a menos que o usuário filtre por status específico ou ative o toggle
         if (!$request->boolean('mostrar_concluidos') && !$request->filled('status')) {

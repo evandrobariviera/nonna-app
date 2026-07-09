@@ -34,6 +34,9 @@ class FilaController extends Controller
         if ($request->boolean('atrasadas')) {
             $query->whereNotNull('due_date')->where('due_date', '<', today());
         }
+        if ($request->filled('search')) {
+            $query->where('title', 'ilike', '%' . $request->search . '%');
+        }
 
         $tasks = $query->get();
 

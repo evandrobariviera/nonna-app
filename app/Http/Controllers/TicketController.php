@@ -31,6 +31,9 @@ class TicketController extends Controller
         if ($request->filled('executor_id')) {
             $query->where('executor_id', $request->executor_id);
         }
+        if ($request->filled('search')) {
+            $query->where('title', 'ilike', '%' . $request->search . '%');
+        }
 
         $tickets  = $query->paginate(30)->withQueryString();
         $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);

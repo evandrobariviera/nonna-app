@@ -1,15 +1,16 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between w-full">
-            <span class="text-base font-bold" style="color:var(--text)">Tickets / Suporte</span>
-            <a href="{{ route('tickets.create') }}" class="btn btn-primary btn-sm">+ Novo Ticket</a>
-        </div>
+        <span class="text-base font-bold" style="color:var(--text)">Tarefas</span>
     </x-slot>
 
     {{-- BARRA DE FILTROS --}}
     <form method="GET" action="{{ route('tasks.index') }}"
           class="flex items-center gap-2 flex-wrap mb-5 pb-4"
           style="border-bottom:1px solid var(--border2)">
+
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar por título…"
+            class="filter-select" style="cursor:text; min-width:220px">
+        <button type="submit" class="btn btn-ghost btn-sm">🔍 Buscar</button>
 
         <select name="status" onchange="this.form.submit()" class="filter-select">
             <option value="">Todos os status</option>
@@ -48,7 +49,7 @@
             @endforeach
         </select>
 
-        @if(request()->hasAny(['status','client_id','executor_id','sprint_id','sem_sprint','mostrar_concluidos']))
+        @if(request()->hasAny(['search','status','client_id','executor_id','sprint_id','sem_sprint','mostrar_concluidos']))
             <a href="{{ route('tasks.index') }}"
                class="btn btn-ghost btn-sm">
                 ✕ Limpar

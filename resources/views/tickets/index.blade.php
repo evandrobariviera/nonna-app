@@ -11,6 +11,10 @@
           class="flex items-center gap-2 flex-wrap mb-5 pb-4"
           style="border-bottom:1px solid var(--border2)">
 
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar por título…"
+            class="filter-select" style="cursor:text; min-width:220px">
+        <button type="submit" class="btn btn-ghost btn-sm">🔍 Buscar</button>
+
         <select name="status" onchange="this.form.submit()" class="filter-select">
             <option value="">Todos os status</option>
             @foreach(\App\Models\Task::$statuses as $key => $s)
@@ -42,7 +46,7 @@
             </label>
         </div>
 
-        @if(request()->hasAny(['status','client_id','executor_id','mostrar_fechados']))
+        @if(request()->hasAny(['search','status','client_id','executor_id','mostrar_fechados']))
             <a href="{{ route('tickets.index') }}" class="btn btn-ghost btn-sm">✕ Limpar</a>
         @endif
 
