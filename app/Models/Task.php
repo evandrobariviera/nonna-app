@@ -296,4 +296,32 @@ class Task extends Model
             ->withPivot('role')
             ->withTimestamps();
     }
+
+    /**
+     * Agrupamento padrão usado nas telas de lista de tarefas (Filas, Sprint) —
+     * mesma regra em todo o sistema pra dar consistência de uso.
+     *
+     * @param  \Illuminate\Support\Collection<int, Task>  $tasks
+     */
+    public static function groupCollection(\Illuminate\Support\Collection $tasks, string $groupBy): \Illuminate\Support\Collection
+    {
+        return match ($groupBy) {
+            'executor'    => $tasks->groupBy(fn ($t) => self::executorGroupKey($t)),
+            'responsavel' => $tasks->groupBy(fn ($t) => self::responsavelGroupKey($t)),
+            'status'      => $tasks->groupBy(fn ($t) => $t->status),
+            default       => $tasks->groupBy(fn ($t) => $t->client_id ?? '__sem_cliente__'),
+        };
+    }
+
+    public static function executorGroupKey(self $task): string
+    {
+        $exec = $task->executors->first(fn ($u) => $u->pivot->role === 'executor') ?? $task->executor;
+        return $exec ? $exec->id . '|' . $exec->name : '__sem_executor__|Sem executor';
+    }
+
+    public static function responsavelGroupKey(self $task): string
+    {
+        $resp = $task->executors->first(fn ($u) => $u->pivot->role === 'responsavel');
+        return $resp ? $resp->id . '|' . $resp->name : '__sem_responsavel__|Sem responsável';
+    }
 }

@@ -41,15 +41,7 @@ class FilaController extends Controller
         $tasks = $query->get();
 
         $groupBy = $request->get('group_by', 'cliente');
-
-        $grouped = match ($groupBy) {
-            'executor'    => $tasks->groupBy(fn($t) => $this->executorKey($t)),
-            'responsavel' => $tasks->groupBy(fn($t) => $this->responsavelKey($t)),
-            'status'      => $tasks->groupBy(fn($t) => $t->status),
-            default       => $tasks->groupBy(fn($t) => $t->client_id ?? '__sem_cliente__'),
-        };
-
-        $grouped = $grouped->sortByDesc->count();
+        $grouped = Task::groupCollection($tasks, $groupBy)->sortByDesc->count();
 
         $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);
         $users    = User::orderBy('name')->get(['id', 'name']);
@@ -76,16 +68,4 @@ class FilaController extends Controller
         ));
     }
 
-    private function executorKey(Task $task): string
-    {
-        $exec = $task->executors->first(fn($u) => $u->pivot->role === 'executor')
-            ?? $task->executor;
-        return $exec ? $exec->id . '|' . $exec->name : '__sem_executor__|Sem executor';
-    }
-
-    private function responsavelKey(Task $task): string
-    {
-        $resp = $task->executors->first(fn($u) => $u->pivot->role === 'responsavel');
-        return $resp ? $resp->id . '|' . $resp->name : '__sem_responsavel__|Sem responsável';
-    }
 }

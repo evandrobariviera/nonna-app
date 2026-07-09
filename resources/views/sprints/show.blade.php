@@ -275,6 +275,18 @@
                   class="card card-body mb-5 flex flex-wrap items-end gap-3">
                 <input type="hidden" name="view" value="list">
 
+                <div class="min-w-40">
+                    <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Agrupar por</label>
+                    <select name="list_group_by" class="filter-select w-full" onchange="this.form.submit()">
+                        <option value="cliente"     {{ $listGroupBy === 'cliente'     ? 'selected' : '' }}>Cliente</option>
+                        <option value="executor"    {{ $listGroupBy === 'executor'    ? 'selected' : '' }}>Executor</option>
+                        <option value="responsavel" {{ $listGroupBy === 'responsavel' ? 'selected' : '' }}>Responsável</option>
+                        <option value="status"      {{ $listGroupBy === 'status'      ? 'selected' : '' }}>Status</option>
+                    </select>
+                </div>
+
+                <div class="w-px self-stretch" style="background:var(--border2)"></div>
+
                 <div class="flex-1 min-w-44">
                     <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Buscar</label>
                     <input type="text" name="list_search" value="{{ request('list_search') }}" placeholder="Buscar por título…"
@@ -304,7 +316,7 @@
                 <div class="flex gap-2">
                     <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
                     @if(request()->hasAny(['list_search', 'list_client_id', 'list_status']))
-                        <a href="{{ route('sprints.show', ['sprint' => $sprint, 'view' => 'list']) }}" class="btn btn-ghost btn-sm">✕ Limpar</a>
+                        <a href="{{ route('sprints.show', ['sprint' => $sprint, 'view' => 'list', 'list_group_by' => $listGroupBy]) }}" class="btn btn-ghost btn-sm">✕ Limpar</a>
                     @endif
                 </div>
             </form>
@@ -320,11 +332,9 @@
                     <div class="overflow-x-auto">
                         <table class="nonna-table">
                             @include('partials._task-thead')
-                            <tbody x-data="{ groupOpen: true }">
-                                @foreach($listTasks as $task)
-                                    @include('partials._fila-task-tr', ['task' => $task, 'activeSprint' => $activeSprint, 'sprints' => $sprints])
-                                @endforeach
-                            </tbody>
+                            @foreach($listGrouped as $groupKey => $groupTasks)
+                                @include('partials._task-group-tbody', ['groupBy' => $listGroupBy, 'groupKey' => $groupKey, 'groupTasks' => $groupTasks, 'activeSprint' => $activeSprint, 'sprints' => $sprints])
+                            @endforeach
                         </table>
                     </div>
                 </div>

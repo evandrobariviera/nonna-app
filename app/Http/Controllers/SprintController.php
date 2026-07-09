@@ -74,6 +74,9 @@ class SprintController extends Controller
         }
         $listTasks = $listTasks->values();
 
+        $listGroupBy = $request->get('list_group_by', 'cliente');
+        $listGrouped = Task::groupCollection($listTasks, $listGroupBy)->sortByDesc->count();
+
         // Backlog disponível para adicionar (sem sprint, status backlog)
         $backlogTasks = Task::with(['client', 'project.macroPlan', 'executor'])
             ->whereNull('sprint_id')
@@ -88,7 +91,8 @@ class SprintController extends Controller
         $activeSprint = $sprints->firstWhere('status', 'active');
 
         return view('sprints.show', compact(
-            'sprint', 'kanban', 'listTasks', 'backlogTasks', 'clients', 'users', 'projects', 'sprints', 'activeSprint'
+            'sprint', 'kanban', 'listTasks', 'listGrouped', 'listGroupBy',
+            'backlogTasks', 'clients', 'users', 'projects', 'sprints', 'activeSprint'
         ));
     }
 
