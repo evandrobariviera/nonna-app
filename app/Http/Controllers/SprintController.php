@@ -42,7 +42,7 @@ class SprintController extends Controller
         return redirect()->route('sprints.index')->with('success', 'Sprint criada.');
     }
 
-    public function show(Sprint $sprint)
+    public function show(Request $request, Sprint $sprint)
     {
         $sprint->load([
             'tasks.executor',
@@ -60,6 +60,20 @@ class SprintController extends Controller
                 ->values();
         }
 
+        // Lista filtrável (aba "Lista") — mesmo conjunto de tarefas da sprint, só filtrado
+        $listTasks = $sprint->tasks;
+        if ($request->filled('list_client_id')) {
+            $listTasks = $listTasks->where('client_id', $request->get('list_client_id'));
+        }
+        if ($request->filled('list_status')) {
+            $listTasks = $listTasks->where('status', $request->get('list_status'));
+        }
+        if ($request->filled('list_search')) {
+            $search = mb_strtolower($request->get('list_search'));
+            $listTasks = $listTasks->filter(fn ($t) => str_contains(mb_strtolower($t->title), $search));
+        }
+        $listTasks = $listTasks->values();
+
         // Backlog disponível para adicionar (sem sprint, status backlog)
         $backlogTasks = Task::with(['client', 'project.macroPlan', 'executor'])
             ->whereNull('sprint_id')
@@ -67,11 +81,15 @@ class SprintController extends Controller
             ->orderBy('due_date')
             ->get();
 
-        $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);
-        $users    = User::orderBy('name')->get(['id', 'name']);
-        $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
+        $clients      = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $users        = User::orderBy('name')->get(['id', 'name']);
+        $projects     = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
+        $sprints      = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get();
+        $activeSprint = $sprints->firstWhere('status', 'active');
 
-        return view('sprints.show', compact('sprint', 'kanban', 'backlogTasks', 'clients', 'users', 'projects'));
+        return view('sprints.show', compact(
+            'sprint', 'kanban', 'listTasks', 'backlogTasks', 'clients', 'users', 'projects', 'sprints', 'activeSprint'
+        ));
     }
 
     public function update(Request $request, Sprint $sprint)
