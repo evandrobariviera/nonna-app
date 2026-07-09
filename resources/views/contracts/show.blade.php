@@ -182,18 +182,20 @@
                             style="background: var(--purple);">
                         Salvar Contrato
                     </button>
-
-                    <form method="POST" action="{{ route('clients.contracts.destroy', [$client, $contract]) }}"
-                          onsubmit="return confirm('Remover este contrato e seus anexos?')">
-                        @csrf @method('DELETE')
-                        <button type="submit"
-                                class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                                onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
-                            Remover contrato
-                        </button>
-                    </form>
                 </div>
             </form>
+
+            <div class="px-5 pb-5 -mt-2">
+                <form method="POST" action="{{ route('clients.contracts.destroy', [$client, $contract]) }}"
+                      onsubmit="return confirm('Remover este contrato e seus anexos?')">
+                    @csrf @method('DELETE')
+                    <button type="submit"
+                            class="text-xs font-mono transition-colors" style="color:var(--muted)"
+                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+                        Remover contrato
+                    </button>
+                </form>
+            </div>
         </div>
 
         {{-- ANEXOS --}}
