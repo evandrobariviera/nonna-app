@@ -61,9 +61,11 @@ class MacroPlan extends Model
     ];
 
     public static array $statuses = [
-        'draft'  => ['label' => 'Rascunho', 'color' => 'muted'],
-        'active' => ['label' => 'Ativo',    'color' => 'blue'],
-        'closed' => ['label' => 'Encerrado','color' => 'green'],
+        'em_planejamento' => ['label' => 'Em Planejamento', 'color' => 'muted'],
+        'revisao_interna' => ['label' => 'Revisão Interna',  'color' => 'purple'],
+        'aprovacao'       => ['label' => 'Aprovação',        'color' => 'orange'],
+        'em_execucao'     => ['label' => 'Em Execução',      'color' => 'blue'],
+        'concluido'       => ['label' => 'Concluído',        'color' => 'green'],
     ];
 
     public static array $blocks = [

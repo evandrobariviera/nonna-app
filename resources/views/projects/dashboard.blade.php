@@ -52,9 +52,9 @@
                 <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Sem Tarefas</div>
             </button>
 
-            <button @click="filterStatus = 'completed'; filterType = ''; filterOverdue = false; filterNotStarted = false; applyFilters()"
+            <button @click="filterStatus = 'concluido'; filterType = ''; filterOverdue = false; filterNotStarted = false; applyFilters()"
                 class="card px-4 py-4 text-left transition-all"
-                :style="filterStatus === 'completed' ? 'border-color:var(--purple); box-shadow:0 0 0 1px var(--purple)' : ''">
+                :style="filterStatus === 'concluido' ? 'border-color:var(--purple); box-shadow:0 0 0 1px var(--purple)' : ''">
                 <div class="text-2xl font-black mb-1" style="color:var(--purple)">{{ $stats['completed'] }}</div>
                 <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Concluídos</div>
             </button>
@@ -88,10 +88,9 @@
                 class="px-3 py-2 text-xs focus:outline-none"
                 style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                 <option value="">Todos os status</option>
-                <option value="draft">Rascunho</option>
-                <option value="active">Ativo</option>
-                <option value="completed">Concluído</option>
-                <option value="cancelled">Cancelado</option>
+                @foreach(\App\Models\Project::$statuses as $key => $s)
+                    <option value="{{ $key }}">{{ $s['label'] }}</option>
+                @endforeach
             </select>
 
             <select x-model="filterDiscipline" @change="applyFilters()"
@@ -388,10 +387,10 @@
                         <select x-model="editForm.status"
                             class="w-full px-3 py-2 text-xs focus:outline-none"
                             style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                            <option value="draft">Rascunho</option>
-                            <option value="active">Ativo</option>
-                            <option value="completed">Concluído</option>
-                            <option value="cancelled">Cancelado</option>
+                            @foreach(\App\Models\Project::$statuses as $key => $s)
+                                @continue($key === 'cancelado')
+                                <option value="{{ $key }}">{{ $s['label'] }}</option>
+                            @endforeach
                         </select>
                     </div>
 
@@ -446,7 +445,7 @@
             editOpen: false,
             editSaving: false,
             editTarget: null,
-            editForm: { type: 'projeto', status: 'active', macro_plan_id: '' },
+            editForm: { type: 'projeto', status: 'em_planejamento', macro_plan_id: '' },
 
             sortOptions: [
                 { key: 'urgency',       label: 'Urgência' },
@@ -487,13 +486,19 @@
                     );
                 }
                 if (this.filterType)       result = result.filter(p => p.type === this.filterType);
-                if (this.filterStatus)     result = result.filter(p => p.status === this.filterStatus);
+                if (this.filterStatus === 'active') {
+                    // Sentinel do card "Ativos" — agrega tudo que não é um status terminal,
+                    // já que não existe mais um único status "active" (ver Project::$statuses)
+                    result = result.filter(p => !['concluido','cancelado'].includes(p.status));
+                } else if (this.filterStatus) {
+                    result = result.filter(p => p.status === this.filterStatus);
+                }
                 if (this.filterClient)     result = result.filter(p => p.client_id === this.filterClient);
                 if (this.filterDiscipline) result = result.filter(p => p.disciplines.includes(this.filterDiscipline));
                 if (this.filterOverdue)    result = result.filter(p => p.has_overdue);
                 if (this.filterNotStarted) result = result.filter(p => p.not_started);
-                if (!this.showClosed && !['completed','cancelled'].includes(this.filterStatus)) {
-                    result = result.filter(p => !['completed','cancelled'].includes(p.status));
+                if (!this.showClosed && !['concluido','cancelado'].includes(this.filterStatus)) {
+                    result = result.filter(p => !['concluido','cancelado'].includes(p.status));
                 }
                 this.filtered = this.sortProjects(result);
             },

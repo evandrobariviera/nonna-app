@@ -10,20 +10,17 @@ use Illuminate\Support\Facades\DB;
 
 class ClickupMacroPlanImportController extends Controller
 {
+    // Nomes reais dos status personalizados da Lista "Planejamentos (Roadmaps)" no ClickUp
     private const STATUS_MAP = [
-        'em planejamento' => 'draft',
-        'rascunho'        => 'draft',
-        'draft'           => 'draft',
-        'ativo'           => 'active',
-        'active'          => 'active',
-        'in progress'     => 'active',
-        'em andamento'    => 'active',
-        'concluído'       => 'closed',
-        'concluido'       => 'closed',
-        'done'            => 'closed',
-        'complete'        => 'closed',
-        'encerrado'       => 'closed',
-        'closed'          => 'closed',
+        'em planejamento' => 'em_planejamento',
+        'revisão interna' => 'revisao_interna',
+        'revisao interna' => 'revisao_interna',
+        'aprovação'       => 'aprovacao',
+        'aprovacao'       => 'aprovacao',
+        'em execução'     => 'em_execucao',
+        'em execucao'     => 'em_execucao',
+        'concluído'       => 'concluido',
+        'concluido'       => 'concluido',
     ];
 
     public function import(Request $request): JsonResponse
@@ -92,7 +89,7 @@ class ClickupMacroPlanImportController extends Controller
             if ($exists) {
                 MacroPlan::on('pgsql')->withoutGlobalScopes()
                     ->where('clickup_task_id', $clickupTaskId)
-                    ->update(['status' => 'closed']);
+                    ->update(['status' => 'concluido']);
                 $result['updated']++;
             } else {
                 $result['skipped']++;
@@ -114,8 +111,8 @@ class ClickupMacroPlanImportController extends Controller
             return;
         }
 
-        $rawStatus = mb_strtolower(trim($row['clickup_status'] ?? 'draft'));
-        $status    = self::STATUS_MAP[$rawStatus] ?? 'draft';
+        $rawStatus = mb_strtolower(trim($row['clickup_status'] ?? 'em planejamento'));
+        $status    = self::STATUS_MAP[$rawStatus] ?? 'em_planejamento';
 
         $createdBy = $usersByEmail[$row['creator_email'] ?? '']
                   ?? $usersByEmail[$row['responsible_email'] ?? '']

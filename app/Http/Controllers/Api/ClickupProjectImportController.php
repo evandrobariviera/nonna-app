@@ -10,24 +10,16 @@ use Illuminate\Support\Facades\DB;
 
 class ClickupProjectImportController extends Controller
 {
+    // Nomes reais dos status personalizados da Lista "Projetos (Projects)" no ClickUp
     private const STATUS_MAP = [
-        'em planejamento' => 'draft',
-        'rascunho'        => 'draft',
-        'draft'           => 'draft',
-        'ativo'           => 'active',
-        'active'          => 'active',
-        'in progress'     => 'active',
-        'em andamento'    => 'active',
-        'contínuo'        => 'continua',
-        'continuo'        => 'continua',
-        'continuous'      => 'continua',
-        'concluído'       => 'completed',
-        'concluido'       => 'completed',
-        'done'            => 'completed',
-        'complete'        => 'completed',
-        'cancelado'       => 'cancelled',
-        'cancelled'       => 'cancelled',
-        'canceled'        => 'cancelled',
+        'em planejamento' => 'em_planejamento',
+        'aprovação'       => 'aprovacao',
+        'aprovacao'       => 'aprovacao',
+        'em execução'     => 'em_execucao',
+        'em execucao'     => 'em_execucao',
+        'stand by'        => 'stand_by',
+        'concluído'       => 'concluido',
+        'concluido'       => 'concluido',
     ];
 
     public function import(Request $request): JsonResponse
@@ -98,7 +90,7 @@ class ClickupProjectImportController extends Controller
             if ($exists) {
                 Project::on('pgsql')->withoutGlobalScopes()
                     ->where('clickup_task_id', $clickupTaskId)
-                    ->update(['status' => 'cancelled']);
+                    ->update(['status' => 'cancelado']);
                 $result['updated']++;
             } else {
                 $result['skipped']++;
@@ -125,8 +117,8 @@ class ClickupProjectImportController extends Controller
             ? ($macrosByClickup[$row['macro_plan_clickup_id']] ?? null)
             : null;
 
-        $rawStatus = mb_strtolower(trim($row['clickup_status'] ?? 'draft'));
-        $status    = self::STATUS_MAP[$rawStatus] ?? 'draft';
+        $rawStatus = mb_strtolower(trim($row['clickup_status'] ?? 'em planejamento'));
+        $status    = self::STATUS_MAP[$rawStatus] ?? 'em_planejamento';
 
         $exists = Project::on('pgsql')->withoutGlobalScopes()
             ->where('clickup_task_id', $clickupTaskId)->exists();

@@ -9,11 +9,13 @@
     @forelse($macroplans as $plan)
         @php
             $statusColors = [
-                'active'  => ['bg' => 'rgba(5,150,105,.1)',   'text' => 'var(--green)',  'label' => 'Ativo'],
-                'draft'   => ['bg' => 'var(--s3)',            'text' => 'var(--muted)',  'label' => 'Rascunho'],
-                'closed'  => ['bg' => 'rgba(106,90,205,.08)', 'text' => 'var(--purple)', 'label' => 'Encerrado'],
+                'em_planejamento' => ['bg' => 'var(--s3)',             'text' => 'var(--muted)',  'label' => 'Em Planejamento'],
+                'revisao_interna' => ['bg' => 'rgba(106,90,205,.08)',  'text' => 'var(--purple)', 'label' => 'Revisão Interna'],
+                'aprovacao'       => ['bg' => 'rgba(255,140,0,.08)',   'text' => 'var(--orange)', 'label' => 'Aprovação'],
+                'em_execucao'     => ['bg' => 'rgba(37,99,235,.1)',    'text' => '#2563eb',       'label' => 'Em Execução'],
+                'concluido'       => ['bg' => 'rgba(5,150,105,.1)',    'text' => 'var(--green)',  'label' => 'Concluído'],
             ];
-            $sc = $statusColors[$plan->status] ?? $statusColors['draft'];
+            $sc = $statusColors[$plan->status] ?? $statusColors['em_planejamento'];
         @endphp
         <div class="card p-5 mb-4 flex items-center justify-between">
             <div>

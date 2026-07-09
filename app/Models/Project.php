@@ -121,11 +121,14 @@ class Project extends Model
     ];
 
     public static array $statuses = [
-        'draft'     => ['label' => 'Rascunho',  'color' => 'muted'],
-        'active'    => ['label' => 'Ativo',     'color' => 'blue'],
-        'continua'  => ['label' => 'Contínua',  'color' => 'blue'],
-        'completed' => ['label' => 'Concluído', 'color' => 'green'],
-        'cancelled' => ['label' => 'Cancelado', 'color' => 'red'],
+        'em_planejamento' => ['label' => 'Em Planejamento', 'color' => 'muted'],
+        'aprovacao'       => ['label' => 'Aprovação',       'color' => 'orange'],
+        'em_execucao'     => ['label' => 'Em Execução',     'color' => 'blue'],
+        'stand_by'        => ['label' => 'Stand By',        'color' => 'orange'],
+        'concluido'       => ['label' => 'Concluído',       'color' => 'green'],
+        // Só usado pelo mirror de exclusão do ClickUp (deleted:true) — nunca oferecido num <select>,
+        // já que o ClickUp não tem um bucket "Cancelado" pra Projetos.
+        'cancelado'       => ['label' => 'Cancelado',       'color' => 'red'],
     ];
 
     public function statusLabel(): string

@@ -573,7 +573,7 @@
                                     $done  = $project->tasks->where('status', 'concluido')->count();
                                     $isOverdueDeadline = $project->end_date
                                         && $project->end_date->isPast()
-                                        && !in_array($project->status, ['completed', 'cancelled']);
+                                        && !in_array($project->status, ['concluido', 'cancelado']);
                                     $typeColor = $project->type === 'campanha' ? 'var(--green)' : 'var(--purple)';
                                 @endphp
                                 <div x-show="editId !== '{{ $project->id }}'" class="px-5 py-4">
@@ -717,6 +717,7 @@
                                                     class="w-full px-3 py-2 text-sm focus:outline-none"
                                                     style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                                                     @foreach(\App\Models\Project::$statuses as $key => $s)
+                                                        @continue($key === 'cancelado')
                                                         <option value="{{ $key }}" {{ $project->status === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
                                                     @endforeach
                                                 </select>

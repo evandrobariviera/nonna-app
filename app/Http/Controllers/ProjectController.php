@@ -78,10 +78,10 @@ class ProjectController extends Controller
 
         $stats = [
             'total'       => $data->count(),
-            'active'      => $data->where('status', 'active')->count(),
+            'active'      => $data->whereNotIn('status', ['concluido', 'cancelado'])->count(),
             'overdue'     => $data->where('has_overdue', true)->count(),
             'not_started' => $data->where('not_started', true)->count(),
-            'completed'   => $data->where('status', 'completed')->count(),
+            'completed'   => $data->where('status', 'concluido')->count(),
             'projetos'    => $data->where('type', 'projeto')->count(),
             'campanhas'   => $data->where('type', 'campanha')->count(),
         ];
@@ -164,7 +164,7 @@ class ProjectController extends Controller
             'start_date' => $data['start_date'] ?? null,
             'end_date'   => $data['end_date'] ?? null,
             'disciplines'=> $data['disciplines'] ?? [],
-            'status'     => 'draft',
+            'status'     => 'em_planejamento',
         ]);
 
         return redirect()->route('macroplans.edit', [$macroplan, 'bloco' => 'bloco3'])
@@ -188,7 +188,7 @@ class ProjectController extends Controller
             'briefing_social'   => 'nullable|string',
             'briefing_seo'      => 'nullable|string',
             'briefing_email'    => 'nullable|string',
-            'status'            => 'required|in:draft,active,continua,completed,cancelled',
+            'status'            => 'required|in:' . implode(',', array_keys(Project::$statuses)),
             'tags'              => 'nullable|array',
             'tags.*'            => 'nullable|string|max:100',
             'content_ideas'     => 'nullable|array',
@@ -241,7 +241,7 @@ class ProjectController extends Controller
     {
         $data = $request->validate([
             'type'          => 'nullable|in:projeto,campanha',
-            'status'        => 'nullable|in:draft,active,continua,completed,cancelled',
+            'status'        => 'nullable|in:' . implode(',', array_keys(Project::$statuses)),
             'macro_plan_id' => 'nullable|uuid|exists:pgsql.macro_plans,id',
             'title'         => 'nullable|string|max:200',
         ]);

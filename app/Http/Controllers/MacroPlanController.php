@@ -25,7 +25,7 @@ class MacroPlanController extends Controller
 
         // Oculta encerrados por padrão — a menos que o usuário filtre por status específico ou ative o toggle
         if (!$request->boolean('mostrar_concluidos') && !$request->filled('status')) {
-            $query->where('status', '!=', 'closed');
+            $query->where('status', '!=', 'concluido');
         }
 
         $macroplans = $query->paginate(20)->withQueryString();
@@ -53,7 +53,7 @@ class MacroPlanController extends Controller
             'period_start'   => 'required|date',
             'period_end'     => 'required|date|after:period_start',
             'responsible_id' => 'nullable|exists:users,id',
-            'status'         => 'required|in:draft,active,closed',
+            'status'         => 'required|in:' . implode(',', array_keys(MacroPlan::$statuses)),
         ]);
 
         $plan = MacroPlan::create([
@@ -90,7 +90,7 @@ class MacroPlanController extends Controller
                 'period_start'   => 'required|date',
                 'period_end'     => 'required|date|after:period_start',
                 'responsible_id' => 'nullable|exists:users,id',
-                'status'         => 'required|in:draft,active,closed',
+                'status'         => 'required|in:' . implode(',', array_keys(MacroPlan::$statuses)),
                 'disciplines'    => 'nullable|array',
                 'disciplines.*'  => 'string',
             ]);
