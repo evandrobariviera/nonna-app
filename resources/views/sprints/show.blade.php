@@ -87,10 +87,10 @@
         </div>
     </div>
 
-    <div x-data="{ tab: 'board', clientFilter: '', ...taskBulk() }" x-cloak>
+    <div x-data="{ tab: 'board', clientFilter: '', selectMode: false, ...taskBulk() }" x-cloak>
 
         {{-- TABS --}}
-        <div class="flex gap-1 mb-5" style="border-bottom:1px solid var(--border2)">
+        <div class="flex items-center gap-1 mb-5" style="border-bottom:1px solid var(--border2)">
             <button @click="tab = 'board'"
                 class="px-4 py-2 text-xs font-mono uppercase tracking-widest transition-colors"
                 :style="tab === 'board' ? 'color:var(--purple); border-bottom:2px solid var(--purple)' : 'color:var(--muted)'">
@@ -105,6 +105,13 @@
                     <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full font-bold"
                           style="background:var(--s3); color:var(--orange)">{{ $backlogTasks->count() }}</span>
                 @endif
+            </button>
+
+            <button @click="selectMode = !selectMode; if (!selectMode) selected = []"
+                x-show="tab === 'board'"
+                class="ml-auto px-4 py-2 text-xs font-mono uppercase tracking-widest transition-colors"
+                :style="selectMode ? 'color:var(--purple)' : 'color:var(--muted)'">
+                <span x-text="selectMode ? '✕ Cancelar seleção' : '☑ Selecionar'"></span>
             </button>
         </div>
 
@@ -141,9 +148,13 @@
                                 $thumbUrl   = $task->firstImageAttachmentUrl();
                             @endphp
                             <div class="card px-0 py-0 relative overflow-hidden" x-data="{ statusOpen: false }"
-                                 style="{{ $task->isOverdue() ? 'border-left:3px solid var(--red)' : '' }}">
+                                 style="{{ $task->isOverdue() ? 'border-left:3px solid var(--red)' : '' }}; cursor:pointer"
+                                 @click="selectMode
+                                     ? (selected.includes('{{ $task->id }}') ? selected = selected.filter(id => id !== '{{ $task->id }}') : selected.push('{{ $task->id }}'))
+                                     : (window.location = '{{ route('tasks.show', $task) }}')">
 
                                 <input type="checkbox" value="{{ $task->id }}" data-task-id="{{ $task->id }}" x-model="selected"
+                                    x-show="selectMode" @click.stop
                                     class="absolute top-2 right-2 z-10" style="width:14px; height:14px">
 
                                 @if($thumbUrl)
@@ -196,7 +207,7 @@
                                     @endif
 
                                     {{-- Mover status + remover da sprint --}}
-                                    <div class="flex items-center gap-1.5 pt-2 relative" style="border-top:1px solid var(--border2)">
+                                    <div class="flex items-center gap-1.5 pt-2 relative" style="border-top:1px solid var(--border2)" @click.stop>
                                         <button @click="statusOpen = !statusOpen" @click.stop type="button"
                                             class="text-xs px-2 py-0.5 font-mono flex items-center gap-1"
                                             style="border:1px solid var(--border2); color:var(--muted)">
