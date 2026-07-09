@@ -25,6 +25,14 @@ Depois de habilitar o fallback de cliente (ver seção de `client_clickup_id` ab
 1. **Fallback de status agora é `concluido`, não `backlog`** (`ClickupImportController::importTask()`). Um status sem mapeamento é tratado como legado/encerrado, não como "precisa de atenção agora". Isso corrige retroativamente qualquer tarefa já importada com esse problema — basta rodar o import de novo (idempotente).
 2. **Filtro de data nos 3 workflows** (`clickup-import.json`, `clickup-realtime-sync.json`, `clickup-scheduled-resync.json`, node "Build Task(s) Payload"): tarefas com `date_created` anterior a **2025-01-01** são **excluídas antes de montar o payload** — nem chegam a ser enviadas pro App. Tarefa sem `date_created` (não deveria acontecer, mas por segurança) **não é excluída** (fail-open, pra nunca perder tarefa válida por falta desse campo).
 
+## Incidente 3 (2026-07-09) — tarefa em duas telas ao mesmo tempo (Atendimento + Fila)
+
+Uma tarefa que nasceu como Ticket (`origin: 'ticket'`) e depois foi movida no ClickUp da Lista "Chamados (Tickets)" pra "Filas (Backlog)" continuava aparecendo em **/atendimento** (filtra por `is_ticket = true`) **e** em **/filas** (filtra só por `sprint_id` vazio) ao mesmo tempo — porque `is_ticket` era gravado uma única vez na importação (espelho de `origin`) e nunca mais atualizado, mesmo a tarefa tendo mudado de Lista desde então.
+
+**Correção:** `is_ticket` agora é recalculado a cada sync a partir de `list_name` (a Lista *atual* no ClickUp) — só é `true` se a tarefa **ainda estiver** em "Chamados (Tickets)"; qualquer outra Lista (Filas, Sprint) vira `is_ticket = false`, e a tarefa passa a aparecer só em `/filas`. **`origin` não muda** — continua guardando que a tarefa nasceu como ticket, pra relatório/filtro histórico (`origin=ticket` em `/filas`), só não decide mais onde a tarefa aparece.
+
+Sem `list_name` no payload (`clickup-import.json`, que não manda esse campo), mantém o comportamento antigo (`is_ticket` = valor vindo do payload, baseado em `origin`) — o fix é opt-in por workflow, igual ao match de sprint.
+
 ## Autenticação
 
 Não usa Sanctum. Autenticação simples por header, comparado em tempo constante (`hash_equals`):

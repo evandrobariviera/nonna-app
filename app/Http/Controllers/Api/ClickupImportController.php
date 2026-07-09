@@ -213,6 +213,15 @@ class ClickupImportController extends Controller
                   ?? $usersByEmail[$row['executor_email'] ?? '']
                   ?? $fallbackUserId;
 
+        // is_ticket reflete a Lista ATUAL no ClickUp, não a origem histórica (campo 'origin',
+        // que não muda quando o card se move de lista) — uma tarefa que nasceu como Ticket mas
+        // já foi movida pra "Filas (Backlog)" (ou pra uma Sprint) não deve mais aparecer em
+        // /atendimento, só em /filas. Sem list_name (workflow de migração manual antigo, que não
+        // manda esse campo), mantém o comportamento anterior baseado em origin.
+        $isTicket = !empty($row['list_name'])
+            ? mb_strtolower(trim($row['list_name'])) === 'chamados (tickets)'
+            : (bool) ($row['is_ticket'] ?? false);
+
         // withoutGlobalScopes: evita que OrganizationScope filtre tasks com organization_id=null
         $exists = Task::on('pgsql')->withoutGlobalScopes()
             ->where('clickup_task_id', $clickupTaskId)->exists();
@@ -235,7 +244,7 @@ class ClickupImportController extends Controller
                 'publish_date'    => !empty($row['publish_date']) ? $row['publish_date'] : null,
                 'approval_method' => array_key_exists($row['approval_method'] ?? '', Task::$approvalMethods) ? $row['approval_method'] : null,
                 'internal_approval' => (bool) ($row['internal_approval'] ?? false),
-                'is_ticket'       => (bool) ($row['is_ticket'] ?? false),
+                'is_ticket'       => $isTicket,
                 'requester_name'  => $row['requester_name'] ?? null,
                 'requester_whatsapp' => $row['requester_whatsapp'] ?? null,
                 'requester_channel'  => $row['requester_channel'] ?? null,
