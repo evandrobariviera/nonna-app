@@ -32,6 +32,7 @@ class OrganizationUser extends Pivot
         'direcao_geral'    => 'Direção Geral',
         'direcao_criativa' => 'Direção Criativa',
         'coo'              => 'COO & Operação',
+        'estrategia'       => 'Estratégia',
         'gestor_campanhas' => 'Gestor de Campanhas',
         'head_criativa'    => 'Head Criativa & Copy',
         'head_tech'        => 'Head de Tecnologia',

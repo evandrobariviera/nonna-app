@@ -138,9 +138,13 @@
                             </span>
                         </button>
                         <div x-show="open" x-cloak class="px-5 pb-5" style="border-top:1px solid var(--border2)">
-                            <p class="text-xs mt-4" style="color:var(--muted)">
-                                Painel de <strong>{{ \App\Models\OrganizationUser::$functionRoles[$role] }}</strong> em construção — em breve.
-                            </p>
+                            @if($role === 'estrategia')
+                                @include('dashboard.sections.estrategia')
+                            @else
+                                <p class="text-xs mt-4" style="color:var(--muted)">
+                                    Painel de <strong>{{ \App\Models\OrganizationUser::$functionRoles[$role] }}</strong> em construção — em breve.
+                                </p>
+                            @endif
                         </div>
                     </div>
                 @endif

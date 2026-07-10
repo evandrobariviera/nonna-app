@@ -1,0 +1,126 @@
+{{-- Seção "Estratégia" do dashboard — macroplanejamentos + reuniões em acompanhamento --}}
+<div class="grid gap-4 mt-4" style="grid-template-columns: repeat(3, 1fr)">
+
+    {{-- Clientes sem planejamento ativo --}}
+    <div>
+        <h4 class="text-xs font-bold mb-2" style="color:var(--text)">
+            🚩 Sem planejamento ativo ({{ $clientsWithoutActivePlan->count() }})
+        </h4>
+        @if($clientsWithoutActivePlan->isEmpty())
+            <p class="text-xs" style="color:var(--muted)">Todos os clientes ativos têm um ciclo em execução. 🎉</p>
+        @else
+            <div class="flex flex-col gap-1.5">
+                @foreach($clientsWithoutActivePlan as $client)
+                    <a href="{{ route('clients.show', [$client, 'tab' => 'planejamentos']) }}"
+                       class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--red)"
+                       onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $client->company_name }}</p>
+                    </a>
+                @endforeach
+            </div>
+        @endif
+    </div>
+
+    {{-- Planejamentos vencendo em até 30 dias --}}
+    <div>
+        <h4 class="text-xs font-bold mb-2" style="color:var(--text)">
+            ⏰ Vencendo em até 30 dias ({{ $plansExpiringSoon->count() }})
+        </h4>
+        @if($plansExpiringSoon->isEmpty())
+            <p class="text-xs" style="color:var(--muted)">Nenhum planejamento vencendo em breve.</p>
+        @else
+            <div class="flex flex-col gap-1.5">
+                @foreach($plansExpiringSoon as $plan)
+                    @php $daysLeft = today()->diffInDays($plan->period_end, false); @endphp
+                    <a href="{{ route('macroplans.edit', $plan) }}"
+                       class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--orange)"
+                       onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $plan->client?->company_name ?? '—' }}</p>
+                        <p class="text-xs font-mono mt-0.5" style="color:var(--orange)">
+                            {{ $daysLeft <= 0 ? 'vence hoje' : $daysLeft . ' dia' . ($daysLeft !== 1 ? 's' : '') }} · {{ $plan->period_end->format('d/m') }}
+                        </p>
+                    </a>
+                @endforeach
+            </div>
+        @endif
+    </div>
+
+    {{-- Planejamentos ativos --}}
+    <div>
+        <h4 class="text-xs font-bold mb-2" style="color:var(--text)">
+            🟢 Planejamentos ativos ({{ $activePlans->count() }})
+        </h4>
+        @if($activePlans->isEmpty())
+            <p class="text-xs" style="color:var(--muted)">Nenhum planejamento em execução no momento.</p>
+        @else
+            <div class="flex flex-col gap-1.5">
+                @foreach($activePlans as $plan)
+                    <a href="{{ route('macroplans.edit', $plan) }}"
+                       class="block px-3 py-2 transition-colors" style="background:var(--s2)"
+                       onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $plan->client?->company_name ?? '—' }}</p>
+                        <p class="text-xs font-mono mt-0.5" style="color:var(--muted)">{{ $plan->periodLabel() }}</p>
+                    </a>
+                @endforeach
+            </div>
+        @endif
+    </div>
+
+</div>
+
+<div class="grid gap-4 mt-4" style="grid-template-columns: repeat(2, 1fr)">
+
+    {{-- Reuniões em Pós-Reunião --}}
+    <div>
+        <h4 class="text-xs font-bold mb-2" style="color:var(--text)">
+            📝 Em Pós-Reunião ({{ $meetingsPosReuniao->count() }})
+        </h4>
+        @if($meetingsPosReuniao->isEmpty())
+            <p class="text-xs" style="color:var(--muted)">Nenhuma reunião aguardando ata/follow-up.</p>
+        @else
+            <div class="flex flex-col gap-1.5">
+                @foreach($meetingsPosReuniao as $meeting)
+                    <a href="{{ route('meetings.show', $meeting) }}"
+                       class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--orange)"
+                       onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $meeting->title }}</p>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->company_name ?? '—' }}</span>
+                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->scheduled_at->format('d/m') }}</span>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        @endif
+    </div>
+
+    {{-- Reuniões Realizadas --}}
+    <div>
+        <h4 class="text-xs font-bold mb-2" style="color:var(--text)">
+            ✔ Realizadas recentemente ({{ $meetingsRealizadas->count() }})
+        </h4>
+        @if($meetingsRealizadas->isEmpty())
+            <p class="text-xs" style="color:var(--muted)">Nenhuma reunião realizada recentemente.</p>
+        @else
+            <div class="flex flex-col gap-1.5">
+                @foreach($meetingsRealizadas as $meeting)
+                    <a href="{{ route('meetings.show', $meeting) }}"
+                       class="block px-3 py-2 transition-colors" style="background:var(--s2)"
+                       onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $meeting->title }}</p>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->company_name ?? '—' }}</span>
+                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->scheduled_at->format('d/m') }}</span>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        @endif
+    </div>
+
+</div>
+
+<div class="mt-4 flex items-center gap-3">
+    <a href="{{ route('macroplans.index') }}" class="text-xs font-mono" style="color:var(--purple)">Ver todos os planejamentos →</a>
+    <a href="{{ route('meetings.index') }}" class="text-xs font-mono" style="color:var(--purple)">Ver todas as reuniões →</a>
+</div>

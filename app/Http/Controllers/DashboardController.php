@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Client;
+use App\Models\MacroPlan;
 use App\Models\Meeting;
 use App\Models\Sprint;
 use App\Models\Task;
@@ -51,10 +53,39 @@ class DashboardController extends Controller
             ->limit(6)
             ->get();
 
+        // ── Seção "Estratégia" ──
+        $today = today();
+
+        $meetingsPosReuniao = Meeting::where('status', 'pos_reuniao')
+            ->with('client')->orderBy('scheduled_at')->limit(8)->get();
+
+        $meetingsRealizadas = Meeting::where('status', 'realizada')
+            ->with('client')->orderByDesc('scheduled_at')->limit(8)->get();
+
+        // Cliente ativo cujo macroplanejamento mais recente não está "em execução"
+        // (nunca teve um, ou o último ciclo já foi encerrado/ainda não começou).
+        $clientsWithoutActivePlan = Client::where('status', 'active')
+            ->whereDoesntHave('macroplans', fn ($q) => $q->where('status', 'em_execucao'))
+            ->orderBy('company_name')
+            ->get();
+
+        $plansExpiringSoon = MacroPlan::where('status', '!=', 'concluido')
+            ->whereBetween('period_end', [$today, $today->copy()->addDays(30)])
+            ->with('client')
+            ->orderBy('period_end')
+            ->get();
+
+        $activePlans = MacroPlan::where('status', 'em_execucao')
+            ->with('client')
+            ->orderBy('period_end')
+            ->get();
+
         return view('dashboard', compact(
             'activeSprint', 'sprintTotal', 'sprintDone', 'sprintProgress',
             'myAdjustmentTasks', 'myProductionTasks', 'myReadyForProductionTasks',
-            'myMeetings'
+            'myMeetings',
+            'meetingsPosReuniao', 'meetingsRealizadas',
+            'clientsWithoutActivePlan', 'plansExpiringSoon', 'activePlans'
         ));
     }
 
