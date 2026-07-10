@@ -62,7 +62,7 @@
              x-transition:leave-start="translate-x-0"
              x-transition:leave-end="-translate-x-full">
             <div class="flex h-16 items-center justify-between px-5 border-b" style="border-color:var(--border)">
-                <span class="text-sm font-bold grad-text">nonna OS</span>
+                <a href="{{ route('dashboard') }}" class="text-sm font-bold grad-text">nonna OS</a>
                 <button @click="sidebarOpen = false" style="color:var(--muted)">
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
@@ -81,7 +81,7 @@
         {{-- ── SIDEBAR DESKTOP ── --}}
         <aside class="hidden md:flex md:w-64 md:flex-col sidebar-nav flex-shrink-0">
             {{-- Logo --}}
-            <div class="flex h-16 items-center px-6 border-b" style="border-color:var(--border); flex-shrink:0">
+            <a href="{{ route('dashboard') }}" class="flex h-16 items-center px-6 border-b transition-opacity hover:opacity-80" style="border-color:var(--border); flex-shrink:0">
                 @if(isset($currentOrg) && $currentOrg->logoUrl())
                     <img src="{{ $currentOrg->logoUrl() }}" alt="{{ $currentOrg->name }}" class="h-7 w-auto"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
@@ -92,7 +92,7 @@
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
                     <span class="text-base font-black grad-text hidden">{{ config('app.name') }}</span>
                 @endif
-            </div>
+            </a>
 
             {{-- Usuário logado --}}
             <div class="flex items-center gap-3 px-5 py-4 border-b" style="border-color:var(--border)">
@@ -142,6 +142,19 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
                     </svg>
                 </button>
+
+                {{-- Início --}}
+                <a href="{{ route('dashboard') }}"
+                    class="flex items-center justify-center w-8 h-8 rounded-lg transition-colors flex-shrink-0"
+                    style="color:var(--muted)"
+                    onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
+                    onmouseout="this.style.background=''; this.style.color='var(--muted)'"
+                    title="Início">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9.5 12 3l9 6.5" />
+                        <path d="M5 8.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V8.5" />
+                    </svg>
+                </a>
 
                 {{-- Título dinâmico --}}
                 <div class="flex-1">

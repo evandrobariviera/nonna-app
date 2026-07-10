@@ -1,12 +1,23 @@
 <x-app-layout>
     <x-slot name="header">Dashboard</x-slot>
 
+    {{-- ── BOAS-VINDAS ── --}}
+    @php
+        $hour = now()->hour;
+        $greeting = $hour < 12 ? 'Bom dia' : ($hour < 18 ? 'Boa tarde' : 'Boa noite');
+        $firstName = explode(' ', Auth::user()->name)[0];
+    @endphp
+    <div class="mb-6">
+        <h1 class="text-xl font-black" style="color:var(--text)">{{ $greeting }}, {{ $firstName }} 👋</h1>
+        <p class="text-sm mt-1" style="color:var(--muted)">Aqui está o resumo do que precisa da sua atenção hoje.</p>
+    </div>
+
     {{-- ── SPRINT ATUAL ── --}}
     <div class="card px-5 py-4 mb-5">
         @if($activeSprint)
             <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
-                    Sprint atual · {{ $activeSprint->title }}
+                <span class="text-sm font-bold" style="color:var(--text)">
+                    🏃 Sprint atual · {{ $activeSprint->title }}
                 </span>
                 <a href="{{ route('sprints.show', $activeSprint) }}" class="text-xs font-mono" style="color:var(--purple)">
                     Ver Sprint →
@@ -23,7 +34,7 @@
                 <span class="text-xs font-mono flex-shrink-0" style="color:var(--muted)">{{ $sprintDone }} / {{ $sprintTotal }} concluídas</span>
             </div>
         @else
-            <p class="text-sm" style="color:var(--muted)">Nenhuma sprint ativa no momento.</p>
+            <p class="text-sm" style="color:var(--muted)">🏃 Nenhuma sprint ativa no momento.</p>
         @endif
     </div>
 
@@ -33,8 +44,8 @@
         {{-- Minhas tarefas --}}
         <div class="card px-5 py-4">
             <div class="flex items-center justify-between mb-3">
-                <h3 class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
-                    Minhas tarefas ({{ $myTasks->count() }})
+                <h3 class="text-sm font-bold" style="color:var(--text)">
+                    ✅ Minhas tarefas ({{ $myTasks->count() }})
                 </h3>
                 <a href="{{ route('tasks.index', ['executor_id' => auth()->id()]) }}" class="text-xs font-mono" style="color:var(--purple)">Ver todas</a>
             </div>
@@ -62,8 +73,8 @@
         {{-- Agenda --}}
         <div class="card px-5 py-4">
             <div class="flex items-center justify-between mb-3">
-                <h3 class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
-                    Agenda ({{ $myMeetings->count() }})
+                <h3 class="text-sm font-bold" style="color:var(--text)">
+                    📅 Agenda ({{ $myMeetings->count() }})
                 </h3>
                 <a href="{{ route('meetings.index') }}" class="text-xs font-mono" style="color:var(--purple)">Ver agenda</a>
             </div>
@@ -91,8 +102,8 @@
         {{-- Aguardando resposta --}}
         <div class="card px-5 py-4">
             <div class="flex items-center justify-between mb-3">
-                <h3 class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
-                    Aguardando resposta ({{ $myPendingApprovals->count() }})
+                <h3 class="text-sm font-bold" style="color:var(--text)">
+                    ⏳ Aguardando resposta ({{ $myPendingApprovals->count() }})
                 </h3>
                 <a href="{{ route('approvals.index') }}" class="text-xs font-mono" style="color:var(--purple)">Ver aprovações</a>
             </div>
@@ -133,10 +144,9 @@
                     <div class="card" x-data="{ open: false }">
                         <button @click="open = !open" type="button"
                             class="w-full flex items-center gap-2 px-5 py-3 text-left transition-colors"
-                            style="color:var(--muted)"
-                            onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
-                            <span :class="open ? 'rotate-90' : ''" class="transition-transform text-xs">▶</span>
-                            <span class="text-xs font-mono uppercase tracking-widest">
+                            style="color:var(--text)">
+                            <span :class="open ? 'rotate-90' : ''" class="transition-transform text-xs" style="color:var(--muted)">▶</span>
+                            <span class="text-sm font-bold">
                                 {{ \App\Models\OrganizationUser::$functionRoles[$role] }}
                             </span>
                         </button>
