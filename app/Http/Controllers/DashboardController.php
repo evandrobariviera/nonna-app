@@ -38,14 +38,14 @@ class DashboardController extends Controller
             ->where('situation', 'Pronto para produção')
             ->with('client')->orderBy('due_date')->limit(8)->get();
 
-        // Agenda: qualquer reunião futura que ainda não aconteceu (não só "Agendada" —
-        // "Para Agendar" também conta, é o status padrão de uma reunião recém-criada).
+        // Agenda: só os compromissos de hoje (não só "Agendada" — "Para Agendar"
+        // também conta, é o status padrão de uma reunião recém-criada).
         $myMeetings = Meeting::where(function ($q) use ($userId) {
                 $q->where('organized_by', $userId)
                   ->orWhereHas('participants', fn ($q2) => $q2->where('users.id', $userId));
             })
             ->whereNotIn('status', ['realizada', 'cancelada'])
-            ->where('scheduled_at', '>=', now())
+            ->whereDate('scheduled_at', today())
             ->with('client')
             ->orderBy('scheduled_at')
             ->limit(6)

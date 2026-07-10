@@ -47,12 +47,12 @@
         <div class="card px-5 py-4">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-bold" style="color:var(--text)">
-                    📅 Agenda ({{ $myMeetings->count() }})
+                    📅 Agenda de Hoje ({{ $myMeetings->count() }})
                 </h3>
                 <a href="{{ route('meetings.index') }}" class="text-xs font-mono" style="color:var(--purple)">Ver agenda</a>
             </div>
             @if($myMeetings->isEmpty())
-                <p class="text-xs" style="color:var(--muted)">Nenhum compromisso agendado.</p>
+                <p class="text-xs" style="color:var(--muted)">Nenhum compromisso agendado pra hoje.</p>
             @else
                 <div class="flex flex-col gap-2">
                     @foreach($myMeetings as $meeting)
@@ -63,7 +63,7 @@
                             <div class="flex items-center gap-2 mt-1">
                                 <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->company_name ?? '—' }}</span>
                                 <span class="text-xs font-mono" style="color:var(--purple)">
-                                    {{ $meeting->scheduled_at->format('d/m H:i') }}
+                                    {{ $meeting->scheduled_at->format('H:i') }}
                                 </span>
                             </div>
                         </a>
