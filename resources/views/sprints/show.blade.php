@@ -220,7 +220,7 @@
                                         </button>
 
                                         <template x-teleport="body">
-                                            <div x-show="statusOpen" @click.outside="statusOpen = false" x-cloak
+                                            <div x-show="statusOpen" @click.outside="statusOpen = false" x-close-on-scroll="statusOpen" x-cloak
                                                  class="rounded shadow-lg py-1"
                                                  :style="moveStyle + 'background:var(--s1); border:1px solid var(--border2); min-width:190px'">
                                                 @foreach(\App\Models\Task::$statuses as $targetKey => $targetMeta)

@@ -133,7 +133,7 @@
         </button>
 
         <template x-teleport="body">
-            <div x-show="statusOpen" @click.outside="statusOpen = false" x-cloak
+            <div x-show="statusOpen" @click.outside="statusOpen = false" x-close-on-scroll="statusOpen" x-cloak
                  class="rounded shadow-lg py-1"
                  :style="statusStyle + 'background:var(--s1); border:1px solid var(--border2); min-width:190px'">
                 @foreach(\App\Models\Task::$statuses as $key => $s)
@@ -168,7 +168,7 @@
         </button>
 
         <template x-teleport="body">
-            <div x-show="situacaoOpen" @click.outside="situacaoOpen = false" x-cloak
+            <div x-show="situacaoOpen" @click.outside="situacaoOpen = false" x-close-on-scroll="situacaoOpen" x-cloak
                  class="rounded shadow-lg py-1"
                  :style="situacaoStyle + 'background:var(--s1); border:1px solid var(--border2); min-width:210px'">
                 @foreach(\App\Models\Task::$situations as $key => $label)
@@ -202,7 +202,7 @@
                         → Sprint
                     </button>
                     <template x-teleport="body">
-                        <div x-show="sprintOpen" @click.outside="sprintOpen = false" x-cloak
+                        <div x-show="sprintOpen" @click.outside="sprintOpen = false" x-close-on-scroll="sprintOpen" x-cloak
                              class="rounded shadow-lg py-1"
                              :style="sprintStyle + 'background:var(--s1); border:1px solid var(--border2); min-width:160px'">
                             @foreach($sprints as $sp)
