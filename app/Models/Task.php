@@ -84,25 +84,40 @@ class Task extends Model
         'ticket'     => 'Ticket',
     ];
 
+    // Situação = sub-status cru vindo do ClickUp (texto livre). As chaves abaixo são
+    // os valores reais observados na produção — mantidas como o próprio texto, sem
+    // slug, pra bater exatamente com o que o import grava em tasks.situation.
     public static array $situations = [
-        ''                        => '—',
-        'triagem'                 => 'Triagem',
-        'em_producao'             => 'Em Produção',
-        'aguardando_referencias'  => 'Aguardando Referências',
-        'em_revisao_interna'      => 'Em Revisão Interna',
-        'enviar_para_cliente'     => 'Enviar para o Cliente',
-        'agendado_publicacao'     => 'Agendado para Publicação',
-        'publicado'               => 'Publicado',
+        ''                            => '—',
+        'Aguardando Copy / Redação'   => 'Aguardando Copy / Redação',
+        'Em design'                  => 'Em design',
+        'Em Setup / Dev'             => 'Em Setup / Dev',
+        'Pronto para produção'       => 'Pronto para produção',
+        'Revisão Interna'            => 'Revisão Interna',
+        'Pronta para publicação'     => 'Pronta para publicação',
+        'Agendado Plataforma'        => 'Agendado Plataforma',
+        'Enviar para o cliente'      => 'Enviar para o cliente',
+        'Em Aprovação Cliente'       => 'Em Aprovação Cliente',
+        'Pendente de Informações'    => 'Pendente de Informações',
+        'Alteração Solicitada'       => 'Alteração Solicitada',
+        'Aprovado'                   => 'Aprovado',
+        'Publicado / No Ar'          => 'Publicado / No Ar',
     ];
 
     public static array $situationColors = [
-        'triagem'                => '#94a3b8',
-        'em_producao'            => '#2563eb',
-        'aguardando_referencias' => '#FF8C00',
-        'em_revisao_interna'     => '#d97706',
-        'enviar_para_cliente'    => '#6A5ACD',
-        'agendado_publicacao'    => '#0d9488',
-        'publicado'              => '#059669',
+        'Aguardando Copy / Redação'   => '#94a3b8',
+        'Em design'                  => '#2563eb',
+        'Em Setup / Dev'             => '#2563eb',
+        'Pronto para produção'       => '#94a3b8',
+        'Revisão Interna'            => '#6A5ACD',
+        'Pronta para publicação'     => '#2563eb',
+        'Agendado Plataforma'        => '#2563eb',
+        'Enviar para o cliente'      => '#6A5ACD',
+        'Em Aprovação Cliente'       => '#FF8C00',
+        'Pendente de Informações'    => '#FF8C00',
+        'Alteração Solicitada'       => '#FF8C00',
+        'Aprovado'                   => '#059669',
+        'Publicado / No Ar'          => '#059669',
     ];
 
     public static array $requesterChannels = [
