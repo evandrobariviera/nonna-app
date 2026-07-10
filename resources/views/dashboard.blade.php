@@ -120,9 +120,15 @@
     </div>
 
     {{-- ── SEÇÕES POR FUNÇÃO ── --}}
-    @if(!empty($userFunctionRoles))
+    {{-- Administrador vê todas as funções, não só as que tem atribuídas — mesma regra já usada em /visoes/{role}. --}}
+    @php
+        $dashboardRoles = ($isOrgAdmin ?? false)
+            ? array_keys(\App\Models\OrganizationUser::$functionRoles)
+            : ($userFunctionRoles ?? []);
+    @endphp
+    @if(!empty($dashboardRoles))
         <div class="flex flex-col gap-2">
-            @foreach($userFunctionRoles as $role)
+            @foreach($dashboardRoles as $role)
                 @if(isset(\App\Models\OrganizationUser::$functionRoles[$role]))
                     <div class="card" x-data="{ open: false }">
                         <button @click="open = !open" type="button"
