@@ -125,27 +125,20 @@
             : ($userFunctionRoles ?? []);
     @endphp
     @if(!empty($dashboardRoles))
-        <div class="flex flex-col gap-2">
+        <div class="flex flex-col gap-8">
             @foreach($dashboardRoles as $role)
                 @if(isset(\App\Models\OrganizationUser::$functionRoles[$role]))
-                    <div class="card" x-data="{ open: false }">
-                        <button @click="open = !open" type="button"
-                            class="w-full flex items-center gap-2 px-5 py-3 text-left transition-colors"
-                            style="color:var(--text)">
-                            <span :class="open ? 'rotate-90' : ''" class="transition-transform text-xs" style="color:var(--muted)">▶</span>
-                            <span class="text-sm font-bold">
-                                {{ \App\Models\OrganizationUser::$functionRoles[$role] }}
-                            </span>
-                        </button>
-                        <div x-show="open" x-cloak class="px-5 pb-5" style="border-top:1px solid var(--border2)">
-                            @if($role === 'estrategia')
-                                @include('dashboard.sections.estrategia')
-                            @else
-                                <p class="text-xs mt-4" style="color:var(--muted)">
-                                    Painel de <strong>{{ \App\Models\OrganizationUser::$functionRoles[$role] }}</strong> em construção — em breve.
-                                </p>
-                            @endif
-                        </div>
+                    <div>
+                        <h2 class="text-base font-bold mb-3" style="color:var(--text); border-bottom:1px solid var(--border2); padding-bottom:10px">
+                            {{ \App\Models\OrganizationUser::$functionRoles[$role] }}
+                        </h2>
+                        @if($role === 'estrategia')
+                            @include('dashboard.sections.estrategia')
+                        @else
+                            <p class="text-xs" style="color:var(--muted)">
+                                Painel de <strong>{{ \App\Models\OrganizationUser::$functionRoles[$role] }}</strong> em construção — em breve.
+                            </p>
+                        @endif
                     </div>
                 @endif
             @endforeach
