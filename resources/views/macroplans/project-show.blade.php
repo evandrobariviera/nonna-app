@@ -42,14 +42,14 @@
             <div class="flex-1 min-w-0" style="min-width:200px">
                 <div class="flex items-center justify-between mb-1.5">
                     <span class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Progresso</span>
-                    <span class="text-sm font-black" style="color:var(--text)">{{ $progress }}%</span>
+                    <span id="project-progress-pct" class="text-sm font-black" style="color:var(--text)">{{ $progress }}%</span>
                 </div>
                 <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--border2)">
-                    <div class="h-2 rounded-full transition-all duration-500"
+                    <div id="project-progress-bar" class="h-2 rounded-full transition-all duration-500"
                          style="width:{{ $progress }}%; background:{{ $progress >= 100 ? 'var(--green)' : 'var(--grad)' }}">
                     </div>
                 </div>
-                <p class="text-xs mt-1.5 font-mono" style="color:var(--muted)">
+                <p id="project-progress-text" class="text-xs mt-1.5 font-mono" style="color:var(--muted)">
                     {{ $doneTasks }} de {{ $totalTasks }} tarefa{{ $totalTasks !== 1 ? 's' : '' }} concluída{{ $doneTasks !== 1 ? 's' : '' }}
                 </p>
             </div>
@@ -58,7 +58,7 @@
                     @continue($statusKey === 'cancelado')
                     @php $count = $kanban[$statusKey]->count(); @endphp
                     <div class="text-center">
-                        <div class="text-lg font-black" style="color:{{ \App\Models\Task::colorHex($meta['color']) }}">{{ $count }}</div>
+                        <div class="text-lg font-black" data-stat-count="{{ $statusKey }}" style="color:{{ \App\Models\Task::colorHex($meta['color']) }}">{{ $count }}</div>
                         <div class="text-xs font-mono" style="color:var(--muted)">{{ $meta['label'] }}</div>
                     </div>
                 @endforeach
@@ -271,12 +271,15 @@
         </div>
 
         {{-- ── COLUNAS KANBAN ── --}}
-        <div class="flex gap-4 overflow-x-auto pb-2" style="align-items: start;">
+        <div id="project-board" class="flex gap-4 overflow-x-auto pb-2" style="align-items: start;"
+             data-kanban-board data-status-field="status">
 
             @foreach(\App\Models\Task::$statuses as $colKey => $col)
                 @continue($colKey === 'cancelado')
                 @php $colTasks = $kanban[$colKey]; @endphp
-                <div class="flex flex-col gap-2 flex-shrink-0" style="width:270px" @if($colKey === 'concluido') x-show="showDone" x-cloak @endif>
+                <div class="flex flex-col gap-2 flex-shrink-0" style="width:270px"
+                     data-kanban-column data-status="{{ $colKey }}"
+                     @if($colKey === 'concluido') x-show="showDone" x-cloak @endif>
 
                     {{-- Header da coluna — sólido estilo Monday --}}
                     <div class="flex items-center justify-between px-3 py-2.5 rounded"
@@ -284,14 +287,19 @@
                         <span class="text-xs font-bold uppercase tracking-wider" style="color:#fff; letter-spacing:.06em">
                             {{ $col['label'] }}
                         </span>
-                        <span class="text-xs font-bold" style="color:rgba(255,255,255,.75)">
+                        <span class="text-xs font-bold" data-kanban-count style="color:rgba(255,255,255,.75)">
                             {{ $colTasks->count() }}
                         </span>
                     </div>
 
                     {{-- Cards --}}
+                    <div class="flex flex-col gap-2" data-kanban-list>
                     @forelse($colTasks as $task)
+                        @php
+                            $statusUrl = $standalone ? route('tasks.updateStatusStandalone', [$project, $task]) : route('tasks.update-status', [$macroplan, $project, $task]);
+                        @endphp
                         <div class="card px-4 py-3"
+                             data-kanban-card data-id="{{ $task->id }}" data-update-url="{{ $statusUrl }}"
                              style="{{ $task->isOverdue() ? 'border-left:3px solid var(--red)' : '' }}">
 
                             {{-- VIEW do card --}}
@@ -553,6 +561,7 @@
                             Sem tarefas
                         </div>
                     @endforelse
+                    </div>
 
                 </div>
             @endforeach
@@ -751,5 +760,37 @@ function executorPicker(initial = []) {
         }
     }
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    var board = document.getElementById('project-board');
+    if (!board) return;
+
+    initKanbanDnd('#project-board');
+
+    board.addEventListener('kanban:moved', function (evt) {
+        var fromStatus = evt.detail.fromColumn.dataset.status;
+        var toStatus = evt.detail.toColumn.dataset.status;
+        var fromStat = document.querySelector('[data-stat-count="' + fromStatus + '"]');
+        var toStat = document.querySelector('[data-stat-count="' + toStatus + '"]');
+        if (fromStat) fromStat.textContent = String(parseInt(fromStat.textContent, 10) - 1);
+        if (toStat) toStat.textContent = String(parseInt(toStat.textContent, 10) + 1);
+
+        var total = 0, done = 0;
+        document.querySelectorAll('[data-stat-count]').forEach(function (el) {
+            var status = el.dataset.statCount;
+            var n = parseInt(el.textContent, 10) || 0;
+            total += n;
+            if (status === 'concluido') done = n;
+        });
+        var pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+        document.getElementById('project-progress-pct').textContent = pct + '%';
+        document.getElementById('project-progress-text').textContent =
+            done + ' de ' + total + (total !== 1 ? ' tarefas' : ' tarefa') + ' concluída' + (done !== 1 ? 's' : '');
+        var bar = document.getElementById('project-progress-bar');
+        bar.style.width = pct + '%';
+        bar.style.background = pct >= 100 ? 'var(--green)' : 'var(--grad)';
+    });
+});
 </script>
 @endpush

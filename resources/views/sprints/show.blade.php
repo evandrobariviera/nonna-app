@@ -125,18 +125,18 @@
             <div class="flex-1" style="min-width:180px">
                 <div class="flex items-center justify-between mb-1">
                     <span class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Progresso</span>
-                    <span class="text-sm font-black" style="color:var(--text)">{{ $progress }}%</span>
+                    <span id="sprint-progress-pct" class="text-sm font-black" style="color:var(--text)">{{ $progress }}%</span>
                 </div>
                 <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--border2)">
-                    <div class="h-2 rounded-full transition-all"
+                    <div id="sprint-progress-bar" class="h-2 rounded-full transition-all"
                          style="width:{{ $progress }}%; background:{{ $progress >= 100 ? 'var(--green)' : 'var(--grad)' }}"></div>
                 </div>
-                <p class="text-xs mt-1 font-mono" style="color:var(--muted)">{{ $done }} / {{ $total }} concluídas</p>
+                <p id="sprint-progress-text" class="text-xs mt-1 font-mono" style="color:var(--muted)">{{ $done }} / {{ $total }} concluídas</p>
             </div>
             @foreach(\App\Models\Task::$statuses as $statusKey => $meta)
                 @php $cnt = $kanban[$statusKey]->count(); @endphp
                 <div class="text-center">
-                    <div class="text-lg font-black" style="color:var(--{{ $meta['color'] === 'muted' ? 'muted2' : $meta['color'] }})">{{ $cnt }}</div>
+                    <div class="text-lg font-black" data-stat-count="{{ $statusKey }}" style="color:var(--{{ $meta['color'] === 'muted' ? 'muted2' : $meta['color'] }})">{{ $cnt }}</div>
                     <div class="text-xs font-mono" style="color:var(--muted)">{{ $meta['label'] }}</div>
                 </div>
             @endforeach
@@ -180,11 +180,13 @@
 
         {{-- ── TAB BOARD ── --}}
         <div x-show="tab === 'board'" x-cloak>
-            <div class="flex gap-4 overflow-x-auto pb-2" style="align-items: start;">
+            <div id="sprint-board" class="flex gap-4 overflow-x-auto pb-2" style="align-items: start;"
+                 data-kanban-board data-status-field="status">
 
                 @foreach(\App\Models\Task::$statuses as $statusKey => $meta)
                     @php $colTasks = $kanban[$statusKey]; @endphp
-                    <div class="flex flex-col gap-2 flex-shrink-0" style="width:270px">
+                    <div class="flex flex-col gap-2 flex-shrink-0" style="width:270px"
+                         data-kanban-column data-status="{{ $statusKey }}">
                         <div class="flex items-center justify-between px-3 py-2"
                              style="background:var(--s2); border:1px solid var(--border2)">
                             <div class="flex items-center gap-2">
@@ -195,9 +197,10 @@
                                     {{ $meta['label'] }}
                                 </span>
                             </div>
-                            <span class="text-xs font-mono font-bold" style="color:var(--muted)">{{ $colTasks->count() }}</span>
+                            <span class="text-xs font-mono font-bold" data-kanban-count style="color:var(--muted)">{{ $colTasks->count() }}</span>
                         </div>
 
+                        <div class="flex flex-col gap-2" style="min-height:40px" data-kanban-list>
                         @forelse($colTasks as $task)
                             @php
                                 $execList = $task->executors->filter(fn($u) => $u->pivot->role === 'executor');
@@ -209,6 +212,7 @@
                                 $thumbUrl   = $task->firstImageAttachmentUrl();
                             @endphp
                             <div class="card px-0 py-0 relative overflow-hidden" x-data="{ statusOpen: false, moveStyle: '' }"
+                                 data-kanban-card data-id="{{ $task->id }}" data-update-url="{{ $statusUrl }}"
                                  style="{{ $task->isOverdue() ? 'border-left:3px solid var(--red)' : '' }}; cursor:pointer"
                                  @click="selectMode
                                      ? (selected.includes('{{ $task->id }}') ? selected = selected.filter(id => id !== '{{ $task->id }}') : selected.push('{{ $task->id }}'))
@@ -319,6 +323,7 @@
                                 Sem tarefas
                             </div>
                         @endforelse
+                        </div>
                     </div>
                 @endforeach
 
@@ -474,5 +479,40 @@
         </div>
 
     </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var board = document.getElementById('sprint-board');
+            if (!board) return;
+
+            initKanbanDnd('#sprint-board');
+
+            board.addEventListener('kanban:moved', function (evt) {
+                var fromStatus = evt.detail.fromColumn.dataset.status;
+                var toStatus = evt.detail.toColumn.dataset.status;
+                var fromStat = document.querySelector('[data-stat-count="' + fromStatus + '"]');
+                var toStat = document.querySelector('[data-stat-count="' + toStatus + '"]');
+                if (fromStat) fromStat.textContent = String(parseInt(fromStat.textContent, 10) - 1);
+                if (toStat) toStat.textContent = String(parseInt(toStat.textContent, 10) + 1);
+
+                var total = 0, done = 0;
+                document.querySelectorAll('[data-stat-count]').forEach(function (el) {
+                    var status = el.dataset.statCount;
+                    var n = parseInt(el.textContent, 10) || 0;
+                    if (status !== 'cancelado') total += n;
+                    if (status === 'concluido') done = n;
+                });
+                var pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+                document.getElementById('sprint-progress-pct').textContent = pct + '%';
+                document.getElementById('sprint-progress-text').textContent = done + ' / ' + total + ' concluídas';
+                var bar = document.getElementById('sprint-progress-bar');
+                bar.style.width = pct + '%';
+                bar.style.background = pct >= 100 ? 'var(--green)' : 'var(--grad)';
+            });
+        });
+    </script>
+    @endpush
 
 </x-app-layout>

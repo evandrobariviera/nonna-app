@@ -309,6 +309,10 @@ class TaskController extends Controller
             'status' => 'required|in:' . implode(',', array_keys(Task::$statuses)),
         ])['status']]);
 
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
         return redirect()->back()->with('success', 'Status atualizado.');
     }
 
@@ -320,6 +324,10 @@ class TaskController extends Controller
             'status' => 'required|in:' . implode(',', array_keys(Task::$statuses)),
         ])['status']]);
 
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
         return redirect()->back()->with('success', 'Status atualizado.');
     }
 
@@ -328,6 +336,10 @@ class TaskController extends Controller
         $task->update(['status' => $request->validate([
             'status' => 'required|in:' . implode(',', array_keys(Task::$statuses)),
         ])['status']]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->back()->with('success', 'Status atualizado.');
     }

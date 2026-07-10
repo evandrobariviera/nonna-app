@@ -20,7 +20,8 @@
         @endif
 
         {{-- Kanban Board --}}
-        <div class="flex gap-4 overflow-x-auto pb-4" style="min-height: 70vh;">
+        <div id="opportunities-board" class="flex gap-4 overflow-x-auto pb-4" style="min-height: 70vh;"
+             data-kanban-board data-status-field="stage">
 
             @php
                 $stageColors = [
@@ -38,7 +39,8 @@
                     $stageCards = $opportunities->get($stage, collect());
                     $stageMeta  = \App\Models\Opportunity::$stages[$stage];
                 @endphp
-                <div class="flex-shrink-0 w-64 flex flex-col gap-3">
+                <div class="flex-shrink-0 w-64 flex flex-col gap-3"
+                     data-kanban-column data-status="{{ $stage }}">
 
                     {{-- Column Header --}}
                     <div class="flex items-center justify-between px-3 py-2 border-b"
@@ -47,16 +49,17 @@
                               style="color: {{ $stageColors[$stage] ?? 'var(--muted2)' }}">
                             {{ $stageMeta['label'] }}
                         </span>
-                        <span class="text-xs font-mono px-1.5 py-0.5 rounded"
+                        <span class="text-xs font-mono px-1.5 py-0.5 rounded" data-kanban-count
                               style="background: var(--s3); color: var(--muted);">
                             {{ $stageCards->count() }}
                         </span>
                     </div>
 
                     {{-- Cards --}}
-                    <div class="flex flex-col gap-2 flex-1">
+                    <div class="flex flex-col gap-2 flex-1" data-kanban-list>
                         @forelse($stageCards as $opp)
                             <div class="card p-3 cursor-pointer hover:border-[var(--purple)] transition-colors group"
+                                 data-kanban-card data-id="{{ $opp->id }}" data-update-url="{{ route('opportunities.update-stage', $opp) }}"
                                  x-data="{ open: false }">
 
                                 <div class="flex items-start justify-between gap-2 mb-2">
@@ -210,5 +213,11 @@
             if (data.ok) window.location.reload();
         });
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (document.getElementById('opportunities-board')) {
+            initKanbanDnd('#opportunities-board');
+        }
+    });
     </script>
 </x-app-layout>

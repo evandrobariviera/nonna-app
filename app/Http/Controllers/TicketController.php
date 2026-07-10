@@ -110,6 +110,10 @@ class TicketController extends Controller
 
         $task->update(['status' => $data['status']]);
 
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
         return redirect()->back()->with('success', 'Status atualizado.');
     }
 
