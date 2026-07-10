@@ -213,32 +213,34 @@
 
                                     {{-- Mover status + remover da sprint --}}
                                     <div class="flex items-center gap-1.5 pt-2 relative" style="border-top:1px solid var(--border2)" @click.stop>
-                                        <button @click="statusOpen = !statusOpen" @click.stop type="button"
+                                        <button x-ref="moveBtn" @click="statusOpen = !statusOpen" @click.stop type="button"
                                             class="text-xs px-2 py-0.5 font-mono flex items-center gap-1"
                                             style="border:1px solid var(--border2); color:var(--muted)">
                                             Mover <span style="opacity:.7">▾</span>
                                         </button>
 
-                                        <div x-show="statusOpen" @click.outside="statusOpen = false" x-cloak
-                                             class="absolute left-0 bottom-full mb-1 z-20 rounded shadow-lg py-1"
-                                             style="background:var(--s1); border:1px solid var(--border2); min-width:190px">
-                                            @foreach(\App\Models\Task::$statuses as $targetKey => $targetMeta)
-                                                @if($targetKey !== $statusKey)
-                                                    <form method="POST" action="{{ $statusUrl }}">
-                                                        @csrf @method('PATCH')
-                                                        <input type="hidden" name="status" value="{{ $targetKey }}">
-                                                        <button type="submit"
-                                                            class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
-                                                            style="color:var(--text)"
-                                                            onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
-                                                            <span class="inline-block w-2 h-2 rounded-full flex-shrink-0"
-                                                                  style="background:{{ \App\Models\Task::colorHex($targetMeta['color']) }}"></span>
-                                                            {{ $targetMeta['label'] }}
-                                                        </button>
-                                                    </form>
-                                                @endif
-                                            @endforeach
-                                        </div>
+                                        <template x-teleport="body">
+                                            <div x-show="statusOpen" @click.outside="statusOpen = false" x-cloak
+                                                 class="rounded shadow-lg py-1"
+                                                 :style="dropdownStyle($refs.moveBtn, 'top-left') + 'background:var(--s1); border:1px solid var(--border2); min-width:190px'">
+                                                @foreach(\App\Models\Task::$statuses as $targetKey => $targetMeta)
+                                                    @if($targetKey !== $statusKey)
+                                                        <form method="POST" action="{{ $statusUrl }}">
+                                                            @csrf @method('PATCH')
+                                                            <input type="hidden" name="status" value="{{ $targetKey }}">
+                                                            <button type="submit"
+                                                                class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
+                                                                style="color:var(--text)"
+                                                                onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                                                                <span class="inline-block w-2 h-2 rounded-full flex-shrink-0"
+                                                                      style="background:{{ \App\Models\Task::colorHex($targetMeta['color']) }}"></span>
+                                                                {{ $targetMeta['label'] }}
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                        </template>
 
                                         @if($sprint->status !== 'closed' && !$sprint->isLocked())
                                             <form method="POST" action="{{ route('sprints.remove-task', [$sprint, $task]) }}"

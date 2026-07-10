@@ -124,7 +124,7 @@
 
     {{-- Status (Monday fill clicável + dropdown) --}}
     <td class="monday-fill-td relative" style="width:140px">
-        <button @click="statusOpen = !statusOpen; situacaoOpen = false" type="button"
+        <button x-ref="statusBtn" @click="statusOpen = !statusOpen; situacaoOpen = false" type="button"
                 style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
                        gap:4px; background:{{ $task->statusHex() }}; color:#fff; font-size:11px;
                        font-weight:700; cursor:pointer; border:none; overflow:hidden">
@@ -132,29 +132,31 @@
             <span style="opacity:.8; flex-shrink:0">▾</span>
         </button>
 
-        <div x-show="statusOpen" @click.outside="statusOpen = false" x-cloak
-             class="absolute left-0 top-full mt-1 z-20 rounded shadow-lg py-1"
-             style="background:var(--s1); border:1px solid var(--border2); min-width:190px">
-            @foreach(\App\Models\Task::$statuses as $key => $s)
-                <form method="POST" action="{{ $statusUrl }}">
-                    @csrf @method('PATCH')
-                    <input type="hidden" name="status" value="{{ $key }}">
-                    <button type="submit"
-                        class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
-                        style="color:{{ $task->status === $key ? 'var(--purple)' : 'var(--text)' }}"
-                        onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
-                        <span class="inline-block w-2 h-2 rounded-full flex-shrink-0"
-                              style="background:{{ \App\Models\Task::colorHex($s['color']) }}"></span>
-                        {{ $s['label'] }}
-                    </button>
-                </form>
-            @endforeach
-        </div>
+        <template x-teleport="body">
+            <div x-show="statusOpen" @click.outside="statusOpen = false" x-cloak
+                 class="rounded shadow-lg py-1"
+                 :style="dropdownStyle($refs.statusBtn, 'bottom-left') + 'background:var(--s1); border:1px solid var(--border2); min-width:190px'">
+                @foreach(\App\Models\Task::$statuses as $key => $s)
+                    <form method="POST" action="{{ $statusUrl }}">
+                        @csrf @method('PATCH')
+                        <input type="hidden" name="status" value="{{ $key }}">
+                        <button type="submit"
+                            class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
+                            style="color:{{ $task->status === $key ? 'var(--purple)' : 'var(--text)' }}"
+                            onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                            <span class="inline-block w-2 h-2 rounded-full flex-shrink-0"
+                                  style="background:{{ \App\Models\Task::colorHex($s['color']) }}"></span>
+                            {{ $s['label'] }}
+                        </button>
+                    </form>
+                @endforeach
+            </div>
+        </template>
     </td>
 
     {{-- Situação (Monday fill clicável + dropdown) --}}
     <td class="{{ $hasSituation ? 'monday-fill-td' : '' }} relative" style="width:150px">
-        <button @click="situacaoOpen = !situacaoOpen; statusOpen = false" type="button"
+        <button x-ref="situacaoBtn" @click="situacaoOpen = !situacaoOpen; statusOpen = false" type="button"
                 style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
                        gap:4px; {{ $hasSituation ? 'background:' . $task->situationColor() . '; color:#fff;' : 'background:transparent; color:var(--muted);' }}
                        font-size:11px; font-weight:{{ $hasSituation ? '700' : '400' }};
@@ -165,28 +167,30 @@
             <span style="opacity:.6; flex-shrink:0">▾</span>
         </button>
 
-        <div x-show="situacaoOpen" @click.outside="situacaoOpen = false" x-cloak
-             class="absolute left-0 top-full mt-1 z-20 rounded shadow-lg py-1"
-             style="background:var(--s1); border:1px solid var(--border2); min-width:210px">
-            @foreach(\App\Models\Task::$situations as $key => $label)
-                <form method="POST" action="{{ $situacaoUrl }}">
-                    @csrf @method('PATCH')
-                    <input type="hidden" name="situation" value="{{ $key }}">
-                    <button type="submit"
-                        class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
-                        style="color:{{ ($task->situation ?? '') === $key ? 'var(--purple)' : 'var(--text)' }}"
-                        onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
-                        @if($key !== '')
-                            <span class="inline-block w-2 h-2 rounded-full flex-shrink-0"
-                                  style="background:{{ \App\Models\Task::$situationColors[$key] ?? '#94a3b8' }}"></span>
-                        @else
-                            <span class="inline-block w-2 h-2 flex-shrink-0"></span>
-                        @endif
-                        {{ $label ?: '— Limpar —' }}
-                    </button>
-                </form>
-            @endforeach
-        </div>
+        <template x-teleport="body">
+            <div x-show="situacaoOpen" @click.outside="situacaoOpen = false" x-cloak
+                 class="rounded shadow-lg py-1"
+                 :style="dropdownStyle($refs.situacaoBtn, 'bottom-left') + 'background:var(--s1); border:1px solid var(--border2); min-width:210px'">
+                @foreach(\App\Models\Task::$situations as $key => $label)
+                    <form method="POST" action="{{ $situacaoUrl }}">
+                        @csrf @method('PATCH')
+                        <input type="hidden" name="situation" value="{{ $key }}">
+                        <button type="submit"
+                            class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
+                            style="color:{{ ($task->situation ?? '') === $key ? 'var(--purple)' : 'var(--text)' }}"
+                            onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                            @if($key !== '')
+                                <span class="inline-block w-2 h-2 rounded-full flex-shrink-0"
+                                      style="background:{{ \App\Models\Task::$situationColors[$key] ?? '#94a3b8' }}"></span>
+                            @else
+                                <span class="inline-block w-2 h-2 flex-shrink-0"></span>
+                            @endif
+                            {{ $label ?: '— Limpar —' }}
+                        </button>
+                    </form>
+                @endforeach
+            </div>
+        </template>
     </td>
 
     {{-- Ações --}}
@@ -194,26 +198,28 @@
         <div class="row-actions flex items-center gap-1.5">
             @if($context === 'fila' && isset($sprints) && $sprints->isNotEmpty())
                 <div x-data="{ sprintOpen: false }" class="relative">
-                    <button @click="sprintOpen = !sprintOpen" type="button" class="btn btn-ghost btn-xs">
+                    <button x-ref="sprintBtn" @click="sprintOpen = !sprintOpen" type="button" class="btn btn-ghost btn-xs">
                         → Sprint
                     </button>
-                    <div x-show="sprintOpen" @click.outside="sprintOpen = false" x-cloak
-                         class="absolute right-0 top-full mt-1 z-20 rounded shadow-lg py-1"
-                         style="background:var(--s1); border:1px solid var(--border2); min-width:160px">
-                        @foreach($sprints as $sp)
-                            <form method="POST" action="{{ route('tasks.assign-sprint', $task) }}">
-                                @csrf @method('PATCH')
-                                <input type="hidden" name="sprint_id" value="{{ $sp->id }}">
-                                <button type="submit"
-                                    class="w-full text-left px-3 py-1.5 text-xs"
-                                    style="color:var(--text)"
-                                    onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
-                                    {{ $sp->title }}
-                                    @if($sp->status === 'active') <span class="badge badge-green" style="font-size:9px">ativa</span> @endif
-                                </button>
-                            </form>
-                        @endforeach
-                    </div>
+                    <template x-teleport="body">
+                        <div x-show="sprintOpen" @click.outside="sprintOpen = false" x-cloak
+                             class="rounded shadow-lg py-1"
+                             :style="dropdownStyle($refs.sprintBtn, 'bottom-right') + 'background:var(--s1); border:1px solid var(--border2); min-width:160px'">
+                            @foreach($sprints as $sp)
+                                <form method="POST" action="{{ route('tasks.assign-sprint', $task) }}">
+                                    @csrf @method('PATCH')
+                                    <input type="hidden" name="sprint_id" value="{{ $sp->id }}">
+                                    <button type="submit"
+                                        class="w-full text-left px-3 py-1.5 text-xs"
+                                        style="color:var(--text)"
+                                        onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                                        {{ $sp->title }}
+                                        @if($sp->status === 'active') <span class="badge badge-green" style="font-size:9px">ativa</span> @endif
+                                    </button>
+                                </form>
+                            @endforeach
+                        </div>
+                    </template>
                 </div>
             @endif
         </div>
