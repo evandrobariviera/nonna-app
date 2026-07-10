@@ -18,29 +18,61 @@ class CampaignController extends Controller
         'archived' => 'Arquivada',
     ];
 
+    public static array $periods = [
+        '7d'         => 'Últimos 7 dias',
+        '30d'        => 'Últimos 30 dias',
+        'month'      => 'Mês atual',
+        'last_month' => 'Mês anterior',
+    ];
+
     public function index(Request $request)
     {
-        $adAccountIds = ClientAdAccount::whereIn('client_id', Client::pluck('id'))->pluck('id');
+        $clientId   = $request->get('client_id') ?: null;
+        $campaignId = $request->get('ad_campaign_id') ?: null;
+        $platform   = $request->get('platform') ?: null;
+        $period     = $request->filled('period') && array_key_exists($request->get('period'), self::$periods)
+            ? $request->get('period')
+            : '7d';
+
+        // Sem parâmetro na URL (primeiro load) → "Ativa" por padrão.
+        // status= vazio explícito (usuário escolheu "Todos os status") → mostra tudo.
+        $statusFilter = $request->has('status') ? $request->get('status') : 'active';
+
+        [$periodStart, $periodEnd, $periodLabel] = $this->periodRange($period);
+
+        // Se só a campanha foi selecionada (sem cliente), o cliente dela vira o
+        // escopo efetivo — assim os cards de orçamento também se moldam.
+        $selectedCampaign = $campaignId ? AdCampaign::with('adAccount')->find($campaignId) : null;
+        $effectiveClientId = $clientId ?: $selectedCampaign?->adAccount?->client_id;
+
+        $accountsQuery = ClientAdAccount::whereIn('client_id', Client::pluck('id'));
+        if ($effectiveClientId) {
+            $accountsQuery->where('client_id', $effectiveClientId);
+        }
+        $adAccountIds = $accountsQuery->pluck('id');
+
+        // Opções do filtro de campanha — restritas ao cliente selecionado (se houver)
+        $campaignOptions = $adAccountIds->isEmpty() ? collect() : AdCampaign::whereIn('client_ad_account_id', $adAccountIds)
+            ->with('adAccount.client:id,company_name')
+            ->orderBy('name')
+            ->get(['id', 'name', 'client_ad_account_id']);
 
         $campaigns = collect();
         if ($adAccountIds->isNotEmpty()) {
             $campaigns = AdCampaign::whereIn('client_ad_account_id', $adAccountIds)
                 ->with('adAccount.client')
-                ->when($request->filled('platform'), fn ($q) => $q->where('platform', $request->platform))
-                ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
-                ->when($request->filled('client_id'), fn ($q) => $q->whereHas(
-                    'adAccount',
-                    fn ($q2) => $q2->where('client_id', $request->client_id)
-                ))
+                ->when($platform, fn ($q) => $q->where('platform', $platform))
+                ->when($statusFilter !== '', fn ($q) => $q->where('status', $statusFilter))
+                ->when($campaignId, fn ($q) => $q->where('id', $campaignId))
                 ->orderBy('name')
                 ->get();
 
-            $since = now()->subDays(7)->toDateString();
             $perCampaignStats = DB::connection('pgsql')
                 ->table('ad_daily_snapshots')
                 ->whereIn('client_ad_account_id', $adAccountIds)
                 ->where('entity_level', 'campaign')
-                ->where('snapshot_date', '>=', $since)
+                ->whereBetween('snapshot_date', [$periodStart, $periodEnd])
+                ->when($platform, fn ($q) => $q->where('platform', $platform))
                 ->selectRaw('
                     client_ad_account_id, entity_id,
                     COALESCE(SUM(spend), 0) AS spend,
@@ -70,17 +102,37 @@ class CampaignController extends Controller
             }
         }
 
-        $monthStart = now()->startOfMonth()->toDateString();
-        $monthSpend = $adAccountIds->isEmpty() ? 0.0 : (float) DB::connection('pgsql')
-            ->table('ad_daily_snapshots')
-            ->whereIn('client_ad_account_id', $adAccountIds)
-            ->where('entity_level', 'campaign')
-            ->where('snapshot_date', '>=', $monthStart)
-            ->sum('spend');
+        // "Gasto no período" — mesmo escopo de cliente/campanha/plataforma/período da tabela.
+        $periodSpend = 0.0;
+        if ($adAccountIds->isNotEmpty()) {
+            $spendQuery = DB::connection('pgsql')
+                ->table('ad_daily_snapshots')
+                ->whereIn('client_ad_account_id', $adAccountIds)
+                ->where('entity_level', 'campaign')
+                ->whereBetween('snapshot_date', [$periodStart, $periodEnd])
+                ->when($platform, fn ($q) => $q->where('platform', $platform));
 
+            if ($selectedCampaign) {
+                $spendQuery->where('client_ad_account_id', $selectedCampaign->client_ad_account_id)
+                    ->where('entity_id', $selectedCampaign->external_id);
+            }
+
+            $periodSpend = (float) $spendQuery->sum('spend');
+        }
+
+        // "Campanhas ativas" — sempre conta status=active de verdade, independente do
+        // filtro de Status escolhido (que só restringe as linhas da tabela).
+        $activeCampaigns = $adAccountIds->isEmpty() ? 0 : AdCampaign::whereIn('client_ad_account_id', $adAccountIds)
+            ->when($platform, fn ($q) => $q->where('platform', $platform))
+            ->when($campaignId, fn ($q) => $q->where('id', $campaignId))
+            ->where('status', 'active')
+            ->count();
+
+        // Orçamento é mensal por natureza — sempre mês corrente, só respeita o cliente.
+        $budgetClients = $effectiveClientId ? Client::where('id', $effectiveClientId)->get() : Client::all();
         $totalBudget = 0.0;
         $overBudgetCount = 0;
-        foreach (Client::all() as $client) {
+        foreach ($budgetClients as $client) {
             $budget = $client->currentAdBudget();
             if (!$budget) {
                 continue;
@@ -92,20 +144,40 @@ class CampaignController extends Controller
         }
 
         $stats = [
-            'month_spend'       => $monthSpend,
+            'period_spend'      => $periodSpend,
             'total_budget'      => $totalBudget,
             'over_budget_count' => $overBudgetCount,
-            'active_campaigns'  => $adAccountIds->isEmpty() ? 0 : AdCampaign::whereIn('client_ad_account_id', $adAccountIds)
-                ->where('status', 'active')->count(),
+            'active_campaigns'  => $activeCampaigns,
         ];
 
+        // Insights: client_id sempre existe (mesmo os de orçamento, que não têm campanha/conta
+        // associada), então o filtro certo é por client_id — não por client_ad_account_id.
         $openInsights = CampaignInsight::whereIn('status', ['novo', 'lido'])
+            ->when($effectiveClientId, fn ($q) => $q->where('client_id', $effectiveClientId))
+            ->when($campaignId, fn ($q) => $q->where('ad_campaign_id', $campaignId))
+            ->whereBetween('generated_at', ["{$periodStart} 00:00:00", "{$periodEnd} 23:59:59"])
             ->with(['client', 'campaign'])
             ->orderByDesc('generated_at')
             ->get();
 
         $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
 
-        return view('campaigns.index', compact('campaigns', 'stats', 'openInsights', 'clients'));
+        return view('campaigns.index', compact(
+            'campaigns', 'stats', 'openInsights', 'clients', 'campaignOptions',
+            'periodLabel', 'period', 'statusFilter', 'clientId', 'campaignId', 'platform'
+        ));
+    }
+
+    /**
+     * @return array{0: string, 1: string, 2: string} início, fim (Y-m-d) e label do período.
+     */
+    private function periodRange(string $period): array
+    {
+        return match ($period) {
+            '30d'        => [now()->subDays(30)->toDateString(), now()->toDateString(), 'Últimos 30 dias'],
+            'month'      => [now()->startOfMonth()->toDateString(), now()->toDateString(), 'mês atual'],
+            'last_month' => [now()->subMonthNoOverflow()->startOfMonth()->toDateString(), now()->subMonthNoOverflow()->endOfMonth()->toDateString(), 'mês anterior'],
+            default      => [now()->subDays(7)->toDateString(), now()->toDateString(), 'Últimos 7 dias'],
+        };
     }
 }
