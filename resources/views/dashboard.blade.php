@@ -125,10 +125,10 @@
             : ($userFunctionRoles ?? []);
     @endphp
     @if(!empty($dashboardRoles))
-        <div class="flex flex-col gap-8">
+        <div class="flex flex-col gap-5">
             @foreach($dashboardRoles as $role)
                 @if(isset(\App\Models\OrganizationUser::$functionRoles[$role]))
-                    <div>
+                    <div class="card px-5 py-4">
                         <h2 class="text-base font-bold mb-3" style="color:var(--text); border-bottom:1px solid var(--border2); padding-bottom:10px">
                             {{ \App\Models\OrganizationUser::$functionRoles[$role] }}
                         </h2>
