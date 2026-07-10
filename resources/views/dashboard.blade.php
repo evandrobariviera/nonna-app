@@ -1,97 +1,148 @@
 <x-app-layout>
     <x-slot name="header">Dashboard</x-slot>
 
-    {{-- ── STAT CARDS ── --}}
-    <div class="grid grid-cols-2 gap-4 mb-6 md:grid-cols-4">
-        <div class="stat-card">
-            <div class="stat-label">Clientes Ativos</div>
-            <div class="stat-value grad-text">{{ $clients->count() }}</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Campanhas</div>
-            <div class="stat-value" style="color:var(--muted2)">—</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Sprints em curso</div>
-            <div class="stat-value" style="color:var(--muted2)">—</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Tickets abertos</div>
-            <div class="stat-value" style="color:var(--muted2)">—</div>
-        </div>
-    </div>
-
-    {{-- ── TABELA DE CLIENTES ── --}}
-    <div class="card">
-        <div class="card-header flex items-center justify-between">
-            <div>
-                <p class="stat-label" style="margin-bottom:4px">CRM · PostgreSQL</p>
-                <h2 class="text-base font-bold" style="color:var(--text)">Carteira de Clientes Ativos</h2>
+    {{-- ── SPRINT ATUAL ── --}}
+    <div class="card px-5 py-4 mb-5">
+        @if($activeSprint)
+            <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
+                    Sprint atual · {{ $activeSprint->title }}
+                </span>
+                <a href="{{ route('sprints.show', $activeSprint) }}" class="text-xs font-mono" style="color:var(--purple)">
+                    Ver Sprint →
+                </a>
             </div>
-            <span class="badge badge-green">Sincronizado</span>
-        </div>
-
-        @if($clients->isEmpty())
-            <div class="px-6 py-12 text-center" style="color:var(--muted)">
-                <p class="text-sm">Nenhum cliente encontrado na base de dados remota.</p>
+            <div class="flex items-center gap-4">
+                <div class="flex-1">
+                    <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--border2)">
+                        <div class="h-2 rounded-full transition-all"
+                             style="width:{{ $sprintProgress }}%; background:{{ $sprintProgress >= 100 ? 'var(--green)' : 'var(--grad)' }}"></div>
+                    </div>
+                </div>
+                <span class="text-sm font-black flex-shrink-0" style="color:var(--text)">{{ $sprintProgress }}%</span>
+                <span class="text-xs font-mono flex-shrink-0" style="color:var(--muted)">{{ $sprintDone }} / {{ $sprintTotal }} concluídas</span>
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table class="nonna-table">
-                    <thead>
-                        <tr>
-                            <th>ID ClickUp</th>
-                            <th>Empresa</th>
-                            <th>Website</th>
-                            <th>CNPJ</th>
-                            <th>Últ. Sync</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($clients as $client)
-                            <tr>
-                                <td>
-                                    <span class="font-mono text-xs badge badge-purple">
-                                        {{ $client->client_task_id }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="font-bold text-sm" style="color:var(--text)">
-                                        {{ $client->company_name }}
-                                    </span>
-                                </td>
-                                <td>
-                                    @if($client->website)
-                                        <a href="{{ $client->website }}" target="_blank"
-                                           class="flex items-center gap-1 text-xs transition-colors"
-                                           style="color:var(--purple)"
-                                           onmouseover="this.style.color='var(--orange)'"
-                                           onmouseout="this.style.color='var(--purple)'">
-                                            {{ parse_url($client->website, PHP_URL_HOST) ?? $client->website }}
-                                            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                                            </svg>
-                                        </a>
-                                    @else
-                                        <span style="color:var(--muted)">—</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <span class="font-mono text-xs" style="color:var(--muted2)">
-                                        {{ $client->cnpj ?? '—' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="font-mono text-xs" style="color:var(--muted)">
-                                        {{ $client->last_synced_at ? \Carbon\Carbon::parse($client->last_synced_at)->diffForHumans() : '—' }}
-                                    </span>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+            <p class="text-sm" style="color:var(--muted)">Nenhuma sprint ativa no momento.</p>
         @endif
     </div>
+
+    {{-- ── SEÇÃO COMUM ── --}}
+    <div class="grid gap-4 mb-6" style="grid-template-columns: repeat(3, 1fr)">
+
+        {{-- Minhas tarefas --}}
+        <div class="card px-5 py-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
+                    Minhas tarefas ({{ $myTasks->count() }})
+                </h3>
+                <a href="{{ route('tasks.index', ['executor_id' => auth()->id()]) }}" class="text-xs font-mono" style="color:var(--purple)">Ver todas</a>
+            </div>
+            @if($myTasks->isEmpty())
+                <p class="text-xs" style="color:var(--muted)">Nada de hoje ou atrasado no seu nome. 🎉</p>
+            @else
+                <div class="flex flex-col gap-2">
+                    @foreach($myTasks as $task)
+                        <a href="{{ route('tasks.show', $task) }}" class="block px-3 py-2 transition-colors"
+                           style="background:var(--s2); border-left:2px solid {{ $task->isOverdue() ? 'var(--red)' : 'var(--purple)' }}"
+                           onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $task->title }}</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->company_name ?? '—' }}</span>
+                                <span class="text-xs font-mono" style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">
+                                    {{ $task->due_date->format('d/m') }}
+                                </span>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+
+        {{-- Agenda --}}
+        <div class="card px-5 py-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
+                    Agenda ({{ $myMeetings->count() }})
+                </h3>
+                <a href="{{ route('meetings.index') }}" class="text-xs font-mono" style="color:var(--purple)">Ver agenda</a>
+            </div>
+            @if($myMeetings->isEmpty())
+                <p class="text-xs" style="color:var(--muted)">Nenhum compromisso agendado.</p>
+            @else
+                <div class="flex flex-col gap-2">
+                    @foreach($myMeetings as $meeting)
+                        <a href="{{ route('meetings.show', $meeting) }}" class="block px-3 py-2 transition-colors"
+                           style="background:var(--s2)"
+                           onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $meeting->title }}</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->company_name ?? '—' }}</span>
+                                <span class="text-xs font-mono" style="color:var(--purple)">
+                                    {{ $meeting->scheduled_at->format('d/m H:i') }}
+                                </span>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+
+        {{-- Aguardando resposta --}}
+        <div class="card px-5 py-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
+                    Aguardando resposta ({{ $myPendingApprovals->count() }})
+                </h3>
+                <a href="{{ route('approvals.index') }}" class="text-xs font-mono" style="color:var(--purple)">Ver aprovações</a>
+            </div>
+            @if($myPendingApprovals->isEmpty())
+                <p class="text-xs" style="color:var(--muted)">Nada esperando resposta do cliente.</p>
+            @else
+                <div class="flex flex-col gap-2">
+                    @foreach($myPendingApprovals as $round)
+                        <a href="{{ route('tasks.show', $round->task) }}" class="block px-3 py-2 transition-colors"
+                           style="background:var(--s2)"
+                           onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $round->task->title }}</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->task->client?->company_name ?? '—' }}</span>
+                                <span class="text-xs font-mono" style="color:var(--orange)">
+                                    enviado {{ $round->submitted_at->diffForHumans() }}
+                                </span>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+
+    </div>
+
+    {{-- ── SEÇÕES POR FUNÇÃO ── --}}
+    @if(!empty($userFunctionRoles))
+        <div class="flex flex-col gap-2">
+            @foreach($userFunctionRoles as $role)
+                @if(isset(\App\Models\OrganizationUser::$functionRoles[$role]))
+                    <div class="card" x-data="{ open: false }">
+                        <button @click="open = !open" type="button"
+                            class="w-full flex items-center gap-2 px-5 py-3 text-left transition-colors"
+                            style="color:var(--muted)"
+                            onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                            <span :class="open ? 'rotate-90' : ''" class="transition-transform text-xs">▶</span>
+                            <span class="text-xs font-mono uppercase tracking-widest">
+                                {{ \App\Models\OrganizationUser::$functionRoles[$role] }}
+                            </span>
+                        </button>
+                        <div x-show="open" x-cloak class="px-5 pb-5" style="border-top:1px solid var(--border2)">
+                            <p class="text-xs mt-4" style="color:var(--muted)">
+                                Painel de <strong>{{ \App\Models\OrganizationUser::$functionRoles[$role] }}</strong> em construção — em breve.
+                            </p>
+                        </div>
+                    </div>
+                @endif
+            @endforeach
+        </div>
+    @endif
 
 </x-app-layout>

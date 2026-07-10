@@ -42,7 +42,6 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\VisionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicRegistrationController;
-use App\Models\ClickupTaskClient;
 use Illuminate\Support\Facades\Route;
 
 // ── Raiz: redireciona autenticados pro dashboard, demais pro login ──
@@ -53,10 +52,8 @@ Route::get('/', function () {
 });
 
 // ── Dashboard ──
-Route::get('/dashboard', function () {
-    $clients = ClickupTaskClient::all();
-    return view('dashboard', compact('clients'));
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])->name('dashboard');
 
 // ── CRM: Clientes (autenticado) ──
 Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
