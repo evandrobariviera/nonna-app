@@ -1,15 +1,15 @@
 {{-- Seção "Estratégia" do dashboard — macroplanejamentos + reuniões em acompanhamento --}}
-<div class="grid gap-4 mt-4" style="grid-template-columns: repeat(3, 1fr)">
+<div class="grid gap-4 mb-4" style="grid-template-columns: repeat(3, 1fr)">
 
     {{-- Clientes sem planejamento ativo --}}
-    <div>
-        <h4 class="text-xs font-bold mb-2" style="color:var(--text)">
+    <div class="card px-5 py-4">
+        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
             🚩 Sem planejamento ativo ({{ $clientsWithoutActivePlan->count() }})
         </h4>
         @if($clientsWithoutActivePlan->isEmpty())
             <p class="text-xs" style="color:var(--muted)">Todos os clientes ativos têm um ciclo em execução. 🎉</p>
         @else
-            <div class="flex flex-col gap-1.5">
+            <div class="flex flex-col gap-2">
                 @foreach($clientsWithoutActivePlan as $client)
                     <a href="{{ route('clients.show', [$client, 'tab' => 'planejamentos']) }}"
                        class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--red)"
@@ -22,14 +22,14 @@
     </div>
 
     {{-- Planejamentos vencendo em até 30 dias --}}
-    <div>
-        <h4 class="text-xs font-bold mb-2" style="color:var(--text)">
+    <div class="card px-5 py-4">
+        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
             ⏰ Vencendo em até 30 dias ({{ $plansExpiringSoon->count() }})
         </h4>
         @if($plansExpiringSoon->isEmpty())
             <p class="text-xs" style="color:var(--muted)">Nenhum planejamento vencendo em breve.</p>
         @else
-            <div class="flex flex-col gap-1.5">
+            <div class="flex flex-col gap-2">
                 @foreach($plansExpiringSoon as $plan)
                     @php $daysLeft = today()->diffInDays($plan->period_end, false); @endphp
                     <a href="{{ route('macroplans.edit', $plan) }}"
@@ -46,14 +46,14 @@
     </div>
 
     {{-- Planejamentos ativos --}}
-    <div>
-        <h4 class="text-xs font-bold mb-2" style="color:var(--text)">
+    <div class="card px-5 py-4">
+        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
             🟢 Planejamentos ativos ({{ $activePlans->count() }})
         </h4>
         @if($activePlans->isEmpty())
             <p class="text-xs" style="color:var(--muted)">Nenhum planejamento em execução no momento.</p>
         @else
-            <div class="flex flex-col gap-1.5">
+            <div class="flex flex-col gap-2">
                 @foreach($activePlans as $plan)
                     <a href="{{ route('macroplans.edit', $plan) }}"
                        class="block px-3 py-2 transition-colors" style="background:var(--s2)"
@@ -68,17 +68,17 @@
 
 </div>
 
-<div class="grid gap-4 mt-4" style="grid-template-columns: repeat(2, 1fr)">
+<div class="grid gap-4" style="grid-template-columns: repeat(2, 1fr)">
 
     {{-- Reuniões em Pós-Reunião --}}
-    <div>
-        <h4 class="text-xs font-bold mb-2" style="color:var(--text)">
+    <div class="card px-5 py-4">
+        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
             📝 Em Pós-Reunião ({{ $meetingsPosReuniao->count() }})
         </h4>
         @if($meetingsPosReuniao->isEmpty())
             <p class="text-xs" style="color:var(--muted)">Nenhuma reunião aguardando ata/follow-up.</p>
         @else
-            <div class="flex flex-col gap-1.5">
+            <div class="flex flex-col gap-2">
                 @foreach($meetingsPosReuniao as $meeting)
                     <a href="{{ route('meetings.show', $meeting) }}"
                        class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--orange)"
@@ -95,14 +95,14 @@
     </div>
 
     {{-- Reuniões Realizadas --}}
-    <div>
-        <h4 class="text-xs font-bold mb-2" style="color:var(--text)">
+    <div class="card px-5 py-4">
+        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
             ✔ Realizadas recentemente ({{ $meetingsRealizadas->count() }})
         </h4>
         @if($meetingsRealizadas->isEmpty())
             <p class="text-xs" style="color:var(--muted)">Nenhuma reunião realizada recentemente.</p>
         @else
-            <div class="flex flex-col gap-1.5">
+            <div class="flex flex-col gap-2">
                 @foreach($meetingsRealizadas as $meeting)
                     <a href="{{ route('meetings.show', $meeting) }}"
                        class="block px-3 py-2 transition-colors" style="background:var(--s2)"

@@ -125,19 +125,21 @@
             : ($userFunctionRoles ?? []);
     @endphp
     @if(!empty($dashboardRoles))
-        <div class="flex flex-col gap-5">
+        <div class="flex flex-col gap-6">
             @foreach($dashboardRoles as $role)
                 @if(isset(\App\Models\OrganizationUser::$functionRoles[$role]))
-                    <div class="card px-5 py-4">
-                        <h2 class="text-base font-bold mb-3" style="color:var(--text); border-bottom:1px solid var(--border2); padding-bottom:10px">
+                    <div>
+                        <h2 class="text-base font-bold mb-3" style="color:var(--text)">
                             {{ \App\Models\OrganizationUser::$functionRoles[$role] }}
                         </h2>
                         @if($role === 'estrategia')
                             @include('dashboard.sections.estrategia')
                         @else
-                            <p class="text-xs" style="color:var(--muted)">
-                                Painel de <strong>{{ \App\Models\OrganizationUser::$functionRoles[$role] }}</strong> em construção — em breve.
-                            </p>
+                            <div class="card px-5 py-4">
+                                <p class="text-xs" style="color:var(--muted)">
+                                    Painel de <strong>{{ \App\Models\OrganizationUser::$functionRoles[$role] }}</strong> em construção — em breve.
+                                </p>
+                            </div>
                         @endif
                     </div>
                 @endif
