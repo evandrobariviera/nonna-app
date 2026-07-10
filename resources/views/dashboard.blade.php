@@ -8,7 +8,7 @@
     @endphp
 
     {{-- ── LINHA 1: boas-vindas + sprint (70%) | agenda (30%) ── --}}
-    <div class="grid gap-4 mb-6" style="grid-template-columns: 7fr 3fr; align-items: start">
+    <div class="grid gap-4 mb-6" style="grid-template-columns: 7fr 3fr; align-items: stretch">
 
         {{-- Coluna 1 --}}
         <div class="flex flex-col gap-4">
@@ -44,7 +44,7 @@
         </div>
 
         {{-- Coluna 2: Agenda --}}
-        <div class="card px-5 py-4">
+        <div class="card px-5 py-4 flex flex-col" style="height:100%">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-bold" style="color:var(--text)">
                     📅 Agenda de Hoje ({{ $myMeetings->count() }})
