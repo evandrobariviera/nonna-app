@@ -6,6 +6,7 @@ use App\Models\AdCampaign;
 use App\Models\CampaignInsight;
 use App\Models\Client;
 use App\Models\ClientAdAccount;
+use App\Models\ClientAdBudget;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -129,16 +130,34 @@ class CampaignController extends Controller
             ->count();
 
         // Orçamento é mensal por natureza — sempre mês corrente, só respeita o cliente.
-        $budgetClients = $effectiveClientId ? Client::where('id', $effectiveClientId)->get() : Client::all();
+        // Duas queries agregadas no lugar de N+1 (uma por cliente) — antes isso rodava
+        // 2 a 4 consultas *por cliente* em loop, ficando bem lento com muitos clientes.
+        $budgetClientIds = $effectiveClientId ? collect([$effectiveClientId]) : Client::pluck('id');
+
+        $currentBudgetByClient = ClientAdBudget::whereIn('client_id', $budgetClientIds)
+            ->where('start_date', '<=', now())
+            ->orderByDesc('start_date')
+            ->orderByDesc('created_at')
+            ->get()
+            ->groupBy('client_id')
+            ->map(fn ($group) => $group->first());
+
+        $monthSpendByClient = DB::connection('pgsql')
+            ->table('ad_daily_snapshots as s')
+            ->join('client_ad_accounts as a', 'a.id', '=', 's.client_ad_account_id')
+            ->whereIn('a.client_id', $budgetClientIds)
+            ->where('s.entity_level', 'campaign')
+            ->where('s.snapshot_date', '>=', now()->startOfMonth()->toDateString())
+            ->groupBy('a.client_id')
+            ->selectRaw('a.client_id, COALESCE(SUM(s.spend), 0) as total_spend')
+            ->pluck('total_spend', 'client_id');
+
         $totalBudget = 0.0;
         $overBudgetCount = 0;
-        foreach ($budgetClients as $client) {
-            $budget = $client->currentAdBudget();
-            if (!$budget) {
-                continue;
-            }
+        foreach ($currentBudgetByClient as $clientIdForBudget => $budget) {
             $totalBudget += (float) $budget->monthly_budget;
-            if ($client->currentMonthAdSpend() > (float) $budget->monthly_budget) {
+            $spend = (float) ($monthSpendByClient[$clientIdForBudget] ?? 0);
+            if ($spend > (float) $budget->monthly_budget) {
                 $overBudgetCount++;
             }
         }

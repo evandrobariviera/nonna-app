@@ -26,6 +26,7 @@ class AdAccountController extends Controller
                 'platform'       => $account->platform,
                 'account_id'     => $account->account_id,
                 'account_name'   => $account->account_name,
+                'sheet_tab_name' => $account->sheet_tab_name,
                 'status'         => $account->status,
             ]);
 

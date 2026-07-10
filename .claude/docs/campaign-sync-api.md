@@ -45,11 +45,14 @@ Retorna as contas de anúncio ativas (`status = 'ativo'`) da organização do to
       "platform": "meta_ads",
       "account_id": "123456789012345",
       "account_name": "Conta Principal",
+      "sheet_tab_name": "Cliente X - Meta",
       "status": "ativo"
     }
   ]
 }
 ```
+
+`sheet_tab_name` (2026-07): cadastrado manualmente na aba "Contas de Anúncios" do cliente — é o nome da aba/planilha do Google Sheets (ex: exportação do Adveronix, que exige uma planilha por conta no plano gratuito) que contém os dados **daquela** conta. Existe pra resolver "dado o `account_id`, qual planilha eu abro?": o n8n chama `GET /api/ad-accounts`, e pra cada conta já sabe direto qual aba do Sheets ler — sem precisar de nenhuma lógica de busca adicional.
 
 **Atenção:** `platform` aqui vem no formato do cadastro (`meta_ads`, `google_ads`, `tiktok_ads`, `outros`) — é só informativo. Nos endpoints de sync abaixo, `platform` é enviado no formato **curto** (`meta` ou `google`), independente do valor acima.
 
@@ -172,6 +175,46 @@ Envia as métricas de um dia específico. Deve ser chamado **uma vez por dia por
 Payload fora do formato esperado retorna `422` no formato padrão do Laravel:
 ```json
 { "message": "The campaigns.0.external_id field is required.", "errors": { "campaigns.0.external_id": ["..."] } }
+```
+
+## Alternativa temporária: planilha (Google Sheets via Adveronix)
+
+Enquanto a aprovação de "Basic Access" da API do Google Ads não sai, uma ponte via planilha
+(Adveronix ou similar) alimentando os mesmos endpoints acima é uma opção válida — quando a API
+for aprovada, é só trocar a fonte (planilha → chamada direta à API), o schema do App não muda.
+
+**Estrutura de colunas necessária na planilha (uma linha por campanha por dia):**
+
+| Coluna | Mapeia para | Observação |
+|---|---|---|
+| Data | `snapshot_date` (`/sync/snapshots`) | formato `YYYY-MM-DD` |
+| ID da campanha | `external_id` / `entity_id` | o ID da campanha na plataforma (Meta/Google) — é a chave de idempotência, tem que ser estável |
+| Nome da campanha | `name` / `entity_name` | |
+| Status da campanha | `status` | `active`/`paused`/`deleted`/`archived` (Meta) — string livre, o App só espelha |
+| Gasto | `spend` | |
+| Receita/valor de conversão | `revenue` | usado pro cálculo de ROAS |
+| Impressões | `impressions` | |
+| Cliques | `clicks` | |
+| Conversões | `conversions` | usado pro cálculo de CPA |
+| Alcance | `reach` | opcional |
+
+O nome exato das colunas na planilha não importa — quem faz a ponte é o node de transformação no
+n8n (Set/Code node), então pode manter os nomes que o Adveronix já gera. O que importa é: **ter
+esses 9 pontos de dado por campanha por dia**, e o **ID da campanha ser estável** (não mudar entre
+exportações), porque é a chave que casa a métrica com a campanha nos dois endpoints.
+
+`objective`/`start_date`/`end_date`/`adsets`/`ads` de `/sync/campaigns` são opcionais — dá pra
+sincronizar só granularidade de campanha (sem adset/ad) se a planilha não tiver esse detalhe.
+
+**Fluxo do workflow (1x ao dia):**
+```
+Schedule Trigger (diário)
+  → GET /api/ad-accounts (pega client_ad_account_id + sheet_tab_name de cada conta)
+  → Loop por conta:
+      → Google Sheets node: abre a aba = sheet_tab_name da conta atual
+      → transforma as linhas pro formato acima
+      → POST /sync/campaigns (estrutura das campanhas encontradas)
+      → POST /sync/snapshots (métricas do dia)
 ```
 
 ## Workflow n8n (alternativa, não é mais o caminho recomendado)

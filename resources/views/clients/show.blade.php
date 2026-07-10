@@ -1098,6 +1098,14 @@
                                    class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
                         </div>
                         <div class="col-span-2">
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                Aba da Planilha de Relatório
+                            </label>
+                            <input type="text" name="sheet_tab_name"
+                                   placeholder="Ex: nome da aba no Google Sheets do Adveronix pra esta conta"
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                        </div>
+                        <div class="col-span-2">
                             <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Observações</label>
                             <input type="text" name="notes"
                                    placeholder="Ex: conta de remarketing, separada da principal..."
@@ -1133,6 +1141,7 @@
                                 <th>Plataforma</th>
                                 <th>ID da Conta</th>
                                 <th>Nome</th>
+                                <th>Aba Planilha</th>
                                 <th>Status</th>
                                 <th>Obs</th>
                                 <th></th>
@@ -1176,6 +1185,17 @@
                                         <td>
                                             <input type="text" name="account_name" form="edit-account-{{ $account->id }}"
                                                    value="{{ $account->account_name }}"
+                                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-xs text-[var(--text)] px-2 py-1.5 focus:outline-none focus:border-[var(--purple)]">
+                                        </td>
+                                    </template>
+
+                                    <template x-if="editId !== '{{ $account->id }}'">
+                                        <td class="text-sm text-[var(--muted2)]">{{ $account->sheet_tab_name ?: '—' }}</td>
+                                    </template>
+                                    <template x-if="editId === '{{ $account->id }}'">
+                                        <td>
+                                            <input type="text" name="sheet_tab_name" form="edit-account-{{ $account->id }}"
+                                                   value="{{ $account->sheet_tab_name }}"
                                                    class="w-full bg-[var(--s3)] border border-[var(--border2)] text-xs text-[var(--text)] px-2 py-1.5 focus:outline-none focus:border-[var(--purple)]">
                                         </td>
                                     </template>

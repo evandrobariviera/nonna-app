@@ -18,6 +18,7 @@ class ClientAdAccount extends Model
         'platform_custom',
         'account_id',
         'account_name',
+        'sheet_tab_name',
         'status',
         'notes',
         'created_by',

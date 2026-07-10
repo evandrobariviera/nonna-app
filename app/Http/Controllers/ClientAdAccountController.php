@@ -16,6 +16,7 @@ class ClientAdAccountController extends Controller
             'platform_custom' => 'required_if:platform,outros|nullable|string|max:100',
             'account_id'      => 'required|string|max:100',
             'account_name'    => 'nullable|string|max:150',
+            'sheet_tab_name'  => 'nullable|string|max:150',
             'status'          => 'required|in:ativo,pausado,suspenso',
             'notes'           => 'nullable|string',
         ]);
@@ -38,6 +39,7 @@ class ClientAdAccountController extends Controller
             'platform_custom' => 'required_if:platform,outros|nullable|string|max:100',
             'account_id'      => 'required|string|max:100',
             'account_name'    => 'nullable|string|max:150',
+            'sheet_tab_name'  => 'nullable|string|max:150',
             'status'          => 'required|in:ativo,pausado,suspenso',
             'notes'           => 'nullable|string',
         ]);
