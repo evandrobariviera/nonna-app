@@ -9,9 +9,31 @@ use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class SprintController extends Controller
 {
+    /**
+     * Regra de negócio: só pode existir 1 sprint ativa por vez. Futuramente isso vira
+     * automático por data; por enquanto é travado manualmente aqui.
+     */
+    private function assertSingleActiveSprint(string $status, ?string $exceptSprintId = null): void
+    {
+        if ($status !== 'active') {
+            return;
+        }
+
+        $existing = Sprint::where('status', 'active')
+            ->when($exceptSprintId, fn ($q) => $q->where('id', '!=', $exceptSprintId))
+            ->first();
+
+        if ($existing) {
+            throw ValidationException::withMessages([
+                'status' => "Já existe uma sprint ativa: \"{$existing->title}\". Encerre ou reabra ela antes de ativar outra.",
+            ]);
+        }
+    }
+
     public function index()
     {
         $sprints = Sprint::withCount('tasks')
@@ -36,6 +58,8 @@ class SprintController extends Controller
             'ends_at'    => 'required|date|after_or_equal:starts_at',
             'status'     => 'required|in:planning,active,closed',
         ]);
+
+        $this->assertSingleActiveSprint($data['status']);
 
         Sprint::create([...$data, 'created_by' => Auth::id()]);
 
@@ -105,6 +129,8 @@ class SprintController extends Controller
             'status'    => 'required|in:planning,active,closed',
         ]);
 
+        $this->assertSingleActiveSprint($data['status'], $sprint->id);
+
         $sprint->update($data);
 
         return redirect()->route('sprints.show', $sprint)->with('success', 'Sprint atualizada.');
@@ -112,6 +138,8 @@ class SprintController extends Controller
 
     public function lock(Sprint $sprint)
     {
+        $this->assertSingleActiveSprint('active', $sprint->id);
+
         $sprint->update([
             'locked_at' => now(),
             'locked_by' => Auth::id(),

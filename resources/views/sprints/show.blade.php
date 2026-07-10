@@ -2,53 +2,109 @@
     <x-slot name="header">{{ $sprint->title }}</x-slot>
 
     {{-- HEADER DA SPRINT --}}
-    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <div class="flex items-center gap-3 flex-wrap">
-            <span class="badge badge-{{ $sprint->statusColor() }}">{{ $sprint->statusLabel() }}</span>
-            <span class="text-xs font-mono" style="color:var(--muted)">
-                {{ $sprint->starts_at->format('d/m/Y') }} → {{ $sprint->ends_at->format('d/m/Y') }}
-            </span>
-            @if($sprint->isLocked())
-                <span class="text-xs font-mono" style="color:var(--purple)">
-                    🔒 Travada por {{ $sprint->lockedBy?->name }} em {{ $sprint->locked_at->format('d/m H:i') }}
-                </span>
-            @endif
+    <div x-data="{ editing: {{ $errors->any() ? 'true' : 'false' }} }" class="mb-6">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+            <template x-if="!editing">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <span class="badge badge-{{ $sprint->statusColor() }}">{{ $sprint->statusLabel() }}</span>
+                    <span class="text-xs font-mono" style="color:var(--muted)">
+                        {{ $sprint->starts_at->format('d/m/Y') }} → {{ $sprint->ends_at->format('d/m/Y') }}
+                    </span>
+                    @if($sprint->isLocked())
+                        <span class="text-xs font-mono" style="color:var(--purple)">
+                            🔒 Travada por {{ $sprint->lockedBy?->name }} em {{ $sprint->locked_at->format('d/m H:i') }}
+                        </span>
+                    @endif
+                </div>
+            </template>
+
+            {{-- Ações da sprint --}}
+            <div class="flex items-center gap-2" x-show="!editing">
+                <button type="button" @click="editing = true"
+                    class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest"
+                    style="border:1px solid var(--border2); color:var(--muted)">
+                    ✎ Editar
+                </button>
+                @if($sprint->status === 'planning')
+                    <form method="POST" action="{{ route('sprints.lock', $sprint) }}">
+                        @csrf
+                        <button type="submit"
+                            class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest"
+                            style="background:var(--orange); color:#fff"
+                            onclick="return confirm('Travar sprint e iniciar execução?')">
+                            🔒 Travar Sprint
+                        </button>
+                    </form>
+                @elseif($sprint->status === 'active')
+                    <form method="POST" action="{{ route('sprints.unlock', $sprint) }}">
+                        @csrf
+                        <button type="submit"
+                            class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest"
+                            style="border:1px solid var(--border2); color:var(--muted)"
+                            onclick="return confirm('Reabrir sprint para planejamento?')">
+                            Reabrir
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ route('sprints.close', $sprint) }}">
+                        @csrf
+                        <button type="submit"
+                            class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest"
+                            style="border:1px solid var(--green); color:var(--green)"
+                            onclick="return confirm('Encerrar sprint? Tarefas pendentes voltam ao backlog.')">
+                            Encerrar Sprint
+                        </button>
+                    </form>
+                @endif
+                <a href="{{ route('sprints.index') }}" class="text-xs font-mono" style="color:var(--muted)">← Sprints</a>
+            </div>
         </div>
 
-        {{-- Ações da sprint --}}
-        <div class="flex items-center gap-2">
-            @if($sprint->status === 'planning')
-                <form method="POST" action="{{ route('sprints.lock', $sprint) }}">
-                    @csrf
-                    <button type="submit"
-                        class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest"
-                        style="background:var(--orange); color:#fff"
-                        onclick="return confirm('Travar sprint e iniciar execução?')">
-                        🔒 Travar Sprint
-                    </button>
-                </form>
-            @elseif($sprint->status === 'active')
-                <form method="POST" action="{{ route('sprints.unlock', $sprint) }}">
-                    @csrf
-                    <button type="submit"
-                        class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest"
-                        style="border:1px solid var(--border2); color:var(--muted)"
-                        onclick="return confirm('Reabrir sprint para planejamento?')">
-                        Reabrir
-                    </button>
-                </form>
-                <form method="POST" action="{{ route('sprints.close', $sprint) }}">
-                    @csrf
-                    <button type="submit"
-                        class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest"
-                        style="border:1px solid var(--green); color:var(--green)"
-                        onclick="return confirm('Encerrar sprint? Tarefas pendentes voltam ao backlog.')">
-                        Encerrar Sprint
-                    </button>
-                </form>
-            @endif
-            <a href="{{ route('sprints.index') }}" class="text-xs font-mono" style="color:var(--muted)">← Sprints</a>
-        </div>
+        {{-- Formulário de edição --}}
+        <template x-if="editing">
+            <form method="POST" action="{{ route('sprints.update', $sprint) }}" class="card px-5 py-4 mt-3 flex items-end gap-3 flex-wrap">
+                @csrf @method('PATCH')
+                <div class="flex-1 min-w-48">
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Título</label>
+                    <input type="text" name="title" required value="{{ old('title', $sprint->title) }}"
+                        class="w-full px-3 py-2 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    @error('title') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Início</label>
+                    <input type="date" name="starts_at" required value="{{ old('starts_at', $sprint->starts_at->format('Y-m-d')) }}"
+                        class="px-3 py-2 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    @error('starts_at') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Fim</label>
+                    <input type="date" name="ends_at" required value="{{ old('ends_at', $sprint->ends_at->format('Y-m-d')) }}"
+                        class="px-3 py-2 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    @error('ends_at') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Status</label>
+                    <select name="status" class="px-3 py-2 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        @foreach(\App\Models\Sprint::$statuses as $key => $s)
+                            <option value="{{ $key }}" {{ old('status', $sprint->status) === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
+                        @endforeach
+                    </select>
+                    @error('status') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
+                </div>
+                <button type="submit"
+                    class="px-5 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                    style="background:var(--purple)">
+                    Salvar
+                </button>
+                <button type="button" @click="editing = false"
+                    class="px-4 py-2 text-xs font-mono" style="color:var(--muted)">
+                    Cancelar
+                </button>
+            </form>
+        </template>
     </div>
 
     @if(session('success'))
