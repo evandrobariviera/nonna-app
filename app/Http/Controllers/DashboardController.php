@@ -62,9 +62,14 @@ class DashboardController extends Controller
         $meetingsRealizadas = Meeting::where('status', 'realizada')
             ->with('client')->orderByDesc('scheduled_at')->limit(8)->get();
 
-        // Cliente ativo cujo macroplanejamento mais recente não está "em execução"
-        // (nunca teve um, ou o último ciclo já foi encerrado/ainda não começou).
+        // Cliente ativo, com Tráfego Pago ou Consultoria Estratégica contratado, cujo
+        // macroplanejamento mais recente não está "em execução" (nunca teve um, ou o
+        // último ciclo já foi encerrado/ainda não começou).
         $clientsWithoutActivePlan = Client::where('status', 'active')
+            ->where(function ($q) {
+                $q->whereJsonContains('contracted_services', 'trafego')
+                  ->orWhereJsonContains('contracted_services', 'consultoria');
+            })
             ->whereDoesntHave('macroplans', fn ($q) => $q->where('status', 'em_execucao'))
             ->orderBy('company_name')
             ->get();
