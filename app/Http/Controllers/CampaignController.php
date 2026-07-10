@@ -52,9 +52,12 @@ class CampaignController extends Controller
         }
         $adAccountIds = $accountsQuery->pluck('id');
 
-        // Opções do filtro de campanha — restritas ao cliente selecionado (se houver)
+        // Opções do filtro de campanha — restritas ao cliente/plataforma/status
+        // selecionados, pra o próprio dropdown de campanha já vir dinâmico.
         $campaignOptions = $adAccountIds->isEmpty() ? collect() : AdCampaign::whereIn('client_ad_account_id', $adAccountIds)
             ->with('adAccount.client:id,company_name')
+            ->when($platform, fn ($q) => $q->where('platform', $platform))
+            ->when($statusFilter !== '', fn ($q) => $q->where('status', $statusFilter))
             ->orderBy('name')
             ->get(['id', 'name', 'client_ad_account_id']);
 

@@ -116,7 +116,7 @@
 
     {{-- Filtros --}}
     <form method="GET" action="{{ route('campaigns.index') }}" class="flex flex-wrap items-center gap-3 mb-5">
-        <select name="client_id"
+        <select name="client_id" onchange="this.form.ad_campaign_id.value=''; this.form.submit()"
             style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
             <option value="">Todos os clientes</option>
             @foreach($clients as $c)
@@ -134,14 +134,14 @@
             @endforeach
         </select>
 
-        <select name="platform"
+        <select name="platform" onchange="this.form.ad_campaign_id.value=''; this.form.submit()"
             style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
             <option value="">Todas as plataformas</option>
             <option value="meta" {{ $platform === 'meta' ? 'selected' : '' }}>Meta Ads</option>
             <option value="google" {{ $platform === 'google' ? 'selected' : '' }}>Google Ads</option>
         </select>
 
-        <select name="status"
+        <select name="status" onchange="this.form.ad_campaign_id.value=''; this.form.submit()"
             style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
             <option value="" {{ $statusFilter === '' ? 'selected' : '' }}>Todos os status</option>
             @foreach(\App\Http\Controllers\CampaignController::$campaignStatuses as $key => $label)
