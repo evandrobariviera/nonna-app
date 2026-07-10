@@ -152,7 +152,7 @@
                                 $statusUrl  = $task->is_ticket ? route('tickets.update-status', $task) : route('tasks.update-status-direct', $task);
                                 $thumbUrl   = $task->firstImageAttachmentUrl();
                             @endphp
-                            <div class="card px-0 py-0 relative overflow-hidden" x-data="{ statusOpen: false }"
+                            <div class="card px-0 py-0 relative overflow-hidden" x-data="{ statusOpen: false, moveStyle: '' }"
                                  style="{{ $task->isOverdue() ? 'border-left:3px solid var(--red)' : '' }}; cursor:pointer"
                                  @click="selectMode
                                      ? (selected.includes('{{ $task->id }}') ? selected = selected.filter(id => id !== '{{ $task->id }}') : selected.push('{{ $task->id }}'))
@@ -213,7 +213,7 @@
 
                                     {{-- Mover status + remover da sprint --}}
                                     <div class="flex items-center gap-1.5 pt-2 relative" style="border-top:1px solid var(--border2)" @click.stop>
-                                        <button x-ref="moveBtn" @click="statusOpen = !statusOpen" @click.stop type="button"
+                                        <button @click="statusOpen = !statusOpen; moveStyle = dropdownStyle($el, 'top-left')" @click.stop type="button"
                                             class="text-xs px-2 py-0.5 font-mono flex items-center gap-1"
                                             style="border:1px solid var(--border2); color:var(--muted)">
                                             Mover <span style="opacity:.7">▾</span>
@@ -222,7 +222,7 @@
                                         <template x-teleport="body">
                                             <div x-show="statusOpen" @click.outside="statusOpen = false" x-cloak
                                                  class="rounded shadow-lg py-1"
-                                                 :style="dropdownStyle($refs.moveBtn, 'top-left') + 'background:var(--s1); border:1px solid var(--border2); min-width:190px'">
+                                                 :style="moveStyle + 'background:var(--s1); border:1px solid var(--border2); min-width:190px'">
                                                 @foreach(\App\Models\Task::$statuses as $targetKey => $targetMeta)
                                                     @if($targetKey !== $statusKey)
                                                         <form method="POST" action="{{ $statusUrl }}">

@@ -16,7 +16,7 @@
 @endphp
 
 <tr class="{{ $priorityClass }} {{ $task->isOverdue() ? 'row-overdue' : '' }}"
-    x-show="groupOpen" x-data="{ statusOpen: false, situacaoOpen: false }">
+    x-show="groupOpen" x-data="{ statusOpen: false, situacaoOpen: false, statusStyle: '', situacaoStyle: '' }">
 
     {{-- Checkbox --}}
     <td class="text-center">
@@ -112,7 +112,7 @@
 
     {{-- Status (Monday fill clicável + dropdown) --}}
     <td class="monday-fill-td relative" style="width:140px">
-        <button x-ref="statusBtn" @click="statusOpen = !statusOpen; situacaoOpen = false" type="button"
+        <button @click="statusOpen = !statusOpen; situacaoOpen = false; statusStyle = dropdownStyle($el, 'bottom-left')" type="button"
                 style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
                        gap:4px; background:{{ $task->statusHex() }}; color:#fff; font-size:11px;
                        font-weight:700; cursor:pointer; border:none; overflow:hidden">
@@ -123,7 +123,7 @@
         <template x-teleport="body">
             <div x-show="statusOpen" @click.outside="statusOpen = false" x-cloak
                  class="rounded shadow-lg py-1"
-                 :style="dropdownStyle($refs.statusBtn, 'bottom-left') + 'background:var(--s1); border:1px solid var(--border2); min-width:190px'">
+                 :style="statusStyle + 'background:var(--s1); border:1px solid var(--border2); min-width:190px'">
                 @foreach(\App\Models\Task::$statuses as $key => $s)
                     <form method="POST" action="{{ $statusUrl }}">
                         @csrf @method('PATCH')
@@ -144,7 +144,7 @@
 
     {{-- Situação (Monday fill clicável + dropdown) --}}
     <td class="{{ $hasSituation ? 'monday-fill-td' : '' }} relative" style="width:150px">
-        <button x-ref="situacaoBtn" @click="situacaoOpen = !situacaoOpen; statusOpen = false" type="button"
+        <button @click="situacaoOpen = !situacaoOpen; statusOpen = false; situacaoStyle = dropdownStyle($el, 'bottom-left')" type="button"
                 style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
                        gap:4px; {{ $hasSituation ? 'background:' . $task->situationColor() . '; color:#fff;' : 'background:transparent; color:var(--muted);' }}
                        font-size:11px; font-weight:{{ $hasSituation ? '700' : '400' }};
@@ -158,7 +158,7 @@
         <template x-teleport="body">
             <div x-show="situacaoOpen" @click.outside="situacaoOpen = false" x-cloak
                  class="rounded shadow-lg py-1"
-                 :style="dropdownStyle($refs.situacaoBtn, 'bottom-left') + 'background:var(--s1); border:1px solid var(--border2); min-width:210px'">
+                 :style="situacaoStyle + 'background:var(--s1); border:1px solid var(--border2); min-width:210px'">
                 @foreach(\App\Models\Task::$situations as $key => $label)
                     <form method="POST" action="{{ $situacaoUrl }}">
                         @csrf @method('PATCH')
@@ -185,7 +185,7 @@
     <td style="width:110px">
         <div class="row-actions flex items-center gap-1.5">
             @if($sprints->count() > 0)
-                <div x-data="{ sprintOpen: false }" class="relative flex items-stretch">
+                <div x-data="{ sprintOpen: false, sprintStyle: '' }" class="relative flex items-stretch">
                     @if($activeSprint)
                         <form method="POST" action="{{ route('sprints.add-task', [$activeSprint, $task]) }}">
                             @csrf
@@ -198,7 +198,7 @@
                         </form>
                     @endif
                     @if($sprints->count() > 1 || !$activeSprint)
-                        <button x-ref="sprintBtn" @click="sprintOpen = !sprintOpen" @click.stop type="button"
+                        <button @click="sprintOpen = !sprintOpen; sprintStyle = dropdownStyle($el, 'top-right')" @click.stop type="button"
                             class="btn btn-xs px-1.5"
                             style="background:var(--green); border-color:var(--green); color:#fff;
                                    border-radius:{{ $activeSprint ? '0 6px 6px 0' : '6px' }};
@@ -208,7 +208,7 @@
                         <template x-teleport="body">
                             <div x-show="sprintOpen" @click.outside="sprintOpen = false" x-cloak
                                  class="py-1"
-                                 :style="dropdownStyle($refs.sprintBtn, 'top-right') + 'background:var(--s1); border:1px solid var(--border2); min-width:180px; box-shadow:0 4px 16px rgba(0,0,0,.15)'">
+                                 :style="sprintStyle + 'background:var(--s1); border:1px solid var(--border2); min-width:180px; box-shadow:0 4px 16px rgba(0,0,0,.15)'">
                                 <p class="px-3 py-1.5 text-xs font-semibold uppercase" style="color:var(--muted); letter-spacing:.08em">Enviar para</p>
                                 @foreach($sprints as $sp)
                                     <form method="POST" action="{{ route('sprints.add-task', [$sp, $task]) }}">
