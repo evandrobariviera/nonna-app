@@ -20,7 +20,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('clients.update', $client) }}">
+        <form method="POST" action="{{ route('clients.update', $client) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             @include('clients.partials.form')

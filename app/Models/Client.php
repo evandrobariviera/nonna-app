@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Client extends Model
@@ -20,6 +21,8 @@ class Client extends Model
     protected $fillable = [
         'clickup_task_id',
         'company_name',
+        'logo_path',
+        'logo_disk',
         'tax_id',
         'website',
         'segment',
@@ -118,6 +121,19 @@ class Client extends Model
     public function statusColor(): string
     {
         return self::$statuses[$this->status]['color'] ?? 'muted';
+    }
+
+    public function logoUrl(): ?string
+    {
+        if (!$this->logo_path) {
+            return null;
+        }
+
+        if ($this->logo_disk === 'r2') {
+            return Storage::disk('r2')->temporaryUrl($this->logo_path, now()->addHours(24));
+        }
+
+        return Storage::disk($this->logo_disk)->url($this->logo_path);
     }
 
     public function isRegistrationComplete(): bool

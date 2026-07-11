@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -25,6 +26,7 @@ class OrganizationMemberController extends Controller
             'role'           => ['required', 'in:admin,manager,member'],
             'function_roles' => ['nullable', 'array'],
             'function_roles.*' => ['in:' . implode(',', $validFunctionRoles)],
+            'avatar'         => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:3072'],
         ]);
 
         $user = User::create([
@@ -32,6 +34,12 @@ class OrganizationMemberController extends Controller
             'email'    => $data['email'],
             'password' => Hash::make($data['password']),
         ]);
+
+        if ($request->hasFile('avatar')) {
+            $disk = config('filesystems.default', 'r2');
+            $path = $request->file('avatar')->store("avatars/{$user->id}", $disk);
+            $user->update(['avatar_path' => $path, 'avatar_disk' => $disk]);
+        }
 
         $org->users()->attach($user->id, [
             'id'             => Str::uuid(),
@@ -57,12 +65,28 @@ class OrganizationMemberController extends Controller
             'role'             => ['required', 'in:admin,manager,member'],
             'function_roles'   => ['nullable', 'array'],
             'function_roles.*' => ['in:' . implode(',', $validFunctionRoles)],
+            'avatar'           => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:3072'],
+            'remove_avatar'    => ['nullable', 'boolean'],
         ]);
 
         $updateData = ['name' => $data['name'], 'email' => $data['email']];
         if (!empty($data['password'])) {
             $updateData['password'] = Hash::make($data['password']);
         }
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar_path) {
+                Storage::disk($user->avatar_disk)->delete($user->avatar_path);
+            }
+            $disk = config('filesystems.default', 'r2');
+            $updateData['avatar_path'] = $request->file('avatar')->store("avatars/{$user->id}", $disk);
+            $updateData['avatar_disk'] = $disk;
+        } elseif ($request->boolean('remove_avatar') && $user->avatar_path) {
+            Storage::disk($user->avatar_disk)->delete($user->avatar_path);
+            $updateData['avatar_path'] = null;
+            $updateData['avatar_disk'] = null;
+        }
+
         $user->update($updateData);
 
         $org->users()->updateExistingPivot($user->id, [

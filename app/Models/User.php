@@ -10,12 +10,26 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['name', 'email', 'password', 'is_super_admin', 'client_id'])]
+#[Fillable(['name', 'email', 'password', 'is_super_admin', 'client_id', 'avatar_path', 'avatar_disk'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
+
+    public function avatarUrl(): ?string
+    {
+        if (!$this->avatar_path) {
+            return null;
+        }
+
+        if ($this->avatar_disk === 'r2') {
+            return Storage::disk('r2')->temporaryUrl($this->avatar_path, now()->addHours(24));
+        }
+
+        return Storage::disk($this->avatar_disk)->url($this->avatar_path);
+    }
 
     protected function casts(): array
     {

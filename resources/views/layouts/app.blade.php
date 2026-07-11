@@ -96,10 +96,7 @@
 
             {{-- Usuário logado --}}
             <div class="flex items-center gap-3 px-5 py-4 border-b" style="border-color:var(--border)">
-                <div class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-black text-white flex-shrink-0"
-                     style="background: var(--grad)">
-                    {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
-                </div>
+                <x-user-avatar :user="Auth::user()" size="8" />
                 <div class="min-w-0">
                     <p class="text-xs font-bold truncate" style="color:var(--text)">{{ Auth::user()->name }}</p>
                     <p class="text-xs truncate" style="color:var(--muted); font-size:11px">{{ Auth::user()->email }}</p>

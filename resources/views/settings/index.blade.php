@@ -521,14 +521,14 @@
              x-data="{
                 modal: false,
                 editing: null,
-                form: { name: '', email: '', password: '', role: 'member', function_roles: [] },
+                form: { name: '', email: '', password: '', role: 'member', function_roles: [], avatar_url: null, remove_avatar: false },
                 open(member) {
                     if (member) {
                         this.editing = member;
-                        this.form = { name: member.name, email: member.email, password: '', role: member.role, function_roles: member.function_roles || [] };
+                        this.form = { name: member.name, email: member.email, password: '', role: member.role, function_roles: member.function_roles || [], avatar_url: member.avatar_url || null, remove_avatar: false };
                     } else {
                         this.editing = null;
-                        this.form = { name: '', email: '', password: '', role: 'member', function_roles: [] };
+                        this.form = { name: '', email: '', password: '', role: 'member', function_roles: [], avatar_url: null, remove_avatar: false };
                     }
                     this.modal = true;
                 },
@@ -574,10 +574,7 @@
                             <tr style="border-bottom:1px solid var(--border2)">
                                 <td class="px-5 py-3.5">
                                     <div class="flex items-center gap-3">
-                                        <div class="h-7 w-7 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0"
-                                             style="background:var(--grad)">
-                                            {{ strtoupper(substr($member->name, 0, 2)) }}
-                                        </div>
+                                        <x-user-avatar :user="$member" size="7" />
                                         <div>
                                             <span class="font-semibold" style="color:var(--text)">{{ $member->name }}</span>
                                             @if($isSelf)
@@ -599,7 +596,7 @@
                                     @if(!$isOrgOwner)
                                         <div class="flex items-center gap-3 justify-end">
                                             <button type="button"
-                                                    @click="open({{ json_encode(['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'role' => $role, 'function_roles' => $member->pivot->function_roles ?? []]) }})"
+                                                    @click="open({{ json_encode(['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'role' => $role, 'function_roles' => $member->pivot->function_roles ?? [], 'avatar_url' => $member->avatarUrl()]) }})"
                                                     class="text-xs font-semibold transition-colors"
                                                     style="color:var(--muted)"
                                                     onmouseover="this.style.color='var(--purple)'"
@@ -649,9 +646,23 @@
                     <form :action="editing
                               ? '{{ url('configuracoes/equipe') }}/' + editing.id
                               : '{{ route('settings.members.store') }}'"
-                          method="POST" class="space-y-4">
+                          method="POST" enctype="multipart/form-data" class="space-y-4">
                         @csrf
                         <input type="hidden" name="_method" value="PATCH" :disabled="!editing">
+
+                        <div>
+                            <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Foto de Perfil</label>
+                            <div class="flex items-center gap-3">
+                                <img x-show="form.avatar_url" :src="form.avatar_url" x-cloak
+                                     class="h-10 w-10 rounded-full object-cover flex-shrink-0">
+                                <input type="file" name="avatar" accept="image/png,image/jpeg,image/webp"
+                                       class="flex-1 text-xs" style="color:var(--muted)">
+                            </div>
+                            <label x-show="editing && form.avatar_url" x-cloak class="flex items-center gap-2 mt-2 cursor-pointer">
+                                <input type="checkbox" name="remove_avatar" value="1" x-model="form.remove_avatar">
+                                <span class="text-xs" style="color:var(--muted)">Remover foto atual</span>
+                            </label>
+                        </div>
 
                         <div>
                             <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Nome</label>

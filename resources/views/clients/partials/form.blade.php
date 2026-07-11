@@ -17,6 +17,24 @@ $selectStyle = "background:var(--s1); border:1px solid var(--border2); color:var
     <div class="p-6 grid grid-cols-1 gap-5 md:grid-cols-2">
 
         <div class="md:col-span-2">
+            <label class="stat-label block mb-2">Logomarca</label>
+            <div class="flex items-center gap-3">
+                @if($isEdit && $client->logoUrl())
+                    <img src="{{ $client->logoUrl() }}" alt="Logo" class="h-12 w-12 rounded-lg object-cover flex-shrink-0" style="border:1px solid var(--border2)">
+                @endif
+                <input type="file" name="logo" accept="image/png,image/jpeg,image/webp"
+                    class="flex-1 text-sm" style="color:var(--muted2)">
+            </div>
+            @error('logo') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
+            @if($isEdit && $client->logoUrl())
+                <label class="flex items-center gap-2 mt-2 cursor-pointer">
+                    <input type="checkbox" name="remove_logo" value="1">
+                    <span class="text-xs" style="color:var(--muted)">Remover logomarca atual</span>
+                </label>
+            @endif
+        </div>
+
+        <div class="md:col-span-2">
             <label class="stat-label block mb-2">Razão Social <span style="color:var(--orange)">*</span></label>
             <input type="text" name="company_name" value="{{ old('company_name', $client->company_name) }}"
                 placeholder="Nome jurídico da empresa"

@@ -196,10 +196,7 @@
                         <ul class="space-y-2">
                             @foreach($meeting->participants as $user)
                                 <li class="flex items-center gap-3">
-                                    <div class="flex h-7 w-7 items-center justify-center rounded-full text-xs font-black text-white flex-shrink-0"
-                                         style="background:var(--grad)">
-                                        {{ strtoupper(substr($user->name, 0, 2)) }}
-                                    </div>
+                                    <x-user-avatar :user="$user" size="7" />
                                     <span class="text-sm" style="color:var(--text)">{{ $user->name }}</span>
                                 </li>
                             @endforeach

@@ -387,10 +387,7 @@
                         <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Responsável</p>
                         @if($responsavel)
                             <div class="flex items-center gap-2.5">
-                                <div class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0"
-                                     style="background:var(--orange)">
-                                    {{ strtoupper(substr($responsavel->name, 0, 2)) }}
-                                </div>
+                                <x-user-avatar :user="$responsavel" size="8" color="var(--orange)" />
                                 <p class="text-sm font-semibold" style="color:var(--text)">{{ $responsavel->name }}</p>
                             </div>
                         @else
@@ -402,10 +399,7 @@
                         <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Executor</p>
                         @if($executor)
                             <div class="flex items-center gap-2.5">
-                                <div class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0"
-                                     style="background:var(--purple)">
-                                    {{ strtoupper(substr($executor->name, 0, 2)) }}
-                                </div>
+                                <x-user-avatar :user="$executor" size="8" color="var(--purple)" />
                                 <p class="text-sm font-semibold" style="color:var(--text)">{{ $executor->name }}</p>
                             </div>
                         @else
@@ -419,10 +413,7 @@
                             <div class="flex flex-col gap-2">
                                 @foreach($observers as $obs)
                                     <div class="flex items-center gap-2.5">
-                                        <div class="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0"
-                                             style="background:var(--slate, #64748b)">
-                                            {{ strtoupper(substr($obs->name, 0, 2)) }}
-                                        </div>
+                                        <x-user-avatar :user="$obs" size="7" color="var(--slate, #64748b)" />
                                         <p class="text-sm" style="color:var(--muted2)">{{ $obs->name }}</p>
                                     </div>
                                 @endforeach
@@ -708,10 +699,7 @@
                     <div class="flex flex-col mb-6">
                         @foreach($task->comments as $comment)
                             <div class="flex gap-4 py-4" style="{{ !$loop->last ? 'border-bottom:1px solid var(--border2)' : '' }}">
-                                <div class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0 mt-0.5"
-                                     style="background:var(--grad)">
-                                    {{ strtoupper(substr($comment->user->name, 0, 2)) }}
-                                </div>
+                                <x-user-avatar :user="$comment->user" size="8" class="mt-0.5" />
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-baseline gap-3 mb-1.5 flex-wrap">
                                         <span class="text-sm font-semibold" style="color:var(--text)">{{ $comment->user->name }}</span>
@@ -744,10 +732,7 @@
                       @submit="if (!body.trim()) { $event.preventDefault(); }">
                     @csrf
                     <div class="flex gap-3">
-                        <div class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0 mt-0.5"
-                             style="background:var(--grad)">
-                            {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
-                        </div>
+                        <x-user-avatar :user="auth()->user()" size="8" class="mt-0.5" />
                         <div class="flex-1">
                             <textarea
                                 name="body"

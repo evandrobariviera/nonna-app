@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -35,6 +36,48 @@ class ProfileController extends Controller
         $request->user()->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    /**
+     * Upload/substitui a foto de perfil do usuário logado.
+     */
+    public function updateAvatar(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,jpg,png,webp|max:3072',
+        ]);
+
+        $user = $request->user();
+        $file = $request->file('avatar');
+        $disk = config('filesystems.default', 'r2');
+
+        if ($user->avatar_path) {
+            Storage::disk($user->avatar_disk)->delete($user->avatar_path);
+        }
+
+        $path = $file->store("avatars/{$user->id}", $disk);
+
+        $user->update([
+            'avatar_path' => $path,
+            'avatar_disk' => $disk,
+        ]);
+
+        return Redirect::route('profile.edit')->with('status', 'avatar-updated');
+    }
+
+    /**
+     * Remove a foto de perfil do usuário logado.
+     */
+    public function destroyAvatar(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($user->avatar_path) {
+            Storage::disk($user->avatar_disk)->delete($user->avatar_path);
+            $user->update(['avatar_path' => null, 'avatar_disk' => null]);
+        }
+
+        return Redirect::route('profile.edit')->with('status', 'avatar-removed');
     }
 
     /**

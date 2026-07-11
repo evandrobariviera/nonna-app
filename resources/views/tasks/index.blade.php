@@ -174,10 +174,7 @@
                                 <div class="flex items-center gap-1.5 flex-wrap">
                                     @foreach($task->executors as $exec)
                                         <div class="flex items-center gap-1.5">
-                                            <div class="flex h-6 w-6 items-center justify-center rounded-full text-white flex-shrink-0"
-                                                 style="background:var(--purple); font-size:10px; font-weight:700">
-                                                {{ strtoupper(substr($exec->name, 0, 2)) }}
-                                            </div>
+                                            <x-user-avatar :user="$exec" size="6" color="var(--purple)" />
                                             <span class="text-sm" style="color:var(--text)">
                                                 {{ explode(' ', $exec->name)[0] }}
                                             </span>
@@ -186,10 +183,7 @@
                                 </div>
                             @elseif($task->executor)
                                 <div class="flex items-center gap-1.5">
-                                    <div class="flex h-6 w-6 items-center justify-center rounded-full text-white flex-shrink-0"
-                                         style="background:var(--slate); font-size:10px; font-weight:700">
-                                        {{ strtoupper(substr($task->executor->name, 0, 2)) }}
-                                    </div>
+                                    <x-user-avatar :user="$task->executor" size="6" color="var(--slate)" />
                                     <span class="text-sm" style="color:var(--text)">
                                         {{ explode(' ', $task->executor->name)[0] }}
                                     </span>

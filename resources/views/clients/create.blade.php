@@ -12,7 +12,7 @@
             <span class="text-xs font-semibold" style="color:var(--text)">Novo Cliente</span>
         </div>
 
-        <form method="POST" action="{{ route('clients.store') }}">
+        <form method="POST" action="{{ route('clients.store') }}" enctype="multipart/form-data">
             @csrf
             @include('clients.partials.form', ['client' => new App\Models\Client()])
 

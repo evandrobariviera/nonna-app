@@ -67,11 +67,7 @@
     {{-- Responsável --}}
     <td style="width:44px; text-align:center; padding:0 4px">
         @if($respList->isNotEmpty())
-            <div class="flex h-7 w-7 items-center justify-center rounded-full text-white mx-auto"
-                 style="background:var(--orange); font-size:10px; font-weight:700"
-                 title="{{ $respList->first()->name }}">
-                {{ strtoupper(substr($respList->first()->name, 0, 2)) }}
-            </div>
+            <x-user-avatar :user="$respList->first()" size="7" color="var(--orange)" class="mx-auto" title="{{ $respList->first()->name }}" />
         @else
             <span class="text-xs" style="color:var(--muted)">—</span>
         @endif
@@ -80,11 +76,7 @@
     {{-- Executor --}}
     <td style="width:44px; text-align:center; padding:0 4px">
         @if($execList->isNotEmpty())
-            <div class="flex h-7 w-7 items-center justify-center rounded-full text-white mx-auto"
-                 style="background:var(--purple); font-size:10px; font-weight:700"
-                 title="{{ $execList->first()->name }}">
-                {{ strtoupper(substr($execList->first()->name, 0, 2)) }}
-            </div>
+            <x-user-avatar :user="$execList->first()" size="7" color="var(--purple)" class="mx-auto" title="{{ $execList->first()->name }}" />
         @else
             <span class="text-xs" style="color:var(--muted)">—</span>
         @endif

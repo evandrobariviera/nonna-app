@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ClientController extends Controller
 {
@@ -38,6 +39,7 @@ class ClientController extends Controller
     {
         $data = $request->validate([
             'company_name'            => 'required|string|max:255',
+            'logo'                    => 'nullable|image|mimes:jpeg,jpg,png,webp|max:3072',
             'tax_id'                  => 'nullable|string|max:20',
             'website'                 => 'nullable|url|max:255',
             'segment'                 => 'nullable|string|max:255',
@@ -63,7 +65,16 @@ class ClientController extends Controller
             'notes'                   => 'nullable|string',
         ]);
 
+        $logo = $request->file('logo');
+        unset($data['logo']);
+
         $client = Client::create($data);
+
+        if ($logo) {
+            $disk = config('filesystems.default', 'r2');
+            $path = $logo->store("clients/{$client->id}/logo", $disk);
+            $client->update(['logo_path' => $path, 'logo_disk' => $disk]);
+        }
 
         return redirect()->route('clients.show', $client)
             ->with('success', 'Cliente criado com sucesso.');
@@ -91,6 +102,8 @@ class ClientController extends Controller
     {
         $data = $request->validate([
             'company_name'            => 'required|string|max:255',
+            'logo'                    => 'nullable|image|mimes:jpeg,jpg,png,webp|max:3072',
+            'remove_logo'             => 'nullable|boolean',
             'tax_id'                  => 'nullable|string|max:20',
             'website'                 => 'nullable|url|max:255',
             'segment'                 => 'nullable|string|max:255',
@@ -116,6 +129,23 @@ class ClientController extends Controller
             'notes'                   => 'nullable|string',
             'clickup_task_id'         => 'nullable|string|max:50',
         ]);
+
+        $logo = $request->file('logo');
+        $removeLogo = $request->boolean('remove_logo');
+        unset($data['logo'], $data['remove_logo']);
+
+        if ($logo) {
+            if ($client->logo_path) {
+                Storage::disk($client->logo_disk)->delete($client->logo_path);
+            }
+            $disk = config('filesystems.default', 'r2');
+            $data['logo_path'] = $logo->store("clients/{$client->id}/logo", $disk);
+            $data['logo_disk'] = $disk;
+        } elseif ($removeLogo && $client->logo_path) {
+            Storage::disk($client->logo_disk)->delete($client->logo_path);
+            $data['logo_path'] = null;
+            $data['logo_disk'] = null;
+        }
 
         $client->update($data);
 

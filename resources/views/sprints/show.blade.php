@@ -247,18 +247,10 @@
                                     @if($respList->isNotEmpty() || $execList->isNotEmpty())
                                         <div class="flex items-center gap-1 mb-2">
                                             @foreach($respList as $resp)
-                                                <div class="flex h-6 w-6 items-center justify-center rounded-full text-white flex-shrink-0"
-                                                     style="background:var(--orange); font-size:9px; font-weight:700"
-                                                     title="{{ $resp->name }} (Responsável)">
-                                                    {{ strtoupper(substr($resp->name, 0, 2)) }}
-                                                </div>
+                                                <x-user-avatar :user="$resp" size="6" color="var(--orange)" title="{{ $resp->name }} (Responsável)" />
                                             @endforeach
                                             @foreach($execList as $exec)
-                                                <div class="flex h-6 w-6 items-center justify-center rounded-full text-white flex-shrink-0"
-                                                     style="background:var(--purple); font-size:9px; font-weight:700"
-                                                     title="{{ $exec->name }} (Executor)">
-                                                    {{ strtoupper(substr($exec->name, 0, 2)) }}
-                                                </div>
+                                                <x-user-avatar :user="$exec" size="6" color="var(--purple)" title="{{ $exec->name }} (Executor)" />
                                             @endforeach
                                         </div>
                                     @endif
