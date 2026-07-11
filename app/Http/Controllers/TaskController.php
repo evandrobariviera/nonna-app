@@ -11,7 +11,6 @@ use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\TaskExecutor;
 use App\Models\User;
-use App\Services\TaskApprovalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -145,10 +144,6 @@ class TaskController extends Controller
             'sprint_id'          => 'nullable|uuid|exists:sprints,id',
         ]);
 
-        $triggerApproval = ($data['situation'] ?? null) === 'Enviar para o cliente'
-            && $task->situation !== 'Enviar para o cliente'
-            && $task->status !== 'aprovacao';
-
         $task->update([
             ...$data,
             'internal_approval' => $request->boolean('internal_approval'),
@@ -156,29 +151,6 @@ class TaskController extends Controller
 
         if ($request->hasAny(['executor_id', 'responsavel_id', 'observer_ids'])) {
             $this->syncPersonnel($task, $data);
-        }
-
-        if ($triggerApproval) {
-            $task->load('attachments');
-            $newAttachments = $task->attachments
-                ->where('is_deliverable', false)
-                ->pluck('id')
-                ->toArray();
-
-            if (!empty($newAttachments)) {
-                app(TaskApprovalService::class)->submitForApproval(
-                    $task,
-                    Auth::user(),
-                    $newAttachments,
-                );
-
-                return redirect()->route('tasks.show', $task)
-                    ->with('success', 'Material enviado para aprovação do cliente. Os contatos serão notificados.');
-            }
-
-            return redirect()->route('tasks.show', $task)
-                ->with('success', 'Tarefa atualizada.')
-                ->with('warning', 'Nenhum arquivo encontrado para enviar. Faça o upload dos arquivos e altere a situação novamente.');
         }
 
         return redirect()->route('tasks.show', $task)->with('success', 'Tarefa atualizada.');

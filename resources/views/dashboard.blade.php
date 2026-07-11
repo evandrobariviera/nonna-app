@@ -134,6 +134,8 @@
                         </h2>
                         @if($role === 'estrategia')
                             @include('dashboard.sections.estrategia')
+                        @elseif($role === 'atendimento')
+                            @include('dashboard.sections.atendimento')
                         @else
                             <div class="card px-5 py-4">
                                 <p class="text-xs" style="color:var(--muted)">

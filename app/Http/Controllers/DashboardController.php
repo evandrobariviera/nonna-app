@@ -7,6 +7,7 @@ use App\Models\MacroPlan;
 use App\Models\Meeting;
 use App\Models\Sprint;
 use App\Models\Task;
+use App\Models\TaskApprovalRound;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
@@ -85,12 +86,47 @@ class DashboardController extends Controller
             ->orderBy('period_end')
             ->get();
 
+        // ── Seção "Atendimento" ──
+        $teamMeetingsToday = Meeting::whereNotIn('status', ['cancelada'])
+            ->whereDate('scheduled_at', $today)
+            ->with('client')
+            ->orderBy('scheduled_at')
+            ->limit(8)
+            ->get();
+
+        $openTickets = Task::where('is_ticket', true)
+            ->whereNotIn('status', ['concluido', 'cancelado'])
+            ->with('client')
+            ->orderBy('due_date')
+            ->limit(8)
+            ->get();
+
+        $roundsPending = TaskApprovalRound::where('status', 'pending')
+            ->with('task.client')
+            ->orderByDesc('submitted_at')
+            ->limit(8)
+            ->get();
+
+        $roundsApproved = TaskApprovalRound::where('status', 'approved')
+            ->with('task.client')
+            ->orderByDesc('resolved_at')
+            ->limit(8)
+            ->get();
+
+        $roundsChangesRequested = TaskApprovalRound::where('status', 'changes_requested')
+            ->with('task.client')
+            ->orderByDesc('resolved_at')
+            ->limit(8)
+            ->get();
+
         return view('dashboard', compact(
             'activeSprint', 'sprintTotal', 'sprintDone', 'sprintProgress',
             'myAdjustmentTasks', 'myProductionTasks', 'myReadyForProductionTasks',
             'myMeetings',
             'meetingsPosReuniao', 'meetingsRealizadas',
-            'clientsWithoutActivePlan', 'plansExpiringSoon', 'activePlans'
+            'clientsWithoutActivePlan', 'plansExpiringSoon', 'activePlans',
+            'teamMeetingsToday', 'openTickets',
+            'roundsPending', 'roundsApproved', 'roundsChangesRequested'
         ));
     }
 

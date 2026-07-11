@@ -19,6 +19,11 @@ class TaskApprovalController extends Controller
             'notes'            => 'nullable|string|max:2000',
         ]);
 
+        if ($task->approvalRounds()->where('status', 'pending')->exists()) {
+            return redirect()->route('tasks.show', $task)
+                ->with('warning', 'Essa tarefa já tem uma rodada de aprovação pendente. Aguarde a resposta do cliente antes de enviar de novo.');
+        }
+
         $this->service->submitForApproval(
             $task,
             Auth::user(),

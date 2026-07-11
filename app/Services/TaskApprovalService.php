@@ -9,11 +9,48 @@ use App\Models\TaskApprovalRound;
 use App\Models\TaskApprovalToken;
 use App\Models\TaskAttachment;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class TaskApprovalService
 {
+    /**
+     * Chamado pelo TaskObserver sempre que status/situação de uma tarefa mudam —
+     * dispara a aprovação sozinho quando as duas condições batem ao mesmo tempo
+     * (status "Aprovação" + situação "Enviar para o cliente"), não importa por
+     * qual tela/dropdown a mudança veio.
+     */
+    public function maybeAutoSubmitOnApprovalTransition(Task $task): void
+    {
+        if ($task->status !== 'aprovacao' || $task->situation !== 'Enviar para o cliente') {
+            return;
+        }
+
+        if ($task->approvalRounds()->where('status', 'pending')->exists()) {
+            return;
+        }
+
+        $submitter = Auth::user();
+        if (!$submitter) {
+            return;
+        }
+
+        $attachmentIds = $task->attachments()
+            ->where('is_deliverable', false)
+            ->pluck('id')
+            ->toArray();
+
+        if (empty($attachmentIds)) {
+            session()->flash('warning', 'A tarefa "' . $task->title . '" está em Aprovação com situação "Enviar para o cliente", mas não há nenhum arquivo pra enviar — faça o upload e ajuste a situação de novo.');
+            return;
+        }
+
+        $this->submitForApproval($task, $submitter, $attachmentIds);
+
+        session()->flash('success', 'Tarefa "' . $task->title . '" enviada para aprovação do cliente automaticamente.');
+    }
+
     /**
      * Submete a tarefa para aprovação do cliente.
      * Cria uma rodada, marca os anexos como entregáveis,
@@ -131,7 +168,7 @@ class TaskApprovalService
             ],
             'client' => [
                 'id'   => $round->task->client_id,
-                'name' => $round->task->client->name,
+                'name' => $round->task->client->company_name,
             ],
             'contact' => [
                 'name'  => $contact->name,

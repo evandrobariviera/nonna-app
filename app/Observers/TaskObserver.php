@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Task;
 use App\Services\AutomationEngine;
+use App\Services\TaskApprovalService;
 
 class TaskObserver
 {
@@ -23,6 +24,12 @@ class TaskObserver
                 'from'  => $task->getOriginal('situation'),
                 'to'    => $task->situation,
             ]);
+        }
+
+        // Aprovação automática: status "Aprovação" + situação "Enviar para o
+        // cliente" ao mesmo tempo, vindo de qualquer lugar que edite a tarefa.
+        if ($task->wasChanged('status') || $task->wasChanged('situation')) {
+            app(TaskApprovalService::class)->maybeAutoSubmitOnApprovalTransition($task);
         }
     }
 
