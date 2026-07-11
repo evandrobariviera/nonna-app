@@ -119,6 +119,25 @@ class DashboardController extends Controller
             ->limit(8)
             ->get();
 
+        // ── Seção "Heads" (Criativa & Tech, mesma seção pros dois) ──
+        // "Responsável" aqui é o papel dedicado na task_executors (pivot role =
+        // 'responsavel'), diferente de "executor" — é quem responde pela qualidade,
+        // não quem produz.
+        $headsTickets = Task::where('is_ticket', true)
+            ->whereNotIn('status', ['concluido', 'cancelado'])
+            ->whereHas('responsibles', fn ($q) => $q->where('users.id', $userId))
+            ->with('client')
+            ->orderBy('due_date')
+            ->limit(8)
+            ->get();
+
+        $headsRevisaoInterna = Task::where('status', 'revisao_interna')
+            ->whereHas('responsibles', fn ($q) => $q->where('users.id', $userId))
+            ->with('client')
+            ->orderBy('due_date')
+            ->limit(8)
+            ->get();
+
         return view('dashboard', compact(
             'activeSprint', 'sprintTotal', 'sprintDone', 'sprintProgress',
             'myAdjustmentTasks', 'myProductionTasks', 'myReadyForProductionTasks',
@@ -126,7 +145,8 @@ class DashboardController extends Controller
             'meetingsPosReuniao', 'meetingsRealizadas',
             'clientsWithoutActivePlan', 'plansExpiringSoon', 'activePlans',
             'teamMeetingsToday', 'openTickets',
-            'roundsPending', 'roundsApproved', 'roundsChangesRequested'
+            'roundsPending', 'roundsApproved', 'roundsChangesRequested',
+            'headsTickets', 'headsRevisaoInterna'
         ));
     }
 

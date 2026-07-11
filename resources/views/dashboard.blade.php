@@ -123,10 +123,15 @@
         $dashboardRoles = ($isOrgAdmin ?? false)
             ? array_keys(\App\Models\OrganizationUser::$functionRoles)
             : ($userFunctionRoles ?? []);
+        // Direção Criativa e Head de Tecnologia compartilham uma única seção
+        // "Heads" — não faz sentido separar por setor pro que eles precisam ver aqui.
+        $headsRoles = ['head_criativa', 'head_tech'];
+        $showHeadsSection = !empty(array_intersect($dashboardRoles, $headsRoles));
     @endphp
     @if(!empty($dashboardRoles))
         <div class="flex flex-col gap-6">
             @foreach($dashboardRoles as $role)
+                @continue(in_array($role, $headsRoles))
                 @if(isset(\App\Models\OrganizationUser::$functionRoles[$role]))
                     <div>
                         <h2 class="text-base font-bold mb-3" style="color:var(--text)">
@@ -146,6 +151,13 @@
                     </div>
                 @endif
             @endforeach
+
+            @if($showHeadsSection)
+                <div>
+                    <h2 class="text-base font-bold mb-3" style="color:var(--text)">Heads</h2>
+                    @include('dashboard.sections.heads')
+                </div>
+            @endif
         </div>
     @endif
 
