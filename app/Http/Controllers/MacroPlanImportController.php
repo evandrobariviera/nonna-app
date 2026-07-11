@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\MacroPlan;
 use App\Models\MacroPlanAttachment;
+use App\Models\User;
 use App\Services\MacroPlanHtmlImporter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,7 +31,7 @@ class MacroPlanImportController extends Controller
 
         if (blank($parsed['client_name'])) {
             return back()->withInput()
-                ->with('error', 'Não foi possível identificar o nome do cliente no HTML (elemento ".cli-name" não encontrado na Capa).');
+                ->with('error', 'Não foi possível identificar o nome do cliente no HTML (célula "Cliente" não encontrada na Capa).');
         }
 
         $matches = Client::where('company_name', 'ilike', $parsed['client_name'])->get();
@@ -42,15 +43,30 @@ class MacroPlanImportController extends Controller
         }
         $client = $matches->first();
 
-        $plan = DB::connection('pgsql')->transaction(function () use ($client, $parsed, $data, $request) {
+        // Capa costuma trazer só o primeiro nome (ex: "Evandro") — busca por
+        // substring, não match exato. Só usa se achar exatamente 1 pessoa.
+        $responsibleId = null;
+        if (filled($parsed['responsible_name'])) {
+            $userMatches = User::where('name', 'ilike', '%' . $parsed['responsible_name'] . '%')->get();
+            if ($userMatches->count() === 1) {
+                $responsibleId = $userMatches->first()->id;
+            }
+        }
+
+        $plan = DB::connection('pgsql')->transaction(function () use ($client, $parsed, $data, $request, $responsibleId) {
             $plan = $client->macroplans()->create([
-                'title'        => $parsed['title'],
-                'period_start' => $data['period_start'],
-                'period_end'   => $data['period_end'],
-                'status'       => 'draft',
-                'bloco1'       => $parsed['bloco1'],
-                'bloco2'       => $parsed['bloco2'],
-                'created_by'   => Auth::id(),
+                'title'          => $parsed['title'],
+                'version'        => $parsed['version'] ?: null,
+                'responsible_id' => $responsibleId,
+                'period_start'   => $data['period_start'],
+                'period_end'     => $data['period_end'],
+                'status'         => 'em_planejamento',
+                'disciplines'    => $parsed['disciplines'],
+                'bloco1'         => $parsed['bloco1'],
+                'bloco2'         => $parsed['bloco2'],
+                'bloco4'         => $parsed['bloco4'],
+                'bloco5'         => $parsed['bloco5'],
+                'created_by'     => Auth::id(),
             ]);
 
             foreach ($parsed['projects'] as $i => $projectData) {

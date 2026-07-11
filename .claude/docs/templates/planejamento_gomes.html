@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nonna · Planejamento GOMES Máquinas Agrícolas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080810; --bg2:#0f0f1a; --bg3:#14141f;
+  --border:rgba(255,255,255,0.07); --text:#e8e8f5; --muted:#7a7a9a;
+  --accent1:#ff5c4d; --accent2:#d63eaa; --accent3:#7b3fe4;
+  --grad:linear-gradient(135deg,#ff5c4d,#d63eaa,#7b3fe4);
+  --sidebar:268px; --header:56px;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:'Syne',sans-serif;
+  min-height:100vh;
+}
+.mono{font-family:'IBM Plex Mono',monospace;}
+.serif{font-family:'Fraunces',serif;}
+
+/* HEADER */
+header{
+  position:fixed; top:0; left:0; right:0; height:var(--header);
+  background:var(--bg2); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; padding:0 24px; z-index:100;
+  gap:12px;
+}
+.brand-mark{
+  width:28px; height:28px; border-radius:8px;
+  background:var(--grad);
+}
+header .brand-name{font-weight:700; font-size:14px; letter-spacing:0.5px;}
+header .doc-title{
+  font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted);
+  margin-left:8px; padding-left:12px; border-left:1px solid var(--border);
+}
+
+/* SIDEBAR */
+nav.sidebar{
+  position:fixed; top:var(--header); left:0; bottom:0; width:var(--sidebar);
+  background:var(--bg2); border-right:1px solid var(--border);
+  overflow-y:auto; padding:20px 0; z-index:90;
+}
+.nav-section-label{
+  font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1.5px;
+  color:var(--muted); text-transform:uppercase; padding:14px 20px 8px;
+}
+.nav-item{
+  display:flex; align-items:center; gap:10px; padding:9px 20px;
+  cursor:pointer; border-left:2px solid transparent; transition:.15s;
+  text-decoration:none; color:var(--text);
+}
+.nav-item:hover{background:var(--bg3);}
+.nav-item.active{background:var(--bg3); border-left:2px solid var(--accent2);}
+.nav-num{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted); min-width:20px;}
+.nav-label{font-size:13px; flex:1;}
+.nav-tag{
+  font-family:'IBM Plex Mono',monospace; font-size:9px; padding:2px 6px;
+  border-radius:4px; text-transform:uppercase; letter-spacing:0.5px;
+}
+.nav-tag.macro{background:rgba(123,63,228,0.18); color:#b895ff;}
+.nav-tag.projeto{background:rgba(214,62,170,0.18); color:#ec8fd0;}
+.nav-tag.campanha{background:rgba(255,92,77,0.18); color:#ff9d90;}
+
+/* MAIN */
+main{
+  margin-left:var(--sidebar); margin-top:var(--header);
+  padding:40px 48px 100px; max-width:980px;
+}
+.page{display:none; animation:fadein .25s ease;}
+.page.active{display:block;}
+@keyframes fadein{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:2px;
+  color:var(--accent2); text-transform:uppercase; margin-bottom:10px;
+}
+h1.page-title{
+  font-family:'Fraunces',serif; font-size:34px; font-weight:600;
+  margin-bottom:6px; line-height:1.15;
+}
+.page-sub{color:var(--muted); font-size:14px; margin-bottom:32px;}
+
+/* BLOCO 00 - CAPA */
+.capa-hero{
+  background:var(--grad); border-radius:20px; padding:44px;
+  margin-bottom:32px; position:relative; overflow:hidden;
+}
+.capa-hero::after{
+  content:""; position:absolute; inset:0; background:rgba(8,8,16,0.55);
+}
+.capa-hero-content{position:relative; z-index:1;}
+.capa-hero .eyebrow{color:rgba(255,255,255,0.85);}
+.capa-hero h1{font-family:'Fraunces',serif; font-size:42px; color:#fff; font-weight:600;}
+.capa-hero p{color:rgba(255,255,255,0.85); margin-top:8px; font-size:15px;}
+
+.capa-grid{
+  display:grid; grid-template-columns:repeat(2,1fr); gap:1px;
+  background:var(--border); border:1px solid var(--border); border-radius:14px;
+  overflow:hidden; margin-bottom:24px;
+}
+.capa-cell{background:var(--bg2); padding:20px 24px;}
+.capa-cell-label{
+  font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1.5px;
+  color:var(--muted); text-transform:uppercase; margin-bottom:8px;
+}
+.capa-cell-val{font-size:16px; font-weight:600;}
+.capa-cell-val.placeholder{font-style:italic; color:var(--muted); font-weight:400;}
+
+.chip-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;}
+.chip{
+  font-family:'IBM Plex Mono',monospace; font-size:11px; padding:6px 12px;
+  border-radius:20px; background:var(--bg3); border:1px solid var(--border); color:var(--text);
+}
+
+/* CARDS */
+.card{
+  background:var(--bg2); border:1px solid var(--border); border-radius:14px;
+  padding:24px 26px; margin-bottom:20px;
+}
+.card-title{
+  font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--accent2); margin-bottom:12px;
+}
+.card-body{font-size:15px; line-height:1.7; color:#d8d8ea;}
+
+.two-col{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+@media(max-width:700px){.two-col{grid-template-columns:1fr;}}
+
+.alert-info{
+  background:rgba(123,63,228,0.12); border:1px solid rgba(123,63,228,0.3);
+  border-radius:10px; padding:14px 18px; font-size:13.5px; margin-bottom:18px;
+  display:flex; gap:10px; align-items:flex-start;
+}
+.alert-info b{color:#c7a8ff;}
+.alert.warn{
+  background:rgba(255,92,77,0.1); border:1px solid rgba(255,92,77,0.35);
+  border-radius:10px; padding:12px 18px; font-size:13px; color:#ffb3a8; margin-bottom:18px;
+}
+
+/* VERBA */
+.verba-section{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:24px;}
+.verba-box{background:var(--bg2); padding:22px;}
+.verba-label{font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; color:var(--muted); text-transform:uppercase; margin-bottom:8px;}
+.verba-val{font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:600; background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;}
+.verba-note{font-size:12px; color:var(--muted); margin-top:8px; line-height:1.5;}
+
+/* KPI */
+.kpi-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:8px;}
+@media(max-width:700px){.kpi-grid{grid-template-columns:1fr;}}
+.kpi-card{background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:20px;}
+.kpi-label{font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; color:var(--accent1); text-transform:uppercase; margin-bottom:8px;}
+.kpi-title{font-weight:700; font-size:15px; margin-bottom:6px;}
+.kpi-desc{font-size:13px; color:var(--muted); line-height:1.6;}
+.kpi-desc.pending{color:#ffb3a8; font-style:italic;}
+
+/* PILARES */
+.pilar{display:flex; gap:16px; padding:18px 0; border-bottom:1px solid var(--border);}
+.pilar:last-child{border-bottom:none;}
+.pilar-num{font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:700; color:var(--accent3); min-width:36px;}
+.pilar-name{font-weight:700; font-size:15px; margin-bottom:4px;}
+.pilar-desc{font-size:13.5px; color:var(--muted); line-height:1.6;}
+
+/* TIMELINE */
+.timeline{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:24px 0;}
+@media(max-width:700px){.timeline{grid-template-columns:1fr;}}
+.tl-col{background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:18px; border-top:3px solid var(--accent2);}
+.tl-month{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--accent2); margin-bottom:6px;}
+.tl-label{font-weight:700; font-size:14px; margin-bottom:8px;}
+.tl-desc{font-size:12.5px; color:var(--muted); line-height:1.6;}
+
+/* RESUMO */
+.resumo-row{display:flex; gap:12px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--border);}
+.resumo-row:last-child{border-bottom:none;}
+.resumo-tag{font-family:'IBM Plex Mono',monospace; font-size:10px; padding:3px 8px; border-radius:5px; text-transform:uppercase; min-width:34px; text-align:center; height:fit-content;}
+.resumo-tag.p{background:rgba(214,62,170,0.18); color:#ec8fd0;}
+.resumo-tag.c{background:rgba(255,92,77,0.18); color:#ff9d90;}
+.resumo-name{font-weight:700; font-size:14px;}
+.resumo-desc{font-size:12.5px; color:var(--muted); margin-top:2px;}
+.resumo-status{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); margin-left:auto; white-space:nowrap; padding-left:10px;}
+
+/* PROJETO/CAMPANHA HEADER */
+.pc-header{margin-bottom:26px;}
+.pc-badge{
+  display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:1.5px; text-transform:uppercase; padding:5px 12px; border-radius:6px;
+  margin-bottom:14px;
+}
+.pc-badge.projeto{background:rgba(214,62,170,0.18); color:#ec8fd0;}
+.pc-badge.campanha{background:rgba(255,92,77,0.18); color:#ff9d90;}
+.pc-title{font-family:'Fraunces',serif; font-size:30px; font-weight:600; margin-bottom:10px;}
+.pc-type{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+.status-pill{
+  font-family:'IBM Plex Mono',monospace; font-size:10px; padding:4px 10px; border-radius:20px;
+  background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--muted);
+}
+.status-pill.backlog{background:rgba(122,122,154,0.15); color:var(--muted);}
+.tags{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;}
+.tag{font-family:'IBM Plex Mono',monospace; font-size:10.5px; padding:4px 10px; border-radius:6px; background:var(--bg3); border:1px solid var(--border); color:var(--muted);}
+
+.obj-box{font-size:15px; line-height:1.7; color:#d8d8ea; background:var(--bg2); border:1px solid var(--border); border-left:3px solid var(--accent1); border-radius:0 12px 12px 0; padding:20px 24px; margin-bottom:26px;}
+
+.disc-block{margin-bottom:16px; padding:16px 18px; background:var(--bg2); border:1px solid var(--border); border-radius:10px;}
+.disc-label{font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:1px; color:var(--accent3); text-transform:uppercase; margin-bottom:8px;}
+.disc-text{font-size:13.5px; color:#d8d8ea; line-height:1.65;}
+
+.tasks-title{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin:26px 0 12px;}
+.task-item{display:flex; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); font-size:13.5px;}
+.task-item:last-child{border-bottom:none;}
+.task-dot{width:6px; height:6px; border-radius:50%; background:var(--accent2); margin-top:6px; flex-shrink:0;}
+.task-text{flex:1;}
+.task-setor{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--muted); white-space:nowrap;}
+
+.content-ideas{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:20px 0 8px;}
+@media(max-width:800px){.content-ideas{grid-template-columns:1fr;}}
+.content-idea{background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:18px;}
+.badge-video,.badge-card,.badge-carrossel{
+  display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:9.5px;
+  padding:3px 9px; border-radius:5px; text-transform:uppercase; margin-bottom:10px; letter-spacing:0.5px;
+}
+.badge-video{background:rgba(255,92,77,0.18); color:#ff9d90;}
+.badge-card{background:rgba(214,62,170,0.18); color:#ec8fd0;}
+.badge-carrossel{background:rgba(123,63,228,0.18); color:#b895ff;}
+.content-idea h4{font-size:14px; margin-bottom:8px;}
+.content-idea p{font-size:12.5px; color:var(--muted); line-height:1.6;}
+
+.trafego-box{background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:22px; margin-top:24px;}
+.trafego-box h4{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent1); margin-bottom:16px;}
+.fase-block{padding:14px 0; border-bottom:1px solid var(--border);}
+.fase-block:last-child{border-bottom:none;}
+.fase-tag{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--accent2); margin-bottom:6px;}
+.fase-detail{font-size:13px; color:#d8d8ea; line-height:1.65;}
+.fase-detail b{color:var(--text);}
+.verba-bar{height:8px; border-radius:4px; background:var(--bg3); overflow:hidden; display:flex; margin:10px 0;}
+.verba-bar-seg{height:100%;}
+.verba-bar-legend{display:flex; gap:16px; font-size:11.5px; color:var(--muted);}
+.verba-bar-legend span{display:flex; align-items:center; gap:6px;}
+.dot{width:8px; height:8px; border-radius:2px; display:inline-block;}
+
+/* CHECKLIST */
+.check-item{
+  display:flex; align-items:flex-start; gap:14px; padding:16px 18px;
+  background:var(--bg2); border:1px solid var(--border); border-radius:10px;
+  margin-bottom:10px; cursor:pointer; transition:.15s;
+}
+.check-item:hover{border-color:var(--accent2);}
+.check-item.done{opacity:0.55;}
+.check-item.done .check-name{text-decoration:line-through;}
+.check-box{
+  width:20px; height:20px; border-radius:6px; border:2px solid var(--muted);
+  flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center;
+  font-size:12px; transition:.15s;
+}
+.check-item.done .check-box{background:var(--grad); border-color:transparent;}
+.check-name{font-weight:700; font-size:14px; margin-bottom:3px;}
+.check-desc{font-size:12.5px; color:var(--muted); line-height:1.5;}
+
+.urgencia{font-family:'IBM Plex Mono',monospace; font-size:9.5px; padding:2px 8px; border-radius:4px; text-transform:uppercase; margin-left:8px;}
+.urg-alta{background:rgba(255,92,77,0.2); color:#ff9d90;}
+
+footer.doc-footer{margin-left:var(--sidebar); padding:24px 48px 60px; font-size:11px; color:var(--muted); font-family:'IBM Plex Mono',monospace;}
+
+::-webkit-scrollbar{width:8px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--bg3); border-radius:4px;}
+
+/* ===== COMPONENTES CRIATIVOS (estrategia-criativa-nonna) ===== */
+.tag-detalhada{
+  font-family:'IBM Plex Mono',monospace; font-size:9px; padding:2px 7px; border-radius:5px;
+  background:var(--grad); color:#fff; letter-spacing:0.5px; margin-left:6px;
+}
+.bigidea-hero{
+  position:relative; border-radius:18px; padding:40px 36px; margin-bottom:24px;
+  background:var(--bg2); border:1px solid var(--border); overflow:hidden;
+}
+.bigidea-hero::before{
+  content:""; position:absolute; inset:0; background:var(--grad); opacity:0.07;
+}
+.bigidea-eyebrow{position:relative; z-index:1; font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent2); margin-bottom:12px;}
+.bigidea-phrase{position:relative; z-index:1; font-family:'Fraunces',serif; font-size:30px; font-weight:600; line-height:1.3; margin-bottom:16px;}
+.bigidea-manifesto{position:relative; z-index:1; font-size:14.5px; line-height:1.75; color:#d8d8ea;}
+
+.territorios{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:24px;}
+@media(max-width:700px){.territorios{grid-template-columns:1fr;}}
+.territorio-card{background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:20px;}
+.territorio-rota{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--muted); text-transform:uppercase; margin-bottom:8px;}
+.territorio-title{font-weight:800; font-size:15px; margin-bottom:8px; font-family:'Syne',sans-serif;}
+.territorio-desc{font-size:13px; color:var(--muted); line-height:1.65;}
+
+.tomdevoz-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;}
+.tomdevoz-chip{font-family:'IBM Plex Mono',monospace; font-size:11px; padding:6px 13px; border-radius:20px; background:var(--bg3); border:1px solid var(--border);}
+.tomdevoz-frase{font-family:'Fraunces',serif; font-style:italic; font-size:17px; color:#d8d8ea; padding:14px 18px; border-left:3px solid var(--accent2); background:var(--bg2); border-radius:0 10px 10px 0; margin-bottom:20px;}
+
+.mecanica-steps{counter-reset:step; margin:18px 0;}
+.mecanica-step{display:flex; gap:16px; padding:16px 0; border-bottom:1px solid var(--border);}
+.mecanica-step:last-child{border-bottom:none;}
+.mecanica-stepnum{
+  counter-increment:step; flex-shrink:0; width:32px; height:32px; border-radius:50%;
+  background:var(--grad); display:flex; align-items:center; justify-content:center;
+  font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:13px; color:#fff;
+}
+.mecanica-fase-label{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--accent1); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;}
+.mecanica-text{font-size:13.5px; color:#d8d8ea; line-height:1.7;}
+.mecanica-atencao{
+  background:rgba(255,184,77,0.08); border:1px solid rgba(255,184,77,0.3);
+  border-radius:10px; padding:12px 16px; font-size:13px; color:#ffd28a; margin-top:14px;
+}
+
+.moodcards{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:18px 0;}
+@media(max-width:700px){.moodcards{grid-template-columns:1fr;}}
+.moodcard{background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:18px;}
+.moodcard-label{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--accent3); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;}
+.moodcard-text{font-size:13px; color:var(--muted); line-height:1.65;}
+
+.pecas-list{margin:16px 0;}
+.peca-item{display:flex; gap:14px; padding:13px 0; border-bottom:1px solid var(--border); align-items:flex-start;}
+.peca-item:last-child{border-bottom:none;}
+.peca-nome{font-family:'Syne',sans-serif; font-weight:700; font-size:14px; min-width:220px;}
+.peca-desc{font-size:13px; color:var(--muted); line-height:1.6;}
+
+.subsection-title{
+  font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--accent2); margin:30px 0 14px;
+  padding-bottom:8px; border-bottom:1px solid var(--border);
+}
+
+/* ===== RESPONSABILIDADES DO CLIENTE ===== */
+.resp-block{
+  background:var(--bg2); border:1px solid var(--border); border-left:3px solid var(--accent1);
+  border-radius:0 14px 14px 0; padding:22px 26px; margin-bottom:16px;
+}
+.resp-block-title{
+  font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--accent1); margin-bottom:14px;
+}
+.resp-item{display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); align-items:flex-start;}
+.resp-item:last-child{border-bottom:none;}
+.resp-dot{width:6px; height:6px; border-radius:50%; background:var(--accent1); margin-top:7px; flex-shrink:0;}
+.resp-text{font-size:13.5px; color:#d8d8ea; line-height:1.65;}
+.resp-text b{color:var(--text);}
+.resp-tag-campanha{
+  font-family:'IBM Plex Mono',monospace; font-size:9.5px; padding:2px 8px; border-radius:5px;
+  background:rgba(255,92,77,0.15); color:#ff9d90; margin-left:8px; white-space:nowrap;
+}
+.resp-clausula{
+  background:rgba(255,92,77,0.07); border:1px solid rgba(255,92,77,0.25);
+  border-radius:10px; padding:16px 20px; font-size:13px; color:#d8d8ea; line-height:1.7;
+  margin-top:8px;
+}
+.resp-clausula b{color:#ff9d90;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-mark"></div>
+  <span class="brand-name">NONNA AGÊNCIA DIGITAL</span>
+  <span class="doc-title">Macroplanejamento · GOMES Máquinas Agrícolas</span>
+</header>
+
+<nav class="sidebar" id="sidebar">
+  <div class="nav-section-label">Configurações</div>
+  <a href="#" class="nav-item active" data-page="p00"><span class="nav-num">00</span><span class="nav-label">Capa & Identificação</span><span class="nav-tag macro">Ref</span></a>
+  <a href="#" class="nav-item" data-page="p01"><span class="nav-num">01</span><span class="nav-label">Visão Geral & Metas</span><span class="nav-tag macro">Macro</span></a>
+  <a href="#" class="nav-item" data-page="p02"><span class="nav-num">02</span><span class="nav-label">Contexto & Estratégia</span><span class="nav-tag macro">Estratégia</span></a>
+
+  <div class="nav-section-label">Projetos</div>
+  <a href="#" class="nav-item" data-page="pj1"><span class="nav-num">P1</span><span class="nav-label">Portal do Concessionário</span><span class="nav-tag projeto">Projeto</span></a>
+  <a href="#" class="nav-item" data-page="pj2"><span class="nav-num">P2</span><span class="nav-label">Kit Padrão Gomes</span><span class="nav-tag projeto">Backlog</span></a>
+  <a href="#" class="nav-item" data-page="pj3"><span class="nav-num">P3</span><span class="nav-label">Implementação de CRM</span><span class="nav-tag projeto">Projeto</span></a>
+
+  <div class="nav-section-label">Campanhas</div>
+  <a href="#" class="nav-item" data-page="c1"><span class="nav-num">C1</span><span class="nav-label">Reposicionamento de Marca</span><span class="nav-tag campanha">Campanha</span><span class="tag-detalhada">✦ Detalhada</span></a>
+  <a href="#" class="nav-item" data-page="c2"><span class="nav-num">C2</span><span class="nav-label">Captação BR</span><span class="nav-tag campanha">Campanha</span><span class="tag-detalhada">✦ Detalhada</span></a>
+  <a href="#" class="nav-item" data-page="c3"><span class="nav-num">C3</span><span class="nav-label">Expansão Internacional</span><span class="nav-tag campanha">Campanha</span><span class="tag-detalhada">✦ Detalhada</span></a>
+  <a href="#" class="nav-item" data-page="c4"><span class="nav-num">C4</span><span class="nav-label">Feiras & Eventos</span><span class="nav-tag campanha">Campanha</span><span class="tag-detalhada">✦ Detalhada</span></a>
+  <a href="#" class="nav-item" data-page="c5"><span class="nav-num">C5</span><span class="nav-label">Bravo — Regularização</span><span class="nav-tag campanha">Campanha</span><span class="tag-detalhada">✦ Detalhada</span></a>
+
+  <div class="nav-section-label">Operacional</div>
+  <a href="#" class="nav-item" data-page="p04"><span class="nav-num">04</span><span class="nav-label">Rotina & Demandas Contínuas</span><span class="nav-tag macro">Rotina</span></a>
+  <a href="#" class="nav-item" data-page="p05"><span class="nav-num">05</span><span class="nav-label">Infraestrutura, Acessos & Responsabilidades</span><span class="nav-tag macro">Infra</span></a>
+</nav>
+
+<main>
+
+<!-- ============ BLOCO 00 ============ -->
+<div class="page active" id="p00">
+  <div class="capa-hero">
+    <div class="capa-hero-content">
+      <div class="eyebrow">Nonna Agência Digital · Macroplanejamento</div>
+      <h1>GOMES Máquinas Agrícolas</h1>
+      <p>Reposicionamento de marca e captação de concessionários — Julho a Setembro de 2026</p>
+    </div>
+  </div>
+
+  <div class="capa-grid">
+    <div class="capa-cell"><div class="capa-cell-label">Cliente</div><div class="capa-cell-val">GOMES Máquinas Agrícolas</div></div>
+    <div class="capa-cell"><div class="capa-cell-label">Segmento</div><div class="capa-cell-val">Agro · Fabricação e revenda de máquinas agrícolas (tratores, transportadores, quadriciclos, linha elétrica em desenvolvimento)</div></div>
+    <div class="capa-cell"><div class="capa-cell-label">Responsável Nonna</div><div class="capa-cell-val">Evandro</div></div>
+    <div class="capa-cell"><div class="capa-cell-label">Período de Execução</div><div class="capa-cell-val">Julho, Agosto e Setembro de 2026 (ciclo de 3 meses)</div></div>
+    <div class="capa-cell"><div class="capa-cell-label">Site / Canal Principal</div><div class="capa-cell-val">gomesmaquinas.com.br</div></div>
+    <div class="capa-cell"><div class="capa-cell-label">Versão do Documento</div><div class="capa-cell-val">v1.0</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Disciplinas Ativas neste Ciclo</div>
+    <div class="chip-row">
+      <span class="chip">Criação / Audiovisual</span>
+      <span class="chip">Tráfego / Performance</span>
+      <span class="chip">Web / Dev</span>
+      <span class="chip">Social Media</span>
+      <span class="chip">Estratégia</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Contatos-chave do cliente</div>
+    <div class="card-body">
+      <b>Luciano</b> — comercial / vendas, ponta de contato mais direta com o mercado e com maior urgência por material pronto.<br>
+      <b>Karina</b> — marketing / diretoria, referência interna sobre marca e experiência do cliente.<br>
+      <b>Diretoria</b> — Jailson, Ricardo e Jason, decisão final sobre reposicionamento de marca.
+    </div>
+  </div>
+</div>
+
+<!-- ============ BLOCO 01 ============ -->
+<div class="page" id="p01">
+  <div class="eyebrow">Bloco 01</div>
+  <h1 class="page-title">Visão Geral & Metas</h1>
+  <p class="page-sub">Para onde a comunicação da GOMES aponta neste ciclo, e como vamos saber se funcionou.</p>
+
+  <div class="card">
+    <div class="card-title">Foco Principal do Ciclo</div>
+    <div class="card-body">Reposicionar a GOMES como uma rede comercial sólida, organizada e em expansão dentro do agro brasileiro — abandonando a comunicação puramente operacional e o discurso de "buscando revendedor" para construir uma presença institucional que reduza a percepção de risco do investidor. O ciclo concentra esforço em duas frentes que caminham em paralelo: a reconstrução da identidade digital da marca (C1) e a geração de concessionários e distribuidores qualificados no Brasil e em dois mercados internacionais (C2, C3), usando o material que hoje falta ao time comercial.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Ponto de Partida</div>
+    <div class="card-body">A comunicação atual da GOMES é muito operacional — mostra produção e venda pontual, sem construir uma percepção de marca institucional condizente com o tamanho real da empresa, que já expande para outros países. Não existe um manual de marca consolidado (a nova logo está em ajuste, sem versão simplificada fechada), a nomenclatura é inconsistente ("revendedor" convive com "concessionário" e "distribuidor"), a prova social não é documentada de forma sistemática e falta material em vídeo profissional — o que trava tanto o vendedor de campo quanto o discurso de expansão internacional.</div>
+  </div>
+
+  <div class="alert-info"><span>💡</span><div><b>Regra de divisão de verba:</b> a distribuição abaixo prioriza Google Ads por conta da intenção de busca já qualificada de quem pesquisa "seja um concessionário" ou marcas concorrentes; Meta Ads sustenta o alcance e a construção da nova identidade de marca em C1.</div></div>
+
+  <div class="verba-section">
+    <div class="verba-box"><div class="verba-label">Total Mensal</div><div class="verba-val">R$ 2.000</div><div class="verba-note">Verba enxuta para o tamanho da ambição do ciclo (expansão em 3 países) — recomenda-se revisão após o primeiro mês de captação em C2/C3.</div></div>
+    <div class="verba-box"><div class="verba-label">Google Ads</div><div class="verba-val">70%</div><div class="verba-note">≈ R$ 1.400/mês — busca ativa por concessionário, palavras-chave de marca e concorrência.</div></div>
+    <div class="verba-box"><div class="verba-label">Meta Ads</div><div class="verba-val">30%</div><div class="verba-note">≈ R$ 600/mês — alcance e construção de percepção da nova identidade (C1).</div></div>
+  </div>
+
+  <div class="card-title" style="margin-bottom:14px;">KPIs do Período</div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">KPI Principal</div>
+      <div class="kpi-title">Concessionários/distribuidores qualificados captados</div>
+      <div class="kpi-desc pending">A calibrar após o Mês 1 — baseline a levantar junto ao Luciano, sem meta numérica definida na reunião.</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">KPI de Tráfego</div>
+      <div class="kpi-title">CPL por região (Brasil vs. internacional)</div>
+      <div class="kpi-desc pending">A calibrar após o Mês 1, separando captação nacional de Argentina/Uruguai.</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">KPI de Marca</div>
+      <div class="kpi-title">Reconhecimento espontâneo da GOMES no agro</div>
+      <div class="kpi-desc pending">Sem baseline formal — medir via relatos de prospecção comercial (ex: casos como o do distribuidor no Sul de Minas que não conhecia a marca).</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">KPI de Negócio</div>
+      <div class="kpi-title">Vendas atribuídas a concessionários captados via campanha</div>
+      <div class="kpi-desc pending">Pendente de integração com o dashboard comercial já existente do cliente.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ BLOCO 02 ============ -->
+<div class="page" id="p02">
+  <div class="eyebrow">Bloco 02</div>
+  <h1 class="page-title">Contexto & Estratégia</h1>
+  <p class="page-sub">Por que a GOMES precisa mudar de discurso agora, e como a Nonna vai conduzir essa mudança.</p>
+
+  <div class="card">
+    <div class="card-title">O Desafio Atual</div>
+    <div class="card-body">A GOMES enfrenta três pressões simultâneas. Primeira: concorrentes com porte comparável ou menor (Januário, Brasília, Case) já ocupam o "top of mind" do agro brasileiro, enquanto a GOMES — em plena expansão para outros países — segue invisível até para quem já revende produtos concorrentes na mesma região. Segunda: a comunicação de hoje é operacional demais, sem construir a percepção institucional condizente com o real ritmo de crescimento da empresa, o que aumenta a sensação de risco para quem avalia investir como concessionário. Terceira: a ausência crônica de material pronto trava o time comercial no momento exato da venda, forçando decisões "no escuro" e criativos feitos sob pressão de prazo.</div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Antes (situação atual)</div>
+      <div class="card-body">Comunicação fragmentada — Instagram, site e WhatsApp passam sensações diferentes da empresa. Discurso de "buscando revendedor", que transmite necessidade. Nomenclatura inconsistente. Sem prova social documentada de concessionários e produtores já ativos.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Agora (o que queremos)</div>
+      <div class="card-body">Sistema de marca único e coerente em todos os pontos de contato. Discurso de "expandindo rede comercial planejada", que transmite crescimento. Nomenclatura padronizada em concessionário/distribuidor. Prova social sistemática, com depoimentos reais de quem já opera com a GOMES.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">A Nossa Estratégia</div>
+    <div class="card-body">A Nonna conduz a reconstrução da identidade digital da GOMES (C1) enquanto já ativa, em paralelo, a captação de concessionários com o que já existe hoje (C2, C3) — sem interromper as campanhas que já estão rodando. O diagnóstico de mercado (entrevistas com vendedores, clientes e prospects, mapeamento de concorrência) acontece dentro da própria operação comercial de C2, sem virar uma frente de trabalho separada. A cada 3 meses, o ciclo é revisto: o que funcionou continua, o que não funcionou é recalibrado.</div>
+  </div>
+
+  <div class="card-title" style="margin-bottom:4px;">Pilares de Comunicação</div>
+  <div class="card">
+    <div class="pilar">
+      <div class="pilar-num">01</div>
+      <div><div class="pilar-name">Percepção de marca sólida e institucional</div><div class="pilar-desc">Identidade visual, tom de voz e presença coerente em todos os canais — comunicando estabilidade e a escala real da empresa, não apenas o produto.</div></div>
+    </div>
+    <div class="pilar">
+      <div class="pilar-num">02</div>
+      <div><div class="pilar-name">Redução do risco percebido</div><div class="pilar-desc">Mostrar a operação real — fábrica, entregas, assistência técnica, concessionários já ativos — como prova de que investir na marca é seguro.</div></div>
+    </div>
+    <div class="pilar">
+      <div class="pilar-num">03</div>
+      <div><div class="pilar-name">Prova social de quem já é concessionário/produtor</div><div class="pilar-desc">Depoimentos reais (como os casos de Rondônia e Redenção/PA) substituem qualquer discurso publicitário vazio.</div></div>
+    </div>
+    <div class="pilar">
+      <div class="pilar-num">04</div>
+      <div><div class="pilar-name">Expansão como narrativa, não como necessidade</div><div class="pilar-desc">Comunicar "estamos expandindo" em vez de "buscamos representante" — invertendo a lógica de quem precisa para quem é procurado.</div></div>
+    </div>
+  </div>
+
+  <div class="card-title" style="margin-bottom:4px;">Linha do Tempo</div>
+  <div class="timeline">
+    <div class="tl-col">
+      <div class="tl-month">MÊS 1 · JUL/2026</div>
+      <div class="tl-label">Fundação</div>
+      <div class="tl-desc">Kickoff C1 (nova identidade em execução), início dos testes de card C2 no Brasil, briefing do vídeo institucional para produtora externa.</div>
+    </div>
+    <div class="tl-col">
+      <div class="tl-month">MÊS 2 · AGO/2026</div>
+      <div class="tl-label">Expansão</div>
+      <div class="tl-desc">Materiais institucionais em produção, ativação de C3 (Argentina/Uruguai), cobertura de feiras (C4) com antecedência mapeada.</div>
+    </div>
+    <div class="tl-col">
+      <div class="tl-month">MÊS 3 · SET/2026</div>
+      <div class="tl-label">Consolidação</div>
+      <div class="tl-desc">Nova identidade consolidada em todos os canais, relatório de recalibração do ciclo, decisão sobre ativar C5 (lançamento de produtos).</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Resumo do Período</div>
+    <div class="resumo-row"><span class="resumo-tag p">P1</span><div><div class="resumo-name">Portal do Concessionário</div><div class="resumo-desc">Upgrade da página pública + área restrita com login</div></div></div>
+    <div class="resumo-row"><span class="resumo-tag p">P2</span><div><div class="resumo-name">Kit Padrão Gomes</div><div class="resumo-desc">Selo de qualidade + kit físico de entrega técnica</div></div><span class="resumo-status">backlog</span></div>
+    <div class="resumo-row"><span class="resumo-tag p">P3</span><div><div class="resumo-name">Implementação de CRM</div><div class="resumo-desc">Contratação e implementação do Merge, integrado aos formulários de captação</div></div><span class="resumo-status">Mês 2–3</span></div>
+    <div class="resumo-row"><span class="resumo-tag c">C1</span><div><div class="resumo-name">Reposicionamento de Marca & Presença Digital</div><div class="resumo-desc">Nova identidade em todos os canais, site e materiais gráficos</div></div></div>
+    <div class="resumo-row"><span class="resumo-tag c">C2</span><div><div class="resumo-name">Captação de Concessionários/Distribuidores Brasil</div><div class="resumo-desc">Testes de card + diagnóstico comercial contínuo</div></div></div>
+    <div class="resumo-row"><span class="resumo-tag c">C3</span><div><div class="resumo-name">Expansão Internacional</div><div class="resumo-desc">Argentina e Uruguai, captação de distribuidor</div></div></div>
+    <div class="resumo-row"><span class="resumo-tag c">C4</span><div><div class="resumo-name">Presença Geolocalizada em Feiras e Eventos</div><div class="resumo-desc">Distribuição do material de C1 por região/data (ANDAV, Expointer e demais a confirmar) — sem cobertura física, sem geração de lead</div></div></div>
+    <div class="resumo-row"><span class="resumo-tag c">C5</span><div><div class="resumo-name">Bravo — Regularização & Nova Geração</div><div class="resumo-desc">Julho: divulgar 3 máquinas já prontas (4000, Gerador, Lâmina Frontal). Agosto: lançamento maior do Bravo 2000/1600</div></div></div>
+  </div>
+</div>
+
+<!-- ============ P1 - PORTAL DO CONCESSIONÁRIO ============ -->
+<div class="page" id="pj1">
+  <!-- PROJETO:INICIO id=pj1 nome="Portal do Concessionário" estado="resumo" -->
+  <div class="projeto-conteudo" data-estado="resumo">
+  <div class="pc-header">
+    <span class="pc-badge projeto">Projeto</span>
+    <h1 class="pc-title">Portal do Concessionário</h1>
+    <div class="pc-type">
+      <span class="status-pill">Em execução</span>
+      <span class="tags"><span class="tag">Início: Mês 1</span><span class="tag">Término: Mês 3</span></span>
+    </div>
+    <div class="tags">
+      <span class="tag">Web / Dev</span>
+      <span class="tag">Estratégia</span>
+    </div>
+  </div>
+
+  <div class="obj-box">Transformar a atual página "Seja um Concessionário" em um ambiente rico de informação para quem avalia investir na GOMES, e criar uma área restrita com login para quem já é concessionário ou distribuidor acessar catálogos e materiais completos — reduzindo a dependência de arquivos soltos enviados manualmente.</div>
+
+  <div class="disc-block">
+    <div class="disc-label">Web / Dev</div>
+    <div class="disc-text">Reestruturar a página pública com plano de negócio, modelo de operação, estrutura física e tecnológica necessária, e dados de mercado. Desenvolver login e área restrita para concessionários/distribuidores ativos, com catálogo e materiais de download.</div>
+  </div>
+  <div class="disc-block">
+    <div class="disc-label">Estratégia</div>
+    <div class="disc-text">Definir junto ao cliente quais informações são públicas (funil de captação) e quais são sensíveis (exclusivas de quem já é parceiro), evitando misturar os dois ambientes.</div>
+  </div>
+
+  <div class="tasks-title">Tarefas</div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Levantar com Luciano e Karina os dados de mercado e números que devem compor a página pública</span><span class="task-setor">[Estratégia]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Estruturar wireframe da nova página "Seja um Concessionário"</span><span class="task-setor">[Web/Dev]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Implementar sistema de login e área restrita</span><span class="task-setor">[Web/Dev]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Definir lista de materiais que entram na área restrita (catálogos, fotos, vídeos)</span><span class="task-setor">[Estratégia]</span></div>
+  </div>
+  <!-- PROJETO:FIM id=pj1 -->
+</div>
+
+<!-- ============ P2 - KIT PADRÃO GOMES (BACKLOG) ============ -->
+<div class="page" id="pj2">
+  <!-- PROJETO:INICIO id=pj2 nome="Kit Padrão Gomes" estado="resumo" -->
+  <div class="projeto-conteudo" data-estado="resumo">
+  <div class="pc-header">
+    <span class="pc-badge projeto">Projeto</span>
+    <h1 class="pc-title">Kit "Padrão Gomes"</h1>
+    <div class="pc-type">
+      <span class="status-pill backlog">Backlog · fora deste ciclo</span>
+      <span class="tags"><span class="tag">Início: a definir</span></span>
+    </div>
+    <div class="tags">
+      <span class="tag">Criação / Audiovisual</span>
+      <span class="tag">Estratégia</span>
+    </div>
+  </div>
+
+  <div class="alert.warn" style="background:rgba(122,122,154,0.12); border:1px solid var(--border); border-radius:10px; padding:14px 18px; font-size:13px; color:var(--muted); margin-bottom:22px;">Registrado para referência futura — não faz parte da execução deste ciclo de 3 meses.</div>
+
+  <div class="obj-box">Consolidar um selo de qualidade "Padrão Gomes" aplicado a toda a experiência de entrega da máquina: carta de apresentação da qualidade dos processos, manual de entrega técnica para as concessionárias e kit físico premium (chave em caixa estilo joalheria, brinde personalizado, manual com histórico de revisões da máquina).</div>
+
+  <div class="disc-block">
+    <div class="disc-label">Estratégia</div>
+    <div class="disc-text">Ideia já validada com o cliente (referência: kit que Evandro havia desenhado anteriormente, guardado "na gavetinha"). Retomar quando a estrutura de marca (C1) estiver consolidada.</div>
+  </div>
+  </div>
+  <!-- PROJETO:FIM id=pj2 -->
+</div>
+
+<!-- ============ P3 - IMPLEMENTAÇÃO DE CRM ============ -->
+<div class="page" id="pj3">
+  <!-- PROJETO:INICIO id=pj3 nome="Implementação de CRM" estado="resumo" -->
+  <div class="projeto-conteudo" data-estado="resumo">
+  <div class="pc-header">
+    <span class="pc-badge projeto">Projeto</span>
+    <h1 class="pc-title">Implementação de CRM</h1>
+    <div class="pc-type">
+      <span class="status-pill">A iniciar no Mês 2</span>
+      <span class="tags"><span class="tag">Início: Mês 2</span><span class="tag">Término: Mês 3</span></span>
+    </div>
+    <div class="tags">
+      <span class="tag">Web / Dev</span>
+      <span class="tag">Estratégia</span>
+    </div>
+  </div>
+
+  <div class="alert-info"><span>🔗</span><div><b>Dependência direta com P1, C2 e C3:</b> o CRM só entra em ação depois que os formulários de qualificação de leads (Portal do Concessionário, Captação BR e Expansão Internacional) estiverem funcionando — por isso o início é programado para o Mês 2, não o Mês 1.</div></div>
+
+  <div class="obj-box">Auxiliar a GOMES na contratação e implementação de um fluxo de CRM, integrando-o aos formulários de captação de leads já em construção (P1, C2, C3), para que nenhum lead qualificado se perca entre o clique no anúncio e a conversa com o comercial. Ferramenta recomendada pela Nonna: <b>Merge</b>.</div>
+
+  <div class="disc-block">
+    <div class="disc-label">Web / Dev</div>
+    <div class="disc-text">Configurar a integração técnica entre os formulários de captação (site) e o CRM Merge, garantindo que cada lead chegue já com os dados de qualificação preenchidos (região, porte, se já tem loja/distribuição aberta).</div>
+  </div>
+  <div class="disc-block">
+    <div class="disc-label">Estratégia</div>
+    <div class="disc-text">Apoiar a GOMES na contratação do Merge e no desenho do fluxo comercial dentro do CRM — estágios do funil, critérios de qualificação automática, roteamento para Luciano e o time comercial.</div>
+  </div>
+
+  <div class="tasks-title">Tarefas</div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Apoiar a contratação do Merge junto à GOMES</span><span class="task-setor">[Estratégia]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Desenhar o fluxo de funil e estágios de qualificação dentro do CRM</span><span class="task-setor">[Estratégia]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Integrar os formulários de captação (P1, C2, C3) ao CRM</span><span class="task-setor">[Web/Dev]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Testar o fluxo ponta a ponta (anúncio → formulário → CRM → comercial)</span><span class="task-setor">[Web/Dev]</span></div>
+  </div>
+  <!-- PROJETO:FIM id=pj3 -->
+</div>
+
+<!-- ============ C1 - REPOSICIONAMENTO DE MARCA ============ -->
+<div class="page" id="c1">
+  <!-- CAMPANHA:INICIO id=c1 nome="Reposicionamento de Marca & Presença Digital" estado="detalhada" -->
+  <div class="campanha-conteudo" data-estado="detalhada">
+  <div class="pc-header">
+    <span class="pc-badge campanha">Campanha</span>
+    <h1 class="pc-title">Reposicionamento de Marca & Presença Digital</h1>
+    <div class="pc-type">
+      <span class="status-pill">Em execução</span>
+      <span class="tags"><span class="tag">Início: Mês 1</span><span class="tag">Término: Mês 3</span></span>
+    </div>
+    <div class="tags">
+      <span class="tag">Criação / Audiovisual</span>
+      <span class="tag">Web / Dev</span>
+      <span class="tag">Social Media</span>
+      <span class="tag">Estratégia</span>
+    </div>
+  </div>
+
+  <div class="obj-box">Implementar em todos os canais a nova identidade visual já criada, unificando a comunicação da GOMES (hoje fragmentada entre Instagram, site e WhatsApp) e produzindo os materiais gráficos de social media que sustentam a nova percepção institucional da marca. O vídeo institucional entra aqui apenas como diretriz de roteiro e briefing — a produção é feita por uma equipe audiovisual terceirizada.</div>
+
+  <div class="subsection-title">00 · Conceito & Big Idea</div>
+  <div class="bigidea-hero">
+    <div class="bigidea-eyebrow">Big Idea</div>
+    <div class="bigidea-phrase">"Quem cresce não implora espaço. Ocupa o dele."</div>
+    <div class="bigidea-manifesto">A GOMES já opera na escala dos grandes — exporta para outros países, tem distribuidores que atendem centenas de clientes por semana, existe há décadas no mercado. Mas sua comunicação ainda se comporta como se estivesse pedindo licença: gritando num megafone de cima de um caixote, pedindo pra alguém prestar atenção. A prova mais dura disso é simples — um revendedor que já trabalha há dois anos com a concorrência direta, no Sul de Minas, nunca tinha ouvido falar da GOMES. O problema não é o produto. É que a empresa cresceu e a comunicação ficou pra trás. Essa campanha não tenta convencer ninguém de que a GOMES é grande — ela simplesmente para de se comportar como se fosse pequena. Trocamos o megafone pela vitrine: paramos de gritar pra quem passa e passamos a ser o lugar pra onde as pessoas já querem olhar.</div>
+  </div>
+
+  <div class="territorios">
+    <div class="territorio-card">
+      <div class="territorio-rota">Rota A · Escolhida</div>
+      <div class="territorio-title">"Quem cresce não implora espaço. Ocupa o dele."</div>
+      <div class="territorio-desc">Tom de atitude e postura — a marca comunica presença, não necessidade. Mais afirmativo, mais alinhado à virada de discurso ("expandindo" em vez de "buscando representante") já validada em reunião.</div>
+    </div>
+    <div class="territorio-card">
+      <div class="territorio-rota">Rota B · Alternativa</div>
+      <div class="territorio-title">"A Gomes sempre foi grande. Agora, parece."</div>
+      <div class="territorio-desc">Tom mais racional — ancorado em tornar visível uma escala que já existe de fato. Menos sobre atitude, mais sobre "finalmente mostrar o tamanho real". Pode se combinar com a Rota A se o cliente preferir um tom menos afirmativo.</div>
+    </div>
+  </div>
+
+  <div class="subsection-title">01 · Racional Estratégico</div>
+  <div class="card-body" style="margin-bottom:8px;">Funciona porque ataca exatamente a objeção que está travando o comercial hoje: o risco percebido por quem avalia investir como concessionário. Ninguém aposta alto — e virar concessionário é uma aposta alta — numa marca que parece estar implorando por atenção, porque isso sinaliza fraqueza, não oportunidade. Ao inverter a postura, comunicando presença e não necessidade, a GOMES se aproxima do padrão de percepção que já existe ao redor de John Deere, Case e New Holland: marcas que não precisam explicar o que fazem, porque a própria comunicação já sinaliza estrutura, tradição e demanda real. É a mesma lógica por trás da percepção do Luciano na prospecção: o problema não era o produto — era a invisibilidade da marca diante de quem já deveria conhecê-la.</div>
+
+  <div class="subsection-title">02 · Linha de Comunicação</div>
+  <div class="tomdevoz-row">
+    <span class="tomdevoz-chip">confiante</span>
+    <span class="tomdevoz-chip">maduro</span>
+    <span class="tomdevoz-chip">institucional sem ser frio</span>
+    <span class="tomdevoz-chip">sem soberba</span>
+  </div>
+  <div class="tomdevoz-frase">"A Gomes não pede seu lugar. Já está aqui."</div>
+  <div class="card-body" style="margin-bottom:8px;"><b>Estratégia de conteúdo</b> — três ângulos que se revezam: prova de operação real (bastidores, fábrica, entregas, assistência técnica em campo — mostrar, não descrever); prova social que já assume reconhecimento (depoimentos de concessionários ativos de Rondônia e Redenção/PA falando como quem já faz parte, não como quem está testando a marca); e postura de expansão (comunicar "estamos abrindo mais uma unidade" em vez de "procuramos representante").</div>
+  <div class="card-body"><b>Assinatura:</b> aproveitar a expressão que já nasceu dentro da própria empresa — <b>"Padrão Gomes"</b> — como selo público de identidade, não só como conceito interno de qualidade. Já tem lastro real (o cliente já usa essa expressão) e conecta esta campanha ao futuro kit físico do Projeto P2, sem precisar antecipá-lo.</div>
+
+  <div class="subsection-title">03 · Mecânica da Campanha</div>
+  <div class="mecanica-steps">
+    <div class="mecanica-step">
+      <div class="mecanica-stepnum">1</div>
+      <div><div class="mecanica-fase-label">Fase 1 — Silenciosa · Mês 1</div><div class="mecanica-text">Ajustes internos antes de qualquer anúncio público: fechamento da versão simplificada da logo, aplicação da nova identidade no site e nos templates de social, produção das primeiras peças-base, briefing do vídeo institucional para a produtora externa. Nenhum canal comunica publicamente que "algo está mudando" — a mudança acontece nos bastidores.</div></div>
+    </div>
+    <div class="mecanica-step">
+      <div class="mecanica-stepnum">2</div>
+      <div><div class="mecanica-fase-label">Fase 2 — Barulhenta · Meses 2–3</div><div class="mecanica-text">Lançamento sincronizado em todos os canais no mesmo momento — site, Instagram, materiais impressos, WhatsApp comercial — a "nova cara" da GOMES aparece de uma vez, não aos poucos, para gerar impacto real de virada. A partir daí, todo conteúdo novo (institucional, depoimentos, cobertura de feira) já nasce dentro do padrão novo.</div></div>
+    </div>
+  </div>
+  <div class="mecanica-atencao">⚠ Atualizado em 09/07 (diretriz do cliente): a prioridade mudou para foco total e paralelo — posts e materiais da nova marca saem o quanto antes, junto dos lançamentos de C5, sem esperar a logo estar 100% fechada. O ideal continua sendo logo fechada antes da Fase 2, mas isso não pode mais travar a publicação: usar a identidade já disponível agora e absorver o ajuste fino assim que a diretoria aprovar a versão simplificada.</div>
+
+  <div class="subsection-title">04 · Desdobramento por Disciplina</div>
+  <div class="disc-block">
+    <div class="disc-label">Criação / Audiovisual</div>
+    <div class="disc-text">Aplicar a nova identidade em todas as peças de social media e materiais institucionais, sempre dentro dos três ângulos da linha de comunicação (operação real, prova social, postura de expansão). Redigir o briefing e as diretrizes de roteiro para a produtora externa do vídeo institucional — foco em estabilidade, tamanho real da empresa e o conceito de "Padrão Gomes" como fio condutor visual.</div>
+  </div>
+  <div class="disc-block">
+    <div class="disc-label">Web / Dev <span style="color:var(--muted); font-weight:400;">(camada de comunicação)</span></div>
+    <div class="disc-text">O site precisa comunicar a mesma postura de presença que a campanha assume nas redes — página inicial e institucional devem se ler como "empresa que já chegou", não "empresa se apresentando". Ajustar toda a nomenclatura (substituir "revendedor" por "concessionário"/"distribuidor" em todo o site), alinhado ao Projeto P1.</div>
+  </div>
+  <div class="disc-block">
+    <div class="disc-label">Social Media</div>
+    <div class="disc-text">Unificar tom de voz e padrão visual em todos os posts, sem alterar o volume atual de publicações — o objetivo é qualidade e coerência, não quantidade. O feed passa a alternar sistematicamente entre os três ângulos da linha de comunicação, em vez de publicar conforme a demanda do dia.</div>
+  </div>
+  <div class="disc-block">
+    <div class="disc-label">Estratégia</div>
+    <div class="disc-text">Acompanhar o ajuste fino da nova logo junto à diretoria da GOMES, sem impor preferência estética própria da agência — a decisão final é do cliente. Validar com Luciano e Karina se a Fase 2 (lançamento sincronizado) deve coincidir com algum evento do calendário de feiras (ver C4).</div>
+  </div>
+
+  <div class="subsection-title">05 · Referências Visuais & Direção de Arte</div>
+  <div class="moodcards">
+    <div class="moodcard">
+      <div class="moodcard-label">Paleta & Mood</div>
+      <div class="moodcard-text">Tons sólidos e terrosos combinados com a cor institucional da GOMES — nada de paleta "startup", e sim uma paleta que remeta a solidez e maturidade, na mesma prateleira visual de John Deere e Case (verde/amarelo institucionais fortes, alto contraste, sem gradientes suaves).</div>
+    </div>
+    <div class="moodcard">
+      <div class="moodcard-label">Estilo de Imagem</div>
+      <div class="moodcard-text">Fotografia real de campo e fábrica — nunca banco de imagem genérico. A prova de operação real só funciona se a imagem for inegavelmente real: máquina suja de terra, mão calejada, produtor de verdade.</div>
+    </div>
+    <div class="moodcard">
+      <div class="moodcard-label">Tipografia</div>
+      <div class="moodcard-text">Display robusto para o nome GOMES (peso alto, sem serifas decorativas) — comunicando a mesma solidez do conceito. Textos de apoio em fonte limpa e institucional.</div>
+    </div>
+    <div class="moodcard">
+      <div class="moodcard-label">Inspiração</div>
+      <div class="moodcard-text">A linguagem visual de anúncios de John Deere e Case: pouco texto, imagem que fala por si, assinatura discreta. Evitar o excesso de informação técnica no visual — isso fica pro conteúdo educativo, não pra peça de marca.</div>
+    </div>
+  </div>
+
+  <div class="subsection-title">06 · Desdobramento em Peças</div>
+  <div class="pecas-list">
+    <div class="peca-item"><div class="peca-nome">Vídeo institucional (briefing)</div><div class="peca-desc">Roteiro-diretriz para a produtora externa executar — não produzido pela Nonna.</div></div>
+    <div class="peca-item"><div class="peca-nome">Card "Nova cara da Gomes"</div><div class="peca-desc">Peça de lançamento da Fase 2, anunciando a nova identidade sem explicar o processo.</div></div>
+    <div class="peca-item"><div class="peca-nome">Carrossel "Padrão Gomes, visualmente"</div><div class="peca-desc">Elementos da nova identidade aplicados em diferentes pontos de contato (site, uniforme, material impresso).</div></div>
+    <div class="peca-item"><div class="peca-nome">Série de depoimentos</div><div class="peca-desc">Concessionários ativos (Rondônia, Redenção/PA) falando como quem já faz parte da marca, não como teste.</div></div>
+    <div class="peca-item"><div class="peca-nome">Templates de social atualizados</div><div class="peca-desc">Base visual para toda produção recorrente entrar automaticamente no padrão novo.</div></div>
+  </div>
+
+  <div class="tasks-title">Tarefas</div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Fechar versão simplificada da logo com a diretoria (pré-requisito da Fase 2)</span><span class="task-setor">[Estratégia]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Aplicar nova identidade visual em templates de social media</span><span class="task-setor">[Criação]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Redigir briefing de roteiro do vídeo institucional para a produtora externa</span><span class="task-setor">[Criação]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Atualizar site com nova identidade e nomenclatura padronizada</span><span class="task-setor">[Web/Dev]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Coordenar lançamento sincronizado da Fase 2 em todos os canais</span><span class="task-setor">[Estratégia]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Publicar conteúdo apresentando a nova cara da GOMES nas redes</span><span class="task-setor">[Social Media]</span></div>
+
+  <div class="tasks-title">Ideias de Conteúdo</div>
+  <div class="content-ideas">
+    <div class="content-idea">
+      <span class="badge-video">Vídeo</span>
+      <h4>Diretrizes para o institucional</h4>
+      <p>Roteiro-briefing (não produzido pela Nonna) apresentando a GOMES como empresa de décadas, com tamanho real, "Padrão Gomes" de qualidade e presença em expansão — para a produtora externa executar.</p>
+    </div>
+    <div class="content-idea">
+      <span class="badge-card">Card</span>
+      <h4>Apresentando a nova marca</h4>
+      <p>Card institucional com a nova identidade visual, anunciando a "nova cara" da GOMES sem explicar o processo — deixando a marca falar por si, no momento da Fase 2.</p>
+    </div>
+    <div class="content-idea">
+      <span class="badge-carrossel">Carrossel</span>
+      <h4>Padrão Gomes, visualmente</h4>
+      <p>Carrossel mostrando lado a lado elementos da nova identidade aplicados em diferentes pontos de contato (site, uniforme, material impresso), reforçando coerência.</p>
+    </div>
+  </div>
+
+  <div class="trafego-box">
+    <h4>Estrutura de Tráfego</h4>
+    <div class="fase-block">
+      <div class="fase-tag">FASE ÚNICA · MESES 1–3</div>
+      <div class="fase-detail"><b>Objetivo:</b> reconhecimento e alcance da nova identidade. <b>Localização:</b> Brasil (nacional). <b>Público principal:</b> quem já segue ou interage com a GOMES nas redes. <b>Público secundário:</b> público frio do agro em geral. <b>Criativos:</b> peças com a nova identidade visual (cards e carrosséis), priorizando o material da Fase 2 (lançamento sincronizado).</div>
+    </div>
+    <div class="verba-bar">
+      <div class="verba-bar-seg" style="width:100%; background:var(--accent2);"></div>
+    </div>
+    <div class="verba-bar-legend"><span><span class="dot" style="background:var(--accent2);"></span>Meta Ads — alcance e reconhecimento de marca</span></div>
+  </div>
+  </div>
+  <!-- CAMPANHA:FIM id=c1 -->
+</div>
+
+<!-- ============ C2 - CAPTAÇÃO BRASIL ============ -->
+<div class="page" id="c2">
+  <!-- CAMPANHA:INICIO id=c2 nome="Captação de Concessionários/Distribuidores Brasil" estado="detalhada" -->
+  <div class="campanha-conteudo" data-estado="detalhada">
+  <div class="pc-header">
+    <span class="pc-badge campanha">Campanha</span>
+    <h1 class="pc-title">Captação de Concessionários/Distribuidores — Brasil</h1>
+    <div class="pc-type">
+      <span class="status-pill">Em execução</span>
+      <span class="tags"><span class="tag">Início: Mês 1</span><span class="tag">Término: Mês 3</span></span>
+    </div>
+    <div class="tags">
+      <span class="tag">Tráfego / Performance</span>
+      <span class="tag">Criação / Audiovisual</span>
+      <span class="tag">Estratégia</span>
+    </div>
+  </div>
+
+  <div class="obj-box">Captar concessionários e distribuidores qualificados no Brasil — donos de concessionária ou investidores de agro que já entendem o que é ter um negócio no setor — e não representantes avulsos ou pessoas físicas caçando renda extra. As reuniões periódicas de diagnóstico comercial (vendedores, clientes, ex-clientes e prospects, além do mapeamento de concorrência) acontecem dentro desta campanha, sem gerar demanda separada para a agência.</div>
+
+  <div class="alert-info"><span>🔗</span><div><b>Dependência direta com o Projeto P1:</b> o formulário de qualificação para onde esta campanha direciona o clique é a mesma peça que o Portal do Concessionário (P1) vai construir. A C2 não pode ser lançada em Fase 2 sem que a página de qualificação do P1 esteja pronta.</div></div>
+
+  <div class="subsection-title">00 · Conceito & Big Idea</div>
+  <div class="bigidea-hero">
+    <div class="bigidea-eyebrow">Big Idea</div>
+    <div class="bigidea-phrase">"Não é pra qualquer um. É pra quem já entende o que é ter uma concessionária."</div>
+    <div class="bigidea-manifesto">Existe uma diferença enorme entre quem quer "vender Gomes" e quem já sabe o que significa ter um negócio no agro — estrutura, capital, relação de longo prazo com o produtor. A campanha não busca representante avulso nem pessoa física caçando uma renda extra. Busca o dono de concessionária ou investidor do agro que reconhece, ao ler o anúncio, que aquilo foi escrito pra ele — e não pra qualquer um que clicar. O filtro começa na mensagem, antes mesmo do clique.</div>
+  </div>
+
+  <div class="territorios">
+    <div class="territorio-card">
+      <div class="territorio-rota">Rota Principal</div>
+      <div class="territorio-title">"Não é pra qualquer um. É pra quem já entende."</div>
+      <div class="territorio-desc">Comunica exclusividade e critério de seleção — afasta representante avulso e pessoa física, atrai dono de concessionária e investidor de agro. Aceita CTR menor em troca de lead mais qualificado.</div>
+    </div>
+    <div class="territorio-card">
+      <div class="territorio-rota">Território de apoio</div>
+      <div class="territorio-title">"A rede que só cresce pra quem já entende do campo."</div>
+      <div class="territorio-desc">Variante mais institucional do mesmo racional, útil para peças de carrossel/site onde há espaço para explicar melhor o critério de seleção.</div>
+    </div>
+  </div>
+
+  <div class="subsection-title">01 · Racional Estratégico</div>
+  <div class="card-body" style="margin-bottom:8px;">O objetivo real da C2 é qualidade, não volume bruto — por isso o racional é o oposto de uma campanha de performance clássica: em vez de reduzir atrito ao máximo, a campanha cria um filtro inteligente logo na largada. A mensagem precisa afastar quem não serve (representante avulso, pessoa física sem estrutura) e atrair quem serve (dono de concessionária, investidor de agro). O gatilho aqui não é "fácil demais, clique aqui" — é reconhecimento: "essa marca está falando comigo, não com qualquer um." Por isso o lead não cai direto no WhatsApp comercial sem filtro: ele passa primeiro pela página de qualificação do site (Projeto P1), e só chega a Luciano e ao comercial já com contexto real — região, porte do negócio, se já tem loja de implementos aberta.</div>
+
+  <div class="subsection-title">02 · Linha de Comunicação</div>
+  <div class="tomdevoz-row">
+    <span class="tomdevoz-chip">seletivo</span>
+    <span class="tomdevoz-chip">direto</span>
+    <span class="tomdevoz-chip">institucional-comercial</span>
+    <span class="tomdevoz-chip">sem apelo fácil</span>
+  </div>
+  <div class="tomdevoz-frase">"Se você já tem uma concessionária, sabe do que estamos falando."</div>
+  <div class="card-body" style="margin-bottom:8px;"><b>Estratégia de conteúdo</b> — dois ângulos que se revezam: <b>oferta seletiva</b> ("seja concessionário/distribuidor Gomes", com linguagem que já filtra quem lê) e <b>prova de quem já topou</b> (depoimento curto de concessionário ativo — Rondônia, Redenção/PA — mostrando resultado real, não história de superação).</div>
+  <div class="card-body"><b>Assinatura:</b> "Gomes: para quem já entende de concessionária." — reforça o critério de seleção em vez do baixo esforço de entrada.</div>
+
+  <div class="subsection-title">03 · Mecânica da Campanha</div>
+  <div class="mecanica-steps">
+    <div class="mecanica-step">
+      <div class="mecanica-stepnum">1</div>
+      <div><div class="mecanica-fase-label">Anúncio</div><div class="mecanica-text">O público vê o card com a mensagem seletiva — linguagem que já sinaliza "isso é pra quem entende de concessionária", não uma oferta genérica de renda extra.</div></div>
+    </div>
+    <div class="mecanica-step">
+      <div class="mecanica-stepnum">2</div>
+      <div><div class="mecanica-fase-label">Clique → Site</div><div class="mecanica-text">O clique leva direto para a página "Seja um Concessionário" do site (Projeto P1) — não para o WhatsApp. Isso evita que o comercial receba volume não filtrado.</div></div>
+    </div>
+    <div class="mecanica-step">
+      <div class="mecanica-stepnum">3</div>
+      <div><div class="mecanica-fase-label">Formulário de Qualificação</div><div class="mecanica-text">Perguntas objetivas: já tem loja de implementos aberta? Em qual região? Qual o porte do negócio? Esse formulário é a mesma peça que o Projeto P1 constrói — não é um formulário separado criado só para a campanha.</div></div>
+    </div>
+    <div class="mecanica-step">
+      <div class="mecanica-stepnum">4</div>
+      <div><div class="mecanica-fase-label">Repasse ao Comercial</div><div class="mecanica-text">Só depois desse filtro o lead chega a Luciano e ao time comercial, já qualificado e com contexto — a conversa de WhatsApp começa direto no ponto certo, sem perder tempo com triagem.</div></div>
+    </div>
+  </div>
+  <div class="mecanica-atencao">⚠ Ponto de atenção: a Fase 2 desta campanha (rodagem em volume) depende da página de qualificação do Projeto P1 estar pronta. Rodar tráfego pago antes disso reintroduz o problema que estamos tentando resolver — lead sem filtro caindo direto no comercial.</div>
+
+  <div class="subsection-title">04 · Desdobramento por Disciplina</div>
+  <div class="disc-block">
+    <div class="disc-label">Estratégia</div>
+    <div class="disc-text">Conduzir reuniões individuais com o time comercial da GOMES (vendedores, lideranças) e, quando possível, com clientes/ex-clientes/prospects indicados pelo cliente, para refinar o perfil do público prioritário. Mapear concorrência direta (Januário, Brasília, Case): discurso, preço e praças ocupadas. Definir, junto ao Web/Dev do Projeto P1, as perguntas exatas do formulário de qualificação.</div>
+  </div>
+  <div class="disc-block">
+    <div class="disc-label">Criação / Audiovisual</div>
+    <div class="disc-text">Produzir os cards com a mensagem seletiva "Seja um concessionário/distribuidor Gomes Máquinas", com as máquinas identificadas, escritos para quem já entende do negócio — não para quem está apenas curioso.</div>
+  </div>
+  <div class="disc-block">
+    <div class="disc-label">Tráfego / Performance</div>
+    <div class="disc-text">Rodar os anúncios direcionando 100% do clique para a página de qualificação do site (não para WhatsApp), priorizando públicos com perfil de loja de implementos já aberta (referência real: casos de Rondônia e Redenção/PA).</div>
+  </div>
+
+  <div class="tasks-title">Tarefas</div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Agendar reuniões individuais com Luciano e demais vendedores para diagnóstico</span><span class="task-setor">[Estratégia]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Levantar contatos de clientes/ex-clientes/prospects para entrevista, se o cliente autorizar</span><span class="task-setor">[Estratégia]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Mapear discurso, preço e praça dos concorrentes diretos</span><span class="task-setor">[Estratégia]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Definir perguntas do formulário de qualificação junto ao Projeto P1</span><span class="task-setor">[Estratégia/Web-Dev]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Produzir e rodar os cards com mensagem seletiva</span><span class="task-setor">[Criação/Tráfego]</span></div>
+
+  <div class="tasks-title">Ideias de Conteúdo</div>
+  <div class="content-ideas">
+    <div class="content-idea">
+      <span class="badge-video">Vídeo</span>
+      <h4>Depoimento de concessionário ativo</h4>
+      <p>Vídeo curto e sem roteiro ensaiado com um distribuidor real (Rondônia ou Redenção/PA) falando sobre entrega, eficiência e volume de atendimento — prova social que fala com quem já está no ramo.</p>
+    </div>
+    <div class="content-idea">
+      <span class="badge-card">Card</span>
+      <h4>Não é pra qualquer um</h4>
+      <p>Card com mensagem seletiva e as máquinas identificadas, voltado especificamente a quem já tem concessionária ou loja de implementos.</p>
+    </div>
+    <div class="content-idea">
+      <span class="badge-carrossel">Carrossel</span>
+      <h4>O que esperamos de um concessionário Gomes</h4>
+      <p>Carrossel explicando o critério de seleção — estrutura mínima, porte, região — funcionando como pré-filtro antes mesmo do clique.</p>
+    </div>
+  </div>
+
+  <div class="trafego-box">
+    <h4>Estrutura de Tráfego</h4>
+    <div class="fase-block">
+      <div class="fase-tag">FASE ÚNICA · MESES 1–3</div>
+      <div class="fase-detail"><b>Objetivo de campanha:</b> geração de leads qualificados via formulário no site (não WhatsApp direto). <b>Localização:</b> Brasil, com prioridade em regiões com potencial de conversão a mapear. <b>Público principal:</b> donos de concessionária/loja de implementos já aberta e investidores de agro. <b>Público secundário:</b> nenhum priorizado — representante avulso e pessoa física não são o alvo desta campanha. <b>Criativos:</b> cards com mensagem seletiva + depoimentos.</div>
+    </div>
+    <div class="verba-bar">
+      <div class="verba-bar-seg" style="width:70%; background:var(--accent3);"></div>
+      <div class="verba-bar-seg" style="width:30%; background:var(--accent2);"></div>
+    </div>
+    <div class="verba-bar-legend">
+      <span><span class="dot" style="background:var(--accent3);"></span>Google Ads 70%</span>
+      <span><span class="dot" style="background:var(--accent2);"></span>Meta Ads 30%</span>
+    </div>
+    <div class="fase-detail" style="margin-top:12px;"><b>Palavras-chave sugeridas (Google Search):</b> "seja um concessionário de máquinas agrícolas", "investir em concessionária agro", "distribuidor implementos agrícolas", "Gomes máquinas concessionária".</div>
+  </div>
+  </div>
+  <!-- CAMPANHA:FIM id=c2 -->
+</div>
+
+<!-- ============ C3 - EXPANSÃO INTERNACIONAL ============ -->
+<div class="page" id="c3">
+  <!-- CAMPANHA:INICIO id=c3 nome="Expansão Internacional" estado="detalhada" -->
+  <div class="campanha-conteudo" data-estado="detalhada">
+  <div class="pc-header">
+    <span class="pc-badge campanha">Campanha</span>
+    <h1 class="pc-title">Expansão Internacional — Argentina & Uruguai</h1>
+    <div class="pc-type">
+      <span class="status-pill">Teste em andamento · migração de funil</span>
+      <span class="tags"><span class="tag">Início: Mês 1</span><span class="tag">Término: Mês 3</span></span>
+    </div>
+    <div class="tags">
+      <span class="tag">Tráfego / Performance</span>
+      <span class="tag">Criação / Audiovisual</span>
+    </div>
+  </div>
+
+  <div class="obj-box">Captar, em Argentina e Uruguai, poucos contatos — mas de quem já tem estrutura de distribuição agro montada no país e só precisa somar a marca certa do Brasil à sua linha. Já existe tráfego pago rodando nesses países, ainda em estágio inicial e sem funil de qualificação formalizado — os contatos hoje caem centralizados na operação do Brasil.</div>
+
+  <div class="alert-info"><span>🔗</span><div><b>Dependência direta com a C2 e o Projeto P1:</b> esta campanha segue a mesma lógica de qualificação da C2 — o clique leva à página de qualificação do site (versão em espanhol), não direto ao WhatsApp. A prioridade do Mês 1 é migrar o tráfego já em andamento para esse padrão, não criar uma campanha nova do zero.</div></div>
+
+  <div class="subsection-title">00 · Conceito & Big Idea</div>
+  <div class="bigidea-hero">
+    <div class="bigidea-eyebrow">Big Idea</div>
+    <div class="bigidea-phrase">"Você já distribui pro campo. Só falta a marca certa do Brasil."</div>
+    <div class="bigidea-manifesto">A lógica é a mesma da C2, adaptada pra fora: não buscamos quem quer começar do zero em outro país, buscamos quem já tem estrutura de distribuição agro montada na Argentina ou no Uruguai e só precisa de uma marca brasileira de confiança pra somar à linha. O diferencial aqui não é "descobrir a GOMES" — é "a GOMES já está pronta pra você, que já distribui".</div>
+  </div>
+
+  <div class="tomdevoz-row">
+    <span class="tomdevoz-chip">seletivo</span>
+    <span class="tomdevoz-chip">direto</span>
+    <span class="tomdevoz-chip">adaptado, não traduzido</span>
+  </div>
+  <div class="tomdevoz-frase">"Gomes: la marca brasileña para quien ya distribuye."</div>
+
+  <div class="subsection-title">01 · Racional Estratégico</div>
+  <div class="card-body">O objetivo é poucos contatos, mas de quem já tem estrutura — o oposto de volume raso. Isso significa que a campanha internacional segue exatamente o mesmo racional de qualificação da C2: filtro na mensagem, qualificação no site antes do contato comercial. A diferença real não é de estratégia, é de estágio operacional: hoje já existe tráfego pago rodando nesses países, mas ainda cedo e sem funil de qualificação formalizado, com os contatos caindo centralizados na operação do Brasil. Isso é natural numa fase de teste, mas precisa evoluir para o mesmo padrão da C2 assim que a versão em espanhol da página de qualificação (P1) estiver pronta — senão o Brasil vira gargalo de triagem para os dois países.</div>
+
+  <div class="subsection-title">02 · Mecânica da Campanha</div>
+  <div class="mecanica-steps">
+    <div class="mecanica-step">
+      <div class="mecanica-stepnum">1</div>
+      <div><div class="mecanica-fase-label">Anúncio (ES)</div><div class="mecanica-text">Card com a mensagem seletiva, em espanhol, mirando quem já tem operação de distribuição agro no país — não quem está começando do zero.</div></div>
+    </div>
+    <div class="mecanica-step">
+      <div class="mecanica-stepnum">2</div>
+      <div><div class="mecanica-fase-label">Clique → Site (versão ES)</div><div class="mecanica-text">Mesmo padrão da C2: leva para a página de qualificação em espanhol, não direto para o WhatsApp.</div></div>
+    </div>
+    <div class="mecanica-step">
+      <div class="mecanica-stepnum">3</div>
+      <div><div class="mecanica-fase-label">Formulário de Qualificação</div><div class="mecanica-text">Perguntas objetivas: já distribui máquinas/implementos agrícolas? Há quanto tempo? Que região do país atende?</div></div>
+    </div>
+    <div class="mecanica-step">
+      <div class="mecanica-stepnum">4</div>
+      <div><div class="mecanica-fase-label">Repasse ao Comercial</div><div class="mecanica-text">Por ora, centralizado na equipe do Brasil — estágio atual da operação. Avaliar com o cliente, conforme o volume qualificado crescer, se cada país passa a ter um ponto de contato comercial próprio.</div></div>
+    </div>
+  </div>
+  <div class="mecanica-atencao">⚠ Ponto de atenção: as campanhas de tráfego já em andamento na Argentina/Uruguai estão rodando sem esse funil de qualificação — a prioridade do Mês 1 é migrar esse tráfego existente para o padrão da C2, não criar uma campanha nova do zero.</div>
+
+  <div class="subsection-title">03 · Desdobramento por Disciplina</div>
+  <div class="disc-block">
+    <div class="disc-label">Criação / Audiovisual</div>
+    <div class="disc-text">Adaptar (não traduzir literalmente) o card com a mensagem seletiva para o espanhol: "Distribuidor Gomes Máquinas no seu país" evolui para uma abordagem que já pressupõe estrutura de distribuição existente.</div>
+  </div>
+  <div class="disc-block">
+    <div class="disc-label">Tráfego / Performance</div>
+    <div class="disc-text">Migrar as campanhas já em andamento (Argentina e Uruguai) para o novo funil com qualificação via site, ajustando a segmentação para priorizar perfil de distribuidor já estabelecido.</div>
+  </div>
+
+  <div class="tasks-title">Tarefas</div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Adaptar (não traduzir) o card seletivo para espanhol</span><span class="task-setor">[Criação]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Alinhar com o Projeto P1 a versão em espanhol da página de qualificação</span><span class="task-setor">[Estratégia/Web-Dev]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Migrar tráfego já em andamento para o novo funil com formulário de qualificação</span><span class="task-setor">[Tráfego]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Reportar volume e qualidade dos contatos antes de decidir investimento maior</span><span class="task-setor">[Tráfego]</span></div>
+
+  <div class="tasks-title">Ideias de Conteúdo</div>
+  <div class="content-ideas">
+    <div class="content-idea">
+      <span class="badge-video">Vídeo</span>
+      <h4>Máquinas em operação (legendado)</h4>
+      <p>Reaproveitamento de material já captado da fábrica e de produtos em campo, legendado em espanhol.</p>
+    </div>
+    <div class="content-idea">
+      <span class="badge-card">Card</span>
+      <h4>La marca brasileña para quien ya distribuye</h4>
+      <p>Card seletivo, com imagens dos produtos e chamada objetiva em espanhol, mirando quem já tem estrutura de distribuição.</p>
+    </div>
+    <div class="content-idea">
+      <span class="badge-carrossel">Carrossel</span>
+      <h4>Linha de produtos Gomes</h4>
+      <p>Apresentação resumida da linha (transportadores, tratores, quadriciclo) para quem ainda não conhece a marca fora do Brasil.</p>
+    </div>
+  </div>
+
+  <div class="trafego-box">
+    <h4>Estrutura de Tráfego</h4>
+    <div class="fase-block">
+      <div class="fase-tag">FASE ÚNICA · MESES 1–3</div>
+      <div class="fase-detail"><b>Objetivo:</b> captação qualificada de distribuidor via formulário no site (versão ES), migrando do modelo atual sem filtro. <b>Localização:</b> Argentina e Uruguai. <b>Público:</b> distribuidores agro já estabelecidos no país. <b>Criativos:</b> card seletivo em espanhol.</div>
+    </div>
+    <div class="verba-bar"><div class="verba-bar-seg" style="width:100%; background:var(--accent2);"></div></div>
+    <div class="verba-bar-legend"><span><span class="dot" style="background:var(--accent2);"></span>Meta Ads — captação qualificada, escala reduzida</span></div>
+  </div>
+  </div>
+  <!-- CAMPANHA:FIM id=c3 -->
+</div>
+
+<!-- ============ C4 - FEIRAS E EVENTOS ============ -->
+<div class="page" id="c4">
+  <!-- CAMPANHA:INICIO id=c4 nome="Cobertura de Feiras e Eventos" estado="detalhada" -->
+  <div class="campanha-conteudo" data-estado="detalhada">
+  <div class="pc-header">
+    <span class="pc-badge campanha">Campanha</span>
+    <h1 class="pc-title">Presença Geolocalizada em Feiras e Eventos</h1>
+    <div class="pc-type">
+      <span class="status-pill">Em execução</span>
+      <span class="tags"><span class="tag">Início: Mês 1</span><span class="tag">Término: Mês 3</span></span>
+    </div>
+    <div class="tags">
+      <span class="tag">Tráfego / Performance</span>
+      <span class="tag">Social Media</span>
+    </div>
+  </div>
+
+  <div class="obj-box">Distribuir os criativos institucionais já produzidos em C1 (não peças novas) de forma geolocalizada nas regiões e datas das principais feiras do agro do ciclo — sem cobertura física, sem estande, sem geração de lead. O papel desta campanha é puramente fortalecer a percepção de marca por saturação geográfica: aparecer para quem está na área do evento, no momento certo.</div>
+
+  <div class="alert-info"><span>🔗</span><div><b>Dependência direta com a C1:</b> esta campanha não produz peça própria — reaproveita 100% do material institucional já criado em C1 (Reposicionamento de Marca), apenas redistribuído com segmentação geográfica e temporal.</div></div>
+
+  <div class="subsection-title">00 · Conceito & Big Idea</div>
+  <div class="bigidea-hero">
+    <div class="bigidea-eyebrow">Big Idea</div>
+    <div class="bigidea-phrase">"Você não precisa ver o estande da Gomes pra saber que ela está lá."</div>
+    <div class="bigidea-manifesto">Diferente de C1 (constrói percepção geral) e C2/C3 (geram lead qualificado), esta campanha não tenta captar nada — ela garante que, na semana e na região de cada feira do agro, quem está por perto veja a GOMES no feed, mesmo sem visitar nenhum estande físico. É presença por saturação geográfica, não por evento em si: a marca aparece pra quem está naquele raio, no momento certo, sem depender de estande, sem depender de equipe no local.</div>
+  </div>
+
+  <div class="subsection-title">01 · Racional Estratégico</div>
+  <div class="card-body">Funciona porque aproveita um comportamento natural de quem participa de feira do agro: mesmo quem não visita o estande físico está no celular, no mesmo raio geográfico, nos mesmos dias. Aparecer ali — com os mesmos materiais institucionais já produzidos em C1, sem custo extra de produção — reforça exatamente a percepção que a C1 já está construindo (marca sólida, presente, em expansão), testada num contexto de alta concentração do público certo, no mesmo lugar e no mesmo momento. Não há CTA de captação porque esse não é o papel desta campanha — o objetivo é ser visto, não converter.</div>
+
+  <div class="subsection-title">02 · Calendário do Ciclo (Julho–Setembro 2026)</div>
+  <div class="card-body" style="margin-bottom:14px;">Calendário confirmado com o cliente em 09/07. Julho não tem feira relevante — o mês fica livre para a Regularização de C5. Bahia Farm Show (08–13/jun) e Hortitec (17–19/jun) já ocorreram antes do início do ciclo.</div>
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div class="resumo-row" style="padding:16px 22px;"><span class="resumo-tag c" style="min-width:70px;">JUL</span><div><div class="resumo-name">Sem feira relevante</div><div class="resumo-desc">Mês liberado para concentrar esforço na Regularização de estoque represado (C5) e no reposicionamento de marca (C1)</div></div></div>
+    <div class="resumo-row" style="padding:16px 22px;"><span class="resumo-tag c" style="min-width:70px;">AGO</span><div><div class="resumo-name">Expointer — confirmada</div><div class="resumo-desc">Presença digital geolocalizada desde o dia 01/08. Levantamento inicial indicava 29/08–06/09; cliente confirmou início já no dia 1 — validar com Luciano se é ativação antecipada de campanha ou nova janela de datas do evento.</div></div></div>
+    <div class="resumo-row" style="padding:16px 22px;"><span class="resumo-tag c" style="min-width:70px;">AGO</span><div><div class="resumo-name">ANDAV · Fenasucro & Agrocana</div><div class="resumo-desc">Do levantamento inicial da Agro Advance — não confirmadas pelo cliente nesta rodada; ficam como candidatas de menor prioridade frente à Expointer</div></div></div>
+    <div class="resumo-row" style="padding:16px 22px; border-bottom:none;"><span class="resumo-tag c" style="min-width:70px;">SET</span><div><div class="resumo-name">A confirmar</div><div class="resumo-desc">Cliente ainda vai definir se há evento em setembro — sem ativação prevista até essa confirmação</div></div></div>
+  </div>
+
+  <div class="subsection-title">03 · Mecânica da Campanha</div>
+  <div class="mecanica-steps">
+    <div class="mecanica-step">
+      <div class="mecanica-stepnum">1</div>
+      <div><div class="mecanica-fase-label">Julho — sem ativação de feira</div><div class="mecanica-text">Mês livre nesta campanha; todo o esforço de tráfego/criação do mês se concentra na Regularização de C5 e no lançamento de C1.</div></div>
+    </div>
+    <div class="mecanica-step">
+      <div class="mecanica-stepnum">2</div>
+      <div><div class="mecanica-fase-label">Agosto — Expointer</div><div class="mecanica-text">Ativação geolocalizada a partir de 01/08, usando material institucional de C1 já publicado em julho — reaproveitamento real, não teórico.</div></div>
+    </div>
+    <div class="mecanica-step">
+      <div class="mecanica-stepnum">3</div>
+      <div><div class="mecanica-fase-label">Setembro — pendente</div><div class="mecanica-text">Sem ativação prevista até o cliente confirmar se há evento no mês.</div></div>
+    </div>
+  </div>
+  <div class="mecanica-atencao">⚠ Ponto de atenção: a data de início da Expointer (01/08, segundo o cliente) diverge do levantamento inicial da Agro Advance (29/08–06/09) — confirmar com Luciano antes de configurar a segmentação, para não ativar tráfego 4 semanas antes ou depois da data real do evento.</div>
+
+  <div class="subsection-title">04 · Desdobramento por Disciplina</div>
+  <div class="disc-block">
+    <div class="disc-label">Estratégia</div>
+    <div class="disc-text">Confirmar com Luciano a data exata da Expointer (divergência identificada) e se ANDAV/Fenasucro entram como ativações secundárias.</div>
+  </div>
+  <div class="disc-block">
+    <div class="disc-label">Tráfego / Performance</div>
+    <div class="disc-text">Configurar segmentação geolocalizada para a Expointer a partir de 01/08, usando o material de C1. Nenhuma ativação em julho.</div>
+  </div>
+  <div class="disc-block">
+    <div class="disc-label">Social Media</div>
+    <div class="disc-text">Reforçar organicamente os criativos de C1 na semana da Expointer, sem gerar conteúdo exclusivo.</div>
+  </div>
+
+  <div class="tasks-title">Tarefas</div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Confirmar com Luciano a data exata da Expointer (01/08 vs. 29/08–06/09)</span><span class="task-setor">[Estratégia]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Configurar segmentação geolocalizada para a Expointer</span><span class="task-setor">[Tráfego]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Reforçar organicamente os criativos de C1 na semana do evento</span><span class="task-setor">[Social Media]</span></div>
+
+  <div class="trafego-box">
+    <h4>Estrutura de Tráfego</h4>
+    <div class="fase-block">
+      <div class="fase-tag">AGOSTO · EXPOINTER · DESDE 01/08</div>
+      <div class="fase-detail"><b>Objetivo:</b> presença e reconhecimento de marca (impressão/frequência) — sem CTA de captação. <b>Localização:</b> raio geográfico da Expointer. <b>Público:</b> presente na região do evento, geolocalizado. <b>Criativos:</b> 100% reaproveitados de C1, sem peça exclusiva.</div>
+    </div>
+    <div class="verba-bar"><div class="verba-bar-seg" style="width:100%; background:var(--accent2);"></div></div>
+    <div class="verba-bar-legend"><span><span class="dot" style="background:var(--accent2);"></span>Meta Ads — impressão geolocalizada, sem investimento adicional de criação</span></div>
+  </div>
+  </div>
+  <!-- CAMPANHA:FIM id=c4 -->
+</div>
+
+<!-- ============ C5 - LANÇAMENTO DE PRODUTOS (PENDENTE) ============ -->
+<div class="page" id="c5">
+  <!-- CAMPANHA:INICIO id=c5 nome="Lançamento de Novos Produtos" estado="detalhada" -->
+  <div class="campanha-conteudo" data-estado="detalhada">
+  <div class="pc-header">
+    <span class="pc-badge campanha">Campanha</span>
+    <h1 class="pc-title">Bravo — Regularização & Nova Geração</h1>
+    <div class="pc-type">
+      <span class="status-pill">Prioridade máxima · Mês 1</span>
+      <span class="tags"><span class="tag">Regularização: Julho</span><span class="tag">Lançamento maior: Agosto</span></span>
+    </div>
+    <div class="tags">
+      <span class="tag">Criação / Audiovisual</span>
+      <span class="tag">Tráfego / Performance</span>
+    </div>
+  </div>
+
+  <div class="alert-info"><span>🔊</span><div><b>Atualização de 09/07 (áudio do cliente):</b> existem três máquinas já produzidas e entregues, mas nunca divulgadas — o material (fotos e vídeos) está pronto desde a captação na Festa do Colono, em maio, e ficou parado. Isso muda a prioridade do ciclo: julho vira mês de regularização, não de lançamento espaçado como estava planejado antes.</div></div>
+
+  <div class="obj-box">Zerar até o fim de julho o estoque de comunicação represado — três máquinas já produzidas e em campo, mas nunca divulgadas — e, a partir de agosto, dar um lançamento de maior fôlego para a nova geração de Bravos menores (maior demanda de mercado). Tudo isso corre em paralelo ao reposicionamento de marca (C1), que também tem prioridade máxima e sai o quanto antes, sem esperar a marca estar 100% fechada.</div>
+
+  <div class="subsection-title">00 · Conceito & Big Idea</div>
+  <div class="bigidea-hero">
+    <div class="bigidea-eyebrow">Big Idea</div>
+    <div class="bigidea-phrase">"A nova geração Bravo carrega mais. No trailer e no campo."</div>
+    <div class="bigidea-manifesto">A linha Bravo está entrando numa nova geração de capacidade — e boa parte dela já está em uso, esperando só ser mostrada. O 4000 carrega mais peso. O gerador carrega energia, inclusive para os drones que já fazem parte da rotina do produtor moderno. A lâmina frontal carrega mais função pra mesma máquina. Cada lançamento é mais uma prova do mesmo avanço técnico — e o próximo capítulo, o Bravo pequeno, é o que o mercado está pedindo com mais força.</div>
+  </div>
+  <div class="tomdevoz-frase">Assinatura recorrente: "Nova geração Bravo." — usada em todos os lançamentos, criando fio condutor entre produtos diferentes.</div>
+
+  <div class="subsection-title">01 · Racional Estratégico</div>
+  <div class="card-body">O atraso na divulgação já gerou desconforto interno — a equipe da GOMES está "alvoroçada" porque máquinas prontas desde maio nunca apareceram nas redes. Isso muda o racional: a prioridade de julho não é criar uma narrativa elaborada de lançamento, é <b>eliminar o atraso</b> o mais rápido possível, usando o material que já existe. Só depois de zerar esse passivo é que faz sentido investir energia criativa maior no próximo capítulo — o Bravo pequeno, que tem mais demanda de mercado e por isso merece um lançamento com mais peso, não uma divulgação corrida em meio ao atraso dos outros três.</div>
+
+  <div class="subsection-title">02 · Fase 1 — Regularização (Julho)</div>
+  <div class="card-body" style="margin-bottom:14px;">Três máquinas já produzidas e entregues, mas nunca divulgadas — material pronto (fotos e vídeos), só falta publicar em sequência até zerar o passivo até o fim do mês.</div>
+  <div class="pecas-list">
+    <div class="peca-item"><div class="peca-nome">Bravo 4000</div><div class="peca-desc">Transportador de carga, já em uso — vídeo e fotos prontos, aguardando publicação.</div></div>
+    <div class="peca-item"><div class="peca-nome">Bravo Gerador de Energia</div><div class="peca-desc">Uso principal: carregamento de drones em campo — vídeo e fotos prontos.</div></div>
+    <div class="peca-item"><div class="peca-nome">Bravo com Lâmina Frontal</div><div class="peca-desc">Produto ainda não catalogado no planejamento anterior — vídeo e fotos prontos, mesma prioridade dos outros dois.</div></div>
+  </div>
+  <div class="mecanica-atencao">⚠ Ponto de atenção: não é lançamento no sentido clássico — é regularização. O tom é mais direto, menos "grande estreia", porque são três produtos de uma vez, intercalados, não um evento único.</div>
+
+  <div class="subsection-title">03 · Fase 2 — Lançamento Maior (Agosto)</div>
+  <div class="card-body">Com o passivo zerado, agosto recebe o lançamento de maior fôlego do ciclo: o novo <b>Bravo 2000</b> e o novo <b>Bravo 1600</b> — versões menores da linha, identificadas pelo cliente como as de maior demanda de mercado. Diferente da Fase 1, aqui cabe construção de expectativa e um tratamento criativo mais elaborado, já que não há atraso a correr atrás.</div>
+  <div class="mecanica-atencao">⚠ Pendência: specs completas do Bravo 2000 e do Bravo 1600 ainda não foram detalhadas — aprofundar esta fase assim que o cliente fornecer os dados técnicos, junto com o material de campo (mesma exigência de vídeo/foto real das Responsabilidades do Cliente, Bloco 05).</div>
+
+  <div class="subsection-title">04 · Mecânica da Campanha</div>
+  <div class="mecanica-steps">
+    <div class="mecanica-step">
+      <div class="mecanica-stepnum">1</div>
+      <div><div class="mecanica-fase-label">Julho — Regularização</div><div class="mecanica-text">Publicar os três produtos já prontos em sequência intercalada (foto, vídeo, foto, vídeo...), rodando em paralelo com o lançamento de C1 — sem esperar a marca nova estar 100% fechada, conforme prioridade definida pelo cliente.</div></div>
+    </div>
+    <div class="mecanica-step">
+      <div class="mecanica-stepnum">2</div>
+      <div><div class="mecanica-fase-label">Agosto — Lançamento Bravo Pequeno</div><div class="mecanica-text">Bravo 2000 e Bravo 1600, com tratamento de lançamento mais elaborado — construção de expectativa, maior investimento criativo, aproveitando que a base já viu a "nova geração" ganhar forma em julho.</div></div>
+    </div>
+  </div>
+  <div class="mecanica-atencao">⚠ Ponto de atenção geral: o gatilho desta mudança foi justamente um atraso de comunicação gerando desconforto interno na GOMES — a sequência de julho precisa sair rápido, sem depender de aprovações longas, para não repetir o mesmo problema que motivou o ajuste.</div>
+
+  <div class="subsection-title">05 · Desdobramento por Disciplina</div>
+  <div class="disc-block">
+    <div class="disc-label">Criação / Audiovisual</div>
+    <div class="disc-text">Organizar o material já pronto (Drive do cliente) numa sequência de publicação intercalando foto e vídeo dos três produtos de julho. Para agosto, planejar peças de lançamento com mais elaboração para o Bravo 2000/1600 assim que specs e material chegarem.</div>
+  </div>
+  <div class="disc-block">
+    <div class="disc-label">Tráfego / Performance</div>
+    <div class="disc-text">Julho: sem necessidade de investimento pesado — o objetivo é publicar, não performar. Agosto: rodar janela de lançamento do Bravo pequeno com maior investimento, aproveitando o momentum de julho.</div>
+  </div>
+
+  <div class="tasks-title">Tarefas</div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Organizar sequência de publicação com o material já pronto no Drive (Bravo 4000, Gerador, Lâmina Frontal)</span><span class="task-setor">[Criação]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Publicar os três produtos intercalados (foto/vídeo) até o fim de julho</span><span class="task-setor">[Social Media]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Solicitar ao cliente specs técnicas do Bravo 2000 e Bravo 1600</span><span class="task-setor">[Estratégia]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Planejar peças de lançamento do Bravo pequeno para agosto</span><span class="task-setor">[Criação]</span></div>
+  <div class="task-item"><span class="task-dot"></span><span class="task-text">Rodar janela de tráfego do lançamento Bravo pequeno (Agosto)</span><span class="task-setor">[Tráfego]</span></div>
+
+  <div class="tasks-title">Ideias de Conteúdo · Julho (Regularização)</div>
+  <div class="content-ideas">
+    <div class="content-idea">
+      <span class="badge-video">Vídeo</span>
+      <h4>Bravo 4000 em operação</h4>
+      <p>Material já pronto — transportador em uso real de campo.</p>
+    </div>
+    <div class="content-idea">
+      <span class="badge-card">Card</span>
+      <h4>Bravo Gerador de Energia</h4>
+      <p>Foto do produto com o ângulo de carregamento de drone, já disponível no Drive.</p>
+    </div>
+    <div class="content-idea">
+      <span class="badge-video">Vídeo</span>
+      <h4>Bravo com Lâmina Frontal</h4>
+      <p>Material já pronto — produto novo no radar do planejamento, mesma prioridade dos outros dois.</p>
+    </div>
+  </div>
+
+  <div class="trafego-box">
+    <h4>Estrutura de Tráfego</h4>
+    <div class="fase-block">
+      <div class="fase-tag">JULHO · REGULARIZAÇÃO</div>
+      <div class="fase-detail"><b>Objetivo:</b> publicar e zerar o passivo, sem foco em performance paga. <b>Público:</b> base orgânica já engajada.</div>
+    </div>
+    <div class="fase-block">
+      <div class="fase-tag">AGOSTO · LANÇAMENTO BRAVO PEQUENO</div>
+      <div class="fase-detail"><b>Objetivo:</b> alcance e reconhecimento do lançamento de maior fôlego do ciclo. <b>Público:</b> base já engajada (aquecida pela regularização de julho) + interesse em maquinário agrícola de menor porte.</div>
+    </div>
+    <div class="verba-bar"><div class="verba-bar-seg" style="width:100%; background:var(--accent2);"></div></div>
+    <div class="verba-bar-legend"><span><span class="dot" style="background:var(--accent2);"></span>Meta Ads — concentrado no lançamento de agosto</span></div>
+  </div>
+  </div>
+  <!-- CAMPANHA:FIM id=c5 -->
+</div>
+
+<!-- ============ BLOCO 04 ============ -->
+<div class="page" id="p04">
+  <div class="eyebrow">Bloco 04</div>
+  <h1 class="page-title">Rotina & Demandas Contínuas</h1>
+  <p class="page-sub">O que continua rodando sem virar projeto ou campanha isolada.</p>
+
+  <div class="card">
+    <div class="card-title">Tráfego Contínuo</div>
+    <div class="card-body">As campanhas que já estão no ar continuam rodando normalmente, sem pausa, enquanto a reestruturação de marca acontece em paralelo. Não há intenção de mexer no volume de campanhas já definido — o ajuste é de qualidade e assertividade da comunicação, não de quantidade.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Social Media Contínuo</div>
+    <div class="card-body">Volume de postagens mantido conforme o que já está planejado com a equipe (Alessandra), sem alteração neste ciclo. Programa interno de gamificação (equipe/rede posta e marca a GOMES, acumula pontos, ganha premiação anual) segue como estímulo de cultura interna do cliente — não gera peça de campanha nem demanda direta para a agência.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Outras Demandas Recorrentes</div>
+    <div class="card-body">Relatório mensal de acompanhamento do plano de ação (entregas por mês, o que evoluiu, o que precisa mudar de rota). Dashboard de campanha já existente do cliente segue sendo a fonte de números — a Nonna soma a leitura qualitativa por cima dos números frios.</div>
+  </div>
+</div>
+
+<!-- ============ BLOCO 05 ============ -->
+<div class="page" id="p05">
+  <div class="eyebrow">Bloco 05</div>
+  <h1 class="page-title">Infraestrutura, Acessos & Responsabilidades</h1>
+  <p class="page-sub">O que precisa estar pronto para a equipe trabalhar sem travar — e o que é dever do cliente, não da agência.</p>
+
+  <div class="card">
+    <div class="card-title">Acessos e Integrações Necessárias</div>
+    <div class="card-body" style="font-style:italic; color:var(--muted);">Estado atual de Meta Business Manager, Google Ads e acesso ao site/hospedagem não foi detalhado na reunião — a confirmar com o cliente antes do início da Fase de tráfego.</div>
+  </div>
+
+  <div class="card-title" style="margin-bottom:4px;">Reuniões / Alinhamentos Pendentes</div>
+  <div class="check-item" onclick="this.classList.toggle('done')">
+    <div class="check-box"></div>
+    <div><div class="check-name">Kickoff geral do ciclo com Luciano, Karina e diretoria</div><div class="check-desc">Alinhar prazos, prioridades e nomenclatura oficial (concessionário/distribuidor).</div></div>
+  </div>
+  <div class="check-item" onclick="this.classList.toggle('done')">
+    <div class="check-box"></div>
+    <div><div class="check-name">Reuniões individuais de diagnóstico com vendedores e lideranças</div><div class="check-desc">Parte da execução de C2 — entender dores por função antes de fechar a comunicação.</div></div>
+  </div>
+  <div class="check-item" onclick="this.classList.toggle('done')">
+    <div class="check-box"></div>
+    <div><div class="check-name">Definição do calendário de feiras do semestre</div><div class="check-desc">Insumo direto para C4 — precisa vir de Luciano com antecedência real.</div></div>
+  </div>
+  <div class="check-item" onclick="this.classList.toggle('done')">
+    <div class="check-box"></div>
+    <div><div class="check-name">Aprovação final da logo simplificada</div><div class="check-desc">Pendência da diretoria da GOMES antes de fechar o manual de marca em C1.</div></div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-title">Materiais e Insumos Necessários</div>
+    <div class="card-body">Material bruto do Bravo 4000, Gerador de Energia e Lâmina Frontal está pronto (fotos e vídeos, capturados na Festa do Colono em maio) e salvo no Drive do cliente — pronto para publicação imediata em julho (C5, Fase 1). Catálogo dobrável na horizontal já existe como referência de material impresso. Falta: vídeo institucional profissional (a contratar produtora externa), e specs técnicas + material de campo do Bravo 2000 e Bravo 1600 (C5, Fase 2 — agosto).</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Observações e Pendências</div>
+    <div class="card-body"><b>Embaixador Gomes:</b> proposta de trazer uma autoridade/rosto para a marca foi levantada, mas o próprio time reconhece que só faz sentido depois que a estrutura de comunicação estiver pronta — não entra neste ciclo. <b>Globo Rural / mídia nacional:</b> possibilidade de pauta jornalística (não anúncio) mostrando produtos em uso real — avaliar após consolidação da nova identidade. <b>Kit Padrão Gomes (P2):</b> backlog, ver página do projeto.</div>
+  </div>
+
+  <div class="subsection-title">Responsabilidades do Cliente</div>
+
+  <div class="resp-block">
+    <div class="resp-block-title">Responsabilidades Gerais</div>
+    <div class="resp-item"><span class="resp-dot"></span><div class="resp-text"><b>Fornecer informação de produto</b> — specs técnicas, fotos, vídeos e dados de cada linha (incluindo lançamentos) sob demanda da equipe Nonna, dentro do prazo combinado.</div></div>
+    <div class="resp-item"><span class="resp-dot"></span><div class="resp-text"><b>Prestar suporte técnico</b> — disponibilizar alguém da equipe GOMES para esclarecer dúvidas técnicas de produto sempre que a criação ou o comercial precisar.</div></div>
+    <div class="resp-item"><span class="resp-dot"></span><div class="resp-text"><b>Não terceirizar para a agência decisões e insumos que são do cliente</b> — aprovação de identidade visual, dados de produto, autorização de imagem/depoimento e escolha de ferramentas (ex: CRM) são responsabilidade da GOMES, não da Nonna.</div></div>
+    <div class="resp-item"><span class="resp-dot"></span><div class="resp-text"><b>Aprovar materiais dentro do prazo combinado</b> — peças, roteiros e briefings aguardando validação da diretoria ou do comercial têm prazo de resposta acordado em reunião de kickoff.</div></div>
+  </div>
+
+  <div class="resp-block">
+    <div class="resp-block-title">Responsabilidades Específicas do Ciclo</div>
+    <div class="resp-item"><span class="resp-dot"></span><div class="resp-text">Aprovar a versão simplificada da logo com a diretoria <span class="resp-tag-campanha">C1</span></div></div>
+    <div class="resp-item"><span class="resp-dot"></span><div class="resp-text">Autorizar e viabilizar contato com clientes/ex-clientes/prospects para entrevista de diagnóstico <span class="resp-tag-campanha">C2</span></div></div>
+    <div class="resp-item"><span class="resp-dot"></span><div class="resp-text">Definir e confirmar o calendário de feiras do ciclo junto a Luciano <span class="resp-tag-campanha">C4</span></div></div>
+    <div class="resp-item"><span class="resp-dot"></span><div class="resp-text">Fornecer specs técnicas e material de campo (foto/vídeo) do Bravo 2000 e Bravo 1600 para o lançamento de agosto <span class="resp-tag-campanha">C5</span></div></div>
+    <div class="resp-item"><span class="resp-dot"></span><div class="resp-text">Contratar o CRM Merge e disponibilizar acesso à equipe de Web/Dev para integração <span class="resp-tag-campanha">P3</span></div></div>
+    <div class="resp-item"><span class="resp-dot"></span><div class="resp-text">Disponibilizar acesso a Meta Business Manager, Google Ads e site/hospedagem <span class="resp-tag-campanha">Geral</span></div></div>
+  </div>
+
+  <div class="resp-clausula"><b>Sobre prazos e resultados:</b> este planejamento funciona como uma corrente — cada etapa depende da anterior para manter o ritmo combinado. Quando uma pendência listada acima atrasa, o efeito não fica isolado: ele se propaga para as entregas seguintes e pode interferir diretamente nos resultados esperados para o ciclo. Por isso, cumprir os prazos das responsabilidades acima é tão importante para o resultado final quanto qualquer entrega da agência — é um trabalho conjunto, e o ritmo de um lado sustenta o ritmo do outro.</div>
+</div>
+
+</main>
+
+<footer class="doc-footer">NONNA AGÊNCIA DIGITAL · Documento gerado para uso interno e apresentação ao cliente · v1.0</footer>
+
+<script>
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click', function(e){
+    e.preventDefault();
+    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById(this.dataset.page).classList.add('active');
+    window.scrollTo(0,0);
+  });
+});
+</script>
+
+</body>
+</html>
