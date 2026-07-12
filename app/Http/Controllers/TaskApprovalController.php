@@ -32,6 +32,6 @@ class TaskApprovalController extends Controller
         );
 
         return redirect()->route('tasks.show', $task)
-            ->with('success', 'Tarefa enviada para aprovação. Os contatos serão notificados.');
+            ->with('success', 'Rodada de aprovação criada. Envie pro cliente na Central de Aprovações.');
     }
 }

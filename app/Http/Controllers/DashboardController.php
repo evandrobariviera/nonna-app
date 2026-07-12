@@ -102,10 +102,15 @@ class DashboardController extends Controller
             ->get();
 
         $roundsPending = TaskApprovalRound::where('status', 'pending')
+            ->whereNotNull('sent_at')
             ->with('task.client')
             ->orderByDesc('submitted_at')
             ->limit(8)
             ->get();
+
+        $roundsAwaitingSendCount = TaskApprovalRound::where('status', 'pending')
+            ->whereNull('sent_at')
+            ->count();
 
         $roundsApproved = TaskApprovalRound::where('status', 'approved')
             ->with('task.client')
@@ -145,7 +150,7 @@ class DashboardController extends Controller
             'meetingsPosReuniao', 'meetingsRealizadas',
             'clientsWithoutActivePlan', 'plansExpiringSoon', 'activePlans',
             'teamMeetingsToday', 'openTickets',
-            'roundsPending', 'roundsApproved', 'roundsChangesRequested',
+            'roundsPending', 'roundsAwaitingSendCount', 'roundsApproved', 'roundsChangesRequested',
             'headsTickets', 'headsRevisaoInterna'
         ));
     }

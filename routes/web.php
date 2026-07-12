@@ -279,6 +279,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Dashboard central de aprovações ──
     Route::get('/aprovacoes', [\App\Http\Controllers\ApprovalDashboardController::class, 'index'])
         ->name('approvals.index');
+    Route::post('/aprovacoes/{round}/enviar', [\App\Http\Controllers\ApprovalDashboardController::class, 'send'])
+        ->name('approvals.send');
 
     // ── Dashboard global de projetos ──
     Route::get('/projetos', [ProjectController::class, 'dashboard'])

@@ -8,13 +8,15 @@ Quando uma tarefa é enviada para aprovação do cliente, o App dispara um webho
 
 ## Quando o webhook é disparado
 
-`TaskApprovalService::submitForApproval()` cria uma `TaskApprovalRound` e, para cada contato do cliente marcado com `receives_approvals = true`, gera um `TaskApprovalToken` e chama `dispatchWebhook()` — ou seja, **um POST por contato** (não um por rodada).
+**Atualizado (2026-07):** criar a rodada de aprovação e notificar o cliente são dois passos separados — `TaskApprovalService::submitForApproval()` só cria a `TaskApprovalRound` e gera um `TaskApprovalToken` por contato (marcado com `receives_approvals = true`), **sem** disparar nada ainda. O webhook só sai quando alguém chama `TaskApprovalService::sendToClient(TaskApprovalRound $round)` — um POST por contato/token daquela rodada, e a rodada é marcada com `sent_at = now()` (idempotente: chamar de novo numa rodada já enviada não reenvia nada).
 
-Esse método é acionado por três caminhos:
+`submitForApproval()` é acionado por dois caminhos, e nenhum dos dois envia sozinho:
 
-1. **Automático** (`TaskApprovalService::maybeAutoSubmitOnApprovalTransition()`, chamado pelo `TaskObserver` em todo `$task->update()` individual): dispara sozinho sempre que `status = 'aprovacao'` **e** `situation = 'Enviar para o cliente'` ficam verdadeiros ao mesmo tempo — não importa se a mudança veio do board de Sprint, de Filas, de drag-and-drop ou de um formulário. Só dispara se não houver rodada `pending` já aberta pra tarefa, e só se houver anexos não marcados como entregáveis ainda.
-2. **Manual** (`TaskApprovalController::store()`): botão "Enviar para aprovação" na tela da tarefa, com seleção manual de anexos.
-3. **Atualização em massa (`bulkUpdate`) NÃO dispara** — decisão consciente, não uma limitação técnica: `Builder::update()` pula os eventos do Eloquent (e o `TaskObserver` com ele), e a regra de negócio é que aprovação sempre vai uma tarefa por vez pro cliente, nunca em lote.
+1. **Automático** (`TaskApprovalService::maybeAutoSubmitOnApprovalTransition()`, chamado pelo `TaskObserver` em todo `$task->update()` individual): cria a rodada sozinho sempre que `status = 'aprovacao'` **e** `situation = 'Enviar para o cliente'` ficam verdadeiros ao mesmo tempo — não importa se a mudança veio do board de Sprint, de Filas, de drag-and-drop ou de um formulário. Só cria se não houver rodada `pending` já aberta pra tarefa, e só se houver anexos não marcados como entregáveis ainda.
+2. **Manual** (`TaskApprovalController::store()`): botão "Enviar para aprovação" na tela da tarefa, com seleção manual de anexos — cria a rodada, mas também não notifica.
+3. **Atualização em massa (`bulkUpdate`) NÃO cria rodada** — decisão consciente, não uma limitação técnica: `Builder::update()` pula os eventos do Eloquent (e o `TaskObserver` com ele), e a regra de negócio é que aprovação sempre vai uma tarefa por vez pro cliente, nunca em lote.
+
+`sendToClient()` só é chamado de um único lugar: o botão **"Enviar pro Cliente"** na Central de Aprovações (`/aprovacoes`, `ApprovalDashboardController::send()`) — uma ação manual e deliberada, separada da criação da rodada. Enquanto a rodada não foi enviada, ela aparece como "Aguardando Envio" (`TaskApprovalRound::displayStatusLabel()`).
 
 ## Endpoint
 

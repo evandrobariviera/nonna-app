@@ -17,9 +17,10 @@ class TaskApprovalService
 {
     /**
      * Chamado pelo TaskObserver sempre que status/situação de uma tarefa mudam —
-     * dispara a aprovação sozinho quando as duas condições batem ao mesmo tempo
-     * (status "Aprovação" + situação "Enviar para o cliente"), não importa por
-     * qual tela/dropdown a mudança veio.
+     * cria a rodada de aprovação sozinho quando as duas condições batem ao mesmo
+     * tempo (status "Aprovação" + situação "Enviar para o cliente"), não importa
+     * por qual tela/dropdown a mudança veio. Só cria a rodada — o envio de fato
+     * pro cliente continua sendo manual, pelo botão na Central de Aprovações.
      */
     public function maybeAutoSubmitOnApprovalTransition(Task $task): void
     {
@@ -48,13 +49,15 @@ class TaskApprovalService
 
         $this->submitForApproval($task, $submitter, $attachmentIds);
 
-        session()->flash('success', 'Tarefa "' . $task->title . '" enviada para aprovação do cliente automaticamente.');
+        session()->flash('success', 'Tarefa "' . $task->title . '" entrou em Aprovação — envie pro cliente na Central de Aprovações.');
     }
 
     /**
      * Submete a tarefa para aprovação do cliente.
-     * Cria uma rodada, marca os anexos como entregáveis,
-     * gera tokens por contato e dispara webhooks para o n8n.
+     * Cria uma rodada, marca os anexos como entregáveis e gera um token por
+     * contato — mas NÃO notifica ninguém ainda. O envio de fato (webhook pro
+     * n8n) é um passo manual à parte, disparado por sendToClient() a partir
+     * da Central de Aprovações.
      *
      * @param  array<string>  $attachmentIds  UUIDs dos task_attachments que serão entregáveis
      */
@@ -77,21 +80,38 @@ class TaskApprovalService
 
         $task->update(['status' => 'aprovacao']);
 
-        $contacts = $this->getApprovalContacts($task);
-
-        foreach ($contacts as $contact) {
-            $token = TaskApprovalToken::create([
+        foreach ($this->getApprovalContacts($task) as $contact) {
+            TaskApprovalToken::create([
                 'round_id'   => $round->id,
                 'contact_id' => $contact->id,
                 'token'      => Str::uuid()->toString(),
                 'status'     => 'pending',
                 'expires_at' => now()->addDays(7),
             ]);
-
-            $this->dispatchWebhook($round, $token, $contact);
         }
 
         return $round;
+    }
+
+    /**
+     * Dispara de fato a notificação pro cliente (webhook pro n8n, um POST por
+     * contato) e marca a rodada como enviada. Ação manual, disparada pelo
+     * botão "Enviar pro Cliente" na Central de Aprovações — nunca automática,
+     * pra nunca mandar mais de uma tarefa pro cliente sem controle.
+     */
+    public function sendToClient(TaskApprovalRound $round): void
+    {
+        if ($round->sent_at) {
+            return;
+        }
+
+        $round->loadMissing('tokens.contact');
+
+        foreach ($round->tokens as $token) {
+            $this->dispatchWebhook($round, $token, $token->contact);
+        }
+
+        $round->update(['sent_at' => now()]);
     }
 
     /**

@@ -58,9 +58,16 @@
 
     {{-- Enviado / Aguardando resposta --}}
     <div class="card px-5 py-4">
-        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
-            📤 Aguardando resposta ({{ $roundsPending->count() }})
-        </h4>
+        <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-bold" style="color:var(--text)">
+                📤 Aguardando resposta ({{ $roundsPending->count() }})
+            </h4>
+            @if($roundsAwaitingSendCount > 0)
+                <a href="{{ route('approvals.index') }}" class="text-xs font-mono" style="color:var(--orange)">
+                    ⚠ {{ $roundsAwaitingSendCount }} aguardando envio →
+                </a>
+            @endif
+        </div>
         @if($roundsPending->isEmpty())
             <p class="text-xs" style="color:var(--muted)">Nenhuma aprovação pendente no momento.</p>
         @else

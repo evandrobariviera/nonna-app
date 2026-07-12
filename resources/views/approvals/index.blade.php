@@ -1,10 +1,31 @@
 <x-app-layout>
     <x-slot name="header">Central de Aprovações</x-slot>
 
+    @if(session('success'))
+        <div class="mb-5 px-4 py-3 text-sm font-semibold"
+             style="background:rgba(52,211,153,.08); border:1px solid rgba(52,211,153,.25); color:var(--green)">
+            {{ session('success') }}
+        </div>
+    @endif
+    @if(session('warning'))
+        <div class="mb-5 px-4 py-3 text-sm font-semibold"
+             style="background:rgba(255,140,0,.08); border:1px solid rgba(255,140,0,.25); color:var(--orange)">
+            ⚠ {{ session('warning') }}
+        </div>
+    @endif
+
     {{-- ══ CARDS DE ESTATÍSTICAS ══ --}}
-    <div class="grid grid-cols-2 gap-4 mb-6 md:grid-cols-4">
+    <div class="grid grid-cols-2 gap-4 mb-6 md:grid-cols-5">
         @php
             $statCards = [
+                [
+                    'label' => 'Aguardando Envio',
+                    'value' => $stats['awaiting_send'],
+                    'color' => 'var(--muted2)',
+                    'bg'    => 'var(--s2)',
+                    'border'=> 'var(--border2)',
+                    'filter'=> null,
+                ],
                 [
                     'label' => 'Aguardando Resposta',
                     'value' => $stats['pending'],
@@ -110,13 +131,14 @@
                     $isPending  = $round->status === 'pending';
                     $isChanges  = $round->status === 'changes_requested';
                     $isApproved = $round->status === 'approved';
+                    $notSent    = $isPending && !$round->sent_at;
                     $total      = $round->tokens->count();
                     $responded  = $round->tokens->whereNotNull('reviewed_at')->count();
                     $hasChange  = $round->tokens->contains('status', 'changes_requested');
                 @endphp
 
                 <div class="card transition-all"
-                     style="border-left:3px solid {{ $isChanges ? 'var(--orange)' : ($isApproved ? 'var(--green)' : 'var(--purple)') }}">
+                     style="border-left:3px solid {{ $notSent ? 'var(--border2)' : ($isChanges ? 'var(--orange)' : ($isApproved ? 'var(--green)' : 'var(--purple)')) }}">
                     <div class="flex items-start justify-between gap-4 px-5 py-4 flex-wrap">
 
                         {{-- Lado esquerdo: cliente + tarefa + meta --}}
@@ -178,11 +200,21 @@
 
                         {{-- Lado direito: status + ação --}}
                         <div class="flex items-start gap-3 flex-shrink-0">
+                            @if($notSent)
+                                <form method="POST" action="{{ route('approvals.send', $round) }}"
+                                      onsubmit="return confirm('Enviar essa rodada para o cliente agora?')">
+                                    @csrf
+                                    <button type="submit" class="text-xs font-semibold px-3 py-1 text-white"
+                                            style="background:var(--purple)">
+                                        Enviar pro Cliente
+                                    </button>
+                                </form>
+                            @endif
                             <span class="text-xs font-semibold px-2.5 py-1"
-                                  style="background:{{ $isApproved ? 'rgba(34,197,94,.12)' : ($isChanges ? 'rgba(255,140,0,.12)' : 'rgba(106,90,205,.12)') }};
-                                         color:{{ $isApproved ? '#22c55e' : ($isChanges ? 'var(--orange)' : 'var(--purple)') }};
-                                         border:1px solid {{ $isApproved ? 'rgba(34,197,94,.25)' : ($isChanges ? 'rgba(255,140,0,.25)' : 'rgba(106,90,205,.25)') }}">
-                                {{ $round->statusLabel() }}
+                                  style="background:{{ $notSent ? 'var(--s2)' : ($isApproved ? 'rgba(34,197,94,.12)' : ($isChanges ? 'rgba(255,140,0,.12)' : 'rgba(106,90,205,.12)')) }};
+                                         color:{{ $notSent ? 'var(--muted2)' : ($isApproved ? '#22c55e' : ($isChanges ? 'var(--orange)' : 'var(--purple)')) }};
+                                         border:1px solid {{ $notSent ? 'var(--border2)' : ($isApproved ? 'rgba(34,197,94,.25)' : ($isChanges ? 'rgba(255,140,0,.25)' : 'rgba(106,90,205,.25)')) }}">
+                                {{ $round->displayStatusLabel() }}
                             </span>
                             <a href="{{ route('tasks.show', $round->task_id) }}"
                                class="text-xs font-semibold px-3 py-1 transition-colors"

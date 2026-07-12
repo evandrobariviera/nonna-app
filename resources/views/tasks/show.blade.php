@@ -575,11 +575,12 @@
                                         <span class="text-sm font-bold" style="color:var(--text)">Rodada #{{ $round->round_number }}</span>
                                         <span class="text-xs" style="color:var(--muted)">{{ $round->submitted_at->format('d/m/Y H:i') }}</span>
                                     </div>
+                                    @php $rNotSent = $rPending && !$round->sent_at; @endphp
                                     <div class="flex items-center gap-3">
                                         <span class="text-xs font-semibold px-2 py-0.5"
-                                              style="background:{{ $rApproved ? 'rgba(34,197,94,.12)' : ($rHasChanges ? 'rgba(255,140,0,.12)' : 'rgba(106,90,205,.12)') }};
-                                                     color:{{ $rApproved ? '#22c55e' : ($rHasChanges ? 'var(--orange)' : 'var(--purple)') }}">
-                                            {{ $round->statusLabel() }}
+                                              style="background:{{ $rNotSent ? 'var(--s3)' : ($rApproved ? 'rgba(34,197,94,.12)' : ($rHasChanges ? 'rgba(255,140,0,.12)' : 'rgba(106,90,205,.12)')) }};
+                                                     color:{{ $rNotSent ? 'var(--muted)' : ($rApproved ? '#22c55e' : ($rHasChanges ? 'var(--orange)' : 'var(--purple)')) }}">
+                                            {{ $round->displayStatusLabel() }}
                                         </span>
                                         <span x-text="open ? '▴' : '▾'" style="color:var(--muted); font-size:10px"></span>
                                     </div>
@@ -999,7 +1000,10 @@
             <div class="card card-body">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Aprovação</p>
 
-                @php $latestRound = $task->latestApprovalRound; @endphp
+                @php
+                    $latestRound = $task->latestApprovalRound;
+                    $latestNotSent = $latestRound && $latestRound->status === 'pending' && !$latestRound->sent_at;
+                @endphp
 
                 @if($latestRound)
                     <div class="flex flex-col gap-3">
@@ -1010,9 +1014,9 @@
                         <div class="flex items-center justify-between">
                             <span class="text-xs" style="color:var(--muted)">Status</span>
                             <span class="text-xs font-semibold px-2 py-0.5"
-                                  style="background:{{ $latestRound->status === 'approved' ? 'rgba(34,197,94,.12)' : ($latestRound->status === 'changes_requested' ? 'rgba(255,140,0,.12)' : 'rgba(106,90,205,.12)') }};
-                                         color:{{ $latestRound->status === 'approved' ? '#22c55e' : ($latestRound->status === 'changes_requested' ? 'var(--orange)' : 'var(--purple)') }}">
-                                {{ $latestRound->statusLabel() }}
+                                  style="background:{{ $latestNotSent ? 'var(--s3)' : ($latestRound->status === 'approved' ? 'rgba(34,197,94,.12)' : ($latestRound->status === 'changes_requested' ? 'rgba(255,140,0,.12)' : 'rgba(106,90,205,.12)')) }};
+                                         color:{{ $latestNotSent ? 'var(--muted)' : ($latestRound->status === 'approved' ? '#22c55e' : ($latestRound->status === 'changes_requested' ? 'var(--orange)' : 'var(--purple)')) }}">
+                                {{ $latestRound->displayStatusLabel() }}
                             </span>
                         </div>
                         <div class="flex items-center justify-between">

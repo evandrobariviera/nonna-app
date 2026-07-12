@@ -17,12 +17,13 @@ class TaskApprovalRound extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'task_id', 'round_number', 'submitted_by', 'submitted_at',
+        'task_id', 'round_number', 'submitted_by', 'submitted_at', 'sent_at',
         'status', 'notes', 'resolved_at',
     ];
 
     protected $casts = [
         'submitted_at' => 'datetime',
+        'sent_at'      => 'datetime',
         'resolved_at'  => 'datetime',
     ];
 
@@ -69,5 +70,17 @@ class TaskApprovalRound extends Model
             'cancelled'         => 'Cancelado',
             default             => $this->status,
         };
+    }
+
+    // Igual a statusLabel(), mas distingue "ainda não mandamos pro cliente"
+    // de "mandamos, agora é esperar resposta" — sent_at é um estado à parte
+    // do status da rodada (aprovado/pendente/ajustes), não um novo status.
+    public function displayStatusLabel(): string
+    {
+        if ($this->status === 'pending' && !$this->sent_at) {
+            return 'Aguardando Envio';
+        }
+
+        return $this->statusLabel();
     }
 }
