@@ -96,6 +96,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('clients.contacts.update-pivot');
     Route::delete('/clientes/{client}/contatos/{contact}/desvincular', [ClientContactController::class, 'unlink'])
         ->name('clients.contacts.unlink');
+    Route::put('/clientes/{client}/contatos/{contact}/comunicacoes', [ClientContactController::class, 'updateSubscriptions'])
+        ->name('clients.contacts.subscriptions.update');
 
     // ── Contas de Anúncios do cliente ──
     Route::post('/clientes/{client}/contas-anuncios', [ClientAdAccountController::class, 'store'])

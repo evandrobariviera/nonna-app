@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ClientContact;
 use App\Models\Contact;
 use App\Models\DeliverableFeedback;
 use App\Models\Task;
@@ -9,6 +10,7 @@ use App\Models\TaskApprovalRound;
 use App\Models\TaskApprovalToken;
 use App\Models\TaskAttachment;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -87,10 +89,11 @@ class TaskApprovalService
 
         $task->update(['status' => 'aprovacao']);
 
-        foreach ($this->getApprovalContacts($task) as $contact) {
+        foreach ($this->getApprovalRecipients($task) as $clientContact) {
             TaskApprovalToken::create([
                 'round_id'   => $round->id,
-                'contact_id' => $contact->id,
+                'contact_id' => $clientContact->contact_id,
+                'channels'   => $clientContact->subscriptions->first()->channels ?? [],
                 'token'      => Str::uuid()->toString(),
                 'status'     => 'pending',
                 'expires_at' => now()->addDays(7),
@@ -149,10 +152,18 @@ class TaskApprovalService
         $this->tryResolveRound($token->round()->with('tokens')->first());
     }
 
-    private function getApprovalContacts(Task $task): \Illuminate\Database\Eloquent\Collection
+    /**
+     * Contatos do cliente assinados pra receber aprovação de materiais —
+     * cada um pode ter um conjunto de canais diferente (WhatsApp, e-mail, ou
+     * os dois). Ver ClientContactSubscription.
+     *
+     * @return Collection<int, ClientContact>
+     */
+    private function getApprovalRecipients(Task $task): Collection
     {
-        return $task->client->contacts()
-            ->wherePivot('receives_approvals', true)
+        return ClientContact::where('client_id', $task->client_id)
+            ->whereHas('subscriptions', fn ($q) => $q->where('type', 'aprovacao'))
+            ->with(['contact', 'subscriptions' => fn ($q) => $q->where('type', 'aprovacao')])
             ->get();
     }
 
@@ -198,9 +209,10 @@ class TaskApprovalService
                 'name' => $round->task->client->company_name,
             ],
             'contact' => [
-                'name'  => $contact->name,
-                'email' => $contact->email,
-                'phone' => $contact->phone ?? null,
+                'name'     => $contact->name,
+                'email'    => $contact->email,
+                'phone'    => $contact->phone ?? null,
+                'channels' => $approvalToken->channels ?? [],
             ],
             'link'               => route('approval.show', $approvalToken->token),
             'expires_at'         => $approvalToken->expires_at->toIso8601String(),

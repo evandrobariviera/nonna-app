@@ -636,7 +636,17 @@
 
         {{-- TAB: CONTATOS --}}
         <div x-show="tab === 'contatos'" x-cloak
-             x-data="{ mode: null, editId: null }">
+             x-data="{
+                mode: null, editId: null,
+                subsModal: false, subsContactId: null, subsContactName: '', subsForm: {},
+                openSubs(contactId, name, current) {
+                    this.subsContactId = contactId;
+                    this.subsContactName = name;
+                    this.subsForm = current;
+                    this.subsModal = true;
+                },
+                closeSubs() { this.subsModal = false; this.subsContactId = null; }
+             }">
 
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">
@@ -805,11 +815,18 @@
                                 <th>Cargo</th>
                                 <th>Papel no Cliente</th>
                                 <th>Contato</th>
+                                <th>Comunicações</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($client->contacts as $contact)
+                                @php
+                                    $contactSubs = ($subscriptionsByContact[$contact->id] ?? null)?->subscriptions ?? collect();
+                                    $subsForRow = collect(\App\Models\ClientContactSubscription::$types)->keys()
+                                        ->mapWithKeys(fn ($type) => [$type => $contactSubs->firstWhere('type', $type)?->channels ?? []]);
+                                    $activeSubs = $subsForRow->filter(fn ($channels) => !empty($channels));
+                                @endphp
                                 <tr>
                                     {{-- Linha de exibição --}}
                                     <template x-if="editId !== '{{ $contact->id }}'">
@@ -884,6 +901,28 @@
                                         @endif
                                     </td>
 
+                                    <td>
+                                        @if($activeSubs->isEmpty())
+                                            <button type="button"
+                                                    @click="openSubs('{{ $contact->id }}', '{{ addslashes($contact->name) }}', {{ json_encode($subsForRow) }})"
+                                                    class="text-xs font-mono text-[var(--muted)] hover:text-[var(--purple)] transition-colors">
+                                                + Configurar
+                                            </button>
+                                        @else
+                                            <button type="button"
+                                                    @click="openSubs('{{ $contact->id }}', '{{ addslashes($contact->name) }}', {{ json_encode($subsForRow) }})"
+                                                    class="flex flex-wrap gap-1">
+                                                @foreach($activeSubs as $type => $channels)
+                                                    <span class="text-xs font-semibold px-1.5 py-0.5"
+                                                          style="background:rgba(106,90,205,.1); color:var(--purple); border:1px solid rgba(106,90,205,.25)">
+                                                        {{ \App\Models\ClientContactSubscription::$types[$type] }}
+                                                        <span style="color:var(--muted2)">{{ implode('+', array_map(fn($c) => $c === 'whatsapp' ? '📱' : '✉', $channels)) }}</span>
+                                                    </span>
+                                                @endforeach
+                                            </button>
+                                        @endif
+                                    </td>
+
                                     <td class="text-right">
                                         <div class="flex items-center justify-end gap-3">
                                             <template x-if="editId !== '{{ $contact->id }}'">
@@ -921,6 +960,59 @@
                     </table>
                 </div>
             @endif
+
+            {{-- Modal: gerenciar comunicações do contato --}}
+            <div x-show="subsModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                 x-transition:enter="transition duration-150"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100">
+                <div class="absolute inset-0 bg-black/60" @click="closeSubs()"></div>
+                <div class="relative w-full max-w-md rounded-xl shadow-2xl p-6"
+                     style="background:var(--s1); border:1px solid var(--border)"
+                     x-transition:enter="transition duration-150"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100">
+
+                    <h3 class="text-base font-bold mb-1" style="color:var(--text)">Comunicações</h3>
+                    <p class="text-xs mb-5" style="color:var(--muted)" x-text="subsContactName"></p>
+
+                    <template x-if="subsContactId">
+                        <form :action="'{{ url('clientes/' . $client->id . '/contatos') }}/' + subsContactId + '/comunicacoes'"
+                              method="POST" class="space-y-4">
+                            @csrf
+                            @method('PUT')
+
+                            @foreach(\App\Models\ClientContactSubscription::$types as $typeKey => $typeLabel)
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1.5" style="color:var(--text)">{{ $typeLabel }}</label>
+                                    <div class="flex items-center gap-4">
+                                        @foreach(\App\Models\ClientContactSubscription::$channels as $chKey => $chLabel)
+                                            <label class="flex items-center gap-1.5 cursor-pointer">
+                                                <input type="checkbox" value="{{ $chKey }}"
+                                                       name="subscriptions[{{ $typeKey }}][]"
+                                                       x-model="subsForm.{{ $typeKey }}">
+                                                <span class="text-xs" style="color:var(--muted2)">{{ $chLabel }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+
+                            <div class="flex justify-end gap-3 pt-2">
+                                <button type="button" @click="closeSubs()"
+                                        class="px-4 py-2 text-sm font-semibold rounded-lg"
+                                        style="color:var(--muted); background:var(--s3)">
+                                    Cancelar
+                                </button>
+                                <button type="submit"
+                                        class="btn-primary px-4 py-2 text-sm rounded-lg font-semibold">
+                                    Salvar
+                                </button>
+                            </div>
+                        </form>
+                    </template>
+                </div>
+            </div>
         </div>
 
         {{-- TAB: CONTAS DE ANÚNCIOS --}}

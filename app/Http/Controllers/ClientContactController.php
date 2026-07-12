@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\ClientContact;
+use App\Models\ClientContactSubscription;
 use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -110,6 +112,37 @@ class ClientContactController extends Controller
 
         return redirect()->route('clients.show', [$client, 'tab' => 'contatos'])
             ->with('success', 'Vínculo atualizado.');
+    }
+
+    // Atualiza quais comunicações (aprovação, financeiro, feedback, cobrança)
+    // esse contato recebe e por quais canais — substitui tudo de uma vez
+    // (mais simples que diff, e a escala é pequena: no máximo 4 tipos x 2 canais).
+    public function updateSubscriptions(Request $request, Client $client, Contact $contact)
+    {
+        $data = $request->validate([
+            'subscriptions'      => 'nullable|array',
+            'subscriptions.*'    => 'array',
+            'subscriptions.*.*'  => 'in:' . implode(',', array_keys(ClientContactSubscription::$channels)),
+        ]);
+
+        $clientContact = ClientContact::where('client_id', $client->id)
+            ->where('contact_id', $contact->id)
+            ->firstOrFail();
+
+        $clientContact->subscriptions()->delete();
+
+        foreach ($data['subscriptions'] ?? [] as $type => $channels) {
+            if (!array_key_exists($type, ClientContactSubscription::$types) || empty($channels)) {
+                continue;
+            }
+            $clientContact->subscriptions()->create([
+                'type'     => $type,
+                'channels' => array_values($channels),
+            ]);
+        }
+
+        return redirect()->route('clients.show', [$client, 'tab' => 'contatos'])
+            ->with('success', 'Comunicações atualizadas.');
     }
 
     // Remove o vínculo (não exclui o contato do CRM)

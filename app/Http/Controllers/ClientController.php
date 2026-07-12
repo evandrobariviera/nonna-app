@@ -90,7 +90,15 @@ class ClientController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'job_title', 'company_name']);
 
-        return view('clients.show', compact('client', 'availableContacts'));
+        // Assinaturas de comunicação (aprovação, financeiro, feedback, cobrança)
+        // por contato vinculado — buscado à parte porque não dá pra eager-load
+        // uma relação do pivot (ClientContact->subscriptions) via $client->contacts.
+        $subscriptionsByContact = \App\Models\ClientContact::where('client_id', $client->id)
+            ->with('subscriptions')
+            ->get()
+            ->keyBy('contact_id');
+
+        return view('clients.show', compact('client', 'availableContacts', 'subscriptionsByContact'));
     }
 
     public function edit(Client $client)

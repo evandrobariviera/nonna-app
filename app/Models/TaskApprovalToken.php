@@ -17,11 +17,12 @@ class TaskApprovalToken extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'round_id', 'contact_id', 'token', 'status',
+        'round_id', 'contact_id', 'token', 'status', 'channels',
         'overall_comment', 'notified_at', 'reviewed_at', 'expires_at',
     ];
 
     protected $casts = [
+        'channels'    => 'array',
         'notified_at' => 'datetime',
         'reviewed_at' => 'datetime',
         'expires_at'  => 'datetime',

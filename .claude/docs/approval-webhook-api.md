@@ -8,7 +8,9 @@ Quando uma tarefa é enviada para aprovação do cliente, o App dispara um webho
 
 ## Quando o webhook é disparado
 
-**Atualizado (2026-07):** criar a rodada de aprovação e notificar o cliente são dois passos separados — `TaskApprovalService::submitForApproval()` só cria a `TaskApprovalRound` e gera um `TaskApprovalToken` por contato (marcado com `receives_approvals = true`), **sem** disparar nada ainda. O webhook só sai quando alguém chama `TaskApprovalService::sendToClient(TaskApprovalRound $round)` — um POST por contato/token daquela rodada, e a rodada é marcada com `sent_at = now()` (idempotente: chamar de novo numa rodada já enviada não reenvia nada).
+**Atualizado (2026-07):** criar a rodada de aprovação e notificar o cliente são dois passos separados — `TaskApprovalService::submitForApproval()` só cria a `TaskApprovalRound` e gera um `TaskApprovalToken` por contato, **sem** disparar nada ainda. O webhook só sai quando alguém chama `TaskApprovalService::sendToClient(TaskApprovalRound $round)` — um POST por contato/token daquela rodada, e a rodada é marcada com `sent_at = now()` (idempotente: chamar de novo numa rodada já enviada não reenvia nada).
+
+**Atualizado de novo (2026-07):** quem recebe aprovação não é mais um booleano único (`client_contacts.receives_approvals`, removido) — agora é uma assinatura por contato em `client_contact_subscriptions` (`type = 'aprovacao'`), com um conjunto de canais próprio por contato (`channels`: `whatsapp` e/ou `email`). Isso permite múltiplos aprovadores por cliente, cada um com seu próprio canal — gerenciado na aba "Contatos" da ficha do cliente. `submitForApproval()` lê essa tabela (`TaskApprovalService::getApprovalRecipients()`) e grava os `channels` de cada contato direto no `TaskApprovalToken` (snapshot no momento da criação, não recalculado depois) — é esse valor que sai no payload abaixo em `contact.channels`, pro n8n saber se manda WhatsApp, e-mail, ou os dois.
 
 `submitForApproval()` é acionado por dois caminhos, e nenhum dos dois envia sozinho:
 
@@ -42,7 +44,8 @@ Quando uma tarefa é enviada para aprovação do cliente, o App dispara um webho
   "contact": {
     "name": "Nome do Contato",
     "email": "contato@cliente.com",
-    "phone": "+55 51 99999-9999"
+    "phone": "+55 51 99999-9999",
+    "channels": ["whatsapp", "email"]
   },
   "link": "https://app.nonna.../aprovacao/{token}",
   "expires_at": "2026-07-17T00:00:00-03:00",
