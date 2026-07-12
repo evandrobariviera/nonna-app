@@ -16,25 +16,30 @@ use Illuminate\Support\Str;
 class TaskApprovalService
 {
     /**
-     * Chamado pelo TaskObserver sempre que status/situação de uma tarefa mudam —
-     * cria a rodada de aprovação sozinho quando as duas condições batem ao mesmo
-     * tempo (status "Aprovação" + situação "Enviar para o cliente"), não importa
-     * por qual tela/dropdown a mudança veio. Só cria a rodada — o envio de fato
-     * pro cliente continua sendo manual, pelo botão na Central de Aprovações.
+     * Reavalia se a tarefa já reúne as condições pra entrar em aprovação
+     * sozinha — status "Aprovação" + situação "Enviar para o cliente" + pelo
+     * menos um anexo. Chamado de todo lugar que possa completar essa condição,
+     * não importa a ordem em que as coisas aconteçam: TaskObserver (mudança de
+     * status/situação) e TaskAttachmentController (upload de anexo) — porque
+     * dá pra marcar a situação antes ou depois de subir o arquivo, e os dois
+     * caminhos precisam terminar no mesmo lugar. Só cria a rodada — o envio de
+     * fato pro cliente continua sendo manual, pelo botão na Central de Aprovações.
+     *
+     * @return bool  true se uma rodada foi criada nesta chamada
      */
-    public function maybeAutoSubmitOnApprovalTransition(Task $task): void
+    public function maybeAutoSubmitOnApprovalTransition(Task $task): bool
     {
         if ($task->status !== 'aprovacao' || $task->situation !== 'Enviar para o cliente') {
-            return;
+            return false;
         }
 
         if ($task->approvalRounds()->where('status', 'pending')->exists()) {
-            return;
+            return false;
         }
 
         $submitter = Auth::user();
         if (!$submitter) {
-            return;
+            return false;
         }
 
         $attachmentIds = $task->attachments()
@@ -43,13 +48,15 @@ class TaskApprovalService
             ->toArray();
 
         if (empty($attachmentIds)) {
-            session()->flash('warning', 'A tarefa "' . $task->title . '" está em Aprovação com situação "Enviar para o cliente", mas não há nenhum arquivo pra enviar — faça o upload e ajuste a situação de novo.');
-            return;
+            session()->flash('warning', 'A tarefa "' . $task->title . '" está em Aprovação com situação "Enviar para o cliente", mas não há nenhum arquivo pra enviar — assim que você subir o arquivo, a rodada é criada automaticamente.');
+            return false;
         }
 
         $this->submitForApproval($task, $submitter, $attachmentIds);
 
         session()->flash('success', 'Tarefa "' . $task->title . '" entrou em Aprovação — envie pro cliente na Central de Aprovações.');
+
+        return true;
     }
 
     /**

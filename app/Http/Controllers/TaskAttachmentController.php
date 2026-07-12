@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use App\Models\TaskAttachment;
+use App\Services\TaskApprovalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class TaskAttachmentController extends Controller
 {
-    public function store(Request $request, Task $task)
+    public function store(Request $request, Task $task, TaskApprovalService $approvalService)
     {
         $request->validate([
             'file' => 'required|file|max:102400', // 100 MB
@@ -30,8 +31,14 @@ class TaskAttachmentController extends Controller
             'uploaded_by' => Auth::id(),
         ]);
 
-        return redirect()->route('tasks.show', $task)
-            ->with('success', 'Arquivo anexado.');
+        // A tarefa pode já estar em Aprovação + situação "Enviar para o cliente"
+        // esperando só o anexo — reavalia agora que o arquivo chegou, porque o
+        // upload não passa pelo TaskObserver (não muda status/situação da tarefa).
+        $roundCreated = $approvalService->maybeAutoSubmitOnApprovalTransition($task);
+
+        $redirect = redirect()->route('tasks.show', $task);
+
+        return $roundCreated ? $redirect : $redirect->with('success', 'Arquivo anexado.');
     }
 
     public function destroy(Task $task, TaskAttachment $attachment)
