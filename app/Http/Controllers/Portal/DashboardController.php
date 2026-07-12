@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Controller;
 use App\Models\Meeting;
 use App\Models\Task;
+use App\Models\TaskApprovalRound;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -55,6 +56,10 @@ class DashboardController extends Controller
             ->whereNotIn('status', ['concluido', 'cancelado'])
             ->count();
 
-        return view('portal.dashboard', compact('client', 'activePlan', 'stats', 'activePlanStats', 'nextMeeting', 'openTicketsCount'));
+        $pendingApprovalsCount = TaskApprovalRound::whereHas('task', fn ($q) => $q->where('client_id', $client->id))
+            ->where('status', 'pending')
+            ->count();
+
+        return view('portal.dashboard', compact('client', 'activePlan', 'stats', 'activePlanStats', 'nextMeeting', 'openTicketsCount', 'pendingApprovalsCount'));
     }
 }

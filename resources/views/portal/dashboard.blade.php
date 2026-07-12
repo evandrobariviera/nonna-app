@@ -17,9 +17,9 @@
         </span>
     </div>
 
-    {{-- Próxima reunião + chamados abertos --}}
-    @if($nextMeeting || $openTicketsCount > 0)
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+    {{-- Próxima reunião + chamados abertos + aprovações pendentes --}}
+    @if($nextMeeting || $openTicketsCount > 0 || $pendingApprovalsCount > 0)
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             @if($nextMeeting)
                 <a href="{{ route('portal.meetings.show', $nextMeeting) }}" class="card p-5 flex items-center justify-between transition-colors" style="text-decoration:none">
                     <div>
@@ -40,6 +40,14 @@
                 <div>
                     <p class="text-xs font-bold uppercase tracking-widest mb-1" style="color: var(--muted)">Chamados Abertos</p>
                     <p class="text-2xl font-black" style="color: var(--text)">{{ $openTicketsCount }}</p>
+                </div>
+                <span style="color: var(--muted)">→</span>
+            </a>
+
+            <a href="{{ route('portal.approvals.index') }}" class="card p-5 flex items-center justify-between transition-colors" style="text-decoration:none">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-widest mb-1" style="color: var(--muted)">Aprovações Pendentes</p>
+                    <p class="text-2xl font-black" style="color: {{ $pendingApprovalsCount > 0 ? 'var(--orange)' : 'var(--text)' }}">{{ $pendingApprovalsCount }}</p>
                 </div>
                 <span style="color: var(--muted)">→</span>
             </a>

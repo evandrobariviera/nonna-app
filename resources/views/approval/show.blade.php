@@ -60,7 +60,7 @@
             <span class="label-sm">Aprovação de Material</span>
             <h1 style="font-size:20px; font-weight:800; margin:0 0 4px">{{ $approvalToken->round->task->title }}</h1>
             <p style="font-size:13px; color:var(--muted); margin:0">
-                {{ $approvalToken->round->task->client->name }}
+                {{ $approvalToken->round->task->client->company_name }}
                 <span style="margin:0 8px; opacity:.3">·</span>
                 Olá, <strong style="color:var(--text)">{{ $approvalToken->contact->name }}</strong>
             </p>

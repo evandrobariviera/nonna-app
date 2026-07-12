@@ -153,6 +153,41 @@ class TaskApprovalService
     }
 
     /**
+     * Decisão direta do usuário autenticado do Portal — um caminho separado
+     * do fluxo por contato/token, sem granularidade por peça: o Portal decide
+     * a rodada inteira de uma vez. Resolve na hora, mesmo que ainda existam
+     * contatos nomeados sem responder pelo link público — o login do Portal
+     * é considerado mais confiável que o contato público. Sai sem fazer nada
+     * se a rodada já não estiver mais pending (já foi decidida por qualquer
+     * um dos dois caminhos).
+     *
+     * @return bool  true se a decisão foi aplicada
+     */
+    public function submitPortalDecision(TaskApprovalRound $round, User $user, string $decision, ?string $comment = null): bool
+    {
+        if ($round->status !== 'pending') {
+            return false;
+        }
+
+        $round->update([
+            'portal_decided_by' => $user->id,
+            'portal_decision'   => $decision,
+            'portal_comment'    => $comment,
+            'portal_decided_at' => now(),
+        ]);
+
+        $this->resolveRound($round, $decision);
+
+        // A rodada já foi decidida por outro caminho — fecha qualquer link
+        // público de contato ainda pendente pra essa mesma rodada, pra ele
+        // parar de aceitar submissão (TaskApprovalToken::isValid() checa
+        // isPending()).
+        $round->tokens()->where('status', 'pending')->update(['status' => $decision]);
+
+        return true;
+    }
+
+    /**
      * Contatos do cliente assinados pra receber aprovação de materiais —
      * cada um pode ter um conjunto de canais diferente (WhatsApp, e-mail, ou
      * os dois). Ver ClientContactSubscription.
@@ -176,11 +211,14 @@ class TaskApprovalService
         }
 
         $hasChanges = $tokens->contains('status', 'changes_requested');
-        $status     = $hasChanges ? 'changes_requested' : 'approved';
+        $this->resolveRound($round, $hasChanges ? 'changes_requested' : 'approved');
+    }
 
+    private function resolveRound(TaskApprovalRound $round, string $status): void
+    {
         $round->update(['status' => $status, 'resolved_at' => now()]);
 
-        $round->task->update(['status' => $hasChanges ? 'ajuste_alteracao' : 'despacho_agendamento']);
+        $round->task->update(['status' => $status === 'changes_requested' ? 'ajuste_alteracao' : 'despacho_agendamento']);
     }
 
     private function dispatchWebhook(TaskApprovalRound $round, TaskApprovalToken $approvalToken, Contact $contact): void

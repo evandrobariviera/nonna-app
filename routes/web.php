@@ -8,6 +8,7 @@ use App\Http\Controllers\Portal\AccountController as PortalAccount;
 use App\Http\Controllers\Portal\CampaignController as PortalCampaigns;
 use App\Http\Controllers\Portal\MeetingController as PortalMeetings;
 use App\Http\Controllers\Portal\TicketController as PortalTickets;
+use App\Http\Controllers\Portal\ApprovalController as PortalApprovals;
 use App\Http\Controllers\ClientPortalAccessController;
 use App\Http\Controllers\ClientAdAccountController;
 use App\Http\Controllers\FilaController;
@@ -482,6 +483,9 @@ Route::prefix('portal')->name('portal.')->middleware(['auth', 'portal'])->group(
     Route::get('/chamados/{task}', [PortalTickets::class, 'show'])->name('tickets.show');
     Route::get('/reunioes', [PortalMeetings::class, 'index'])->name('meetings.index');
     Route::get('/reunioes/{meeting}', [PortalMeetings::class, 'show'])->name('meetings.show');
+    Route::get('/aprovacoes', [PortalApprovals::class, 'index'])->name('approvals.index');
+    Route::get('/aprovacoes/{round}', [PortalApprovals::class, 'show'])->name('approvals.show');
+    Route::post('/aprovacoes/{round}/decidir', [PortalApprovals::class, 'decide'])->name('approvals.decide');
     Route::get('/campanhas', [PortalCampaigns::class, 'index'])->name('campaigns.index');
     Route::get('/conta', [PortalAccount::class, 'index'])->name('account');
 });
