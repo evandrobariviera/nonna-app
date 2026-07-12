@@ -22,6 +22,8 @@
                         $navLinks = [
                             ['route' => 'portal.dashboard',       'label' => 'Início',       'match' => 'portal.dashboard'],
                             ['route' => 'portal.projects.index',  'label' => 'Projetos',     'match' => 'portal.projects.*'],
+                            ['route' => 'portal.tickets.index',   'label' => 'Chamados',     'match' => 'portal.tickets.*'],
+                            ['route' => 'portal.meetings.index',  'label' => 'Reuniões',     'match' => 'portal.meetings.*'],
                             ['route' => 'portal.campaigns.index', 'label' => 'Campanhas',    'match' => 'portal.campaigns.*'],
                             ['route' => 'portal.account',         'label' => 'Minha Conta',  'match' => 'portal.account'],
                         ];

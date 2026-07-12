@@ -17,6 +17,35 @@
         </span>
     </div>
 
+    {{-- Próxima reunião + chamados abertos --}}
+    @if($nextMeeting || $openTicketsCount > 0)
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            @if($nextMeeting)
+                <a href="{{ route('portal.meetings.show', $nextMeeting) }}" class="card p-5 flex items-center justify-between transition-colors" style="text-decoration:none">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-widest mb-1" style="color: var(--muted)">Próxima Reunião</p>
+                        <p class="text-sm font-bold" style="color: var(--text)">{{ $nextMeeting->title }}</p>
+                        <p class="text-xs mt-0.5" style="color: var(--purple)">{{ $nextMeeting->scheduled_at->format('d/m/Y \à\s H:i') }}</p>
+                    </div>
+                    <span style="color: var(--muted)">→</span>
+                </a>
+            @else
+                <div class="card p-5">
+                    <p class="text-xs font-bold uppercase tracking-widest mb-1" style="color: var(--muted)">Próxima Reunião</p>
+                    <p class="text-sm" style="color: var(--muted)">Nenhuma reunião agendada.</p>
+                </div>
+            @endif
+
+            <a href="{{ route('portal.tickets.index') }}" class="card p-5 flex items-center justify-between transition-colors" style="text-decoration:none">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-widest mb-1" style="color: var(--muted)">Chamados Abertos</p>
+                    <p class="text-2xl font-black" style="color: var(--text)">{{ $openTicketsCount }}</p>
+                </div>
+                <span style="color: var(--muted)">→</span>
+            </a>
+        </div>
+    @endif
+
     {{-- Bloco de métricas principais --}}
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
 
@@ -107,7 +136,7 @@
                                 $done  = $project->tasks->where('status', 'concluido')->count();
                                 $total = $project->tasks->count();
                                 $pct   = $total > 0 ? round($done / $total * 100) : 0;
-                                $isActive = $project->status === 'active';
+                                $isActive = $project->status === 'em_execucao';
                             @endphp
                             <div class="rounded-xl p-4" style="background: var(--s2); border: 1px solid var(--border2)">
                                 <div class="flex items-start justify-between mb-2">

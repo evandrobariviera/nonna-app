@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Meeting;
+use App\Models\Task;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -14,16 +16,18 @@ class DashboardController extends Controller
         ])->firstOrFail();
 
         $allPlans    = $client->macroplans;
-        $activePlan  = $allPlans->where('status', 'active')->sortByDesc('period_start')->first();
+        // "em_execucao" é o status real de MacroPlan/Project — "active" nunca
+        // existiu nas duas taxonomias, então "Planejamento Ativo" nunca aparecia.
+        $activePlan  = $allPlans->where('status', 'em_execucao')->sortByDesc('period_start')->first();
 
         $allProjects = $allPlans->flatMap->projects;
         $allTasks    = $allProjects->flatMap->tasks;
 
         $stats = [
             'plans_total'     => $allPlans->count(),
-            'plans_active'    => $allPlans->where('status', 'active')->count(),
+            'plans_active'    => $allPlans->where('status', 'em_execucao')->count(),
             'projects_total'  => $allProjects->count(),
-            'projects_active' => $allProjects->whereIn('status', ['active'])->count(),
+            'projects_active' => $allProjects->whereIn('status', ['em_execucao'])->count(),
             'tasks_total'     => $allTasks->count(),
             'tasks_done'      => $allTasks->where('status', 'concluido')->count(),
             'tasks_progress'  => $allTasks->whereIn('status', ['em_producao', 'revisao_interna', 'ajuste_alteracao', 'aprovacao', 'despacho_agendamento'])->count(),
@@ -40,6 +44,17 @@ class DashboardController extends Controller
             $activePlanStats['progress'] = round($activePlanStats['done'] / $activePlanStats['total'] * 100);
         }
 
-        return view('portal.dashboard', compact('client', 'activePlan', 'stats', 'activePlanStats'));
+        $nextMeeting = Meeting::where('client_id', $client->id)
+            ->whereIn('status', ['para_agendar', 'agendada'])
+            ->where('scheduled_at', '>=', now())
+            ->orderBy('scheduled_at')
+            ->first();
+
+        $openTicketsCount = Task::where('is_ticket', true)
+            ->where('client_id', $client->id)
+            ->whereNotIn('status', ['concluido', 'cancelado'])
+            ->count();
+
+        return view('portal.dashboard', compact('client', 'activePlan', 'stats', 'activePlanStats', 'nextMeeting', 'openTicketsCount'));
     }
 }
