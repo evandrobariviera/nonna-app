@@ -188,7 +188,7 @@
             </header>
 
             {{-- PÁGINA --}}
-            <main class="flex-1 overflow-y-auto p-6" style="background:var(--bg)">
+            <main class="app-page flex-1 overflow-y-auto p-6" style="background:var(--bg)">
                 {{ $slot }}
             </main>
         </div>
