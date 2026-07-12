@@ -445,6 +445,58 @@
     }
 }
 
+/* ══ Portal do Cliente — tipografia confortável + polish sutil ══ */
+/*
+ * html/body roda a 14px (não 16px) pra caber mais informação densa no app
+ * interno. Isso encolhe TODAS as classes text-* do Tailwind (rem-based) em
+ * ~12.5%, já que rem sempre segue o root, não o pai mais próximo. O app
+ * interno escapa disso porque usa px fixo nos componentes (.nonna-table td,
+ * .btn, etc). As telas do Portal usam as classes text-* do Tailwind direto,
+ * então levam o encolhimento inteiro — por isso o texto ali fica pequeno
+ * demais. Restaura aqui os tamanhos "verdadeiros" do Tailwind (os mesmos
+ * valores que teria com root em 16px), só dentro do Portal.
+ */
+.portal-page .text-xs   { font-size: 12px; }
+.portal-page .text-sm   { font-size: 14px; }
+.portal-page .text-base { font-size: 16px; }
+.portal-page .text-lg   { font-size: 18px; }
+.portal-page .text-xl   { font-size: 20px; }
+.portal-page .text-2xl  { font-size: 24px; }
+.portal-page .text-3xl  { font-size: 30px; }
+.portal-page .text-4xl  { font-size: 36px; }
+
+/* Entrada suave da página — só uma vez, ao carregar */
+@keyframes portalFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: none; }
+}
+.portal-page { animation: portalFadeIn .4s ease both; }
+
+/* Cards clicáveis (linhas de lista, destaques do dashboard) ganham uma
+ * leve elevação no hover — cards estáticos (blocos de conteúdo) ficam como
+ * estão, pra não sinalizar interatividade que não existe. */
+.portal-page a.card {
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.portal-page a.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(28, 28, 46, 0.08), 0 0 0 1px var(--border2);
+}
+.dark .portal-page a.card:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--border2);
+}
+.portal-page a.card:active {
+    transform: translateY(-1px) scale(0.997);
+}
+
+/* Foco visível mais elegante que o outline padrão do navegador */
+.portal-page a:focus-visible,
+.portal-page button:focus-visible {
+    outline: 2px solid var(--purple);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
 /* ══ Rich Editor (Tiptap) ══ */
 .rich-wrapper {
     border: 1px solid var(--border2);

@@ -57,7 +57,7 @@
         </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-6 py-8">
+    <main class="portal-page max-w-5xl mx-auto px-6 py-8">
         @if(session('success'))
             <div class="mb-6 rounded-lg px-4 py-3 text-sm font-semibold"
                  style="background: rgba(5,150,105,.08); color: var(--green); border: 1px solid rgba(5,150,105,.2)">
