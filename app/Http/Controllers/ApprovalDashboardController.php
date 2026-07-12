@@ -45,7 +45,39 @@ class ApprovalDashboardController extends Controller
             ->orderBy('company_name')
             ->get(['id', 'company_name']);
 
-        return view('approvals.index', compact('rounds', 'stats', 'clients'));
+        $board = $this->buildBoard($request->input('client_id'));
+
+        return view('approvals.index', compact('rounds', 'stats', 'clients', 'board'));
+    }
+
+    /**
+     * Monta as 4 colunas do quadro (view "Board" da Central de Aprovações) —
+     * só visualização, sem drag-and-drop, já que a mudança de coluna reflete
+     * uma ação real (botão Enviar, resposta do cliente), não uma decisão
+     * manual da equipe arrastando o card.
+     *
+     * @return array<string, \Illuminate\Support\Collection<int, TaskApprovalRound>>
+     */
+    private function buildBoard(?string $clientId): array
+    {
+        $base = function () use ($clientId) {
+            $q = TaskApprovalRound::with(['task.client', 'tokens'])->whereHas('task');
+            if ($clientId) {
+                $q->whereHas('task', fn ($t) => $t->where('client_id', $clientId));
+            }
+            return $q;
+        };
+
+        return [
+            'awaiting_send'     => $base()->where('status', 'pending')->whereNull('sent_at')
+                ->orderByDesc('submitted_at')->limit(20)->get(),
+            'pending'           => $base()->where('status', 'pending')->whereNotNull('sent_at')
+                ->orderByDesc('submitted_at')->limit(20)->get(),
+            'changes_requested' => $base()->where('status', 'changes_requested')
+                ->orderByDesc('resolved_at')->limit(20)->get(),
+            'approved'          => $base()->where('status', 'approved')
+                ->orderByDesc('resolved_at')->limit(20)->get(),
+        ];
     }
 
     public function send(TaskApprovalRound $round, TaskApprovalService $service)

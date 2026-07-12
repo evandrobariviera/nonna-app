@@ -80,8 +80,79 @@
         @endforeach
     </div>
 
+    <div x-data="{ tab: '{{ request('view', 'list') }}' }" x-cloak>
+
+        {{-- ══ TOGGLE QUADROS / LISTA ══ --}}
+        <div class="flex items-center gap-1 mb-5" style="border-bottom:1px solid var(--border2)">
+            <button @click="tab = 'board'"
+                class="px-4 py-2 text-xs font-mono uppercase tracking-widest transition-colors"
+                :style="tab === 'board' ? 'color:var(--purple); border-bottom:2px solid var(--purple)' : 'color:var(--muted)'">
+                Quadros
+            </button>
+            <button @click="tab = 'list'"
+                class="px-4 py-2 text-xs font-mono uppercase tracking-widest transition-colors"
+                :style="tab === 'list' ? 'color:var(--purple); border-bottom:2px solid var(--purple)' : 'color:var(--muted)'">
+                Lista
+            </button>
+        </div>
+
+        {{-- ══ QUADROS ══ --}}
+        <div x-show="tab === 'board'" x-cloak>
+            @php
+                $boardColumns = [
+                    ['key' => 'awaiting_send',     'label' => '📤 Aguardando Envio',     'color' => 'var(--muted2)'],
+                    ['key' => 'pending',           'label' => '⏳ Aguardando Resposta',   'color' => 'var(--purple)'],
+                    ['key' => 'changes_requested', 'label' => '✎ Ajustes Solicitados',   'color' => 'var(--orange)'],
+                    ['key' => 'approved',          'label' => '✓ Aprovado',              'color' => 'var(--green)'],
+                ];
+            @endphp
+            <div class="grid gap-4 mb-6" style="grid-template-columns: repeat(4, 1fr)">
+                @foreach($boardColumns as $col)
+                    @php $colRounds = $board[$col['key']]; @endphp
+                    <div class="card px-4 py-4">
+                        <h4 class="text-xs font-bold mb-3" style="color:var(--text)">
+                            {{ $col['label'] }} ({{ $colRounds->count() }})
+                        </h4>
+                        @if($colRounds->isEmpty())
+                            <p class="text-xs" style="color:var(--muted)">Nada por aqui.</p>
+                        @else
+                            <div class="flex flex-col gap-2">
+                                @foreach($colRounds as $round)
+                                    <div class="block px-3 py-2" style="background:var(--s2); border-left:2px solid {{ $col['color'] }}">
+                                        <a href="{{ route('tasks.show', $round->task_id) }}" class="hover:underline">
+                                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">
+                                                {{ $round->task?->title ?? '—' }}
+                                            </p>
+                                        </a>
+                                        <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->task?->client?->company_name ?? '—' }}</span>
+                                            <span class="text-xs font-mono" style="color:var(--muted)">rodada {{ $round->round_number }}</span>
+                                        </div>
+                                        @if($col['key'] === 'awaiting_send')
+                                            <form method="POST" action="{{ route('approvals.send', $round) }}"
+                                                  onsubmit="return confirm('Enviar essa rodada para o cliente agora?')" class="mt-2">
+                                                @csrf
+                                                <button type="submit" class="text-xs font-semibold px-2.5 py-1 text-white"
+                                                        style="background:var(--purple)">
+                                                    Enviar pro Cliente
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- ══ LISTA ══ --}}
+        <div x-show="tab === 'list'" x-cloak>
+
     {{-- ══ FILTROS ══ --}}
     <form method="GET" action="{{ route('approvals.index') }}" class="flex gap-3 mb-5 flex-wrap items-end">
+        <input type="hidden" name="view" value="list">
         <div>
             <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Status</label>
             <select name="status" class="px-3 py-2 text-sm focus:outline-none"
@@ -279,5 +350,8 @@
             </div>
         @endif
     @endif
+
+        </div>{{-- /x-show list --}}
+    </div>{{-- /x-data --}}
 
 </x-app-layout>
