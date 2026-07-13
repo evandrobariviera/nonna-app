@@ -8,6 +8,11 @@
                 </a>
                 <h1 class="text-xl font-black" style="color:var(--text)">{{ $campaign->name }}</h1>
             </div>
+            @if($campaign->managerUrl())
+                <a href="{{ $campaign->managerUrl() }}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">
+                    Abrir no Gerenciador ↗
+                </a>
+            @endif
         </div>
     </x-slot>
 
@@ -37,11 +42,15 @@
                 @endif
             </div>
 
-            {{-- STATS 7 DIAS --}}
+            {{-- STATS 7 DIAS — resultado --}}
             <div class="grid gap-3" style="grid-template-columns: repeat(4, 1fr)">
                 <div class="card px-4 py-4 text-left">
                     <div class="text-2xl font-black mb-1" style="color:var(--text)">R$ {{ number_format($stats->spend, 2, ',', '.') }}</div>
                     <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Gasto (7 dias)</div>
+                </div>
+                <div class="card px-4 py-4 text-left">
+                    <div class="text-2xl font-black mb-1" style="color:var(--text)">{{ number_format($stats->conversions, 0, ',', '.') }}</div>
+                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Resultados</div>
                 </div>
                 <div class="card px-4 py-4 text-left">
                     <div class="text-2xl font-black mb-1" style="color:var(--text)">
@@ -51,15 +60,37 @@
                 </div>
                 <div class="card px-4 py-4 text-left">
                     <div class="text-2xl font-black mb-1" style="color:var(--text)">
+                        {{ $stats->roas !== null ? number_format($stats->roas, 2, ',', '.') . 'x' : '—' }}
+                    </div>
+                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">ROAS</div>
+                </div>
+            </div>
+
+            {{-- STATS 7 DIAS — alcance e engajamento --}}
+            <div class="grid gap-3" style="grid-template-columns: repeat(5, 1fr)">
+                <div class="card px-4 py-4 text-left">
+                    <div class="text-xl font-black mb-1" style="color:var(--text)">{{ number_format($stats->impressions, 0, ',', '.') }}</div>
+                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Impressões</div>
+                </div>
+                <div class="card px-4 py-4 text-left">
+                    <div class="text-xl font-black mb-1" style="color:var(--text)">{{ number_format($stats->reach, 0, ',', '.') }}</div>
+                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Alcance</div>
+                </div>
+                <div class="card px-4 py-4 text-left">
+                    <div class="text-xl font-black mb-1" style="color:var(--text)">{{ number_format($stats->clicks, 0, ',', '.') }}</div>
+                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Cliques</div>
+                </div>
+                <div class="card px-4 py-4 text-left">
+                    <div class="text-xl font-black mb-1" style="color:var(--text)">
                         {{ $stats->ctr !== null ? number_format($stats->ctr, 2, ',', '.') . '%' : '—' }}
                     </div>
                     <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">CTR</div>
                 </div>
                 <div class="card px-4 py-4 text-left">
-                    <div class="text-2xl font-black mb-1" style="color:var(--text)">
-                        {{ $stats->roas !== null ? number_format($stats->roas, 2, ',', '.') . 'x' : '—' }}
+                    <div class="text-xl font-black mb-1" style="color:var(--text)">
+                        {{ $stats->cpc !== null ? 'R$ ' . number_format($stats->cpc, 2, ',', '.') : '—' }}
                     </div>
-                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">ROAS</div>
+                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">CPC</div>
                 </div>
             </div>
 
@@ -264,11 +295,12 @@
 
                 <form method="POST" action="{{ route('campaigns.mark-optimized', $campaign) }}" x-data="{ comment: '' }">
                     @csrf
-                    <textarea name="comment" x-model="comment" rows="2"
-                        placeholder="O que foi otimizado? (opcional)"
+                    <textarea name="comment" x-model="comment" rows="2" required
+                        placeholder="O que foi otimizado? (obrigatório)"
                         class="w-full px-3 py-2 text-sm mb-2 focus:outline-none resize-none"
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"></textarea>
-                    <button type="submit" class="btn btn-primary btn-sm w-full justify-center">
+                    <button type="submit" :disabled="!comment.trim()" :style="!comment.trim() ? 'opacity:.5; cursor:not-allowed' : ''"
+                        class="btn btn-primary btn-sm w-full justify-center">
                         Marcar otimização feita
                     </button>
                 </form>

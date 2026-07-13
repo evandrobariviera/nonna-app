@@ -76,6 +76,25 @@ class AdCampaign extends Model
         return $this->belongsTo(ClientAdAccount::class, 'client_ad_account_id');
     }
 
+    // Deep link pro gerenciador da própria plataforma, já aberto na campanha
+    // específica. Só implementado pro Meta por enquanto — o formato de deep
+    // link do Google Ads varia conforme a conta ser MCC ou não (precisa de um
+    // login-customer-id que não temos guardado), então não dá pra garantir
+    // que abre certo sem confirmar com quem usa todo dia.
+    public function managerUrl(): ?string
+    {
+        $accountId = $this->adAccount?->account_id;
+        if (!$accountId) {
+            return null;
+        }
+
+        if (str_starts_with($this->platform, 'meta')) {
+            return "https://adsmanager.facebook.com/adsmanager/manage/campaigns?act={$accountId}&selected_campaign_ids={$this->external_id}";
+        }
+
+        return null;
+    }
+
     public function adsets(): HasMany
     {
         return $this->hasMany(AdAdset::class);

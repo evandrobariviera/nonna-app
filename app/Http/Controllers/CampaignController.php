@@ -224,7 +224,8 @@ class CampaignController extends Controller
                 COALESCE(SUM(revenue), 0) AS revenue,
                 COALESCE(SUM(clicks), 0) AS clicks,
                 COALESCE(SUM(impressions), 0) AS impressions,
-                COALESCE(SUM(conversions), 0) AS conversions
+                COALESCE(SUM(conversions), 0) AS conversions,
+                COALESCE(SUM(reach), 0) AS reach
             ')
             ->first();
 
@@ -233,12 +234,20 @@ class CampaignController extends Controller
         $impressions = (int) ($row->impressions ?? 0);
         $conversions = (int) ($row->conversions ?? 0);
         $revenue = (float) ($row->revenue ?? 0);
+        $reach = (int) ($row->reach ?? 0);
 
+        // Recalculadas em cima da soma dos 7 dias — não dá pra somar as médias
+        // diárias já gravadas em ad_daily_snapshots (cpc/ctr/cpa/roas são por dia).
         $stats = (object) [
-            'spend' => $spend,
-            'cpa'   => $conversions > 0 ? $spend / $conversions : null,
-            'ctr'   => $impressions > 0 ? round(($clicks / $impressions) * 100, 2) : null,
-            'roas'  => $spend > 0 ? round($revenue / $spend, 2) : null,
+            'spend'        => $spend,
+            'impressions'  => $impressions,
+            'clicks'       => $clicks,
+            'reach'        => $reach,
+            'conversions'  => $conversions,
+            'cpc'          => $clicks > 0 ? $spend / $clicks : null,
+            'cpa'          => $conversions > 0 ? $spend / $conversions : null,
+            'ctr'          => $impressions > 0 ? round(($clicks / $impressions) * 100, 2) : null,
+            'roas'         => $spend > 0 ? round($revenue / $spend, 2) : null,
         ];
 
         return view('campaigns.show', compact('campaign', 'logs', 'stats'));
@@ -280,7 +289,7 @@ class CampaignController extends Controller
     public function markOptimized(Request $request, AdCampaign $campaign)
     {
         $data = $request->validate([
-            'comment' => 'nullable|string|max:2000',
+            'comment' => 'required|string|max:2000',
         ]);
 
         DB::connection('pgsql')->transaction(function () use ($campaign, $data) {
@@ -293,7 +302,7 @@ class CampaignController extends Controller
                 'platform'             => $campaign->platform,
                 'logged_by'            => Auth::id(),
                 'type'                 => 'otimizacao',
-                'description'          => $data['comment'] ?: 'Otimização realizada',
+                'description'          => $data['comment'],
             ]);
 
             $campaign->update(['last_optimized_at' => now()]);
