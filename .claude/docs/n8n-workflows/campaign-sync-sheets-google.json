@@ -1,0 +1,259 @@
+{
+  "name": "Nonna - Sync Campanhas Google Ads via Planilha (temporário)",
+  "nodes": [
+    {
+      "id": "sticky-setup",
+      "name": "LEIA ANTES DE ATIVAR",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -320],
+      "parameters": {
+        "width": 680,
+        "height": 340,
+        "content": "## Antes de ativar\n\nEste workflow é a PONTE TEMPORÁRIA enquanto a API do Google Ads não tem \"Basic Access\" aprovado (ver `.claude/docs/campaign-sync-api.md`, seção \"Alternativa temporária: planilha\"). Quando a aprovação sair, é só desativar isto e reativar `campaigns:sync-ad-platforms` (App) pro Google - o schema do App não muda.\n\n1. Crie a credencial **HTTP Header Auth** chamada `Nonna App API Token`:\n   - Name: `Authorization`\n   - Value: `Bearer SEU_TOKEN` (gerado em Configurações → API no App)\n2. Edite o node **Config** e troque `app_url` pela URL real do App e `spreadsheet_id` pelo ID da planilha \"Clientes \\ Google Ads\" (está na URL do Google Sheets, entre `/d/` e `/edit`).\n3. Crie/selecione a credencial **Google Sheets OAuth2 API** no node **Ler Aba do Cliente** (conta que tem acesso à planilha).\n4. Rode manualmente uma vez, item por item, antes de ativar o Schedule Trigger - o mapeamento de colunas (Sticky \"Sobre a planilha\") pode precisar de ajuste fino no primeiro run real."
+      }
+    },
+    {
+      "id": "trigger",
+      "name": "Schedule Trigger (diário)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 6 * * *" }]
+        }
+      }
+    },
+    {
+      "id": "config",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 300],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "app_url",
+              "name": "app_url",
+              "type": "string",
+              "value": "https://app.nonnaagenciadigital.com.br"
+            },
+            {
+              "id": "spreadsheet_id",
+              "name": "spreadsheet_id",
+              "type": "string",
+              "value": "COLOQUE_O_ID_DA_PLANILHA_AQUI"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "get-ad-accounts",
+      "name": "Get Ad Accounts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300],
+      "parameters": {
+        "url": "={{ $json.app_url }}/api/ad-accounts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App API Token" }
+      }
+    },
+    {
+      "id": "filter-google",
+      "name": "Filtra Contas Google",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 300],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Só contas Google (platform vem do cadastro: 'google_ads', 'google', etc)\n// A aba da planilha tem o MESMO nome do account_id (ex: \"721-845-9036\"),\n// incluindo os traços - não precisa de sheet_tab_name pra isso.\nconst accounts = $('Get Ad Accounts').first().json.data || [];\nconst config = $('Config').first().json;\n\nreturn accounts\n  .filter(a => (a.platform || '').startsWith('google'))\n  .map(a => ({\n    json: {\n      ...a,\n      app_url: config.app_url,\n      spreadsheet_id: config.spreadsheet_id,\n    }\n  }));\n"
+      }
+    },
+    {
+      "id": "loop-accounts",
+      "name": "Loop Contas",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [880, 300],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "sticky-loop",
+      "name": "Sobre o loop",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [880, 460],
+      "parameters": {
+        "width": 320,
+        "height": 160,
+        "content": "**Loop Contas** processa uma conta Google por vez. A saída \"done\" (esquerda, quando acabam os itens) fica sem conexão - o workflow termina ali. A saída \"loop\" (direita) segue pro resto, e o final da cadeia volta pra este node (ver conexões)."
+      }
+    },
+    {
+      "id": "read-sheet-tab",
+      "name": "Ler Aba do Cliente",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1100, 300],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $('Loop Contas').item.json.spreadsheet_id }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "={{ $('Loop Contas').item.json.account_id }}"
+        },
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googleSheetsOAuth2Api": { "id": "", "name": "Google Sheets - Nonna" }
+      }
+    },
+    {
+      "id": "sticky-sheet",
+      "name": "Sobre a planilha",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1100, -260],
+      "parameters": {
+        "width": 620,
+        "height": 340,
+        "content": "## Mapeamento de colunas (confira no primeiro run real)\n\nColunas observadas na planilha: `Day`, `Campaign Name`, `Cost (Spend)`, `Impressions`, `Clicks`, `CTR`, `Avg. CPC`, `Conversions`, `Cost / conv.`, `Target ROAS (Maximize Conversion Value)`.\n\n**ID da campanha = o próprio texto de `Campaign Name`** (ex: `[#1291521][00][CBO]...`) - é proposital, a Nonna quem nomeia as campanhas assim, então o nome inteiro já é estável o suficiente pra servir de `external_id`. Não precisa extrair número nenhum.\n\n**Não existe coluna de receita real** - `Target ROAS (Maximize Conversion Value)` é a ESTRATÉGIA de lance da campanha, não receita medida. `revenue` vai como `0`, então o ROAS aparece como `—` no App (CPA continua calculando normal, via Conversions + Cost).\n\nSe o node \"Ler Aba do Cliente\" retornar as colunas com chaves diferentes das listadas acima (n8n às vezes normaliza nomes com parênteses/espaço), ajuste as chaves lidas nos dois Code nodes seguintes."
+      }
+    },
+    {
+      "id": "filter-yesterday",
+      "name": "Filtra Linha de Ontem (D-1)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 300],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Uma linha por campanha por dia - pegamos só as linhas de ontem (D-1),\n// mesma regra usada no sync direto (as plataformas só consolidam o dia\n// inteiro algumas horas depois da meia-noite).\nconst account = $('Loop Contas').item.json;\nconst yesterday = $today.minus({ days: 1 }).toFormat('yyyy-MM-dd');\n\nconst rows = $input.all().map(i => i.json).filter(r => r && !r.error);\n\nconst rowsYesterday = rows.filter(r => (r['Day'] || '').toString().trim() === yesterday);\n\nreturn [{\n  json: {\n    account,\n    yesterday,\n    rows: rowsYesterday,\n  }\n}];\n"
+      }
+    },
+    {
+      "id": "build-campaigns-payload",
+      "name": "Monta Payload de Campanhas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1540, 220],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const data = $input.first().json;\nconst account = data.account;\n\n// Uma campanha por nome distinto encontrado nas linhas de ontem.\nconst seen = new Set();\nconst campaigns = [];\nfor (const row of data.rows) {\n  const name = (row['Campaign Name'] || '').toString().trim();\n  if (!name || seen.has(name)) continue;\n  seen.add(name);\n  campaigns.push({\n    external_id: name,\n    name: name,\n    status: 'active',\n    raw_data: row,\n  });\n}\n\nreturn [{\n  json: {\n    client_ad_account_id: account.id,\n    platform: 'google',\n    campaigns,\n  }\n}];\n"
+      }
+    },
+    {
+      "id": "post-campaigns",
+      "name": "POST Sync Campaigns",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1760, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Loop Contas').item.json.app_url }}/api/sync/campaigns",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {},
+        "onError": "continueRegularOutput"
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App API Token" }
+      }
+    },
+    {
+      "id": "build-snapshots-payload",
+      "name": "Monta Payload de Métricas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1540, 400],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const data = $('Filtra Linha de Ontem (D-1)').first().json;\nconst account = data.account;\n\nfunction toNumber(v) {\n  if (v === null || v === undefined || v === '') return 0;\n  // planilha em pt-BR usa vírgula decimal (ex: \"7,88\")\n  const n = parseFloat(String(v).replace(/\\./g, '').replace(',', '.'));\n  return isNaN(n) ? 0 : n;\n}\n\nconst snapshots = data.rows.map(row => {\n  const name = (row['Campaign Name'] || '').toString().trim();\n  return {\n    entity_level: 'campaign',\n    entity_id: name,\n    entity_name: name,\n    spend: toNumber(row['Cost (Spend)']),\n    // Sem coluna de receita real na planilha - ver Sticky \"Sobre a planilha\".\n    revenue: 0,\n    impressions: Math.round(toNumber(row['Impressions'])),\n    clicks: Math.round(toNumber(row['Clicks'])),\n    conversions: Math.round(toNumber(row['Conversions'])),\n    reach: 0,\n    raw_data: row,\n  };\n}).filter(s => s.entity_id);\n\nreturn [{\n  json: {\n    client_ad_account_id: account.id,\n    platform: 'google',\n    snapshot_date: data.yesterday,\n    snapshots,\n  }\n}];\n"
+      }
+    },
+    {
+      "id": "post-snapshots",
+      "name": "POST Sync Snapshots",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1760, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Loop Contas').item.json.app_url }}/api/sync/snapshots",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {},
+        "onError": "continueRegularOutput"
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Nonna App API Token" }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger (diário)": {
+      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+    },
+    "Config": {
+      "main": [[{ "node": "Get Ad Accounts", "type": "main", "index": 0 }]]
+    },
+    "Get Ad Accounts": {
+      "main": [[{ "node": "Filtra Contas Google", "type": "main", "index": 0 }]]
+    },
+    "Filtra Contas Google": {
+      "main": [[{ "node": "Loop Contas", "type": "main", "index": 0 }]]
+    },
+    "Loop Contas": {
+      "main": [
+        [],
+        [{ "node": "Ler Aba do Cliente", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ler Aba do Cliente": {
+      "main": [[{ "node": "Filtra Linha de Ontem (D-1)", "type": "main", "index": 0 }]]
+    },
+    "Filtra Linha de Ontem (D-1)": {
+      "main": [[
+        { "node": "Monta Payload de Campanhas", "type": "main", "index": 0 },
+        { "node": "Monta Payload de Métricas", "type": "main", "index": 0 }
+      ]]
+    },
+    "Monta Payload de Campanhas": {
+      "main": [[{ "node": "POST Sync Campaigns", "type": "main", "index": 0 }]]
+    },
+    "Monta Payload de Métricas": {
+      "main": [[{ "node": "POST Sync Snapshots", "type": "main", "index": 0 }]]
+    },
+    "POST Sync Campaigns": {
+      "main": [[]]
+    },
+    "POST Sync Snapshots": {
+      "main": [[{ "node": "Loop Contas", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

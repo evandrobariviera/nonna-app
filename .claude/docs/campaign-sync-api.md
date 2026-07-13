@@ -183,6 +183,8 @@ Enquanto a aprovação de "Basic Access" da API do Google Ads não sai, uma pont
 (Adveronix ou similar) alimentando os mesmos endpoints acima é uma opção válida — quando a API
 for aprovada, é só trocar a fonte (planilha → chamada direta à API), o schema do App não muda.
 
+**Workflow de referência (2026-07):** [`n8n-workflows/campaign-sync-sheets-google.json`](n8n-workflows/campaign-sync-sheets-google.json) — implementa exatamente essa ponte. Achado importante: o `account_id` já cadastrado em cada `client_ad_account` (formato `XXX-XXX-XXXX`) **é o mesmo nome da aba** na planilha "Clientes \ Google Ads" — não precisa do campo `sheet_tab_name` pra esse caso específico, `GET /api/ad-accounts` já retorna tudo que é preciso pra abrir a aba certa. O ID da campanha usado como `external_id`/`entity_id` é o texto inteiro da coluna "Campaign Name" (ex: `[#1291521][00][CBO][INT+EXT][ENG][GERAR PUBLICO]`) — proposital, é a própria Nonna quem nomeia as campanhas assim, então o nome já é estável o suficiente, sem precisar extrair nenhum número. A planilha não tem coluna de receita real (só "Target ROAS", que é config de lance, não receita medida) — `revenue` vai sempre `0`, então ROAS fica `—` no App, só CPA calcula. **Não testado contra um n8n real** (só validado como JSON bem-formado com todas as conexões íntegras) — mesma ressalva do workflow de sync direto abaixo.
+
 **Estrutura de colunas necessária na planilha (uma linha por campanha por dia):**
 
 | Coluna | Mapeia para | Observação |
