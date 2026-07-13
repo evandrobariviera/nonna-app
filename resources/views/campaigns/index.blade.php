@@ -44,6 +44,47 @@
         </div>
     @endif
 
+    {{-- ── ATRASADAS (aberto por padrão) ── --}}
+    <div class="mb-6" x-data="{ open: true }">
+        <button @click="open = !open" type="button"
+            class="text-xs font-mono uppercase tracking-widest transition-colors flex items-center gap-2 mb-3"
+            style="color:{{ $overdueCampaignsTotal > 0 ? 'var(--red)' : 'var(--muted)' }}">
+            <span :class="open ? 'rotate-90' : ''" class="transition-transform">▶</span>
+            Atrasadas ({{ $overdueCampaignsTotal }})
+        </button>
+
+        <div x-show="open" x-cloak>
+            @if($overdueCampaigns->isEmpty())
+                <div class="card px-6 py-8 text-center" style="color:var(--muted)">
+                    <p class="text-sm">Nenhuma campanha atrasada na otimização. 🎉</p>
+                </div>
+            @else
+                <div class="flex flex-col gap-2">
+                    @foreach($overdueCampaigns as $campaign)
+                        <a href="{{ route('campaigns.show', $campaign) }}" class="card px-5 py-4 flex items-center justify-between transition-colors" style="text-decoration:none">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                    <span class="badge badge-{{ $campaign->optimizationTierColor() }}">{{ $campaign->optimizationTierLabel() }}</span>
+                                    <span class="font-bold text-sm" style="color:var(--text)">{{ $campaign->name }}</span>
+                                </div>
+                                <p class="text-xs font-mono" style="color:var(--muted)">
+                                    {{ $campaign->adAccount?->client?->company_name ?? '—' }}
+                                    · {{ $campaign->last_optimized_at ? 'última otimização há ' . $campaign->last_optimized_at->diffForHumans(null, true) : 'nunca otimizada' }}
+                                </p>
+                            </div>
+                            <span class="text-xs font-semibold" style="color:var(--red)">Otimizar →</span>
+                        </a>
+                    @endforeach
+                    @if($overdueCampaignsTotal > $overdueCampaigns->count())
+                        <p class="text-xs text-center py-2" style="color:var(--muted)">
+                            e mais {{ $overdueCampaignsTotal - $overdueCampaigns->count() }} campanha(s) atrasada(s) — refine por cliente pra ver o restante.
+                        </p>
+                    @endif
+                </div>
+            @endif
+        </div>
+    </div>
+
     {{-- ── INSIGHTS (colapsado por padrão) ── --}}
     <div class="mb-6" x-data="{ open: false }">
         <button @click="open = !open" type="button"

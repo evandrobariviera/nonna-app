@@ -186,8 +186,22 @@ class CampaignController extends Controller
 
         $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
 
+        // Atrasadas: independe do filtro de status/plataforma/período da tabela
+        // principal — é sempre "toda campanha em gestão ativa (não encerrada)
+        // que passou do prazo de otimização", pra não esconder atraso por causa
+        // de um filtro que o usuário deixou aplicado.
+        $overdueCampaigns = AdCampaign::whereIn('client_ad_account_id', $adAccountIds)
+            ->whereNotIn('management_status', ['encerrada'])
+            ->with('adAccount.client')
+            ->get()
+            ->filter->isOptimizationOverdue()
+            ->sortBy(fn ($c) => $c->last_optimized_at ?? now()->subYears(10));
+
+        $overdueCampaignsTotal = $overdueCampaigns->count();
+        $overdueCampaigns = $overdueCampaigns->take(20);
+
         return view('campaigns.index', compact(
-            'campaigns', 'stats', 'openInsights', 'clients', 'campaignOptions',
+            'campaigns', 'stats', 'openInsights', 'overdueCampaigns', 'overdueCampaignsTotal', 'clients', 'campaignOptions',
             'periodLabel', 'period', 'statusFilter', 'clientId', 'campaignId', 'platform'
         ));
     }
