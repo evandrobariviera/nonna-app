@@ -184,6 +184,7 @@
                         <th>CPA</th>
                         <th>CTR</th>
                         <th>ROAS</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -192,7 +193,9 @@
                             <td class="font-semibold text-[var(--text)]">
                                 {{ $campaign->adAccount?->client?->company_name ?? '—' }}
                             </td>
-                            <td class="text-[var(--text)]">{{ $campaign->name }}</td>
+                            <td>
+                                <a href="{{ route('campaigns.show', $campaign) }}" class="text-[var(--text)] hover:underline">{{ $campaign->name }}</a>
+                            </td>
                             <td class="text-xs font-mono uppercase" style="color:var(--muted)">{{ $campaign->platform }}</td>
                             <td>
                                 <span class="badge">{{ \App\Http\Controllers\CampaignController::$campaignStatuses[$campaign->status] ?? $campaign->status }}</span>
@@ -206,6 +209,11 @@
                             </td>
                             <td class="text-xs font-mono text-[var(--muted2)]">
                                 {{ $campaign->stats->roas !== null ? number_format($campaign->stats->roas, 2, ',', '.') . 'x' : '—' }}
+                            </td>
+                            <td>
+                                <div class="row-actions flex items-center gap-1.5">
+                                    <a href="{{ route('campaigns.show', $campaign) }}" class="btn btn-primary btn-xs">Abrir</a>
+                                </div>
                             </td>
                         </tr>
                     @endforeach

@@ -23,14 +23,18 @@ class CampaignLog extends Model
     ];
 
     public static array $types = [
-        'budget_change' => ['label' => 'Mudança de Orçamento', 'color' => 'orange'],
-        'targeting'     => ['label' => 'Segmentação',          'color' => 'purple'],
-        'creative'      => ['label' => 'Criativo',             'color' => 'blue'],
-        'bid'           => ['label' => 'Lance / Bid',          'color' => 'orange'],
-        'pause'         => ['label' => 'Pausado',              'color' => 'red'],
-        'resume'        => ['label' => 'Reativado',            'color' => 'green'],
-        'note'          => ['label' => 'Observação',           'color' => 'muted'],
-        'other'         => ['label' => 'Outro',                'color' => 'muted'],
+        'budget_change' => ['label' => 'Mudança de Orçamento',   'color' => 'orange'],
+        'targeting'     => ['label' => 'Segmentação',            'color' => 'purple'],
+        'creative'      => ['label' => 'Criativo',               'color' => 'blue'],
+        'bid'           => ['label' => 'Lance / Bid',            'color' => 'orange'],
+        'pause'         => ['label' => 'Pausado',                'color' => 'red'],
+        'resume'        => ['label' => 'Reativado',              'color' => 'green'],
+        'note'          => ['label' => 'Observação',             'color' => 'muted'],
+        'other'         => ['label' => 'Outro',                  'color' => 'muted'],
+        // Só criado por CampaignController::markOptimized() — é o único tipo
+        // de log que reseta o relógio de otimização (ad_campaigns.last_optimized_at).
+        // Não aparece no formulário genérico de histórico.
+        'otimizacao'    => ['label' => 'Otimização Realizada',   'color' => 'green'],
     ];
 
     public function user(): BelongsTo

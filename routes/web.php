@@ -23,6 +23,7 @@ use App\Http\Controllers\BrandDossierController;
 use App\Http\Controllers\ClientAdBudgetController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\CampaignInsightController;
+use App\Http\Controllers\CampaignLogController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractAttachmentController;
 use App\Http\Controllers\DossierCompetitorController;
@@ -151,6 +152,20 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Campanhas (dashboard interno + insights de IA) ──
     Route::get('/campanhas', [CampaignController::class, 'index'])
         ->name('campaigns.index');
+    Route::get('/campanhas/{campaign}', [CampaignController::class, 'show'])
+        ->name('campaigns.show');
+    Route::patch('/campanhas/{campaign}/status', [CampaignController::class, 'updateManagementStatus'])
+        ->name('campaigns.update-status');
+    Route::patch('/campanhas/{campaign}/situacao', [CampaignController::class, 'updateManagementSituation'])
+        ->name('campaigns.update-situation');
+    Route::patch('/campanhas/{campaign}/tier', [CampaignController::class, 'updateOptimizationTier'])
+        ->name('campaigns.update-tier');
+    Route::post('/campanhas/{campaign}/otimizar', [CampaignController::class, 'markOptimized'])
+        ->name('campaigns.mark-optimized');
+    Route::post('/campanhas/{campaign}/logs', [CampaignLogController::class, 'store'])
+        ->name('campaign-logs.store');
+    Route::delete('/campanhas/{campaign}/logs/{log}', [CampaignLogController::class, 'destroy'])
+        ->name('campaign-logs.destroy');
     Route::patch('/insights/{insight}/status', [CampaignInsightController::class, 'updateStatus'])
         ->name('campaign-insights.update-status');
 

@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\AdCampaign;
 use App\Models\CampaignInsight;
+use App\Models\CampaignLog;
 use App\Models\Client;
 use App\Models\ClientAdAccount;
 use App\Models\ClientAdBudget;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CampaignController extends Controller
@@ -188,6 +190,102 @@ class CampaignController extends Controller
             'campaigns', 'stats', 'openInsights', 'clients', 'campaignOptions',
             'periodLabel', 'period', 'statusFilter', 'clientId', 'campaignId', 'platform'
         ));
+    }
+
+    public function show(AdCampaign $campaign)
+    {
+        $campaign->load('adAccount.client');
+        $logs = $campaign->logs()->with('user')->orderByDesc('created_at')->get();
+
+        [$periodStart, $periodEnd] = $this->periodRange('7d');
+
+        $row = DB::connection('pgsql')
+            ->table('ad_daily_snapshots')
+            ->where('client_ad_account_id', $campaign->client_ad_account_id)
+            ->where('entity_level', 'campaign')
+            ->where('entity_id', $campaign->external_id)
+            ->whereBetween('snapshot_date', [$periodStart, $periodEnd])
+            ->selectRaw('
+                COALESCE(SUM(spend), 0) AS spend,
+                COALESCE(SUM(revenue), 0) AS revenue,
+                COALESCE(SUM(clicks), 0) AS clicks,
+                COALESCE(SUM(impressions), 0) AS impressions,
+                COALESCE(SUM(conversions), 0) AS conversions
+            ')
+            ->first();
+
+        $spend = (float) ($row->spend ?? 0);
+        $clicks = (int) ($row->clicks ?? 0);
+        $impressions = (int) ($row->impressions ?? 0);
+        $conversions = (int) ($row->conversions ?? 0);
+        $revenue = (float) ($row->revenue ?? 0);
+
+        $stats = (object) [
+            'spend' => $spend,
+            'cpa'   => $conversions > 0 ? $spend / $conversions : null,
+            'ctr'   => $impressions > 0 ? round(($clicks / $impressions) * 100, 2) : null,
+            'roas'  => $spend > 0 ? round($revenue / $spend, 2) : null,
+        ];
+
+        return view('campaigns.show', compact('campaign', 'logs', 'stats'));
+    }
+
+    public function updateManagementStatus(Request $request, AdCampaign $campaign)
+    {
+        $data = $request->validate([
+            'management_status' => 'required|string|in:' . implode(',', array_keys(AdCampaign::$managementStatuses)),
+        ]);
+
+        $campaign->update($data);
+
+        return back()->with('success', 'Status atualizado.');
+    }
+
+    public function updateManagementSituation(Request $request, AdCampaign $campaign)
+    {
+        $data = $request->validate([
+            'management_situation' => 'nullable|string|in:' . implode(',', array_keys(AdCampaign::$managementSituations)),
+        ]);
+
+        $campaign->update($data);
+
+        return back()->with('success', 'Situação atualizada.');
+    }
+
+    public function updateOptimizationTier(Request $request, AdCampaign $campaign)
+    {
+        $data = $request->validate([
+            'optimization_tier' => 'required|string|in:' . implode(',', array_keys(AdCampaign::$optimizationTiers)),
+        ]);
+
+        $campaign->update($data);
+
+        return back()->with('success', 'Frequência de otimização atualizada.');
+    }
+
+    public function markOptimized(Request $request, AdCampaign $campaign)
+    {
+        $data = $request->validate([
+            'comment' => 'nullable|string|max:2000',
+        ]);
+
+        DB::connection('pgsql')->transaction(function () use ($campaign, $data) {
+            CampaignLog::create([
+                'organization_id'      => $campaign->organization_id,
+                'client_ad_account_id' => $campaign->client_ad_account_id,
+                'entity_level'         => 'campaign',
+                'entity_id'            => $campaign->external_id,
+                'entity_name'          => $campaign->name,
+                'platform'             => $campaign->platform,
+                'logged_by'            => Auth::id(),
+                'type'                 => 'otimizacao',
+                'description'          => $data['comment'] ?: 'Otimização realizada',
+            ]);
+
+            $campaign->update(['last_optimized_at' => now()]);
+        });
+
+        return back()->with('success', 'Otimização registrada.')->withFragment('otimizacao');
     }
 
     /**
