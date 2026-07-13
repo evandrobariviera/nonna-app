@@ -44,47 +44,6 @@
         </div>
     @endif
 
-    {{-- ── ATRASADAS (aberto por padrão) ── --}}
-    <div class="mb-6" x-data="{ open: true }">
-        <button @click="open = !open" type="button"
-            class="text-xs font-mono uppercase tracking-widest transition-colors flex items-center gap-2 mb-3"
-            style="color:{{ $overdueCampaignsTotal > 0 ? 'var(--red)' : 'var(--muted)' }}">
-            <span :class="open ? 'rotate-90' : ''" class="transition-transform">▶</span>
-            Atrasadas ({{ $overdueCampaignsTotal }})
-        </button>
-
-        <div x-show="open" x-cloak>
-            @if($overdueCampaigns->isEmpty())
-                <div class="card px-6 py-8 text-center" style="color:var(--muted)">
-                    <p class="text-sm">Nenhuma campanha atrasada na otimização. 🎉</p>
-                </div>
-            @else
-                <div class="flex flex-col gap-2">
-                    @foreach($overdueCampaigns as $campaign)
-                        <a href="{{ route('campaigns.show', $campaign) }}" class="card px-5 py-4 flex items-center justify-between transition-colors" style="text-decoration:none">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                    <span class="badge badge-{{ $campaign->optimizationTierColor() }}">{{ $campaign->optimizationTierLabel() }}</span>
-                                    <span class="font-bold text-sm" style="color:var(--text)">{{ $campaign->name }}</span>
-                                </div>
-                                <p class="text-xs font-mono" style="color:var(--muted)">
-                                    {{ $campaign->adAccount?->client?->company_name ?? '—' }}
-                                    · {{ $campaign->last_optimized_at ? 'última otimização há ' . $campaign->last_optimized_at->diffForHumans(null, true) : 'nunca otimizada' }}
-                                </p>
-                            </div>
-                            <span class="text-xs font-semibold" style="color:var(--red)">Otimizar →</span>
-                        </a>
-                    @endforeach
-                    @if($overdueCampaignsTotal > $overdueCampaigns->count())
-                        <p class="text-xs text-center py-2" style="color:var(--muted)">
-                            e mais {{ $overdueCampaignsTotal - $overdueCampaigns->count() }} campanha(s) atrasada(s) — refine por cliente pra ver o restante.
-                        </p>
-                    @endif
-                </div>
-            @endif
-        </div>
-    </div>
-
     {{-- ── INSIGHTS (colapsado por padrão) ── --}}
     <div class="mb-6" x-data="{ open: false }">
         <button @click="open = !open" type="button"
@@ -197,9 +156,16 @@
             @endforeach
         </select>
 
+        <select name="group_by" onchange="this.form.submit()"
+            style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
+            <option value="" {{ $groupBy === '' ? 'selected' : '' }}>Sem agrupamento</option>
+            <option value="cliente" {{ $groupBy === 'cliente' ? 'selected' : '' }}>Agrupar por Cliente</option>
+            <option value="situacao" {{ $groupBy === 'situacao' ? 'selected' : '' }}>Agrupar por Situação</option>
+        </select>
+
         <button type="submit" class="btn btn-ghost btn-sm">Filtrar</button>
 
-        @if(request()->hasAny(['client_id', 'ad_campaign_id', 'platform', 'status', 'period']))
+        @if(request()->hasAny(['client_id', 'ad_campaign_id', 'platform', 'status', 'period', 'group_by']))
             <a href="{{ route('campaigns.index') }}"
                class="text-xs font-mono transition-colors" style="color:var(--muted)"
                onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
@@ -225,40 +191,21 @@
                         <th>CPA</th>
                         <th>CTR</th>
                         <th>ROAS</th>
+                        <th>Última Otimização</th>
                         <th></th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach($campaigns as $campaign)
-                        <tr>
-                            <td class="font-semibold text-[var(--text)]">
-                                {{ $campaign->adAccount?->client?->company_name ?? '—' }}
-                            </td>
-                            <td>
-                                <a href="{{ route('campaigns.show', $campaign) }}" class="text-[var(--text)] hover:underline">{{ $campaign->name }}</a>
-                            </td>
-                            <td class="text-xs font-mono uppercase" style="color:var(--muted)">{{ $campaign->platform }}</td>
-                            <td>
-                                <span class="badge">{{ \App\Http\Controllers\CampaignController::$campaignStatuses[$campaign->status] ?? $campaign->status }}</span>
-                            </td>
-                            <td class="text-xs font-mono text-[var(--muted2)]">R$ {{ number_format($campaign->stats->spend, 2, ',', '.') }}</td>
-                            <td class="text-xs font-mono text-[var(--muted2)]">
-                                {{ $campaign->stats->cpa !== null ? 'R$ ' . number_format($campaign->stats->cpa, 2, ',', '.') : '—' }}
-                            </td>
-                            <td class="text-xs font-mono text-[var(--muted2)]">
-                                {{ $campaign->stats->ctr !== null ? number_format($campaign->stats->ctr, 2, ',', '.') . '%' : '—' }}
-                            </td>
-                            <td class="text-xs font-mono text-[var(--muted2)]">
-                                {{ $campaign->stats->roas !== null ? number_format($campaign->stats->roas, 2, ',', '.') . 'x' : '—' }}
-                            </td>
-                            <td>
-                                <div class="row-actions flex items-center gap-1.5">
-                                    <a href="{{ route('campaigns.show', $campaign) }}" class="btn btn-primary btn-xs">Abrir</a>
-                                </div>
-                            </td>
-                        </tr>
+                @if($groupBy)
+                    @foreach($campaignsGrouped as $groupKey => $groupCampaigns)
+                        @include('partials._campaign-group-tbody', ['groupBy' => $groupBy, 'groupKey' => $groupKey, 'groupCampaigns' => $groupCampaigns])
                     @endforeach
-                </tbody>
+                @else
+                    <tbody x-data="{ groupOpen: true }">
+                        @foreach($campaigns as $campaign)
+                            @include('partials._campaign-tr', ['campaign' => $campaign])
+                        @endforeach
+                    </tbody>
+                @endif
             </table>
         @endif
     </div>

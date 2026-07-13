@@ -80,6 +80,9 @@ class CampaignController extends Controller
                 ->when($platform, fn ($q) => $q->where('platform', $platform))
                 ->when($statusFilter !== '', fn ($q) => $q->where('status', $statusFilter))
                 ->when($campaignId, fn ($q) => $q->where('id', $campaignId))
+                // Quem nunca foi otimizada (ou está há mais tempo sem otimização)
+                // aparece primeiro, pra ficar fácil ver o que precisa de atenção.
+                ->orderByRaw('last_optimized_at ASC NULLS FIRST')
                 ->orderBy('name')
                 ->get();
 
@@ -196,22 +199,16 @@ class CampaignController extends Controller
 
         $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
 
-        // Atrasadas: independe do filtro de status/plataforma/período da tabela
-        // principal — é sempre "toda campanha em gestão ativa (não encerrada)
-        // que passou do prazo de otimização", pra não esconder atraso por causa
-        // de um filtro que o usuário deixou aplicado.
-        $overdueCampaigns = AdCampaign::whereIn('client_ad_account_id', $adAccountIds)
-            ->whereNotIn('management_status', ['encerrada'])
-            ->with('adAccount.client')
-            ->get()
-            ->filter->isOptimizationOverdue()
-            ->sortBy(fn ($c) => $c->last_optimized_at ?? now()->subYears(10));
-
-        $overdueCampaignsTotal = $overdueCampaigns->count();
-        $overdueCampaigns = $overdueCampaigns->take(20);
+        // Agrupamento opcional (mesmo padrão de Filas/Sprint) — mantém a ordenação
+        // por otimização (mais atrasada primeiro) dentro de cada grupo, já que
+        // group By não reordena, só particiona a coleção já ordenada.
+        $groupBy = $request->get('group_by', '');
+        $campaignsGrouped = $groupBy
+            ? AdCampaign::groupCollection($campaigns, $groupBy)->sortByDesc(fn ($g) => $g->filter->isOptimizationOverdue()->count())
+            : null;
 
         return view('campaigns.index', compact(
-            'campaigns', 'stats', 'openInsights', 'overdueCampaigns', 'overdueCampaignsTotal', 'clients', 'campaignOptions',
+            'campaigns', 'campaignsGrouped', 'groupBy', 'stats', 'openInsights', 'clients', 'campaignOptions',
             'periodLabel', 'period', 'statusFilter', 'clientId', 'campaignId', 'platform'
         ));
     }

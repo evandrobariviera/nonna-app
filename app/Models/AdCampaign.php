@@ -112,6 +112,19 @@ class AdCampaign extends Model
             ->where('entity_level', 'campaign');
     }
 
+    /**
+     * Agrupamento da listagem de campanhas — mesmo padrão de Task::groupCollection().
+     *
+     * @param  \Illuminate\Support\Collection<int, AdCampaign>  $campaigns
+     */
+    public static function groupCollection(\Illuminate\Support\Collection $campaigns, string $groupBy): \Illuminate\Support\Collection
+    {
+        return match ($groupBy) {
+            'situacao' => $campaigns->groupBy(fn ($c) => $c->management_situation ?: '__sem_situacao__'),
+            default    => $campaigns->groupBy(fn ($c) => $c->adAccount?->client_id ?? '__sem_cliente__'),
+        };
+    }
+
     public function managementStatusLabel(): string
     {
         return self::$managementStatuses[$this->management_status]['label'] ?? $this->management_status;
