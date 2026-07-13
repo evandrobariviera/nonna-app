@@ -42,11 +42,21 @@
                 @endif
             </div>
 
-            {{-- STATS 7 DIAS — resultado --}}
+            {{-- FILTRO DE PERÍODO --}}
+            <form method="GET" action="{{ route('campaigns.show', $campaign) }}" class="flex items-center gap-2">
+                <select name="period" onchange="this.form.submit()"
+                    style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
+                    @foreach(\App\Http\Controllers\CampaignController::$campaignPeriods as $key => $label)
+                        <option value="{{ $key }}" {{ $period === $key ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </form>
+
+            {{-- STATS — resultado --}}
             <div class="grid gap-3" style="grid-template-columns: repeat(4, 1fr)">
                 <div class="card px-4 py-4 text-left">
                     <div class="text-2xl font-black mb-1" style="color:var(--text)">R$ {{ number_format($stats->spend, 2, ',', '.') }}</div>
-                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Gasto (7 dias)</div>
+                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Gasto ({{ $periodLabel }})</div>
                 </div>
                 <div class="card px-4 py-4 text-left">
                     <div class="text-2xl font-black mb-1" style="color:var(--text)">{{ number_format($stats->conversions, 0, ',', '.') }}</div>
@@ -66,7 +76,7 @@
                 </div>
             </div>
 
-            {{-- STATS 7 DIAS — alcance e engajamento --}}
+            {{-- STATS — alcance e engajamento --}}
             <div class="grid gap-3" style="grid-template-columns: repeat(5, 1fr)">
                 <div class="card px-4 py-4 text-left">
                     <div class="text-xl font-black mb-1" style="color:var(--text)">{{ number_format($stats->impressions, 0, ',', '.') }}</div>
@@ -138,6 +148,9 @@
                 @endif
 
                 {{-- Novo registro --}}
+                <p class="text-xs mb-3" style="color:var(--muted)">
+                    Use aqui pra qualquer anotação (mudança de orçamento, segmentação, criativo, pausa...) que não seja a otimização em si — isso não mexe no prazo de otimização, que fica no card ao lado.
+                </p>
                 <form method="POST" action="{{ route('campaign-logs.store', $campaign) }}"
                       x-data="{ description: '', rows: 2 }"
                       @submit="if (!description.trim()) { $event.preventDefault(); }">
@@ -282,7 +295,7 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2 mb-3">
+                <div class="flex items-center gap-2 mb-1 flex-wrap">
                     @if($campaign->isOptimizationOverdue())
                         <span class="badge badge-red">Atrasada</span>
                     @else
@@ -292,6 +305,9 @@
                         {{ $campaign->last_optimized_at ? 'há ' . $campaign->last_optimized_at->diffForHumans(null, true) : 'nunca otimizada' }}
                     </span>
                 </div>
+                <p class="text-xs mb-3" style="color:var(--muted2)">
+                    Última otimização: {{ $campaign->last_optimized_at?->format('d/m/Y \à\s H:i') ?? '—' }}
+                </p>
 
                 <form method="POST" action="{{ route('campaigns.mark-optimized', $campaign) }}" x-data="{ comment: '' }">
                     @csrf
@@ -304,6 +320,9 @@
                         Marcar otimização feita
                     </button>
                 </form>
+                <p class="text-xs mt-2" style="color:var(--muted)">
+                    Isso reinicia o prazo de otimização e aparece no histórico ao lado, marcado como "Otimização Realizada".
+                </p>
             </div>
 
         </div>{{-- /sidebar --}}

@@ -28,6 +28,16 @@ class CampaignController extends Controller
         'last_month' => 'Mês anterior',
     ];
 
+    // Períodos da página de detalhe da campanha — conjunto próprio (diferente
+    // de $periods, que é o filtro da listagem) porque o pedido aqui foi
+    // especificamente ontem/7/15/30 dias.
+    public static array $campaignPeriods = [
+        'yesterday' => 'Ontem',
+        '7d'        => 'Últimos 7 dias',
+        '15d'       => 'Últimos 15 dias',
+        '30d'       => 'Últimos 30 dias',
+    ];
+
     public function index(Request $request)
     {
         $clientId   = $request->get('client_id') ?: null;
@@ -206,12 +216,16 @@ class CampaignController extends Controller
         ));
     }
 
-    public function show(AdCampaign $campaign)
+    public function show(Request $request, AdCampaign $campaign)
     {
         $campaign->load('adAccount.client');
         $logs = $campaign->logs()->with('user')->orderByDesc('created_at')->get();
 
-        [$periodStart, $periodEnd] = $this->periodRange('7d');
+        $period = $request->filled('period') && array_key_exists($request->get('period'), self::$campaignPeriods)
+            ? $request->get('period')
+            : '7d';
+
+        [$periodStart, $periodEnd, $periodLabel] = $this->periodRange($period);
 
         $row = DB::connection('pgsql')
             ->table('ad_daily_snapshots')
@@ -250,7 +264,7 @@ class CampaignController extends Controller
             'roas'         => $spend > 0 ? round($revenue / $spend, 2) : null,
         ];
 
-        return view('campaigns.show', compact('campaign', 'logs', 'stats'));
+        return view('campaigns.show', compact('campaign', 'logs', 'stats', 'period', 'periodLabel'));
     }
 
     public function updateManagementStatus(Request $request, AdCampaign $campaign)
@@ -317,6 +331,8 @@ class CampaignController extends Controller
     private function periodRange(string $period): array
     {
         return match ($period) {
+            'yesterday'  => [now()->subDay()->toDateString(), now()->subDay()->toDateString(), 'Ontem'],
+            '15d'        => [now()->subDays(15)->toDateString(), now()->toDateString(), 'Últimos 15 dias'],
             '30d'        => [now()->subDays(30)->toDateString(), now()->toDateString(), 'Últimos 30 dias'],
             'month'      => [now()->startOfMonth()->toDateString(), now()->toDateString(), 'mês atual'],
             'last_month' => [now()->subMonthNoOverflow()->startOfMonth()->toDateString(), now()->subMonthNoOverflow()->endOfMonth()->toDateString(), 'mês anterior'],
