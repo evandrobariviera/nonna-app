@@ -88,7 +88,7 @@ class GoogleAdsFetcher
         $campaigns = array_map(fn ($r) => [
             'external_id' => (string) $r['campaign']['id'],
             'name'        => $r['campaign']['name'],
-            'status'      => strtolower($r['campaign']['status'] ?? 'enabled'),
+            'status'      => self::mapStatus($r['campaign']['status'] ?? 'ENABLED'),
             'objective'   => $r['campaign']['advertisingChannelType'] ?? null,
             'start_date'  => $r['campaign']['startDate'] ?? null,
             'end_date'    => $r['campaign']['endDate'] ?? null,
@@ -109,5 +109,19 @@ class GoogleAdsFetcher
         ], $rows);
 
         return ['campaigns' => $campaigns, 'snapshots' => $snapshots];
+    }
+
+    /**
+     * Google Ads usa ENABLED/PAUSED/REMOVED; o resto do App (e a Meta API)
+     * fala active/paused/deleted/archived — sem isso o filtro padrão de
+     * status=active da tela de campanhas nunca acha nada do Google.
+     */
+    private static function mapStatus(string $googleStatus): string
+    {
+        return match (strtoupper($googleStatus)) {
+            'ENABLED' => 'active',
+            'REMOVED' => 'deleted',
+            default   => strtolower($googleStatus),
+        };
     }
 }
