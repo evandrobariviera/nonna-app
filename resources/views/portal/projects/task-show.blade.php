@@ -2,35 +2,38 @@
     <x-slot name="title">{{ $task->title }}</x-slot>
 
     @php
-        $statusColors = [
-            'backlog'              => ['bg' => 'var(--s3)',              'text' => 'var(--muted)',  'label' => 'Backlog / A Fazer'],
-            'em_producao'          => ['bg' => 'rgba(37,99,235,.1)',     'text' => '#2563eb',       'label' => 'Em Produção'],
-            'revisao_interna'      => ['bg' => 'rgba(106,90,205,.08)',   'text' => 'var(--purple)', 'label' => 'Revisão Interna'],
-            'ajuste_alteracao'     => ['bg' => 'rgba(37,99,235,.1)',     'text' => '#2563eb',       'label' => 'Ajuste / Alteração'],
-            'aprovacao'            => ['bg' => 'rgba(255,140,0,.08)',    'text' => 'var(--orange)', 'label' => 'Aprovação'],
-            'despacho_agendamento' => ['bg' => 'rgba(37,99,235,.1)',     'text' => '#2563eb',       'label' => 'Despacho / Agendamento'],
-            'concluido'            => ['bg' => 'rgba(5,150,105,.1)',     'text' => 'var(--green)',  'label' => 'Concluído'],
-            'cancelado'            => ['bg' => 'rgba(220,38,38,.08)',    'text' => 'var(--red)',    'label' => 'Cancelado'],
+        $statusMap = [
+            'backlog'               => ['label' => 'Backlog',              'bg' => 'var(--s3)',             'text' => 'var(--muted)'],
+            'em_producao'           => ['label' => 'Em Produção',          'bg' => 'rgba(37,99,235,.1)',    'text' => '#2563eb'],
+            'revisao_interna'       => ['label' => 'Em Revisão',           'bg' => 'rgba(106,90,205,.08)',  'text' => 'var(--purple)'],
+            'ajuste_alteracao'      => ['label' => 'Em Ajuste',            'bg' => 'rgba(37,99,235,.1)',    'text' => '#2563eb'],
+            'aprovacao'             => ['label' => 'Ag. Aprovação',        'bg' => 'rgba(255,140,0,.08)',   'text' => 'var(--orange)'],
+            'despacho_agendamento'  => ['label' => 'Aprovada — Agendando', 'bg' => 'rgba(5,150,105,.1)',    'text' => 'var(--green)'],
+            'concluido'             => ['label' => 'Concluída',            'bg' => 'rgba(5,150,105,.1)',    'text' => 'var(--green)'],
+            'cancelado'             => ['label' => 'Cancelada',            'bg' => 'rgba(220,38,38,.08)',   'text' => 'var(--red)'],
         ];
-        $sc = $statusColors[$task->status] ?? $statusColors['backlog'];
+        $st = $statusMap[$task->status] ?? ['label' => $task->status, 'bg' => 'var(--s3)', 'text' => 'var(--muted)'];
+        $macroplan = $task->project?->macroPlan;
     @endphp
 
     <div class="mb-6">
-        <a href="{{ route('portal.tickets.index') }}" class="text-xs font-semibold" style="color: var(--muted)">← Chamados</a>
+        @if($macroplan)
+            <a href="{{ route('portal.projects.show', $macroplan) }}" class="text-xs font-semibold" style="color: var(--muted)">
+                ← {{ $task->project->title }}
+            </a>
+        @else
+            <a href="{{ route('portal.projects.index') }}" class="text-xs font-semibold" style="color: var(--muted)">← Planejamentos</a>
+        @endif
     </div>
 
     <div class="card p-6 mb-6">
         <div class="flex items-start justify-between mb-4">
             <h1 class="text-xl font-black" style="color: var(--text)">{{ $task->title }}</h1>
             <span class="text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
-                  style="background: {{ $sc['bg'] }}; color: {{ $sc['text'] }}">
-                {{ $sc['label'] }}
+                  style="background: {{ $st['bg'] }}; color: {{ $st['text'] }}">
+                {{ $st['label'] }}
             </span>
         </div>
-
-        @if($task->situation)
-            <p class="text-xs font-semibold mb-4" style="color: var(--purple)">{{ $task->situationLabel() }}</p>
-        @endif
 
         @if($task->description)
             <p class="text-sm whitespace-pre-wrap mb-4" style="color: var(--text); line-height: 1.7">{{ $task->description }}</p>

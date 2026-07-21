@@ -16,8 +16,9 @@ class TaskCommentController extends Controller
         ]);
 
         $task->comments()->create([
-            'user_id' => Auth::id(),
-            'body'    => $data['body'],
+            'user_id'           => Auth::id(),
+            'body'              => $data['body'],
+            'visible_to_client' => $request->boolean('visible_to_client'),
         ]);
 
         return redirect()->route('tasks.show', $task)

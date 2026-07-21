@@ -9,6 +9,7 @@ use App\Http\Controllers\Portal\CampaignController as PortalCampaigns;
 use App\Http\Controllers\Portal\MeetingController as PortalMeetings;
 use App\Http\Controllers\Portal\TicketController as PortalTickets;
 use App\Http\Controllers\Portal\ApprovalController as PortalApprovals;
+use App\Http\Controllers\Portal\TaskCommentController as PortalTaskComments;
 use App\Http\Controllers\ClientPortalAccessController;
 use App\Http\Controllers\ClientAdAccountController;
 use App\Http\Controllers\FilaController;
@@ -494,7 +495,11 @@ Route::prefix('portal')->name('portal.')->middleware(['auth', 'portal'])->group(
     Route::get('/', [PortalDashboard::class, 'index'])->name('dashboard');
     Route::get('/projetos', [PortalProjects::class, 'index'])->name('projects.index');
     Route::get('/projetos/{macroplan}', [PortalProjects::class, 'show'])->name('projects.show');
+    Route::get('/tarefas/{task}', [PortalProjects::class, 'showTask'])->name('tasks.show');
+    Route::post('/tarefas/{task}/comentarios', [PortalTaskComments::class, 'store'])->name('tasks.comments.store');
     Route::get('/chamados', [PortalTickets::class, 'index'])->name('tickets.index');
+    Route::get('/chamados/novo', [PortalTickets::class, 'create'])->name('tickets.create');
+    Route::post('/chamados', [PortalTickets::class, 'store'])->name('tickets.store');
     Route::get('/chamados/{task}', [PortalTickets::class, 'show'])->name('tickets.show');
     Route::get('/reunioes', [PortalMeetings::class, 'index'])->name('meetings.index');
     Route::get('/reunioes/{meeting}', [PortalMeetings::class, 'show'])->name('meetings.show');
@@ -509,7 +514,7 @@ Route::prefix('portal')->name('portal.')->middleware(['auth', 'portal'])->group(
 Route::middleware(['auth', 'not-client'])->group(function () {
     Route::post('/clientes/{client}/acesso-portal', [ClientPortalAccessController::class, 'store'])
         ->name('clients.portal-access.store');
-    Route::delete('/clientes/{client}/acesso-portal', [ClientPortalAccessController::class, 'destroy'])
+    Route::delete('/clientes/{client}/acesso-portal/{portalUser}', [ClientPortalAccessController::class, 'destroy'])
         ->name('clients.portal-access.destroy');
 });
 

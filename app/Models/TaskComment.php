@@ -12,7 +12,11 @@ class TaskComment extends Model
 
     protected $connection = 'pgsql';
 
-    protected $fillable = ['task_id', 'user_id', 'body'];
+    protected $fillable = ['task_id', 'user_id', 'body', 'visible_to_client'];
+
+    protected $casts = [
+        'visible_to_client' => 'boolean',
+    ];
 
     public function task(): BelongsTo
     {

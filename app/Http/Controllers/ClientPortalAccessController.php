@@ -13,17 +13,14 @@ class ClientPortalAccessController extends Controller
     {
         abort_if($client->organization_id !== app('currentOrganization')->id, 403);
 
-        if (User::where('client_id', $client->id)->exists()) {
-            return back()->with('error', 'Este cliente já tem acesso ao portal.');
-        }
-
         $data = $request->validate([
+            'portal_name'     => ['required', 'string', 'max:150'],
             'portal_email'    => ['required', 'email', 'unique:users,email'],
             'portal_password' => ['required', 'string', 'min:8'],
         ]);
 
         User::create([
-            'name'      => $client->responsible_name ?? $client->company_name,
+            'name'      => $data['portal_name'],
             'email'     => $data['portal_email'],
             'password'  => $data['portal_password'],
             'client_id' => $client->id,
@@ -32,12 +29,13 @@ class ClientPortalAccessController extends Controller
         return back()->with('success', 'Acesso ao portal criado com sucesso.');
     }
 
-    public function destroy(Client $client): RedirectResponse
+    public function destroy(Client $client, User $portalUser): RedirectResponse
     {
         abort_if($client->organization_id !== app('currentOrganization')->id, 403);
+        abort_if($portalUser->client_id !== $client->id, 403);
 
-        User::where('client_id', $client->id)->delete();
+        $portalUser->delete();
 
-        return back()->with('success', 'Acesso ao portal removido.');
+        return back()->with('success', 'Acesso removido.');
     }
 }

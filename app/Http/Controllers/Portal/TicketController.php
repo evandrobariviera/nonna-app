@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Task;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -32,8 +33,40 @@ class TicketController extends Controller
 
         abort_if(!$task->is_ticket || $task->client_id !== $client->id, 403);
 
+        $task->load('comments.user');
         $deliverables = $task->attachments()->where('is_deliverable', true)->get();
 
         return view('portal.tickets.show', compact('client', 'task', 'deliverables'));
+    }
+
+    public function create(): View
+    {
+        $client = auth()->user()->client;
+
+        return view('portal.tickets.create', compact('client'));
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $client = auth()->user()->client;
+
+        $data = $request->validate([
+            'title'       => 'required|string|max:300',
+            'description' => 'nullable|string|max:5000',
+            'task_type'   => 'required|in:' . implode(',', array_keys(Task::$types)),
+        ]);
+
+        $task = Task::create([
+            ...$data,
+            'organization_id' => $client->organization_id,
+            'client_id'       => $client->id,
+            'is_ticket'       => true,
+            'origin'          => 'ticket',
+            'status'          => 'backlog',
+            'requester_name'  => auth()->user()->name,
+            'created_by'      => auth()->id(),
+        ]);
+
+        return redirect()->route('portal.tickets.show', $task)->with('success', 'Chamado aberto com sucesso.');
     }
 }

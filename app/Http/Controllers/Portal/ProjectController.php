@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\MacroPlan;
+use App\Models\Task;
 use Illuminate\View\View;
 
 class ProjectController extends Controller
@@ -29,5 +30,17 @@ class ProjectController extends Controller
         $macroplan->load(['projects.tasks' => fn($q) => $q->orderBy('created_at')]);
 
         return view('portal.projects.show', compact('client', 'macroplan'));
+    }
+
+    public function showTask(Task $task): View
+    {
+        $client = auth()->user()->client;
+
+        abort_if($task->client_id !== $client->id || $task->is_ticket, 403);
+
+        $task->load('comments.user', 'project.macroPlan');
+        $deliverables = $task->attachments()->where('is_deliverable', true)->get();
+
+        return view('portal.projects.task-show', compact('client', 'task', 'deliverables'));
     }
 }

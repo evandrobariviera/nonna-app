@@ -6,15 +6,23 @@
             <h1 class="text-2xl font-black" style="color: var(--text)">Chamados</h1>
             <p class="text-sm mt-1" style="color: var(--muted)">Tarefas avulsas e solicitações de {{ $client->company_name }}</p>
         </div>
-        @if(!request()->boolean('mostrar_fechados'))
-            <a href="{{ route('portal.tickets.index', ['mostrar_fechados' => 1]) }}" class="text-xs font-semibold" style="color: var(--purple)">
-                Mostrar concluídos →
+        <div class="flex items-center gap-4">
+            @if(!request()->boolean('mostrar_fechados'))
+                <a href="{{ route('portal.tickets.index', ['mostrar_fechados' => 1]) }}" class="text-xs font-semibold" style="color: var(--purple)">
+                    Mostrar concluídos →
+                </a>
+            @else
+                <a href="{{ route('portal.tickets.index') }}" class="text-xs font-semibold" style="color: var(--muted)">
+                    ← Ocultar concluídos
+                </a>
+            @endif
+            <a href="{{ route('portal.tickets.create') }}"
+               class="px-4 py-2 text-sm font-semibold text-white rounded-lg"
+               style="background: var(--purple)"
+               onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                + Novo Chamado
             </a>
-        @else
-            <a href="{{ route('portal.tickets.index') }}" class="text-xs font-semibold" style="color: var(--muted)">
-                ← Ocultar concluídos
-            </a>
-        @endif
+        </div>
     </div>
 
     @php

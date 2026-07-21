@@ -706,6 +706,11 @@
                                         <span class="text-sm font-semibold" style="color:var(--text)">{{ $comment->user->name }}</span>
                                         <span class="text-xs" style="color:var(--muted)">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
                                         <span class="text-xs" style="color:var(--muted2)">{{ $comment->created_at->diffForHumans() }}</span>
+                                        @if($comment->visible_to_client)
+                                            <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full" style="background:rgba(5,150,105,.1); color:var(--green)">Visível pro cliente</span>
+                                        @else
+                                            <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full" style="background:var(--s3); color:var(--muted)">Interno</span>
+                                        @endif
                                     </div>
                                     <p class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.65">{{ $comment->body }}</p>
                                 </div>
@@ -745,7 +750,11 @@
                                 style="background:var(--s3); border:1px solid var(--border2); color:var(--text); line-height:1.65"
                                 onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'"
                             ></textarea>
-                            <div class="flex justify-end mt-2" x-show="body.trim().length > 0" x-cloak>
+                            <div class="flex items-center justify-between mt-2" x-show="body.trim().length > 0" x-cloak>
+                                <label class="flex items-center gap-2 text-xs" style="color:var(--muted)">
+                                    <input type="checkbox" name="visible_to_client" value="1">
+                                    Visível para o cliente
+                                </label>
                                 <button type="submit"
                                     class="px-4 py-2 text-sm font-semibold text-white"
                                     style="background:var(--purple)"
