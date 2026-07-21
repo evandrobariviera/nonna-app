@@ -12,7 +12,6 @@ use App\Models\TaskAttachment;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class TaskApprovalService
@@ -223,39 +222,22 @@ class TaskApprovalService
 
     private function dispatchWebhook(TaskApprovalRound $round, TaskApprovalToken $approvalToken, Contact $contact): void
     {
-        $webhookUrl = config('services.n8n.approval_webhook_url');
+        $channels = $approvalToken->channels ?? [];
 
-        if (! $webhookUrl) {
+        if (empty($channels)) {
             return;
         }
 
-        $deliverablesCount = TaskAttachment::where('task_id', $round->task_id)
-            ->where('is_deliverable', true)
-            ->where('round_number', $round->round_number)
-            ->count();
+        $client = $round->task->client;
 
-        Http::timeout(5)->post($webhookUrl, [
-            'event' => 'approval_requested',
-            'round' => [
-                'id'         => $round->id,
-                'number'     => $round->round_number,
-                'task_title' => $round->task->title,
-                'notes'      => $round->notes,
-            ],
-            'client' => [
-                'id'   => $round->task->client_id,
-                'name' => $round->task->client->company_name,
-            ],
-            'contact' => [
-                'name'     => $contact->name,
-                'email'    => $contact->email,
-                'phone'    => $contact->phone ?? null,
-                'channels' => $approvalToken->channels ?? [],
-            ],
-            'link'               => route('approval.show', $approvalToken->token),
-            'expires_at'         => $approvalToken->expires_at->toIso8601String(),
-            'deliverables_count' => $deliverablesCount,
-        ]);
+        $variables = [
+            'tarefa'         => $round->task->title,
+            'link_aprovacao' => route('approval.show', $approvalToken->token),
+        ];
+
+        foreach ($channels as $channel) {
+            app(NotificationDispatchService::class)->dispatch('aprovacao', $channel, $client, $contact, $variables);
+        }
 
         $approvalToken->update(['notified_at' => now()]);
     }

@@ -4,18 +4,18 @@
 
 Disparo genérico de mensagens padrão (WhatsApp/e-mail) pro n8n, com o texto já resolvido a partir de `notification_templates` — o n8n só recebe o payload pronto e decide como enviar (WhatsApp/e-mail, qual provedor).
 
-**Status atual (2026-07):** o lado do App está pronto e já dispara de verdade para **um gatilho**: `chamado_aberto` (quando um cliente abre um chamado pelo Portal, `Portal\TicketController::store()`). Os outros 8 tipos já têm template cadastrado (`Configurações > Mensagens Padrão`) e já podem ter contatos assinados (`client_contact_subscriptions`), mas **ninguém no App ainda chama `NotificationDispatchService::send()` pra eles** — ligar cada um é um passo separado, deliberadamente não feito ainda. `financeiro`/`cobranca`/`cs_survey`/`offboarding` nem têm de onde disparar (não existe tabela de nota/boleto, ciclo de CS ou fluxo de offboarding implementado).
+**Status atual (2026-07-21):** o lado do App está pronto e já dispara de verdade pra **dois gatilhos**: `chamado_aberto` (quando um cliente abre um chamado pelo Portal, `Portal\TicketController::store()`) e `aprovacao` (unificado com o antigo webhook exclusivo de aprovação — ver [approval-webhook-api.md](approval-webhook-api.md) pra lógica de negócio específica: tokens, expiração, resolução de rodada). Os outros 7 tipos já têm template cadastrado (`Configurações > Mensagens Padrão`) e já podem ter contatos assinados (`client_contact_subscriptions`), mas **ninguém no App ainda chama o serviço pra eles** — ligar cada um é um passo separado, deliberadamente não feito ainda. `financeiro`/`cobranca`/`cs_survey`/`offboarding` nem têm de onde disparar (não existe tabela de nota/boleto, ciclo de CS ou fluxo de offboarding implementado).
 
 **O workflow do n8n que recebe esse payload e efetivamente manda a mensagem também não existe ainda** — até lá, o webhook simplesmente não é chamado (`N8N_NOTIFICATION_WEBHOOK_URL` não configurado → `send()` retorna sem fazer nada, silenciosamente).
 
 ## Quando dispara
 
-`NotificationDispatchService::send(string $type, Client $client, array $variables = [])`:
+Duas formas de chamar, mesmo mecanismo por baixo (`dispatch()`):
 
-1. Busca todos os `client_contacts` do cliente com assinatura (`client_contact_subscriptions`) pro `$type` informado.
-2. Pra cada contato assinado, pra cada canal marcado na assinatura (`whatsapp`/`email`), busca o `NotificationTemplate` da organização pra aquele tipo+canal.
-3. Troca as variáveis (`{{chave}}` → valor) no `subject`/`body` do template — `cliente` e `contato` são preenchidos automaticamente, o resto vem do array `$variables` passado por quem chama.
-4. Um `POST` por (contato, canal) — fire-and-forget, sem fila (mesmo padrão síncrono do `TaskApprovalService::dispatchWebhook()`).
+- **`NotificationDispatchService::send(string $type, Client $client, array $variables = [])`** — fan-out automático: busca todos os `client_contacts` do cliente com assinatura (`client_contact_subscriptions`) pro `$type`, e dispara pra cada (contato, canal) assinado. Usado por `chamado_aberto`.
+- **`NotificationDispatchService::dispatch(string $type, string $channel, Client $client, Contact $contact, array $variables = [])`** — dispara pra um (contato, canal) já conhecido de antemão, sem reconsultar assinatura. Usado por `aprovacao` (`TaskApprovalService::dispatchWebhook()`), que já sabe exatamente quem notificar e por qual canal via `TaskApprovalToken` (snapshot feito na submissão, não na hora do envio).
+
+Em ambos os casos: busca o `NotificationTemplate` da organização pra aquele tipo+canal, troca as variáveis (`{{chave}}` → valor) no `subject`/`body` — `cliente` e `contato` são preenchidos automaticamente, o resto vem do array `$variables` passado por quem chama — e faz um `POST` fire-and-forget, sem fila.
 
 Se não tiver `N8N_NOTIFICATION_WEBHOOK_URL` configurado, ou ninguém assinado naquele tipo pro cliente, ou o template estiver vazio pro canal — não dispara nada, sem erro.
 
@@ -53,11 +53,11 @@ Se não tiver `N8N_NOTIFICATION_WEBHOOK_URL` configurado, ou ninguém assinado n
 
 ## Tipos (`event`) já com template cadastrado
 
-`onboarding_boas_vindas`, `chamado_aberto` (único disparando de verdade), `chamado_concluido`, `reuniao_lembrete`, `aprovacao` (continua no fluxo separado de `approval-webhook-api.md`, não usa esse serviço), `financeiro`, `cobranca`, `cs_survey`, `offboarding`.
+`onboarding_boas_vindas`, `chamado_aberto` (disparando via `send()`), `chamado_concluido`, `reuniao_lembrete`, `aprovacao` (disparando via `dispatch()`, ver [approval-webhook-api.md](approval-webhook-api.md) pra lógica de negócio), `financeiro`, `cobranca`, `cs_survey`, `offboarding`.
 
 ## O que falta para o fluxo ficar 100% funcional
 
-1. Cadastrar `N8N_NOTIFICATION_WEBHOOK_URL` no ambiente de produção (Portainer) — a URL do webhook node do n8n que vai receber esse payload.
-2. Montar o workflow no n8n que recebe o payload e decide como enviar (WhatsApp/e-mail, qual provedor).
+1. Cadastrar `N8N_NOTIFICATION_WEBHOOK_URL` no ambiente de produção (Portainer) — a URL do webhook node do n8n que vai receber esse payload (única variável agora, substituiu a antiga `N8N_APPROVAL_WEBHOOK_URL`).
+2. Montar o workflow no n8n que recebe o payload e decide como enviar (WhatsApp/e-mail, qual provedor) — pode ramificar internamente pelo campo `event`.
 3. Ligar os outros gatilhos que já têm dado de origem pronto (`chamado_concluido` quando a tarefa vira `concluido`; `reuniao_lembrete` via um comando agendado novo — nenhum dos dois está ligado ainda).
 4. Construir a funcionalidade de base que falta pros gatilhos que ainda não têm nada por trás (`financeiro`/`cobranca`/`cs_survey`/`offboarding`).

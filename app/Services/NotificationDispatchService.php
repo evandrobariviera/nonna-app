@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Client;
 use App\Models\ClientContact;
+use App\Models\Contact;
 use App\Models\NotificationTemplate;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -17,16 +18,10 @@ class NotificationDispatchService
      * trocadas pelo valor real).
      *
      * Silenciosamente não faz nada se faltar peça (webhook não configurado,
-     * ninguém assinado, template sem texto pro canal) — mesmo padrão do
-     * TaskApprovalService::dispatchWebhook().
+     * ninguém assinado, template sem texto pro canal).
      */
     public function send(string $type, Client $client, array $variables = []): void
     {
-        $webhookUrl = config('services.n8n.notification_webhook_url');
-        if (!$webhookUrl) {
-            return;
-        }
-
         $recipients = ClientContact::where('client_id', $client->id)
             ->whereHas('subscriptions', fn ($q) => $q->where('type', $type))
             ->with(['contact', 'subscriptions' => fn ($q) => $q->where('type', $type)])
@@ -37,13 +32,24 @@ class NotificationDispatchService
             $channels = $clientContact->subscriptions->first()->channels ?? [];
 
             foreach ($channels as $channel) {
-                $this->sendOne($webhookUrl, $type, $channel, $client, $contact, $variables);
+                $this->dispatch($type, $channel, $client, $contact, $variables);
             }
         }
     }
 
-    private function sendOne(string $webhookUrl, string $type, string $channel, Client $client, $contact, array $variables): void
+    /**
+     * Dispara pra um (contato, canal) já conhecido de antemão — usado quando
+     * quem chama já tem a lista exata de destinatários (ex: TaskApprovalService,
+     * que snapshota os canais no TaskApprovalToken no momento da submissão,
+     * em vez de reconsultar a assinatura atual).
+     */
+    public function dispatch(string $type, string $channel, Client $client, Contact $contact, array $variables = []): void
     {
+        $webhookUrl = config('services.n8n.notification_webhook_url');
+        if (!$webhookUrl) {
+            return;
+        }
+
         $template = NotificationTemplate::where('organization_id', $client->organization_id)
             ->where('type', $type)
             ->where('channel', $channel)

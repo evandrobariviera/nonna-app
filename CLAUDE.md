@@ -121,7 +121,7 @@ Ver [.claude/docs/architecture.md](.claude/docs/architecture.md) para schema com
 - [.claude/docs/campaign-sync-api.md](.claude/docs/campaign-sync-api.md) — contrato da API que o n8n usa para sincronizar campanhas/métricas de anúncios (Meta/Google Ads) com o App
 - [.claude/docs/clickup-import-api.md](.claude/docs/clickup-import-api.md) — contrato da API que o n8n usa para importar dados do ClickUp (tarefas, projetos, macroplanejamentos) para o App
 - [.claude/docs/approval-webhook-api.md](.claude/docs/approval-webhook-api.md) — contrato do webhook `approval_requested` que o App dispara pro n8n quando uma tarefa é enviada para aprovação do cliente (WhatsApp/e-mail)
-- [.claude/docs/notification-webhook-api.md](.claude/docs/notification-webhook-api.md) — contrato do webhook genérico de mensagens padrão (`NotificationDispatchService`) que o App dispara pro n8n — só `chamado_aberto` está ligado de verdade por enquanto
+- [.claude/docs/notification-webhook-api.md](.claude/docs/notification-webhook-api.md) — contrato do webhook genérico de mensagens padrão (`NotificationDispatchService`) que o App dispara pro n8n — unificado com o antigo webhook exclusivo de aprovação; `chamado_aberto` e `aprovacao` já disparam de verdade
 - [.claude/docs/templates/](.claude/docs/templates/) — HTMLs de diagnóstico, planejamento e apresentação (referência de UX/campos)
 
 ## Convenções
