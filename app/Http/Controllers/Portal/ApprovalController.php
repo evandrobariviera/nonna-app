@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TaskApprovalRound;
 use App\Services\TaskApprovalService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class ApprovalController extends Controller
@@ -14,7 +15,7 @@ class ApprovalController extends Controller
 
     public function index(): View
     {
-        $client = auth()->user()->client;
+        $client = app('currentPortalClient');
 
         $rounds = TaskApprovalRound::whereHas('task', fn ($q) => $q->where('client_id', $client->id))
             ->with('task')
@@ -29,7 +30,7 @@ class ApprovalController extends Controller
 
     public function show(TaskApprovalRound $round): View
     {
-        $client = auth()->user()->client;
+        $client = app('currentPortalClient');
 
         abort_if($round->task->client_id !== $client->id, 403);
 
@@ -40,7 +41,7 @@ class ApprovalController extends Controller
 
     public function decide(Request $request, TaskApprovalRound $round)
     {
-        $client = auth()->user()->client;
+        $client = app('currentPortalClient');
 
         abort_if($round->task->client_id !== $client->id, 403);
 
@@ -51,7 +52,7 @@ class ApprovalController extends Controller
 
         $applied = $this->service->submitPortalDecision(
             $round,
-            auth()->user(),
+            Auth::guard('portal')->user(),
             $data['decision'],
             $data['comment'] ?? null,
         );

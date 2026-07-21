@@ -10,6 +10,8 @@ use App\Http\Controllers\Portal\MeetingController as PortalMeetings;
 use App\Http\Controllers\Portal\TicketController as PortalTickets;
 use App\Http\Controllers\Portal\ApprovalController as PortalApprovals;
 use App\Http\Controllers\Portal\TaskCommentController as PortalTaskComments;
+use App\Http\Controllers\Portal\Auth\AuthenticatedSessionController as PortalSession;
+use App\Http\Controllers\Portal\ClientContextController as PortalClientContext;
 use App\Http\Controllers\ClientPortalAccessController;
 use App\Http\Controllers\ClientAdAccountController;
 use App\Http\Controllers\FilaController;
@@ -490,9 +492,18 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
 });
 
-// ── Portal do Cliente (Nível 3) ──
-Route::prefix('portal')->name('portal.')->middleware(['auth', 'portal'])->group(function () {
+// ── Portal do Cliente (Nível 3) — login/logout próprios (guard "portal") ──
+Route::prefix('portal')->name('portal.')->group(function () {
+    Route::middleware('guest:portal')->group(function () {
+        Route::get('/login', [PortalSession::class, 'create'])->name('login');
+        Route::post('/login', [PortalSession::class, 'store'])->name('login.store');
+    });
+    Route::post('/logout', [PortalSession::class, 'destroy'])->middleware('portal')->name('logout');
+});
+
+Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client'])->group(function () {
     Route::get('/', [PortalDashboard::class, 'index'])->name('dashboard');
+    Route::post('/trocar-cliente/{client}', [PortalClientContext::class, 'switch'])->name('client-context.switch');
     Route::get('/projetos', [PortalProjects::class, 'index'])->name('projects.index');
     Route::get('/projetos/{macroplan}', [PortalProjects::class, 'show'])->name('projects.show');
     Route::get('/tarefas/{task}', [PortalProjects::class, 'showTask'])->name('tasks.show');
@@ -514,7 +525,7 @@ Route::prefix('portal')->name('portal.')->middleware(['auth', 'portal'])->group(
 Route::middleware(['auth', 'not-client'])->group(function () {
     Route::post('/clientes/{client}/acesso-portal', [ClientPortalAccessController::class, 'store'])
         ->name('clients.portal-access.store');
-    Route::delete('/clientes/{client}/acesso-portal/{portalUser}', [ClientPortalAccessController::class, 'destroy'])
+    Route::delete('/clientes/{client}/acesso-portal/{portalContact}', [ClientPortalAccessController::class, 'destroy'])
         ->name('clients.portal-access.destroy');
 });
 

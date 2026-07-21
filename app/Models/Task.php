@@ -20,7 +20,7 @@ class Task extends Model
         'organization_id', 'project_id', 'macro_plan_id', 'sprint_id', 'client_id',
         'title', 'description', 'task_type', 'destination', 'status', 'situation',
         'priority',
-        'executor_id', 'created_by',
+        'executor_id', 'created_by', 'contact_id',
         'due_date', 'approval_date', 'publish_date',
         'approval_location', 'approval_method', 'internal_approval',
         'requester_name', 'requester_whatsapp', 'requester_channel',
@@ -244,6 +244,18 @@ class Task extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function createdByContact(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'contact_id');
+    }
+
+    // Quem criou a tarefa — sempre exatamente um dos dois (created_by XOR
+    // contact_id, garantido por constraint no banco).
+    public function creator(): User|Contact|null
+    {
+        return $this->createdBy ?? $this->createdByContact;
     }
 
     public function executorLinks(): HasMany

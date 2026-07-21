@@ -19,7 +19,7 @@ class TaskApprovalRound extends Model
     protected $fillable = [
         'task_id', 'round_number', 'submitted_by', 'submitted_at', 'sent_at',
         'status', 'notes', 'resolved_at',
-        'portal_decided_by', 'portal_decision', 'portal_comment', 'portal_decided_at',
+        'portal_decided_by', 'portal_decided_by_contact_id', 'portal_decision', 'portal_comment', 'portal_decided_at',
     ];
 
     protected $casts = [
@@ -42,6 +42,11 @@ class TaskApprovalRound extends Model
     public function portalDecidedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'portal_decided_by');
+    }
+
+    public function portalDecidedByContact(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'portal_decided_by_contact_id');
     }
 
     public function tokens(): HasMany

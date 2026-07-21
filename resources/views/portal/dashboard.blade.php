@@ -5,7 +5,7 @@
     <div class="mb-8 flex items-center justify-between">
         <div>
             <h1 class="text-2xl font-black" style="color: var(--text)">
-                Olá, {{ auth()->user()->name }} 👋
+                Olá, {{ $portalContact->name }} 👋
             </h1>
             <p class="text-sm mt-1" style="color: var(--muted)">
                 {{ $client->company_name }} · acompanhe o andamento de tudo com a Nonna.

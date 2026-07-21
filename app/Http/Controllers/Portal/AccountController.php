@@ -9,11 +9,8 @@ class AccountController extends Controller
 {
     public function index(): View
     {
-        $client = auth()->user()->client()->with([
-            'contacts',
-            'adAccounts',
-            'credentials',
-        ])->firstOrFail();
+        $client = app('currentPortalClient');
+        $client->load(['contacts', 'adAccounts', 'credentials']);
 
         return view('portal.account.index', compact('client'));
     }

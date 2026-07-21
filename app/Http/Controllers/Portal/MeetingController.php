@@ -10,7 +10,7 @@ class MeetingController extends Controller
 {
     public function index(): View
     {
-        $client = auth()->user()->client;
+        $client = app('currentPortalClient');
 
         $meetings = Meeting::where('client_id', $client->id)
             ->orderByDesc('scheduled_at')
@@ -24,7 +24,7 @@ class MeetingController extends Controller
 
     public function show(Meeting $meeting): View
     {
-        $client = auth()->user()->client;
+        $client = app('currentPortalClient');
 
         abort_if($meeting->client_id !== $client->id, 403);
 

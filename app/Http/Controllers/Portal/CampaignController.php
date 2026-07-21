@@ -11,7 +11,7 @@ class CampaignController extends Controller
 {
     public function index(): View
     {
-        $client = auth()->user()->client;
+        $client = app('currentPortalClient');
         $adAccountIds = $client->adAccounts()->pluck('id');
 
         if ($adAccountIds->isEmpty()) {

@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Task;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class TicketController extends Controller
 {
     public function index(Request $request): View
     {
-        $client = auth()->user()->client;
+        $client = app('currentPortalClient');
 
         $query = Task::where('is_ticket', true)
             ->where('client_id', $client->id)
@@ -29,11 +30,11 @@ class TicketController extends Controller
 
     public function show(Task $task): View
     {
-        $client = auth()->user()->client;
+        $client = app('currentPortalClient');
 
         abort_if(!$task->is_ticket || $task->client_id !== $client->id, 403);
 
-        $task->load('comments.user');
+        $task->load('comments.user', 'comments.contact');
         $deliverables = $task->attachments()->where('is_deliverable', true)->get();
 
         return view('portal.tickets.show', compact('client', 'task', 'deliverables'));
@@ -41,14 +42,15 @@ class TicketController extends Controller
 
     public function create(): View
     {
-        $client = auth()->user()->client;
+        $client = app('currentPortalClient');
 
         return view('portal.tickets.create', compact('client'));
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $client = auth()->user()->client;
+        $client = app('currentPortalClient');
+        $contact = Auth::guard('portal')->user();
 
         $data = $request->validate([
             'title'       => 'required|string|max:300',
@@ -63,8 +65,8 @@ class TicketController extends Controller
             'is_ticket'       => true,
             'origin'          => 'ticket',
             'status'          => 'backlog',
-            'requester_name'  => auth()->user()->name,
-            'created_by'      => auth()->id(),
+            'requester_name'  => $contact->name,
+            'contact_id'      => $contact->id,
         ]);
 
         return redirect()->route('portal.tickets.show', $task)->with('success', 'Chamado aberto com sucesso.');

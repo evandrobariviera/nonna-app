@@ -1,5 +1,5 @@
 @php
-    $_portalClient = auth()->user()->client;
+    $_portalClient = $currentClient;
 
     $_portalTicketsCount = \App\Models\Task::where('is_ticket', true)
         ->where('client_id', $_portalClient->id)

@@ -12,9 +12,8 @@ class DashboardController extends Controller
 {
     public function index(): View
     {
-        $client = auth()->user()->client()->with([
-            'macroplans.projects.tasks',
-        ])->firstOrFail();
+        $client = app('currentPortalClient');
+        $client->load(['macroplans.projects.tasks']);
 
         $allPlans    = $client->macroplans;
         // "em_execucao" é o status real de MacroPlan/Project — "active" nunca

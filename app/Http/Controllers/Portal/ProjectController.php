@@ -11,7 +11,7 @@ class ProjectController extends Controller
 {
     public function index(): View
     {
-        $client = auth()->user()->client;
+        $client = app('currentPortalClient');
 
         $macroplans = MacroPlan::where('client_id', $client->id)
             ->with('projects')
@@ -23,7 +23,7 @@ class ProjectController extends Controller
 
     public function show(MacroPlan $macroplan): View
     {
-        $client = auth()->user()->client;
+        $client = app('currentPortalClient');
 
         abort_if($macroplan->client_id !== $client->id, 403);
 
@@ -34,11 +34,11 @@ class ProjectController extends Controller
 
     public function showTask(Task $task): View
     {
-        $client = auth()->user()->client;
+        $client = app('currentPortalClient');
 
         abort_if($task->client_id !== $client->id || $task->is_ticket, 403);
 
-        $task->load('comments.user', 'project.macroPlan');
+        $task->load('comments.user', 'comments.contact', 'project.macroPlan');
         $deliverables = $task->attachments()->where('is_deliverable', true)->get();
 
         return view('portal.projects.task-show', compact('client', 'task', 'deliverables'));

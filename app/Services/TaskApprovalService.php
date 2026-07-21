@@ -163,14 +163,14 @@ class TaskApprovalService
      *
      * @return bool  true se a decisão foi aplicada
      */
-    public function submitPortalDecision(TaskApprovalRound $round, User $user, string $decision, ?string $comment = null): bool
+    public function submitPortalDecision(TaskApprovalRound $round, Contact $contact, string $decision, ?string $comment = null): bool
     {
         if ($round->status !== 'pending') {
             return false;
         }
 
         $round->update([
-            'portal_decided_by' => $user->id,
+            'portal_decided_by_contact_id' => $contact->id,
             'portal_decision'   => $decision,
             'portal_comment'    => $comment,
             'portal_decided_at' => now(),

@@ -58,11 +58,34 @@
             </div>
 
             {{-- Cliente logado --}}
-            <div class="flex items-center gap-3 px-5 py-4 border-b" style="border-color:var(--border)">
-                <div class="min-w-0">
-                    <p class="text-xs font-bold truncate" style="color:var(--text)">{{ auth()->user()->client->company_name }}</p>
-                    <p class="text-xs truncate" style="color:var(--muted); font-size:11px">{{ auth()->user()->name }}</p>
-                </div>
+            <div class="px-5 py-4 border-b" style="border-color:var(--border)">
+                @if(($portalClients ?? collect())->count() > 1)
+                    <div x-data="{ open: false }" class="relative">
+                        <button @click="open = !open" class="flex items-center justify-between w-full text-left" style="min-width:0">
+                            <p class="text-xs font-bold truncate" style="color:var(--text)">{{ $currentClient->company_name }}</p>
+                            <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="color:var(--muted)">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" :class="open ? '-rotate-90' : 'rotate-90'" style="transition:transform .15s"/>
+                            </svg>
+                        </button>
+                        <div x-show="open" @click.outside="open = false" x-transition x-cloak
+                             class="absolute left-0 right-0 mt-2 rounded-lg z-10 py-1"
+                             style="background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.12)">
+                            @foreach($portalClients as $switchClient)
+                                <form method="POST" action="{{ route('portal.client-context.switch', $switchClient) }}">
+                                    @csrf
+                                    <button type="submit" class="w-full text-left px-3 py-2 text-xs font-semibold transition-colors"
+                                            style="color:{{ $switchClient->id === $currentClient->id ? 'var(--purple)' : 'var(--text)' }}"
+                                            onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background=''">
+                                        {{ $switchClient->company_name }}
+                                    </button>
+                                </form>
+                            @endforeach
+                        </div>
+                    </div>
+                @else
+                    <p class="text-xs font-bold truncate" style="color:var(--text)">{{ $currentClient->company_name }}</p>
+                @endif
+                <p class="text-xs truncate mt-0.5" style="color:var(--muted); font-size:11px">{{ $portalContact->name }}</p>
             </div>
 
             {{-- Links --}}
@@ -78,7 +101,7 @@
                    onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='{{ request()->routeIs('portal.account') ? 'var(--purple)' : 'var(--muted)' }}'">
                     Minha Conta
                 </a>
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ route('portal.logout') }}">
                     @csrf
                     <button type="submit"
                             class="text-xs font-semibold transition-colors"
