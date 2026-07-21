@@ -19,6 +19,9 @@ php artisan migrate --force || echo "==> Migrate reportou falha — app continua
 echo "==> Populando providers de IA..."
 php artisan db:seed --class=AiProviderSeeder --force || echo "    Seeder ignorado (tabelas podem não existir ainda)"
 
+echo "==> Populando mensagens padrão de notificação..."
+php artisan db:seed --class=NotificationTemplateSeeder --force || echo "    Seeder ignorado (tabelas podem não existir ainda)"
+
 # Cache de configurações e rotas
 php artisan package:discover --ansi
 php artisan config:cache
