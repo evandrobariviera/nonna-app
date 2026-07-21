@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AiAgent;
+use App\Models\NotificationTemplate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -17,7 +18,12 @@ class OrganizationSettingsController extends Controller
         $apiTokens    = $org->tokens()->orderByDesc('created_at')->get();
         $aiAgents     = AiAgent::where('is_active', true)->orderBy('name')->get();
 
-        return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens', 'aiAgents'));
+        $notificationTemplates = NotificationTemplate::where('organization_id', $org->id)
+            ->get()
+            ->groupBy('type')
+            ->map(fn ($group) => $group->keyBy('channel'));
+
+        return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens', 'aiAgents', 'notificationTemplates'));
     }
 
     public function createToken(Request $request): RedirectResponse

@@ -465,6 +465,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
             ->name('settings.members.update');
         Route::delete('/configuracoes/equipe/{user}', [OrganizationMemberController::class, 'destroy'])
             ->name('settings.members.destroy');
+
+        Route::post('/configuracoes/mensagens', [\App\Http\Controllers\NotificationTemplateController::class, 'update'])
+            ->name('settings.notification-templates.update');
     });
 
 });

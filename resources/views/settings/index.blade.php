@@ -27,7 +27,7 @@
 
         {{-- Tabs --}}
         <div class="flex gap-1 mb-6 border-b" style="border-color:var(--border)">
-            @foreach(['geral' => 'Geral', 'integracoes' => 'Integrações', 'equipe' => 'Equipe', 'api' => 'API & Tokens'] as $key => $label)
+            @foreach(['geral' => 'Geral', 'integracoes' => 'Integrações', 'equipe' => 'Equipe', 'mensagens' => 'Mensagens Padrão', 'api' => 'API & Tokens'] as $key => $label)
                 <button @click="tab = '{{ $key }}'"
                         class="tab-btn px-4 py-2.5 text-sm font-semibold transition-colors"
                         :class="tab === '{{ $key }}'
@@ -736,6 +736,77 @@
                     </form>
                 </div>
             </div>
+        </div>
+
+        {{-- ══ TAB MENSAGENS PADRÃO ══ --}}
+        <div x-show="tab === 'mensagens'" x-cloak>
+            <div class="mb-5">
+                <h2 class="text-sm font-bold" style="color:var(--text)">Mensagens Padrão</h2>
+                <p class="text-xs mt-0.5 max-w-lg" style="color:var(--muted)">
+                    Texto padrão por gatilho e canal, usado em toda a organização. Um cliente só recebe uma dessas
+                    mensagens se algum contato dele estiver assinado naquele tipo (aba Portal/Contatos da ficha do
+                    cliente). O disparo automático ainda não está ligado — por enquanto isso só cadastra o texto.
+                </p>
+            </div>
+
+            <form method="POST" action="{{ route('settings.notification-templates.update') }}" class="space-y-4">
+                @csrf
+
+                @foreach(\App\Models\NotificationTemplate::$types as $type => $typeLabel)
+                    @php
+                        $hints = \App\Models\NotificationTemplate::$variableHints[$type] ?? [];
+                    @endphp
+                    <div class="card p-5" x-data="{ open: {{ $loop->first ? 'true' : 'false' }} }">
+                        <button type="button" @click="open = !open"
+                                class="w-full flex items-center justify-between text-left">
+                            <span class="text-sm font-bold" style="color:var(--text)">{{ $typeLabel }}</span>
+                            <svg class="h-4 w-4 flex-shrink-0 transition-transform" :class="open ? 'rotate-90' : ''"
+                                 fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="color:var(--muted)">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                            </svg>
+                        </button>
+
+                        <div x-show="open" x-transition class="mt-4 space-y-4">
+                            @if(!empty($hints))
+                                <p class="text-xs" style="color:var(--muted)">
+                                    Variáveis disponíveis:
+                                    @foreach($hints as $hint)
+                                        <code class="px-1 py-0.5 rounded" style="background:var(--s3); color:var(--purple)">{{ $hint }}</code>
+                                    @endforeach
+                                </p>
+                            @endif
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                @foreach(\App\Models\NotificationTemplate::$channels as $channel => $channelLabel)
+                                    @php $existing = $notificationTemplates[$type][$channel] ?? null; @endphp
+                                    <div class="rounded-lg p-3" style="background:var(--s2); border:1px solid var(--border2)">
+                                        <p class="text-xs font-bold uppercase tracking-wide mb-2" style="color:var(--muted)">{{ $channelLabel }}</p>
+
+                                        @if($channel === 'email')
+                                            <input type="text"
+                                                   name="templates[{{ $type }}][{{ $channel }}][subject]"
+                                                   value="{{ old("templates.{$type}.{$channel}.subject", $existing?->subject) }}"
+                                                   placeholder="Assunto do e-mail"
+                                                   class="w-full rounded-lg border px-3 py-2 text-sm mb-2"
+                                                   style="background:var(--s1); border-color:var(--border2); color:var(--text)">
+                                        @endif
+
+                                        <textarea name="templates[{{ $type }}][{{ $channel }}][body]"
+                                                  rows="4"
+                                                  placeholder="Texto padrão..."
+                                                  class="w-full rounded-lg border px-3 py-2 text-sm resize-none"
+                                                  style="background:var(--s1); border-color:var(--border2); color:var(--text)">{{ old("templates.{$type}.{$channel}.body", $existing?->body) }}</textarea>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+
+                <button type="submit" class="btn-primary px-4 py-2 text-sm rounded-lg font-semibold">
+                    Salvar Mensagens
+                </button>
+            </form>
         </div>
 
         {{-- ══ TAB API & TOKENS ══ --}}
