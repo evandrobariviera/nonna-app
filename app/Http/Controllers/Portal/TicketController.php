@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Task;
+use App\Services\NotificationDispatchService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -67,6 +68,11 @@ class TicketController extends Controller
             'status'          => 'backlog',
             'requester_name'  => $contact->name,
             'contact_id'      => $contact->id,
+        ]);
+
+        app(NotificationDispatchService::class)->send('chamado_aberto', $client, [
+            'chamado_titulo' => $task->title,
+            'link_chamado'   => route('portal.tickets.show', $task),
         ]);
 
         return redirect()->route('portal.tickets.show', $task)->with('success', 'Chamado aberto com sucesso.');

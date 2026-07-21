@@ -26,10 +26,19 @@ class ClientContactSubscription extends Model
     // demais ficam com o cadastro pronto pra quando essas funcionalidades
     // existirem.
     public static array $types = [
-        'aprovacao'           => 'Aprovação de Materiais',
-        'financeiro'          => 'Financeiro (Notas de Anúncios)',
-        'feedback_campanhas'  => 'Feedback de Campanhas',
-        'cobranca'            => 'Cobrança / Faturamento',
+        'onboarding_boas_vindas' => 'Onboarding — Boas-vindas',
+        'chamado_aberto'         => 'Chamado Aberto',
+        'chamado_concluido'      => 'Chamado Concluído',
+        'reuniao_lembrete'       => 'Lembrete de Reunião',
+        'aprovacao'              => 'Aprovação de Materiais',
+        'financeiro'             => 'Financeiro (Notas de Anúncios)',
+        'cobranca'               => 'Cobrança / Faturamento',
+        'cs_survey'              => 'Pesquisa de Satisfação (CS)',
+        'offboarding'            => 'Offboarding',
+        // Mantido por compatibilidade — 3 contatos reais já assinados;
+        // não é mais oferecido como notificação nova (já é visível no
+        // portal do cliente, ver seção Desempenho).
+        'feedback_campanhas'     => 'Feedback de Campanhas',
     ];
 
     public static array $channels = [
