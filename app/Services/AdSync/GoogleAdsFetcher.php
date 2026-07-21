@@ -65,7 +65,7 @@ class GoogleAdsFetcher
         $loginCustomerId = preg_replace('/-/', '', $googleCredentials['login_customer_id'] ?? ($googleCredentials['customer_id'] ?? ''));
 
         $query = "SELECT campaign.id, campaign.name, campaign.status, campaign.advertising_channel_type, "
-            . "campaign.start_date, campaign.end_date, metrics.cost_micros, metrics.impressions, "
+            . "metrics.cost_micros, metrics.impressions, "
             . "metrics.clicks, metrics.conversions, metrics.conversions_value "
             . "FROM campaign WHERE segments.date = '{$date}'";
 
