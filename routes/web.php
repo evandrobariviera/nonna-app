@@ -468,6 +468,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
 
         Route::post('/configuracoes/mensagens', [\App\Http\Controllers\NotificationTemplateController::class, 'update'])
             ->name('settings.notification-templates.update');
+        Route::post('/configuracoes/mensagens/{type}/{channel}/testar', [\App\Http\Controllers\NotificationTemplateController::class, 'test'])
+            ->name('settings.notification-templates.test');
     });
 
 });

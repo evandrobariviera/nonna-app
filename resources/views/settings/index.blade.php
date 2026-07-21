@@ -796,6 +796,15 @@
                                                   placeholder="Texto padrão..."
                                                   class="w-full rounded-lg border px-3 py-2 text-sm resize-none"
                                                   style="background:var(--s1); border-color:var(--border2); color:var(--text)">{{ old("templates.{$type}.{$channel}.body", $existing?->body) }}</textarea>
+
+                                        <div class="flex justify-end mt-2">
+                                            <button type="submit" form="test-{{ $type }}-{{ $channel }}"
+                                                    class="text-xs font-semibold transition-colors"
+                                                    style="color:var(--purple)"
+                                                    onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">
+                                                Enviar teste →
+                                            </button>
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>
@@ -807,6 +816,19 @@
                     Salvar Mensagens
                 </button>
             </form>
+
+            {{-- Um form isolado por gatilho+canal pra "Enviar teste" (associado ao
+                 botão via atributo form="", já que HTML não permite form aninhado
+                 dentro do form grande de salvar acima). Testa sempre o texto já
+                 salvo — se você editou e ainda não salvou, salve primeiro. --}}
+            @foreach(\App\Models\NotificationTemplate::$types as $type => $typeLabel)
+                @foreach(\App\Models\NotificationTemplate::$channels as $channel => $channelLabel)
+                    <form id="test-{{ $type }}-{{ $channel }}" method="POST"
+                          action="{{ route('settings.notification-templates.test', [$type, $channel]) }}" class="hidden">
+                        @csrf
+                    </form>
+                @endforeach
+            @endforeach
         </div>
 
         {{-- ══ TAB API & TOKENS ══ --}}
