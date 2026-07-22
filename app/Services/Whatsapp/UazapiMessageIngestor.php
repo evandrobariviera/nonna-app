@@ -37,8 +37,12 @@ class UazapiMessageIngestor
             return;
         }
 
+        // Precisa converter pro fuso do app (America/Sao_Paulo) já na criação - sem o
+        // 2º argumento, Carbon guarda o instante em UTC e o valor gravado no banco
+        // (coluna timestamp sem timezone) fica ~3h "no futuro" quando lido de volta,
+        // porque a leitura assume que o texto salvo já está no fuso do app.
         $sentAt = isset($message['messageTimestamp'])
-            ? Carbon::createFromTimestampMs((int) $message['messageTimestamp'])
+            ? Carbon::createFromTimestampMs((int) $message['messageTimestamp'], config('app.timezone'))
             : now();
 
         $conversation = ServiceConversation::firstOrNew([
