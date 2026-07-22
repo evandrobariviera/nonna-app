@@ -7,7 +7,6 @@ version: '3.8'
 services:
   app:
     image: ghcr.io/evandrobariviera/nonna-app:latest
-    pull_policy: always
     restart: unless-stopped
     environment:
       APP_NAME: "Nonna App"
