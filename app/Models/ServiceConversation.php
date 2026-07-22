@@ -19,6 +19,7 @@ class ServiceConversation extends Model
         'external_thread_id',
         'contact_name',
         'contact_phone',
+        'is_group',
         'started_at',
         'last_message_at',
         'message_count',
@@ -28,6 +29,7 @@ class ServiceConversation extends Model
         'started_at'      => 'datetime',
         'last_message_at' => 'datetime',
         'message_count'   => 'integer',
+        'is_group'        => 'boolean',
     ];
 
     public function client(): BelongsTo

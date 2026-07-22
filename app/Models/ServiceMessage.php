@@ -14,7 +14,9 @@ class ServiceMessage extends Model
 
     protected $fillable = [
         'conversation_id',
+        'external_message_id',
         'direction',
+        'sent_via_api',
         'sender_name',
         'body',
         'media_url',
@@ -23,8 +25,9 @@ class ServiceMessage extends Model
     ];
 
     protected $casts = [
-        'sent_at'     => 'datetime',
-        'raw_payload' => 'array',
+        'sent_at'      => 'datetime',
+        'raw_payload'  => 'array',
+        'sent_via_api' => 'boolean',
     ];
 
     public function conversation(): BelongsTo

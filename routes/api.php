@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ClickupMacroPlanImportController;
 use App\Http\Controllers\Api\ClickupProjectImportController;
 use App\Http\Controllers\Api\IntegrationCredentialController;
 use App\Http\Controllers\Api\SyncController;
+use App\Http\Controllers\Api\UazapiWebhookController;
 use App\Http\Middleware\SetApiTenant;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +23,10 @@ use Illuminate\Support\Facades\Route;
 Route::post('/clickup/import',            [ClickupImportController::class,         'import']);
 Route::post('/clickup/import-macroplans', [ClickupMacroPlanImportController::class, 'import']);
 Route::post('/clickup/import-projects',   [ClickupProjectImportController::class,   'import']);
+
+// ── WhatsApp (uazapi) — recebe evento de mensagem por webhook, autenticado pelo
+// token da instância embutido no próprio payload (correlaciona com client_integrations)
+Route::post('/whatsapp/uazapi/webhook', UazapiWebhookController::class);
 
 Route::middleware(['auth:sanctum', SetApiTenant::class])->group(function () {
 
