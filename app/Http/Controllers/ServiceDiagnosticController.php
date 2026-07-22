@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\ClientIntegration;
 use App\Models\ServiceDiagnostic;
+use App\Services\ServiceDiagnostics\ServiceDiagnosticGenerator;
+use Illuminate\Http\RedirectResponse;
 
 class ServiceDiagnosticController extends Controller
 {
@@ -33,5 +35,18 @@ class ServiceDiagnosticController extends Controller
         $diagnostic->load('personas', 'aiAgent', 'recommendations');
 
         return view('service-diagnostics.show', compact('integration', 'diagnostic'));
+    }
+
+    public function generate(ClientIntegration $integration, ServiceDiagnosticGenerator $generator): RedirectResponse
+    {
+        try {
+            $diagnostic = $generator->generate($integration, 'manual');
+
+            return redirect()->route('service-diagnostics.show', [$integration, $diagnostic])
+                ->with('success', 'Diagnóstico gerado com sucesso.');
+        } catch (\Throwable $e) {
+            return redirect()->route('service-diagnostics.integration', $integration)
+                ->with('error', 'Falha ao gerar diagnóstico: ' . $e->getMessage());
+        }
     }
 }

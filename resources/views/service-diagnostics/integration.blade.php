@@ -46,11 +46,33 @@
 
     <div style="max-width:960px">
 
+        @if(session('success'))
+            <div class="mb-4 px-4 py-3 rounded text-sm font-medium"
+                 style="background:rgba(52,211,153,.15); color:#34d399; border:1px solid rgba(52,211,153,.25)">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="mb-4 px-4 py-3 rounded text-sm font-medium"
+                 style="background:rgba(239,68,68,.1); color:var(--red); border:1px solid rgba(239,68,68,.25)">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <div class="flex items-center justify-between mb-6">
             <p class="text-sm" style="color:var(--muted)">
                 {{ $integration->providerLabel() }} · {{ $integration->statusLabel() }} ·
                 cadência de {{ $integration->diagnosticFrequencyDays() }} dias
             </p>
+            <form method="POST" action="{{ route('service-diagnostics.generate', $integration) }}"
+                  onsubmit="return confirm('Gerar um novo diagnóstico agora, analisando as conversas desde a última rodada? Isso consome créditos de IA.')">
+                @csrf
+                <button type="submit"
+                        class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                        style="background:var(--purple)">
+                    Gerar diagnóstico agora
+                </button>
+            </form>
         </div>
 
         @if($diagnostics->isEmpty())

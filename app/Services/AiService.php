@@ -300,6 +300,130 @@ class AiService
         ];
     }
 
+    /**
+     * Como run(), mas pede saída em JSON estruturado e devolve o array já decodificado
+     * (não uma string). Usado por análises que precisam de schema, não texto livre.
+     */
+    public function runStructured(
+        AiAgent $agent,
+        string $userMessage,
+        array $context = [],
+        ?int $userId = null,
+        ?string $clientId = null,
+        ?string $trigger = null
+    ): array {
+        $agent->loadMissing('provider');
+
+        $apiKey = $agent->resolvedApiKey();
+        if (!$apiKey) {
+            throw new \RuntimeException("Agente '{$agent->name}': nenhuma chave de API configurada para {$agent->provider->name}.");
+        }
+
+        $systemPrompt = $this->injectContext($agent->system_prompt, $context);
+        $systemPrompt .= "\n\n---\nIMPORTANTE: responda ESTRITAMENTE com um único objeto JSON válido, sem markdown, sem texto antes ou depois, sem \`\`\`. Se não conseguir preencher um campo, use null - nunca invente dado.";
+
+        [$responseText, $usage] = $this->dispatchStructured($agent, $apiKey->getApiKey(), $systemPrompt, $userMessage);
+
+        $this->logUsage($agent, $usage, $userId, $clientId, $trigger);
+
+        return $this->parseJsonResponse($responseText, $agent);
+    }
+
+    private function dispatchStructured(AiAgent $agent, string $apiKey, string $systemPrompt, string $userMessage): array
+    {
+        return match ($agent->provider->slug) {
+            'openai', 'groq' => $this->callOpenAiCompatStructured($agent, $apiKey, $systemPrompt, $userMessage),
+            'anthropic'      => $this->callAnthropic($agent, $apiKey, $systemPrompt, $userMessage),
+            'google'         => $this->callGoogleStructured($agent, $apiKey, $systemPrompt, $userMessage),
+            default          => throw new \RuntimeException("Provider '{$agent->provider->slug}' não suportado."),
+        };
+    }
+
+    // OpenAI/Groq têm modo JSON nativo (response_format) - garante saída parseável
+    private function callOpenAiCompatStructured(AiAgent $agent, string $apiKey, string $systemPrompt, string $userMessage): array
+    {
+        $response = Http::withToken($apiKey)
+            ->timeout(180)
+            ->post(rtrim($agent->provider->base_url, '/') . '/chat/completions', [
+                'model'           => $agent->model,
+                'messages'        => [
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user',   'content' => $userMessage],
+                ],
+                'temperature'     => $agent->temperature,
+                'max_tokens'      => $agent->max_tokens,
+                'response_format' => ['type' => 'json_object'],
+            ])
+            ->throw()
+            ->json();
+
+        return [
+            $response['choices'][0]['message']['content'] ?? '',
+            [
+                'prompt_tokens'     => $response['usage']['prompt_tokens'] ?? 0,
+                'completion_tokens' => $response['usage']['completion_tokens'] ?? 0,
+                'total_tokens'      => $response['usage']['total_tokens'] ?? 0,
+            ],
+        ];
+    }
+
+    // Gemini tem modo JSON nativo via responseMimeType
+    private function callGoogleStructured(AiAgent $agent, string $apiKey, string $systemPrompt, string $userMessage): array
+    {
+        $url = rtrim($agent->provider->base_url, '/') . "/models/{$agent->model}:generateContent?key={$apiKey}";
+
+        $response = Http::timeout(180)
+            ->post($url, [
+                'systemInstruction' => ['parts' => [['text' => $systemPrompt]]],
+                'contents'          => [
+                    ['role' => 'user', 'parts' => [['text' => $userMessage]]],
+                ],
+                'generationConfig' => [
+                    'temperature'      => $agent->temperature,
+                    'maxOutputTokens'  => $agent->max_tokens,
+                    'responseMimeType' => 'application/json',
+                ],
+            ])
+            ->throw()
+            ->json();
+
+        $in  = $response['usageMetadata']['promptTokenCount'] ?? 0;
+        $out = $response['usageMetadata']['candidatesTokenCount'] ?? 0;
+
+        return [
+            $response['candidates'][0]['content']['parts'][0]['text'] ?? '',
+            [
+                'prompt_tokens'     => $in,
+                'completion_tokens' => $out,
+                'total_tokens'      => $in + $out,
+            ],
+        ];
+    }
+
+    // Anthropic não tem modo JSON nativo - depende só da instrução no prompt,
+    // por isso o parseJsonResponse() abaixo tem fallback de extração por regex.
+    private function parseJsonResponse(string $responseText, AiAgent $agent): array
+    {
+        $decoded = json_decode(trim($responseText), true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return $decoded;
+        }
+
+        // Fallback: extrai o primeiro bloco {...} da resposta (modelo pode ter
+        // envolvido em ```json ... ``` ou adicionado texto antes/depois)
+        if (preg_match('/\{.*\}/s', $responseText, $matches)) {
+            $decoded = json_decode($matches[0], true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        throw new \RuntimeException(
+            "Agente '{$agent->name}': resposta não é um JSON válido. Início da resposta: " .
+            mb_substr($responseText, 0, 200)
+        );
+    }
+
     private function logUsage(AiAgent $agent, array $usage, ?int $userId, ?string $clientId, ?string $trigger): void
     {
         $cost = $this->estimateCost($agent, $usage);

@@ -85,6 +85,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('service-diagnostics.index');
     Route::get('/atendimento/{integration}', [\App\Http\Controllers\ServiceDiagnosticController::class, 'integration'])
         ->name('service-diagnostics.integration');
+    Route::post('/atendimento/{integration}/gerar', [\App\Http\Controllers\ServiceDiagnosticController::class, 'generate'])
+        ->name('service-diagnostics.generate');
     Route::get('/atendimento/{integration}/diagnosticos/{diagnostic}', [\App\Http\Controllers\ServiceDiagnosticController::class, 'show'])
         ->name('service-diagnostics.show');
 
