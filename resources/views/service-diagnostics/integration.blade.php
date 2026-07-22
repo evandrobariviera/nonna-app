@@ -64,15 +64,61 @@
                 {{ $integration->providerLabel() }} · {{ $integration->statusLabel() }} ·
                 cadência de {{ $integration->diagnosticFrequencyDays() }} dias
             </p>
-            <form method="POST" action="{{ route('service-diagnostics.generate', $integration) }}"
-                  onsubmit="return confirm('Gerar um novo diagnóstico agora, analisando as conversas desde a última rodada? Isso consome créditos de IA.')">
-                @csrf
-                <button type="submit"
-                        class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
-                        style="background:var(--purple)">
+            @if($readiness['pending_conversations'] > 0)
+                <form method="POST" action="{{ route('service-diagnostics.generate', $integration) }}"
+                      onsubmit="return confirm('Gerar um novo diagnóstico agora, analisando as conversas desde a última rodada? Isso consome créditos de IA.')">
+                    @csrf
+                    <button type="submit"
+                            class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                            style="background:var(--purple)">
+                        Gerar diagnóstico agora
+                    </button>
+                </form>
+            @else
+                <button type="button" disabled
+                        class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest opacity-50 cursor-not-allowed"
+                        style="background:var(--s3); color:var(--muted)">
                     Gerar diagnóstico agora
                 </button>
-            </form>
+            @endif
+        </div>
+
+        {{-- Prontidão pro próximo diagnóstico --}}
+        <div class="card mb-8">
+            <div class="card-header"><h3 class="text-sm font-bold" style="color:var(--text)">Prontidão para o Próximo Diagnóstico</h3></div>
+            <div class="card-body">
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                    <div class="stat-card">
+                        <p class="stat-label">Conversas (total)</p>
+                        <p class="stat-value">{{ $readiness['total_conversations'] }}</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-label">Mensagens (total)</p>
+                        <p class="stat-value">{{ $readiness['total_messages'] }}</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-label">Última mensagem recebida</p>
+                        <p class="stat-value" style="font-size:16px">{{ $readiness['last_message_at'] ? \Illuminate\Support\Carbon::parse($readiness['last_message_at'])->diffForHumans() : '—' }}</p>
+                    </div>
+                </div>
+
+                <div class="px-4 py-3 rounded mb-3" style="background:var(--s3); border-left:3px solid {{ $readiness['pending_conversations'] > 0 ? 'var(--purple)' : 'var(--muted)' }}">
+                    <p class="text-xs font-mono uppercase tracking-widest mb-1" style="color:{{ $readiness['pending_conversations'] > 0 ? 'var(--purple)' : 'var(--muted)' }}">
+                        Próximo período a analisar
+                    </p>
+                    <p class="text-sm" style="color:var(--text)">
+                        {{ $readiness['period_start']->format('d/m/Y') }} até {{ $readiness['period_end']->format('d/m/Y H:i') }}
+                    </p>
+                    @if($readiness['pending_conversations'] > 0)
+                        <p class="text-xs mt-1" style="color:var(--muted)">
+                            {{ $readiness['pending_conversations'] }} conversa{{ $readiness['pending_conversations'] !== 1 ? 's' : '' }}
+                            · {{ $readiness['pending_messages'] }} mensage{{ $readiness['pending_messages'] !== 1 ? 'ns' : 'm' }} nesse período
+                        </p>
+                    @else
+                        <p class="text-xs mt-1" style="color:var(--muted)">Nenhuma conversa nova nesse período ainda — o botão fica desabilitado até chegar mensagem.</p>
+                    @endif
+                </div>
+            </div>
         </div>
 
         @if($diagnostics->isEmpty())

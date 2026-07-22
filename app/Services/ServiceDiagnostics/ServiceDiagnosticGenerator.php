@@ -149,8 +149,12 @@ class ServiceDiagnosticGenerator
         return AiAgent::where('id', $agentId)->where('is_active', true)->first();
     }
 
-    /** @return array{0: Carbon, 1: Carbon} */
-    private function resolvePeriod(ClientIntegration $integration): array
+    /**
+     * Público pra permitir uma prévia ("prontidão pro próximo diagnóstico") antes
+     * de rodar a geração de verdade - ver ServiceDiagnosticController::integration().
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    public function resolvePeriod(ClientIntegration $integration): array
     {
         $last = ServiceDiagnostic::where('client_integration_id', $integration->id)
             ->orderByDesc('version')

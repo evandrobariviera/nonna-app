@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClientIntegration;
+use App\Models\ServiceConversation;
 use App\Models\ServiceDiagnostic;
+use App\Models\ServiceMessage;
 use App\Services\ServiceDiagnostics\ServiceDiagnosticGenerator;
 use Illuminate\Http\RedirectResponse;
 
@@ -19,12 +21,45 @@ class ServiceDiagnosticController extends Controller
         return view('service-diagnostics.index', compact('integrations'));
     }
 
-    public function integration(ClientIntegration $integration)
+    public function integration(ClientIntegration $integration, ServiceDiagnosticGenerator $generator)
     {
         $integration->load('client');
         $diagnostics = $integration->diagnostics()->orderBy('version')->get();
 
-        return view('service-diagnostics.integration', compact('integration', 'diagnostics'));
+        $readiness = $this->buildReadiness($integration, $generator);
+
+        return view('service-diagnostics.integration', compact('integration', 'diagnostics', 'readiness'));
+    }
+
+    private function buildReadiness(ClientIntegration $integration, ServiceDiagnosticGenerator $generator): array
+    {
+        [$periodStart, $periodEnd] = $generator->resolvePeriod($integration);
+
+        $conversationsQuery = ServiceConversation::where('client_integration_id', $integration->id)
+            ->where('is_group', false);
+
+        $pendingConversations = (clone $conversationsQuery)
+            ->whereHas('messages', fn ($q) => $q->whereBetween('sent_at', [$periodStart, $periodEnd]))
+            ->count();
+
+        $pendingMessages = ServiceMessage::whereHas('conversation', fn ($q) => $q
+                ->where('client_integration_id', $integration->id)
+                ->where('is_group', false))
+            ->whereBetween('sent_at', [$periodStart, $periodEnd])
+            ->count();
+
+        return [
+            'period_start'          => $periodStart,
+            'period_end'            => $periodEnd,
+            'total_conversations'   => (clone $conversationsQuery)->count(),
+            'total_messages'        => ServiceMessage::whereHas('conversation', fn ($q) => $q
+                    ->where('client_integration_id', $integration->id)
+                    ->where('is_group', false))
+                ->count(),
+            'last_message_at'       => (clone $conversationsQuery)->max('last_message_at'),
+            'pending_conversations' => $pendingConversations,
+            'pending_messages'      => $pendingMessages,
+        ];
     }
 
     public function show(ClientIntegration $integration, ServiceDiagnostic $diagnostic)
