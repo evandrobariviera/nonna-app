@@ -54,15 +54,16 @@
 {{-- ══ INTELIGÊNCIA ══ --}}
 <div class="nav-group-label" style="margin-top:8px">Inteligência</div>
 
-<span class="nav-group-trigger" style="opacity:.45; cursor:not-allowed">
+<a href="{{ route('portal.service-diagnostics.index') }}"
+   class="nav-group-trigger {{ request()->routeIs('portal.service-diagnostics.*') ? 'open' : '' }}"
+   style="{{ request()->routeIs('portal.service-diagnostics.*') ? 'color:var(--purple);' : '' }}">
     <span class="flex items-center gap-3">
         <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
         </svg>
-        Atendimento
+        Diagnóstico de Atendimento
     </span>
-    <span class="badge badge-muted" style="font-size:9px; padding:1px 6px; white-space:nowrap; flex-shrink:0">Em breve</span>
-</span>
+</a>
 
 <span class="nav-group-trigger" style="opacity:.45; cursor:not-allowed">
     <span class="flex items-center gap-3">

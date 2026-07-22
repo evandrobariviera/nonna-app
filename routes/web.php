@@ -6,6 +6,7 @@ use App\Http\Controllers\Portal\DashboardController as PortalDashboard;
 use App\Http\Controllers\Portal\ProjectController as PortalProjects;
 use App\Http\Controllers\Portal\AccountController as PortalAccount;
 use App\Http\Controllers\Portal\CampaignController as PortalCampaigns;
+use App\Http\Controllers\Portal\ServiceDiagnosticController as PortalServiceDiagnostics;
 use App\Http\Controllers\Portal\MeetingController as PortalMeetings;
 use App\Http\Controllers\Portal\TicketController as PortalTickets;
 use App\Http\Controllers\Portal\ApprovalController as PortalApprovals;
@@ -541,6 +542,8 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
     Route::get('/aprovacoes/{round}', [PortalApprovals::class, 'show'])->name('approvals.show');
     Route::post('/aprovacoes/{round}/decidir', [PortalApprovals::class, 'decide'])->name('approvals.decide');
     Route::get('/campanhas', [PortalCampaigns::class, 'index'])->name('campaigns.index');
+    Route::get('/atendimento', [PortalServiceDiagnostics::class, 'index'])->name('service-diagnostics.index');
+    Route::get('/atendimento/{diagnostic}', [PortalServiceDiagnostics::class, 'show'])->name('service-diagnostics.show');
     Route::get('/conta', [PortalAccount::class, 'index'])->name('account');
 });
 
