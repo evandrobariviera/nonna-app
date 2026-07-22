@@ -15,7 +15,7 @@ class AdCampaign extends Model
 
     protected $fillable = [
         'organization_id', 'client_ad_account_id',
-        'platform', 'external_id', 'name', 'status',
+        'platform', 'external_id', 'name', 'description', 'status',
         'objective', 'start_date', 'end_date',
         'raw_data', 'last_synced_at',
         'management_status', 'management_situation', 'optimization_tier', 'last_optimized_at',

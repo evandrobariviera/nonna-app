@@ -40,6 +40,28 @@
                 @if($campaign->objective)
                     <p class="text-xs mt-1" style="color:var(--muted)">Objetivo: {{ $campaign->objective }}</p>
                 @endif
+
+                {{-- DESCRIÇÃO — o que essa campanha é e o que significa pro cliente.
+                     Aparece aqui e também no Portal do Cliente. --}}
+                <div class="mt-4 pt-4" style="border-top:1px solid var(--border2)" x-data="{ editing: {{ $campaign->description ? 'false' : 'true' }} }">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Descrição da campanha</p>
+                        <button type="button" @click="editing = !editing" class="text-xs font-mono transition-colors" style="color:var(--muted)"
+                            onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                            <span x-text="editing ? 'Cancelar' : 'Editar'"></span>
+                        </button>
+                    </div>
+                    <p x-show="!editing" x-cloak class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.6">
+                        {{ $campaign->description ?: 'Nenhuma descrição cadastrada ainda — explique aqui o que essa campanha é e o que significa pro cliente.' }}
+                    </p>
+                    <form x-show="editing" x-cloak method="POST" action="{{ route('campaigns.update-description', $campaign) }}">
+                        @csrf @method('PATCH')
+                        <textarea name="description" rows="4" maxlength="2000"
+                            placeholder="Ex: Campanha de remarketing pra quem visitou o site nos últimos 30 dias e não converteu — objetivo é recuperar esses visitantes com uma oferta direcionada."
+                            class="w-full text-sm rounded px-3 py-2" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); resize:vertical">{{ $campaign->description }}</textarea>
+                        <button type="submit" class="btn btn-primary btn-sm mt-2">Salvar descrição</button>
+                    </form>
+                </div>
             </div>
 
             {{-- FILTRO DE PERÍODO --}}
@@ -311,10 +333,10 @@
 
                 <form method="POST" action="{{ route('campaigns.mark-optimized', $campaign) }}" x-data="{ comment: '' }">
                     @csrf
-                    <textarea name="comment" x-model="comment" rows="2" required
+                    <textarea name="comment" x-model="comment" rows="6" required
                         placeholder="O que foi otimizado? (obrigatório)"
-                        class="w-full px-3 py-2 text-sm mb-2 focus:outline-none resize-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"></textarea>
+                        class="w-full px-3 py-2 text-sm mb-2 focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text); resize:vertical"></textarea>
                     <button type="submit" :disabled="!comment.trim()" :style="!comment.trim() ? 'opacity:.5; cursor:not-allowed' : ''"
                         class="btn btn-primary btn-sm w-full justify-center">
                         Marcar otimização feita

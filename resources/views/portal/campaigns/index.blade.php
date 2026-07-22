@@ -174,6 +174,12 @@
                         </span>
                     </div>
 
+                    @if($campaign->description)
+                        <div class="px-6 py-3" style="background: var(--s3); border-bottom: 1px solid var(--border2)">
+                            <p class="text-sm whitespace-pre-wrap" style="color: var(--muted2); line-height: 1.6">{{ $campaign->description }}</p>
+                        </div>
+                    @endif
+
                     <div class="px-6 py-4 grid grid-cols-2 sm:grid-cols-5 gap-4">
                         <div>
                             <p class="text-xs font-bold uppercase tracking-wide mb-1" style="color: var(--muted)">Investimento</p>

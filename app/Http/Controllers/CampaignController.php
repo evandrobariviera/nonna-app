@@ -295,6 +295,17 @@ class CampaignController extends Controller
         return view('campaigns.show', compact('campaign', 'logs', 'stats', 'period', 'periodLabel'));
     }
 
+    public function updateDescription(Request $request, AdCampaign $campaign)
+    {
+        $data = $request->validate([
+            'description' => 'nullable|string|max:2000',
+        ]);
+
+        $campaign->update($data);
+
+        return back()->with('success', 'Descrição atualizada.');
+    }
+
     public function updateManagementStatus(Request $request, AdCampaign $campaign)
     {
         $data = $request->validate([
