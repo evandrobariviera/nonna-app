@@ -80,6 +80,14 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::post('/clientes/{client}/gerar-link', [ClientController::class, 'generateToken'])
         ->name('clients.generate-token');
 
+    // ── Diagnóstico de Atendimento (WhatsApp/CRM) — visão por cliente/número ──
+    Route::get('/atendimento', [\App\Http\Controllers\ServiceDiagnosticController::class, 'index'])
+        ->name('service-diagnostics.index');
+    Route::get('/atendimento/{integration}', [\App\Http\Controllers\ServiceDiagnosticController::class, 'integration'])
+        ->name('service-diagnostics.integration');
+    Route::get('/atendimento/{integration}/diagnosticos/{diagnostic}', [\App\Http\Controllers\ServiceDiagnosticController::class, 'show'])
+        ->name('service-diagnostics.show');
+
     // ── Credenciais do cliente (senhas) ──
     Route::post('/clientes/{client}/credenciais', [ClientCredentialController::class, 'store'])
         ->name('clients.credentials.store');
