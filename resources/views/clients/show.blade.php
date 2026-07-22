@@ -1625,10 +1625,14 @@
                         </div>
                         <div>
                             <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
-                                Cadência do diagnóstico (dias)
+                                Cadência do diagnóstico
                             </label>
-                            <input type="number" name="diagnostic_frequency_days" min="1" value="30"
-                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                            <select name="diagnostic_frequency_days"
+                                    class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                <option value="7">A cada 7 dias</option>
+                                <option value="15">A cada 15 dias</option>
+                                <option value="30" selected>A cada 30 dias</option>
+                            </select>
                         </div>
                         <div>
                             <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
