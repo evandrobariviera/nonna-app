@@ -1,10 +1,10 @@
 <x-portal-layout>
     <x-slot name="title">Campanhas</x-slot>
 
-    <div class="mb-8">
+    <div class="mb-6">
         <h1 class="text-2xl font-black" style="color: var(--text)">Campanhas</h1>
         <p class="text-sm mt-1" style="color: var(--muted)">
-            Performance de tráfego pago dos últimos 30 dias — {{ $client->company_name }}.
+            Performance de tráfego pago — {{ $client->company_name }}.
         </p>
     </div>
 
@@ -16,6 +16,24 @@
         </div>
     @else
 
+        {{-- Filtros --}}
+        <form method="GET" action="{{ route('portal.campaigns.index') }}" class="flex flex-wrap items-center gap-3 mb-6">
+            <select name="period" onchange="this.form.submit()"
+                    style="background: var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px; border-radius:6px; outline:none; cursor:pointer">
+                @foreach(\App\Http\Controllers\Portal\CampaignController::$periods as $key => $label)
+                    <option value="{{ $key }}" {{ $period === $key ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+
+            <select name="status" onchange="this.form.submit()"
+                    style="background: var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px; border-radius:6px; outline:none; cursor:pointer">
+                <option value="" {{ $statusFilter === '' ? 'selected' : '' }}>Todos os status</option>
+                @foreach(\App\Http\Controllers\Portal\CampaignController::$statuses as $key => $label)
+                    <option value="{{ $key }}" {{ $statusFilter === $key ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+        </form>
+
         {{-- Cards de métricas --}}
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
             <div class="card p-5">
@@ -23,7 +41,12 @@
                 <p class="text-3xl font-black leading-none" style="color: var(--text)">
                     R$ {{ number_format($stats['spend'], 0, ',', '.') }}
                 </p>
-                <p class="text-xs mt-2" style="color: var(--muted)">últimos 30 dias</p>
+                <p class="text-xs mt-2" style="color: var(--muted)">{{ $periodLabel }}</p>
+                @if($deltas['spend'] !== null)
+                    <p class="text-xs font-semibold mt-1" style="color: {{ $deltas['spend'] >= 0 ? 'var(--green)' : 'var(--red)' }}">
+                        {{ $deltas['spend'] >= 0 ? '▲' : '▼' }} {{ number_format(abs($deltas['spend']), 1, ',', '.') }}% vs período anterior
+                    </p>
+                @endif
             </div>
 
             <div class="card p-5">
@@ -37,6 +60,11 @@
                         <span style="color: var(--green)">✓ meta atingida</span>
                     @endif
                 </p>
+                @if($deltas['roas'] !== null)
+                    <p class="text-xs font-semibold mt-1" style="color: {{ $deltas['roas'] >= 0 ? 'var(--green)' : 'var(--red)' }}">
+                        {{ $deltas['roas'] >= 0 ? '▲' : '▼' }} {{ number_format(abs($deltas['roas']), 1, ',', '.') }}% vs período anterior
+                    </p>
+                @endif
             </div>
 
             <div class="card p-5">
@@ -45,6 +73,11 @@
                 <p class="text-xs mt-2" style="color: var(--muted)">
                     CPA médio R$ {{ number_format($stats['cpa'], 0, ',', '.') }}
                 </p>
+                @if($deltas['conversions'] !== null)
+                    <p class="text-xs font-semibold mt-1" style="color: {{ $deltas['conversions'] >= 0 ? 'var(--green)' : 'var(--red)' }}">
+                        {{ $deltas['conversions'] >= 0 ? '▲' : '▼' }} {{ number_format(abs($deltas['conversions']), 1, ',', '.') }}% vs período anterior
+                    </p>
+                @endif
             </div>
 
             <div class="card p-5">
@@ -55,6 +88,11 @@
                 <p class="text-xs mt-2" style="color: var(--muted)">
                     {{ number_format($stats['clicks'], 0, ',', '.') }} cliques · {{ number_format($stats['impressions'], 0, ',', '.') }} impressões
                 </p>
+                @if($deltas['cpc'] !== null)
+                    <p class="text-xs font-semibold mt-1" style="color: {{ $deltas['cpc'] >= 0 ? 'var(--green)' : 'var(--red)' }}">
+                        {{ $deltas['cpc'] >= 0 ? '▲' : '▼' }} {{ number_format(abs($deltas['cpc']), 1, ',', '.') }}% vs período anterior
+                    </p>
+                @endif
             </div>
         </div>
 
@@ -88,11 +126,18 @@
         @endif
 
         {{-- Lista de campanhas --}}
-        @if($campaigns->isNotEmpty())
-            <div class="mb-4">
-                <h2 class="text-xs font-bold uppercase tracking-widest" style="color: var(--muted)">Campanhas Ativas</h2>
-            </div>
+        <div class="mb-4">
+            <h2 class="text-xs font-bold uppercase tracking-widest" style="color: var(--muted)">
+                Campanhas com veiculação · {{ $periodLabel }}
+            </h2>
+        </div>
 
+        @if($campaigns->isEmpty())
+            <div class="card p-10 text-center">
+                <p class="text-sm font-semibold" style="color: var(--text)">Nenhuma campanha com veiculação neste período</p>
+                <p class="text-xs mt-1" style="color: var(--muted)">Tente um período maior ou outro status no filtro acima.</p>
+            </div>
+        @else
             @foreach($campaigns as $campaign)
                 @php
                     $s = $campaign->period_stats;

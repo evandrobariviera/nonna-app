@@ -23,6 +23,7 @@ class CampaignController extends Controller
 
     public static array $periods = [
         '7d'         => 'Últimos 7 dias',
+        '15d'        => 'Últimos 15 dias',
         '30d'        => 'Últimos 30 dias',
         'month'      => 'Mês atual',
         'last_month' => 'Mês anterior',
@@ -118,7 +119,13 @@ class CampaignController extends Controller
                     'ctr'   => $impressions > 0 ? round(($clicks / $impressions) * 100, 2) : null,
                     'roas'  => $spend > 0 ? round($revenue / $spend, 2) : null,
                 ];
+                $campaign->had_activity_in_period = $spend > 0 || $impressions > 0;
             }
+
+            // Por padrão só mostra quem teve veiculação de verdade no período - reduz
+            // a visão pra o que importa. Filtro de status continua funcionando por
+            // cima disso normalmente (são independentes, não um substitui o outro).
+            $campaigns = $campaigns->filter->had_activity_in_period->values();
         }
 
         // "Gasto no período" — mesmo escopo de cliente/campanha/plataforma/período da tabela.
@@ -138,6 +145,29 @@ class CampaignController extends Controller
 
             $periodSpend = (float) $spendQuery->sum('spend');
         }
+
+        // Comparativo com o período anterior de mesma duração (ex: 7d → compara com
+        // os 7 dias imediatamente antes) - mesmo escopo de cliente/campanha/plataforma.
+        [$previousPeriodStart, $previousPeriodEnd] = $this->previousPeriodRange($periodStart, $periodEnd);
+        $previousPeriodSpend = 0.0;
+        if ($adAccountIds->isNotEmpty()) {
+            $previousSpendQuery = DB::connection('pgsql')
+                ->table('ad_daily_snapshots')
+                ->whereIn('client_ad_account_id', $adAccountIds)
+                ->where('entity_level', 'campaign')
+                ->whereBetween('snapshot_date', [$previousPeriodStart, $previousPeriodEnd])
+                ->when($platform, fn ($q) => $q->where('platform', $platform));
+
+            if ($selectedCampaign) {
+                $previousSpendQuery->where('client_ad_account_id', $selectedCampaign->client_ad_account_id)
+                    ->where('entity_id', $selectedCampaign->external_id);
+            }
+
+            $previousPeriodSpend = (float) $previousSpendQuery->sum('spend');
+        }
+        $periodSpendDelta = $previousPeriodSpend > 0
+            ? round((($periodSpend - $previousPeriodSpend) / $previousPeriodSpend) * 100, 1)
+            : null;
 
         // "Campanhas ativas" — sempre conta status=active de verdade, independente do
         // filtro de Status escolhido (que só restringe as linhas da tabela).
@@ -181,10 +211,11 @@ class CampaignController extends Controller
         }
 
         $stats = [
-            'period_spend'      => $periodSpend,
-            'total_budget'      => $totalBudget,
-            'over_budget_count' => $overBudgetCount,
-            'active_campaigns'  => $activeCampaigns,
+            'period_spend'       => $periodSpend,
+            'period_spend_delta' => $periodSpendDelta,
+            'total_budget'       => $totalBudget,
+            'over_budget_count'  => $overBudgetCount,
+            'active_campaigns'   => $activeCampaigns,
         ];
 
         // Insights: client_id sempre existe (mesmo os de orçamento, que não têm campanha/conta
@@ -335,5 +366,22 @@ class CampaignController extends Controller
             'last_month' => [now()->subMonthNoOverflow()->startOfMonth()->toDateString(), now()->subMonthNoOverflow()->endOfMonth()->toDateString(), 'mês anterior'],
             default      => [now()->subDays(7)->toDateString(), now()->toDateString(), 'Últimos 7 dias'],
         };
+    }
+
+    /**
+     * Período imediatamente anterior, com a mesma duração em dias do período
+     * selecionado - base do comparativo "subiu/desceu vs período anterior".
+     * @return array{0: string, 1: string} início, fim (Y-m-d)
+     */
+    private function previousPeriodRange(string $periodStart, string $periodEnd): array
+    {
+        $start = \Illuminate\Support\Carbon::parse($periodStart);
+        $end   = \Illuminate\Support\Carbon::parse($periodEnd);
+        $days  = $start->diffInDays($end) + 1;
+
+        $previousEnd   = $start->copy()->subDay();
+        $previousStart = $previousEnd->copy()->subDays($days - 1);
+
+        return [$previousStart->toDateString(), $previousEnd->toDateString()];
     }
 }

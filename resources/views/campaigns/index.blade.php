@@ -15,6 +15,11 @@
                 R$ {{ number_format($stats['period_spend'], 2, ',', '.') }}
             </div>
             <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Gasto ({{ $periodLabel }})</div>
+            @if($stats['period_spend_delta'] !== null)
+                <div class="text-xs font-mono mt-1" style="color:{{ $stats['period_spend_delta'] >= 0 ? 'var(--green)' : 'var(--red)' }}">
+                    {{ $stats['period_spend_delta'] >= 0 ? '▲' : '▼' }} {{ number_format(abs($stats['period_spend_delta']), 1, ',', '.') }}% vs período anterior
+                </div>
+            @endif
         </div>
 
         <div class="card px-4 py-4 text-left">
