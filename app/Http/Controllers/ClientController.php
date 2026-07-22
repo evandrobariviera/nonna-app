@@ -82,7 +82,9 @@ class ClientController extends Controller
 
     public function show(Client $client)
     {
-        $client->load(['credentials', 'adAccounts', 'dossiers', 'contacts', 'macroplans.projects', 'contracts', 'adBudgets.createdBy']);
+        $client->load(['credentials', 'adAccounts', 'dossiers', 'contacts', 'macroplans.projects', 'contracts', 'adBudgets.createdBy', 'integrations']);
+
+        $aiAgents = \App\Models\AiAgent::where('is_active', true)->orderBy('name')->get(['id', 'name']);
 
         // Contatos disponíveis para vincular (excluindo os já vinculados)
         $linkedIds = $client->contacts->pluck('id');
@@ -98,7 +100,7 @@ class ClientController extends Controller
             ->get()
             ->keyBy('contact_id');
 
-        return view('clients.show', compact('client', 'availableContacts', 'subscriptionsByContact'));
+        return view('clients.show', compact('client', 'availableContacts', 'subscriptionsByContact', 'aiAgents'));
     }
 
     public function edit(Client $client)

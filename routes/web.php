@@ -88,6 +88,14 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::delete('/clientes/{client}/credenciais/{credential}', [ClientCredentialController::class, 'destroy'])
         ->name('clients.credentials.destroy');
 
+    // ── Números de Atendimento do cliente (client_integrations - uazapi/CRM) ──
+    Route::post('/clientes/{client}/atendimento', [\App\Http\Controllers\ClientIntegrationController::class, 'store'])
+        ->name('clients.integrations.store');
+    Route::patch('/clientes/{client}/atendimento/{integration}', [\App\Http\Controllers\ClientIntegrationController::class, 'update'])
+        ->name('clients.integrations.update');
+    Route::delete('/clientes/{client}/atendimento/{integration}', [\App\Http\Controllers\ClientIntegrationController::class, 'destroy'])
+        ->name('clients.integrations.destroy');
+
     // ── Links do cliente (Drive, contrato, briefing, etc.) ──
     Route::post('/clientes/{client}/links', [ClientLinkController::class, 'store'])
         ->name('clients.links.store');

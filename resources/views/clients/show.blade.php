@@ -93,6 +93,12 @@
             <button class="tab-btn" :class="{ active: tab === 'planejamentos' }" @click="tab = 'planejamentos'">
                 Planejamentos
             </button>
+            <button class="tab-btn" :class="{ active: tab === 'atendimento' }" @click="tab = 'atendimento'">
+                Atendimento
+                @if($client->integrations->count())
+                    <span class="tab-count">{{ $client->integrations->count() }}</span>
+                @endif
+            </button>
             <button class="tab-btn" :class="{ active: tab === 'portal' }" @click="tab = 'portal'">
                 Portal
             </button>
@@ -1563,6 +1569,157 @@
                             </div>
                         </div>
                     @endforeach
+                </div>
+            @endif
+        </div>
+
+        {{-- TAB: ATENDIMENTO --}}
+        <div x-show="tab === 'atendimento'" x-cloak x-data="{ addForm: false }">
+
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">
+                    Números de Atendimento
+                </h3>
+                <button @click="addForm = !addForm"
+                        class="px-4 py-1.5 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                        style="background: var(--purple);">
+                    + Adicionar
+                </button>
+            </div>
+
+            <p class="text-xs text-[var(--muted2)] mb-4 max-w-2xl">
+                Números de WhatsApp (via uazapi) alocados a este cliente para o Diagnóstico de Atendimento.
+                Só mensagens de números cadastrados aqui são aceitas pelo webhook de ingestão.
+            </p>
+
+            {{-- Formulário de novo número --}}
+            <div x-show="addForm" x-cloak class="card p-5 mb-6">
+                <h4 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-4">Novo Número de Atendimento</h4>
+                <form method="POST" action="{{ route('clients.integrations.store', $client) }}" class="space-y-4">
+                    @csrf
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                Origem <span class="text-[var(--orange)]">*</span>
+                            </label>
+                            <select name="provider" required
+                                    class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                <option value="uazapi">WhatsApp (uazapi)</option>
+                                <option value="partner_crm" disabled>CRM Parceiro (em breve)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                Nome <span class="text-[var(--orange)]">*</span>
+                            </label>
+                            <input type="text" name="label" required placeholder="Ex: Atendimento Fratte"
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                Token da instância (uazapi) <span class="text-[var(--orange)]">*</span>
+                            </label>
+                            <input type="text" name="external_id" required autocomplete="off"
+                                   placeholder="Instance Token (painel uazapi → Dados da instância)"
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)] font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                Cadência do diagnóstico (dias)
+                            </label>
+                            <input type="number" name="diagnostic_frequency_days" min="1" value="30"
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                Agente de IA
+                            </label>
+                            <select name="ai_agent_id"
+                                    class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                <option value="">Sem agente definido ainda</option>
+                                @foreach($aiAgents as $agent)
+                                    <option value="{{ $agent->id }}">{{ $agent->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Status</label>
+                            <select name="status"
+                                    class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                @foreach(\App\Models\ClientIntegration::$statuses as $key => $meta)
+                                    <option value="{{ $key }}" {{ $key === 'connected' ? 'selected' : '' }}>{{ $meta['label'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button type="submit"
+                                class="px-5 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                                style="background: var(--purple);">
+                            Salvar
+                        </button>
+                        <button type="button" @click="addForm = false"
+                                class="px-4 py-2 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] transition-colors">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {{-- Lista de números --}}
+            @if($client->integrations->isEmpty())
+                <div class="tab-placeholder">
+                    <div class="tab-placeholder-icon">📱</div>
+                    <div class="tab-placeholder-title">Nenhum número de atendimento cadastrado</div>
+                    <div class="tab-placeholder-desc">Conecte um número de WhatsApp (uazapi) para começar a alimentar o Diagnóstico de Atendimento deste cliente.</div>
+                </div>
+            @else
+                <div class="card">
+                    <table class="nonna-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Origem</th>
+                                <th>Agente de IA</th>
+                                <th>Cadência</th>
+                                <th>Status</th>
+                                <th>Última sincronização</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($client->integrations as $integration)
+                                <tr>
+                                    <td class="font-semibold text-[var(--text)]">{{ $integration->label }}</td>
+                                    <td class="text-sm text-[var(--muted2)]">{{ $integration->providerLabel() }}</td>
+                                    <td class="text-sm text-[var(--muted2)]">
+                                        {{ $aiAgents->firstWhere('id', $integration->settings['ai_agent_id'] ?? null)?->name ?? '—' }}
+                                    </td>
+                                    <td class="text-sm font-mono text-[var(--muted2)]">
+                                        {{ $integration->diagnosticFrequencyDays() }} dias
+                                    </td>
+                                    <td class="text-xs font-mono uppercase" style="color: var(--{{ $integration->status === 'connected' ? 'green' : ($integration->status === 'error' ? 'red' : 'muted') }})">
+                                        {{ $integration->statusLabel() }}
+                                    </td>
+                                    <td class="text-xs font-mono text-[var(--muted)]">
+                                        {{ $integration->last_synced_at?->diffForHumans() ?? 'nunca' }}
+                                    </td>
+                                    <td class="text-right">
+                                        <form method="POST"
+                                              action="{{ route('clients.integrations.destroy', [$client, $integration]) }}"
+                                              onsubmit="return confirm('Remover este número de atendimento? Conversas e diagnósticos já gerados não são apagados.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="text-xs font-mono text-[var(--muted)] hover:text-[var(--red)] transition-colors">
+                                                Remover
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             @endif
         </div>
