@@ -90,6 +90,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('service-diagnostics.generate');
     Route::get('/atendimento/{integration}/diagnosticos/{diagnostic}', [\App\Http\Controllers\ServiceDiagnosticController::class, 'show'])
         ->name('service-diagnostics.show');
+    Route::post('/atendimento/{integration}/diagnosticos/{diagnostic}/publicar', [\App\Http\Controllers\ServiceDiagnosticController::class, 'publish'])
+        ->name('service-diagnostics.publish');
 
     // ── Credenciais do cliente (senhas) ──
     Route::post('/clientes/{client}/credenciais', [ClientCredentialController::class, 'store'])

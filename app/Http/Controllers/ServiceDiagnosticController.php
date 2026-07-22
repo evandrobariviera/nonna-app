@@ -84,4 +84,14 @@ class ServiceDiagnosticController extends Controller
                 ->with('error', 'Falha ao gerar diagnóstico: ' . $e->getMessage());
         }
     }
+
+    public function publish(ClientIntegration $integration, ServiceDiagnostic $diagnostic): RedirectResponse
+    {
+        abort_unless($diagnostic->client_integration_id === $integration->id, 404);
+
+        $diagnostic->update(['status' => 'published', 'published_at' => now()]);
+
+        return redirect()->route('service-diagnostics.show', [$integration, $diagnostic])
+            ->with('success', 'Diagnóstico publicado - já está visível pro cliente no Portal.');
+    }
 }
