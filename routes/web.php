@@ -545,7 +545,8 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
     Route::post('/aprovacoes/{round}/decidir', [PortalApprovals::class, 'decide'])->name('approvals.decide');
     Route::get('/campanhas', [PortalCampaigns::class, 'index'])->name('campaigns.index');
     Route::get('/atendimento', [PortalServiceDiagnostics::class, 'index'])->name('service-diagnostics.index');
-    Route::get('/atendimento/{diagnostic}', [PortalServiceDiagnostics::class, 'show'])->name('service-diagnostics.show');
+    Route::get('/atendimento/{integration}', [PortalServiceDiagnostics::class, 'integration'])->name('service-diagnostics.integration');
+    Route::get('/atendimento/{integration}/diagnosticos/{diagnostic}', [PortalServiceDiagnostics::class, 'show'])->name('service-diagnostics.show');
     Route::get('/conta', [PortalAccount::class, 'index'])->name('account');
 });
 

@@ -12,7 +12,7 @@
     <x-slot name="title">Diagnóstico de Atendimento · Versão {{ $diagnostic->version }}</x-slot>
 
     <div class="mb-6">
-        <a href="{{ route('portal.service-diagnostics.index') }}" class="text-xs" style="color:var(--muted)">← Voltar ao histórico</a>
+        <a href="{{ route('portal.service-diagnostics.integration', $integration) }}" class="text-xs" style="color:var(--muted)">← Voltar ao histórico</a>
         <h1 class="text-2xl font-black mt-2" style="color: var(--text)">Diagnóstico · Versão {{ $diagnostic->version }}</h1>
         <p class="text-sm mt-1" style="color: var(--muted)">
             {{ $diagnostic->period_start->format('d/m/Y') }} – {{ $diagnostic->period_end->format('d/m/Y') }}

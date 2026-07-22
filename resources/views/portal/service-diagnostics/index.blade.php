@@ -40,19 +40,19 @@
         </div>
 
         {{-- Histórico --}}
-        <div class="card">
+        <div class="card mb-8">
             <div class="p-5" style="border-bottom:1px solid var(--border2)">
                 <h3 class="text-sm font-bold" style="color:var(--text)">Histórico de Diagnósticos</h3>
             </div>
             <div>
                 @foreach($diagnostics->sortByDesc('version') as $d)
-                    <a href="{{ route('portal.service-diagnostics.show', $d) }}"
+                    <a href="{{ route('portal.service-diagnostics.show', [$d->integration, $d]) }}"
                        class="flex items-center justify-between p-5 transition-colors"
                        style="border-bottom:1px solid var(--border2)">
                         <div>
                             <p class="text-sm font-semibold" style="color:var(--text)">
                                 Versão {{ $d->version }}
-                                @if($diagnostics->count() > 1 && $d->integration && $client->integrations->count() > 1)
+                                @if($integrations->count() > 1 && $d->integration)
                                     <span class="text-xs font-normal" style="color:var(--muted)">· {{ $d->integration->label }}</span>
                                 @endif
                             </p>
@@ -65,6 +65,31 @@
                     </a>
                 @endforeach
             </div>
+        </div>
+    @endif
+
+    {{-- Números Conectados --}}
+    @if($integrations->isNotEmpty())
+        <div class="mb-4">
+            <h2 class="text-xs font-bold uppercase tracking-widest" style="color: var(--muted)">Números Conectados</h2>
+        </div>
+        <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(140px, 1fr))">
+            @foreach($integrations as $integration)
+                <a href="{{ route('portal.service-diagnostics.integration', $integration) }}"
+                   class="card p-4 flex flex-col items-center justify-center text-center transition-colors"
+                   style="aspect-ratio: 1">
+                    <span class="text-2xl mb-2">📱</span>
+                    <p class="text-sm font-bold" style="color: var(--text)">{{ $integration->label }}</p>
+                    <p class="text-xs mt-1" style="color: var(--muted)">
+                        {{ $integration->published_diagnostics_count }} diagnóstico{{ $integration->published_diagnostics_count !== 1 ? 's' : '' }}
+                    </p>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full mt-2"
+                          style="background: {{ $integration->isConnected() ? 'rgba(5,150,105,.1)' : 'var(--s3)' }};
+                                 color: {{ $integration->isConnected() ? 'var(--green)' : 'var(--muted)' }}">
+                        {{ $integration->statusLabel() }}
+                    </span>
+                </a>
+            @endforeach
         </div>
     @endif
 </x-portal-layout>
