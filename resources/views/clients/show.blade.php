@@ -1646,6 +1646,14 @@
                                 @endforeach
                             </select>
                         </div>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                Ticket médio (R$)
+                            </label>
+                            <input type="number" name="avg_ticket_value" min="0" step="0.01" placeholder="Ex: 1200.00"
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                            <p class="text-xs mt-1" style="color:var(--muted)">Base pra estimar o valor de vendas perdidas nos gaps do diagnóstico.</p>
+                        </div>
                         <div class="col-span-2">
                             <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Status</label>
                             <select name="status"

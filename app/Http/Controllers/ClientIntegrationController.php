@@ -69,9 +69,12 @@ class ClientIntegrationController extends Controller
             $agentId = null;
         }
 
+        $avgTicket = $request->input('avg_ticket_value');
+
         return array_filter([
             'diagnostic_frequency_days' => (int) $request->input('diagnostic_frequency_days', 30) ?: 30,
             'ai_agent_id'               => $agentId,
+            'avg_ticket_value'          => $avgTicket !== null && $avgTicket !== '' ? (float) $avgTicket : null,
         ], fn ($value) => $value !== null);
     }
 

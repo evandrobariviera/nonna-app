@@ -28,11 +28,14 @@ class ServiceDiagnostic extends Model
         'sales_in_negotiation',
         'conversion_rate',
         'avg_first_response_minutes',
+        'service_score',
+        'service_score_breakdown',
+        'avg_sentiment_score',
+        'estimated_lost_revenue',
         'funnel_summary',
         'gaps',
         'strengths',
         'campaign_insights',
-        'recommendations',
         'published_at',
     ];
 
@@ -45,11 +48,14 @@ class ServiceDiagnostic extends Model
         'sales_in_negotiation'        => 'integer',
         'conversion_rate'             => 'float',
         'avg_first_response_minutes'  => 'integer',
+        'service_score'               => 'integer',
+        'service_score_breakdown'     => 'array',
+        'avg_sentiment_score'         => 'float',
+        'estimated_lost_revenue'      => 'float',
         'funnel_summary'              => 'array',
         'gaps'                        => 'array',
         'strengths'                   => 'array',
         'campaign_insights'           => 'array',
-        'recommendations'             => 'array',
         'published_at'                => 'datetime',
     ];
 
@@ -98,5 +104,10 @@ class ServiceDiagnostic extends Model
     public function personas(): HasMany
     {
         return $this->hasMany(ServiceDiagnosticPersona::class, 'diagnostic_id')->orderBy('position');
+    }
+
+    public function recommendations(): HasMany
+    {
+        return $this->hasMany(ServiceDiagnosticRecommendation::class, 'diagnostic_id')->orderBy('position');
     }
 }

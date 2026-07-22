@@ -30,7 +30,7 @@ class ServiceDiagnosticController extends Controller
         abort_unless($diagnostic->client_integration_id === $integration->id, 404);
 
         $integration->load('client');
-        $diagnostic->load('personas', 'aiAgent');
+        $diagnostic->load('personas', 'aiAgent', 'recommendations');
 
         return view('service-diagnostics.show', compact('integration', 'diagnostic'));
     }

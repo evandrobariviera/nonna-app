@@ -20,6 +20,8 @@ class ServiceConversation extends Model
         'contact_name',
         'contact_phone',
         'is_group',
+        'sentiment_score',
+        'sentiment_trend',
         'started_at',
         'last_message_at',
         'message_count',
@@ -30,6 +32,13 @@ class ServiceConversation extends Model
         'last_message_at' => 'datetime',
         'message_count'   => 'integer',
         'is_group'        => 'boolean',
+        'sentiment_score' => 'float',
+    ];
+
+    public static array $sentimentTrends = [
+        'melhorando' => 'Melhorando',
+        'piorando'   => 'Piorando',
+        'estavel'    => 'Estável',
     ];
 
     public function client(): BelongsTo

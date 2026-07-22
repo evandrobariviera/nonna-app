@@ -108,4 +108,11 @@ class ClientIntegration extends Model
     {
         return (int) data_get($this->settings, 'diagnostic_frequency_days', 30);
     }
+
+    // Ticket médio configurado manualmente - base pra estimar R$ perdido nos gaps do diagnóstico
+    public function avgTicketValue(): ?float
+    {
+        $value = data_get($this->settings, 'avg_ticket_value');
+        return $value !== null ? (float) $value : null;
+    }
 }

@@ -1,9 +1,11 @@
 @php
     $metrics = [
-        'total_conversations' => ['label' => 'Conversas', 'suffix' => '', 'direction' => null],
+        'service_score' => ['label' => 'Índice de Atendimento', 'suffix' => '', 'direction' => 'up'],
         'conversion_rate' => ['label' => 'Taxa de conversão', 'suffix' => '%', 'direction' => 'up'],
         'avg_first_response_minutes' => ['label' => '1ª resposta (min)', 'suffix' => 'min', 'direction' => 'down'],
+        'avg_sentiment_score' => ['label' => 'Sentimento', 'suffix' => '', 'direction' => 'up'],
         'sales_confirmed' => ['label' => 'Vendas confirmadas', 'suffix' => '', 'direction' => 'up'],
+        'estimated_lost_revenue' => ['label' => 'R$ perdido no período', 'suffix' => '', 'direction' => 'down'],
     ];
 
     $series = [];
@@ -60,11 +62,11 @@
         @else
             {{-- Evolução de KPIs --}}
             <h3 class="text-xs font-mono uppercase tracking-widest mb-3" style="color:var(--muted)">Evolução</h3>
-            <div class="grid grid-cols-4 gap-3 mb-8">
+            <div class="grid grid-cols-3 gap-3 mb-8">
                 @foreach($series as $key => $s)
                     <div class="stat-card">
                         <p class="stat-label">{{ $s['label'] }}</p>
-                        <p class="stat-value">{{ rtrim(rtrim(number_format($s['current'], 1, ',', '.'), '0'), ',') }}{{ $s['suffix'] }}</p>
+                        <p class="stat-value">{{ $key === 'estimated_lost_revenue' ? 'R$ ' . number_format($s['current'], 0, ',', '.') : rtrim(rtrim(number_format($s['current'], 1, ',', '.'), '0'), ',') . $s['suffix'] }}</p>
 
                         @if($s['delta'] !== null)
                             <p class="text-xs font-mono mt-1"
