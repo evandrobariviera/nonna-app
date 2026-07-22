@@ -1574,7 +1574,7 @@
         </div>
 
         {{-- TAB: ATENDIMENTO --}}
-        <div x-show="tab === 'atendimento'" x-cloak x-data="{ addForm: false }">
+        <div x-show="tab === 'atendimento'" x-cloak x-data="{ addForm: false, editId: null }">
 
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">
@@ -1716,8 +1716,12 @@
                                     <td class="text-xs font-mono text-[var(--muted)]">
                                         {{ $integration->last_synced_at?->diffForHumans() ?? 'nunca' }}
                                     </td>
-                                    <td class="text-right">
-                                        <form method="POST"
+                                    <td class="text-right whitespace-nowrap">
+                                        <button type="button" @click="editId = editId === '{{ $integration->id }}' ? null : '{{ $integration->id }}'"
+                                                class="text-xs font-mono text-[var(--muted)] hover:text-[var(--purple)] transition-colors mr-3">
+                                            <span x-text="editId === '{{ $integration->id }}' ? 'Fechar' : 'Editar'"></span>
+                                        </button>
+                                        <form method="POST" class="inline"
                                               action="{{ route('clients.integrations.destroy', [$client, $integration]) }}"
                                               onsubmit="return confirm('Remover este número de atendimento? Conversas e diagnósticos já gerados não são apagados.')">
                                             @csrf
@@ -1726,6 +1730,79 @@
                                                     class="text-xs font-mono text-[var(--muted)] hover:text-[var(--red)] transition-colors">
                                                 Remover
                                             </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr x-show="editId === '{{ $integration->id }}'" x-cloak>
+                                    <td colspan="7" style="background:var(--s2)">
+                                        <form method="POST" action="{{ route('clients.integrations.update', [$client, $integration]) }}" class="space-y-4 p-4">
+                                            @csrf
+                                            @method('PATCH')
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Origem</label>
+                                                    <select name="provider" required
+                                                            class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                                        <option value="uazapi" {{ $integration->provider === 'uazapi' ? 'selected' : '' }}>WhatsApp (uazapi)</option>
+                                                        <option value="partner_crm" disabled>CRM Parceiro (em breve)</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Nome</label>
+                                                    <input type="text" name="label" required value="{{ $integration->label }}"
+                                                           class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                                </div>
+                                                <div class="col-span-2">
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Token da instância (uazapi)</label>
+                                                    <input type="text" name="external_id" autocomplete="off"
+                                                           placeholder="Deixe em branco para manter o token atual"
+                                                           class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)] font-mono">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Cadência do diagnóstico</label>
+                                                    <select name="diagnostic_frequency_days"
+                                                            class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                                        <option value="7" {{ $integration->diagnosticFrequencyDays() === 7 ? 'selected' : '' }}>A cada 7 dias</option>
+                                                        <option value="15" {{ $integration->diagnosticFrequencyDays() === 15 ? 'selected' : '' }}>A cada 15 dias</option>
+                                                        <option value="30" {{ $integration->diagnosticFrequencyDays() === 30 ? 'selected' : '' }}>A cada 30 dias</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Agente de IA</label>
+                                                    <select name="ai_agent_id"
+                                                            class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                                        <option value="">Sem agente definido ainda</option>
+                                                        @foreach($aiAgents as $agent)
+                                                            <option value="{{ $agent->id }}" {{ ($integration->settings['ai_agent_id'] ?? null) === $agent->id ? 'selected' : '' }}>{{ $agent->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Ticket médio (R$)</label>
+                                                    <input type="number" name="avg_ticket_value" min="0" step="0.01" value="{{ $integration->avgTicketValue() }}"
+                                                           class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                                </div>
+                                                <div class="col-span-2">
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Status</label>
+                                                    <select name="status"
+                                                            class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                                        @foreach(\App\Models\ClientIntegration::$statuses as $key => $meta)
+                                                            <option value="{{ $key }}" {{ $integration->status === $key ? 'selected' : '' }}>{{ $meta['label'] }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="flex gap-3">
+                                                <button type="submit"
+                                                        class="px-5 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                                                        style="background: var(--purple);">
+                                                    Salvar alterações
+                                                </button>
+                                                <button type="button" @click="editId = null"
+                                                        class="px-4 py-2 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] transition-colors">
+                                                    Cancelar
+                                                </button>
+                                            </div>
                                         </form>
                                     </td>
                                 </tr>
