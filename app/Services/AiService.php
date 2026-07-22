@@ -3,11 +3,40 @@
 namespace App\Services;
 
 use App\Models\AiAgent;
+use App\Models\AiProvider;
 use App\Models\AiTokenUsage;
 use Illuminate\Support\Facades\Http;
 
 class AiService
 {
+    /**
+     * Transcreve um áudio (mp3/ogg/etc, já descriptografado) via Whisper da OpenAI.
+     * Usa a chave ativa do provider "openai" diretamente - não depende de um AiAgent
+     * configurado, porque transcrição de mídia não é uma "skill" configurável, é
+     * infraestrutura de ingestão (ver UazapiMessageIngestor).
+     */
+    public function transcribeAudio(string $audioUrl): ?string
+    {
+        $provider = AiProvider::where('slug', 'openai')->first();
+        $apiKey = $provider?->activeKey();
+        if (!$apiKey) {
+            return null;
+        }
+
+        $audio = Http::timeout(30)->get($audioUrl);
+        if (!$audio->successful()) {
+            return null;
+        }
+
+        $response = Http::withToken($apiKey->getApiKey())
+            ->timeout(60)
+            ->attach('file', $audio->body(), 'audio.mp3')
+            ->post('https://api.openai.com/v1/audio/transcriptions', [
+                'model' => 'whisper-1',
+            ]);
+
+        return $response->successful() ? $response->json('text') : null;
+    }
     public function chat(
         AiAgent $agent,
         array $history,

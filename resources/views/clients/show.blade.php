@@ -1615,13 +1615,22 @@
                             <input type="text" name="label" required placeholder="Ex: Atendimento Fratte"
                                    class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
                         </div>
-                        <div class="col-span-2">
+                        <div>
                             <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
                                 Token da instância (uazapi) <span class="text-[var(--orange)]">*</span>
                             </label>
                             <input type="text" name="external_id" required autocomplete="off"
                                    placeholder="Instance Token (painel uazapi → Dados da instância)"
                                    class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)] font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                Servidor uazapi (Base URL)
+                            </label>
+                            <input type="text" name="base_url" placeholder="https://nonna.uazapi.com"
+                                   value="https://nonna.uazapi.com"
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)] font-mono">
+                            <p class="text-xs mt-1" style="color:var(--muted)">Necessário pra baixar áudio/imagem recebidos.</p>
                         </div>
                         <div>
                             <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
@@ -1756,6 +1765,12 @@
                                                     <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Token da instância (uazapi)</label>
                                                     <input type="text" name="external_id" autocomplete="off"
                                                            placeholder="Deixe em branco para manter o token atual"
+                                                           class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)] font-mono">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Servidor uazapi (Base URL)</label>
+                                                    <input type="text" name="base_url" placeholder="https://nonna.uazapi.com"
+                                                           value="{{ $integration->baseUrl() }}"
                                                            class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)] font-mono">
                                                 </div>
                                                 <div>

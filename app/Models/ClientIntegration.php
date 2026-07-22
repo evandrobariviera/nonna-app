@@ -115,4 +115,10 @@ class ClientIntegration extends Model
         $value = data_get($this->settings, 'avg_ticket_value');
         return $value !== null ? (float) $value : null;
     }
+
+    // Servidor uazapi da instância (ex: https://nonna.uazapi.com) - necessário pra baixar mídia
+    public function baseUrl(): ?string
+    {
+        return data_get($this->settings, 'base_url');
+    }
 }
