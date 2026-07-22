@@ -258,7 +258,7 @@ Responda SOMENTE com um objeto JSON com exatamente esta estrutura:
   "gaps": [{"titulo": "<string>", "descricao": "<string>", "estimated_leads_lost": <int - estimativa de quantos leads foram perdidos por esse gap especificamente neste período>}],
   "strengths": [{"titulo": "<string>", "descricao": "<string>"}],
   "campaign_insights": [{"titulo": "<string>", "descricao": "<string>"}],
-  "personas": [{"tag": "<string ex: Persona A>", "name": "<string>", "profile": "<string>", "behavior": "<string>", "evidence": "<string - trecho real de alguma conversa>"}],
+  "personas": [{"tag": "<string curto, no máximo 20 caracteres, formato 'Persona A', 'Persona B' etc - NUNCA uma frase descritiva>", "name": "<string - aqui sim pode ser descritivo, ex: 'Cliente em busca de fitness'>", "profile": "<string>", "behavior": "<string>", "evidence": "<string - trecho real de alguma conversa>"}],
   "recommendations": [{"category": "quick_win"|"estrutural", "title": "<string>", "description": "<string>", "status": "pendente"|"implementada", "carries_forward_title": "<título EXATO de uma recomendação pendente acima, se esta for continuação dela, senão null>"}]
 }
 PROMPT;
