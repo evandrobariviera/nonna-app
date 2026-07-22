@@ -187,4 +187,37 @@
             </div>
         </div>
     @endif
+
+    {{-- Metodologia --}}
+    <div class="card" x-data="{ open: false }">
+        <button type="button" @click="open = !open" class="w-full flex items-center justify-between p-5 text-left">
+            <h3 class="text-sm font-bold" style="color:var(--text)">Como calculamos este diagnóstico</h3>
+            <span class="text-xs transition-transform" :style="open ? 'transform:rotate(180deg)' : ''" style="color:var(--muted)">▾</span>
+        </button>
+        <div x-show="open" x-cloak class="px-5 pb-5" style="border-top:1px solid var(--border2)">
+            <p class="text-sm mt-4 mb-3" style="color:var(--muted2); line-height:1.7">
+                Este diagnóstico é uma metodologia proprietária da Nonna, construída sobre conceitos consolidados de gestão comercial e ciência de dados — não é uma opinião solta, cada peça tem uma base:
+            </p>
+            <ul class="flex flex-col gap-3">
+                <li class="text-sm" style="color:var(--muted2); line-height:1.6">
+                    <strong style="color:var(--text)">Tempo de resposta e conversão</strong> — pesquisas de gestão comercial (como o estudo de Lead Response Management, do MIT/InsideSales.com) mostram que a velocidade da primeira resposta impacta diretamente a chance de fechar uma venda. Por isso monitoramos isso de perto.
+                </li>
+                <li class="text-sm" style="color:var(--muted2); line-height:1.6">
+                    <strong style="color:var(--text)">Análise de funil</strong> — mapeamos cada etapa da jornada (entrada, qualificação, proposta, fechamento) pra identificar exatamente onde as oportunidades se perdem, seguindo o modelo clássico de funil de vendas.
+                </li>
+                <li class="text-sm" style="color:var(--muted2); line-height:1.6">
+                    <strong style="color:var(--text)">Índice de Atendimento</strong> — um índice único (0 a 100) que combina velocidade, conversão, consistência e sentimento, inspirado em técnicas de análise multicritério — o mesmo princípio por trás de índices conhecidos como o IDH.
+                </li>
+                <li class="text-sm" style="color:var(--muted2); line-height:1.6">
+                    <strong style="color:var(--text)">Inteligência Artificial</strong> — as conversas são analisadas por IA especializada em processamento de linguagem natural, que identifica padrões, objeções, pontos fortes e oportunidades reais de melhoria.
+                </li>
+                <li class="text-sm" style="color:var(--muted2); line-height:1.6">
+                    <strong style="color:var(--text)">Melhoria contínua</strong> — cada diagnóstico compara o período atual com o anterior e acompanha se as recomendações foram implementadas, seguindo o princípio dos ciclos de melhoria contínua (PDCA) usados em gestão da qualidade.
+                </li>
+            </ul>
+            <p class="text-xs mt-4" style="color:var(--muted)">
+                Os parâmetros usados no cálculo são definidos pela Nonna com base em boas práticas de mercado, e evoluem conforme acumulamos mais dados reais da sua operação.
+            </p>
+        </div>
+    </div>
 </x-portal-layout>
