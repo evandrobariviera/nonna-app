@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análise de Atendimentos · Fratte Indústria Láctea</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090e;--s1:#0e0e18;--s2:#141422;--s3:#1b1b2c;
+  --b1:rgba(255,255,255,.04);--b2:rgba(255,255,255,.08);--b3:rgba(255,255,255,.14);
+  --ink:#ececf4;--mu:rgba(236,236,244,.3);--mu2:rgba(236,236,244,.58);
+  --b01:#60a5fa; /* Panorama — azul analítico */
+  --b02:#fbbf24; /* Objeções — âmbar */
+  --b03:#d63eaa; /* Personas — magenta */
+  --b04:#7b3fe4; /* Campanha — roxo criativo */
+  --ok:#34d399;  /* O que funciona — verde */
+  --gap:#f87171; /* Gaps — vermelho */
+  --rec:#22d3ee; /* Recomendações — ciano */
+  --nonna-grad:linear-gradient(135deg,#ff5c4d,#d63eaa,#7b3fe4);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.7;}
+
+/* ── TOP BAR ── */
+.editbar{position:fixed;top:0;left:0;right:0;z-index:500;background:rgba(9,9,14,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--b2);padding:0 32px;height:44px;display:flex;align-items:center;justify-content:space-between;}
+.eb-l{display:flex;align-items:center;gap:10px;}
+.eb-logo-fb{font-size:11px;font-weight:800;background:var(--nonna-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-family:'Syne',sans-serif;}
+.eb-sep{width:1px;height:14px;background:var(--b2);}
+.eb-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(236,236,244,.45);letter-spacing:.1em;text-transform:uppercase;}
+.eb-btn{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border:none;background:var(--nonna-grad);color:#fff;cursor:pointer;transition:all .2s;}
+.eb-btn:hover{opacity:.85;}
+
+/* ── NAV ── */
+aside{position:fixed;top:44px;left:0;bottom:0;width:230px;background:var(--s1);border-right:1px solid var(--b1);overflow-y:auto;scrollbar-width:none;z-index:200;display:flex;flex-direction:column;}
+aside::-webkit-scrollbar{display:none;}
+.sb-brand{padding:20px 18px 14px;border-bottom:1px solid var(--b1);}
+.sb-brand-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.14em;text-transform:uppercase;margin-bottom:5px;}
+.sb-brand-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--ink);line-height:1.2;}
+.sb-block{padding:14px 18px 4px;font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;}
+.sb-link{display:flex;align-items:center;gap:8px;padding:7px 18px;text-decoration:none;border-left:2px solid transparent;transition:all .15s;cursor:pointer;}
+.sb-link:hover{background:var(--s2);}
+.sb-link.on{background:var(--s2);}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:var(--b2);flex-shrink:0;transition:background .2s;}
+.sb-link.on .sb-dot{background:currentColor;}
+.sb-text{font-size:11px;color:var(--mu2);}
+.sb-link.on .sb-text{color:var(--ink);}
+.sb-footer{margin-top:auto;padding:14px 18px;border-top:1px solid var(--b1);}
+.sb-footer p{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);line-height:1.6;}
+
+/* ── MAIN ── */
+main{margin-left:230px;padding-top:44px;}
+.capa{min-height:100vh;padding:60px 64px;display:flex;flex-direction:column;justify-content:space-between;border-bottom:1px solid var(--b1);position:relative;overflow:hidden;}
+.capa-glow{position:absolute;border-radius:50%;pointer-events:none;}
+.sec{padding:56px 64px 64px;border-bottom:1px solid var(--b1);}
+.sec:last-child{border-bottom:none;}
+
+/* ── BLOCK HEADER ── */
+.block-header{display:flex;align-items:flex-start;gap:20px;margin-bottom:40px;padding-bottom:24px;border-bottom:1px solid var(--b2);}
+.block-number{font-family:'Syne',sans-serif;font-size:clamp(48px,6vw,80px);font-weight:800;line-height:1;opacity:.1;flex-shrink:0;}
+.block-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px;}
+.block-title{font-family:'Syne',sans-serif;font-size:clamp(24px,3vw,38px);font-weight:800;letter-spacing:-.02em;line-height:1.06;margin-bottom:8px;}
+.block-desc{font-size:13px;color:var(--mu2);line-height:1.7;max-width:620px;}
+
+/* ── TEXT ── */
+h4.mini{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;margin:32px 0 12px;color:var(--mu2);}
+p.body{font-size:14px;color:var(--mu2);line-height:1.75;margin-bottom:14px;max-width:760px;}
+p.body strong{color:var(--ink);font-weight:600;}
+.sep{height:1px;background:var(--b2);margin:28px 0;}
+
+/* ── STATS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:36px;}
+.stat{background:var(--s2);border:1px solid var(--b2);padding:20px 18px;}
+.stat-num{font-family:'Syne',sans-serif;font-size:34px;font-weight:800;line-height:1;margin-bottom:8px;}
+.stat-lbl{font-size:11px;color:var(--mu2);line-height:1.4;}
+
+/* ── INSIGHT ── */
+.insight-box{background:var(--s2);border:1px solid rgba(251,191,36,.2);border-left:4px solid var(--b02);padding:24px 22px;margin:20px 0;position:relative;overflow:hidden;}
+.insight-box::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(251,191,36,.06) 0%,transparent 65%);pointer-events:none;}
+.ib-label{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--b02);margin-bottom:10px;}
+.ib-text{font-family:'Syne',sans-serif;font-size:clamp(16px,2vw,22px);font-weight:700;line-height:1.35;color:var(--ink);}
+.ib-text span{background:var(--nonna-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+/* ── PERSONA ── */
+.persona-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.persona-card{background:var(--s2);border:1px solid var(--b2);border-top:2px solid var(--b03);padding:18px;}
+.pc-tag{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--b03);letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px;}
+.pc-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:12px;line-height:1.15;}
+.pc-field{margin-bottom:9px;}
+.pcf-label{font-size:9px;color:var(--mu);font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px;}
+.pcf-val{font-size:12.5px;color:var(--ink);line-height:1.5;}
+.pcf-val.mut{color:var(--mu2);}
+
+/* ── TABLE ── */
+table.comp{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0 10px;}
+table.comp th{text-align:left;padding:9px 14px;background:var(--s3);font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--b2);}
+table.comp td{padding:12px 14px;border-bottom:1px solid var(--b1);color:var(--mu2);vertical-align:top;line-height:1.5;}
+table.comp tr:last-child td{border-bottom:none;}
+table.comp td:first-child{color:var(--ink);font-weight:600;}
+
+/* ── GAP / ITEM CARDS ── */
+.item{background:var(--s2);border:1px solid var(--b2);border-left:3px solid var(--gap);padding:16px 18px;margin-bottom:10px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;}
+.item-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--gap);opacity:.7;line-height:1;}
+.item-t{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:4px;}
+.item-d{font-size:12.5px;color:var(--mu2);line-height:1.6;}
+.item.ok{border-left-color:var(--ok);}
+.item.ok .item-num{color:var(--ok);}
+.item.rec{border-left-color:var(--rec);}
+.item.rec .item-num{color:var(--rec);}
+.item.camp{border-left-color:var(--b04);}
+.item.camp .item-num{color:var(--b04);}
+
+/* ── PILL LIST ── */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* ── ESSENCE ── */
+.essence-box{background:var(--s2);border:1px solid rgba(214,62,170,.2);border-left:4px solid var(--b03);padding:26px 24px;margin-top:20px;position:relative;overflow:hidden;}
+.essence-box::before{content:'';position:absolute;top:-40px;right:-40px;width:220px;height:220px;background:radial-gradient(circle,rgba(214,62,170,.07) 0%,transparent 65%);pointer-events:none;}
+.eb2-label{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--b03);margin-bottom:12px;}
+.eb2-text{font-family:'Syne',sans-serif;font-size:clamp(18px,2.4vw,26px);font-weight:800;line-height:1.25;}
+
+/* ── PRINT ── */
+@media print{
+  .editbar,aside{display:none!important;}
+  main{margin-left:0!important;padding-top:0!important;}
+  .sec,.capa{padding:40px!important;page-break-inside:avoid;}
+  .capa{min-height:auto!important;page-break-after:always;}
+  body{background:#fff!important;color:#111!important;}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+}
+@media(max-width:900px){
+  aside{transform:translateX(-100%);}
+  main{margin-left:0;}
+  .sec,.capa{padding:40px 24px;}
+  .stat-grid{grid-template-columns:1fr 1fr;}
+  .persona-grid,.two{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="editbar">
+  <div class="eb-l">
+    <span class="eb-logo-fb">nonna</span>
+    <span class="eb-sep"></span>
+    <span class="eb-tag">Análise de Atendimentos · WhatsApp</span>
+  </div>
+  <button class="eb-btn" onclick="window.print()">Exportar PDF</button>
+</div>
+
+<aside>
+  <div class="sb-brand">
+    <div class="sb-brand-label">Cliente</div>
+    <div class="sb-brand-name">Fratte Indústria Láctea</div>
+  </div>
+
+  <div class="sb-block" style="color:var(--b01);">01 · Diagnóstico</div>
+  <a class="sb-link" href="#s01" style="color:var(--b01);"><div class="sb-dot"></div><span class="sb-text">Panorama &amp; Funil</span></a>
+
+  <div class="sb-block" style="color:var(--b03);">02 · Público</div>
+  <a class="sb-link" href="#s02" style="color:var(--b03);"><div class="sb-dot"></div><span class="sb-text">Personas</span></a>
+
+  <div class="sb-block" style="color:var(--b02);">03 · Barreiras</div>
+  <a class="sb-link" href="#s03" style="color:var(--b02);"><div class="sb-dot"></div><span class="sb-text">Objeções</span></a>
+  <a class="sb-link" href="#s04" style="color:var(--gap);"><div class="sb-dot"></div><span class="sb-text">Gaps Operacionais</span></a>
+
+  <div class="sb-block" style="color:var(--ok);">04 · Ativos</div>
+  <a class="sb-link" href="#s05" style="color:var(--ok);"><div class="sb-dot"></div><span class="sb-text">O que Funciona</span></a>
+
+  <div class="sb-block" style="color:var(--b04);">05 · Ação</div>
+  <a class="sb-link" href="#s06" style="color:var(--b04);"><div class="sb-dot"></div><span class="sb-text">Insights de Campanha</span></a>
+  <a class="sb-link" href="#s07" style="color:var(--rec);"><div class="sb-dot"></div><span class="sb-text">Recomendações</span></a>
+
+  <div class="sb-footer">
+    <p>Base: 32 conversas · 07/06 a 17/07/2026<br>Nonna Agência Digital</p>
+  </div>
+</aside>
+
+<main>
+
+<!-- ══ CAPA ══ -->
+<div class="capa" id="capa">
+  <div class="capa-glow" style="width:500px;height:500px;top:-150px;right:-100px;background:radial-gradient(circle,rgba(123,63,228,.12) 0%,transparent 65%);"></div>
+  <div class="capa-glow" style="width:400px;height:400px;bottom:-100px;left:-80px;background:radial-gradient(circle,rgba(255,92,77,.08) 0%,transparent 65%);"></div>
+
+  <div style="position:relative;z-index:1;">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mu);letter-spacing:.2em;text-transform:uppercase;margin-bottom:40px;">Nonna Agência Digital · Diagnóstico de Atendimento</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mu);margin-bottom:14px;letter-spacing:.06em;">Análise de Atendimentos via WhatsApp</div>
+    <div style="font-family:'Syne',sans-serif;font-size:clamp(44px,7vw,88px);font-weight:800;line-height:.95;letter-spacing:-.03em;background:var(--nonna-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:16px;">Fratte Indústria Láctea</div>
+    <div style="font-size:16px;color:var(--mu2);max-width:520px;line-height:1.6;">Leitura de 32 conversas de venda para mapear funil, personas, objeções e gaps — e transformar isso em estratégia de atendimento e campanha.</div>
+  </div>
+
+  <div style="position:relative;z-index:1;">
+    <div style="height:1px;background:var(--b2);margin-bottom:22px;"></div>
+    <div style="display:grid;grid-template-columns:repeat(4,auto);gap:32px;align-items:start;justify-content:start;">
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;margin-bottom:4px;">BASE</div><div style="font-size:12px;font-weight:500;">32 conversas</div></div>
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;margin-bottom:4px;">PERÍODO</div><div style="font-size:12px;font-weight:500;">Jun–Jul · 2026</div></div>
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;margin-bottom:4px;">VERSÃO</div><div style="font-size:12px;font-weight:500;">1.0</div></div>
+      <div><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mu);letter-spacing:.12em;margin-bottom:4px;">STATUS</div><div style="font-size:12px;font-weight:500;">Diagnóstico</div></div>
+    </div>
+    <div style="height:3px;background:var(--nonna-grad);margin-top:22px;margin-left:-64px;margin-right:-64px;"></div>
+  </div>
+</div>
+
+<!-- ══ 01 · PANORAMA ══ -->
+<div class="sec" id="s01">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b01);">01</div>
+    <div>
+      <div class="block-eyebrow" style="color:var(--b01);">Bloco 01 · Diagnóstico</div>
+      <div class="block-title">Panorama &amp; Funil</div>
+      <div class="block-desc">O retrato do que acontece do primeiro "olá" ao fechamento. Onde entra o lead, por onde ele trava e o que isso revela sobre o processo.</div>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat"><div class="stat-num" style="color:var(--b01);">32</div><div class="stat-lbl">conversas analisadas</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--ok);">2</div><div class="stat-lbl">vendas confirmadas <span style="color:var(--mu)">(+1 em negociação)</span></div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--b02);">~6–9%</div><div class="stat-lbl">conversão observável</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--b03);">Sul</div><div class="stat-lbl">SC &gt; RS &gt; PR concentram a demanda</div></div>
+  </div>
+
+  <div class="insight-box">
+    <div class="ib-label">O achado central</div>
+    <div class="ib-text">A maior parte das perdas <span>não é preço nem falta de interesse</span> — é lentidão de resposta e ruído operacional. Leads quentes esfriam esperando cotação.</div>
+  </div>
+
+  <h4 class="mini">Como o lead entra</h4>
+  <p class="body">A quase totalidade chega pela mensagem pré-preenchida do anúncio: <strong>"Tenho interesse no Parmesão Alta Cura 12 meses - 4,7kg para pessoa física"</strong>. O criativo ancora 12 meses, peça inteira (4,7kg) e pessoa física — mas a demanda real diverge: muita gente quer <strong>meia peça</strong>, e boa parte é <strong>PJ/revenda</strong>. Ou seja, o anúncio promete um perfil e o cliente chega querendo outro, forçando reeducação a cada conversa. O motor é <strong>social pago (Instagram e Facebook)</strong>; Google, indicação e "terceiros" aparecem de forma pontual.</p>
+
+  <h4 class="mini">Onde o funil trava</h4>
+  <table class="comp">
+    <thead><tr><th style="width:22%">Estágio</th><th style="width:44%">O que observamos</th><th>Onde perde</th></tr></thead>
+    <tbody>
+      <tr><td>Entrada (anúncio)</td><td>Alto volume, Sul, mensagem pré-preenchida PF / 12m / 4,7kg</td><td>Expectativa desalinhada com a demanda real (meia peça / PJ)</td></tr>
+      <tr><td>Qualificação</td><td>Cidade e interesse coletados</td><td>Lentidão na 1ª resposta esfria o lead</td></tr>
+      <tr><td>Cotação</td><td>Tabela de preços + frete</td><td>Frete só sai quando o cliente cobra; atrito do CPF</td></tr>
+      <tr><td>Orçamento fechado</td><td>Valor total com isopor em linha separada</td><td>Choque de frete + isopor; silêncio</td></tr>
+      <tr><td>Fechamento</td><td>PIX, reserva da peça</td><td>Fecha bem quando há agilidade e/ou pequena concessão</td></tr>
+      <tr><td>Pós-venda</td><td>Confirmação de entrega (quando feita)</td><td>Inconsistente — recompra subaproveitada</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══ 02 · PERSONAS ══ -->
+<div class="sec" id="s02">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b03);">02</div>
+    <div>
+      <div class="block-eyebrow" style="color:var(--b03);">Bloco 02 · Público</div>
+      <div class="block-title">Personas Identificadas</div>
+      <div class="block-desc">Seis perfis emergem das conversas. Cada um chega por um motivo diferente, trava por uma barreira diferente e precisa de uma abordagem diferente.</div>
+    </div>
+  </div>
+
+  <div class="persona-grid">
+    <div class="persona-card">
+      <div class="pc-tag">Persona A</div>
+      <div class="pc-name">O curioso do queijo bom</div>
+      <div class="pc-field"><div class="pcf-label">Perfil</div><div class="pcf-val">PF consumo próprio, Sul do país — o maior grupo.</div></div>
+      <div class="pc-field"><div class="pcf-label">Comportamento</div><div class="pcf-val mut">Quer experimentar; tende à meia peça; pergunta como conservar (sinal forte de intenção).</div></div>
+      <div class="pc-field"><div class="pcf-label">No dado</div><div class="pcf-val mut">Norte do PR perguntou como manter a qualidade por 4 meses.</div></div>
+    </div>
+
+    <div class="persona-card">
+      <div class="pc-tag">Persona B</div>
+      <div class="pc-name">O aficionado gourmet</div>
+      <div class="pc-field"><div class="pcf-label">Perfil</div><div class="pcf-val">PF que aprecia queijo de verdade — alto valor de recompra.</div></div>
+      <div class="pc-field"><div class="pcf-label">Comportamento</div><div class="pcf-val mut">Cita maasdam, gruyère; valoriza os cristais de maturação; compra por prazer.</div></div>
+      <div class="pc-field"><div class="pcf-label">No dado</div><div class="pcf-val mut">Porto Alegre: "compro quando acabar o queijo que tenho em casa".</div></div>
+    </div>
+
+    <div class="persona-card">
+      <div class="pc-tag">Persona C</div>
+      <div class="pc-name">Quem trava no volume</div>
+      <div class="pc-field"><div class="pcf-label">Perfil</div><div class="pcf-val">PF que quer 1kg e não os 2,5kg da meia peça.</div></div>
+      <div class="pc-field"><div class="pcf-label">Comportamento</div><div class="pcf-val mut">Tenta "juntar com alguém para comprar". Demanda perdida por falta de formato menor.</div></div>
+      <div class="pc-field"><div class="pcf-label">No dado</div><div class="pcf-val mut">Cliente do RS pediu 1kg e recuou no mínimo.</div></div>
+    </div>
+
+    <div class="persona-card">
+      <div class="pc-tag">Persona D</div>
+      <div class="pc-name">Revenda pequena</div>
+      <div class="pc-field"><div class="pcf-label">Perfil</div><div class="pcf-val">Empório, cave, mercearia fina — PJ.</div></div>
+      <div class="pc-field"><div class="pcf-label">Comportamento</div><div class="pcf-val mut">Foco em margem; compara com Scala, Quatá, Conaprole; negocia; fecha com concessão.</div></div>
+      <div class="pc-field"><div class="pcf-label">No dado</div><div class="pcf-val mut">Empório da Daiane (fechou) e Cave do Queijo (negociando).</div></div>
+    </div>
+
+    <div class="persona-card">
+      <div class="pc-tag">Persona E</div>
+      <div class="pc-name">Revenda maior / atacado</div>
+      <div class="pc-field"><div class="pcf-label">Perfil</div><div class="pcf-val">PJ que busca preço de volume e já tem fornecedor.</div></div>
+      <div class="pc-field"><div class="pcf-label">Comportamento</div><div class="pcf-val mut">Difícil de bater no preço; trava/perde por margem.</div></div>
+      <div class="pc-field"><div class="pcf-label">No dado</div><div class="pcf-val mut">Anderson (mercado de SP) e Gilberto perderam no preço.</div></div>
+    </div>
+
+    <div class="persona-card">
+      <div class="pc-tag">Persona F</div>
+      <div class="pc-name">Cliente local de Videira</div>
+      <div class="pc-field"><div class="pcf-label">Perfil</div><div class="pcf-val">Retira direto na fábrica — sem frete.</div></div>
+      <div class="pc-field"><div class="pcf-label">Comportamento</div><div class="pcf-val mut">Barreira menor, ticket mais fácil. Hoje subaproveitado.</div></div>
+      <div class="pc-field"><div class="pcf-label">No dado</div><div class="pcf-val mut">Clientes de Videira e quem "tem gente que passa por Videira".</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 03 · OBJEÇÕES ══ -->
+<div class="sec" id="s03">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b02);">03</div>
+    <div>
+      <div class="block-eyebrow" style="color:var(--b02);">Bloco 03 · Barreiras</div>
+      <div class="block-title">Objeções Mapeadas</div>
+      <div class="block-desc">As barreiras que aparecem repetidamente na hora da decisão — em ordem de impacto no fechamento.</div>
+    </div>
+  </div>
+
+  <table class="comp">
+    <thead><tr><th style="width:26%">Objeção</th><th style="width:38%">Onde aparece</th><th>Leitura estratégica</th></tr></thead>
+    <tbody>
+      <tr><td>Preço na revenda (B2B)</td><td>Concorrente mais barato; "está salgado" para a margem</td><td>Objeção B2B nº 1 — resolve-se com condição de 1ª compra, não com tabela cheia</td></tr>
+      <tr><td>Volume mínimo alto (PF)</td><td>Meia peça de 2,5kg é muito para consumo individual</td><td>Bloqueia um segmento inteiro; há formato fracionado ocioso para resolver</td></tr>
+      <tr><td>Frete + isopor</td><td>Frete R$55–76 <em>mais</em> R$21 de isopor à parte</td><td>~30% de acréscimo numa meia peça; o isopor destacado soa como custo extra</td></tr>
+      <tr><td>Timing do cliente</td><td>"Vou ver com a família", "estou viajando", "quando acabar meu estoque"</td><td>Não é rejeição — é momento. Pede nutrição, não desconto</td></tr>
+      <tr><td>Confiança / garantia</td><td>"Que garantia eu tenho?" antes de pagar</td><td>Perecível caro pela internet gera insegurança — precisa de argumento pronto</td></tr>
+      <tr><td>Transparência de preço</td><td>"O preço do WhatsApp é diferente do Facebook?"</td><td>Resposta vaga reforça desconfiança em vez de resolver</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══ 04 · GAPS ══ -->
+<div class="sec" id="s04">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--gap);">04</div>
+    <div>
+      <div class="block-eyebrow" style="color:var(--gap);">Bloco 04 · Barreiras</div>
+      <div class="block-title">Gaps Operacionais</div>
+      <div class="block-desc">O bloco mais acionável. Não são problemas de produto — são de processo, e cada um está custando venda de tráfego já pago.</div>
+    </div>
+  </div>
+
+  <div class="item"><div class="item-num">01</div><div><div class="item-t">Lentidão &amp; leads que esfriam</div><div class="item-d">Recorrente e caro. Um lead quente pediu "não esquece de mim por favor" e ficou esperando; outro pediu frete e a informação simplesmente não foi enviada na 1ª vez, só dias depois com desculpas. Cada hora de silêncio num lead de anúncio pago é mídia desperdiçada.</div></div></div>
+  <div class="item"><div class="item-num">02</div><div><div class="item-t">Automação disparando fora de hora</div><div class="item-d">O menu "digite 1 Oeste Catarinense / 2 Litoral" aparece no meio de conversas já humanizadas, depois de venda praticamente fechada e até como última mensagem. A régua do bot não está sincronizada com o atendimento humano.</div></div></div>
+  <div class="item"><div class="item-num">03</div><div><div class="item-t">Inconsistência de marca</div><div class="item-d">A saudação diz "Fratte Indústria Láctea", mas a pergunta de origem cita "Queijos Campestre" e o Instagram enviado é @queijoscampestre. Para o cliente, parecem duas empresas. Falta decidir a marca de frente e alinhar todo o script a ela.</div></div></div>
+  <div class="item"><div class="item-num">04</div><div><div class="item-t">Catálogo &amp; preço inconsistentes</div><div class="item-d">Ora só 12 meses, ora entram 6m, 18m, montanhês, mussarela; ora preço por kg, ora valor fechado (ex.: "peça inteira R$698"). O cliente não recebe a mesma informação, o que dificulta padronização e comparação.</div></div></div>
+  <div class="item"><div class="item-num">05</div><div><div class="item-t">Atrito do CPF antecipado</div><div class="item-d">A transportadora passou a exigir CPF para calcular frete, e isso é pedido cedo demais — antes de o cliente decidir. Pedir documento antes de gerar valor aumenta o abandono.</div></div></div>
+  <div class="item"><div class="item-num">06</div><div><div class="item-t">Frete reativo, não proativo</div><div class="item-d">Muitas vezes o frete só é calculado quando o cliente insiste. Deveria já sair junto da tabela para as regiões mais frequentes do Sul, encurtando o ciclo.</div></div></div>
+  <div class="item"><div class="item-num">07</div><div><div class="item-t">Follow-up genérico</div><div class="item-d">A retomada de 30/06 foi disparada em massa, igual para todos. Funciona como lembrete, mas não personaliza por objeção nem cria urgência.</div></div></div>
+</div>
+
+<!-- ══ 05 · O QUE FUNCIONA ══ -->
+<div class="sec" id="s05">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--ok);">05</div>
+    <div>
+      <div class="block-eyebrow" style="color:var(--ok);">Bloco 05 · Ativos</div>
+      <div class="block-title">O que Já Funciona</div>
+      <div class="block-desc">Os acertos do atendimento atual — para manter, padronizar e escalar, não reinventar.</div>
+    </div>
+  </div>
+
+  <div class="item ok"><div class="item-num">✓</div><div><div class="item-t">Educação de produto de qualidade</div><div class="item-d">A explicação dos cristais de maturação (textura crocante, tempo de cura, característica valorizada) encanta e diferencia. Ótimo ativo de conteúdo.</div></div></div>
+  <div class="item ok"><div class="item-num">✓</div><div><div class="item-t">Narrativa artesanal</div><div class="item-d">"Método tradicional, leite selecionado, bacia leiteira de Videira" posiciona valor acima do preço.</div></div></div>
+  <div class="item ok"><div class="item-num">✓</div><div><div class="item-t">Pós-venda de verdade</div><div class="item-d">No caso do empório houve confirmação de entrega e checagem de condição do produto. Excelente — gera recompra e prova social.</div></div></div>
+  <div class="item ok"><div class="item-num">✓</div><div><div class="item-t">Flexibilidade de negociação B2B</div><div class="item-d">Baixar de R$553 para R$540 fechou a venda. Pequenas concessões destravam revenda.</div></div></div>
+  <div class="item ok"><div class="item-num">✓</div><div><div class="item-t">Reserva da peça</div><div class="item-d">"Vou deixar reservado para você" cria compromisso e ancora o fechamento.</div></div></div>
+  <div class="item ok"><div class="item-num">✓</div><div><div class="item-t">Prova social disponível</div><div class="item-d">Envio de link do Mercado Livre e do Instagram ajuda quem precisa "ver" antes de confiar.</div></div></div>
+</div>
+
+<!-- ══ 06 · CAMPANHA ══ -->
+<div class="sec" id="s06">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--b04);">06</div>
+    <div>
+      <div class="block-eyebrow" style="color:var(--b04);">Bloco 06 · Ação</div>
+      <div class="block-title">Insights de Campanha</div>
+      <div class="block-desc">O que o diagnóstico abre como direção de comunicação e mídia.</div>
+    </div>
+  </div>
+
+  <div class="item camp"><div class="item-num">01</div><div><div class="item-t">Segmentar o anúncio por persona</div><div class="item-d">Hoje um único criativo (12m, 4,7kg, PF) atende todo mundo e desalinha expectativa. Trilhas separadas: PF/experimentar (meia peça, conservação), PF gourmet (cristais, 18 meses, tábua/presente) e Revenda/PJ (margem, exclusividade regional, condição de 1ª compra).</div></div></div>
+  <div class="item camp"><div class="item-num">02</div><div><div class="item-t">Transformar a objeção de volume em campanha</div><div class="item-d">A Fratte já tem parmesão 6m fracionado (250g/500g) e montanhês fracionado. Um criativo de kit degustação / porção menor abre o segmento de PF que hoje desiste no mínimo de 2,5kg.</div></div></div>
+  <div class="item camp"><div class="item-num">03</div><div><div class="item-t">Frete como previsibilidade</div><div class="item-d">O choque de frete some quando o preço é comunicado fechado ("tudo incluso") para as regiões-chave do Sul. Campanha do tipo "queijo + entrega a partir de R$X para SC/RS/PR" reduz atrito.</div></div></div>
+  <div class="item camp"><div class="item-num">04</div><div><div class="item-t">Vender a confiança do perecível</div><div class="item-d">Embalagem em isopor/caixa térmica, entrega em ~48h e histórico de entregas viram pilar de campanha — hoje ficam soltos no meio da conversa. "Chega perfeito ou resolvemos".</div></div></div>
+  <div class="item camp"><div class="item-num">05</div><div><div class="item-t">Explorar a herança de marca</div><div class="item-d">Um cliente reconheceu a família Salmoria por trás da fábrica e isso criou conexão imediata. Origem e história são diferencial de conteúdo, sobretudo no Sul.</div></div></div>
+  <div class="item camp"><div class="item-num">06</div><div><div class="item-t">Ativar a retirada local em Videira</div><div class="item-d">Público local e "quem passa por Videira" é conversão barata (sem frete). Merece comunicação própria de loja de fábrica.</div></div></div>
+</div>
+
+<!-- ══ 07 · RECOMENDAÇÕES ══ -->
+<div class="sec" id="s07">
+  <div class="block-header">
+    <div class="block-number" style="color:var(--rec);">07</div>
+    <div>
+      <div class="block-eyebrow" style="color:var(--rec);">Bloco 07 · Ação</div>
+      <div class="block-title">Recomendações Priorizadas</div>
+      <div class="block-desc">Separadas por esforço: o que dá para atacar em dias e o que estrutura o processo em semanas.</div>
+    </div>
+  </div>
+
+  <h4 class="mini" style="color:var(--rec);">Quick wins — dias, baixo esforço</h4>
+  <div class="item rec"><div class="item-num">01</div><div><div class="item-t">Definir SLA de resposta</div><div class="item-d">1ª resposta em ≤15 min no horário comercial para leads de anúncio. É o que mais está custando venda.</div></div></div>
+  <div class="item rec"><div class="item-num">02</div><div><div class="item-t">Corrigir/silenciar a automação</div><div class="item-d">Impedir o menu de região de disparar no meio ou no fim de conversas humanas.</div></div></div>
+  <div class="item rec"><div class="item-num">03</div><div><div class="item-t">Padronizar um único script de catálogo + preço</div><div class="item-d">Mesma tabela sempre, com frete das regiões do Sul já embutido nas opções mais comuns.</div></div></div>
+  <div class="item rec"><div class="item-num">04</div><div><div class="item-t">Resolver a marca</div><div class="item-d">Decidir entre Fratte e Queijos Campestre como nome de frente e alinhar saudação, pergunta de origem e Instagram.</div></div></div>
+  <div class="item rec"><div class="item-num">05</div><div><div class="item-t">Adiar o pedido de CPF</div><div class="item-d">Pedir no momento do fechamento, não na cotação.</div></div></div>
+
+  <h4 class="mini" style="color:var(--rec);">Estruturais — semanas</h4>
+  <div class="item rec"><div class="item-num">06</div><div><div class="item-t">Segmentar campanhas por persona</div><div class="item-d">Criativos e mensagens pré-preenchidas distintas para PF experimentar, PF gourmet e PJ revenda.</div></div></div>
+  <div class="item rec"><div class="item-num">07</div><div><div class="item-t">Criar/promover formato menor</div><div class="item-d">Fracionado / kit degustação para destravar o PF que trava no volume mínimo.</div></div></div>
+  <div class="item rec"><div class="item-num">08</div><div><div class="item-t">Padronizar o pós-venda</div><div class="item-d">Confirmação de entrega + checagem + convite à recompra/indicação como processo, não exceção.</div></div></div>
+  <div class="item rec"><div class="item-num">09</div><div><div class="item-t">Régua de follow-up por objeção</div><div class="item-d">Timing → lembrete com prazo; preço revenda → condição de 1ª compra; volume → oferta de fracionado.</div></div></div>
+  <div class="item rec"><div class="item-num">10</div><div><div class="item-t">Argumentário de garantia/confiança</div><div class="item-d">Documentado e usado proativamente com quem compra à distância.</div></div></div>
+
+  <div class="essence-box">
+    <div class="eb2-label">Em uma frase</div>
+    <div class="eb2-text">O produto encanta e a narrativa vende. O que falta é velocidade e consistência de processo — resolver isso destrava mais venda do que qualquer desconto.</div>
+  </div>
+</div>
+
+</main>
+
+<script>
+const links=document.querySelectorAll('.sb-link');
+const secs=document.querySelectorAll('.sec[id], .capa[id]');
+const io=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){links.forEach(l=>l.classList.remove('on'));const a=document.querySelector('.sb-link[href="#'+x.target.id+'"]');if(a)a.classList.add('on');}});},{threshold:.25,rootMargin:'-20% 0px -60% 0px'});
+secs.forEach(s=>io.observe(s));
+</script>
+</body>
+</html>

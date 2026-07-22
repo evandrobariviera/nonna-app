@@ -233,4 +233,24 @@ class Client extends Model
     {
         return $this->contacts()->wherePivot('is_primary', true)->first();
     }
+
+    public function integrations(): HasMany
+    {
+        return $this->hasMany(ClientIntegration::class);
+    }
+
+    public function serviceConversations(): HasMany
+    {
+        return $this->hasMany(ServiceConversation::class);
+    }
+
+    public function serviceDiagnostics(): HasMany
+    {
+        return $this->hasMany(ServiceDiagnostic::class)->orderByDesc('version');
+    }
+
+    public function currentServiceDiagnostic(): ?ServiceDiagnostic
+    {
+        return $this->serviceDiagnostics()->where('status', 'published')->first();
+    }
 }
