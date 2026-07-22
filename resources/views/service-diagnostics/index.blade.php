@@ -18,32 +18,25 @@
         @else
             <div class="flex flex-col gap-6">
                 @foreach($integrations as $clientName => $clientIntegrations)
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="text-sm font-bold" style="color:var(--text)">{{ $clientName }}</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="grid gap-3">
-                                @foreach($clientIntegrations as $integration)
-                                    <a href="{{ route('service-diagnostics.integration', $integration) }}"
-                                       class="flex items-center justify-between px-4 py-3 transition-colors"
-                                       style="border:1px solid var(--border2); border-radius:8px;">
-                                        <div class="flex items-center gap-3">
-                                            <span class="h-8 w-8 rounded flex items-center justify-center text-xs font-black flex-shrink-0"
-                                                  style="background:var(--s3); color:var(--purple)">
-                                                📱
-                                            </span>
-                                            <div>
-                                                <div class="text-sm font-semibold" style="color:var(--text)">{{ $integration->label }}</div>
-                                                <div class="text-xs font-mono" style="color:var(--muted)">{{ $integration->providerLabel() }} · {{ $integration->statusLabel() }}</div>
-                                            </div>
-                                        </div>
-                                        <div class="text-xs font-mono" style="color:var(--muted)">
-                                            {{ $integration->diagnostics_count }} diagnóstico{{ $integration->diagnostics_count !== 1 ? 's' : '' }} →
-                                        </div>
-                                    </a>
-                                @endforeach
-                            </div>
+                    <div>
+                        <h3 class="text-xs font-mono uppercase tracking-widest mb-3" style="color:var(--muted)">{{ $clientName }}</h3>
+                        <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(140px, 1fr))">
+                            @foreach($clientIntegrations as $integration)
+                                <a href="{{ route('service-diagnostics.integration', $integration) }}"
+                                   class="card p-4 flex flex-col items-center justify-center text-center transition-colors"
+                                   style="aspect-ratio: 1">
+                                    <span class="text-2xl mb-2">📱</span>
+                                    <p class="text-sm font-bold" style="color:var(--text)">{{ $integration->label }}</p>
+                                    <p class="text-xs mt-1" style="color:var(--muted)">
+                                        {{ $integration->diagnostics_count }} diagnóstico{{ $integration->diagnostics_count !== 1 ? 's' : '' }}
+                                    </p>
+                                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full mt-2"
+                                          style="background: {{ $integration->isConnected() ? 'rgba(5,150,105,.1)' : 'var(--s3)' }};
+                                                 color: {{ $integration->isConnected() ? 'var(--green)' : 'var(--muted)' }}">
+                                        {{ $integration->statusLabel() }}
+                                    </span>
+                                </a>
+                            @endforeach
                         </div>
                     </div>
                 @endforeach
