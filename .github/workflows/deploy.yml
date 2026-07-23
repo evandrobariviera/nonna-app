@@ -40,6 +40,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # A cada deploy o Swarm baixa a imagem nova mas nunca apaga a antiga no
+      # próprio servidor — ela fica órfã (dangling, tag <none>) e nunca mais
+      # sai de lá. `docker image prune -f` só remove imagens sem tag e sem
+      # nenhum container usando (nunca a que o container em transição ainda
+      # usa), então é seguro rodar logo depois do update.
       - name: Deploy no Swarm via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -53,6 +58,7 @@ jobs:
               --image ghcr.io/evandrobariviera/nonna-app:latest \
               --with-registry-auth \
               nonna-app_app
+            docker image prune -f
 
       # Cada push cria uma tag `sha-<commit>` nova (além de `latest`) e nada
       # nunca apagava as antigas — acumulou 225+ versões no ghcr.io. Mantém só
