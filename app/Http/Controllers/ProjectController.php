@@ -40,6 +40,10 @@ class ProjectController extends Controller
             $clientId   = $p->client_id ?? $p->macroPlan?->client_id;
             $hasPlan    = (bool) $p->macro_plan_id;
 
+            $deadlineOverdue = $p->end_date
+                && $p->end_date->isPast()
+                && !in_array($p->status, ['concluido', 'cancelado']);
+
             return [
                 'id'               => $p->id,
                 'title'            => $p->title,
@@ -47,6 +51,9 @@ class ProjectController extends Controller
                 'status'           => $p->status,
                 'status_label'     => $p->statusLabel(),
                 'status_color'     => $p->statusColor(),
+                'start_date'       => $p->start_date?->format('d/m/y'),
+                'end_date'         => $p->end_date?->format('d/m/y'),
+                'deadline_overdue' => $deadlineOverdue,
                 'type'             => $p->type ?? 'projeto',
                 'type_label'       => $p->typeLabel(),
                 'type_color'       => $p->typeColor(),
@@ -87,10 +94,15 @@ class ProjectController extends Controller
         ];
 
         return view('projects.dashboard', [
-            'projectsJson'  => $data->values()->toJson(),
-            'macroplansJson'=> $macroplans->toJson(),
-            'clients'       => $clients,
-            'stats'         => $stats,
+            'projectsJson'         => $data->values()->toJson(),
+            'macroplansJson'       => $macroplans->toJson(),
+            'clients'              => $clients,
+            'stats'                => $stats,
+            'statusOptionsJson'    => collect(Project::$statuses)
+                ->map(fn ($s, $key) => ['key' => $key, 'label' => $s['label'], 'color' => $s['color']])
+                ->values()
+                ->toJson(),
+            'disciplineLabelsJson' => collect(Project::$disciplines)->toJson(),
         ]);
     }
 

@@ -91,4 +91,17 @@ class ContractController extends Controller
         return redirect()->route('clients.show', [$client, 'tab' => 'contratos'])
             ->with('success', 'Contrato removido.');
     }
+
+    // Edição rápida de status direto na listagem, sem abrir o form completo
+    // de edição do contrato (mesmo padrão de MeetingController::updateStatus()).
+    public function updateStatus(Request $request, Client $client, Contract $contract)
+    {
+        $data = $request->validate([
+            'status' => 'required|in:' . implode(',', array_keys(Contract::$statuses)),
+        ]);
+
+        $contract->update($data);
+
+        return redirect()->back()->with('success', 'Status atualizado.');
+    }
 }

@@ -100,9 +100,8 @@
                                    class="hover:underline">{{ $contract->client->company_name }}</a>
                             </td>
                             <td class="text-[var(--text)]">{{ $contract->title }}</td>
-                            <td>
-                                <span class="badge badge-{{ $contract->statusColor() }}">{{ $contract->statusLabel() }}</span>
-                            </td>
+                            <x-status-dropdown-cell :options="\App\Models\Contract::$statuses" :current="$contract->status"
+                                :action="route('clients.contracts.update-status', [$contract->client, $contract])" :width="130" />
                             <td class="text-xs {{ $isVencido ? 'font-semibold' : '' }}" style="color:{{ $isVencido ? 'var(--red)' : 'var(--muted)' }}">
                                 {{ $contract->periodLabel() }}
                                 @if($isVencido) · vencido @endif

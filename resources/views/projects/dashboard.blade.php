@@ -2,7 +2,7 @@
     <x-slot name="header">Projetos & Campanhas</x-slot>
 
     <div
-        x-data="projectDashboard({{ $projectsJson }}, {{ $macroplansJson }})"
+        x-data="projectDashboard({{ $projectsJson }}, {{ $macroplansJson }}, {{ $statusOptionsJson }}, {{ $disciplineLabelsJson }})"
         x-init="init()"
         x-cloak
     >
@@ -123,6 +123,17 @@
                 </div>
             </div>
 
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-mono" style="color:var(--muted)">Agrupar:</span>
+                <select x-model="groupBy"
+                    class="px-3 py-2 text-xs focus:outline-none"
+                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    <template x-for="opt in groupOptions" :key="opt.key">
+                        <option :value="opt.key" x-text="opt.label"></option>
+                    </template>
+                </select>
+            </div>
+
             <button @click="showClosed = !showClosed; applyFilters()"
                 class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 transition-all"
                 :style="showClosed
@@ -176,57 +187,98 @@
                             <th>Cliente</th>
                             <th>Projeto</th>
                             <th>Planejamento</th>
+                            <th>Período</th>
                             <th>Status</th>
                             <th>Progresso</th>
                             <th>Tarefas</th>
                             <th></th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <template x-for="p in filtered" :key="p.id">
-                            <tr :class="p.has_overdue ? 'row-overdue' : ''">
-                                <td class="font-mono" x-text="p.client_name" style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap"></td>
-                                <td style="max-width:320px">
-                                    <div class="flex items-center gap-2">
-                                        <span class="badge text-xs font-bold flex-shrink-0" :class="'badge-' + p.type_color" x-text="p.type_label"></span>
-                                        <a :href="p.url" class="font-semibold truncate" style="color:var(--text)" x-text="p.title"
-                                           onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'"></a>
-                                        <span x-show="p.has_overdue" title="Tem tarefas atrasadas">⚠</span>
-                                    </div>
-                                </td>
-                                <td class="truncate" style="max-width:180px; color:var(--muted2)" x-text="p.macroplan_title !== '—' ? p.macroplan_title : '—'"></td>
-                                <td><span class="badge text-xs" :class="'badge-' + p.status_color" x-text="p.status_label"></span></td>
-                                <td style="min-width:120px">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-16 h-1.5 rounded-full overflow-hidden flex-shrink-0" style="background:var(--border2)">
-                                            <div class="h-1.5 rounded-full" :style="'width:' + p.progress + '%; background:' + (p.progress === 100 ? 'var(--green)' : 'var(--grad)')"></div>
+                    <template x-for="group in displayGroups()" :key="group.key">
+                        <tbody>
+                                <tr x-show="group.label">
+                                    <td colspan="8" class="text-xs font-bold font-mono uppercase tracking-widest"
+                                        style="background:var(--s2); color:var(--muted)"
+                                        x-text="group.label + ' (' + group.items.length + ')'"></td>
+                                </tr>
+                                <template x-for="p in group.items" :key="p.id">
+                                <tr :class="p.has_overdue ? 'row-overdue' : ''">
+                                    <td class="font-mono" x-text="p.client_name" style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap"></td>
+                                    <td style="max-width:320px">
+                                        <div class="flex items-center gap-2">
+                                            <span class="badge text-xs font-bold flex-shrink-0" :class="'badge-' + p.type_color" x-text="p.type_label"></span>
+                                            <a :href="p.url" class="font-semibold truncate" style="color:var(--text)" x-text="p.title"
+                                               onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'"></a>
+                                            <span x-show="p.has_overdue" title="Tem tarefas atrasadas">⚠</span>
                                         </div>
-                                        <span class="text-xs font-mono" style="color:var(--muted)" x-text="p.progress + '%'"></span>
-                                    </div>
-                                </td>
-                                <td class="text-xs font-mono" style="color:var(--muted)" x-text="p.done_tasks + '/' + p.total_tasks"></td>
-                                <td class="row-actions">
-                                    <div class="flex items-center gap-2 justify-end">
-                                        <button @click="openEdit(p)" style="color:var(--muted)"
-                                            onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'"
-                                            title="Editar">
-                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                                            </svg>
+                                    </td>
+                                    <td class="truncate" style="max-width:180px; color:var(--muted2)" x-text="p.macroplan_title !== '—' ? p.macroplan_title : '—'"></td>
+                                    <td class="text-xs font-mono whitespace-nowrap" :style="p.deadline_overdue ? 'color:var(--red); font-weight:600' : 'color:var(--muted2)'">
+                                        <span x-show="!p.start_date && !p.end_date">—</span>
+                                        <span x-text="p.start_date"></span><span x-show="p.start_date && p.end_date"> → </span><span x-text="p.end_date"></span>
+                                    </td>
+                                    <td class="monday-fill-td relative" style="width:150px" x-data="{ open: false, style: '' }">
+                                        <button type="button" @click="open = !open; style = dropdownStyle($el, 'bottom-left')"
+                                            style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+                                                   gap:4px; color:#fff; font-size:11px; font-weight:700; cursor:pointer; border:none; overflow:hidden"
+                                            :style="'background:' + colorHex(p.status_color)">
+                                            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:calc(100% - 20px)" x-text="p.status_label"></span>
+                                            <span style="opacity:.8; flex-shrink:0">▾</span>
                                         </button>
-                                        <a :href="p.url" class="text-xs font-bold font-mono" style="color:var(--purple)">Abrir →</a>
-                                    </div>
-                                </td>
-                            </tr>
-                        </template>
-                    </tbody>
+                                        <template x-teleport="body">
+                                            <div x-show="open" @click.outside="open = false" x-close-on-scroll="open" x-cloak
+                                                 class="rounded shadow-lg py-1"
+                                                 :style="style + 'background:var(--s1); border:1px solid var(--border2); min-width:190px'">
+                                                <template x-for="opt in statusOptions" :key="opt.key">
+                                                    <button type="button" @click="quickSetStatus(p, opt.key); open = false"
+                                                        class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
+                                                        :style="p.status === opt.key ? 'color:var(--purple)' : 'color:var(--text)'"
+                                                        onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                                                        <span class="inline-block w-2 h-2 rounded-full flex-shrink-0" :style="'background:' + colorHex(opt.color)"></span>
+                                                        <span x-text="opt.label"></span>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </td>
+                                    <td style="min-width:120px">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-16 h-1.5 rounded-full overflow-hidden flex-shrink-0" style="background:var(--border2)">
+                                                <div class="h-1.5 rounded-full" :style="'width:' + p.progress + '%; background:' + (p.progress === 100 ? 'var(--green)' : 'var(--grad)')"></div>
+                                            </div>
+                                            <span class="text-xs font-mono" style="color:var(--muted)" x-text="p.progress + '%'"></span>
+                                        </div>
+                                    </td>
+                                    <td class="text-xs font-mono" style="color:var(--muted)" x-text="p.done_tasks + '/' + p.total_tasks"></td>
+                                    <td class="row-actions">
+                                        <div class="flex items-center gap-2 justify-end">
+                                            <button @click="openEdit(p)" style="color:var(--muted)"
+                                                onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'"
+                                                title="Editar">
+                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                                </svg>
+                                            </button>
+                                            <a :href="p.url" class="text-xs font-bold font-mono" style="color:var(--purple)">Abrir →</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </template>
                 </table>
             </div>
         </div>
 
         {{-- ── GRID DE CARDS ───────────────────────────────────────────────── --}}
         <div x-show="viewMode === 'cards' && filtered.length > 0" class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr))">
-            <template x-for="p in filtered" :key="p.id">
+            <template x-for="group in displayGroups()" :key="group.key">
+            <div class="contents">
+                <div x-show="group.label" class="col-span-full">
+                    <p class="text-xs font-bold font-mono uppercase tracking-widest px-1 mt-2 mb-1" style="color:var(--muted)"
+                       x-text="group.label + ' (' + group.items.length + ')'"></p>
+                </div>
+            <template x-for="p in group.items" :key="p.id">
                 <div class="card flex flex-col relative"
                      :style="typeTopBorder(p) + urgencyLeftBorder(p)">
 
@@ -258,13 +310,34 @@
                         </div>
 
                         {{-- Badges tipo + status --}}
-                        <div class="flex items-center gap-1.5 mb-1.5">
+                        <div class="flex items-center gap-1.5 mb-1.5" x-data="{ open: false, style: '' }">
                             <span class="badge text-xs font-bold"
                                   :class="'badge-' + p.type_color"
                                   x-text="p.type_label"></span>
-                            <span class="badge text-xs"
-                                  :class="'badge-' + p.status_color"
-                                  x-text="p.status_label"></span>
+
+                            <span class="relative inline-block">
+                                <button type="button" @click="open = !open; style = dropdownStyle($el, 'bottom-left')"
+                                    class="badge text-xs font-bold"
+                                    style="border:none; cursor:pointer"
+                                    :style="'background:' + colorHex(p.status_color) + '; color:#fff'">
+                                    <span x-text="p.status_label"></span> ▾
+                                </button>
+                                <template x-teleport="body">
+                                    <div x-show="open" @click.outside="open = false" x-close-on-scroll="open" x-cloak
+                                         class="rounded shadow-lg py-1"
+                                         :style="style + 'background:var(--s1); border:1px solid var(--border2); min-width:190px'">
+                                        <template x-for="opt in statusOptions" :key="opt.key">
+                                            <button type="button" @click="quickSetStatus(p, opt.key); open = false"
+                                                class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
+                                                :style="p.status === opt.key ? 'color:var(--purple)' : 'color:var(--text)'"
+                                                onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                                                <span class="inline-block w-2 h-2 rounded-full flex-shrink-0" :style="'background:' + colorHex(opt.color)"></span>
+                                                <span x-text="opt.label"></span>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </template>
+                            </span>
                         </div>
 
                         {{-- Cliente --}}
@@ -274,8 +347,15 @@
                         <h3 class="font-bold text-sm leading-snug mb-1 pr-6" style="color:var(--text)" x-text="p.title"></h3>
 
                         {{-- Planejamento --}}
-                        <p class="text-xs mb-3 truncate" style="color:var(--muted2)"
+                        <p class="text-xs mb-1 truncate" style="color:var(--muted2)"
                            x-text="p.macroplan_title !== '—' ? '[ROADMAP] ' + p.macroplan_title : 'Sem planejamento'"></p>
+
+                        {{-- Período --}}
+                        <p class="text-xs font-mono mb-3" x-show="p.start_date || p.end_date"
+                           :style="p.deadline_overdue ? 'color:var(--red); font-weight:600' : 'color:var(--muted)'">
+                            <span x-text="p.start_date"></span><span x-show="p.start_date && p.end_date"> → </span><span x-text="p.end_date"></span>
+                            <span x-show="p.deadline_overdue"> · vencido</span>
+                        </p>
 
                         {{-- Disciplinas --}}
                         <div class="flex flex-wrap gap-1 mb-3" x-show="p.discipline_labels.length > 0">
@@ -342,6 +422,8 @@
 
                 </div>
             </template>
+            </div>
+            </template>
         </div>
 
         {{-- ── MODAL DE EDIÇÃO RÁPIDA ──────────────────────────────────────── --}}
@@ -381,19 +463,6 @@
                         </div>
                     </div>
 
-                    {{-- Status --}}
-                    <div>
-                        <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Status</label>
-                        <select x-model="editForm.status"
-                            class="w-full px-3 py-2 text-xs focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                            @foreach(\App\Models\Project::$statuses as $key => $s)
-                                @continue($key === 'cancelado')
-                                <option value="{{ $key }}">{{ $s['label'] }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
                     {{-- Planejamento --}}
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Planejamento (Roadmap)</label>
@@ -426,10 +495,12 @@
     </div>{{-- /x-data --}}
 
     <script>
-    function projectDashboard(projects, macroplans) {
+    function projectDashboard(projects, macroplans, statusOptions, disciplineLabels) {
         return {
             all: projects,
             macroplans: macroplans,
+            statusOptions: statusOptions,
+            disciplineLabels: disciplineLabels,
             filtered: [],
             search: '',
             filterType: '',
@@ -440,12 +511,13 @@
             filterNotStarted: false,
             showClosed: false,
             sortBy: 'urgency',
+            groupBy: '',
             viewMode: localStorage.getItem('projectsViewMode') || 'cards',
 
             editOpen: false,
             editSaving: false,
             editTarget: null,
-            editForm: { type: 'projeto', status: 'em_planejamento', macro_plan_id: '' },
+            editForm: { type: 'projeto', macro_plan_id: '' },
 
             sortOptions: [
                 { key: 'urgency',       label: 'Urgência' },
@@ -454,6 +526,83 @@
                 { key: 'client',        label: 'Cliente A–Z' },
                 { key: 'recent',        label: 'Recente' },
             ],
+
+            groupOptions: [
+                { key: '',           label: 'Sem agrupamento' },
+                { key: 'client',     label: 'Cliente' },
+                { key: 'discipline', label: 'Disciplina' },
+                { key: 'status',     label: 'Status' },
+            ],
+
+            // Mesmo mapeamento semântico de cor usado em Task::colorHex() (PHP)
+            // — aqui em JS porque esta tela é 100% renderizada via Alpine/JSON,
+            // não tem loop do servidor pra rodar o helper PHP.
+            colorHex(color) {
+                const map = {
+                    green: '#059669', blue: '#2563eb', purple: '#6A5ACD',
+                    orange: '#FF8C00', red: '#dc2626', yellow: '#d97706',
+                    teal: '#0d9488', cyan: '#0891b2', muted: '#94a3b8',
+                };
+                return map[color] || '#94a3b8';
+            },
+
+            // Agrupa this.filtered em { key, label, items }[]. Sem agrupamento
+            // (groupBy === ''), devolve um único grupo sem cabeçalho — assim o
+            // template sempre itera grupo→item, sem duplicar o markup da linha/card.
+            displayGroups() {
+                if (!this.groupBy) {
+                    return [{ key: '__all__', label: null, items: this.filtered }];
+                }
+
+                const groups = {};
+                const pushTo = (key, label, p) => {
+                    if (!groups[key]) groups[key] = { key, label, items: [] };
+                    groups[key].items.push(p);
+                };
+
+                for (const p of this.filtered) {
+                    if (this.groupBy === 'discipline') {
+                        const list = p.disciplines.length ? p.disciplines : ['__sem_disciplina__'];
+                        for (const d of list) {
+                            pushTo(d, d === '__sem_disciplina__' ? 'Sem disciplina' : (this.disciplineLabels[d] || d), p);
+                        }
+                    } else if (this.groupBy === 'status') {
+                        pushTo(p.status, p.status_label, p);
+                    } else {
+                        pushTo(p.client_id || '__sem_cliente__', p.client_name, p);
+                    }
+                }
+
+                return Object.values(groups).sort((a, b) => a.label.localeCompare(b.label));
+            },
+
+            // Troca só o status, direto do dropdown inline da tabela/card —
+            // reaproveita a mesma rota de projects.quickUpdate já usada pelo
+            // modal de edição, só que enviando um único campo.
+            async quickSetStatus(p, statusKey) {
+                try {
+                    const res = await fetch(p.edit_url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                            'X-HTTP-Method-Override': 'PATCH',
+                        },
+                        body: JSON.stringify({ _method: 'PATCH', status: statusKey }),
+                    });
+                    const json = await res.json();
+                    if (json.success) {
+                        Object.assign(p, {
+                            status:       json.status,
+                            status_label: json.status_label,
+                            status_color: json.status_color,
+                        });
+                    }
+                } catch (e) {
+                    console.error('quickSetStatus falhou', e);
+                }
+            },
 
             typeTopBorder(p) {
                 return p.type === 'campanha'
@@ -529,7 +678,7 @@
             hasActiveFilters() {
                 return this.search.trim() || this.filterType || this.filterStatus || this.filterClient ||
                        this.filterDiscipline || this.filterOverdue || this.filterNotStarted ||
-                       this.sortBy !== 'urgency';
+                       this.sortBy !== 'urgency' || this.groupBy !== '';
             },
 
             resetFilters() {
@@ -538,6 +687,7 @@
                 this.filterOverdue = false; this.filterNotStarted = false;
                 this.showClosed = false;
                 this.sortBy = 'urgency';
+                this.groupBy = '';
                 this.applyFilters();
             },
 
@@ -545,7 +695,6 @@
                 this.editTarget = p;
                 this.editForm = {
                     type:          p.type || 'projeto',
-                    status:        p.status,
                     macro_plan_id: p.macroplan_id || '',
                 };
                 this.editOpen = true;
@@ -566,7 +715,6 @@
                         body: JSON.stringify({
                             _method:       'PATCH',
                             type:          this.editForm.type,
-                            status:        this.editForm.status,
                             macro_plan_id: this.editForm.macro_plan_id || null,
                         }),
                     });

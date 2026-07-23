@@ -81,6 +81,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         'destroy' => 'clients.destroy',
     ]);
 
+    Route::patch('/clientes/{client}/status', [ClientController::class, 'updateStatus'])
+        ->name('clients.update-status');
+
     Route::post('/clientes/{client}/gerar-link', [ClientController::class, 'generateToken'])
         ->name('clients.generate-token');
 
@@ -217,6 +220,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('clients.contracts.show');
     Route::patch('/clientes/{client}/contratos/{contract}', [ContractController::class, 'update'])
         ->name('clients.contracts.update');
+    Route::patch('/clientes/{client}/contratos/{contract}/status', [ContractController::class, 'updateStatus'])
+        ->name('clients.contracts.update-status');
     Route::delete('/clientes/{client}/contratos/{contract}', [ContractController::class, 'destroy'])
         ->name('clients.contracts.destroy');
 
@@ -286,6 +291,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('macroplans.edit');
     Route::patch('/planejamentos/{macroplan}', [MacroPlanController::class, 'update'])
         ->name('macroplans.update');
+    Route::patch('/planejamentos/{macroplan}/status', [MacroPlanController::class, 'updateStatus'])
+        ->name('macroplans.update-status');
     Route::delete('/planejamentos/{macroplan}', [MacroPlanController::class, 'destroy'])
         ->name('macroplans.destroy');
 

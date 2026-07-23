@@ -169,4 +169,17 @@ class ClientController extends Controller
 
         return back()->with('token_generated', route('clients.register', $token));
     }
+
+    // Edição rápida de status direto na listagem, sem abrir o form completo
+    // de edição do cliente (mesmo padrão de MeetingController::updateStatus()).
+    public function updateStatus(Request $request, Client $client)
+    {
+        $data = $request->validate([
+            'status' => 'required|in:' . implode(',', array_keys(Client::$statuses)),
+        ]);
+
+        $client->update($data);
+
+        return redirect()->back()->with('success', 'Status atualizado.');
+    }
 }

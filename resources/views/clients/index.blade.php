@@ -95,13 +95,8 @@
                                         <span style="color:var(--muted)">—</span>
                                     @endif
                                 </td>
-                                <td class="monday-fill-td relative" style="width:110px">
-                                    <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-                                                background:{{ \App\Models\Task::colorHex($client->statusColor()) }}; color:#fff;
-                                                font-size:11px; font-weight:700; overflow:hidden; padding:0 8px">
-                                        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">{{ $client->statusLabel() }}</span>
-                                    </div>
-                                </td>
+                                <x-status-dropdown-cell :options="\App\Models\Client::$statuses" :current="$client->status"
+                                    :action="route('clients.update-status', $client)" :width="110" />
                                 <td class="text-right">
                                     <a href="{{ route('clients.edit', $client) }}"
                                        class="text-xs font-semibold transition-colors"

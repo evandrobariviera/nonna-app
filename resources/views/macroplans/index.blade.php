@@ -112,13 +112,8 @@
                                     {{ $plan->projects_count ?? $plan->projects->count() }}
                                 </td>
                                 <td class="text-xs" style="color:var(--muted2)">{{ $plan->responsible->name ?? '—' }}</td>
-                                <td class="monday-fill-td relative" style="width:120px">
-                                    <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-                                                background:{{ \App\Models\Task::colorHex($plan->statusColor()) }}; color:#fff;
-                                                font-size:11px; font-weight:700; overflow:hidden; padding:0 8px">
-                                        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">{{ $plan->statusLabel() }}</span>
-                                    </div>
-                                </td>
+                                <x-status-dropdown-cell :options="\App\Models\MacroPlan::$statuses" :current="$plan->status"
+                                    :action="route('macroplans.update-status', $plan)" :width="120" />
                                 <td class="text-right">
                                     <a href="{{ route('macroplans.edit', $plan) }}"
                                        class="text-xs font-mono transition-colors" style="color:var(--muted)"

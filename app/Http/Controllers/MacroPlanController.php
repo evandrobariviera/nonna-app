@@ -173,4 +173,17 @@ class MacroPlanController extends Controller
         return redirect()->route('clients.show', [$clientId, 'tab' => 'planejamentos'])
             ->with('success', 'Macroplanejamento removido.');
     }
+
+    // Edição rápida de status direto na listagem/detalhe, sem precisar do
+    // form completo de "Configurações" (mesmo padrão de MeetingController::updateStatus()).
+    public function updateStatus(Request $request, MacroPlan $macroplan)
+    {
+        $data = $request->validate([
+            'status' => 'required|in:' . implode(',', array_keys(MacroPlan::$statuses)),
+        ]);
+
+        $macroplan->update($data);
+
+        return redirect()->back()->with('success', 'Status atualizado.');
+    }
 }

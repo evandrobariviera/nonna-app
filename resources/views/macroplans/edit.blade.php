@@ -18,7 +18,8 @@
             <span class="text-xs font-semibold" style="color:var(--text)">{{ $macroplan->title }}</span>
         </div>
         <div class="flex items-center gap-2">
-            <span class="badge badge-{{ $macroplan->statusColor() }}">{{ $macroplan->statusLabel() }}</span>
+            <x-status-dropdown-inline :options="\App\Models\MacroPlan::$statuses" :current="$macroplan->status"
+                :action="route('macroplans.update-status', $macroplan)" />
             <span class="text-xs font-mono" style="color:var(--muted)">{{ $macroplan->periodLabel() }}</span>
         </div>
     </div>
