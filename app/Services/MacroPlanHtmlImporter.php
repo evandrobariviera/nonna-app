@@ -42,11 +42,16 @@ class MacroPlanHtmlImporter
         $clientName = $this->capaCellValue($searchScope, 'Cliente');
         $title = $this->extractTitle($dom, $capaPage, $clientName);
         $responsibleName = $this->capaCellValue($searchScope, 'Responsável Nonna');
-        $version = $this->capaCellValue($searchScope, 'Versão do Documento');
+        // "Versão do Documento" era o rótulo original da skill; templates
+        // mais novos (ex: multi-unidade) encurtaram pra só "Versão".
+        $version = $this->capaCellValue($searchScope, 'Versão do Documento')
+            ?: $this->capaCellValue($searchScope, 'Versão');
 
         $disciplines = [];
         if ($capaPage) {
-            $chipRows = $this->classNodes($capaPage, 'chip-row');
+            // "chip-row" era a classe original do wrapper; templates mais
+            // novos (multi-unidade) trocaram por "capa-chips".
+            $chipRows = $this->classNodes($capaPage, 'chip-row') ?: $this->classNodes($capaPage, 'capa-chips');
             foreach ($this->classTextAll($chipRows[0] ?? null, 'chip') as $chipLabel) {
                 $key = $this->matchMacroPlanDiscipline($chipLabel);
                 if ($key) $disciplines[] = $key;
@@ -340,10 +345,25 @@ class MacroPlanHtmlImporter
 
         foreach ($pageNodes as $page) {
             $id = $page->getAttribute('id');
-            if (!preg_match('/^(pj|c)\d+$/', $id)) continue;
 
-            $type = str_starts_with($id, 'c') ? 'campanha' : 'projeto';
-            $title = trim($this->xpath->query('.//h1', $page)->item(0)?->textContent ?? '');
+            // O id sozinho não é confiável pra distinguir projeto/campanha dos
+            // blocos fixos (Capa, Visão Geral, Rotinas...) — templates
+            // diferentes já usaram p1/p2 E pj1/pj2 pro mesmo conceito, e p00,
+            // p01 etc são blocos fixos, não projetos. O sinal de verdade é a
+            // div-wrapper que a skill sempre gera (.projeto-conteudo /
+            // .campanha-conteudo), que nunca aparece nos blocos fixos.
+            $projetoWrap = $this->classNodes($page, 'projeto-conteudo');
+            $campanhaWrap = $this->classNodes($page, 'campanha-conteudo');
+            if (empty($projetoWrap) && empty($campanhaWrap)) continue;
+
+            $type = !empty($campanhaWrap) ? 'campanha' : 'projeto';
+
+            // Templates mais novos usam <div class="pc-title"> em vez de <h1>
+            // pro título do projeto/campanha — tenta os dois.
+            $title = $this->classText($page, 'pc-title');
+            if ($title === '') {
+                $title = trim($this->xpath->query('.//h1', $page)->item(0)?->textContent ?? '');
+            }
 
             $briefings = [];
             $disciplines = [];

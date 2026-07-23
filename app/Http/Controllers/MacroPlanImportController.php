@@ -59,7 +59,10 @@ class MacroPlanImportController extends Controller
         $plan = DB::connection('pgsql')->transaction(function () use ($client, $parsed, $data, $request, $responsibleId) {
             $plan = $client->macroplans()->create([
                 'title'          => $parsed['title'],
-                'version'        => $parsed['version'] ?: null,
+                // Coluna tem default '1.0' mas não é nullable — passar null
+                // explícito (quando a Capa não traz versão, ou o rótulo mudou
+                // de novo) quebra o insert em vez de cair no default.
+                'version'        => $parsed['version'] ?: '1.0',
                 'responsible_id' => $responsibleId,
                 'period_start'   => $data['period_start'],
                 'period_end'     => $data['period_end'],
