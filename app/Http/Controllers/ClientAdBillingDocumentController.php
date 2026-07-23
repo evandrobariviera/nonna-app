@@ -58,6 +58,7 @@ class ClientAdBillingDocumentController extends Controller
         }
 
         $adAccount->update($accountUpdate);
+        $adAccount->markAwaitingPayment();
 
         $notifier->send('financeiro', $client, [
             'conta'      => $adAccount->platformLabel() . ' · ' . $adAccount->account_id,

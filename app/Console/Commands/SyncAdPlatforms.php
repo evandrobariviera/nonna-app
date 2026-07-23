@@ -78,6 +78,8 @@ class SyncAdPlatforms extends Command
                             $this->debitLedgerBalance($account, $result['snapshots']);
                         }
                     }
+
+                    $account->applyAutomaticBudgetStatus();
                 } catch (\Throwable $e) {
                     $totalFailures++;
                     Log::warning('SyncAdPlatforms: falha ao sincronizar conta', [

@@ -124,6 +124,54 @@ class ClientAdAccount extends Model
         return self::$budgetStatuses[$this->budget_status]['color'] ?? 'muted';
     }
 
+    // Gestão automática de budget_status — chamada 1x/dia em SyncAdPlatforms
+    // (depois do saldo do dia atualizado) e sempre que um boleto/PIX é
+    // enviado (ClientAdBillingDocumentController::store()).
+    //
+    // Regras confirmadas com o usuário:
+    // - standby trava tudo — só sai manualmente, automação nunca mexe aqui
+    // - saldo > 0 e dias restantes > 7 → creditos_ativos
+    // - caso contrário → adicao_necessaria, EXCETO se já estiver
+    //   aguardando_pagto (só sai desse quando o saldo se recupera pra
+    //   creditos_ativos — nunca regride sozinho pra adicao_necessaria
+    //   enquanto espera o cliente pagar o boleto já enviado)
+    // - "Automação" (budget_automation_enabled) liga/desliga essa reavaliação
+    //   diária por saldo; a transição pra aguardando_pagto ao enviar um
+    //   boleto roda sempre (é ação direta do usuário, não do robô).
+    public function applyAutomaticBudgetStatus(): void
+    {
+        if (!$this->budget_automation_enabled || !$this->hasBillingTracking() || $this->budget_status === 'standby') {
+            return;
+        }
+
+        $days = $this->daysRemaining();
+        $healthy = $this->balance !== null && (float) $this->balance > 0 && $days !== null && $days > 7;
+
+        if ($healthy) {
+            if ($this->budget_status !== 'creditos_ativos') {
+                $this->update(['budget_status' => 'creditos_ativos']);
+            }
+            return;
+        }
+
+        if ($this->budget_status === 'aguardando_pagto') {
+            return;
+        }
+
+        if ($this->budget_status !== 'adicao_necessaria') {
+            $this->update(['budget_status' => 'adicao_necessaria']);
+        }
+    }
+
+    // Chamado ao enviar um boleto/PIX novo — evento direto do usuário, roda
+    // mesmo com "Automação" desligada; só respeita a trava de standby.
+    public function markAwaitingPayment(): void
+    {
+        if ($this->budget_status !== 'standby' && $this->budget_status !== 'aguardando_pagto') {
+            $this->update(['budget_status' => 'aguardando_pagto']);
+        }
+    }
+
     // Contas boleto/PIX fora do Meta não têm saldo exposto por API nenhuma
     // (é dado de faturamento, não de campanha) — mas dá pra manter um
     // "livro-caixa" sozinho: cada boleto/PIX enviado com valor credita o
