@@ -18,9 +18,8 @@
         </div>
     </td>
     <td class="text-xs font-mono uppercase" style="color:var(--muted)">{{ $campaign->platform }}</td>
-    <td>
-        <span class="badge">{{ \App\Http\Controllers\CampaignController::$campaignStatuses[$campaign->status] ?? $campaign->status }}</span>
-    </td>
+    <x-status-dropdown-cell :options="\App\Models\AdCampaign::$managementStatuses" :current="$campaign->management_status"
+        :action="route('campaigns.update-status', $campaign)" field="management_status" :width="150" />
     <td class="text-xs font-mono text-[var(--muted2)]">R$ {{ number_format($campaign->stats->spend, 2, ',', '.') }}</td>
     <td class="text-xs font-mono text-[var(--muted2)]">
         {{ $campaign->stats->cpa !== null ? 'R$ ' . number_format($campaign->stats->cpa, 2, ',', '.') : '—' }}

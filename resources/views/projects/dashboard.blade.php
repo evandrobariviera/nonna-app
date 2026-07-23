@@ -219,9 +219,9 @@
                                     </td>
                                     <td class="monday-fill-td relative" style="width:150px" x-data="{ open: false, style: '' }">
                                         <button type="button" @click="open = !open; style = dropdownStyle($el, 'bottom-left')"
-                                            style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-                                                   gap:4px; color:#fff; font-size:11px; font-weight:700; cursor:pointer; border:none; overflow:hidden"
-                                            :style="'background:' + colorHex(p.status_color)">
+                                            :style="'position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+                                                   gap:4px; color:#fff; font-size:11px; font-weight:700; cursor:pointer; border:none; overflow:hidden;
+                                                   background:' + colorHex(p.status_color)">
                                             <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:calc(100% - 20px)" x-text="p.status_label"></span>
                                             <span style="opacity:.8; flex-shrink:0">▾</span>
                                         </button>
@@ -318,8 +318,7 @@
                             <span class="relative inline-block">
                                 <button type="button" @click="open = !open; style = dropdownStyle($el, 'bottom-left')"
                                     class="badge text-xs font-bold"
-                                    style="border:none; cursor:pointer"
-                                    :style="'background:' + colorHex(p.status_color) + '; color:#fff'">
+                                    :style="'border:none; cursor:pointer; background:' + colorHex(p.status_color) + '; color:#fff'">
                                     <span x-text="p.status_label"></span> ▾
                                 </button>
                                 <template x-teleport="body">
