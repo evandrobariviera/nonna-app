@@ -29,6 +29,8 @@ class ClientAdAccount extends Model
         'balance_synced_at',
         'budget_automation_enabled',
         'last_billing_sent_at',
+        'budget_status',
+        'responsible_user_id',
     ];
 
     protected $casts = [
@@ -68,6 +70,17 @@ class ClientAdAccount extends Model
     // não têm saldo/custo diário pra controlar.
     private const BILLING_PLATFORMS = ['meta_ads', 'google_ads', 'tiktok_ads', 'linkedin_ads', 'pinterest_ads'];
 
+    // Mesmos 4 status da lista "Orçamentos" no ClickUp — controle manual do
+    // gestor sobre a situação daquela conta no momento, independente do saldo
+    // calculado (uma conta pode estar com saldo ok mas ainda em "Standby"
+    // porque o cliente não autorizou rodar, por exemplo).
+    public static array $budgetStatuses = [
+        'adicao_necessaria' => ['label' => 'Adição Necessária', 'color' => 'muted'],
+        'aguardando_pagto'  => ['label' => 'Aguardando Pagto',  'color' => 'orange'],
+        'creditos_ativos'   => ['label' => 'Créditos Ativos',   'color' => 'green'],
+        'standby'           => ['label' => 'Standby',           'color' => 'orange'],
+    ];
+
     public function platformLabel(): string
     {
         if ($this->platform === 'outros' && $this->platform_custom) {
@@ -96,6 +109,21 @@ class ClientAdAccount extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function responsibleUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'responsible_user_id');
+    }
+
+    public function budgetStatusLabel(): string
+    {
+        return self::$budgetStatuses[$this->budget_status]['label'] ?? $this->budget_status;
+    }
+
+    public function budgetStatusColor(): string
+    {
+        return self::$budgetStatuses[$this->budget_status]['color'] ?? 'muted';
+    }
+
     public function billingDocuments(): HasMany
     {
         return $this->hasMany(ClientAdBillingDocument::class)->orderByDesc('created_at');
@@ -109,6 +137,11 @@ class ClientAdAccount extends Model
     public function hasBillingTracking(): bool
     {
         return in_array($this->platform, self::BILLING_PLATFORMS, true);
+    }
+
+    public static function billingPlatforms(): array
+    {
+        return self::BILLING_PLATFORMS;
     }
 
     // Gasto médio diário dos últimos N dias, somando todas as campanhas da

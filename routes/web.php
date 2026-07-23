@@ -28,6 +28,7 @@ use App\Http\Controllers\ClientLinkController;
 use App\Http\Controllers\BrandDossierController;
 use App\Http\Controllers\ClientAdBudgetController;
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\OrcamentoController;
 use App\Http\Controllers\CampaignInsightController;
 use App\Http\Controllers\CampaignLogController;
 use App\Http\Controllers\ContractController;
@@ -196,6 +197,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('campaigns.update-tier');
     Route::post('/campanhas/{campaign}/otimizar', [CampaignController::class, 'markOptimized'])
         ->name('campaigns.mark-optimized');
+
+    // ── Orçamentos (visão geral de saldo/pagamento por conta, cross-cliente) ──
+    Route::get('/orcamentos', [OrcamentoController::class, 'index'])
+        ->name('orcamentos.index');
+    Route::patch('/orcamentos/{adAccount}', [OrcamentoController::class, 'updateStatus'])
+        ->name('orcamentos.update-status');
     Route::post('/campanhas/{campaign}/logs', [CampaignLogController::class, 'store'])
         ->name('campaign-logs.store');
     Route::delete('/campanhas/{campaign}/logs/{log}', [CampaignLogController::class, 'destroy'])

@@ -16,6 +16,10 @@
         ->count();
 
     $_campaignInsightsCount = \App\Models\CampaignInsight::whereIn('status', ['novo', 'lido'])->count();
+
+    $_orcamentosAlertCount = \App\Models\ClientAdAccount::whereIn('platform', \App\Models\ClientAdAccount::billingPlatforms())
+        ->where('budget_status', 'aguardando_pagto')
+        ->count();
 @endphp
 
 {{-- ══ CRM ══ --}}
@@ -234,7 +238,19 @@
                 @endif
             </span>
         </a>
-        <a href="#" class="nav-sub-item">Orçamentos</a>
+        <a href="{{ route('orcamentos.index') }}" class="nav-sub-item {{ request()->routeIs('orcamentos.*') ? 'active' : '' }}">
+            <span class="flex items-center justify-between w-full">
+                <span>Orçamentos</span>
+                @if($_orcamentosAlertCount > 0)
+                    <span class="text-xs px-1.5 py-px rounded-full font-semibold"
+                          style="background:{{ request()->routeIs('orcamentos.*') ? 'rgba(106,90,205,.15)' : 'var(--s3)' }};
+                                 color:{{ request()->routeIs('orcamentos.*') ? 'var(--purple)' : 'var(--muted)' }};
+                                 border:1px solid {{ request()->routeIs('orcamentos.*') ? 'rgba(106,90,205,.25)' : 'var(--border2)' }}">
+                        {{ $_orcamentosAlertCount }}
+                    </span>
+                @endif
+            </span>
+        </a>
         <a href="#" class="nav-sub-item">Prestação de Contas</a>
         <a href="#" class="nav-sub-item">Suporte e Manutenção</a>
     </div>
