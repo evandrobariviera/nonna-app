@@ -13,8 +13,8 @@
         <p class="text-xs mb-6" style="color:var(--muted)">
             Envie o HTML do macroplanejamento já aprovado pelo cliente (gerado pela skill de referência). O sistema
             cria o macroplanejamento, os projetos e as campanhas automaticamente a partir do conteúdo do arquivo,
-            e guarda o próprio HTML como anexo. O cliente precisa já estar cadastrado no App com o mesmo nome
-            usado na capa do documento.
+            e guarda o próprio HTML como anexo. Selecione o cliente abaixo — o nome na capa do HTML nem sempre
+            sai correto, então não é mais usado pra identificar o cliente automaticamente, só como conferência.
         </p>
 
         @if(session('error'))
@@ -26,6 +26,23 @@
 
         <form method="POST" action="{{ route('macroplans.import.store') }}" enctype="multipart/form-data" class="space-y-5">
             @csrf
+
+            <div>
+                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                    Cliente <span class="text-[var(--orange)]">*</span>
+                </label>
+                <select name="client_id" required
+                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    <option value="">Selecione...</option>
+                    @foreach($clients as $c)
+                        <option value="{{ $c->id }}" {{ old('client_id') === $c->id ? 'selected' : '' }}>{{ $c->company_name }}</option>
+                    @endforeach
+                </select>
+                @error('client_id')
+                    <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p>
+                @enderror
+            </div>
 
             <div>
                 <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">

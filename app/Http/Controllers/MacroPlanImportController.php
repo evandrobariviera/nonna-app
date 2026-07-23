@@ -15,33 +15,36 @@ class MacroPlanImportController extends Controller
 {
     public function create()
     {
-        return view('macroplans.import');
+        $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
+
+        return view('macroplans.import', compact('clients'));
     }
 
     public function store(Request $request, MacroPlanHtmlImporter $importer)
     {
         $data = $request->validate([
+            'client_id'    => 'required|uuid|exists:pgsql.clients,id',
             'file'         => 'required|file|mimes:html,htm|max:5120',
             'period_start' => 'required|date',
             'period_end'   => 'required|date|after:period_start',
         ]);
 
+        $client = Client::findOrFail($data['client_id']);
+
         $html = file_get_contents($data['file']->getRealPath());
         $parsed = $importer->parse($html);
 
-        if (blank($parsed['client_name'])) {
-            return back()->withInput()
-                ->with('error', 'Não foi possível identificar o nome do cliente no HTML (célula "Cliente" não encontrada na Capa).');
+        // O nome na Capa do HTML nem sempre bate com o cadastro (abreviação,
+        // erro de digitação, etc.) — por isso quem manda é o cliente
+        // selecionado explicitamente no form, não mais um match por nome.
+        // Se o texto da Capa existir e não bater nem por substring, só avisa
+        // (não bloqueia a importação).
+        if (filled($parsed['client_name']) && !str_contains(
+            \Illuminate\Support\Str::lower($client->company_name),
+            \Illuminate\Support\Str::lower($parsed['client_name'])
+        )) {
+            $parsed['warnings'][] = "A Capa do HTML menciona \"{$parsed['client_name']}\", diferente do cliente selecionado (\"{$client->company_name}\") — confira se é o cliente certo.";
         }
-
-        $matches = Client::where('company_name', 'ilike', $parsed['client_name'])->get();
-        if ($matches->count() !== 1) {
-            $message = $matches->isEmpty()
-                ? "Nenhum cliente chamado \"{$parsed['client_name']}\" foi encontrado. Cadastre o cliente antes de importar (ou confira se o nome na Capa do HTML bate com o cadastro)."
-                : "Mais de um cliente chamado \"{$parsed['client_name']}\" foi encontrado — não dá pra saber qual usar. Ajuste os cadastros antes de importar.";
-            return back()->withInput()->with('error', $message);
-        }
-        $client = $matches->first();
 
         // Capa costuma trazer só o primeiro nome (ex: "Evandro") — busca por
         // substring, não match exato. Só usa se achar exatamente 1 pessoa.
