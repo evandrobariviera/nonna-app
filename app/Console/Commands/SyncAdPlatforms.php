@@ -75,6 +75,7 @@ class SyncAdPlatforms extends Command
                         $upserter->upsertCampaigns($organization->id, $account->id, 'google', $result['campaigns']);
                         if (!empty($result['snapshots'])) {
                             $upserter->upsertSnapshots($organization->id, $account->id, 'google', $yesterday, $result['snapshots']);
+                            $this->debitLedgerBalance($account, $result['snapshots']);
                         }
                     }
                 } catch (\Throwable $e) {
@@ -108,6 +109,34 @@ class SyncAdPlatforms extends Command
     // organização das contas recebidas, porque Tenantable::bootTenantable()
     // usa esse binding pra preencher organization_id na criação.
     private const LOW_BALANCE_THRESHOLD_DAYS = 3;
+
+    // "Livro-caixa" de saldo pra contas boleto/PIX fora do Meta (ver
+    // ClientAdAccount::usesLedgerBalance()) — a plataforma não expõe saldo
+    // por API, então debitamos o gasto real do dia que acabou de ser
+    // sincronizado. O crédito (quando um boleto/PIX é enviado com valor)
+    // acontece em ClientAdBillingDocumentController::store(). Só debita se já
+    // existir um saldo inicial (balance !== null) — sem isso não temos de
+    // onde partir, e a conta continua mostrando "—" até alguém informar o
+    // saldo real uma primeira vez (manual) ou subir o primeiro boleto.
+    private function debitLedgerBalance(ClientAdAccount $account, array $snapshots): void
+    {
+        if (!$account->usesLedgerBalance() || $account->balance === null) {
+            return;
+        }
+
+        $daySpend = collect($snapshots)
+            ->filter(fn ($s) => ($s['entity_level'] ?? null) === 'campaign')
+            ->sum(fn ($s) => (float) ($s['spend'] ?? 0));
+
+        if ($daySpend <= 0) {
+            return;
+        }
+
+        $account->update([
+            'balance'        => (float) $account->balance - $daySpend,
+            'balance_source' => 'ledger',
+        ]);
+    }
 
     private function checkLowBalances(Collection $accounts): void
     {

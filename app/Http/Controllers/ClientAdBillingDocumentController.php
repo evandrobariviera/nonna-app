@@ -47,7 +47,17 @@ class ClientAdBillingDocumentController extends Controller
 
         $document = ClientAdBillingDocument::create($data);
 
-        $adAccount->update(['last_billing_sent_at' => now()]);
+        $accountUpdate = ['last_billing_sent_at' => now()];
+
+        // Contas boleto/PIX fora do Meta não têm saldo por API — o valor
+        // informado aqui é o "depósito" que credita o livro-caixa mantido em
+        // SyncAdPlatforms::debitLedgerBalance() (ver ClientAdAccount::usesLedgerBalance()).
+        if ($document->amount && $adAccount->usesLedgerBalance()) {
+            $accountUpdate['balance'] = (float) ($adAccount->balance ?? 0) + (float) $document->amount;
+            $accountUpdate['balance_source'] = 'ledger';
+        }
+
+        $adAccount->update($accountUpdate);
 
         $notifier->send('financeiro', $client, [
             'conta'      => $adAccount->platformLabel() . ' · ' . $adAccount->account_id,

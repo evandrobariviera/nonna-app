@@ -124,6 +124,31 @@ class ClientAdAccount extends Model
         return self::$budgetStatuses[$this->budget_status]['color'] ?? 'muted';
     }
 
+    // Contas boleto/PIX fora do Meta não têm saldo exposto por API nenhuma
+    // (é dado de faturamento, não de campanha) — mas dá pra manter um
+    // "livro-caixa" sozinho: cada boleto/PIX enviado com valor credita o
+    // saldo (ClientAdBillingDocumentController::store()), e o gasto real do
+    // dia debita automaticamente (SyncAdPlatforms::checkLowBalances() →
+    // debitLedgerBalances()). Meta fica de fora porque a API dele já devolve
+    // o saldo verdadeiro (fetchAccountBalance) — usar as duas fontes juntas
+    // duplicaria a contagem. Cartão (pós-pago automático) nunca tem saldo,
+    // não importa a plataforma.
+    public function usesLedgerBalance(): bool
+    {
+        return $this->hasBillingTracking()
+            && $this->platform !== 'meta_ads'
+            && in_array($this->payment_method, ['boleto', 'pix'], true);
+    }
+
+    public function balanceSourceLabel(): ?string
+    {
+        return match ($this->balance_source) {
+            'api'    => 'API',
+            'ledger' => 'Calculado',
+            default  => null,
+        };
+    }
+
     public function billingDocuments(): HasMany
     {
         return $this->hasMany(ClientAdBillingDocument::class)->orderByDesc('created_at');

@@ -87,8 +87,8 @@
                                         <td class="font-mono text-sm text-[var(--purple)]">{{ $account->account_id }}</td>
                                         <td class="text-xs text-[var(--text)]">
                                             {{ $account->balance !== null ? 'R$ ' . number_format((float) $account->balance, 2, ',', '.') : '—' }}
-                                            @if($account->balance_source === 'api')
-                                                <span class="badge badge-blue" style="white-space:nowrap">API</span>
+                                            @if($account->balanceSourceLabel())
+                                                <span class="badge badge-blue" style="white-space:nowrap">{{ $account->balanceSourceLabel() }}</span>
                                             @endif
                                         </td>
                                         <td>

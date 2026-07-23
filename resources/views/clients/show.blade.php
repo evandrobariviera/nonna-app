@@ -1342,8 +1342,8 @@
                                                 <span style="color:var(--text)">
                                                     {{ $account->balance !== null ? 'R$ ' . number_format((float) $account->balance, 2, ',', '.') : '—' }}
                                                 </span>
-                                                @if($account->balance_source === 'api')
-                                                    <span class="badge badge-blue" style="white-space:nowrap">API</span>
+                                                @if($account->balanceSourceLabel())
+                                                    <span class="badge badge-blue" style="white-space:nowrap">{{ $account->balanceSourceLabel() }}</span>
                                                 @endif
                                                 <div class="mt-0.5">
                                                     <span class="badge badge-{{ $account->balanceStatusColor() }}" style="white-space:nowrap">
