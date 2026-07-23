@@ -53,3 +53,13 @@ jobs:
               --image ghcr.io/evandrobariviera/nonna-app:latest \
               --with-registry-auth \
               nonna-app_app
+
+      # Cada push cria uma tag `sha-<commit>` nova (além de `latest`) e nada
+      # nunca apagava as antigas — acumulou 225+ versões no ghcr.io. Mantém só
+      # as mais recentes (a mais nova, com `latest`, sempre fica).
+      - name: Limpar versões antigas da imagem no ghcr.io
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: nonna-app
+          package-type: container
+          min-versions-to-keep: 10
