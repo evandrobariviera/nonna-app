@@ -359,6 +359,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Projeto standalone (sem macroplanejamento vinculado) ──
     Route::get('/projetos/{project}/ver', [ProjectController::class, 'showDirect'])
         ->name('projects.showDirect');
+    Route::patch('/projetos/{project}/planejamento', [ProjectController::class, 'updateMacroplan'])
+        ->name('projects.update-macroplan');
     Route::post('/projetos/{project}/tarefas', [TaskController::class, 'storeStandalone'])
         ->name('tasks.storeStandalone');
     Route::patch('/projetos/{project}/tarefas/{task}', [TaskController::class, 'updateStandalone'])
@@ -375,6 +377,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('tasks.update-responsavel');
     Route::patch('/tarefas/{task}/executor-direto', [TaskController::class, 'updateExecutorDirect'])
         ->name('tasks.update-executor');
+    Route::patch('/tarefas/{task}/projeto', [TaskController::class, 'updateProject'])
+        ->name('tasks.update-project');
     Route::delete('/projetos/{project}/tarefas/{task}', [TaskController::class, 'destroyStandalone'])
         ->name('tasks.destroyStandalone');
 

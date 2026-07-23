@@ -93,6 +93,12 @@ class TaskController extends Controller
         $users  = User::orderBy('name')->get(['id', 'name']);
         $agents = AiAgent::where('is_active', true)->orderBy('name')->get(['id', 'name']);
 
+        // Projetos do mesmo cliente da tarefa, pra permitir reatribuir direto
+        // desta página (ver TaskController::updateProject()).
+        $clientProjects = $task->client_id
+            ? Project::where('client_id', $task->client_id)->orderBy('title')->get(['id', 'title'])
+            : collect();
+
         $chat = AiChat::where('entity_type', 'task')
             ->where('entity_id', $task->id)
             ->first();
@@ -113,7 +119,7 @@ class TaskController extends Controller
                 ->values()
             : collect();
 
-        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages'));
+        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages', 'clientProjects'));
     }
 
     public function updateInline(Request $request, Task $task)
@@ -271,6 +277,24 @@ class TaskController extends Controller
         }
 
         return redirect()->back()->with('success', 'Executor atualizado.');
+    }
+
+    // Reatribui a tarefa a um projeto direto da própria página da tarefa —
+    // antes só dava pra mover em lote (bulkUpdate) ou criar a tarefa já
+    // dentro de um projeto. Mesmo cuidado do bulkUpdate: só permite projeto
+    // do mesmo cliente da tarefa.
+    public function updateProject(Request $request, Task $task)
+    {
+        $data = $request->validate(['project_id' => 'nullable|uuid|exists:pgsql.projects,id']);
+
+        if ($data['project_id']) {
+            $project = Project::findOrFail($data['project_id']);
+            abort_unless((string) $task->client_id === (string) $project->client_id, 422, 'Esse projeto é de outro cliente.');
+        }
+
+        $task->update(['project_id' => $data['project_id']]);
+
+        return redirect()->back()->with('success', 'Projeto atualizado.');
     }
 
     public function updateStatus(Request $request, MacroPlan $macroplan, Project $project, Task $task)

@@ -125,8 +125,10 @@ class ProjectController extends Controller
         $doneTasks  = $project->tasks->where('status', 'concluido')->count();
         $standalone = false;
 
+        $clientMacroplans = MacroPlan::where('client_id', $project->client_id)->orderBy('title')->get(['id', 'title']);
+
         return view('macroplans.project-show', compact(
-            'macroplan', 'project', 'users', 'kanban', 'cancelled', 'progress', 'totalTasks', 'doneTasks', 'standalone'
+            'macroplan', 'project', 'users', 'kanban', 'cancelled', 'progress', 'totalTasks', 'doneTasks', 'standalone', 'clientMacroplans'
         ));
     }
 
@@ -148,9 +150,34 @@ class ProjectController extends Controller
         $doneTasks  = $project->tasks->where('status', 'concluido')->count();
         $standalone = true;
 
+        $clientMacroplans = MacroPlan::where('client_id', $project->client_id)->orderBy('title')->get(['id', 'title']);
+
         return view('macroplans.project-show', compact(
-            'macroplan', 'project', 'users', 'kanban', 'cancelled', 'progress', 'totalTasks', 'doneTasks', 'standalone'
+            'macroplan', 'project', 'users', 'kanban', 'cancelled', 'progress', 'totalTasks', 'doneTasks', 'standalone', 'clientMacroplans'
         ));
+    }
+
+    // Reatribui o projeto a um planejamento (ou desvincula, se null) direto
+    // da própria página do projeto — antes só dava pra fazer isso pelo modal
+    // da listagem /projetos. Redireciona pra URL canônica correta (com ou
+    // sem macroplano na rota), já que show() valida que a URL bate com o
+    // macro_plan_id atual do projeto.
+    public function updateMacroplan(Request $request, Project $project)
+    {
+        $data = $request->validate(['macro_plan_id' => 'nullable|uuid|exists:pgsql.macro_plans,id']);
+
+        if ($data['macro_plan_id']) {
+            $macroplan = MacroPlan::findOrFail($data['macro_plan_id']);
+            abort_unless((string) $project->client_id === (string) $macroplan->client_id, 422, 'Esse planejamento é de outro cliente.');
+        }
+
+        $project->update(['macro_plan_id' => $data['macro_plan_id']]);
+
+        $redirect = $data['macro_plan_id']
+            ? redirect()->route('macroplans.projects.show', [$data['macro_plan_id'], $project])
+            : redirect()->route('projects.showDirect', $project);
+
+        return $redirect->with('success', 'Planejamento atualizado.');
     }
 
     public function store(Request $request, MacroPlan $macroplan)

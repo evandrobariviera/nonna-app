@@ -950,16 +950,31 @@
                         </div>
                     @endif
 
-                    @if($task->project)
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Projeto</p>
-                            <a href="{{ $task->project->macro_plan_id ? route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) : route('projects.showDirect', $task->project) }}"
-                               class="text-sm font-medium leading-snug block transition-colors" style="color:var(--text)"
-                               onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'">
-                                {{ $task->project->title }}
-                            </a>
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Projeto</p>
+                            @if($task->project)
+                                <a href="{{ $task->project->macro_plan_id ? route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) : route('projects.showDirect', $task->project) }}"
+                                   class="text-xs font-semibold transition-colors" style="color:var(--purple)"
+                                   onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
+                                    Abrir →
+                                </a>
+                            @endif
                         </div>
-                    @endif
+                        <form method="POST" action="{{ route('tasks.update-project', $task) }}">
+                            @csrf @method('PATCH')
+                            <select name="project_id" onchange="this.form.submit()"
+                                class="w-full px-3 py-2 text-sm focus:outline-none"
+                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                <option value="">— nenhum —</option>
+                                @foreach($clientProjects as $p)
+                                    <option value="{{ $p->id }}" {{ $task->project_id === $p->id ? 'selected' : '' }}>
+                                        {{ $p->title }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </form>
+                    </div>
 
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Sprint</p>

@@ -24,7 +24,21 @@
             <span style="color:var(--border2)">/</span>
             <span style="color:var(--text)">{{ $project->title }}</span>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3">
+            <form method="POST" action="{{ route('projects.update-macroplan', $project) }}" class="flex items-center gap-2">
+                @csrf @method('PATCH')
+                <label class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted)">Planejamento</label>
+                <select name="macro_plan_id" onchange="this.form.submit()"
+                    class="px-2 py-1.5 text-xs focus:outline-none"
+                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    <option value="">— nenhum —</option>
+                    @foreach($clientMacroplans as $mp)
+                        <option value="{{ $mp->id }}" {{ $project->macro_plan_id === $mp->id ? 'selected' : '' }}>
+                            {{ $mp->title }}
+                        </option>
+                    @endforeach
+                </select>
+            </form>
             <span class="badge badge-{{ $project->statusColor() }}">{{ $project->statusLabel() }}</span>
         </div>
     </div>
