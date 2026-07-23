@@ -20,7 +20,7 @@ class NotificationDispatchService
      * Silenciosamente não faz nada se faltar peça (webhook não configurado,
      * ninguém assinado, template sem texto pro canal).
      */
-    public function send(string $type, Client $client, array $variables = []): void
+    public function send(string $type, Client $client, array $variables = [], ?string $attachmentUrl = null): void
     {
         $recipients = ClientContact::where('client_id', $client->id)
             ->whereHas('subscriptions', fn ($q) => $q->where('type', $type))
@@ -32,7 +32,7 @@ class NotificationDispatchService
             $channels = $clientContact->subscriptions->first()->channels ?? [];
 
             foreach ($channels as $channel) {
-                $this->dispatch($type, $channel, $client, $contact, $variables);
+                $this->dispatch($type, $channel, $client, $contact, $variables, $attachmentUrl);
             }
         }
     }
@@ -43,7 +43,7 @@ class NotificationDispatchService
      * que snapshota os canais no TaskApprovalToken no momento da submissão,
      * em vez de reconsultar a assinatura atual).
      */
-    public function dispatch(string $type, string $channel, Client $client, Contact $contact, array $variables = []): void
+    public function dispatch(string $type, string $channel, Client $client, Contact $contact, array $variables = [], ?string $attachmentUrl = null): void
     {
         $webhookUrl = config('services.n8n.notification_webhook_url');
         if (!$webhookUrl) {
@@ -79,8 +79,9 @@ class NotificationDispatchService
                 'whatsapp' => $contact->whatsapp,
             ],
             'message' => [
-                'subject' => $template->subject ? $this->render($template->subject, $vars) : null,
-                'body'    => $this->render($template->body, $vars),
+                'subject'        => $template->subject ? $this->render($template->subject, $vars) : null,
+                'body'           => $this->render($template->body, $vars),
+                'attachment_url' => $attachmentUrl,
             ],
             'fired_at' => now()->toISOString(),
         ];

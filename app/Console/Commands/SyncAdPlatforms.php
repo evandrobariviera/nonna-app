@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\CampaignInsight;
 use App\Models\Client;
 use App\Models\ClientAdAccount;
 use App\Models\Organization;
@@ -10,6 +11,7 @@ use App\Services\AdSync\AdDataUpserter;
 use App\Services\AdSync\GoogleAdsFetcher;
 use App\Services\AdSync\MetaAdsFetcher;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -45,6 +47,11 @@ class SyncAdPlatforms extends Command
             $clientIds = Client::pluck('id');
             $accounts = ClientAdAccount::whereIn('client_id', $clientIds)->where('status', 'ativo')->get();
 
+            // organization_id fica ligado via Tenantable (bootTenantable() lê
+            // app('currentOrganization') na hora de criar) — por isso o check
+            // de saldo roda aqui dentro, com o binding ainda apontando pra
+            // esta organização, e não depois de sair do loop.
+
             foreach ($accounts as $account) {
                 $totalAccounts++;
                 try {
@@ -55,6 +62,13 @@ class SyncAdPlatforms extends Command
                         $snapshots = $meta->fetchInsights($account, $metaToken, $yesterday);
                         if (!empty($snapshots)) {
                             $upserter->upsertSnapshots($organization->id, $account->id, 'meta', $yesterday, $snapshots);
+                        }
+
+                        // Saldo só existe pra conta de anúncios de verdade (meta_ads),
+                        // não pro Business Manager (meta_bm).
+                        if ($account->platform === 'meta_ads') {
+                            $balanceData = $meta->fetchAccountBalance($account, $metaToken);
+                            $upserter->upsertAccountBalance($account, $balanceData);
                         }
                     } elseif (str_starts_with($account->platform, 'google') && $googleToken) {
                         $result = $google->fetchCampaignsAndMetrics($account, $googleToken, $googleIntegration->credentials, $yesterday);
@@ -77,10 +91,61 @@ class SyncAdPlatforms extends Command
                     DB::purge('pgsql');
                 }
             }
+
+            $this->checkLowBalances($accounts);
         }
 
         $this->info("Contas processadas: {$totalAccounts} (falhas: {$totalFailures}).");
 
         return self::SUCCESS;
+    }
+
+    // Alerta determinístico de saldo baixo — não usa IA (diferente dos outros
+    // kinds de CampaignInsight, gerados por campaigns:generate-insights), é só
+    // saldo/custo_diário. Cria um insight "novo" quando entra na faixa crítica
+    // e resolve automaticamente quando o saldo é reposto acima do limite.
+    // Precisa rodar com app('currentOrganization') ainda apontando pra
+    // organização das contas recebidas, porque Tenantable::bootTenantable()
+    // usa esse binding pra preencher organization_id na criação.
+    private const LOW_BALANCE_THRESHOLD_DAYS = 3;
+
+    private function checkLowBalances(Collection $accounts): void
+    {
+        $accounts = $accounts
+            ->filter(fn (ClientAdAccount $account) => $account->budget_automation_enabled
+                && $account->balance !== null
+                && $account->hasBillingTracking());
+
+        foreach ($accounts as $account) {
+            $daysRemaining = $account->daysRemaining();
+
+            $openInsight = CampaignInsight::where('client_ad_account_id', $account->id)
+                ->where('kind', 'saldo_baixo')
+                ->where('status', '!=', 'resolvido')
+                ->first();
+
+            if ($daysRemaining !== null && $daysRemaining <= self::LOW_BALANCE_THRESHOLD_DAYS) {
+                if (!$openInsight) {
+                    CampaignInsight::create([
+                        'client_id'            => $account->client_id,
+                        'client_ad_account_id' => $account->id,
+                        'kind'                 => 'saldo_baixo',
+                        'severity'             => 'critico',
+                        'status'               => 'novo',
+                        'title'                => "Saldo acabando — {$account->platformLabel()}",
+                        'summary'              => "Saldo atual R$ " . number_format((float) $account->balance, 2, ',', '.')
+                            . ", restam aproximadamente {$daysRemaining} dia(s) no ritmo de gasto atual. Gerar novo boleto/PIX.",
+                        'metrics_snapshot'     => [
+                            'balance'        => (float) $account->balance,
+                            'days_remaining' => $daysRemaining,
+                            'daily_spend'    => $account->avgDailySpend(),
+                        ],
+                        'generated_at'         => now(),
+                    ]);
+                }
+            } elseif ($openInsight) {
+                $openInsight->update(['status' => 'resolvido', 'resolved_at' => now()]);
+            }
+        }
     }
 }

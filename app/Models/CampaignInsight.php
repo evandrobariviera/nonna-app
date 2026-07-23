@@ -42,6 +42,7 @@ class CampaignInsight extends Model
         'cpa_spike'      => 'CPA em alta',
         'ctr_drop'       => 'CTR em queda',
         'roas_drop'      => 'ROAS em queda',
+        'saldo_baixo'    => 'Saldo acabando',
     ];
 
     public static array $severities = [

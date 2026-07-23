@@ -5,6 +5,7 @@ use App\Http\Controllers\SuperAdmin\OrganizationController as SuperAdminOrgs;
 use App\Http\Controllers\Portal\DashboardController as PortalDashboard;
 use App\Http\Controllers\Portal\ProjectController as PortalProjects;
 use App\Http\Controllers\Portal\AccountController as PortalAccount;
+use App\Http\Controllers\Portal\BillingDocumentController as PortalBilling;
 use App\Http\Controllers\Portal\CampaignController as PortalCampaigns;
 use App\Http\Controllers\Portal\ServiceDiagnosticController as PortalServiceDiagnostics;
 use App\Http\Controllers\Portal\MeetingController as PortalMeetings;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Portal\Auth\AuthenticatedSessionController as PortalSes
 use App\Http\Controllers\Portal\ClientContextController as PortalClientContext;
 use App\Http\Controllers\ClientPortalAccessController;
 use App\Http\Controllers\ClientAdAccountController;
+use App\Http\Controllers\ClientAdBillingDocumentController;
 use App\Http\Controllers\FilaController;
 use App\Http\Controllers\OrganizationIntegrationController;
 use App\Http\Controllers\OrganizationMemberController;
@@ -134,6 +136,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('clients.ad-accounts.update');
     Route::delete('/clientes/{client}/contas-anuncios/{adAccount}', [ClientAdAccountController::class, 'destroy'])
         ->name('clients.ad-accounts.destroy');
+
+    // ── Boletos/PIX da conta de anúncios (Orçamentos) ──
+    Route::post('/clientes/{client}/contas-anuncios/{adAccount}/boletos', [ClientAdBillingDocumentController::class, 'store'])
+        ->name('clients.ad-accounts.billing.store');
+    Route::delete('/clientes/{client}/contas-anuncios/{adAccount}/boletos/{document}', [ClientAdBillingDocumentController::class, 'destroy'])
+        ->name('clients.ad-accounts.billing.destroy');
 
     // ── Orçamento de Anúncios (com histórico) ──
     Route::post('/clientes/{client}/orcamento-anuncios', [ClientAdBudgetController::class, 'store'])
@@ -546,6 +554,7 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
     Route::get('/aprovacoes/{round}', [PortalApprovals::class, 'show'])->name('approvals.show');
     Route::post('/aprovacoes/{round}/decidir', [PortalApprovals::class, 'decide'])->name('approvals.decide');
     Route::get('/campanhas', [PortalCampaigns::class, 'index'])->name('campaigns.index');
+    Route::get('/boletos', [PortalBilling::class, 'index'])->name('boletos.index');
     Route::get('/atendimento', [PortalServiceDiagnostics::class, 'index'])->name('service-diagnostics.index');
     Route::get('/atendimento/{integration}', [PortalServiceDiagnostics::class, 'integration'])->name('service-diagnostics.integration');
     Route::get('/atendimento/{integration}/diagnosticos/{diagnostic}', [PortalServiceDiagnostics::class, 'show'])->name('service-diagnostics.show');

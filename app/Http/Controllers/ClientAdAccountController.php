@@ -42,7 +42,18 @@ class ClientAdAccountController extends Controller
             'sheet_tab_name'  => 'nullable|string|max:150',
             'status'          => 'required|in:ativo,pausado,suspenso',
             'notes'           => 'nullable|string',
+            'payment_method'  => 'nullable|in:pix,cartao,boleto',
+            'balance'         => 'nullable|numeric|min:0',
         ]);
+
+        $data['budget_automation_enabled'] = $request->boolean('budget_automation_enabled');
+
+        // Editar o saldo na mão sempre marca a origem como manual, mesmo que
+        // a última sincronização tenha vindo da API — evita que o próximo
+        // sync automático sobrescreva silenciosamente uma correção do time.
+        if ($request->filled('balance')) {
+            $data['balance_source'] = 'manual';
+        }
 
         $adAccount->update($data);
 

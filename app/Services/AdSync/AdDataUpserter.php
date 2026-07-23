@@ -6,6 +6,7 @@ use App\Models\AdAd;
 use App\Models\AdAdset;
 use App\Models\AdCampaign;
 use App\Models\AdDailySnapshot;
+use App\Models\ClientAdAccount;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -126,5 +127,19 @@ class AdDataUpserter
         });
 
         return $upserted;
+    }
+
+    // Meta devolve balance/amount_spent/spend_cap em centavos da moeda da conta.
+    public function upsertAccountBalance(ClientAdAccount $account, array $data): void
+    {
+        if (!array_key_exists('balance', $data)) {
+            return;
+        }
+
+        $account->update([
+            'balance'           => ((float) $data['balance']) / 100,
+            'balance_source'    => 'api',
+            'balance_synced_at' => now(),
+        ]);
     }
 }

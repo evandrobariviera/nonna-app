@@ -1022,7 +1022,7 @@
         </div>
 
         {{-- TAB: CONTAS DE ANÚNCIOS --}}
-        <div x-show="tab === 'contas'" x-cloak x-data="{ addForm: false, editId: null, budgetForm: false, budgetHistory: false }">
+        <div x-show="tab === 'contas'" x-cloak x-data="{ addForm: false, editId: null, budgetForm: false, budgetHistory: false, billingOpenId: null }">
 
             {{-- ORÇAMENTO DE ANÚNCIOS --}}
             @php
@@ -1245,6 +1245,9 @@
                                 <th>Nome</th>
                                 <th>Aba Planilha</th>
                                 <th>Status</th>
+                                <th>Pagamento</th>
+                                <th>Saldo</th>
+                                <th>Automação</th>
                                 <th>Obs</th>
                                 <th></th>
                             </tr>
@@ -1318,12 +1321,78 @@
                                         </td>
                                     </template>
 
+                                    <template x-if="editId !== '{{ $account->id }}'">
+                                        <td class="text-xs text-[var(--muted2)]">{{ $account->paymentMethodLabel() }}</td>
+                                    </template>
+                                    <template x-if="editId === '{{ $account->id }}'">
+                                        <td>
+                                            <select name="payment_method" form="edit-account-{{ $account->id }}"
+                                                    class="w-full bg-[var(--s3)] border border-[var(--border2)] text-xs text-[var(--text)] px-2 py-1.5 focus:outline-none focus:border-[var(--purple)]">
+                                                <option value="">—</option>
+                                                @foreach(\App\Models\ClientAdAccount::$paymentMethods as $key => $label)
+                                                    <option value="{{ $key }}" {{ $account->payment_method === $key ? 'selected' : '' }}>{{ $label }}</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                    </template>
+
+                                    @if($account->hasBillingTracking())
+                                        <template x-if="editId !== '{{ $account->id }}'">
+                                            <td class="text-xs">
+                                                <span style="color:var(--text)">
+                                                    {{ $account->balance !== null ? 'R$ ' . number_format((float) $account->balance, 2, ',', '.') : '—' }}
+                                                </span>
+                                                @if($account->balance_source === 'api')
+                                                    <span class="badge badge-blue" style="white-space:nowrap">API</span>
+                                                @endif
+                                                <div class="mt-0.5">
+                                                    <span class="badge badge-{{ $account->balanceStatusColor() }}" style="white-space:nowrap">
+                                                        {{ $account->balanceStatusLabel() }}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </template>
+                                        <template x-if="editId === '{{ $account->id }}'">
+                                            <td>
+                                                <input type="number" step="0.01" min="0" name="balance" form="edit-account-{{ $account->id }}"
+                                                       value="{{ $account->balance }}"
+                                                       class="w-full bg-[var(--s3)] border border-[var(--border2)] text-xs font-mono text-[var(--text)] px-2 py-1.5 focus:outline-none focus:border-[var(--purple)]">
+                                            </td>
+                                        </template>
+
+                                        <template x-if="editId !== '{{ $account->id }}'">
+                                            <td>
+                                                <span class="badge badge-{{ $account->budget_automation_enabled ? 'green' : 'muted' }}">
+                                                    {{ $account->budget_automation_enabled ? 'Sim' : 'Não' }}
+                                                </span>
+                                            </td>
+                                        </template>
+                                        <template x-if="editId === '{{ $account->id }}'">
+                                            <td>
+                                                <label class="flex items-center gap-2 text-xs" style="color:var(--muted2)">
+                                                    <input type="checkbox" name="budget_automation_enabled" value="1" form="edit-account-{{ $account->id }}"
+                                                           {{ $account->budget_automation_enabled ? 'checked' : '' }}>
+                                                    Avisar saldo baixo
+                                                </label>
+                                            </td>
+                                        </template>
+                                    @else
+                                        <td class="text-xs" style="color:var(--muted)">—</td>
+                                        <td class="text-xs" style="color:var(--muted)">—</td>
+                                    @endif
+
                                     <td class="text-xs text-[var(--muted)] max-w-[150px] truncate">
                                         {{ $account->notes ?: '—' }}
                                     </td>
 
                                     <td class="text-right">
                                         <div class="flex items-center justify-end gap-3">
+                                            @if($account->hasBillingTracking())
+                                                <button type="button" @click="billingOpenId = billingOpenId === '{{ $account->id }}' ? null : '{{ $account->id }}'"
+                                                        class="text-xs font-mono text-[var(--muted)] hover:text-[var(--purple)] transition-colors">
+                                                    Boletos ({{ $account->billingDocuments->count() }})
+                                                </button>
+                                            @endif
                                             <template x-if="editId !== '{{ $account->id }}'">
                                                 <button type="button" @click="editId = '{{ $account->id }}'"
                                                         class="text-xs font-mono text-[var(--muted)] hover:text-[var(--purple)] transition-colors">
@@ -1362,6 +1431,95 @@
                                         </form>
                                     </td>
                                 </tr>
+                                @if($account->hasBillingTracking())
+                                    <tr x-show="billingOpenId === '{{ $account->id }}'" x-cloak>
+                                        <td colspan="10" style="background:var(--s2)">
+                                            <div class="p-4" x-data="{ docType: 'boleto' }">
+                                                <h4 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-3">
+                                                    Enviar Boleto/PIX — {{ $account->platformLabel() }} · {{ $account->account_id }}
+                                                </h4>
+                                                <form method="POST" enctype="multipart/form-data"
+                                                      action="{{ route('clients.ad-accounts.billing.store', [$client, $account]) }}"
+                                                      class="grid grid-cols-4 gap-3 items-end mb-4">
+                                                    @csrf
+                                                    <div>
+                                                        <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Tipo</label>
+                                                        <select name="type" x-model="docType"
+                                                                class="w-full bg-[var(--s3)] border border-[var(--border2)] text-xs text-[var(--text)] px-2 py-2 focus:outline-none focus:border-[var(--purple)]">
+                                                            @foreach(\App\Models\ClientAdBillingDocument::$types as $key => $label)
+                                                                <option value="{{ $key }}">{{ $label }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Valor (R$)</label>
+                                                        <input type="number" step="0.01" min="0" name="amount"
+                                                               class="w-full bg-[var(--s3)] border border-[var(--border2)] text-xs font-mono text-[var(--text)] px-2 py-2 focus:outline-none focus:border-[var(--purple)]">
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Vencimento</label>
+                                                        <input type="date" name="due_date"
+                                                               class="w-full bg-[var(--s3)] border border-[var(--border2)] text-xs text-[var(--text)] px-2 py-2 focus:outline-none focus:border-[var(--purple)]">
+                                                    </div>
+                                                    <div x-show="docType === 'boleto'">
+                                                        <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Arquivo (PDF)</label>
+                                                        <input type="file" name="file"
+                                                               class="w-full text-xs text-[var(--text)]">
+                                                    </div>
+                                                    <div x-show="docType === 'pix'" class="col-span-2">
+                                                        <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Código PIX (copia e cola)</label>
+                                                        <textarea name="pix_code" rows="1"
+                                                                  class="w-full bg-[var(--s3)] border border-[var(--border2)] text-xs font-mono text-[var(--text)] px-2 py-2 focus:outline-none focus:border-[var(--purple)]"></textarea>
+                                                    </div>
+                                                    <div class="col-span-4">
+                                                        <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Observações</label>
+                                                        <input type="text" name="notes"
+                                                               class="w-full bg-[var(--s3)] border border-[var(--border2)] text-xs text-[var(--text)] px-2 py-2 focus:outline-none focus:border-[var(--purple)]">
+                                                    </div>
+                                                    <div>
+                                                        <button type="submit"
+                                                                class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                                                                style="background: var(--purple);">
+                                                            Enviar e notificar cliente
+                                                        </button>
+                                                    </div>
+                                                </form>
+
+                                                @if($account->billingDocuments->isNotEmpty())
+                                                    <div class="flex flex-col gap-1.5">
+                                                        @foreach($account->billingDocuments as $doc)
+                                                            <div class="flex items-center justify-between px-3 py-2 text-xs" style="background:var(--s3)">
+                                                                <span style="color:var(--text)">
+                                                                    {{ $doc->typeLabel() }}
+                                                                    @if($doc->amount) — R$ {{ number_format((float) $doc->amount, 2, ',', '.') }} @endif
+                                                                    @if($doc->due_date) <span style="color:var(--muted)">vence {{ $doc->due_date->format('d/m/Y') }}</span> @endif
+                                                                    <span style="color:var(--muted)">· enviado {{ $doc->created_at->format('d/m/Y') }}</span>
+                                                                    @if($doc->notified_at)
+                                                                        <span class="badge badge-green" style="white-space:nowrap">cliente notificado</span>
+                                                                    @endif
+                                                                </span>
+                                                                <div class="flex items-center gap-3">
+                                                                    @if($doc->hasFile())
+                                                                        <a href="{{ $doc->url() }}" target="_blank" style="color:var(--purple)">{{ $doc->icon() }} {{ $doc->filename }}</a>
+                                                                    @endif
+                                                                    <form method="POST"
+                                                                          action="{{ route('clients.ad-accounts.billing.destroy', [$client, $account, $doc]) }}"
+                                                                          onsubmit="return confirm('Remover este documento?')">
+                                                                        @csrf @method('DELETE')
+                                                                        <button type="submit" style="color:var(--muted)"
+                                                                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                @else
+                                                    <p class="text-xs" style="color:var(--muted)">Nenhum boleto/PIX enviado ainda.</p>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endif
                             @endforeach
                         </tbody>
                     </table>

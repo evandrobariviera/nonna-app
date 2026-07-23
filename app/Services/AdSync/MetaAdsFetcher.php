@@ -74,4 +74,23 @@ class MetaAdsFetcher
             ->filter(fn ($a) => in_array($a['action_type'] ?? null, $types))
             ->sum(fn ($a) => (float) ($a['value'] ?? 0));
     }
+
+    // O Meta devolve `balance`/`amount_spent`/`spend_cap` em centavos (menor
+    // unidade da moeda da conta) — a conversão pra reais fica por conta de
+    // quem chama (AdDataUpserter::upsertAccountBalance).
+    public function fetchAccountBalance(ClientAdAccount $account, string $accessToken): array
+    {
+        $response = Http::timeout(15)->get("https://graph.facebook.com/" . self::API_VERSION . "/act_{$account->account_id}", [
+            'fields'       => 'balance,amount_spent,spend_cap,funding_source_details',
+            'access_token' => $accessToken,
+        ]);
+
+        if ($response->failed()) {
+            throw new \RuntimeException(
+                "MetaAdsFetcher::fetchAccountBalance falhou para conta {$account->id} - HTTP {$response->status()}: {$response->body()}"
+            );
+        }
+
+        return $response->json() ?? [];
+    }
 }
