@@ -45,6 +45,16 @@ jobs:
       # sai de lá. `docker image prune -f` só remove imagens sem tag e sem
       # nenhum container usando (nunca a que o container em transição ainda
       # usa), então é seguro rodar logo depois do update.
+      #
+      # `--detach=false` é o ponto importante aqui: por padrão o
+      # `docker service update` só REGISTRA a atualização e retorna na hora,
+      # sem esperar o container novo subir/passar no healthcheck/o antigo
+      # descer — por isso o job sempre "terminava rápido" mesmo quando a
+      # troca de verdade no servidor levava minutos depois disso, invisível
+      # no log do Actions. Com --detach=false o comando fica preso até o
+      # Swarm convergir de verdade (ou desistir e reverter, graças ao
+      # failure_action: rollback do docker-compose.prod.yml) — assim o tempo
+      # que aparece aqui já é o tempo real do deploy.
       - name: Deploy no Swarm via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -54,10 +64,13 @@ jobs:
           script: |
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker pull ghcr.io/evandrobariviera/nonna-app:latest
+            echo "=== Início da atualização do serviço: $(date -u +%H:%M:%S) ==="
             docker service update \
               --image ghcr.io/evandrobariviera/nonna-app:latest \
               --with-registry-auth \
+              --detach=false \
               nonna-app_app
+            echo "=== Serviço convergido: $(date -u +%H:%M:%S) ==="
             docker image prune -f
 
       # Cada push cria uma tag `sha-<commit>` nova (além de `latest`) e nada
