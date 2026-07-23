@@ -45,12 +45,20 @@ services:
 
     networks:
       - nonna-project-02-manager
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/up"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
     deploy:
       replicas: 1
       update_config:
         parallelism: 1
         delay: 10s
         order: start-first       # sobe novo antes de derrubar o atual (zero downtime)
+        failure_action: rollback
+        monitor: 120s            # tempo observando o healthcheck do novo container antes de considerar o update ok
       restart_policy:
         condition: on-failure
         delay: 5s
