@@ -96,4 +96,22 @@ class ContactController extends Controller
         return redirect()->route('contacts.show', $contact)
             ->with('success', 'Contato atualizado.');
     }
+
+    // Delete de verdade — exceção à regra geral de "nunca deletar contato,
+    // usar status inativo" (ver CLAUDE.md), só permitida quando o contato
+    // não tem NENHUMA associação real (ver Contact::blockingAssociations()).
+    // Existe pra limpar duplicatas cadastradas por engano.
+    public function destroy(Contact $contact)
+    {
+        $blocking = $contact->blockingAssociations();
+
+        if (!empty($blocking)) {
+            $reasons = collect($blocking)->map(fn ($count, $label) => "{$count} {$label}")->implode(', ');
+            return back()->with('error', "Não é possível excluir — este contato tem: {$reasons}. Use o status \"Inativo\" em vez de excluir.");
+        }
+
+        $contact->delete();
+
+        return redirect()->route('contacts.index')->with('success', 'Contato excluído.');
+    }
 }

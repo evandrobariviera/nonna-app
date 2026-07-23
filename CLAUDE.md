@@ -137,7 +137,7 @@ Ver [.claude/docs/architecture.md](.claude/docs/architecture.md) para schema com
 
 - Não presumir que toda integração externa precisa passar pelo n8n — o App pode integrar diretamente com APIs externas quando fizer sentido (ex: Meta/Google Ads). O n8n continua valendo pra automações que já funcionam bem assim (ex: ClickUp) ou quando orquestração visual/cross-tool realmente ajuda
 - Não usar Livewire ou Inertia — o projeto usa Blade puro
-- Não deletar clientes ou contatos — usar status `inactive`
+- Não deletar clientes ou contatos que tenham qualquer associação real (contratos, contas de anúncio, tarefas, projetos, planejamentos, oportunidades, acesso ao portal, etc) — usar status `inactive` nesses casos. Delete de verdade (`clients.destroy`/`contacts.destroy`) só é permitido quando `Client::blockingAssociations()`/`Contact::blockingAssociations()` devolve array vazio — existe especificamente para limpar duplicatas cadastradas por engano, nunca para remover histórico de cliente/contato de verdade
 - Não buscar dados do ClickUp diretamente — consultar tabelas `clickup_*` do PostgreSQL
 
 ## Funcionalidades — roadmap

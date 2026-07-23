@@ -57,6 +57,11 @@
                 {{ session('success') }}
             </div>
         @endif
+        @if(session('error'))
+            <div class="mb-4 px-4 py-3 text-sm border" style="background: rgba(220,38,38,.06); border-color: rgba(220,38,38,.25); color: var(--red);">
+                {{ session('error') }}
+            </div>
+        @endif
 
         {{-- Tabela --}}
         <div class="card">
@@ -120,6 +125,13 @@
                                        class="text-xs font-mono text-[var(--muted)] hover:text-[var(--purple)] transition-colors">
                                         Ver →
                                     </a>
+                                    <form method="POST" action="{{ route('contacts.destroy', $contact) }}"
+                                          onsubmit="return confirm('Excluir {{ addslashes($contact->name) }}? Só funciona se não houver nenhuma associação (cliente vinculado, oportunidade, acesso ao portal, etc) — senão use o status Inativo.')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-xs font-mono text-[var(--muted)] hover:text-[var(--red)] transition-colors">
+                                            Excluir
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

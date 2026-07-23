@@ -182,4 +182,28 @@ class ClientController extends Controller
 
         return redirect()->back()->with('success', 'Status atualizado.');
     }
+
+    // Delete de verdade — exceção à regra geral de "nunca deletar cliente,
+    // usar status inactive" (ver CLAUDE.md), só permitida quando o cliente
+    // não tem NENHUMA associação real (ver Client::blockingAssociations()).
+    // Existe pra limpar duplicatas cadastradas por engano, nunca pra remover
+    // um cliente com histórico de verdade — pra esse caso, status inactive
+    // continua sendo o caminho certo.
+    public function destroy(Client $client)
+    {
+        $blocking = $client->blockingAssociations();
+
+        if (!empty($blocking)) {
+            $reasons = collect($blocking)->map(fn ($count, $label) => "{$count} {$label}")->implode(', ');
+            return back()->with('error', "Não é possível excluir — este cliente tem: {$reasons}. Use o status \"Inativo\" em vez de excluir.");
+        }
+
+        if ($client->logo_path) {
+            Storage::disk($client->logo_disk)->delete($client->logo_path);
+        }
+
+        $client->delete();
+
+        return redirect()->route('clients.index')->with('success', 'Cliente excluído.');
+    }
 }

@@ -235,13 +235,14 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::resource('contatos', ContactController::class)->parameters([
         'contatos' => 'contact',
     ])->names([
-        'index'  => 'contacts.index',
-        'create' => 'contacts.create',
-        'store'  => 'contacts.store',
-        'show'   => 'contacts.show',
-        'edit'   => 'contacts.edit',
-        'update' => 'contacts.update',
-    ])->except(['destroy']);
+        'index'   => 'contacts.index',
+        'create'  => 'contacts.create',
+        'store'   => 'contacts.store',
+        'show'    => 'contacts.show',
+        'edit'    => 'contacts.edit',
+        'update'  => 'contacts.update',
+        'destroy' => 'contacts.destroy',
+    ]);
 
     // ── CRM: Oportunidades ──
     Route::resource('oportunidades', OpportunityController::class)->parameters([

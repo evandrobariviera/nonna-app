@@ -1,6 +1,19 @@
 <x-app-layout>
     <x-slot name="header">Clientes</x-slot>
 
+    @if(session('success'))
+        <div class="mb-5 px-4 py-3 text-sm font-semibold"
+             style="background:rgba(52,211,153,.08); border:1px solid rgba(52,211,153,.25); color:var(--green)">
+            {{ session('success') }}
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="mb-5 px-4 py-3 text-sm font-semibold"
+             style="background:rgba(220,38,38,.08); border:1px solid rgba(220,38,38,.25); color:var(--red)">
+            {{ session('error') }}
+        </div>
+    @endif
+
     {{-- TOOLBAR --}}
     <div class="flex items-center justify-between mb-5 gap-4 flex-wrap">
         <form method="GET" action="{{ route('clients.index') }}" class="flex items-center gap-3 flex-1 min-w-0">
@@ -98,13 +111,24 @@
                                 <x-status-dropdown-cell :options="\App\Models\Client::$statuses" :current="$client->status"
                                     :action="route('clients.update-status', $client)" :width="110" />
                                 <td class="text-right">
-                                    <a href="{{ route('clients.edit', $client) }}"
-                                       class="text-xs font-semibold transition-colors"
-                                       style="color:var(--muted)"
-                                       onmouseover="this.style.color='var(--purple)'"
-                                       onmouseout="this.style.color='var(--muted)'">
-                                        Editar
-                                    </a>
+                                    <div class="flex items-center justify-end gap-3">
+                                        <a href="{{ route('clients.edit', $client) }}"
+                                           class="text-xs font-semibold transition-colors"
+                                           style="color:var(--muted)"
+                                           onmouseover="this.style.color='var(--purple)'"
+                                           onmouseout="this.style.color='var(--muted)'">
+                                            Editar
+                                        </a>
+                                        <form method="POST" action="{{ route('clients.destroy', $client) }}"
+                                              onsubmit="return confirm('Excluir {{ addslashes($client->company_name) }}? Só funciona se não houver nenhuma associação (contratos, contas, tarefas, etc) — senão use o status Inativo.')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="text-xs font-semibold transition-colors"
+                                                style="color:var(--muted)"
+                                                onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+                                                Excluir
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach

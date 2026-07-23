@@ -98,4 +98,23 @@ class Contact extends Authenticatable
             ->withPivot(['role', 'is_primary'])
             ->withTimestamps();
     }
+
+    // Delete de verdade só é permitido quando não sobra NENHUMA associação —
+    // devolve um mapa label => contagem só com o que estiver bloqueando
+    // (array vazio = seguro apagar). Usado por ContactController::destroy().
+    public function blockingAssociations(): array
+    {
+        $checks = [
+            'clientes vinculados'         => $this->clients()->count(),
+            'oportunidades'               => $this->opportunities()->count(),
+            'tarefas criadas pelo portal' => Task::where('contact_id', $this->id)->count(),
+            'comentários no portal'       => TaskComment::where('contact_id', $this->id)->count(),
+        ];
+
+        if ($this->portal_access_enabled) {
+            $checks['acesso ao portal ativo'] = 1;
+        }
+
+        return array_filter($checks, fn ($count) => $count > 0);
+    }
 }

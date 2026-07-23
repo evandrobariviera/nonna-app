@@ -253,4 +253,31 @@ class Client extends Model
     {
         return $this->serviceDiagnostics()->where('status', 'published')->first();
     }
+
+    // Delete de verdade só é permitido quando não sobra NENHUMA associação —
+    // devolve um mapa label => contagem só com o que estiver bloqueando
+    // (array vazio = seguro apagar). Usado por ClientController::destroy().
+    // Projeto e Tarefa não têm relação declarada aqui (client_id direto,
+    // sem método hasMany dedicado) — checados por query direta.
+    public function blockingAssociations(): array
+    {
+        $checks = [
+            'contratos'                    => $this->contracts()->count(),
+            'contas de anúncio'            => $this->adAccounts()->count(),
+            'orçamentos de anúncios'       => $this->adBudgets()->count(),
+            'planejamentos'                => $this->macroplans()->count(),
+            'projetos'                     => Project::where('client_id', $this->id)->count(),
+            'tarefas'                      => Task::where('client_id', $this->id)->count(),
+            'dossiês de marca'             => $this->dossiers()->count(),
+            'oportunidades'                => $this->opportunities()->count(),
+            'contatos vinculados'          => $this->contacts()->count(),
+            'integrações de atendimento'   => $this->integrations()->count(),
+            'conversas de atendimento'     => $this->serviceConversations()->count(),
+            'diagnósticos de atendimento'  => $this->serviceDiagnostics()->count(),
+            'links salvos'                 => $this->links()->count(),
+            'onboarding'                   => $this->onboarding ? 1 : 0,
+        ];
+
+        return array_filter($checks, fn ($count) => $count > 0);
+    }
 }
