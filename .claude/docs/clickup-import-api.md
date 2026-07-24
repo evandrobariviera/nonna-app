@@ -33,6 +33,20 @@ Uma tarefa que nasceu como Ticket (`origin: 'ticket'`) e depois foi movida no Cl
 
 Sem `list_name` no payload (`clickup-import.json`, que não manda esse campo), mantém o comportamento antigo (`is_ticket` = valor vindo do payload, baseado em `origin`) — o fix é opt-in por workflow, igual ao match de sprint.
 
+## Filtro temporário de migração — cliente por cliente (2026-07-23)
+
+Em 2026-07-23, depois de zerar `tasks`/`projects`/`macro_plans`/`brand_dossiers` em produção (ver histórico de decisão), a estratégia de retomada do sync passou a ser **gradual, cliente por cliente**, em vez de trazer todo o workspace de uma vez: só um cliente por vez tem suas tarefas sincronizadas pro App, os demais continuam de fora até serem migrados explicitamente.
+
+O filtro fica **no n8n, não no App** (decisão explícita — a alternativa de guardar uma flag em `clients` e filtrar no `ClickupImportController` foi considerada e descartada em favor de manter tudo no lado do n8n). Cada um dos 3 workflows (`clickup-import.json`, `clickup-realtime-sync.json`, `clickup-scheduled-resync.json`) tem um campo `clientes_migrados` no node **Config**: string com os `client_clickup_id` liberados, separados por vírgula (mesmo ID usado em `client_clickup_id` do payload — bate contra `clients.clickup_task_id`). O Code node que monta o payload de Tarefas (branch de Tarefa, nos 3 workflows) filtra antes de montar o array: tarefa de cliente fora da lista **nem chega a ser enviada** pro App.
+
+**Vazio = nenhuma tarefa passa.** Migrar mais um cliente é só adicionar o ID dele na lista.
+
+**Precisa manter os 3 workflows com o mesmo valor de `clientes_migrados`** — não há fonte única compartilhada entre eles (decisão consciente, ver acima). Esquecer de atualizar um dos 3 workflows ao migrar um cliente faz esse workflow continuar ignorando as tarefas dele.
+
+**Só filtra a branch de Tarefa.** As branches de Macroplano/Projeto em `clickup-realtime-sync.json` não são afetadas por este filtro — se isso virar um problema (ex: macroplano/projeto de cliente ainda não migrado entrando no App), precisa ser tratado à parte.
+
+**É temporário, por desenho:** remover o filtro (campo `clientes_migrados` no Config + o bloco de filtro no Code node) dos 3 workflows quando todos os clientes já tiverem migrado.
+
 ## Autenticação
 
 Não usa Sanctum. Autenticação simples por header, comparado em tempo constante (`hash_equals`):
