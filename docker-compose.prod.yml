@@ -49,7 +49,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 90s
+      # start_period generoso de propósito (2026-07-24): o entrypoint.sh faz espera de
+      # banco (até 60s) + migrate + 2 seeders + 4 rebuilds de cache ANTES do nginx sequer
+      # começar a escutar — 90s estourava fácil num servidor compartilhado com outras 13
+      # stacks, fazendo o healthcheck falhar prematuramente e disparar failure_action:
+      # rollback (outro ciclo de start/stop por cima do que já estava rolando — daí os
+      # 15-20min de gateway timeout reportados). Se ainda estourar, o próximo passo é
+      # medir no log do container qual etapa específica do entrypoint está lenta.
+      start_period: 240s
     deploy:
       replicas: 1
       update_config:
@@ -57,7 +64,7 @@ services:
         delay: 10s
         order: start-first       # sobe novo antes de derrubar o atual (zero downtime)
         failure_action: rollback
-        monitor: 120s            # tempo observando o healthcheck do novo container antes de considerar o update ok
+        monitor: 300s            # sempre > start_period + 1 retry, senão o Swarm pode concluir o update antes do healthcheck ter chance real de passar
       restart_policy:
         condition: on-failure
         delay: 5s

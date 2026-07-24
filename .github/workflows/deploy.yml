@@ -61,6 +61,13 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          # Default do command_timeout é 10m — perto demais do pior caso agora que
+          # start_period/monitor do healthcheck (docker-compose.prod.yml) foram
+          # alargados (uma tentativa que falha + rollback completo pode passar de
+          # 10min). Se a conexão SSH morrer no meio do `docker service update`, o
+          # comando é abortado no servidor e pode deixar o serviço pela metade —
+          # pior que só demorar. 20m dá folga confortável mesmo no pior caso.
+          command_timeout: 20m
           script: |
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker pull ghcr.io/evandrobariviera/nonna-app:latest
