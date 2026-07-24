@@ -31,7 +31,7 @@
 <tbody x-data="{ groupOpen: true }">
     {{-- Cabeçalho do grupo --}}
     <tr class="group-header-row" style="background:var(--s2)">
-        <td colspan="11" style="padding:10px 16px">
+        <td colspan="12" style="padding:10px 16px">
             <button @click="groupOpen = !groupOpen"
                     type="button"
                     class="flex items-center gap-3 w-full text-left">

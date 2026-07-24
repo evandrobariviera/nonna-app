@@ -14,7 +14,7 @@ class TicketController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Task::with(['client', 'executor', 'executors'])
+        $query = Task::with(['client', 'executor', 'executors', 'project'])
             ->where('is_ticket', true)
             ->orderByDesc('created_at');
 

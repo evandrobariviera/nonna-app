@@ -64,6 +64,21 @@
         </div>
     </td>
 
+    {{-- Projeto --}}
+    <td style="width:150px; max-width:150px">
+        @if($task->project)
+            <a href="{{ $task->project->macro_plan_id ? route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) : route('projects.showDirect', $task->project) }}"
+               class="text-sm hover:underline" style="color:var(--text)"
+               title="{{ $task->project->title }}">
+                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; max-width:136px">
+                    {{ $task->project->title }}
+                </span>
+            </a>
+        @else
+            <span class="text-sm" style="color:var(--muted)">—</span>
+        @endif
+    </td>
+
     {{-- Responsável --}}
     <td style="width:44px; text-align:center; padding:0 4px">
         @if($respList->isNotEmpty())

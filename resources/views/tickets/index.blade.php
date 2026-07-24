@@ -75,7 +75,7 @@
                             @include('partials._task-tr', ['task' => $ticket, 'context' => 'ticket'])
                         @empty
                             <tr>
-                                <td colspan="11">
+                                <td colspan="12">
                                     <div class="tab-placeholder">
                                         <div class="tab-placeholder-icon">🎫</div>
                                         <div class="tab-placeholder-title">Nenhum ticket encontrado</div>

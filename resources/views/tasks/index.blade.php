@@ -102,6 +102,7 @@
                         <th style="width:130px">Status</th>
                         <th>Tarefa</th>
                         <th style="width:200px">Cliente</th>
+                        <th style="width:180px">Projeto</th>
                         <th style="width:160px">Tipo</th>
                         <th style="width:130px">Executor</th>
                         <th style="width:100px">Prazo</th>
@@ -161,6 +162,19 @@
                             </span>
                         </td>
 
+                        {{-- Projeto --}}
+                        <td>
+                            @if($task->project)
+                                <a href="{{ $task->project->macro_plan_id ? route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) : route('projects.showDirect', $task->project) }}"
+                                   class="text-sm hover:underline" style="color:var(--text)"
+                                   title="{{ $task->project->title }}">
+                                    {{ $task->project->title }}
+                                </a>
+                            @else
+                                <span class="text-sm" style="color:var(--muted)">—</span>
+                            @endif
+                        </td>
+
                         {{-- Tipo --}}
                         <td>
                             <span class="text-sm" style="color:var(--muted2)">
@@ -212,18 +226,12 @@
                                    class="btn btn-primary btn-xs">
                                     Abrir
                                 </a>
-                                @if($task->project)
-                                    <a href="{{ $task->project->macro_plan_id ? route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) : route('projects.showDirect', $task->project) }}"
-                                       class="btn btn-ghost btn-xs">
-                                        Projeto
-                                    </a>
-                                @endif
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8">
+                        <td colspan="9">
                             <div class="tab-placeholder">
                                 <div class="tab-placeholder-icon">📋</div>
                                 <div class="tab-placeholder-title">Nenhuma tarefa encontrada</div>
