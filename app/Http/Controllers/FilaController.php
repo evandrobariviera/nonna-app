@@ -48,7 +48,10 @@ class FilaController extends Controller
 
         $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);
         $users    = User::orderBy('name')->get(['id', 'name']);
-        $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
+        $projects = Project::with('client:id,company_name')
+            ->whereNotIn('status', ['concluido', 'cancelado'])
+            ->orderBy('title')
+            ->get(['id', 'title', 'client_id']);
 
         $sprints = Sprint::whereIn('status', ['active', 'planning'])
             ->orderByRaw("CASE status WHEN 'active' THEN 0 ELSE 1 END")

@@ -325,56 +325,16 @@
         {{-- ── TAB LISTA ── --}}
         <div x-show="tab === 'list'" x-cloak>
 
-            {{-- Filtros --}}
-            <form method="GET" action="{{ route('sprints.show', $sprint) }}"
-                  class="card card-body mb-5 flex flex-wrap items-end gap-3">
-                <input type="hidden" name="view" value="list">
-
-                <div class="min-w-40">
-                    <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Agrupar por</label>
-                    <select name="list_group_by" class="filter-select w-full" onchange="this.form.submit()">
-                        <option value="cliente"     {{ $listGroupBy === 'cliente'     ? 'selected' : '' }}>Cliente</option>
-                        <option value="executor"    {{ $listGroupBy === 'executor'    ? 'selected' : '' }}>Executor</option>
-                        <option value="responsavel" {{ $listGroupBy === 'responsavel' ? 'selected' : '' }}>Responsável</option>
-                        <option value="status"      {{ $listGroupBy === 'status'      ? 'selected' : '' }}>Status</option>
-                    </select>
-                </div>
-
-                <div class="w-px self-stretch" style="background:var(--border2)"></div>
-
-                <div class="flex-1 min-w-44">
-                    <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Buscar</label>
-                    <input type="text" name="list_search" value="{{ request('list_search') }}" placeholder="Buscar por título…"
-                        class="filter-select w-full" style="cursor:text">
-                </div>
-
-                <div class="flex-1 min-w-36">
-                    <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Cliente</label>
-                    <select name="list_client_id" class="filter-select w-full">
-                        <option value="">Todos os clientes</option>
-                        @foreach($clients as $c)
-                            <option value="{{ $c->id }}" {{ request('list_client_id') === $c->id ? 'selected' : '' }}>{{ $c->company_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="min-w-36">
-                    <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Status</label>
-                    <select name="list_status" class="filter-select w-full">
-                        <option value="">Todos os status</option>
-                        @foreach(\App\Models\Task::$statuses as $key => $s)
-                            <option value="{{ $key }}" {{ request('list_status') === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="flex gap-2">
-                    <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
-                    @if(request()->hasAny(['list_search', 'list_client_id', 'list_status']))
-                        <a href="{{ route('sprints.show', ['sprint' => $sprint, 'view' => 'list', 'list_group_by' => $listGroupBy]) }}" class="btn btn-ghost btn-sm">✕ Limpar</a>
-                    @endif
-                </div>
-            </form>
+            {{-- Filtros — exatamente os mesmos da Fila (ver partials/_task-filter-bar.blade.php) --}}
+            @include('partials._task-filter-bar', [
+                'formAction'  => route('sprints.show', $sprint),
+                'prefix'      => 'list_',
+                'extraHidden' => ['view' => 'list'],
+                'clients'     => $clients,
+                'projects'    => $projects,
+                'groupBy'     => $listGroupBy,
+                'clearUrl'    => route('sprints.show', ['sprint' => $sprint, 'view' => 'list', 'list_group_by' => $listGroupBy]),
+            ])
 
             @if($listTasks->isEmpty())
                 <div class="tab-placeholder">

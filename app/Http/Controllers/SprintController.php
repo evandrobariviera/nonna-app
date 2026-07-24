@@ -84,13 +84,26 @@ class SprintController extends Controller
                 ->values();
         }
 
-        // Lista filtrável (aba "Lista") — mesmo conjunto de tarefas da sprint, só filtrado
+        // Lista filtrável (aba "Lista") — mesmo conjunto de tarefas da sprint, filtrado com
+        // exatamente os mesmos filtros da Fila (ver partials/_task-filter-bar.blade.php).
         $listTasks = $sprint->tasks;
+        if (!$request->boolean('list_mostrar_fechados')) {
+            $listTasks = $listTasks->whereNotIn('status', ['concluido', 'cancelado']);
+        }
         if ($request->filled('list_client_id')) {
             $listTasks = $listTasks->where('client_id', $request->get('list_client_id'));
         }
-        if ($request->filled('list_status')) {
-            $listTasks = $listTasks->where('status', $request->get('list_status'));
+        if ($request->filled('list_project_id')) {
+            $listTasks = $listTasks->where('project_id', $request->get('list_project_id'));
+        }
+        if ($request->filled('list_origin')) {
+            $listTasks = $listTasks->where('origin', $request->get('list_origin'));
+        }
+        if ($request->filled('list_task_type')) {
+            $listTasks = $listTasks->where('task_type', $request->get('list_task_type'));
+        }
+        if ($request->boolean('list_atrasadas')) {
+            $listTasks = $listTasks->filter(fn ($t) => $t->isOverdue());
         }
         if ($request->filled('list_search')) {
             $search = mb_strtolower($request->get('list_search'));
@@ -110,7 +123,10 @@ class SprintController extends Controller
 
         $clients      = Client::orderBy('company_name')->get(['id', 'company_name']);
         $users        = User::orderBy('name')->get(['id', 'name']);
-        $projects     = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
+        $projects     = Project::with('client:id,company_name')
+            ->whereNotIn('status', ['concluido', 'cancelado'])
+            ->orderBy('title')
+            ->get(['id', 'title', 'client_id']);
         $sprints      = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get();
         $activeSprint = $sprints->firstWhere('status', 'active');
 

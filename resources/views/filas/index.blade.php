@@ -64,93 +64,14 @@
     @endif
 
     {{-- ══ FILTROS + AGRUPAMENTO ══ --}}
-    <form method="GET" action="{{ route('fila.index') }}"
-          class="card card-body mb-5 flex flex-wrap items-end gap-3">
-
-        {{-- Agrupar por --}}
-        <div class="min-w-40">
-            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Agrupar por</label>
-            <select name="group_by" class="filter-select w-full" onchange="this.form.submit()">
-                <option value="cliente"    {{ $groupBy === 'cliente'    ? 'selected' : '' }}>Cliente</option>
-                <option value="executor"   {{ $groupBy === 'executor'   ? 'selected' : '' }}>Executor</option>
-                <option value="responsavel"{{ $groupBy === 'responsavel'? 'selected' : '' }}>Responsável</option>
-                <option value="status"     {{ $groupBy === 'status'     ? 'selected' : '' }}>Status</option>
-            </select>
-        </div>
-
-        <div class="w-px self-stretch" style="background:var(--border2)"></div>
-
-        <div class="flex-1 min-w-44">
-            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Buscar</label>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar por título…"
-                class="filter-select w-full" style="cursor:text">
-        </div>
-
-        <div class="flex-1 min-w-36">
-            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Cliente</label>
-            <select name="client_id" class="filter-select w-full">
-                <option value="">Todos os clientes</option>
-                @foreach($clients as $c)
-                    <option value="{{ $c->id }}" {{ request('client_id') === $c->id ? 'selected' : '' }}>{{ $c->company_name }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="flex-1 min-w-44">
-            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Projeto</label>
-            <select name="project_id" class="filter-select w-full">
-                <option value="">Todos os projetos</option>
-                @foreach($projects as $p)
-                    <option value="{{ $p->id }}" {{ request('project_id') === $p->id ? 'selected' : '' }}>{{ $p->title }} @if($p->client)({{ $p->client->company_name }})@endif</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="min-w-36">
-            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Origem</label>
-            <select name="origin" class="filter-select w-full">
-                <option value="">Todas</option>
-                @foreach(\App\Models\Task::$origins as $key => $label)
-                    <option value="{{ $key }}" {{ request('origin') === $key ? 'selected' : '' }}>{{ $label }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="min-w-44">
-            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Tipo</label>
-            <select name="task_type" class="filter-select w-full">
-                <option value="">Todos os tipos</option>
-                @foreach(\App\Models\Task::$types as $key => $label)
-                    <option value="{{ $key }}" {{ request('task_type') === $key ? 'selected' : '' }}>{{ $label }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="flex items-center gap-2 pb-0.5">
-            <input type="checkbox" name="atrasadas" value="1" id="chk_atrasadas"
-                {{ request('atrasadas') ? 'checked' : '' }}
-                class="w-4 h-4" style="accent-color:var(--red)">
-            <label for="chk_atrasadas" class="text-sm font-medium cursor-pointer" style="color:var(--red)">
-                Só atrasadas
-            </label>
-        </div>
-
-        <div class="flex items-center gap-2 pb-0.5">
-            <input type="checkbox" name="mostrar_fechados" value="1" id="chk_mostrar_fechados"
-                {{ request()->boolean('mostrar_fechados') ? 'checked' : '' }}
-                class="w-4 h-4" style="accent-color:var(--purple)">
-            <label for="chk_mostrar_fechados" class="text-sm font-medium cursor-pointer" style="color:var(--muted)">
-                Mostrar concluídas/canceladas
-            </label>
-        </div>
-
-        <div class="flex gap-2">
-            <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
-            @if(request()->hasAny(['search','client_id','project_id','origin','task_type','atrasadas','mostrar_fechados']))
-                <a href="{{ route('fila.index', ['group_by' => $groupBy]) }}" class="btn btn-ghost btn-sm">✕ Limpar</a>
-            @endif
-        </div>
-    </form>
+    @include('partials._task-filter-bar', [
+        'formAction' => route('fila.index'),
+        'prefix'     => '',
+        'clients'    => $clients,
+        'projects'   => $projects,
+        'groupBy'    => $groupBy,
+        'clearUrl'   => route('fila.index', ['group_by' => $groupBy]),
+    ])
 
     {{-- ══ TABELA AGRUPADA ══ --}}
     @if($tasks->isEmpty())
