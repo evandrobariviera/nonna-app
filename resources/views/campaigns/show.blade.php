@@ -40,31 +40,161 @@
                 @if($campaign->objective)
                     <p class="text-xs mt-1" style="color:var(--muted)">Objetivo: {{ $campaign->objective }}</p>
                 @endif
+            </div>
 
-                {{-- DESCRIÇÃO — o que essa campanha é e o que significa pro cliente.
-                     Aparece aqui e também no Portal do Cliente. --}}
-                <div class="mt-4 pt-4" style="border-top:1px solid var(--border2)" x-data="{ editing: {{ $campaign->description ? 'false' : 'true' }} }">
-                    <div class="flex items-center justify-between mb-2">
-                        <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Descrição da campanha</p>
-                        <button type="button" @click="editing = !editing" class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                            onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
-                            <span x-text="editing ? 'Cancelar' : 'Editar'"></span>
-                        </button>
+            {{-- FILTRO DE PERÍODO --}}
+            <form method="GET" action="{{ route('campaigns.show', $campaign) }}" class="flex items-center gap-2">
+                <select name="period" onchange="this.form.submit()"
+                    style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
+                    @foreach(\App\Http\Controllers\CampaignController::$campaignPeriods as $key => $label)
+                        <option value="{{ $key }}" {{ $period === $key ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </form>
+
+            {{-- DESCRIÇÃO — o que essa campanha é e o que significa pro cliente.
+                 Aparece aqui e também no Portal do Cliente. --}}
+            <div class="card card-body-lg" x-data="{ editing: {{ $campaign->description ? 'false' : 'true' }} }">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Descrição da campanha</p>
+                    <button type="button" @click="editing = !editing" class="text-xs font-mono transition-colors" style="color:var(--muted)"
+                        onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                        <span x-text="editing ? 'Cancelar' : 'Editar'"></span>
+                    </button>
+                </div>
+                <p x-show="!editing" x-cloak class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.6">
+                    {{ $campaign->description ?: 'Nenhuma descrição cadastrada ainda — explique aqui o que essa campanha é e o que significa pro cliente.' }}
+                </p>
+                <form x-show="editing" x-cloak method="POST" action="{{ route('campaigns.update-description', $campaign) }}">
+                    @csrf @method('PATCH')
+                    <textarea name="description" rows="4" maxlength="2000"
+                        placeholder="Ex: Campanha de remarketing pra quem visitou o site nos últimos 30 dias e não converteu — objetivo é recuperar esses visitantes com uma oferta direcionada."
+                        class="w-full text-sm rounded px-3 py-2" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); resize:vertical">{{ $campaign->description }}</textarea>
+                    <button type="submit" class="btn btn-primary btn-sm mt-2">Salvar descrição</button>
+                </form>
+            </div>
+
+            {{-- DADOS — resultado, com comparativo vs período anterior (mesmo princípio já
+                 usado na listagem de campanhas) --}}
+            <div class="grid gap-3" style="grid-template-columns: repeat(4, 1fr)">
+                <div class="card px-4 py-4 text-left">
+                    <div class="text-2xl font-black mb-1" style="color:var(--text)">R$ {{ number_format($stats->spend, 2, ',', '.') }}</div>
+                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Gasto ({{ $periodLabel }})</div>
+                    @if($deltas['spend'] !== null)
+                        <div class="text-xs font-mono mt-1" style="color:{{ $deltas['spend'] >= 0 ? 'var(--green)' : 'var(--red)' }}">
+                            {{ $deltas['spend'] >= 0 ? '▲' : '▼' }} {{ number_format(abs($deltas['spend']), 1, ',', '.') }}% vs período anterior
+                        </div>
+                    @endif
+                </div>
+                <div class="card px-4 py-4 text-left">
+                    <div class="text-2xl font-black mb-1" style="color:var(--text)">{{ number_format($stats->conversions, 0, ',', '.') }}</div>
+                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Resultados</div>
+                    @if($deltas['conversions'] !== null)
+                        <div class="text-xs font-mono mt-1" style="color:{{ $deltas['conversions'] >= 0 ? 'var(--green)' : 'var(--red)' }}">
+                            {{ $deltas['conversions'] >= 0 ? '▲' : '▼' }} {{ number_format(abs($deltas['conversions']), 1, ',', '.') }}% vs período anterior
+                        </div>
+                    @endif
+                </div>
+                <div class="card px-4 py-4 text-left">
+                    <div class="text-2xl font-black mb-1" style="color:var(--text)">
+                        {{ $stats->cpa !== null ? 'R$ ' . number_format($stats->cpa, 2, ',', '.') : '—' }}
                     </div>
-                    <p x-show="!editing" x-cloak class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.6">
-                        {{ $campaign->description ?: 'Nenhuma descrição cadastrada ainda — explique aqui o que essa campanha é e o que significa pro cliente.' }}
-                    </p>
-                    <form x-show="editing" x-cloak method="POST" action="{{ route('campaigns.update-description', $campaign) }}">
-                        @csrf @method('PATCH')
-                        <textarea name="description" rows="4" maxlength="2000"
-                            placeholder="Ex: Campanha de remarketing pra quem visitou o site nos últimos 30 dias e não converteu — objetivo é recuperar esses visitantes com uma oferta direcionada."
-                            class="w-full text-sm rounded px-3 py-2" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); resize:vertical">{{ $campaign->description }}</textarea>
-                        <button type="submit" class="btn btn-primary btn-sm mt-2">Salvar descrição</button>
-                    </form>
+                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">CPA</div>
+                    @if($deltas['cpa'] !== null)
+                        <div class="text-xs font-mono mt-1" style="color:{{ $deltas['cpa'] >= 0 ? 'var(--green)' : 'var(--red)' }}">
+                            {{ $deltas['cpa'] >= 0 ? '▲' : '▼' }} {{ number_format(abs($deltas['cpa']), 1, ',', '.') }}% vs período anterior
+                        </div>
+                    @endif
+                </div>
+                <div class="card px-4 py-4 text-left">
+                    <div class="text-2xl font-black mb-1" style="color:var(--text)">
+                        {{ $stats->roas !== null ? number_format($stats->roas, 2, ',', '.') . 'x' : '—' }}
+                    </div>
+                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">ROAS</div>
+                    @if($deltas['roas'] !== null)
+                        <div class="text-xs font-mono mt-1" style="color:{{ $deltas['roas'] >= 0 ? 'var(--green)' : 'var(--red)' }}">
+                            {{ $deltas['roas'] >= 0 ? '▲' : '▼' }} {{ number_format(abs($deltas['roas']), 1, ',', '.') }}% vs período anterior
+                        </div>
+                    @endif
                 </div>
             </div>
 
-            {{-- OTIMIZAÇÃO — a ação mais frequente, por isso no fluxo principal (não na sidebar) --}}
+            {{-- DADOS — gráficos de linha (gasto e resultados por dia, sem dependência de JS) --}}
+            @if($dailyStats->count() > 1)
+                <div class="grid gap-3" style="grid-template-columns: repeat(2, 1fr)">
+                    <div class="card px-4 py-4">
+                        <p class="text-xs font-mono uppercase tracking-widest mb-3" style="color:var(--muted)">Gasto por dia</p>
+                        @include('partials._line-chart', [
+                            'points' => $dailyStats->map(fn ($d) => ['x' => \Carbon\Carbon::parse($d->snapshot_date)->format('d/m'), 'y' => (float) $d->spend])->all(),
+                            'color'  => 'var(--purple)',
+                            'formatValue' => fn ($v) => 'R$ ' . number_format($v, 2, ',', '.'),
+                        ])
+                    </div>
+                    <div class="card px-4 py-4">
+                        <p class="text-xs font-mono uppercase tracking-widest mb-3" style="color:var(--muted)">Resultados por dia</p>
+                        @include('partials._line-chart', [
+                            'points' => $dailyStats->map(fn ($d) => ['x' => \Carbon\Carbon::parse($d->snapshot_date)->format('d/m'), 'y' => (float) $d->conversions])->all(),
+                            'color'  => 'var(--orange)',
+                            'formatValue' => fn ($v) => number_format($v, 0, ',', '.'),
+                        ])
+                    </div>
+                </div>
+            @endif
+
+            {{-- DADOS — alcance e engajamento, com comparativo vs período anterior --}}
+            <div class="grid gap-3" style="grid-template-columns: repeat(5, 1fr)">
+                <div class="card px-4 py-4 text-left">
+                    <div class="text-xl font-black mb-1" style="color:var(--text)">{{ number_format($stats->impressions, 0, ',', '.') }}</div>
+                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Impressões</div>
+                    @if($deltas['impressions'] !== null)
+                        <div class="text-xs font-mono mt-1" style="color:{{ $deltas['impressions'] >= 0 ? 'var(--green)' : 'var(--red)' }}">
+                            {{ $deltas['impressions'] >= 0 ? '▲' : '▼' }} {{ number_format(abs($deltas['impressions']), 1, ',', '.') }}%
+                        </div>
+                    @endif
+                </div>
+                <div class="card px-4 py-4 text-left">
+                    <div class="text-xl font-black mb-1" style="color:var(--text)">{{ number_format($stats->reach, 0, ',', '.') }}</div>
+                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Alcance</div>
+                    @if($deltas['reach'] !== null)
+                        <div class="text-xs font-mono mt-1" style="color:{{ $deltas['reach'] >= 0 ? 'var(--green)' : 'var(--red)' }}">
+                            {{ $deltas['reach'] >= 0 ? '▲' : '▼' }} {{ number_format(abs($deltas['reach']), 1, ',', '.') }}%
+                        </div>
+                    @endif
+                </div>
+                <div class="card px-4 py-4 text-left">
+                    <div class="text-xl font-black mb-1" style="color:var(--text)">{{ number_format($stats->clicks, 0, ',', '.') }}</div>
+                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Cliques</div>
+                    @if($deltas['clicks'] !== null)
+                        <div class="text-xs font-mono mt-1" style="color:{{ $deltas['clicks'] >= 0 ? 'var(--green)' : 'var(--red)' }}">
+                            {{ $deltas['clicks'] >= 0 ? '▲' : '▼' }} {{ number_format(abs($deltas['clicks']), 1, ',', '.') }}%
+                        </div>
+                    @endif
+                </div>
+                <div class="card px-4 py-4 text-left">
+                    <div class="text-xl font-black mb-1" style="color:var(--text)">
+                        {{ $stats->ctr !== null ? number_format($stats->ctr, 2, ',', '.') . '%' : '—' }}
+                    </div>
+                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">CTR</div>
+                    @if($deltas['ctr'] !== null)
+                        <div class="text-xs font-mono mt-1" style="color:{{ $deltas['ctr'] >= 0 ? 'var(--green)' : 'var(--red)' }}">
+                            {{ $deltas['ctr'] >= 0 ? '▲' : '▼' }} {{ number_format(abs($deltas['ctr']), 1, ',', '.') }}%
+                        </div>
+                    @endif
+                </div>
+                <div class="card px-4 py-4 text-left">
+                    <div class="text-xl font-black mb-1" style="color:var(--text)">
+                        {{ $stats->cpc !== null ? 'R$ ' . number_format($stats->cpc, 2, ',', '.') : '—' }}
+                    </div>
+                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">CPC</div>
+                    @if($deltas['cpc'] !== null)
+                        <div class="text-xs font-mono mt-1" style="color:{{ $deltas['cpc'] >= 0 ? 'var(--green)' : 'var(--red)' }}">
+                            {{ $deltas['cpc'] >= 0 ? '▲' : '▼' }} {{ number_format(abs($deltas['cpc']), 1, ',', '.') }}%
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- OTIMIZAÇÃO --}}
             <div class="card card-body-lg" id="otimizacao" x-data="{ open: false }">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Otimização</p>
 
@@ -123,70 +253,48 @@
                     </button>
                 </form>
                 <p class="text-xs mt-2" style="color:var(--muted)">
-                    Isso reinicia o prazo de otimização e aparece no histórico ao lado, marcado como "Otimização Realizada".
+                    Isso reinicia o prazo de otimização e aparece no histórico logo abaixo, marcado como "Otimização Realizada".
                 </p>
             </div>
 
-            {{-- FILTRO DE PERÍODO --}}
-            <form method="GET" action="{{ route('campaigns.show', $campaign) }}" class="flex items-center gap-2">
-                <select name="period" onchange="this.form.submit()"
-                    style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
-                    @foreach(\App\Http\Controllers\CampaignController::$campaignPeriods as $key => $label)
-                        <option value="{{ $key }}" {{ $period === $key ? 'selected' : '' }}>{{ $label }}</option>
-                    @endforeach
-                </select>
-            </form>
+            {{-- HISTÓRICO DE OTIMIZAÇÕES --}}
+            <div class="card card-body-lg">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
+                    Histórico de Otimizações
+                    @if($optimizationLogs->count() > 0)
+                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $optimizationLogs->count() }}</span>
+                    @endif
+                </p>
 
-            {{-- STATS — resultado --}}
-            <div class="grid gap-3" style="grid-template-columns: repeat(4, 1fr)">
-                <div class="card px-4 py-4 text-left">
-                    <div class="text-2xl font-black mb-1" style="color:var(--text)">R$ {{ number_format($stats->spend, 2, ',', '.') }}</div>
-                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Gasto ({{ $periodLabel }})</div>
-                </div>
-                <div class="card px-4 py-4 text-left">
-                    <div class="text-2xl font-black mb-1" style="color:var(--text)">{{ number_format($stats->conversions, 0, ',', '.') }}</div>
-                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Resultados</div>
-                </div>
-                <div class="card px-4 py-4 text-left">
-                    <div class="text-2xl font-black mb-1" style="color:var(--text)">
-                        {{ $stats->cpa !== null ? 'R$ ' . number_format($stats->cpa, 2, ',', '.') : '—' }}
+                @if($optimizationLogs->count() > 0)
+                    <div class="flex flex-col">
+                        @foreach($optimizationLogs as $log)
+                            <div class="flex gap-3 py-3" style="{{ !$loop->last ? 'border-bottom:1px solid var(--border2)' : '' }}">
+                                <x-user-avatar :user="$log->user" size="7" class="mt-0.5" />
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-baseline gap-2 mb-1 flex-wrap">
+                                        <span class="text-xs font-semibold" style="color:var(--text)">{{ $log->user->name }}</span>
+                                        <span class="text-xs" style="color:var(--muted)">{{ $log->created_at->diffForHumans() }}</span>
+                                    </div>
+                                    <p class="text-xs whitespace-pre-wrap" style="color:var(--text); line-height:1.55">{{ $log->description }}</p>
+                                </div>
+                                @if($log->logged_by === auth()->id())
+                                    <form method="POST"
+                                          action="{{ route('campaign-logs.destroy', [$campaign, $log]) }}"
+                                          onsubmit="return confirm('Remover registro?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-xs mt-1 flex-shrink-0 transition-colors" style="color:var(--muted)"
+                                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                    </form>
+                                @endif
+                            </div>
+                        @endforeach
                     </div>
-                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">CPA</div>
-                </div>
-                <div class="card px-4 py-4 text-left">
-                    <div class="text-2xl font-black mb-1" style="color:var(--text)">
-                        {{ $stats->roas !== null ? number_format($stats->roas, 2, ',', '.') . 'x' : '—' }}
+                @else
+                    <div class="py-6 text-center" style="border:1px dashed var(--border2)">
+                        <p class="text-xs" style="color:var(--muted)">Nenhuma otimização registrada ainda.</p>
                     </div>
-                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">ROAS</div>
-                </div>
-            </div>
-
-            {{-- STATS — alcance e engajamento --}}
-            <div class="grid gap-3" style="grid-template-columns: repeat(5, 1fr)">
-                <div class="card px-4 py-4 text-left">
-                    <div class="text-xl font-black mb-1" style="color:var(--text)">{{ number_format($stats->impressions, 0, ',', '.') }}</div>
-                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Impressões</div>
-                </div>
-                <div class="card px-4 py-4 text-left">
-                    <div class="text-xl font-black mb-1" style="color:var(--text)">{{ number_format($stats->reach, 0, ',', '.') }}</div>
-                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Alcance</div>
-                </div>
-                <div class="card px-4 py-4 text-left">
-                    <div class="text-xl font-black mb-1" style="color:var(--text)">{{ number_format($stats->clicks, 0, ',', '.') }}</div>
-                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Cliques</div>
-                </div>
-                <div class="card px-4 py-4 text-left">
-                    <div class="text-xl font-black mb-1" style="color:var(--text)">
-                        {{ $stats->ctr !== null ? number_format($stats->ctr, 2, ',', '.') . '%' : '—' }}
-                    </div>
-                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">CTR</div>
-                </div>
-                <div class="card px-4 py-4 text-left">
-                    <div class="text-xl font-black mb-1" style="color:var(--text)">
-                        {{ $stats->cpc !== null ? 'R$ ' . number_format($stats->cpc, 2, ',', '.') : '—' }}
-                    </div>
-                    <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">CPC</div>
-                </div>
+                @endif
             </div>
 
         </div>{{-- /coluna principal --}}
@@ -264,51 +372,11 @@
                 </div>
             </div>
 
-            {{-- ══ HISTÓRICO / COMENTÁRIOS ══ --}}
-            <div class="card card-body" id="historico">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
-                    Histórico
-                    @if($logs->count() > 0)
-                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $logs->count() }}</span>
-                    @endif
-                </p>
-
-                @if($logs->count() > 0)
-                    <div class="flex flex-col mb-4">
-                        @foreach($logs as $log)
-                            <div class="flex gap-3 py-3" style="{{ !$loop->last ? 'border-bottom:1px solid var(--border2)' : '' }}">
-                                <x-user-avatar :user="$log->user" size="7" class="mt-0.5" />
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-baseline gap-2 mb-1 flex-wrap">
-                                        <span class="text-xs font-semibold" style="color:var(--text)">{{ $log->user->name }}</span>
-                                        <span class="badge badge-{{ \App\Models\CampaignLog::$types[$log->type]['color'] ?? 'muted' }}">
-                                            {{ \App\Models\CampaignLog::$types[$log->type]['label'] ?? $log->type }}
-                                        </span>
-                                    </div>
-                                    <p class="text-xs mb-1" style="color:var(--muted)">{{ $log->created_at->diffForHumans() }}</p>
-                                    <p class="text-xs whitespace-pre-wrap" style="color:var(--text); line-height:1.55">{{ $log->description }}</p>
-                                </div>
-                                @if($log->logged_by === auth()->id())
-                                    <form method="POST"
-                                          action="{{ route('campaign-logs.destroy', [$campaign, $log]) }}"
-                                          onsubmit="return confirm('Remover registro?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="text-xs mt-1 flex-shrink-0 transition-colors" style="color:var(--muted)"
-                                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
-                                    </form>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="mb-4 py-6 text-center" style="border:1px dashed var(--border2)">
-                        <p class="text-xs" style="color:var(--muted)">Nenhum registro ainda.</p>
-                    </div>
-                @endif
-
-                {{-- Novo registro --}}
+            {{-- COMENTÁRIO — mesmo padrão da Otimização (input acima, histórico abaixo) --}}
+            <div class="card card-body">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Comentário</p>
                 <p class="text-xs mb-3" style="color:var(--muted)">
-                    Anotações (orçamento, segmentação, criativo, pausa...) — não mexe no prazo de otimização, que fica acima.
+                    Anotações (orçamento, segmentação, criativo, pausa...) — não mexe no prazo de otimização.
                 </p>
                 <form method="POST" action="{{ route('campaign-logs.store', $campaign) }}"
                       x-data="{ description: '', rows: 2 }"
@@ -339,6 +407,49 @@
                         </button>
                     </div>
                 </form>
+            </div>
+
+            {{-- HISTÓRICO DE COMENTÁRIOS --}}
+            <div class="card card-body" id="historico">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
+                    Histórico de Comentários
+                    @if($commentLogs->count() > 0)
+                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $commentLogs->count() }}</span>
+                    @endif
+                </p>
+
+                @if($commentLogs->count() > 0)
+                    <div class="flex flex-col">
+                        @foreach($commentLogs as $log)
+                            <div class="flex gap-3 py-3" style="{{ !$loop->last ? 'border-bottom:1px solid var(--border2)' : '' }}">
+                                <x-user-avatar :user="$log->user" size="7" class="mt-0.5" />
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-baseline gap-2 mb-1 flex-wrap">
+                                        <span class="text-xs font-semibold" style="color:var(--text)">{{ $log->user->name }}</span>
+                                        <span class="badge badge-{{ \App\Models\CampaignLog::$types[$log->type]['color'] ?? 'muted' }}">
+                                            {{ \App\Models\CampaignLog::$types[$log->type]['label'] ?? $log->type }}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs mb-1" style="color:var(--muted)">{{ $log->created_at->diffForHumans() }}</p>
+                                    <p class="text-xs whitespace-pre-wrap" style="color:var(--text); line-height:1.55">{{ $log->description }}</p>
+                                </div>
+                                @if($log->logged_by === auth()->id())
+                                    <form method="POST"
+                                          action="{{ route('campaign-logs.destroy', [$campaign, $log]) }}"
+                                          onsubmit="return confirm('Remover registro?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-xs mt-1 flex-shrink-0 transition-colors" style="color:var(--muted)"
+                                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                    </form>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="py-6 text-center" style="border:1px dashed var(--border2)">
+                        <p class="text-xs" style="color:var(--muted)">Nenhum comentário ainda.</p>
+                    </div>
+                @endif
             </div>
 
         </div>{{-- /sidebar --}}

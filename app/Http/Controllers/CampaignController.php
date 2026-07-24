@@ -247,7 +247,13 @@ class CampaignController extends Controller
     public function show(Request $request, AdCampaign $campaign)
     {
         $campaign->load('adAccount.client');
+
+        // Histórico separado em duas listas: otimização (gatilho dedicado, "Marcar
+        // otimização feita") fica junto da sessão Otimização; o resto (anotações
+        // gerais) vira "Comentário" na sidebar, com o próprio formulário de registro.
         $logs = $campaign->logs()->with('user')->orderByDesc('created_at')->get();
+        $optimizationLogs = $logs->where('type', 'otimizacao')->values();
+        $commentLogs      = $logs->where('type', '!=', 'otimizacao')->values();
 
         $period = $request->filled('period') && array_key_exists($request->get('period'), self::$campaignPeriods)
             ? $request->get('period')
@@ -255,12 +261,43 @@ class CampaignController extends Controller
 
         [$periodStart, $periodEnd, $periodLabel] = $this->periodRange($period);
 
-        $row = DB::connection('pgsql')
+        $stats = $this->buildCampaignStats($this->campaignPeriodTotals($campaign, $periodStart, $periodEnd));
+
+        // Comparativo com o período anterior de mesma duração — mesmo princípio já
+        // usado na listagem (index()), aplicado aqui a todas as métricas da tela.
+        [$previousPeriodStart, $previousPeriodEnd] = $this->previousPeriodRange($periodStart, $periodEnd);
+        $previousStats = $this->buildCampaignStats($this->campaignPeriodTotals($campaign, $previousPeriodStart, $previousPeriodEnd));
+
+        $deltas = [];
+        foreach (['spend', 'impressions', 'clicks', 'reach', 'conversions', 'cpc', 'cpa', 'ctr', 'roas'] as $key) {
+            $deltas[$key] = $this->percentDelta($stats->$key, $previousStats->$key);
+        }
+
+        // Série diária (gasto e conversões) pro gráfico de linha do período selecionado.
+        $dailyStats = DB::connection('pgsql')
             ->table('ad_daily_snapshots')
             ->where('client_ad_account_id', $campaign->client_ad_account_id)
             ->where('entity_level', 'campaign')
             ->where('entity_id', $campaign->external_id)
             ->whereBetween('snapshot_date', [$periodStart, $periodEnd])
+            ->groupBy('snapshot_date')
+            ->orderBy('snapshot_date')
+            ->selectRaw('snapshot_date, COALESCE(SUM(spend), 0) as spend, COALESCE(SUM(conversions), 0) as conversions')
+            ->get();
+
+        return view('campaigns.show', compact(
+            'campaign', 'optimizationLogs', 'commentLogs', 'stats', 'deltas', 'dailyStats', 'period', 'periodLabel'
+        ));
+    }
+
+    private function campaignPeriodTotals(AdCampaign $campaign, string $start, string $end): object
+    {
+        return DB::connection('pgsql')
+            ->table('ad_daily_snapshots')
+            ->where('client_ad_account_id', $campaign->client_ad_account_id)
+            ->where('entity_level', 'campaign')
+            ->where('entity_id', $campaign->external_id)
+            ->whereBetween('snapshot_date', [$start, $end])
             ->selectRaw('
                 COALESCE(SUM(spend), 0) AS spend,
                 COALESCE(SUM(revenue), 0) AS revenue,
@@ -270,17 +307,20 @@ class CampaignController extends Controller
                 COALESCE(SUM(reach), 0) AS reach
             ')
             ->first();
+    }
 
-        $spend = (float) ($row->spend ?? 0);
-        $clicks = (int) ($row->clicks ?? 0);
+    // Recalculadas em cima da soma do período — não dá pra somar as médias diárias
+    // já gravadas em ad_daily_snapshots (cpc/ctr/cpa/roas são por dia).
+    private function buildCampaignStats(object $row): object
+    {
+        $spend       = (float) ($row->spend ?? 0);
+        $clicks      = (int) ($row->clicks ?? 0);
         $impressions = (int) ($row->impressions ?? 0);
         $conversions = (int) ($row->conversions ?? 0);
-        $revenue = (float) ($row->revenue ?? 0);
-        $reach = (int) ($row->reach ?? 0);
+        $revenue     = (float) ($row->revenue ?? 0);
+        $reach       = (int) ($row->reach ?? 0);
 
-        // Recalculadas em cima da soma dos 7 dias — não dá pra somar as médias
-        // diárias já gravadas em ad_daily_snapshots (cpc/ctr/cpa/roas são por dia).
-        $stats = (object) [
+        return (object) [
             'spend'        => $spend,
             'impressions'  => $impressions,
             'clicks'       => $clicks,
@@ -291,8 +331,15 @@ class CampaignController extends Controller
             'ctr'          => $impressions > 0 ? round(($clicks / $impressions) * 100, 2) : null,
             'roas'         => $spend > 0 ? round($revenue / $spend, 2) : null,
         ];
+    }
 
-        return view('campaigns.show', compact('campaign', 'logs', 'stats', 'period', 'periodLabel'));
+    private function percentDelta(?float $current, ?float $previous): ?float
+    {
+        if ($current === null || $previous === null || $previous == 0) {
+            return null;
+        }
+
+        return round((($current - $previous) / $previous) * 100, 1);
     }
 
     public function updateDescription(Request $request, AdCampaign $campaign)
