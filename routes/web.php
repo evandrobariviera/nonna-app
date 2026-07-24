@@ -81,6 +81,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         'destroy' => 'clients.destroy',
     ]);
 
+    Route::get('/clientes/{client}/preview', [ClientController::class, 'preview'])
+        ->name('clients.preview');
+
     Route::patch('/clientes/{client}/status', [ClientController::class, 'updateStatus'])
         ->name('clients.update-status');
 
@@ -360,6 +363,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Projeto standalone (sem macroplanejamento vinculado) ──
     Route::get('/projetos/{project}/ver', [ProjectController::class, 'showDirect'])
         ->name('projects.showDirect');
+    Route::get('/projetos/{project}/preview', [ProjectController::class, 'preview'])
+        ->name('projects.preview');
     Route::patch('/projetos/{project}/planejamento', [ProjectController::class, 'updateMacroplan'])
         ->name('projects.update-macroplan');
     Route::post('/projetos/{project}/tarefas', [TaskController::class, 'storeStandalone'])

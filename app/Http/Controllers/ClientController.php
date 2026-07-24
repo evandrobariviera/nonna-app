@@ -103,6 +103,21 @@ class ClientController extends Controller
         return view('clients.show', compact('client', 'availableContacts', 'subscriptionsByContact', 'aiAgents'));
     }
 
+    /**
+     * Preview leve para o painel lateral (canvas) — não a página completa.
+     */
+    public function preview(Client $client)
+    {
+        $client->loadCount(['adAccounts', 'macroplans']);
+
+        $recentMacroplans = $client->macroplans()
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get(['id', 'title', 'status']);
+
+        return view('clients._preview', compact('client', 'recentMacroplans'));
+    }
+
     public function edit(Client $client)
     {
         return view('clients.edit', compact('client'));

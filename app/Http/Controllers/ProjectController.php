@@ -132,6 +132,26 @@ class ProjectController extends Controller
         ));
     }
 
+    /**
+     * Preview leve para o painel lateral (canvas) — não a página completa.
+     */
+    public function preview(Project $project)
+    {
+        $project->load(['client', 'macroPlan']);
+
+        $recentTasks = $project->tasks()
+            ->where('status', '!=', 'cancelado')
+            ->orderByDesc('created_at')
+            ->limit(6)
+            ->get(['id', 'title', 'status', 'due_date']);
+
+        $progress   = $project->progressPercent();
+        $totalTasks = $project->tasks()->where('status', '!=', 'cancelado')->count();
+        $doneTasks  = $project->tasks()->where('status', 'concluido')->count();
+
+        return view('macroplans._project-preview', compact('project', 'recentTasks', 'progress', 'totalTasks', 'doneTasks'));
+    }
+
     public function showDirect(Project $project)
     {
         $project->load(['tasks.executor', 'tasks.executors', 'macroPlan.client']);

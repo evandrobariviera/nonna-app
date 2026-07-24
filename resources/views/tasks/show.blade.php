@@ -151,10 +151,26 @@
                     </div>
                 </div>
 
+                {{-- Pessoas (Responsável / Executor) — só avatar, sem texto --}}
+                @php $responsavelTopo = $task->responsibles->first(); @endphp
+                @if($responsavelTopo || $task->executor)
+                    <div class="flex items-center gap-2 mb-1">
+                        @if($responsavelTopo)
+                            <x-user-avatar :user="$responsavelTopo" size="7" color="var(--orange)"
+                                title="Responsável: {{ $responsavelTopo->name }}" />
+                        @endif
+                        @if($task->executor)
+                            <x-user-avatar :user="$task->executor" size="7" color="var(--purple)"
+                                title="Executor: {{ $task->executor->name }}" />
+                        @endif
+                    </div>
+                @endif
+
                 {{-- Breadcrumb --}}
                 @if($task->project)
                     <div class="flex items-center gap-2 text-xs flex-wrap mt-3 pt-3" style="border-top:1px solid var(--border2); color:var(--muted)">
                         <a href="{{ route('clients.show', $task->client) }}"
+                           @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('clients.preview', $task->client) }}') }"
                            style="color:var(--purple); font-weight:500"
                            onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
                             {{ $task->client?->company_name }}
@@ -169,6 +185,7 @@
                         @endif
                         <span style="color:var(--border2)">›</span>
                         <a href="{{ $task->project->macro_plan_id ? route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) : route('projects.showDirect', $task->project) }}"
+                           @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('projects.preview', $task->project) }}') }"
                            style="color:var(--muted2)"
                            onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted2)'">
                             {{ $task->project->title }}
@@ -728,6 +745,7 @@
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Cliente</p>
                         @if($task->client)
                             <a href="{{ route('clients.show', $task->client) }}"
+                               @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('clients.preview', $task->client) }}') }"
                                class="text-sm font-semibold transition-colors" style="color:var(--purple)"
                                onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
                                 {{ $task->client->company_name }}
@@ -753,6 +771,7 @@
                             <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Projeto</p>
                             @if($task->project)
                                 <a href="{{ $task->project->macro_plan_id ? route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) : route('projects.showDirect', $task->project) }}"
+                                   @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('projects.preview', $task->project) }}') }"
                                    class="text-xs font-semibold transition-colors" style="color:var(--purple)"
                                    onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
                                     Abrir →
@@ -844,14 +863,11 @@
                 <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Prioridade</p>
                 <div class="relative">
                     <button @click="open = !open"
-                        class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                        <span class="flex items-center gap-2">
-                            <span class="h-2 w-2 rounded-full flex-shrink-0"
-                                  style="background:{{ $task->priorityHex() }}"></span>
-                            {{ $task->priorityLabel() }}
-                        </span>
-                        <span style="color:var(--muted); font-size:10px">▾</span>
+                        class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-bold transition-opacity"
+                        style="background:{{ $task->priorityHex() }}; border:none; color:#fff"
+                        onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">
+                        {{ $task->priorityLabel() }}
+                        <span style="color:rgba(255,255,255,.8); font-size:10px">▾</span>
                     </button>
                     <div x-show="open" @click.outside="open = false" x-cloak
                          class="absolute left-0 right-0 mt-1 z-20 py-1"
@@ -879,16 +895,11 @@
                 <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Situação</p>
                 <div class="relative">
                     <button @click="open = !open"
-                        class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                        <span class="flex items-center gap-2">
-                            @if($task->situation)
-                                <span class="h-2 w-2 rounded-full flex-shrink-0"
-                                      style="background:{{ $task->situationColor() }}"></span>
-                            @endif
-                            {{ $task->situationLabel() !== '—' ? $task->situationLabel() : 'Sem situação' }}
-                        </span>
-                        <span style="color:var(--muted); font-size:10px">▾</span>
+                        class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-bold transition-opacity"
+                        style="background:{{ $task->situationColor() }}; border:none; color:#fff"
+                        onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">
+                        {{ $task->situationLabel() !== '—' ? $task->situationLabel() : 'Sem situação' }}
+                        <span style="color:rgba(255,255,255,.8); font-size:10px">▾</span>
                     </button>
                     <div x-show="open" @click.outside="open = false" x-cloak
                          class="absolute left-0 right-0 mt-1 z-20 py-1"

@@ -194,6 +194,59 @@
         </div>
     </div>
 
+    {{-- ── PAINEL LATERAL (canvas) ── carrega detalhe de Cliente/Projeto sem sair da página atual ── --}}
+    <div x-show="$store.sidePanel.open" x-cloak
+         @keydown.escape.window="$store.sidePanel.close()"
+         class="fixed inset-y-0 right-0 z-40 w-full md:w-1/2 flex flex-col"
+         style="background:var(--bg); border-left:1px solid var(--border2); box-shadow:-8px 0 24px rgba(0,0,0,.12)"
+         x-transition:enter="transition duration-200 ease-out"
+         x-transition:enter-start="translate-x-full"
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transition duration-150 ease-in"
+         x-transition:leave-start="translate-x-0"
+         x-transition:leave-end="translate-x-full">
+
+        <div class="flex items-center justify-between h-14 px-5 border-b flex-shrink-0" style="border-color:var(--border2)">
+            <span class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Detalhes</span>
+            <div class="flex items-center gap-1.5">
+                <a :href="$store.sidePanel.url" target="_blank" rel="noopener"
+                   class="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
+                   style="color:var(--muted)"
+                   onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
+                   onmouseout="this.style.background=''; this.style.color='var(--muted)'"
+                   title="Abrir página completa em nova aba">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                        <path d="M15 3h6v6"/><path d="M10 14 21 3"/>
+                    </svg>
+                </a>
+                <button @click="$store.sidePanel.close()"
+                    class="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
+                    style="color:var(--muted)"
+                    onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
+                    onmouseout="this.style.background=''; this.style.color='var(--muted)'"
+                    title="Fechar (Esc)">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto">
+            <div x-show="$store.sidePanel.loading" class="flex items-center justify-center h-full" style="color:var(--muted)">
+                <svg class="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z"></path>
+                </svg>
+            </div>
+            <div x-show="$store.sidePanel.error" x-cloak class="p-6 text-sm" style="color:var(--red)">
+                Não foi possível carregar os detalhes.
+            </div>
+            <div x-show="!$store.sidePanel.loading && !$store.sidePanel.error" x-html="$store.sidePanel.html"></div>
+        </div>
+    </div>
+
     @stack('scripts')
 </body>
 </html>
