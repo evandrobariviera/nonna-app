@@ -314,57 +314,6 @@
                 </div>
             </form>
 
-            {{-- CAMPOS (visualização) --}}
-            <div x-show="!editing" class="card card-body-lg">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-5" style="color:var(--muted); letter-spacing:.1em">Campos</p>
-                <div class="grid grid-cols-2 gap-x-10 gap-y-5 md:grid-cols-3">
-                    @php
-                        $campos = [
-                            ['Tipo',              $task->typeLabel()],
-                            ['Destino',           $task->destinationLabel() ?: '—'],
-                            ['Origem',            $task->originLabel()],
-                            ['Método de Aprov.',  $task->approvalMethodLabel() ?: '—'],
-                            ['Aprovação Interna', $task->internal_approval ? 'Sim' : 'Não'],
-                            ['Situação',          $task->situationLabel()],
-                        ];
-                    @endphp
-                    @foreach($campos as [$label, $value])
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">{{ $label }}</p>
-                            <p class="text-sm" style="color:var(--text); font-weight:500; line-height:1.4">{{ $value }}</p>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-
-            {{-- DATAS (visualização) --}}
-            <div x-show="!editing" class="card card-body-lg">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-5" style="color:var(--muted); letter-spacing:.1em">Datas</p>
-                <div class="grid grid-cols-3 gap-8">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Vencimento</p>
-                        <p class="text-base" style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--text)' }}; font-weight:600">
-                            {{ $task->due_date?->format('d/m/Y') ?? '—' }}
-                        </p>
-                        @if($task->due_date)
-                            <p class="text-xs mt-0.5" style="color:var(--muted)">{{ $task->due_date->diffForHumans() }}</p>
-                        @endif
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Dt. Aprovação</p>
-                        <p class="text-base" style="color:var(--text); font-weight:600">
-                            {{ $task->approval_date?->format('d/m/Y') ?? '—' }}
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Dt. Publicação</p>
-                        <p class="text-base" style="color:var(--text); font-weight:600">
-                            {{ $task->publish_date?->format('d/m/Y') ?? '—' }}
-                        </p>
-                    </div>
-                </div>
-            </div>
-
             {{-- DESCRIÇÃO --}}
             @if($task->description)
                 <div x-show="!editing" class="card card-body-lg">
@@ -373,53 +322,22 @@
                 </div>
             @endif
 
-            {{-- PESSOAS --}}
+            {{-- CAMPOS (visualização) — só o que não aparece na lateral (Situação/Origem/Destino/
+                 Método de Aprovação já estão nos cards Contexto/Aprovação da sidebar) --}}
             <div x-show="!editing" class="card card-body-lg">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Pessoas</p>
-                <div class="flex flex-col gap-4">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-5" style="color:var(--muted); letter-spacing:.1em">Campos</p>
+                <div class="grid grid-cols-2 gap-x-10 gap-y-5 md:grid-cols-3">
                     @php
-                        $responsavel = $task->responsibles->first();
-                        $executor    = $task->executor;
-                        $observers   = $task->observers;
+                        $campos = [
+                            ['Tipo', $task->typeLabel()],
+                        ];
                     @endphp
-
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Responsável</p>
-                        @if($responsavel)
-                            <div class="flex items-center gap-2.5">
-                                <x-user-avatar :user="$responsavel" size="8" color="var(--orange)" />
-                                <p class="text-sm font-semibold" style="color:var(--text)">{{ $responsavel->name }}</p>
-                            </div>
-                        @else
-                            <p class="text-sm" style="color:var(--muted)">—</p>
-                        @endif
-                    </div>
-
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Executor</p>
-                        @if($executor)
-                            <div class="flex items-center gap-2.5">
-                                <x-user-avatar :user="$executor" size="8" color="var(--purple)" />
-                                <p class="text-sm font-semibold" style="color:var(--text)">{{ $executor->name }}</p>
-                            </div>
-                        @else
-                            <p class="text-sm" style="color:var(--muted)">—</p>
-                        @endif
-                    </div>
-
-                    @if($observers->count() > 0)
+                    @foreach($campos as [$label, $value])
                         <div>
-                            <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Observadores</p>
-                            <div class="flex flex-col gap-2">
-                                @foreach($observers as $obs)
-                                    <div class="flex items-center gap-2.5">
-                                        <x-user-avatar :user="$obs" size="7" color="var(--slate, #64748b)" />
-                                        <p class="text-sm" style="color:var(--muted2)">{{ $obs->name }}</p>
-                                    </div>
-                                @endforeach
-                            </div>
+                            <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">{{ $label }}</p>
+                            <p class="text-sm" style="color:var(--text); font-weight:500; line-height:1.4">{{ $value }}</p>
                         </div>
-                    @endif
+                    @endforeach
                 </div>
             </div>
 
@@ -774,6 +692,115 @@
         ══════════════════════════════════════════════════════════ --}}
         <div class="flex flex-col gap-4" style="width:270px; flex-shrink:0">
 
+            {{-- DATAS --}}
+            <div class="card card-body">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Datas</p>
+                <div class="flex flex-col gap-3">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Vencimento</p>
+                        <p class="text-sm" style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--text)' }}; font-weight:600">
+                            {{ $task->due_date?->format('d/m/Y') ?? '—' }}
+                        </p>
+                        @if($task->due_date)
+                            <p class="text-xs mt-0.5" style="color:var(--muted)">{{ $task->due_date->diffForHumans() }}</p>
+                        @endif
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Dt. Aprovação</p>
+                        <p class="text-sm" style="color:var(--text); font-weight:600">
+                            {{ $task->approval_date?->format('d/m/Y') ?? '—' }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Dt. Publicação</p>
+                        <p class="text-sm" style="color:var(--text); font-weight:600">
+                            {{ $task->publish_date?->format('d/m/Y') ?? '—' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- CONTEXTO --}}
+            <div class="card card-body">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Contexto</p>
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Cliente</p>
+                        @if($task->client)
+                            <a href="{{ route('clients.show', $task->client) }}"
+                               class="text-sm font-semibold transition-colors" style="color:var(--purple)"
+                               onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
+                                {{ $task->client->company_name }}
+                            </a>
+                        @else
+                            <p class="text-sm" style="color:var(--muted)">—</p>
+                        @endif
+                    </div>
+
+                    @if($task->project?->macro_plan_id)
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Planejamento</p>
+                            <a href="{{ route('macroplans.edit', $task->project->macro_plan_id) }}"
+                               class="text-sm font-medium leading-snug block transition-colors" style="color:var(--text)"
+                               onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'">
+                                {{ $task->project->macroPlan?->title }}
+                            </a>
+                        </div>
+                    @endif
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Projeto</p>
+                            @if($task->project)
+                                <a href="{{ $task->project->macro_plan_id ? route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) : route('projects.showDirect', $task->project) }}"
+                                   class="text-xs font-semibold transition-colors" style="color:var(--purple)"
+                                   onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
+                                    Abrir →
+                                </a>
+                            @endif
+                        </div>
+                        <form method="POST" action="{{ route('tasks.update-project', $task) }}">
+                            @csrf @method('PATCH')
+                            <select name="project_id" onchange="this.form.submit()"
+                                class="w-full px-3 py-2 text-sm focus:outline-none"
+                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                <option value="">— nenhum —</option>
+                                @foreach($clientProjects as $p)
+                                    <option value="{{ $p->id }}" {{ $task->project_id === $p->id ? 'selected' : '' }}>
+                                        {{ $p->title }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </form>
+                    </div>
+
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Sprint</p>
+                        @if($task->sprint)
+                            <a href="{{ route('sprints.show', $task->sprint) }}"
+                               class="text-sm font-semibold transition-colors" style="color:var(--orange)"
+                               onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
+                                {{ $task->sprint->title }}
+                            </a>
+                        @else
+                            <p class="text-sm" style="color:var(--muted)">Backlog</p>
+                        @endif
+                    </div>
+
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Origem</p>
+                        <span class="badge mt-0.5">{{ $task->originLabel() }}</span>
+                    </div>
+
+                    @if($task->destination)
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Destino</p>
+                            <p class="text-sm font-medium" style="color:var(--text)">{{ $task->destinationLabel() }}</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
             {{-- STATUS --}}
             <div class="card card-body" x-data="{ open: false }">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Status</p>
@@ -888,7 +915,13 @@
 
             {{-- RESPONSÁVEL --}}
             <div class="card card-body">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Responsável</p>
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Responsável</p>
+                    @php $responsavel = $task->responsibles->first(); @endphp
+                    @if($responsavel)
+                        <x-user-avatar :user="$responsavel" size="7" color="var(--orange)" title="{{ $responsavel->name }}" />
+                    @endif
+                </div>
                 <form method="POST" action="{{ route('tasks.update-responsavel', $task) }}">
                     @csrf @method('PATCH')
                     <select name="responsavel_id" onchange="this.form.submit()"
@@ -896,7 +929,7 @@
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                         <option value="">— nenhum —</option>
                         @foreach($users as $u)
-                            <option value="{{ $u->id }}" {{ $task->responsibles->first()?->id === $u->id ? 'selected' : '' }}>
+                            <option value="{{ $u->id }}" {{ $responsavel?->id === $u->id ? 'selected' : '' }}>
                                 {{ $u->name }}
                             </option>
                         @endforeach
@@ -906,7 +939,12 @@
 
             {{-- EXECUTOR --}}
             <div class="card card-body">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Executor</p>
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Executor</p>
+                    @if($task->executor)
+                        <x-user-avatar :user="$task->executor" size="7" color="var(--purple)" title="{{ $task->executor->name }}" />
+                    @endif
+                </div>
                 <form method="POST" action="{{ route('tasks.update-executor', $task) }}">
                     @csrf @method('PATCH')
                     <select name="executor_id" onchange="this.form.submit()"
@@ -922,86 +960,18 @@
                 </form>
             </div>
 
-            {{-- CONTEXTO --}}
-            <div class="card card-body">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Contexto</p>
-                <div class="flex flex-col gap-4">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Cliente</p>
-                        @if($task->client)
-                            <a href="{{ route('clients.show', $task->client) }}"
-                               class="text-sm font-semibold transition-colors" style="color:var(--purple)"
-                               onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
-                                {{ $task->client->company_name }}
-                            </a>
-                        @else
-                            <p class="text-sm" style="color:var(--muted)">—</p>
-                        @endif
+            {{-- OBSERVADORES (só avatares — nomes completos ficavam na antiga sessão Pessoas
+                 da coluna principal, removida por ocupar espaço demais) --}}
+            @if($task->observers->count() > 0)
+                <div class="card card-body">
+                    <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Observadores</p>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        @foreach($task->observers as $obs)
+                            <x-user-avatar :user="$obs" size="7" color="var(--slate, #64748b)" title="{{ $obs->name }}" />
+                        @endforeach
                     </div>
-
-                    @if($task->project?->macro_plan_id)
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Planejamento</p>
-                            <a href="{{ route('macroplans.edit', $task->project->macro_plan_id) }}"
-                               class="text-sm font-medium leading-snug block transition-colors" style="color:var(--text)"
-                               onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'">
-                                {{ $task->project->macroPlan?->title }}
-                            </a>
-                        </div>
-                    @endif
-
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Projeto</p>
-                            @if($task->project)
-                                <a href="{{ $task->project->macro_plan_id ? route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) : route('projects.showDirect', $task->project) }}"
-                                   class="text-xs font-semibold transition-colors" style="color:var(--purple)"
-                                   onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
-                                    Abrir →
-                                </a>
-                            @endif
-                        </div>
-                        <form method="POST" action="{{ route('tasks.update-project', $task) }}">
-                            @csrf @method('PATCH')
-                            <select name="project_id" onchange="this.form.submit()"
-                                class="w-full px-3 py-2 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                                <option value="">— nenhum —</option>
-                                @foreach($clientProjects as $p)
-                                    <option value="{{ $p->id }}" {{ $task->project_id === $p->id ? 'selected' : '' }}>
-                                        {{ $p->title }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </form>
-                    </div>
-
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Sprint</p>
-                        @if($task->sprint)
-                            <a href="{{ route('sprints.show', $task->sprint) }}"
-                               class="text-sm font-semibold transition-colors" style="color:var(--orange)"
-                               onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
-                                {{ $task->sprint->title }}
-                            </a>
-                        @else
-                            <p class="text-sm" style="color:var(--muted)">Backlog</p>
-                        @endif
-                    </div>
-
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Origem</p>
-                        <span class="badge mt-0.5">{{ $task->originLabel() }}</span>
-                    </div>
-
-                    @if($task->destination)
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Destino</p>
-                            <p class="text-sm font-medium" style="color:var(--text)">{{ $task->destinationLabel() }}</p>
-                        </div>
-                    @endif
                 </div>
-            </div>
+            @endif
 
             {{-- LINKS DO CLIENTE --}}
             @if($task->client?->links->count())
