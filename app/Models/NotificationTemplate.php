@@ -19,6 +19,7 @@ class NotificationTemplate extends Model
     // notificação proativa (decisão do usuário, 2026-07-21).
     public static array $types = [
         'onboarding_boas_vindas' => 'Onboarding — Boas-vindas',
+        'portal_acesso_liberado' => 'Acesso ao Portal Liberado',
         'chamado_aberto'         => 'Chamado Aberto',
         'chamado_concluido'      => 'Chamado Concluído',
         'reuniao_lembrete'       => 'Lembrete de Reunião',
@@ -38,6 +39,7 @@ class NotificationTemplate extends Model
     // variáveis fica pra quando o disparo automático for implementado.
     public static array $variableHints = [
         'onboarding_boas_vindas' => ['{{cliente}}', '{{contato}}', '{{responsavel_agencia}}'],
+        'portal_acesso_liberado' => ['{{cliente}}', '{{contato}}', '{{email}}', '{{senha}}', '{{link_portal}}'],
         'chamado_aberto'         => ['{{cliente}}', '{{contato}}', '{{chamado_titulo}}', '{{link_chamado}}'],
         'chamado_concluido'      => ['{{cliente}}', '{{contato}}', '{{chamado_titulo}}', '{{link_chamado}}'],
         'reuniao_lembrete'       => ['{{cliente}}', '{{contato}}', '{{data_reuniao}}', '{{link_reuniao}}'],

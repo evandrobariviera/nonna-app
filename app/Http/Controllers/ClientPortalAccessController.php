@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\Contact;
+use App\Models\NotificationTemplate;
+use App\Services\NotificationDispatchService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -11,6 +13,10 @@ use Illuminate\Validation\Rule;
 
 class ClientPortalAccessController extends Controller
 {
+    public function __construct(private NotificationDispatchService $notifications)
+    {
+    }
+
     public function store(Request $request, Client $client): RedirectResponse
     {
         abort_if($client->organization_id !== app('currentOrganization')->id, 403);
@@ -43,6 +49,19 @@ class ClientPortalAccessController extends Controller
             'password'               => $data['password'],
             'portal_access_enabled'  => true,
         ]);
+
+        // Avisa o contato com e-mail/senha de acesso — dispara direto (não via
+        // send()/assinatura, igual TaskApprovalService) porque é o próprio ato de
+        // habilitar o acesso que decide o destinatário, não uma assinatura prévia.
+        // Silencioso se o template "Acesso ao Portal Liberado" não estiver preenchido
+        // pra nenhum canal, ou se N8N_NOTIFICATION_WEBHOOK_URL não estiver configurado.
+        foreach (array_keys(NotificationTemplate::$channels) as $channel) {
+            $this->notifications->dispatch('portal_acesso_liberado', $channel, $client, $contact, [
+                'email'       => $contact->email,
+                'senha'       => $data['password'],
+                'link_portal' => route('portal.login'),
+            ]);
+        }
 
         return back()->with('success', 'Acesso ao portal habilitado.');
     }

@@ -4,7 +4,9 @@
 
 Disparo genérico de mensagens padrão (WhatsApp/e-mail) pro n8n, com o texto já resolvido a partir de `notification_templates` — o n8n só recebe o payload pronto e decide como enviar (WhatsApp/e-mail, qual provedor).
 
-**Status atual (2026-07-22):** o lado do App está pronto e já dispara de verdade pra **três gatilhos**: `chamado_aberto` (quando um cliente abre um chamado pelo Portal, `Portal\TicketController::store()`), `aprovacao` (unificado com o antigo webhook exclusivo de aprovação — ver [approval-webhook-api.md](approval-webhook-api.md) pra lógica de negócio específica: tokens, expiração, resolução de rodada) e `financeiro` (quando o time sobe um boleto/PIX de uma conta de anúncios, `ClientAdBillingDocumentController::store()` — ver `.claude/docs/*` do feature de Orçamentos). Os demais tipos já têm template cadastrado (`Configurações > Mensagens Padrão`) e já podem ter contatos assinados (`client_contact_subscriptions`), mas **ninguém no App ainda chama o serviço pra eles** — ligar cada um é um passo separado, deliberadamente não feito ainda.
+**Status atual (2026-07-24):** o lado do App está pronto e já dispara de verdade pra **quatro gatilhos**: `chamado_aberto` (quando um cliente abre um chamado pelo Portal, `Portal\TicketController::store()`), `aprovacao` (unificado com o antigo webhook exclusivo de aprovação — ver [approval-webhook-api.md](approval-webhook-api.md) pra lógica de negócio específica: tokens, expiração, resolução de rodada), `financeiro` (quando o time sobe um boleto/PIX de uma conta de anúncios, `ClientAdBillingDocumentController::store()` — ver `.claude/docs/*` do feature de Orçamentos) e `portal_acesso_liberado` (quando o time habilita acesso ao Portal pra um Contato, `ClientPortalAccessController::store()` — manda e-mail/senha recém-cadastrados). Os demais tipos já têm template cadastrado (`Configurações > Mensagens Padrão`) e já podem ter contatos assinados (`client_contact_subscriptions`), mas **ninguém no App ainda chama o serviço pra eles** — ligar cada um é um passo separado, deliberadamente não feito ainda.
+
+**Testar sem precisar de gatilho real:** `Configurações > Mensagens Padrão` tem um botão "Testar" por tipo+canal (`NotificationTemplateController::test()`) — dispara um POST de verdade pro webhook usando o próprio admin logado como destinatário fictício, contanto que (1) `N8N_NOTIFICATION_WEBHOOK_URL` esteja configurado e (2) o template daquele tipo+canal tenha texto salvo. É o jeito mais rápido de conferir se o payload está chegando no n8n antes de montar o workflow que efetivamente envia a mensagem.
 
 **O workflow do n8n que recebe esse payload e efetivamente manda a mensagem também não existe ainda** — até lá, o webhook simplesmente não é chamado (`N8N_NOTIFICATION_WEBHOOK_URL` não configurado → `send()` retorna sem fazer nada, silenciosamente).
 
@@ -56,7 +58,7 @@ Se não tiver `N8N_NOTIFICATION_WEBHOOK_URL` configurado, ou ninguém assinado n
 
 ## Tipos (`event`) já com template cadastrado
 
-`onboarding_boas_vindas`, `chamado_aberto` (disparando via `send()`), `chamado_concluido`, `reuniao_lembrete`, `aprovacao` (disparando via `dispatch()`, ver [approval-webhook-api.md](approval-webhook-api.md) pra lógica de negócio), `financeiro`, `cobranca`, `cs_survey`, `offboarding`.
+`onboarding_boas_vindas`, `portal_acesso_liberado` (disparando via `dispatch()`, um POST por canal com template preenchido — `{{email}}`/`{{senha}}`/`{{link_portal}}` além de `{{cliente}}`/`{{contato}}`), `chamado_aberto` (disparando via `send()`), `chamado_concluido`, `reuniao_lembrete`, `aprovacao` (disparando via `dispatch()`, ver [approval-webhook-api.md](approval-webhook-api.md) pra lógica de negócio), `financeiro`, `cobranca`, `cs_survey`, `offboarding`.
 
 ## O que falta para o fluxo ficar 100% funcional
 
