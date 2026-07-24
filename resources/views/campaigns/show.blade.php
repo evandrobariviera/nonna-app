@@ -35,7 +35,16 @@
                     <span class="text-xs font-mono uppercase" style="color:var(--muted)">{{ $campaign->platform }}</span>
                 </div>
                 <p class="text-sm font-semibold" style="color:var(--text)">
-                    {{ $campaign->adAccount?->client?->company_name ?? '—' }}
+                    @if($campaign->adAccount?->client)
+                        <a href="{{ route('clients.show', $campaign->adAccount->client) }}"
+                           @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('clients.preview', $campaign->adAccount->client) }}') }"
+                           class="transition-colors" style="color:var(--text)"
+                           onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'">
+                            {{ $campaign->adAccount->client->company_name }}
+                        </a>
+                    @else
+                        —
+                    @endif
                 </p>
                 @if($campaign->objective)
                     <p class="text-xs mt-1" style="color:var(--muted)">Objetivo: {{ $campaign->objective }}</p>
@@ -301,6 +310,30 @@
 
         {{-- ══ SIDEBAR ══ --}}
         <div class="flex flex-col gap-4" style="width:320px; flex-shrink:0">
+
+            {{-- CONTEXTO --}}
+            <div class="card card-body">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Contexto</p>
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Cliente</p>
+                        @if($campaign->adAccount?->client)
+                            <a href="{{ route('clients.show', $campaign->adAccount->client) }}"
+                               @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('clients.preview', $campaign->adAccount->client) }}') }"
+                               class="text-sm font-semibold transition-colors" style="color:var(--purple)"
+                               onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
+                                {{ $campaign->adAccount->client->company_name }}
+                            </a>
+                        @else
+                            <p class="text-sm" style="color:var(--muted)">—</p>
+                        @endif
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Conta de Anúncios</p>
+                        <p class="text-sm" style="color:var(--text)">{{ $campaign->adAccount?->account_name ?? $campaign->adAccount?->account_id ?? '—' }}</p>
+                    </div>
+                </div>
+            </div>
 
             {{-- STATUS --}}
             <div class="card card-body" x-data="{ open: false }">
