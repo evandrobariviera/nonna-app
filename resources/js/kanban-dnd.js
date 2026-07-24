@@ -3,7 +3,10 @@ import Sortable from 'sortablejs';
 // Arrastar-e-soltar genérico pros boards Kanban (Sprint, Projeto, Oportunidades).
 // Contrato de atributos (ver plano):
 //   [data-kanban-board][data-status-field]  — raiz do board ("status" ou "stage")
-//   [data-kanban-column][data-status]       — cada coluna
+//   [data-kanban-column][data-status][data-extra] — cada coluna. data-extra (opcional) é um
+//                                            JSON com campos extras pra mandar junto no PATCH
+//                                            quando o card cai NESSA coluna (ex: uma coluna que
+//                                            representa status+situação, não só status puro).
 //     [data-kanban-count]                   — contador da coluna (texto = número)
 //     [data-kanban-list]                    — contêiner arrastável dos cards
 //       [data-kanban-card][data-id][data-update-url] — cada card
@@ -19,6 +22,14 @@ export function registerKanbanDnd() {
                     sort: false,
                     animation: 150,
                     ghostClass: 'kanban-ghost',
+                    // forceFallback: SortableJS usa HTML5 drag nativo por padrão, que é
+                    // inconsistente (às vezes simplesmente não inicia) dentro de containers
+                    // flex com overflow-x:auto — exatamente o layout dos nossos boards
+                    // (colunas lado a lado com scroll horizontal). O fallback (mouse/touch
+                    // emulado via JS) é mais confiável nesse cenário e funciona em touch.
+                    forceFallback: true,
+                    fallbackClass: 'kanban-fallback',
+                    fallbackOnBody: true,
                     onEnd(evt) {
                         if (evt.from === evt.to) return;
 
@@ -27,6 +38,7 @@ export function registerKanbanDnd() {
                         const toColumn = evt.to.closest('[data-kanban-column]');
                         const newStatus = toColumn.dataset.status;
                         const updateUrl = card.dataset.updateUrl;
+                        const extra = toColumn.dataset.extra ? JSON.parse(toColumn.dataset.extra) : {};
 
                         fetch(updateUrl, {
                             method: 'PATCH',
@@ -35,7 +47,7 @@ export function registerKanbanDnd() {
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                                 'Accept': 'application/json',
                             },
-                            body: JSON.stringify({ [statusField]: newStatus }),
+                            body: JSON.stringify({ [statusField]: newStatus, ...extra }),
                         }).then((res) => {
                             if (!res.ok) throw new Error('update failed');
 

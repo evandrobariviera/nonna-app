@@ -622,3 +622,15 @@
     float: left;
     height: 0;
 }
+
+/* ══ Kanban drag-and-drop (SortableJS, ver resources/js/kanban-dnd.js) ══ */
+.kanban-ghost {
+    opacity: .35;
+    background: var(--s3) !important;
+    border: 1px dashed var(--purple) !important;
+}
+.kanban-fallback {
+    opacity: .9;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+    cursor: grabbing !important;
+}

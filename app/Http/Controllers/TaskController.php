@@ -329,9 +329,15 @@ class TaskController extends Controller
 
     public function updateStatusDirect(Request $request, Task $task)
     {
-        $task->update(['status' => $request->validate([
-            'status' => 'required|in:' . implode(',', array_keys(Task::$statuses)),
-        ])['status']]);
+        // situation é opcional — usado pelo Kanban do Dashboard, cuja coluna "Pronto para
+        // Produção" não é um status próprio (é status=backlog + essa situação específica).
+        $situationKeys = array_keys(array_filter(Task::$situations, fn ($k) => $k !== '', ARRAY_FILTER_USE_KEY));
+        $data = $request->validate([
+            'status'    => 'required|in:' . implode(',', array_keys(Task::$statuses)),
+            'situation' => 'sometimes|in:' . implode(',', $situationKeys),
+        ]);
+
+        $task->update($data);
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true]);

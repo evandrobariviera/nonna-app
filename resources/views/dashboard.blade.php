@@ -74,48 +74,67 @@
 
     </div>
 
-    {{-- ── LINHA 2: camada operacional da sprint (minhas tarefas por etapa) ── --}}
+    {{-- ── LINHA 2: camada operacional da sprint (minhas tarefas por etapa) ──
+         Kanban de verdade (arrastar-e-soltar entre colunas, ver resources/js/kanban-dnd.js).
+         "Pronto para Produção" não é um status próprio no modelo — é status=backlog com
+         situation="Pronto para produção" — por isso carrega data-extra além de data-status. --}}
     @php
         $quadros = [
-            ['emoji' => '🔧', 'label' => 'Ajuste / Alteração',   'tasks' => $myAdjustmentTasks,         'status' => 'ajuste_alteracao'],
-            ['emoji' => '⚙️', 'label' => 'Em Produção',           'tasks' => $myProductionTasks,         'status' => 'em_producao'],
-            ['emoji' => '📋', 'label' => 'Pronto para Produção',  'tasks' => $myReadyForProductionTasks, 'status' => 'backlog'],
+            ['emoji' => '🔧', 'label' => 'Ajuste / Alteração',   'tasks' => $myAdjustmentTasks,         'status' => 'ajuste_alteracao', 'extra' => null],
+            ['emoji' => '⚙️', 'label' => 'Em Produção',           'tasks' => $myProductionTasks,         'status' => 'em_producao',      'extra' => null],
+            ['emoji' => '📋', 'label' => 'Pronto para Produção',  'tasks' => $myReadyForProductionTasks, 'status' => 'backlog',           'extra' => ['situation' => 'Pronto para produção']],
         ];
     @endphp
-    <div class="grid gap-4 mb-6" style="grid-template-columns: repeat(3, 1fr)">
+    <div id="dashboard-board" class="grid gap-4 mb-6" style="grid-template-columns: repeat(3, 1fr)"
+         data-kanban-board data-status-field="status">
         @foreach($quadros as $q)
-            <div class="card px-5 py-4">
+            <div class="card px-5 py-4"
+                 data-kanban-column data-status="{{ $q['status'] }}"
+                 @if($q['extra']) data-extra='{{ json_encode($q['extra']) }}' @endif>
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-sm font-bold" style="color:var(--text)">
-                        {{ $q['emoji'] }} {{ $q['label'] }} ({{ $q['tasks']->count() }})
+                        {{ $q['emoji'] }} {{ $q['label'] }} (<span data-kanban-count>{{ $q['tasks']->count() }}</span>)
                     </h3>
                     <a href="{{ route('tasks.index', ['executor_id' => auth()->id(), 'status' => $q['status']]) }}"
                        class="text-xs font-mono" style="color:var(--purple)">Ver todas</a>
                 </div>
-                @if($q['tasks']->isEmpty())
-                    <p class="text-xs" style="color:var(--muted)">Nada por aqui. 🎉</p>
-                @else
-                    <div class="flex flex-col gap-2">
-                        @foreach($q['tasks'] as $task)
-                            <a href="{{ route('tasks.show', $task) }}" class="block px-3 py-2 transition-colors"
-                               style="background:var(--s2); border-left:2px solid {{ $task->isOverdue() ? 'var(--red)' : 'var(--purple)' }}"
-                               onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                                <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $task->title }}</p>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->company_name ?? '—' }}</span>
-                                    @if($task->due_date)
-                                        <span class="text-xs font-mono" style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">
-                                            {{ $task->due_date->format('d/m') }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </a>
-                        @endforeach
-                    </div>
-                @endif
+                <div class="flex flex-col gap-2" style="min-height:40px" data-kanban-list>
+                    @forelse($q['tasks'] as $task)
+                        @php
+                            $statusUrl = $task->is_ticket ? route('tickets.update-status', $task) : route('tasks.update-status-direct', $task);
+                        @endphp
+                        <div data-kanban-card data-id="{{ $task->id }}" data-update-url="{{ $statusUrl }}"
+                             class="px-3 py-2 transition-colors" style="cursor:pointer;
+                                    background:var(--s2); border-left:2px solid {{ $task->isOverdue() ? 'var(--red)' : 'var(--purple)' }}"
+                             onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'"
+                             onclick="window.location='{{ route('tasks.show', $task) }}'">
+                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $task->title }}</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->company_name ?? '—' }}</span>
+                                @if($task->due_date)
+                                    <span class="text-xs font-mono" style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">
+                                        {{ $task->due_date->format('d/m') }}
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                    @empty
+                        <p class="text-xs" style="color:var(--muted)">Nada por aqui. 🎉</p>
+                    @endforelse
+                </div>
             </div>
         @endforeach
     </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (document.getElementById('dashboard-board')) {
+                initKanbanDnd('#dashboard-board');
+            }
+        });
+    </script>
+    @endpush
 
     {{-- ── SEÇÕES POR FUNÇÃO ── --}}
     {{-- Administrador vê todas as funções, não só as que tem atribuídas — mesma regra já usada em /visoes/{role}. --}}

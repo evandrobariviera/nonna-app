@@ -104,11 +104,14 @@ class TicketController extends Controller
     {
         abort_unless($task->is_ticket, 403);
 
+        // situation é opcional — usado pelo Kanban do Dashboard, ver TaskController::updateStatusDirect().
+        $situationKeys = array_keys(array_filter(Task::$situations, fn ($k) => $k !== '', ARRAY_FILTER_USE_KEY));
         $data = $request->validate([
-            'status' => 'required|in:' . implode(',', array_keys(Task::$statuses)),
+            'status'    => 'required|in:' . implode(',', array_keys(Task::$statuses)),
+            'situation' => 'sometimes|in:' . implode(',', $situationKeys),
         ]);
 
-        $task->update(['status' => $data['status']]);
+        $task->update($data);
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true]);
