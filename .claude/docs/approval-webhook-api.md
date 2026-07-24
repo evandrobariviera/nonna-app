@@ -4,9 +4,9 @@
 
 Quando uma tarefa é enviada para aprovação do cliente, o App dispara um webhook HTTP (`POST`) para o n8n, que é responsável por notificar os contatos do cliente (WhatsApp e/ou e-mail) com o link tokenizado de aprovação.
 
-**Atualizado (2026-07-21): unificado com o webhook genérico de notificações.** O disparo não usa mais uma URL/payload próprios — `TaskApprovalService::dispatchWebhook()` chama `NotificationDispatchService::dispatch('aprovacao', ...)`, o mesmo serviço usado pelos outros gatilhos (chamado aberto, lembrete de reunião, etc.). Isso significa: mesma URL (`N8N_NOTIFICATION_WEBHOOK_URL`), mesmo formato de payload, e o texto vem do template `aprovacao` cadastrado em Configurações > Mensagens Padrão (com `{{tarefa}}` e `{{link_aprovacao}}` já substituídos). **O formato completo do payload está em [notification-webhook-api.md](notification-webhook-api.md)** — este documento aqui só explica a lógica de negócio específica de aprovação (quando dispara, tokens, resolução da rodada), que continua igual.
+**Atualizado (2026-07-21): unificado com o webhook genérico de notificações.** O disparo não usa mais uma URL/payload próprios — `TaskApprovalService::dispatchWebhook()` chama `NotificationDispatchService::dispatch('aprovacao', ...)`, o mesmo serviço usado pelos outros gatilhos (chamado aberto, lembrete de reunião, etc.). Isso significa: mesma URL (cadastrada por organização em `Configurações > Integrações`, ver [notification-webhook-api.md](notification-webhook-api.md)), mesmo formato de payload, e o texto vem do template `aprovacao` cadastrado em Configurações > Mensagens Padrão (com `{{tarefa}}` e `{{link_aprovacao}}` já substituídos). **O formato completo do payload está em [notification-webhook-api.md](notification-webhook-api.md)** — este documento aqui só explica a lógica de negócio específica de aprovação (quando dispara, tokens, resolução da rodada), que continua igual.
 
-**Status atual (2026-07):** o lado do App está pronto — o disparo já funciona em produção. **O workflow do n8n que efetivamente envia a mensagem ainda não existe** — depende da definição do provedor de WhatsApp/e-mail que a agência vai usar. Até lá, o webhook simplesmente não é chamado (`N8N_NOTIFICATION_WEBHOOK_URL` não configurado → `dispatch()` retorna sem fazer nada, silenciosamente).
+**Status atual (2026-07):** o lado do App está pronto — o disparo já funciona em produção. **O workflow do n8n que efetivamente envia a mensagem ainda não existe** — depende da definição do provedor de WhatsApp/e-mail que a agência vai usar. Até lá, o webhook simplesmente não é chamado (URL não cadastrada/conectada → `dispatch()` retorna sem fazer nada, silenciosamente).
 
 ## Quando o webhook é disparado
 
@@ -24,7 +24,7 @@ Quando uma tarefa é enviada para aprovação do cliente, o App dispara um webho
 
 ## Endpoint e payload
 
-Ver [notification-webhook-api.md](notification-webhook-api.md) — mesma URL (`N8N_NOTIFICATION_WEBHOOK_URL`), mesmo formato (`event`, `channel`, `client`, `contact`, `message.subject`/`body`, `fired_at`). Pra aprovação, `event = "aprovacao"` e o `link_aprovacao` (tokenizado, `route('approval.show', $token)`) já vem embutido no texto de `message.body` — não é mais um campo separado no payload (`link`/`expires_at`/`deliverables_count` do formato antigo saíram; se precisar dessa info no n8n, inclua no próprio texto do template via `{{link_aprovacao}}`).
+Ver [notification-webhook-api.md](notification-webhook-api.md) — mesma URL (cadastrada por organização), mesmo formato (`event`, `channel`, `client`, `contact`, `message.subject`/`body`, `fired_at`). Pra aprovação, `event = "aprovacao"` e o `link_aprovacao` (tokenizado, `route('approval.show', $token)`) já vem embutido no texto de `message.body` — não é mais um campo separado no payload (`link`/`expires_at`/`deliverables_count` do formato antigo saíram; se precisar dessa info no n8n, inclua no próprio texto do template via `{{link_aprovacao}}`).
 
 Após o disparo, o App marca `task_approval_tokens.notified_at = now()` — não há confirmação de entrega vinda do n8n de volta pro App nesse fluxo (é fire-and-forget).
 
@@ -32,7 +32,7 @@ Após o disparo, o App marca `task_approval_tokens.notified_at = now()` — não
 
 1. Definir o provedor de WhatsApp (ex: API oficial da Meta, Twilio, Z-API etc.) e de e-mail.
 2. Montar o workflow no n8n que recebe esse payload e dispara as mensagens (o link tokenizado já vem no texto).
-3. Cadastrar `N8N_NOTIFICATION_WEBHOOK_URL` no ambiente de produção (Portainer) — mesma variável usada por todos os gatilhos.
+3. Cadastrar a URL do webhook em `Configurações > Integrações` (provider "n8n", status "Conectado") — mesma integração usada por todos os gatilhos.
 
 ## Fluxo de resposta do cliente (não depende do n8n)
 

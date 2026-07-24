@@ -11,6 +11,7 @@ class OrganizationIntegrationController extends Controller
     private const CREDENTIAL_FIELDS = [
         'access_token', 'refresh_token', 'developer_token',
         'customer_id', 'login_customer_id', 'client_id', 'client_secret',
+        'webhook_url', // usado só pelo provider "n8n" — ver NotificationDispatchService
     ];
 
     public function store(Request $request): RedirectResponse

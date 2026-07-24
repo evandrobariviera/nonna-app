@@ -35,8 +35,4 @@ return [
         ],
     ],
 
-    'n8n' => [
-        'notification_webhook_url' => env('N8N_NOTIFICATION_WEBHOOK_URL'),
-    ],
-
 ];

@@ -23,9 +23,9 @@ class NotificationTemplateController extends Controller
 
         $org = app('currentOrganization');
 
-        if (!config('services.n8n.notification_webhook_url')) {
+        if (!$org->integration('n8n')?->credential('webhook_url')) {
             return back()
-                ->withErrors(['test' => 'Configure N8N_NOTIFICATION_WEBHOOK_URL antes de testar.'])
+                ->withErrors(['test' => 'Configure a URL do webhook em Configurações > Integrações (n8n) antes de testar.'])
                 ->with('tab', 'mensagens');
         }
 

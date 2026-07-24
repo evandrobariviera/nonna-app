@@ -208,7 +208,7 @@
              x-data="{
                 modal: false,
                 editing: null,
-                emptyCredentials: { access_token: '', refresh_token: '', developer_token: '', customer_id: '', login_customer_id: '', client_id: '', client_secret: '' },
+                emptyCredentials: { access_token: '', refresh_token: '', developer_token: '', customer_id: '', login_customer_id: '', client_id: '', client_secret: '', webhook_url: '' },
                 form: { provider: '', label: '', external_id: '', status: 'pending', credentials: {} },
                 open(integration) {
                     if (integration) {
@@ -491,8 +491,20 @@
                                 </p>
                             </div>
 
+                            {{-- n8n: URL do webhook (não é OAuth) --}}
+                            <div x-show="form.provider === 'n8n'" class="mb-3">
+                                <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">URL do Webhook</label>
+                                <p class="text-xs mb-1.5" style="color:var(--muted)">
+                                    URL do node "Webhook" do fluxo no n8n que recebe as notificações padrão (ver Configurações > Mensagens Padrão). Status precisa estar "Conectado" pra disparar.
+                                </p>
+                                <input type="text" name="credentials[webhook_url]" x-model="form.credentials.webhook_url" autocomplete="off"
+                                       placeholder="https://seu-n8n.com/webhook/..."
+                                       class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
+                                       style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                            </div>
+
                             {{-- Demais providers: token genérico --}}
-                            <div x-show="form.provider && !['meta','tiktok','linkedin','pinterest','google'].includes(form.provider)" class="mb-3">
+                            <div x-show="form.provider && !['meta','tiktok','linkedin','pinterest','google','n8n'].includes(form.provider)" class="mb-3">
                                 <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Access Token / API Key</label>
                                 <input type="password" name="credentials[access_token]" x-model="form.credentials.access_token" autocomplete="off"
                                        class="w-full rounded-lg border px-3 py-2 text-sm font-mono"

@@ -45,7 +45,10 @@ class NotificationDispatchService
      */
     public function dispatch(string $type, string $channel, Client $client, Contact $contact, array $variables = [], ?string $attachmentUrl = null): void
     {
-        $webhookUrl = config('services.n8n.notification_webhook_url');
+        // URL do webhook é configurada por organização (Configurações > Integrações,
+        // provider "n8n"), não mais via variável de ambiente — permite cada organização
+        // apontar pro seu próprio n8n.
+        $webhookUrl = $client->organization?->integration('n8n')?->credential('webhook_url');
         if (!$webhookUrl) {
             return;
         }

@@ -6,9 +6,9 @@ Disparo genérico de mensagens padrão (WhatsApp/e-mail) pro n8n, com o texto j�
 
 **Status atual (2026-07-24):** o lado do App está pronto e já dispara de verdade pra **quatro gatilhos**: `chamado_aberto` (quando um cliente abre um chamado pelo Portal, `Portal\TicketController::store()`), `aprovacao` (unificado com o antigo webhook exclusivo de aprovação — ver [approval-webhook-api.md](approval-webhook-api.md) pra lógica de negócio específica: tokens, expiração, resolução de rodada), `financeiro` (quando o time sobe um boleto/PIX de uma conta de anúncios, `ClientAdBillingDocumentController::store()` — ver `.claude/docs/*` do feature de Orçamentos) e `portal_acesso_liberado` (quando o time habilita acesso ao Portal pra um Contato, `ClientPortalAccessController::store()` — manda e-mail/senha recém-cadastrados). Os demais tipos já têm template cadastrado (`Configurações > Mensagens Padrão`) e já podem ter contatos assinados (`client_contact_subscriptions`), mas **ninguém no App ainda chama o serviço pra eles** — ligar cada um é um passo separado, deliberadamente não feito ainda.
 
-**Testar sem precisar de gatilho real:** `Configurações > Mensagens Padrão` tem um botão "Testar" por tipo+canal (`NotificationTemplateController::test()`) — dispara um POST de verdade pro webhook usando o próprio admin logado como destinatário fictício, contanto que (1) `N8N_NOTIFICATION_WEBHOOK_URL` esteja configurado e (2) o template daquele tipo+canal tenha texto salvo. É o jeito mais rápido de conferir se o payload está chegando no n8n antes de montar o workflow que efetivamente envia a mensagem.
+**Testar sem precisar de gatilho real:** `Configurações > Mensagens Padrão` tem um botão "Testar" por tipo+canal (`NotificationTemplateController::test()`) — dispara um POST de verdade pro webhook usando o próprio admin logado como destinatário fictício, contanto que (1) a organização tenha a URL do webhook cadastrada em `Configurações > Integrações` (provider "n8n", status "Conectado") e (2) o template daquele tipo+canal tenha texto salvo. É o jeito mais rápido de conferir se o payload está chegando no n8n antes de montar o workflow que efetivamente envia a mensagem.
 
-**O workflow do n8n que recebe esse payload e efetivamente manda a mensagem também não existe ainda** — até lá, o webhook simplesmente não é chamado (`N8N_NOTIFICATION_WEBHOOK_URL` não configurado → `send()` retorna sem fazer nada, silenciosamente).
+**O workflow do n8n que recebe esse payload e efetivamente manda a mensagem também não existe ainda** — até lá, o webhook simplesmente não é chamado (sem URL cadastrada/conectada → `send()`/`dispatch()` retornam sem fazer nada, silenciosamente).
 
 ## Quando dispara
 
@@ -21,12 +21,12 @@ Duas formas de chamar, mesmo mecanismo por baixo (`dispatch()`):
 
 Em ambos os casos: busca o `NotificationTemplate` da organização pra aquele tipo+canal, troca as variáveis (`{{chave}}` → valor) no `subject`/`body` — `cliente` e `contato` são preenchidos automaticamente, o resto vem do array `$variables` passado por quem chama — e faz um `POST` fire-and-forget, sem fila.
 
-Se não tiver `N8N_NOTIFICATION_WEBHOOK_URL` configurado, ou ninguém assinado naquele tipo pro cliente, ou o template estiver vazio pro canal — não dispara nada, sem erro.
+Se a organização não tiver a integração "n8n" conectada com URL de webhook, ou ninguém assinado naquele tipo pro cliente, ou o template estiver vazio pro canal — não dispara nada, sem erro.
 
 ## Endpoint
 
 - **Método:** `POST`
-- **URL:** valor de `config('services.n8n.notification_webhook_url')` (env `N8N_NOTIFICATION_WEBHOOK_URL`)
+- **URL:** cadastrada **por organização**, em `Configurações > Integrações` → provider `n8n` → campo "URL do Webhook" (não é mais variável de ambiente). Resolvida em `NotificationDispatchService::dispatch()` via `$client->organization->integration('n8n')->credential('webhook_url')` — só considera a integração se `status = connected`.
 - **Timeout:** 10s
 
 ## Payload
@@ -62,7 +62,7 @@ Se não tiver `N8N_NOTIFICATION_WEBHOOK_URL` configurado, ou ninguém assinado n
 
 ## O que falta para o fluxo ficar 100% funcional
 
-1. Cadastrar `N8N_NOTIFICATION_WEBHOOK_URL` no ambiente de produção (Portainer) — a URL do webhook node do n8n que vai receber esse payload (única variável agora, substituiu a antiga `N8N_APPROVAL_WEBHOOK_URL`).
+1. Cadastrar a URL do webhook em `Configurações > Integrações` (provider "n8n", status "Conectado") — a URL do webhook node do n8n que vai receber esse payload. Deixou de ser variável de ambiente (2026-07-24) — cada organização configura a própria (`N8N_NOTIFICATION_WEBHOOK_URL`/`N8N_APPROVAL_WEBHOOK_URL` não existem mais em lugar nenhum).
 2. Montar o workflow no n8n que recebe o payload e decide como enviar (WhatsApp/e-mail, qual provedor) — pode ramificar internamente pelo campo `event`.
 3. Ligar os outros gatilhos que já têm dado de origem pronto (`chamado_concluido` quando a tarefa vira `concluido`; `reuniao_lembrete` via um comando agendado novo — nenhum dos dois está ligado ainda).
 4. Construir a funcionalidade de base que falta pros gatilhos que ainda não têm nada por trás (`cobranca`/`cs_survey`/`offboarding`).
