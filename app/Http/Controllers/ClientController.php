@@ -109,13 +109,16 @@ class ClientController extends Controller
     public function preview(Client $client)
     {
         $client->loadCount(['adAccounts', 'macroplans']);
+        $client->load(['credentials', 'links', 'contacts', 'dossiers']);
 
         $recentMacroplans = $client->macroplans()
             ->orderByDesc('created_at')
             ->limit(5)
             ->get(['id', 'title', 'status']);
 
-        return view('clients._preview', compact('client', 'recentMacroplans'));
+        $contactRoles = \App\Http\Controllers\ClientContactController::$roles;
+
+        return view('clients._preview', compact('client', 'recentMacroplans', 'contactRoles'));
     }
 
     public function edit(Client $client)
