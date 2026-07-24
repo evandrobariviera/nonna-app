@@ -25,6 +25,9 @@ class FilaController extends Controller
         if ($request->filled('client_id')) {
             $query->where('client_id', $request->client_id);
         }
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->project_id);
+        }
         if ($request->filled('origin')) {
             $query->where('origin', $request->origin);
         }

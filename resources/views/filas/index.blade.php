@@ -96,6 +96,16 @@
             </select>
         </div>
 
+        <div class="flex-1 min-w-44">
+            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Projeto</label>
+            <select name="project_id" class="filter-select w-full">
+                <option value="">Todos os projetos</option>
+                @foreach($projects as $p)
+                    <option value="{{ $p->id }}" {{ request('project_id') === $p->id ? 'selected' : '' }}>{{ $p->title }} @if($p->client)({{ $p->client->company_name }})@endif</option>
+                @endforeach
+            </select>
+        </div>
+
         <div class="min-w-36">
             <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Origem</label>
             <select name="origin" class="filter-select w-full">
@@ -136,7 +146,7 @@
 
         <div class="flex gap-2">
             <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
-            @if(request()->hasAny(['search','client_id','origin','task_type','atrasadas','mostrar_fechados']))
+            @if(request()->hasAny(['search','client_id','project_id','origin','task_type','atrasadas','mostrar_fechados']))
                 <a href="{{ route('fila.index', ['group_by' => $groupBy]) }}" class="btn btn-ghost btn-sm">✕ Limpar</a>
             @endif
         </div>
