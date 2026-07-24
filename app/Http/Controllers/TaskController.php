@@ -257,7 +257,16 @@ class TaskController extends Controller
         TaskExecutor::where('task_id', $task->id)->where('role', 'responsavel')->delete();
 
         if ($data['responsavel_id']) {
+            // task_executors só permite 1 linha por (task_id, user_id) — se esse usuário já
+            // estava na tarefa com outro papel (ex: executor), precisa soltar essa linha antes,
+            // senão o attach() abaixo colide com a constraint (bug real, 2026-07-24: 500 ao
+            // tentar tornar responsável alguém que já era executor da mesma tarefa).
+            TaskExecutor::where('task_id', $task->id)->where('user_id', $data['responsavel_id'])->delete();
             $task->executors()->attach($data['responsavel_id'], ['role' => 'responsavel']);
+
+            if ($task->executor_id == $data['responsavel_id']) {
+                $task->updateQuietly(['executor_id' => null]);
+            }
         }
 
         return redirect()->back()->with('success', 'Responsável atualizado.');
@@ -270,6 +279,9 @@ class TaskController extends Controller
         TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->delete();
 
         if ($data['executor_id']) {
+            // Mesmo cuidado do updateResponsavel() — solta qualquer linha existente desse
+            // usuário na tarefa (ex: se ele já era o responsável) antes de anexar como executor.
+            TaskExecutor::where('task_id', $task->id)->where('user_id', $data['executor_id'])->delete();
             $task->executors()->attach($data['executor_id'], ['role' => 'executor']);
             $task->updateQuietly(['executor_id' => $data['executor_id']]);
         } else {
@@ -377,6 +389,11 @@ class TaskController extends Controller
                 foreach ($tasks as $task) {
                     TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->delete();
                     if (!empty($data['executor_id'])) {
+                        // Mesmo cuidado do updateResponsavel()/updateExecutorDirect() — solta
+                        // qualquer linha existente desse usuário na tarefa (ex: já era o
+                        // responsável) antes de anexar como executor, senão colide com a
+                        // constraint task_executors_task_id_user_id_unique.
+                        TaskExecutor::where('task_id', $task->id)->where('user_id', $data['executor_id'])->delete();
                         $task->executors()->attach($data['executor_id'], ['role' => 'executor']);
                     }
                     $task->updateQuietly(['executor_id' => $data['executor_id'] ?? null]);
