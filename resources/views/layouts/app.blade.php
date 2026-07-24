@@ -195,7 +195,7 @@
     </div>
 
     {{-- ── PAINEL LATERAL (canvas) ── carrega detalhe de Cliente/Projeto sem sair da página atual ── --}}
-    <div x-show="$store.sidePanel.open" x-cloak
+    <div x-show="$store.sidePanel.visible" x-cloak
          @keydown.escape.window="$store.sidePanel.close()"
          class="fixed inset-y-0 right-0 z-40 w-full md:w-1/2 flex flex-col"
          style="background:var(--bg); border-left:1px solid var(--border2); box-shadow:-8px 0 24px rgba(0,0,0,.12)"

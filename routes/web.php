@@ -293,6 +293,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('macroplans.store');
     Route::get('/planejamentos/{macroplan}/editar', [MacroPlanController::class, 'edit'])
         ->name('macroplans.edit');
+    Route::get('/planejamentos/{macroplan}/preview', [MacroPlanController::class, 'preview'])
+        ->name('macroplans.preview');
     Route::patch('/planejamentos/{macroplan}', [MacroPlanController::class, 'update'])
         ->name('macroplans.update');
     Route::patch('/planejamentos/{macroplan}/status', [MacroPlanController::class, 'updateStatus'])

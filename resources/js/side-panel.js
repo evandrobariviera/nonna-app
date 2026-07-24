@@ -2,14 +2,14 @@
 // Uso em qualquer link: @click.prevent="$store.sidePanel.open(url)"
 export function registerSidePanel(Alpine) {
     Alpine.store('sidePanel', {
-        open: false,
+        visible: false,
         loading: false,
         error: false,
         html: '',
         url: null,
 
-        async load(url) {
-            this.open = true;
+        async open(url) {
+            this.visible = true;
             this.loading = true;
             this.error = false;
             this.html = '';
@@ -39,7 +39,7 @@ export function registerSidePanel(Alpine) {
         },
 
         close() {
-            this.open = false;
+            this.visible = false;
             this.html = '';
             this.url = null;
             this.error = false;

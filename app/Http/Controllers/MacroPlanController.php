@@ -65,6 +65,16 @@ class MacroPlanController extends Controller
             ->with('success', 'Macroplanejamento criado. Preencha os blocos abaixo.');
     }
 
+    /**
+     * Preview leve para o painel lateral (canvas) — não a página completa.
+     */
+    public function preview(MacroPlan $macroplan)
+    {
+        $macroplan->load(['client', 'responsible', 'projects']);
+
+        return view('macroplans._preview', compact('macroplan'));
+    }
+
     public function edit(MacroPlan $macroplan, Request $request)
     {
         $macroplan->load(['client', 'responsible', 'projects.tasks', 'attachments.uploadedBy']);
