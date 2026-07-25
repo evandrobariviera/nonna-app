@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\TaskApprovalRound;
 use App\Models\TaskStatusTransition;
 use App\Support\BusinessTime;
 use Illuminate\Http\Request;
@@ -25,16 +26,21 @@ class ProductivityDashboardController extends Controller
         }
         $since = now()->subDays((int) $period);
 
-        // ── Quem entrega mais (Executor, tarefas concluídas no período) ──
-        $completedTaskIds = TaskStatusTransition::where('to_status', 'concluido')
+        // Transições pra "concluido" no período — usa a última, se uma tarefa
+        // foi concluída mais de uma vez no recorte (reaberta e concluída de novo).
+        $completedTransitions = TaskStatusTransition::whereIn('task_id', Task::pluck('id'))
+            ->where('to_status', 'concluido')
             ->where('changed_at', '>=', $since)
-            ->pluck('task_id')
-            ->unique();
+            ->get(['task_id', 'changed_at'])
+            ->sortBy('changed_at');
 
-        $completedTasks = Task::whereIn('id', $completedTaskIds)
+        $completedAtByTask = $completedTransitions->keyBy('task_id')->map(fn ($t) => $t->changed_at);
+
+        $completedTasks = Task::whereIn('id', $completedAtByTask->keys())
             ->with(['client', 'executor', 'executors'])
             ->get();
 
+        // ── Quem entrega mais (Executor) ──
         $byExecutor = $this->groupByExecutor($completedTasks);
 
         // ── Tipo de tarefa mais entregue ──
@@ -69,14 +75,57 @@ class ProductivityDashboardController extends Controller
 
         $overdueByExecutor = $this->groupByExecutor($overdueTasks);
 
+        // ── Carga de trabalho atual (WIP), por executor — estado atual ──
+        $wipByExecutor = $this->groupByExecutor(
+            Task::whereNotIn('status', ['concluido', 'cancelado'])
+                ->with(['executor', 'executors'])
+                ->get()
+        );
+
         // ── Tempo médio em cada status, em dias úteis (todo o histórico disponível) ──
         $avgByStatus = $this->averageTimeInStatus();
-
         $instrumentationStartedAt = TaskStatusTransition::oldest('changed_at')->value('changed_at');
 
-        return view('productivity.index', compact(
-            'period', 'byExecutor', 'byType', 'byClient', 'overdueByExecutor', 'avgByStatus', 'instrumentationStartedAt'
-        ));
+        // ── Taxa de retrabalho (passou por "Ajuste / Alteração" pelo menos 1x) ──
+        $reworkRate = $this->reworkRate($completedTasks);
+
+        // ── Cumprimento de prazo (das concluídas no período, quantas foram no prazo) ──
+        $onTimeRate = $this->onTimeRate($completedTasks, $completedAtByTask);
+
+        // ── Mix de origem (quanto do que foi entregue veio de Ticket avulso vs planejado) ──
+        $originMix = $this->originMix($completedTasks);
+
+        // ── Saúde da aprovação (rodadas resolvidas no período) ──
+        $approvalRounds = TaskApprovalRound::whereIn('status', ['approved', 'changes_requested'])
+            ->where('resolved_at', '>=', $since)
+            ->with('task.client')
+            ->get();
+        $approvalOverall = $this->approvalOverallStats($approvalRounds);
+        $approvalByClient = $this->approvalHealthByClient($approvalRounds);
+
+        // ── Matriz Tipo de Tarefa × Executor ──
+        $typeExecutorMatrix = $this->typeExecutorMatrix($completedTasks);
+
+        // ── Tendência semanal (últimas 8 semanas, concluídas) ──
+        $weeklyTrend = $this->weeklyTrend();
+
+        return view('productivity.index', [
+            'period'                   => $period,
+            'byExecutor'               => $byExecutor,
+            'byType'                   => $byType,
+            'byClient'                 => $byClient,
+            'overdueByExecutor'        => $overdueByExecutor,
+            'wipByExecutor'            => $wipByExecutor,
+            'avgByStatus'              => $avgByStatus,
+            'instrumentationStartedAt' => $instrumentationStartedAt,
+            'reworkRate'               => $reworkRate,
+            'onTimeRate'               => $onTimeRate,
+            'originMix'                => $originMix,
+            'approvalOverall'          => $approvalOverall,
+            'approvalByClient'         => $approvalByClient,
+            'typeExecutorMatrix'       => $typeExecutorMatrix,
+            'weeklyTrend'              => $weeklyTrend,
+        ]);
     }
 
     /**
@@ -137,5 +186,207 @@ class ProductivityDashboardController extends Controller
             })
             ->sortByDesc('avg_seconds')
             ->values();
+    }
+
+    /**
+     * "Ajuste / Alteração" é o status que o próprio fluxo usa pra sinalizar
+     * que algo precisou voltar (revisão interna ou cliente pediu ajuste) — em
+     * vez de inferir "andou pra trás" a partir da ordem do array de status
+     * (frágil, não é um DAG garantido), uso esse status como o sinal direto
+     * de retrabalho.
+     */
+    private function reworkRate(Collection $completedTasks): array
+    {
+        $taskIds = $completedTasks->pluck('id');
+
+        $reworkedIds = TaskStatusTransition::whereIn('task_id', $taskIds)
+            ->where('to_status', 'ajuste_alteracao')
+            ->distinct()
+            ->pluck('task_id');
+
+        $total = $completedTasks->count();
+        $reworkedCount = $taskIds->intersect($reworkedIds)->count();
+
+        $byExecutor = $completedTasks->groupBy(fn (Task $t) => Task::executorGroupKey($t))
+            ->map(function ($group, $key) use ($reworkedIds) {
+                [, $name] = explode('|', $key, 2);
+                $groupTotal = $group->count();
+                $groupReworked = $group->filter(fn ($t) => $reworkedIds->contains($t->id))->count();
+
+                return (object) [
+                    'name'        => $name,
+                    'total'       => $groupTotal,
+                    'rework_rate' => $groupTotal > 0 ? round($groupReworked / $groupTotal * 100) : 0,
+                ];
+            })
+            ->sortByDesc('rework_rate')
+            ->values();
+
+        return [
+            'overall_rate' => $total > 0 ? round($reworkedCount / $total * 100) : null,
+            'total'        => $total,
+            'by_executor'  => $byExecutor,
+        ];
+    }
+
+    /**
+     * Das tarefas concluídas no período que tinham prazo definido, quantas
+     * foram entregues até a data de vencimento. Tarefas sem due_date ficam de
+     * fora (não dá pra julgar SLA sem prazo).
+     */
+    private function onTimeRate(Collection $completedTasks, Collection $completedAtByTask): array
+    {
+        $withDueDate = $completedTasks->filter(fn (Task $t) => $t->due_date !== null);
+
+        $onTime = $withDueDate->filter(function (Task $t) use ($completedAtByTask) {
+            $completedAt = $completedAtByTask->get($t->id);
+            return $completedAt && $completedAt->toDateString() <= $t->due_date->toDateString();
+        });
+
+        $total = $withDueDate->count();
+
+        return [
+            'total'   => $total,
+            'on_time' => $onTime->count(),
+            'rate'    => $total > 0 ? round($onTime->count() / $total * 100) : null,
+        ];
+    }
+
+    /**
+     * Quanto do volume entregue veio de chamado avulso (Ticket) vs trabalho
+     * planejado (Onboarding/Projeto/Roadmap) — pergunta clássica de gestão:
+     * "estamos sendo reativos demais?".
+     */
+    private function originMix(Collection $completedTasks): Collection
+    {
+        $total = $completedTasks->count();
+
+        return $completedTasks->groupBy(fn (Task $t) => $t->origin ?: '')
+            ->map(fn ($group, $origin) => (object) [
+                'label' => Task::$origins[$origin] ?? ($origin ?: 'Sem origem'),
+                'count' => $group->count(),
+                'pct'   => $total > 0 ? round($group->count() / $total * 100) : 0,
+            ])
+            ->sortByDesc('count')
+            ->values();
+    }
+
+    private function approvalOverallStats(Collection $rounds): object
+    {
+        $total = $rounds->count();
+        $firstTime = $rounds->filter(fn ($r) => $r->round_number === 1 && $r->status === 'approved')->count();
+
+        $responseSeconds = $rounds->filter(fn ($r) => $r->sent_at && $r->resolved_at)
+            ->map(fn ($r) => BusinessTime::secondsBetween($r->sent_at, $r->resolved_at));
+
+        return (object) [
+            'total'           => $total,
+            'first_time_rate' => $total > 0 ? round($firstTime / $total * 100) : null,
+            'avg_response'    => $responseSeconds->isNotEmpty()
+                ? BusinessTime::humanize((int) round($responseSeconds->avg()))
+                : null,
+        ];
+    }
+
+    /**
+     * % de rodadas aprovadas de primeira (sem pedido de ajuste) e tempo médio
+     * que o CLIENTE demora pra responder (sent_at → resolved_at) — separado
+     * de propósito do tempo interno de produção, pra não confundir "nossa
+     * lentidão" com "lentidão do cliente pra aprovar".
+     */
+    private function approvalHealthByClient(Collection $rounds): Collection
+    {
+        return $rounds->groupBy(fn ($r) => $r->task->client_id)
+            ->filter(fn ($group) => $group->first()->task->client !== null)
+            ->map(function ($group) {
+                $client = $group->first()->task->client;
+                $total = $group->count();
+                $firstTime = $group->filter(fn ($r) => $r->round_number === 1 && $r->status === 'approved')->count();
+
+                $responseSeconds = $group->filter(fn ($r) => $r->sent_at && $r->resolved_at)
+                    ->map(fn ($r) => BusinessTime::secondsBetween($r->sent_at, $r->resolved_at));
+
+                return (object) [
+                    'client'          => $client,
+                    'total'           => $total,
+                    'first_time_rate' => $total > 0 ? round($firstTime / $total * 100) : 0,
+                    'avg_response'    => $responseSeconds->isNotEmpty()
+                        ? BusinessTime::humanize((int) round($responseSeconds->avg()))
+                        : null,
+                ];
+            })
+            ->sortByDesc('total')
+            ->values();
+    }
+
+    /**
+     * Cruza tipo de tarefa × executor pra mostrar especialização real (ex:
+     * só uma pessoa cobrindo um tipo inteiro = risco de gargalo). Limita a
+     * 8 executores (maior volume primeiro) pra não estourar a tabela.
+     */
+    private function typeExecutorMatrix(Collection $completedTasks): array
+    {
+        $totals = $completedTasks->groupBy(fn (Task $t) => Task::executorGroupKey($t))
+            ->map(fn ($group, $key) => (object) [
+                'key'   => $key,
+                'name'  => explode('|', $key, 2)[1],
+                'count' => $group->count(),
+            ])
+            ->sortByDesc('count')
+            ->values()
+            ->take(8);
+
+        $executorKeys = $totals->pluck('key');
+        $executorNames = $totals->pluck('name');
+
+        $rows = $completedTasks->groupBy('task_type')
+            ->map(function ($tasksOfType, $type) use ($executorKeys) {
+                $cells = [];
+                foreach ($executorKeys as $key) {
+                    $cells[$key] = $tasksOfType->filter(fn (Task $t) => Task::executorGroupKey($t) === $key)->count();
+                }
+
+                return (object) [
+                    'label' => Task::$types[$type] ?? ($type ?: 'Sem tipo'),
+                    'cells' => $cells,
+                    'total' => $tasksOfType->count(),
+                ];
+            })
+            ->sortByDesc('total')
+            ->values();
+
+        return [
+            'executor_keys'  => $executorKeys,
+            'executor_names' => $executorNames,
+            'rows'           => $rows,
+        ];
+    }
+
+    /**
+     * Throughput semanal das últimas 8 semanas — janela fixa, independente do
+     * filtro de período do resto do painel, pra dar visão de tendência.
+     */
+    private function weeklyTrend(): Collection
+    {
+        $weeksBack = 8;
+        $start = now()->subWeeks($weeksBack - 1)->startOfWeek();
+
+        $transitions = TaskStatusTransition::whereIn('task_id', Task::pluck('id'))
+            ->where('to_status', 'concluido')
+            ->where('changed_at', '>=', $start)
+            ->get(['changed_at']);
+
+        $counts = $transitions->groupBy(fn ($t) => $t->changed_at->startOfWeek()->toDateString());
+
+        $weeks = collect();
+        for ($i = 0; $i < $weeksBack; $i++) {
+            $weekStart = $start->copy()->addWeeks($i);
+            $weeks->push((object) [
+                'label' => $weekStart->format('d/m'),
+                'count' => $counts->get($weekStart->toDateString())?->count() ?? 0,
+            ]);
+        }
+
+        return $weeks;
     }
 }
