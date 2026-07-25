@@ -13,6 +13,7 @@
 
     $_ticketsCount = \App\Models\Task::where('is_ticket', true)
         ->whereNotIn('status', ['concluido', 'cancelado'])
+        ->whereNull('sprint_id')
         ->count();
 
     $_campaignInsightsCount = \App\Models\CampaignInsight::whereIn('status', ['novo', 'lido'])->count();

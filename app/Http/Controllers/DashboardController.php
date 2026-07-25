@@ -96,6 +96,7 @@ class DashboardController extends Controller
 
         $openTickets = Task::where('is_ticket', true)
             ->whereNotIn('status', ['concluido', 'cancelado'])
+            ->whereNull('sprint_id') // já triado pra uma Sprint = aparece só lá, não duplica aqui
             ->with('client')
             ->orderBy('due_date')
             ->limit(8)
@@ -130,6 +131,7 @@ class DashboardController extends Controller
         // não quem produz.
         $headsTickets = Task::where('is_ticket', true)
             ->whereNotIn('status', ['concluido', 'cancelado'])
+            ->whereNull('sprint_id') // já triado pra uma Sprint = aparece só lá, não duplica aqui
             ->whereHas('responsibles', fn ($q) => $q->where('users.id', $userId))
             ->with('client')
             ->orderBy('due_date')
