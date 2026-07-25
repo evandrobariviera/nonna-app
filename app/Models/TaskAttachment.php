@@ -15,12 +15,25 @@ class TaskAttachment extends Model
 
     protected $fillable = [
         'task_id', 'filename', 'disk_path', 'disk', 'mime_type', 'size', 'uploaded_by',
-        'is_deliverable', 'round_number',
+        'is_deliverable', 'round_number', 'kind',
     ];
 
     protected $casts = [
         'is_deliverable' => 'boolean',
     ];
+
+    // Escolhido pelo time no momento do upload. "insumo" = referência/material
+    // recebido (nunca entra na aprovação do cliente); "entregavel" = material
+    // produzido, candidato à rodada de aprovação (ver TaskApprovalService).
+    public static array $kinds = [
+        'insumo'     => 'Insumo',
+        'entregavel' => 'Entregável',
+    ];
+
+    public function kindLabel(): string
+    {
+        return self::$kinds[$this->kind] ?? $this->kind;
+    }
 
     public function task(): BelongsTo
     {

@@ -19,7 +19,8 @@ class TaskApprovalService
     /**
      * Reavalia se a tarefa já reúne as condições pra entrar em aprovação
      * sozinha — status "Aprovação" + situação "Enviar para o cliente" + pelo
-     * menos um anexo. Chamado de todo lugar que possa completar essa condição,
+     * menos um anexo do tipo "entregavel" (insumos/referências nunca entram
+     * na rodada). Chamado de todo lugar que possa completar essa condição,
      * não importa a ordem em que as coisas aconteçam: TaskObserver (mudança de
      * status/situação) e TaskAttachmentController (upload de anexo) — porque
      * dá pra marcar a situação antes ou depois de subir o arquivo, e os dois
@@ -45,11 +46,12 @@ class TaskApprovalService
 
         $attachmentIds = $task->attachments()
             ->where('is_deliverable', false)
+            ->where('kind', 'entregavel')
             ->pluck('id')
             ->toArray();
 
         if (empty($attachmentIds)) {
-            session()->flash('warning', 'A tarefa "' . $task->title . '" está em Aprovação com situação "Enviar para o cliente", mas não há nenhum arquivo pra enviar — assim que você subir o arquivo, a rodada é criada automaticamente.');
+            session()->flash('warning', 'A tarefa "' . $task->title . '" está em Aprovação com situação "Enviar para o cliente", mas não há nenhum entregável pra enviar — assim que você subir o arquivo em "Entregáveis", a rodada é criada automaticamente.');
             return false;
         }
 

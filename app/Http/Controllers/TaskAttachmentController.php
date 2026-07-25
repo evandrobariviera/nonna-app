@@ -15,6 +15,7 @@ class TaskAttachmentController extends Controller
     {
         $request->validate([
             'file' => 'required|file|max:102400', // 100 MB
+            'kind' => 'required|in:insumo,entregavel',
         ]);
 
         $file = $request->file('file');
@@ -29,6 +30,7 @@ class TaskAttachmentController extends Controller
             'mime_type'   => $file->getMimeType(),
             'size'        => $file->getSize(),
             'uploaded_by' => Auth::id(),
+            'kind'        => $request->kind,
         ]);
 
         // A tarefa pode já estar em Aprovação + situação "Enviar para o cliente"

@@ -359,22 +359,25 @@
                 </div>
             </div>
 
-            {{-- ANEXOS --}}
+            {{-- INSUMOS --}}
+            @php $insumos = $task->attachments->where('kind', 'insumo'); @endphp
             <div class="card card-body-lg">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
-                    Anexos
-                    @if($task->attachments->count() > 0)
-                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $task->attachments->count() }}</span>
+                <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.1em">
+                    Insumos
+                    @if($insumos->count() > 0)
+                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $insumos->count() }}</span>
                     @endif
                 </p>
+                <p class="text-xs mb-4" style="color:var(--muted2)">Referências, briefings e materiais recebidos — não entram na aprovação do cliente.</p>
 
                 <form method="POST" action="{{ route('task-attachments.store', $task) }}"
                       enctype="multipart/form-data"
                       x-data="{ dragging: false }"
                       @dragover.prevent="dragging = true"
                       @dragleave.prevent="dragging = false"
-                      @drop.prevent="dragging = false; $refs.fileInput.files = $event.dataTransfer.files; $el.submit()">
+                      @drop.prevent="dragging = false; $refs.fileInputInsumo.files = $event.dataTransfer.files; $el.submit()">
                     @csrf
+                    <input type="hidden" name="kind" value="insumo">
                     <label
                         :style="dragging ? 'border-color:var(--purple); background:rgba(106,90,205,.04)' : ''"
                         class="flex flex-col items-center justify-center w-full py-7 cursor-pointer transition-colors"
@@ -384,14 +387,14 @@
                         </svg>
                         <span class="text-sm font-medium">Clique para anexar ou arraste arquivos</span>
                         <span class="text-xs mt-1" style="color:var(--muted2)">Máx. 50 MB por arquivo</span>
-                        <input type="file" name="file" x-ref="fileInput" class="hidden"
+                        <input type="file" name="file" x-ref="fileInputInsumo" class="hidden"
                                @change="$el.closest('form').submit()">
                     </label>
                 </form>
 
-                @if($task->attachments->count() > 0)
+                @if($insumos->count() > 0)
                     <div class="mt-3 flex flex-col gap-1.5">
-                        @foreach($task->attachments as $attachment)
+                        @foreach($insumos as $attachment)
                             <div class="flex items-center justify-between gap-3 px-4 py-3"
                                  style="background:var(--s2); border:1px solid var(--border2)">
                                 <div class="flex items-center gap-3 min-w-0">
@@ -459,6 +462,86 @@
                                 </div>
                             @endforeach
                         </div>
+                    </div>
+                @endif
+            </div>
+
+            {{-- ENTREGÁVEIS --}}
+            @php $entregaveis = $task->attachments->where('kind', 'entregavel'); @endphp
+            <div class="card card-body-lg">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.1em">
+                    Entregáveis
+                    @if($entregaveis->count() > 0)
+                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $entregaveis->count() }}</span>
+                    @endif
+                </p>
+                <p class="text-xs mb-4" style="color:var(--muted2)">Material produzido pela equipe — é isso que vai para a aprovação do cliente.</p>
+
+                <form method="POST" action="{{ route('task-attachments.store', $task) }}"
+                      enctype="multipart/form-data"
+                      x-data="{ dragging: false }"
+                      @dragover.prevent="dragging = true"
+                      @dragleave.prevent="dragging = false"
+                      @drop.prevent="dragging = false; $refs.fileInputEntregavel.files = $event.dataTransfer.files; $el.submit()">
+                    @csrf
+                    <input type="hidden" name="kind" value="entregavel">
+                    <label
+                        :style="dragging ? 'border-color:var(--purple); background:rgba(106,90,205,.04)' : ''"
+                        class="flex flex-col items-center justify-center w-full py-7 cursor-pointer transition-colors"
+                        style="border:2px dashed var(--border2); color:var(--muted)">
+                        <svg class="h-6 w-6 mb-2.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                        </svg>
+                        <span class="text-sm font-medium">Clique para anexar ou arraste arquivos</span>
+                        <span class="text-xs mt-1" style="color:var(--muted2)">Máx. 50 MB por arquivo</span>
+                        <input type="file" name="file" x-ref="fileInputEntregavel" class="hidden"
+                               @change="$el.closest('form').submit()">
+                    </label>
+                </form>
+
+                @if($entregaveis->count() > 0)
+                    <div class="mt-3 flex flex-col gap-1.5">
+                        @foreach($entregaveis as $attachment)
+                            <div class="flex items-center justify-between gap-3 px-4 py-3"
+                                 style="background:var(--s2); border:1px solid var(--border2)">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <span class="text-xl flex-shrink-0">{{ $attachment->icon() }}</span>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <a href="{{ $attachment->url() }}" target="_blank"
+                                               class="text-sm font-medium truncate block hover:underline"
+                                               style="color:var(--text)">
+                                                {{ $attachment->filename }}
+                                            </a>
+                                            @if($attachment->is_deliverable)
+                                                <span class="px-1.5 py-0.5 text-xs font-semibold flex-shrink-0"
+                                                      style="background:rgba(106,90,205,.12); color:var(--purple)">
+                                                    Enviado · Rodada #{{ $attachment->round_number }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <p class="text-xs mt-0.5" style="color:var(--muted)">
+                                            {{ $attachment->sizeForHumans() }}
+                                            · {{ $attachment->uploadedBy?->name }}
+                                            · {{ $attachment->created_at->format('d/m/Y H:i') }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3 flex-shrink-0">
+                                    <a href="{{ $attachment->url() }}" target="_blank"
+                                       class="text-xs transition-colors" style="color:var(--muted)"
+                                       onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                                        ↓ Baixar
+                                    </a>
+                                    <form method="POST" action="{{ route('task-attachments.destroy', [$task, $attachment]) }}"
+                                          onsubmit="return confirm('Remover anexo?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-xs transition-colors" style="color:var(--muted)"
+                                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                    </form>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                 @endif
             </div>

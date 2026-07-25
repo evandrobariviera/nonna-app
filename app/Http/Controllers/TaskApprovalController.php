@@ -6,6 +6,7 @@ use App\Models\Task;
 use App\Services\TaskApprovalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class TaskApprovalController extends Controller
 {
@@ -15,7 +16,12 @@ class TaskApprovalController extends Controller
     {
         $request->validate([
             'attachment_ids'   => 'required|array|min:1',
-            'attachment_ids.*' => 'required|uuid|exists:task_attachments,id',
+            'attachment_ids.*' => [
+                'required', 'uuid',
+                Rule::exists('task_attachments', 'id')
+                    ->where('task_id', $task->id)
+                    ->where('kind', 'entregavel'),
+            ],
             'notes'            => 'nullable|string|max:2000',
         ]);
 
