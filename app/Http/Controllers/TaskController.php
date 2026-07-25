@@ -10,6 +10,7 @@ use App\Models\Project;
 use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\TaskExecutor;
+use App\Models\TaskStatusTransition;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -378,6 +379,25 @@ class TaskController extends Controller
 
         switch ($data['action']) {
             case 'status':
+                // Bulk update passa por Builder::update() e pula o TaskObserver de
+                // propósito (ver [[feedback-bulk-actions-no-side-effects]]) — mas o
+                // registro de histórico de status não é um efeito colateral que
+                // afeta o cliente, só uma trilha de auditoria interna, então precisa
+                // ser gravado aqui manualmente pra não deixar buraco no painel de
+                // produtividade.
+                $now = now();
+                $changedBy = Auth::id();
+                foreach ($tasks as $task) {
+                    if ($task->status !== $data['status']) {
+                        TaskStatusTransition::create([
+                            'task_id'     => $task->id,
+                            'from_status' => $task->status,
+                            'to_status'   => $data['status'],
+                            'changed_by'  => $changedBy,
+                            'changed_at'  => $now,
+                        ]);
+                    }
+                }
                 Task::whereIn('id', $data['task_ids'])->update(['status' => $data['status']]);
                 break;
 

@@ -3,14 +3,24 @@
 namespace App\Observers;
 
 use App\Models\Task;
+use App\Models\TaskStatusTransition;
 use App\Services\AutomationEngine;
 use App\Services\TaskApprovalService;
+use Illuminate\Support\Facades\Auth;
 
 class TaskObserver
 {
     public function updated(Task $task): void
     {
         if ($task->wasChanged('status')) {
+            TaskStatusTransition::create([
+                'task_id'     => $task->id,
+                'from_status' => $task->getOriginal('status'),
+                'to_status'   => $task->status,
+                'changed_by'  => Auth::id(),
+                'changed_at'  => now(),
+            ]);
+
             AutomationEngine::evaluate('status_changed', $task, [
                 'field' => 'status',
                 'from'  => $task->getOriginal('status'),
@@ -35,6 +45,14 @@ class TaskObserver
 
     public function created(Task $task): void
     {
+        TaskStatusTransition::create([
+            'task_id'     => $task->id,
+            'from_status' => null,
+            'to_status'   => $task->status,
+            'changed_by'  => Auth::id() ?? $task->created_by,
+            'changed_at'  => now(),
+        ]);
+
         AutomationEngine::evaluate('created', $task);
     }
 }

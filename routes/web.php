@@ -435,6 +435,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('visoes.show')
         ->where('role', 'direcao_geral|direcao_criativa|coo|gestor_campanhas|head_criativa|head_tech|designer|trafego|dev');
 
+    // ── Painel de Produtividade ──
+    Route::get('/produtividade', [\App\Http\Controllers\ProductivityDashboardController::class, 'index'])
+        ->name('productivity.index');
+
     // ── Ecossistema de IA ──
     Route::prefix('ia')->name('ai.')->group(function () {
         // Providers & Chaves
