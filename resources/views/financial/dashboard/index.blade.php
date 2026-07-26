@@ -70,6 +70,49 @@
         </div>
     </div>
 
+    {{-- ── Projeção futura ── --}}
+    <div class="card card-body-lg mb-4">
+        <div class="flex items-center justify-between mb-1 flex-wrap gap-3">
+            <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
+                Projeção Futura <span style="color:var(--muted2); text-transform:none; letter-spacing:normal">· inclui contratos ativos ainda não lançados</span>
+            </p>
+            <div class="flex items-center gap-1.5">
+                @foreach(\App\Http\Controllers\FinancialDashboardController::$futurePeriods as $key => $label)
+                    <a href="{{ route('financial-dashboard.index', ['period' => $period, 'future' => $key]) }}"
+                       class="px-2.5 py-1 text-xs font-semibold transition-colors"
+                       style="background:{{ $future === $key ? 'var(--purple)' : 'var(--s3)' }};
+                              color:{{ $future === $key ? '#fff' : 'var(--muted)' }};
+                              border:1px solid {{ $future === $key ? 'var(--purple)' : 'var(--border2)' }}">
+                        {{ $label }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+        <p class="text-xs mb-4" style="color:var(--muted2)">
+            Receita projetada soma o que já está lançado + o valor de contratos ativos pros meses que ainda não têm lançamento real.
+            Despesa mostra só o que já foi lançado (ex.: via recorrência manual) — não há projeção automática de saída.
+        </p>
+
+        @php $futureCumulative = $futureProjection->last()->cumulative ?? 0; @endphp
+        <div class="text-2xl font-black mb-4" style="color:{{ $futureCumulative >= 0 ? 'var(--green)' : 'var(--red)' }}">
+            R$ {{ number_format($futureCumulative, 2, ',', '.') }}
+            <span class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">variação de caixa projetada ({{ $future }} meses)</span>
+        </div>
+
+        @php $maxFuture = max($futureProjection->flatMap(fn($m) => [$m->entrada, $m->saida])->max(), 1); @endphp
+        <div class="flex items-end gap-2" style="height:140px; overflow-x:auto">
+            @foreach($futureProjection as $month)
+                <div class="flex-1 flex flex-col items-center justify-end h-full" style="min-width:32px">
+                    <div class="flex items-end gap-1 w-full justify-center" style="height:100%">
+                        <div class="rounded-t" style="width:40%; height:{{ round($month->entrada / $maxFuture * 100) }}%; min-height:{{ $month->entrada > 0 ? '4px' : '0' }}; background:var(--green)"></div>
+                        <div class="rounded-t" style="width:40%; height:{{ round($month->saida / $maxFuture * 100) }}%; min-height:{{ $month->saida > 0 ? '4px' : '0' }}; background:var(--red)"></div>
+                    </div>
+                    <span class="text-xs mt-1.5" style="color:var(--muted2); white-space:nowrap">{{ $month->label }}</span>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
     {{-- ── Por categoria ── --}}
     <div class="grid grid-cols-2 gap-4 mb-4">
         <div class="card card-body-lg">

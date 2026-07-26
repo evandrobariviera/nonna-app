@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Contract;
 use App\Models\FinancialTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -13,6 +14,12 @@ class FinancialDashboardController extends Controller
         '3'  => 'Últimos 3 meses',
         '6'  => 'Últimos 6 meses',
         '12' => 'Últimos 12 meses',
+    ];
+
+    public static array $futurePeriods = [
+        '6'  => 'Próximos 6 meses',
+        '12' => 'Próximos 12 meses',
+        '24' => 'Próximos 24 meses',
     ];
 
     public function index(Request $request): View
@@ -42,6 +49,12 @@ class FinancialDashboardController extends Controller
             ->orderBy('due_date')
             ->get();
 
+        $future = $request->get('future', '12');
+        if (!array_key_exists($future, self::$futurePeriods)) {
+            $future = '12';
+        }
+        $futureProjection = $this->futureProjection((int) $future);
+
         return view('financial.dashboard.index', [
             'period'            => $period,
             'currentMonth'      => $currentMonth,
@@ -51,7 +64,64 @@ class FinancialDashboardController extends Controller
             'despesasPorCategoria' => $categoryBreakdown['despesa'],
             'receitasPorCategoria' => $categoryBreakdown['receita'],
             'overdue'           => $overdue,
+            'future'            => $future,
+            'futureProjection'  => $futureProjection,
         ]);
+    }
+
+    // Simula (sem gravar nada) a receita de contratos ativos pros meses
+    // futuros que ainda não têm lançamento real — o comando
+    // financial:generate-contract-transactions só materializa 1 mês por
+    // vez, então pra uma visão de 12+ meses pra frente precisamos calcular
+    // o que ele geraria, sem esperar o tempo passar. Despesa futura não é
+    // simulada (não existe conceito de despesa recorrente cadastrada nesse
+    // sistema) — só soma o que já foi lançado de verdade (ex.: via
+    // recorrência manual da Fase 2).
+    private function futureProjection(int $months): Collection
+    {
+        $activeContracts = Contract::where('status', 'ativo')
+            ->whereNotNull('fee_value')
+            ->whereNotNull('billing_day')
+            ->whereIn('fee_type', ['mensal', 'anual'])
+            ->get();
+
+        $result = collect();
+        $cumulative = 0;
+
+        for ($i = 1; $i <= $months; $i++) {
+            $monthStart = now()->addMonthsNoOverflow($i)->startOfMonth();
+            $monthEnd = $monthStart->copy()->endOfMonth();
+
+            $realEntrada = (float) FinancialTransaction::where('type', 'entrada')
+                ->whereBetween('due_date', [$monthStart, $monthEnd])->sum('amount');
+            $realSaida = (float) FinancialTransaction::where('type', 'saida')
+                ->whereBetween('due_date', [$monthStart, $monthEnd])->sum('amount');
+
+            $projetada = $activeContracts->sum(function (Contract $contract) use ($monthStart, $monthEnd) {
+                $anchor = $contract->fee_type === 'anual' ? ($contract->start_date ?? $contract->signed_at) : null;
+                if ($contract->fee_type === 'anual' && (!$anchor || $anchor->month !== $monthStart->month)) {
+                    return 0;
+                }
+
+                $hasReal = FinancialTransaction::where('contract_id', $contract->id)
+                    ->whereBetween('due_date', [$monthStart, $monthEnd])
+                    ->exists();
+
+                return $hasReal ? 0 : (float) $contract->fee_value;
+            });
+
+            $entradaTotal = $realEntrada + $projetada;
+            $cumulative += $entradaTotal - $realSaida;
+
+            $result->push((object) [
+                'label'      => $monthStart->translatedFormat('M/y'),
+                'entrada'    => $entradaTotal,
+                'saida'      => $realSaida,
+                'cumulative' => $cumulative,
+            ]);
+        }
+
+        return $result;
     }
 
     private function periodStats($start, $end): array
