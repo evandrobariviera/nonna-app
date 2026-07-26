@@ -21,29 +21,26 @@
     $_orcamentosAlertCount = \App\Models\ClientAdAccount::whereIn('platform', \App\Models\ClientAdAccount::billingPlatforms())
         ->where('budget_status', 'aguardando_pagto')
         ->count();
+
+    $_financialOverdueCount = \App\Models\FinancialTransaction::where('status', 'previsto')
+        ->where('due_date', '<', today())
+        ->count();
 @endphp
 
 {{-- ══ CRM ══ --}}
 <div class="nav-group-label">CRM</div>
 
-{{-- Comercial --}}
-<div x-data="{ open: {{ request()->routeIs('opportunities.*') || request()->routeIs('contracts.*') ? 'true' : 'false' }} }">
-    <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
-        <span class="flex items-center gap-3">
-            <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" />
-            </svg>
-            Comercial
-        </span>
-        <svg class="h-3.5 w-3.5 transition-transform duration-200" :class="open ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+{{-- Comercial (só Oportunidades — Contratos mora em Financeiro) --}}
+<a href="{{ route('opportunities.index') }}"
+   class="nav-group-trigger {{ request()->routeIs('opportunities.*') ? 'open' : '' }}"
+   style="{{ request()->routeIs('opportunities.*') ? 'color:var(--purple);' : '' }}">
+    <span class="flex items-center gap-3">
+        <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" />
         </svg>
-    </button>
-    <div x-show="open" x-transition style="display:none">
-        <a href="{{ route('opportunities.index') }}" class="nav-sub-item {{ request()->routeIs('opportunities.*') ? 'active' : '' }}">Oportunidades</a>
-        <a href="{{ route('contracts.index') }}" class="nav-sub-item {{ request()->routeIs('contracts.*') ? 'active' : '' }}">Contratos</a>
-    </div>
-</div>
+        Oportunidades
+    </span>
+</a>
 
 {{-- Cadastros --}}
 <div x-data="{ open: {{ request()->routeIs('clients.*') || request()->routeIs('contacts.*') ? 'true' : 'false' }} }">
@@ -61,6 +58,40 @@
     <div x-show="open" x-transition style="display:none">
         <a href="{{ route('contacts.index') }}" class="nav-sub-item {{ request()->routeIs('contacts.*') ? 'active' : '' }}">Contatos</a>
         <a href="{{ route('clients.index') }}" class="nav-sub-item {{ request()->routeIs('clients.*') ? 'active' : '' }}">Clientes</a>
+    </div>
+</div>
+
+{{-- ══ FINANCEIRO ══ --}}
+<div class="nav-group-label" style="margin-top:8px">Financeiro</div>
+
+<div x-data="{ open: {{ request()->routeIs('contracts.*') || request()->routeIs('clients.contracts.*') || request()->routeIs('financial-transactions.*') || request()->routeIs('financial-categories.*') ? 'true' : 'false' }} }">
+    <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
+        <span class="flex items-center gap-3">
+            <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Financeiro
+        </span>
+        <svg class="h-3.5 w-3.5 transition-transform duration-200" :class="open ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+    </button>
+    <div x-show="open" x-transition style="display:none">
+        <a href="{{ route('contracts.index') }}" class="nav-sub-item {{ request()->routeIs('contracts.*') || request()->routeIs('clients.contracts.*') ? 'active' : '' }}">Contratos</a>
+        <a href="{{ route('financial-transactions.index') }}" class="nav-sub-item {{ request()->routeIs('financial-transactions.*') ? 'active' : '' }}">
+            <span class="flex items-center justify-between w-full">
+                <span>Lançamentos</span>
+                @if($_financialOverdueCount > 0)
+                    <span class="text-xs px-1.5 py-px rounded-full font-semibold"
+                          style="background:{{ request()->routeIs('financial-transactions.*') ? 'rgba(106,90,205,.15)' : 'var(--s3)' }};
+                                 color:{{ request()->routeIs('financial-transactions.*') ? 'var(--purple)' : 'var(--muted)' }};
+                                 border:1px solid {{ request()->routeIs('financial-transactions.*') ? 'rgba(106,90,205,.25)' : 'var(--border2)' }}">
+                        {{ $_financialOverdueCount }}
+                    </span>
+                @endif
+            </span>
+        </a>
+        <a href="{{ route('financial-categories.index') }}" class="nav-sub-item {{ request()->routeIs('financial-categories.*') ? 'active' : '' }}">Categorias</a>
     </div>
 </div>
 

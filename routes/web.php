@@ -33,6 +33,8 @@ use App\Http\Controllers\CampaignInsightController;
 use App\Http\Controllers\CampaignLogController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractAttachmentController;
+use App\Http\Controllers\FinancialCategoryController;
+use App\Http\Controllers\FinancialTransactionController;
 use App\Http\Controllers\DossierCompetitorController;
 use App\Http\Controllers\DossierPersonaController;
 use App\Http\Controllers\ContactController;
@@ -209,6 +211,23 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('orcamentos.index');
     Route::patch('/orcamentos/{adAccount}', [OrcamentoController::class, 'updateStatus'])
         ->name('orcamentos.update-status');
+
+    // ── Financeiro ──
+    Route::get('/financeiro/categorias', [FinancialCategoryController::class, 'index'])
+        ->name('financial-categories.index');
+    Route::post('/financeiro/categorias', [FinancialCategoryController::class, 'store'])
+        ->name('financial-categories.store');
+    Route::patch('/financeiro/categorias/{financialCategory}', [FinancialCategoryController::class, 'update'])
+        ->name('financial-categories.update');
+
+    Route::get('/financeiro/lancamentos', [FinancialTransactionController::class, 'index'])
+        ->name('financial-transactions.index');
+    Route::post('/financeiro/lancamentos', [FinancialTransactionController::class, 'store'])
+        ->name('financial-transactions.store');
+    Route::patch('/financeiro/lancamentos/{financialTransaction}', [FinancialTransactionController::class, 'update'])
+        ->name('financial-transactions.update');
+    Route::delete('/financeiro/lancamentos/{financialTransaction}', [FinancialTransactionController::class, 'destroy'])
+        ->name('financial-transactions.destroy');
     Route::post('/campanhas/{campaign}/logs', [CampaignLogController::class, 'store'])
         ->name('campaign-logs.store');
     Route::delete('/campanhas/{campaign}/logs/{log}', [CampaignLogController::class, 'destroy'])
