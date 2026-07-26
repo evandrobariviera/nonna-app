@@ -34,6 +34,7 @@ use App\Http\Controllers\CampaignLogController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractAttachmentController;
 use App\Http\Controllers\FinancialCategoryController;
+use App\Http\Controllers\FinancialDashboardController;
 use App\Http\Controllers\FinancialTransactionController;
 use App\Http\Controllers\DossierCompetitorController;
 use App\Http\Controllers\DossierPersonaController;
@@ -228,6 +229,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('financial-transactions.update');
     Route::delete('/financeiro/lancamentos/{financialTransaction}', [FinancialTransactionController::class, 'destroy'])
         ->name('financial-transactions.destroy');
+
+    Route::get('/financeiro/dashboard', [FinancialDashboardController::class, 'index'])
+        ->name('financial-dashboard.index');
     Route::post('/campanhas/{campaign}/logs', [CampaignLogController::class, 'store'])
         ->name('campaign-logs.store');
     Route::delete('/campanhas/{campaign}/logs/{log}', [CampaignLogController::class, 'destroy'])

@@ -64,7 +64,7 @@
 {{-- ══ FINANCEIRO ══ --}}
 <div class="nav-group-label" style="margin-top:8px">Financeiro</div>
 
-<div x-data="{ open: {{ request()->routeIs('contracts.*') || request()->routeIs('clients.contracts.*') || request()->routeIs('financial-transactions.*') || request()->routeIs('financial-categories.*') ? 'true' : 'false' }} }">
+<div x-data="{ open: {{ request()->routeIs('contracts.*') || request()->routeIs('clients.contracts.*') || request()->routeIs('financial-transactions.*') || request()->routeIs('financial-categories.*') || request()->routeIs('financial-dashboard.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -92,6 +92,7 @@
             </span>
         </a>
         <a href="{{ route('financial-categories.index') }}" class="nav-sub-item {{ request()->routeIs('financial-categories.*') ? 'active' : '' }}">Categorias</a>
+        <a href="{{ route('financial-dashboard.index') }}" class="nav-sub-item {{ request()->routeIs('financial-dashboard.*') ? 'active' : '' }}">Dashboard</a>
     </div>
 </div>
 
