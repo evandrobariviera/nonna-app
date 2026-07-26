@@ -8,6 +8,8 @@ use App\Models\FinancialCategory;
 use App\Models\FinancialTransaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class FinancialTransactionController extends Controller
 {
@@ -67,13 +69,54 @@ class FinancialTransactionController extends Controller
             'description'    => 'nullable|string|max:255',
             'client_id'      => 'nullable|exists:clients,id',
             'contract_id'    => 'nullable|exists:contracts,id',
+            'repeat_mode'    => 'nullable|in:none,recurring,installments',
+            'repeat_count'   => 'required_if:repeat_mode,recurring,installments|nullable|integer|min:2|max:60',
         ]);
 
         $data['created_by'] = auth()->id();
+        $repeatMode = $data['repeat_mode'] ?? 'none';
+        $repeatCount = (int) ($data['repeat_count'] ?? 1);
+        unset($data['repeat_mode'], $data['repeat_count']);
 
-        FinancialTransaction::create($data);
+        if ($repeatMode === 'none' || $repeatCount < 2) {
+            FinancialTransaction::create($data);
 
-        return back()->with('success', 'Lançamento criado.');
+            return back()->with('success', 'Lançamento criado.');
+        }
+
+        $baseDueDate = Carbon::parse($data['due_date']);
+        $groupId = (string) Str::uuid();
+
+        // "recurring": mesmo valor em cada ocorrência. "installments": o valor
+        // informado é o TOTAL, dividido em $repeatCount parcelas — a última
+        // absorve a diferença de arredondamento pra soma bater com o total.
+        $amounts = [];
+        if ($repeatMode === 'installments') {
+            $installmentAmount = round($data['amount'] / $repeatCount, 2);
+            $accumulated = 0;
+            for ($i = 0; $i < $repeatCount; $i++) {
+                $amounts[$i] = $i === $repeatCount - 1
+                    ? round($data['amount'] - $accumulated, 2)
+                    : $installmentAmount;
+                $accumulated += $amounts[$i];
+            }
+        } else {
+            $amounts = array_fill(0, $repeatCount, $data['amount']);
+        }
+
+        DB::connection('pgsql')->transaction(function () use ($data, $baseDueDate, $groupId, $repeatCount, $amounts) {
+            for ($i = 0; $i < $repeatCount; $i++) {
+                FinancialTransaction::create(array_merge($data, [
+                    'amount'             => $amounts[$i],
+                    'due_date'           => $baseDueDate->copy()->addMonthsNoOverflow($i),
+                    'recurring_group_id' => $groupId,
+                    'installment_number' => $i + 1,
+                    'installment_total'  => $repeatCount,
+                ]));
+            }
+        });
+
+        return back()->with('success', "{$repeatCount} lançamentos criados.");
     }
 
     public function update(Request $request, FinancialTransaction $financialTransaction)

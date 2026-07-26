@@ -59,7 +59,8 @@
         </button>
 
         <div x-show="open" x-cloak class="card px-5 py-5">
-            <form method="POST" action="{{ route('financial-transactions.store') }}" class="grid gap-3" style="grid-template-columns: repeat(4, 1fr)">
+            <form method="POST" action="{{ route('financial-transactions.store') }}" class="grid gap-3"
+                  style="grid-template-columns: repeat(4, 1fr)" x-data="{ repeatMode: 'none' }">
                 @csrf
                 <div>
                     <label class="text-xs font-mono uppercase tracking-widest mb-1 block" style="color:var(--muted)">Tipo</label>
@@ -124,6 +125,22 @@
                     <input type="text" name="description" maxlength="255"
                            class="w-full" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px">
                 </div>
+                <div>
+                    <label class="text-xs font-mono uppercase tracking-widest mb-1 block" style="color:var(--muted)">Repetição</label>
+                    <select name="repeat_mode" x-model="repeatMode" class="w-full" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px">
+                        <option value="none">Nenhuma</option>
+                        <option value="recurring">Recorrente — mesmo valor todo mês</option>
+                        <option value="installments">Parcelado — divide o valor total</option>
+                    </select>
+                    <p class="text-xs mt-1" style="color:var(--muted2)" x-show="repeatMode === 'installments'" x-cloak>
+                        "Valor" acima é o total — divide entre as parcelas.
+                    </p>
+                </div>
+                <div x-show="repeatMode !== 'none'" x-cloak>
+                    <label class="text-xs font-mono uppercase tracking-widest mb-1 block" style="color:var(--muted)">Quantas vezes</label>
+                    <input type="number" name="repeat_count" min="2" max="60" :required="repeatMode !== 'none'"
+                           class="w-full" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px">
+                </div>
 
                 <div class="flex items-end">
                     <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
@@ -179,7 +196,12 @@
                                     <span style="color:var(--muted)">· {{ $transaction->contract->title }}</span>
                                 @endif
                             </td>
-                            <td class="text-xs text-[var(--muted2)]">{{ $transaction->description ?? '—' }}</td>
+                            <td class="text-xs text-[var(--muted2)]">
+                                {{ $transaction->description ?? '—' }}
+                                @if($transaction->installment_total)
+                                    <span style="color:var(--muted)">({{ $transaction->installment_number }}/{{ $transaction->installment_total }})</span>
+                                @endif
+                            </td>
                             <td class="text-sm font-mono text-[var(--text)]">
                                 R$ {{ number_format($transaction->amount, 2, ',', '.') }}
                             </td>

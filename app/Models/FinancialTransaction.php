@@ -25,6 +25,9 @@ class FinancialTransaction extends Model
         'description',
         'client_id',
         'contract_id',
+        'recurring_group_id',
+        'installment_number',
+        'installment_total',
         'created_by',
     ];
 
