@@ -26,6 +26,22 @@ class TaskCommentController extends Controller
             ->withFragment('comentarios');
     }
 
+    public function update(Request $request, Task $task, TaskComment $comment)
+    {
+        abort_unless($comment->task_id === $task->id, 403);
+        abort_unless($comment->user_id === Auth::id(), 403);
+
+        $data = $request->validate([
+            'body' => 'required|string|max:5000',
+        ]);
+
+        $comment->update($data);
+
+        return redirect()->route('tasks.show', $task)
+            ->with('success', 'Comentário atualizado.')
+            ->withFragment('comentarios');
+    }
+
     public function destroy(Task $task, TaskComment $comment)
     {
         abort_unless($comment->task_id === $task->id, 403);

@@ -234,6 +234,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('financial-dashboard.index');
     Route::post('/campanhas/{campaign}/logs', [CampaignLogController::class, 'store'])
         ->name('campaign-logs.store');
+    Route::patch('/campanhas/{campaign}/logs/{log}', [CampaignLogController::class, 'update'])
+        ->name('campaign-logs.update');
     Route::delete('/campanhas/{campaign}/logs/{log}', [CampaignLogController::class, 'destroy'])
         ->name('campaign-logs.destroy');
     Route::patch('/insights/{insight}/status', [CampaignInsightController::class, 'updateStatus'])
@@ -366,6 +368,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Comentários da tarefa ──
     Route::post('/tarefas/{task}/comentarios', [TaskCommentController::class, 'store'])
         ->name('task-comments.store');
+    Route::patch('/tarefas/{task}/comentarios/{comment}', [TaskCommentController::class, 'update'])
+        ->name('task-comments.update');
     Route::delete('/tarefas/{task}/comentarios/{comment}', [TaskCommentController::class, 'destroy'])
         ->name('task-comments.destroy');
 

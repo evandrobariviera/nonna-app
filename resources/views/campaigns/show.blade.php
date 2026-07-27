@@ -267,7 +267,7 @@
             </div>
 
             {{-- HISTÓRICO DE OTIMIZAÇÕES --}}
-            <div class="card card-body-lg">
+            <div class="card card-body-lg" id="otimizacoes" x-data="{ editId: null }">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
                     Histórico de Otimizações
                     @if($optimizationLogs->count() > 0)
@@ -281,20 +281,47 @@
                             <div class="flex gap-3 py-3" style="{{ !$loop->last ? 'border-bottom:1px solid var(--border2)' : '' }}">
                                 <x-user-avatar :user="$log->user" size="7" class="mt-0.5" />
                                 <div class="flex-1 min-w-0">
-                                    <div class="flex items-baseline gap-2 mb-1 flex-wrap">
-                                        <span class="text-xs font-semibold" style="color:var(--text)">{{ $log->user->name }}</span>
-                                        <span class="text-xs" style="color:var(--muted)">{{ $log->created_at->diffForHumans() }}</span>
+                                    {{-- Exibição --}}
+                                    <div x-show="editId !== '{{ $log->id }}'">
+                                        <div class="flex items-baseline gap-2 mb-1 flex-wrap">
+                                            <span class="text-xs font-semibold" style="color:var(--text)">{{ $log->user->name }}</span>
+                                            <span class="text-xs" style="color:var(--muted)">{{ $log->created_at->diffForHumans() }}</span>
+                                            @if($log->updated_at->ne($log->created_at))
+                                                <span class="text-xs" style="color:var(--muted2)">(editado)</span>
+                                            @endif
+                                        </div>
+                                        <p class="text-xs whitespace-pre-wrap" style="color:var(--text); line-height:1.55">{{ $log->description }}</p>
                                     </div>
-                                    <p class="text-xs whitespace-pre-wrap" style="color:var(--text); line-height:1.55">{{ $log->description }}</p>
+
+                                    {{-- Edição --}}
+                                    @if($log->logged_by === auth()->id())
+                                        <div x-show="editId === '{{ $log->id }}'" x-cloak>
+                                            <form method="POST" action="{{ route('campaign-logs.update', [$campaign, $log]) }}">
+                                                @csrf @method('PATCH')
+                                                <textarea name="description" rows="3" required
+                                                    class="w-full px-3 py-2 text-xs focus:outline-none resize-none"
+                                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text); line-height:1.55">{{ $log->description }}</textarea>
+                                                <div class="flex items-center gap-3 mt-2">
+                                                    <button type="submit" class="text-xs font-mono text-[var(--purple)] hover:underline">Salvar</button>
+                                                    <button type="button" @click="editId = null" class="text-xs font-mono" style="color:var(--muted)">Cancelar</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    @endif
                                 </div>
                                 @if($log->logged_by === auth()->id())
-                                    <form method="POST"
-                                          action="{{ route('campaign-logs.destroy', [$campaign, $log]) }}"
-                                          onsubmit="return confirm('Remover registro?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="text-xs mt-1 flex-shrink-0 transition-colors" style="color:var(--muted)"
-                                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
-                                    </form>
+                                    <div class="flex items-start gap-2 flex-shrink-0" x-show="editId !== '{{ $log->id }}'">
+                                        <button type="button" @click="editId = '{{ $log->id }}'"
+                                            class="text-xs mt-1 transition-colors" style="color:var(--muted)"
+                                            onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">Editar</button>
+                                        <form method="POST"
+                                              action="{{ route('campaign-logs.destroy', [$campaign, $log]) }}"
+                                              onsubmit="return confirm('Remover registro?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="text-xs mt-1 flex-shrink-0 transition-colors" style="color:var(--muted)"
+                                                onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                        </form>
+                                    </div>
                                 @endif
                             </div>
                         @endforeach
@@ -443,7 +470,7 @@
             </div>
 
             {{-- HISTÓRICO DE COMENTÁRIOS --}}
-            <div class="card card-body" id="historico">
+            <div class="card card-body" id="historico" x-data="{ editId: null }">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
                     Histórico de Comentários
                     @if($commentLogs->count() > 0)
@@ -457,23 +484,56 @@
                             <div class="flex gap-3 py-3" style="{{ !$loop->last ? 'border-bottom:1px solid var(--border2)' : '' }}">
                                 <x-user-avatar :user="$log->user" size="7" class="mt-0.5" />
                                 <div class="flex-1 min-w-0">
-                                    <div class="flex items-baseline gap-2 mb-1 flex-wrap">
-                                        <span class="text-xs font-semibold" style="color:var(--text)">{{ $log->user->name }}</span>
-                                        <span class="badge badge-{{ \App\Models\CampaignLog::$types[$log->type]['color'] ?? 'muted' }}">
-                                            {{ \App\Models\CampaignLog::$types[$log->type]['label'] ?? $log->type }}
-                                        </span>
+                                    {{-- Exibição --}}
+                                    <div x-show="editId !== '{{ $log->id }}'">
+                                        <div class="flex items-baseline gap-2 mb-1 flex-wrap">
+                                            <span class="text-xs font-semibold" style="color:var(--text)">{{ $log->user->name }}</span>
+                                            <span class="badge badge-{{ \App\Models\CampaignLog::$types[$log->type]['color'] ?? 'muted' }}">
+                                                {{ \App\Models\CampaignLog::$types[$log->type]['label'] ?? $log->type }}
+                                            </span>
+                                            @if($log->updated_at->ne($log->created_at))
+                                                <span class="text-xs" style="color:var(--muted2)">(editado)</span>
+                                            @endif
+                                        </div>
+                                        <p class="text-xs mb-1" style="color:var(--muted)">{{ $log->created_at->diffForHumans() }}</p>
+                                        <p class="text-xs whitespace-pre-wrap" style="color:var(--text); line-height:1.55">{{ $log->description }}</p>
                                     </div>
-                                    <p class="text-xs mb-1" style="color:var(--muted)">{{ $log->created_at->diffForHumans() }}</p>
-                                    <p class="text-xs whitespace-pre-wrap" style="color:var(--text); line-height:1.55">{{ $log->description }}</p>
+
+                                    {{-- Edição --}}
+                                    @if($log->logged_by === auth()->id())
+                                        <div x-show="editId === '{{ $log->id }}'" x-cloak>
+                                            <form method="POST" action="{{ route('campaign-logs.update', [$campaign, $log]) }}">
+                                                @csrf @method('PATCH')
+                                                <select name="type" class="w-full mb-2 px-3 py-2 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                                    @foreach(\App\Models\CampaignLog::$types as $key => $t)
+                                                        @continue($key === 'otimizacao')
+                                                        <option value="{{ $key }}" {{ $log->type === $key ? 'selected' : '' }}>{{ $t['label'] }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <textarea name="description" rows="3" required
+                                                    class="w-full px-3 py-2 text-xs focus:outline-none resize-none"
+                                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text); line-height:1.55">{{ $log->description }}</textarea>
+                                                <div class="flex items-center gap-3 mt-2">
+                                                    <button type="submit" class="text-xs font-mono text-[var(--purple)] hover:underline">Salvar</button>
+                                                    <button type="button" @click="editId = null" class="text-xs font-mono" style="color:var(--muted)">Cancelar</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    @endif
                                 </div>
                                 @if($log->logged_by === auth()->id())
-                                    <form method="POST"
-                                          action="{{ route('campaign-logs.destroy', [$campaign, $log]) }}"
-                                          onsubmit="return confirm('Remover registro?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="text-xs mt-1 flex-shrink-0 transition-colors" style="color:var(--muted)"
-                                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
-                                    </form>
+                                    <div class="flex items-start gap-2 flex-shrink-0" x-show="editId !== '{{ $log->id }}'">
+                                        <button type="button" @click="editId = '{{ $log->id }}'"
+                                            class="text-xs mt-1 transition-colors" style="color:var(--muted)"
+                                            onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">Editar</button>
+                                        <form method="POST"
+                                              action="{{ route('campaign-logs.destroy', [$campaign, $log]) }}"
+                                              onsubmit="return confirm('Remover registro?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="text-xs mt-1 flex-shrink-0 transition-colors" style="color:var(--muted)"
+                                                onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                        </form>
+                                    </div>
                                 @endif
                             </div>
                         @endforeach

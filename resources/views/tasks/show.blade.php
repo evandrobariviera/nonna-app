@@ -706,7 +706,7 @@
             @endif
 
             {{-- ══ COMENTÁRIOS ══ --}}
-            <div class="card card-body-lg" id="comentarios">
+            <div class="card card-body-lg" id="comentarios" x-data="{ editId: null }">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-5" style="color:var(--muted); letter-spacing:.1em">
                     Comentários
                     @if($task->comments->count() > 0)
@@ -721,26 +721,53 @@
                             <div class="flex gap-4 py-4" style="{{ !$loop->last ? 'border-bottom:1px solid var(--border2)' : '' }}">
                                 <x-user-avatar :user="$comment->user" size="8" class="mt-0.5" />
                                 <div class="flex-1 min-w-0">
-                                    <div class="flex items-baseline gap-3 mb-1.5 flex-wrap">
-                                        <span class="text-sm font-semibold" style="color:var(--text)">{{ $comment->user->name }}</span>
-                                        <span class="text-xs" style="color:var(--muted)">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
-                                        <span class="text-xs" style="color:var(--muted2)">{{ $comment->created_at->diffForHumans() }}</span>
-                                        @if($comment->visible_to_client)
-                                            <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full" style="background:rgba(5,150,105,.1); color:var(--green)">Visível pro cliente</span>
-                                        @else
-                                            <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full" style="background:var(--s3); color:var(--muted)">Interno</span>
-                                        @endif
+                                    {{-- Exibição --}}
+                                    <div x-show="editId !== '{{ $comment->id }}'">
+                                        <div class="flex items-baseline gap-3 mb-1.5 flex-wrap">
+                                            <span class="text-sm font-semibold" style="color:var(--text)">{{ $comment->user->name }}</span>
+                                            <span class="text-xs" style="color:var(--muted)">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
+                                            <span class="text-xs" style="color:var(--muted2)">{{ $comment->created_at->diffForHumans() }}</span>
+                                            @if($comment->updated_at->ne($comment->created_at))
+                                                <span class="text-xs" style="color:var(--muted2)">(editado)</span>
+                                            @endif
+                                            @if($comment->visible_to_client)
+                                                <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full" style="background:rgba(5,150,105,.1); color:var(--green)">Visível pro cliente</span>
+                                            @else
+                                                <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full" style="background:var(--s3); color:var(--muted)">Interno</span>
+                                            @endif
+                                        </div>
+                                        <p class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.65">{{ $comment->body }}</p>
                                     </div>
-                                    <p class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.65">{{ $comment->body }}</p>
+
+                                    {{-- Edição --}}
+                                    @if($comment->user_id === auth()->id())
+                                        <div x-show="editId === '{{ $comment->id }}'" x-cloak>
+                                            <form method="POST" action="{{ route('task-comments.update', [$task, $comment]) }}">
+                                                @csrf @method('PATCH')
+                                                <textarea name="body" rows="3" required
+                                                    class="w-full px-3 py-2 text-sm focus:outline-none resize-none"
+                                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text); line-height:1.65">{{ $comment->body }}</textarea>
+                                                <div class="flex items-center gap-3 mt-2">
+                                                    <button type="submit" class="text-xs font-mono text-[var(--purple)] hover:underline">Salvar</button>
+                                                    <button type="button" @click="editId = null" class="text-xs font-mono" style="color:var(--muted)">Cancelar</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    @endif
                                 </div>
                                 @if($comment->user_id === auth()->id())
-                                    <form method="POST"
-                                          action="{{ route('task-comments.destroy', [$task, $comment]) }}"
-                                          onsubmit="return confirm('Remover comentário?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="text-xs mt-1 flex-shrink-0 transition-colors" style="color:var(--muted)"
-                                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
-                                    </form>
+                                    <div class="flex items-start gap-2 flex-shrink-0" x-show="editId !== '{{ $comment->id }}'">
+                                        <button type="button" @click="editId = '{{ $comment->id }}'"
+                                            class="text-xs mt-1 transition-colors" style="color:var(--muted)"
+                                            onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">Editar</button>
+                                        <form method="POST"
+                                              action="{{ route('task-comments.destroy', [$task, $comment]) }}"
+                                              onsubmit="return confirm('Remover comentário?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="text-xs mt-1 flex-shrink-0 transition-colors" style="color:var(--muted)"
+                                                onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                        </form>
+                                    </div>
                                 @endif
                             </div>
                         @endforeach
