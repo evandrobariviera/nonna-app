@@ -2,10 +2,13 @@
 
 namespace App\Services;
 
+use App\Models\AdAd;
+use App\Models\AdAdset;
 use App\Models\AdCampaign;
 use App\Models\AiAgent;
 use App\Models\CampaignInsight;
 use App\Models\Client;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 
 class CampaignInsightService
@@ -14,6 +17,9 @@ class CampaignInsightService
     private const BUDGET_IDLE_MIN_DAY = 10;
     private const CPA_SPIKE_ATENCAO_PCT = 30;
     private const CPA_SPIKE_CRITICO_PCT = 60;
+    private const ADSET_BUDGET_SHARE_ATENCAO_PCT = 40;
+    private const CREATIVE_FATIGUE_CTR_WORSE_PCT = 50;
+    private const CREATIVE_FATIGUE_MIN_IMPRESSIONS = 1000;
 
     public function __construct(private AiService $aiService)
     {
@@ -39,6 +45,7 @@ class CampaignInsightService
 
             foreach ($campaigns as $campaign) {
                 $created = array_merge($created, $this->checkCampaign($client, $campaign));
+                $created = array_merge($created, $this->checkAdsetsAndAds($client, $campaign));
             }
         }
 
@@ -126,14 +133,112 @@ class CampaignInsightService
     }
 
     /**
-     * Evita duplicidade: não gera um novo insight do mesmo tipo/escopo se já
-     * existe um em aberto (novo/lido) criado nos últimos dias.
+     * Detecta insights de fadiga de criativo e concentração de verba por
+     * conjunto — mesmo princípio de checkCampaign, mas olhando os filhos
+     * (adsets/ads) da campanha em vez da campanha como um todo.
      */
-    private function hasRecentOpenInsight(Client $client, string $kind, ?string $campaignId): bool
+    private function checkAdsetsAndAds(Client $client, AdCampaign $campaign): array
+    {
+        $insights = [];
+        $campaignLast7d = ContextResolver::campaignMetrics($campaign, 7, 0);
+
+        $adsets = $campaign->adsets()->where('status', 'active')->get();
+
+        foreach ($adsets as $adset) {
+            $adsetLast7d = ContextResolver::entityMetrics($campaign->client_ad_account_id, 'adset', $adset->external_id, 7, 0);
+
+            if ($campaignLast7d['spend'] > 0 && $adsetLast7d['spend'] > 0) {
+                $share = ($adsetLast7d['spend'] / $campaignLast7d['spend']) * 100;
+
+                if ($share >= self::ADSET_BUDGET_SHARE_ATENCAO_PCT
+                    && $adsetLast7d['roas'] !== null && $adsetLast7d['roas'] < 1.0
+                    && !$this->hasRecentOpenInsight($client, 'adset_budget_concentration', $campaign->id, $adset->id)) {
+                    $metrics = [
+                        'spend_share_pct'   => round($share, 1),
+                        'spend_last_7_days' => round($adsetLast7d['spend'], 2),
+                        'roas_last_7_days'  => $adsetLast7d['roas'],
+                    ];
+                    $insights[] = $this->createInsight(
+                        $client, $campaign->client_ad_account_id, $campaign->id, 'adset_budget_concentration', 'atencao',
+                        "Conjunto \"{$adset->name}\" concentra " . round($share) . "% da verba da campanha \"{$campaign->name}\" com ROAS abaixo de 1x",
+                        $metrics, $adset, $adset->id
+                    );
+                }
+            }
+
+            $insights = array_merge($insights, $this->checkCreativeFatigue($client, $campaign, $adset));
+        }
+
+        return $insights;
+    }
+
+    /**
+     * Compara o CTR de cada anúncio ativo de um conjunto com a média dos seus
+     * irmãos (mesmo conjunto) — precisa de pelo menos 2 anúncios com volume
+     * mínimo de impressões pra não dar falso positivo em anúncio novo/com
+     * pouco alcance.
+     */
+    private function checkCreativeFatigue(Client $client, AdCampaign $campaign, AdAdset $adset): array
+    {
+        $insights = [];
+
+        $ads = $adset->ads()->where('status', 'active')->get();
+        if ($ads->count() < 2) {
+            return $insights;
+        }
+
+        $adMetrics = $ads->map(function (AdAd $ad) use ($campaign) {
+            $metrics = ContextResolver::entityMetrics($campaign->client_ad_account_id, 'ad', $ad->external_id, 7, 0);
+            $metrics['ad'] = $ad;
+            return $metrics;
+        })->filter(fn ($m) => $m['ctr'] !== null && $m['impressions'] >= self::CREATIVE_FATIGUE_MIN_IMPRESSIONS)
+            ->values();
+
+        if ($adMetrics->count() < 2) {
+            return $insights;
+        }
+
+        foreach ($adMetrics as $m) {
+            $siblings = $adMetrics->reject(fn ($other) => $other['ad']->id === $m['ad']->id);
+            $siblingAvgCtr = $siblings->avg('ctr');
+
+            if (!$siblingAvgCtr || $siblingAvgCtr <= 0) {
+                continue;
+            }
+
+            $deltaPct = (($siblingAvgCtr - $m['ctr']) / $siblingAvgCtr) * 100;
+
+            if ($deltaPct >= self::CREATIVE_FATIGUE_CTR_WORSE_PCT
+                && !$this->hasRecentOpenInsight($client, 'creative_fatigue', $campaign->id, $adset->id, $m['ad']->id)) {
+                $metrics = [
+                    'ctr_last_7_days'        => $m['ctr'],
+                    'sibling_avg_ctr_7_days' => round($siblingAvgCtr, 2),
+                    'delta_pct'              => round($deltaPct, 1),
+                ];
+                $insights[] = $this->createInsight(
+                    $client, $campaign->client_ad_account_id, $campaign->id, 'creative_fatigue', 'atencao',
+                    "Criativo \"{$m['ad']->name}\" com CTR " . round($deltaPct) . "% pior que os outros do conjunto \"{$adset->name}\"",
+                    $metrics, $m['ad'], $adset->id, $m['ad']->id
+                );
+            }
+        }
+
+        return $insights;
+    }
+
+    /**
+     * Evita duplicidade: não gera um novo insight do mesmo tipo/escopo se já
+     * existe um em aberto (novo/lido) criado nos últimos dias. Escopo inclui
+     * adset/ad pra um insight granular não colidir com um de campanha do
+     * mesmo kind.
+     */
+    private function hasRecentOpenInsight(Client $client, string $kind, ?string $campaignId, ?string $adsetId = null, ?string $adId = null): bool
     {
         return $client->insights()
             ->where('kind', $kind)
             ->where('ad_campaign_id', $campaignId)
+            ->where('ad_adset_id', $adsetId)
+            ->where('ad_ad_id', $adId)
             ->whereIn('status', ['novo', 'lido'])
             ->where('generated_at', '>=', now()->subDays(self::DUPLICATE_WINDOW_DAYS))
             ->exists();
@@ -147,14 +252,18 @@ class CampaignInsightService
         string $severity,
         string $title,
         array $metrics,
-        ?AdCampaign $campaign = null
+        ?Model $entity = null,
+        ?string $adsetId = null,
+        ?string $adId = null
     ): CampaignInsight {
-        $narrative = $this->generateNarrative($client, $kind, $metrics, $campaign);
+        $narrative = $this->generateNarrative($client, $kind, $metrics, $entity);
 
         return CampaignInsight::create([
             'client_id'            => $client->id,
             'client_ad_account_id' => $adAccountId,
             'ad_campaign_id'       => $campaignId,
+            'ad_adset_id'          => $adsetId,
+            'ad_ad_id'             => $adId,
             'kind'                 => $kind,
             'severity'             => $severity,
             'status'               => 'novo',
@@ -172,7 +281,7 @@ class CampaignInsightService
      * graciosamente (retorna null) se não houver agente ou a chamada falhar —
      * o insight ainda é criado, só sem texto explicativo.
      */
-    private function generateNarrative(Client $client, string $kind, array $metrics, ?AdCampaign $campaign): ?array
+    private function generateNarrative(Client $client, string $kind, array $metrics, ?Model $entity): ?array
     {
         $agent = $this->resolveAgent();
         if (!$agent) {
@@ -185,7 +294,7 @@ class CampaignInsightService
                 'insight_kind'  => CampaignInsight::$kinds[$kind] ?? $kind,
                 'metrics_json'  => json_encode($metrics, JSON_UNESCAPED_UNICODE),
             ],
-            $campaign ? ContextResolver::forCampaign($campaign) : []
+            $entity ? ContextResolver::for($entity) : []
         );
 
         $message = 'Com base nos dados acima, escreva um diagnóstico curto (2 a 3 frases) e uma recomendação '

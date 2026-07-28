@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Task;
 use App\Models\Project;
 use App\Models\AdCampaign;
+use App\Models\AdAdset;
+use App\Models\AdAd;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -16,6 +18,8 @@ class ContextResolver
             $entity instanceof Task       => self::forTask($entity),
             $entity instanceof Project    => self::forProject($entity),
             $entity instanceof AdCampaign => self::forCampaign($entity),
+            $entity instanceof AdAdset    => self::forAdset($entity),
+            $entity instanceof AdAd       => self::forAd($entity),
             default                       => [],
         };
     }
@@ -100,20 +104,87 @@ class ContextResolver
         ]);
     }
 
+    public static function forAdset(AdAdset $adset): array
+    {
+        $adset->loadMissing(['campaign.adAccount.client']);
+        $campaign = $adset->campaign;
+        $client = $campaign?->adAccount?->client;
+
+        $context = [
+            'campaign_name'   => $campaign?->name ?? '',
+            'adset_name'      => $adset->name ?? '',
+            'adset_status'    => $adset->status ?? '',
+            'client_name'     => $client?->company_name ?? '',
+        ];
+
+        return array_merge($context, self::metricsForContext(
+            $campaign?->client_ad_account_id,
+            'adset',
+            $adset->external_id
+        ));
+    }
+
+    public static function forAd(AdAd $ad): array
+    {
+        $ad->loadMissing(['adset.campaign.adAccount.client']);
+        $adset = $ad->adset;
+        $campaign = $adset?->campaign;
+        $client = $campaign?->adAccount?->client;
+
+        $context = [
+            'campaign_name'  => $campaign?->name ?? '',
+            'adset_name'     => $adset?->name ?? '',
+            'ad_name'        => $ad->name ?? '',
+            'creative_type'  => $ad->creative_type ?? '',
+            'client_name'    => $client?->company_name ?? '',
+        ];
+
+        return array_merge($context, self::metricsForContext(
+            $campaign?->client_ad_account_id,
+            'ad',
+            $ad->external_id
+        ));
+    }
+
+    private static function metricsForContext(?string $clientAdAccountId, string $entityLevel, string $entityId): array
+    {
+        $last7d = self::entityMetrics($clientAdAccountId, $entityLevel, $entityId, 7, 0);
+        $prev7d = self::entityMetrics($clientAdAccountId, $entityLevel, $entityId, 14, 7);
+
+        return [
+            'spend_last_7_days'     => number_format($last7d['spend'], 2, ',', '.'),
+            'cpa_last_7_days'       => $last7d['cpa'] !== null ? number_format($last7d['cpa'], 2, ',', '.') : '—',
+            'ctr_last_7_days'       => $last7d['ctr'] !== null ? number_format($last7d['ctr'], 2, ',', '.') . '%' : '—',
+            'roas_last_7_days'      => $last7d['roas'] !== null ? number_format($last7d['roas'], 2, ',', '.') . 'x' : '—',
+            'spend_previous_7_days' => number_format($prev7d['spend'], 2, ',', '.'),
+            'cpa_previous_7_days'   => $prev7d['cpa'] !== null ? number_format($prev7d['cpa'], 2, ',', '.') : '—',
+        ];
+    }
+
     /**
      * Agrega métricas de ad_daily_snapshots para uma campanha numa janela de dias
      * terminando `$daysAgoEnd` dias atrás (ex: janela 7..0 = últimos 7 dias).
      */
     public static function campaignMetrics(AdCampaign $campaign, int $daysAgoStart, int $daysAgoEnd): array
     {
+        return self::entityMetrics($campaign->client_ad_account_id, 'campaign', $campaign->external_id, $daysAgoStart, $daysAgoEnd);
+    }
+
+    /**
+     * Versão genérica de campaignMetrics, parametrizada por nível de entidade
+     * (campaign|adset|ad) — ad_daily_snapshots já grava os 3 níveis com o
+     * mesmo formato de colunas.
+     */
+    public static function entityMetrics(?string $clientAdAccountId, string $entityLevel, string $entityId, int $daysAgoStart, int $daysAgoEnd): array
+    {
         $start = now()->subDays($daysAgoStart)->toDateString();
         $end = now()->subDays($daysAgoEnd)->toDateString();
 
         $agg = DB::connection('pgsql')
             ->table('ad_daily_snapshots')
-            ->where('client_ad_account_id', $campaign->client_ad_account_id)
-            ->where('entity_level', 'campaign')
-            ->where('entity_id', $campaign->external_id)
+            ->where('client_ad_account_id', $clientAdAccountId)
+            ->where('entity_level', $entityLevel)
+            ->where('entity_id', $entityId)
             ->whereBetween('snapshot_date', [$start, $end])
             ->selectRaw('
                 COALESCE(SUM(spend), 0) AS spend,
@@ -131,10 +202,11 @@ class ContextResolver
         $revenue = (float) ($agg->revenue ?? 0);
 
         return [
-            'spend' => $spend,
-            'cpa'   => $conversions > 0 ? $spend / $conversions : null,
-            'ctr'   => $impressions > 0 ? round(($clicks / $impressions) * 100, 2) : null,
-            'roas'  => $spend > 0 ? round($revenue / $spend, 2) : null,
+            'spend'       => $spend,
+            'impressions' => $impressions,
+            'cpa'         => $conversions > 0 ? $spend / $conversions : null,
+            'ctr'         => $impressions > 0 ? round(($clicks / $impressions) * 100, 2) : null,
+            'roas'        => $spend > 0 ? round($revenue / $spend, 2) : null,
         ];
     }
 }

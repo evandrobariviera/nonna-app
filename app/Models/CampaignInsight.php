@@ -18,6 +18,8 @@ class CampaignInsight extends Model
         'client_id',
         'client_ad_account_id',
         'ad_campaign_id',
+        'ad_adset_id',
+        'ad_ad_id',
         'kind',
         'severity',
         'status',
@@ -43,6 +45,8 @@ class CampaignInsight extends Model
         'ctr_drop'       => 'CTR em queda',
         'roas_drop'      => 'ROAS em queda',
         'saldo_baixo'    => 'Saldo acabando',
+        'creative_fatigue'           => 'Fadiga de criativo',
+        'adset_budget_concentration' => 'Conjunto concentrando verba',
     ];
 
     public static array $severities = [
@@ -96,6 +100,16 @@ class CampaignInsight extends Model
     public function campaign(): BelongsTo
     {
         return $this->belongsTo(AdCampaign::class, 'ad_campaign_id');
+    }
+
+    public function adset(): BelongsTo
+    {
+        return $this->belongsTo(AdAdset::class, 'ad_adset_id');
+    }
+
+    public function ad(): BelongsTo
+    {
+        return $this->belongsTo(AdAd::class, 'ad_ad_id');
     }
 
     public function agent(): BelongsTo

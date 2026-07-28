@@ -203,6 +203,12 @@
                 </div>
             </div>
 
+            {{-- INSIGHTS --}}
+            @include('campaigns.partials._insights-panel', ['insights' => $insights])
+
+            {{-- CONJUNTOS DE ANÚNCIOS / CRIATIVOS --}}
+            @include('campaigns.partials._adsets-breakdown', ['campaign' => $campaign, 'adsetStats' => $adsetStats, 'adStats' => $adStats, 'periodLabel' => $periodLabel])
+
             {{-- OTIMIZAÇÃO --}}
             <div class="card card-body-lg" id="otimizacao" x-data="{ open: false }">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Otimização</p>

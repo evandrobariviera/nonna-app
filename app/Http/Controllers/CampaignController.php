@@ -224,7 +224,7 @@ class CampaignController extends Controller
             ->when($effectiveClientId, fn ($q) => $q->where('client_id', $effectiveClientId))
             ->when($campaignId, fn ($q) => $q->where('ad_campaign_id', $campaignId))
             ->whereBetween('generated_at', ["{$periodStart} 00:00:00", "{$periodEnd} 23:59:59"])
-            ->with(['client', 'campaign'])
+            ->with(['client', 'campaign', 'adset', 'ad'])
             ->orderByDesc('generated_at')
             ->get();
 
@@ -246,7 +246,7 @@ class CampaignController extends Controller
 
     public function show(Request $request, AdCampaign $campaign)
     {
-        $campaign->load('adAccount.client');
+        $campaign->load('adAccount.client', 'adsets.ads');
 
         // Histórico separado em duas listas: otimização (gatilho dedicado, "Marcar
         // otimização feita") fica junto da sessão Otimização; o resto (anotações
@@ -285,8 +285,60 @@ class CampaignController extends Controller
             ->selectRaw('snapshot_date, COALESCE(SUM(spend), 0) as spend, COALESCE(SUM(conversions), 0) as conversions')
             ->get();
 
+        // Breakdown por conjunto/anúncio — mesma janela de período da tela.
+        // ad_daily_snapshots já grava os 3 níveis; só falta agregar por entity_id
+        // igual já é feito pra campanha (campaignPeriodTotals).
+        $adsetIds = $campaign->adsets->pluck('external_id');
+
+        $adsetStats = $adsetIds->isEmpty() ? collect() : DB::connection('pgsql')
+            ->table('ad_daily_snapshots')
+            ->where('client_ad_account_id', $campaign->client_ad_account_id)
+            ->where('entity_level', 'adset')
+            ->whereIn('entity_id', $adsetIds)
+            ->whereBetween('snapshot_date', [$periodStart, $periodEnd])
+            ->groupBy('entity_id')
+            ->selectRaw('
+                entity_id,
+                COALESCE(SUM(spend), 0) AS spend,
+                COALESCE(SUM(revenue), 0) AS revenue,
+                COALESCE(SUM(clicks), 0) AS clicks,
+                COALESCE(SUM(impressions), 0) AS impressions,
+                COALESCE(SUM(conversions), 0) AS conversions
+            ')
+            ->get()
+            ->keyBy('entity_id')
+            ->map(fn ($row) => $this->buildCampaignStats($row));
+
+        $adIds = $campaign->adsets->flatMap->ads->pluck('external_id');
+
+        $adStats = $adIds->isEmpty() ? collect() : DB::connection('pgsql')
+            ->table('ad_daily_snapshots')
+            ->where('client_ad_account_id', $campaign->client_ad_account_id)
+            ->where('entity_level', 'ad')
+            ->whereIn('entity_id', $adIds)
+            ->whereBetween('snapshot_date', [$periodStart, $periodEnd])
+            ->groupBy('entity_id')
+            ->selectRaw('
+                entity_id,
+                COALESCE(SUM(spend), 0) AS spend,
+                COALESCE(SUM(revenue), 0) AS revenue,
+                COALESCE(SUM(clicks), 0) AS clicks,
+                COALESCE(SUM(impressions), 0) AS impressions,
+                COALESCE(SUM(conversions), 0) AS conversions
+            ')
+            ->get()
+            ->keyBy('entity_id')
+            ->map(fn ($row) => $this->buildCampaignStats($row));
+
+        $insights = CampaignInsight::where('ad_campaign_id', $campaign->id)
+            ->whereIn('status', ['novo', 'lido'])
+            ->with(['client', 'campaign', 'adset', 'ad'])
+            ->orderByDesc('generated_at')
+            ->get();
+
         return view('campaigns.show', compact(
-            'campaign', 'optimizationLogs', 'commentLogs', 'stats', 'deltas', 'dailyStats', 'period', 'periodLabel'
+            'campaign', 'optimizationLogs', 'commentLogs', 'stats', 'deltas', 'dailyStats', 'period', 'periodLabel',
+            'adsetStats', 'adStats', 'insights'
         ));
     }
 
