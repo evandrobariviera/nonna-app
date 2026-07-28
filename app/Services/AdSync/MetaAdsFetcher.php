@@ -87,8 +87,13 @@ class MetaAdsFetcher
         $rows = $this->fetchAllPages(
             "https://graph.facebook.com/" . self::API_VERSION . "/act_{$account->account_id}/ads",
             [
-                'fields'       => 'id,name,status,adset_id,creative{id,thumbnail_url,video_id,object_story_spec,image_url}',
-                'limit'        => 200,
+                // Só pede o subcampo de object_story_spec que realmente usa
+                // (detectar carrossel) — pedir o objeto inteiro por anúncio
+                // já disparou "Please reduce the amount of data" do Graph API
+                // com limit=200. O limite de página também cai pra 50: essa
+                // é a chamada mais pesada (expande creative por anúncio).
+                'fields'       => 'id,name,status,adset_id,creative{id,thumbnail_url,video_id,object_story_spec{link_data{child_attachments}}}',
+                'limit'        => 50,
                 'access_token' => $accessToken,
             ],
             'MetaAdsFetcher::fetchAds',
