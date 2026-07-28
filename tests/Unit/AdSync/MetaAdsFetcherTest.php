@@ -155,4 +155,124 @@ class MetaAdsFetcherTest extends TestCase
         $this->assertSame('as1', $adsetRow['entity_id']);
         $this->assertSame('c1', $adsetRow['parent_entity_id']);
     }
+
+    public function test_fetch_insights_resolves_conversions_by_optimization_goal_and_rolls_up_to_campaign(): void
+    {
+        Http::fake(function ($request) {
+            $url = $request->url();
+
+            if (str_contains($url, 'level=adset')) {
+                return Http::response(['data' => [[
+                    'campaign_id' => 'c1', 'campaign_name' => 'Campanha 1',
+                    'adset_id' => 'as1', 'adset_name' => 'Adset 1',
+                    'optimization_goal' => 'REPLIES',
+                    'spend' => '10', 'date_start' => '2026-07-27',
+                    'actions' => [
+                        ['action_type' => 'onsite_conversion.messaging_conversation_started_7d', 'value' => '5'],
+                        ['action_type' => 'link_click', 'value' => '40'], // ruído — não deve contar
+                    ],
+                ]]]);
+            }
+
+            if (str_contains($url, 'level=campaign')) {
+                return Http::response(['data' => [[
+                    'campaign_id' => 'c1', 'campaign_name' => 'Campanha 1',
+                    'spend' => '10', 'date_start' => '2026-07-27',
+                    'actions' => [], // sem optimization_goal — valor original seria sobrescrito pelo rollup
+                ]]]);
+            }
+
+            return Http::response(['data' => []]);
+        });
+
+        $fetcher = new MetaAdsFetcher();
+        $snapshots = collect($fetcher->fetchInsights($this->account(), 'token', '2026-07-27'));
+
+        $adsetRow = $snapshots->firstWhere('entity_level', 'adset');
+        $this->assertSame(5, $adsetRow['conversions']);
+
+        $campaignRow = $snapshots->firstWhere('entity_level', 'campaign');
+        $this->assertSame(5, $campaignRow['conversions']); // veio do rollup do adset, não da lista fixa
+    }
+
+    public function test_fetch_insights_falls_back_to_default_list_for_unmapped_goal(): void
+    {
+        Http::fake(function ($request) {
+            $url = $request->url();
+
+            if (str_contains($url, 'level=adset')) {
+                return Http::response(['data' => [[
+                    'campaign_id' => 'c1', 'campaign_name' => 'Campanha 1',
+                    'adset_id' => 'as1', 'adset_name' => 'Adset 1',
+                    'optimization_goal' => 'SOME_UNKNOWN_GOAL',
+                    'spend' => '10', 'date_start' => '2026-07-27',
+                    'actions' => [
+                        ['action_type' => 'purchase', 'value' => '3'],
+                        ['action_type' => 'link_click', 'value' => '100'],
+                    ],
+                ]]]);
+            }
+
+            return Http::response(['data' => []]);
+        });
+
+        $fetcher = new MetaAdsFetcher();
+        $snapshots = collect($fetcher->fetchInsights($this->account(), 'token', '2026-07-27'));
+
+        $adsetRow = $snapshots->firstWhere('entity_level', 'adset');
+        $this->assertSame(3, $adsetRow['conversions']);
+    }
+
+    public function test_fetch_insights_sums_by_prefix_for_custom_conversion_goals(): void
+    {
+        Http::fake(function ($request) {
+            $url = $request->url();
+
+            if (str_contains($url, 'level=adset')) {
+                return Http::response(['data' => [[
+                    'campaign_id' => 'c1', 'campaign_name' => 'Campanha 1',
+                    'adset_id' => 'as1', 'adset_name' => 'Adset 1',
+                    'optimization_goal' => 'OFFSITE_CONVERSIONS',
+                    'spend' => '10', 'date_start' => '2026-07-27',
+                    'actions' => [
+                        ['action_type' => 'offsite_conversion.custom.12345', 'value' => '7'],
+                        ['action_type' => 'link_click', 'value' => '50'], // fora do prefixo — não conta
+                    ],
+                ]]]);
+            }
+
+            return Http::response(['data' => []]);
+        });
+
+        $fetcher = new MetaAdsFetcher();
+        $snapshots = collect($fetcher->fetchInsights($this->account(), 'token', '2026-07-27'));
+
+        $adsetRow = $snapshots->firstWhere('entity_level', 'adset');
+        $this->assertSame(7, $adsetRow['conversions']);
+    }
+
+    public function test_fetch_insights_range_groups_snapshots_by_date(): void
+    {
+        Http::fake(function ($request) {
+            $url = $request->url();
+
+            if (str_contains($url, 'level=campaign')) {
+                return Http::response(['data' => [
+                    ['campaign_id' => 'c1', 'campaign_name' => 'Campanha 1', 'spend' => '10', 'date_start' => '2026-07-20'],
+                    ['campaign_id' => 'c1', 'campaign_name' => 'Campanha 1', 'spend' => '20', 'date_start' => '2026-07-21'],
+                ]]);
+            }
+
+            return Http::response(['data' => []]);
+        });
+
+        $fetcher = new MetaAdsFetcher();
+        $snapshots = collect($fetcher->fetchInsightsRange($this->account(), 'token', '2026-07-20', '2026-07-21'));
+
+        $byDate = $snapshots->groupBy('snapshot_date');
+        $this->assertCount(1, $byDate->get('2026-07-20'));
+        $this->assertCount(1, $byDate->get('2026-07-21'));
+        $this->assertSame(10.0, $byDate->get('2026-07-20')->first()['spend']);
+        $this->assertSame(20.0, $byDate->get('2026-07-21')->first()['spend']);
+    }
 }

@@ -115,8 +115,12 @@ class CampaignInsightService
             }
         }
 
-        // ROAS abaixo do ponto de equilíbrio
-        if ($last7d['roas'] !== null && $last7d['roas'] < 1.0 && $last7d['spend'] > 0
+        // ROAS abaixo do ponto de equilíbrio — só faz sentido pra campanha
+        // orientada a venda; Meta não rastreia valor monetário em objetivos
+        // de mensagem/lead/engajamento, então revenue fica sempre 0 ali e
+        // dispararia falso-positivo pra praticamente toda campanha desse tipo.
+        if ($this->isSalesOriented($campaign)
+            && $last7d['roas'] !== null && $last7d['roas'] < 1.0 && $last7d['spend'] > 0
             && !$this->hasRecentOpenInsight($client, 'roas_drop', $campaign->id)) {
             $metrics = [
                 'roas_last_7_days'  => $last7d['roas'],
@@ -130,6 +134,16 @@ class CampaignInsightService
         }
 
         return $insights;
+    }
+
+    /**
+     * ROAS só é uma métrica válida pra campanha de venda — Meta não rastreia
+     * valor monetário (`action_values`) em objetivos de mensagem/lead/tráfego,
+     * então checar ROAS nesses casos é sempre falso-positivo.
+     */
+    private function isSalesOriented(AdCampaign $campaign): bool
+    {
+        return $campaign->objective === 'OUTCOME_SALES';
     }
 
     /**
@@ -150,7 +164,8 @@ class CampaignInsightService
             if ($campaignLast7d['spend'] > 0 && $adsetLast7d['spend'] > 0) {
                 $share = ($adsetLast7d['spend'] / $campaignLast7d['spend']) * 100;
 
-                if ($share >= self::ADSET_BUDGET_SHARE_ATENCAO_PCT
+                if ($this->isSalesOriented($campaign)
+                    && $share >= self::ADSET_BUDGET_SHARE_ATENCAO_PCT
                     && $adsetLast7d['roas'] !== null && $adsetLast7d['roas'] < 1.0
                     && !$this->hasRecentOpenInsight($client, 'adset_budget_concentration', $campaign->id, $adset->id)) {
                     $metrics = [

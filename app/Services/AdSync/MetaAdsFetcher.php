@@ -10,6 +10,32 @@ class MetaAdsFetcher
 {
     private const API_VERSION = 'v20.0';
 
+    // "Resultado" no Ads Manager depende do objetivo real do conjunto
+    // (optimization_goal), não da campanha — uma campanha OUTCOME_LEADS pode
+    // otimizar pra formulário, mensagem ou chamada dependendo do conjunto.
+    // Mapa construído a partir de dado real (REPLIES confirmado contra a API
+    // de uma conta com campanhas de mensagem) + convenções documentadas do
+    // Meta pros demais goals. Goals fora daqui caem no fallback (ver
+    // resolveConversions()) — nunca fica pior que a lista fixa antiga.
+    private const OPTIMIZATION_GOAL_ACTION_TYPES = [
+        'REPLIES'            => ['onsite_conversion.messaging_conversation_started_7d'],
+        'LEAD_GENERATION'    => ['lead', 'onsite_conversion.lead_grouped'],
+        'QUALITY_LEAD'       => ['lead', 'onsite_conversion.lead_grouped'],
+        'QUALITY_CALL'       => ['onsite_conversion.call_confirm', 'click_to_call_call_confirm'],
+        'LINK_CLICKS'        => ['link_click'],
+        'LANDING_PAGE_VIEWS' => ['landing_page_view', 'omni_landing_page_view'],
+        'APP_INSTALLS'       => ['app_install', 'omni_app_install', 'mobile_app_install'],
+        'THRUPLAY'           => ['video_view'],
+    ];
+
+    // Conversão customizada (pixel/evento configurado só naquela conta) —
+    // sem promoted_object (não vem via Insights) não dá pra saber o evento
+    // exato, então soma por prefixo em vez de tipo exato. Menos preciso, mas
+    // cobre a maioria dos casos sem precisar de uma chamada extra.
+    private const PREFIX_MATCHED_GOALS = ['OFFSITE_CONVERSIONS', 'ONSITE_CONVERSIONS'];
+
+    private const DEFAULT_CONVERSION_ACTION_TYPES = ['purchase', 'omni_purchase', 'lead', 'offsite_conversion.fb_pixel_purchase'];
+
     public function fetchCampaigns(ClientAdAccount $account, string $accessToken): array
     {
         $campaigns = $this->fetchCampaignsFlat($account, $accessToken);
@@ -135,18 +161,38 @@ class MetaAdsFetcher
     }
 
     /**
+     * Busca insights de 1 dia (usado pelo sync diário). Internamente já é
+     * uma "faixa" de 1 dia só — mesma lógica de fetchInsightsRange().
+     */
+    public function fetchInsights(ClientAdAccount $account, string $accessToken, string $date): array
+    {
+        return $this->fetchInsightsForRange($account, $accessToken, $date, $date);
+    }
+
+    /**
+     * Busca insights numa faixa de datas (usado pelo backfill) — uma
+     * chamada por nível com `time_increment=1`, em vez de um loop de N
+     * chamadas por dia. O Graph API já devolve 1 linha por entidade por dia
+     * (com `date_start`), reaproveitando a paginação existente.
+     */
+    public function fetchInsightsRange(ClientAdAccount $account, string $accessToken, string $sinceDate, string $untilDate): array
+    {
+        return $this->fetchInsightsForRange($account, $accessToken, $sinceDate, $untilDate);
+    }
+
+    /**
      * Busca insights nos 3 níveis (campanha, conjunto, anúncio). Cada nível é
      * isolado num try/catch próprio: uma falha no nível `ad` (o mais sujeito a
      * limite de taxa, por ter muito mais linhas) não deve derrubar os dados de
      * campanha, que hoje são a base de tudo (orçamento, CPA, ROAS).
      */
-    public function fetchInsights(ClientAdAccount $account, string $accessToken, string $date): array
+    private function fetchInsightsForRange(ClientAdAccount $account, string $accessToken, string $since, string $until): array
     {
         $snapshots = [];
 
         foreach (['campaign', 'adset', 'ad'] as $level) {
             try {
-                $snapshots = array_merge($snapshots, $this->fetchInsightsAtLevel($account, $accessToken, $date, $level));
+                $snapshots = array_merge($snapshots, $this->fetchInsightsAtLevel($account, $accessToken, $since, $until, $level));
             } catch (\Throwable $e) {
                 Log::warning("MetaAdsFetcher::fetchInsights falhou no nível '{$level}' para conta {$account->id}", [
                     'error' => $e->getMessage(),
@@ -154,10 +200,10 @@ class MetaAdsFetcher
             }
         }
 
-        return $snapshots;
+        return $this->rollupCampaignConversions($snapshots);
     }
 
-    private function fetchInsightsAtLevel(ClientAdAccount $account, string $accessToken, string $date, string $level): array
+    private function fetchInsightsAtLevel(ClientAdAccount $account, string $accessToken, string $since, string $until, string $level): array
     {
         $idField = match ($level) {
             'adset' => 'adset_id',
@@ -173,8 +219,13 @@ class MetaAdsFetcher
 
         $fields = ['campaign_id', 'campaign_name', 'spend', 'impressions', 'clicks', 'actions', 'action_values', 'reach'];
         if ($level !== 'campaign') {
+            // optimization_goal só existe no nível conjunto (a campanha não
+            // tem um goal próprio) — é o que permite resolver o action_type
+            // certo por linha, sem precisar buscar o objeto do conjunto à
+            // parte (ver resolveConversions()).
             $fields[] = 'adset_id';
             $fields[] = 'adset_name';
+            $fields[] = 'optimization_goal';
         }
         if ($level === 'ad') {
             $fields[] = 'ad_id';
@@ -184,11 +235,12 @@ class MetaAdsFetcher
         $rows = $this->fetchAllPages(
             "https://graph.facebook.com/" . self::API_VERSION . "/act_{$account->account_id}/insights",
             [
-                'level'      => $level,
-                'fields'     => implode(',', array_unique($fields)),
-                'time_range' => json_encode(['since' => $date, 'until' => $date]),
-                'limit'      => 500,
-                'access_token' => $accessToken,
+                'level'          => $level,
+                'fields'         => implode(',', array_unique($fields)),
+                'time_range'     => json_encode(['since' => $since, 'until' => $until]),
+                'time_increment' => 1,
+                'limit'          => 500,
+                'access_token'   => $accessToken,
             ],
             "MetaAdsFetcher::fetchInsights[{$level}]",
             $account
@@ -199,20 +251,102 @@ class MetaAdsFetcher
             'entity_id'        => $row[$idField],
             'entity_name'      => $row[$nameField] ?? $row['campaign_name'] ?? null,
             'parent_entity_id' => $parentIdField ? ($row[$parentIdField] ?? null) : null,
+            'snapshot_date'    => $row['date_start'] ?? $since,
             'spend'            => (float) ($row['spend'] ?? 0),
             'revenue'          => $this->sumActions($row['action_values'] ?? [], ['purchase', 'omni_purchase']),
             'impressions'      => (int) ($row['impressions'] ?? 0),
             'clicks'           => (int) ($row['clicks'] ?? 0),
-            'conversions'      => (int) round($this->sumActions($row['actions'] ?? [], ['purchase', 'omni_purchase', 'lead', 'offsite_conversion.fb_pixel_purchase'])),
+            'conversions'      => (int) round($this->resolveConversions($row['actions'] ?? [], $row['optimization_goal'] ?? null)),
             'reach'            => (int) ($row['reach'] ?? 0),
             'raw_data'         => $row,
         ], $rows);
+    }
+
+    /**
+     * A campanha não tem optimization_goal próprio (é conceito do conjunto)
+     * — em vez de arriscar uma lista solta pro nível campanha, as
+     * conversões/receita da linha de campanha são substituídas pela soma dos
+     * conjuntos filhos do mesmo dia, já resolvidos corretamente por
+     * optimization_goal. Só sobrescreve quando existe pelo menos 1 conjunto
+     * filho naquele dia — sem isso mantém o valor original (fallback).
+     */
+    private function rollupCampaignConversions(array $snapshots): array
+    {
+        return collect($snapshots)
+            ->groupBy('snapshot_date')
+            ->flatMap(function ($dateSnapshots) {
+                $adsetTotalsByCampaign = $dateSnapshots
+                    ->where('entity_level', 'adset')
+                    ->groupBy('parent_entity_id')
+                    ->map(fn ($rows) => [
+                        'conversions' => $rows->sum('conversions'),
+                        'revenue'     => $rows->sum('revenue'),
+                    ]);
+
+                return $dateSnapshots->map(function ($row) use ($adsetTotalsByCampaign) {
+                    if ($row['entity_level'] === 'campaign' && $adsetTotalsByCampaign->has($row['entity_id'])) {
+                        $totals = $adsetTotalsByCampaign->get($row['entity_id']);
+                        $row['conversions'] = $totals['conversions'];
+                        $row['revenue'] = $totals['revenue'];
+                    }
+
+                    return $row;
+                });
+            })
+            ->values()
+            ->all();
     }
 
     private function sumActions(array $actions, array $types): float
     {
         return collect($actions)
             ->filter(fn ($a) => in_array($a['action_type'] ?? null, $types))
+            ->sum(fn ($a) => (float) ($a['value'] ?? 0));
+    }
+
+    /**
+     * Resolve quais action_type contam como "resultado" pra uma linha de
+     * insight, com base no optimization_goal do conjunto (ver
+     * OPTIMIZATION_GOAL_ACTION_TYPES). Goals de conversão customizada somam
+     * por prefixo (não sabemos o evento exato sem promoted_object); goals
+     * desconhecidos caem na lista fixa antiga como fallback conservador.
+     */
+    private function resolveConversions(array $actions, ?string $optimizationGoal): float
+    {
+        if ($optimizationGoal !== null && in_array($optimizationGoal, self::PREFIX_MATCHED_GOALS, true)) {
+            return $this->sumActionsByPrefix($actions, ['purchase', 'omni_purchase'], ['offsite_conversion.', 'onsite_conversion.']);
+        }
+
+        $types = self::OPTIMIZATION_GOAL_ACTION_TYPES[$optimizationGoal] ?? null;
+
+        if ($types === null) {
+            if ($optimizationGoal !== null) {
+                Log::info("MetaAdsFetcher: optimization_goal '{$optimizationGoal}' sem mapeamento de conversão — usando lista padrão");
+            }
+            $types = self::DEFAULT_CONVERSION_ACTION_TYPES;
+        }
+
+        return $this->sumActions($actions, $types);
+    }
+
+    private function sumActionsByPrefix(array $actions, array $exactTypes, array $prefixes): float
+    {
+        return collect($actions)
+            ->filter(function ($a) use ($exactTypes, $prefixes) {
+                $type = $a['action_type'] ?? '';
+
+                if (in_array($type, $exactTypes, true)) {
+                    return true;
+                }
+
+                foreach ($prefixes as $prefix) {
+                    if (str_starts_with($type, $prefix)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            })
             ->sum(fn ($a) => (float) ($a['value'] ?? 0));
     }
 
