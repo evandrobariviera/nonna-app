@@ -25,10 +25,10 @@
                     <th>ROAS</th>
                 </tr>
             </thead>
-            <tbody>
-                @foreach($campaign->adsets as $adset)
-                    @php($adsetRow = $adsetStats->get($adset->external_id))
-                    <tr x-data="{ open: false }">
+            @foreach($campaign->adsets as $adset)
+                @php($adsetRow = $adsetStats->get($adset->external_id))
+                <tbody x-data="{ open: false }">
+                    <tr>
                         <td>
                             <button type="button" @click="open = !open" class="text-xs" style="color:var(--muted)">
                                 <span :class="open ? 'rotate-90' : ''" class="inline-block transition-transform">▶</span>
@@ -86,8 +86,8 @@
                             @endif
                         </td>
                     </tr>
-                @endforeach
-            </tbody>
+                </tbody>
+            @endforeach
         </table>
     @endif
 </div>
