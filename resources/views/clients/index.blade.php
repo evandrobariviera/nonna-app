@@ -112,19 +112,13 @@
                                     :action="route('clients.update-status', $client)" :width="110" />
                                 <td class="text-right">
                                     <div class="flex items-center justify-end gap-3">
-                                        <a href="{{ route('clients.edit', $client) }}"
-                                           class="text-xs font-semibold transition-colors"
-                                           style="color:var(--muted)"
-                                           onmouseover="this.style.color='var(--purple)'"
-                                           onmouseout="this.style.color='var(--muted)'">
+                                        <a href="{{ route('clients.edit', $client) }}" class="btn btn-ghost btn-xs">
                                             Editar
                                         </a>
                                         <form method="POST" action="{{ route('clients.destroy', $client) }}"
                                               onsubmit="return confirm('Excluir {{ addslashes($client->company_name) }}? Só funciona se não houver nenhuma associação (contratos, contas, tarefas, etc) — senão use o status Inativo.')">
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="text-xs font-semibold transition-colors"
-                                                style="color:var(--muted)"
-                                                onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+                                            <button type="submit" class="btn btn-danger btn-xs">
                                                 Excluir
                                             </button>
                                         </form>

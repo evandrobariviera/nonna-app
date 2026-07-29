@@ -54,11 +54,7 @@
                 @if(!$dossier->isAprovado())
                     <form method="POST" action="{{ route('clients.dossiers.avancar-fase', [$client, $dossier]) }}">
                         @csrf
-                        <button type="submit"
-                                class="text-xs font-mono px-3 py-1 transition-colors"
-                                style="border:1px solid var(--border2); color:var(--muted2)"
-                                onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-                                onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'"
+                        <button type="submit" class="btn btn-ghost btn-sm"
                                 onclick="return confirm('Avançar para a próxima fase?')">
                             Avançar fase →
                         </button>
@@ -73,10 +69,7 @@
                       x-text="'✓ Salvo às ' + savedAt"></span>
 
                 {{-- Salvar manual --}}
-                <button type="button" @click="save()"
-                        class="px-4 py-1.5 text-xs font-bold text-white transition-opacity"
-                        style="background:var(--purple)"
-                        :class="{'opacity-50': !dirty && savedAt}">
+                <button type="button" @click="save()" class="btn btn-primary btn-sm" :class="{'opacity-50': !dirty && savedAt}">
                     Salvar
                 </button>
 
@@ -84,9 +77,7 @@
                 <form method="POST" action="{{ route('clients.dossiers.destroy', [$client, $dossier]) }}"
                       onsubmit="return confirm('Remover este dossiê e todos os seus dados?')">
                     @csrf @method('DELETE')
-                    <button type="submit" class="text-xs font-mono transition-colors"
-                            style="color:var(--muted)"
-                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+                    <button type="submit" class="btn btn-danger btn-xs">
                         Remover
                     </button>
                 </form>
@@ -533,9 +524,7 @@
                                 <textarea x-show="c._editing" x-model="c.o_que_nao_ocupa" @blur="updateCompetitor(c)" class="form-textarea text-xs" rows="2"></textarea>
                             </td>
                             <td class="text-right">
-                                <button type="button" @click="deleteCompetitor(c.id)"
-                                        class="text-xs transition-colors" style="color:var(--muted)"
-                                        onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+                                <button type="button" @click="deleteCompetitor(c.id)" class="btn btn-danger btn-xs">
                                     ✕
                                 </button>
                             </td>
@@ -651,9 +640,7 @@
                     <span class="font-bold" style="color:var(--text)" x-text="p.nome_ficticio || 'Persona'"></span>
                     <span class="text-xs ml-2" style="color:var(--muted)" x-text="p.idade_genero ? '· ' + p.idade_genero : ''"></span>
                 </div>
-                <button type="button" @click="deletePersona(p.id)"
-                        class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                        onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+                <button type="button" @click="deletePersona(p.id)" class="btn btn-danger btn-xs">
                     Remover
                 </button>
             </div>
@@ -810,8 +797,7 @@
                     <textarea x-model="v.descricao" @input="markDirty()" placeholder="O que esse valor significa na prática para esta marca..."
                               class="form-textarea" rows="3"></textarea>
                 </div>
-                <button type="button" @click="removeValor(i)" class="text-xs mt-1 transition-colors"
-                        style="color:var(--muted)" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                <button type="button" @click="removeValor(i)" class="btn btn-danger btn-xs mt-1">✕</button>
             </div>
         </div>
     </template>

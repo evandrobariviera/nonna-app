@@ -36,8 +36,7 @@
                                 <form method="POST" action="{{ route('notifications.update-status', $n) }}">
                                     @csrf @method('PATCH')
                                     <input type="hidden" name="status" value="lido">
-                                    <button type="submit" class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                                        onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                                    <button type="submit" class="btn btn-ghost btn-xs">
                                         Marcar como lido
                                     </button>
                                 </form>
@@ -46,7 +45,7 @@
                                 <form method="POST" action="{{ route('notifications.update-status', $n) }}">
                                     @csrf @method('PATCH')
                                     <input type="hidden" name="status" value="resolvido">
-                                    <button type="submit" class="text-xs font-mono transition-colors" style="color:var(--green)">
+                                    <button type="submit" class="btn btn-success btn-xs">
                                         Resolver
                                     </button>
                                 </form>
@@ -55,8 +54,7 @@
                                 <form method="POST" action="{{ route('notifications.update-status', $n) }}">
                                     @csrf @method('PATCH')
                                     <input type="hidden" name="status" value="descartado">
-                                    <button type="submit" class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                                        onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+                                    <button type="submit" class="btn btn-danger btn-xs">
                                         Descartar
                                     </button>
                                 </form>

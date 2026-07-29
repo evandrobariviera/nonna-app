@@ -103,10 +103,7 @@
                 </a>
                 <form method="POST" action="{{ route('portal.logout') }}">
                     @csrf
-                    <button type="submit"
-                            class="text-xs font-semibold transition-colors"
-                            style="color:var(--muted); background:none; border:none; cursor:pointer"
-                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+                    <button type="submit" class="btn btn-ghost btn-xs">
                         Sair
                     </button>
                 </form>

@@ -20,17 +20,14 @@
 
             {{-- Ações da sprint --}}
             <div class="flex items-center gap-2" x-show="!editing">
-                <button type="button" @click="editing = true"
-                    class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest"
-                    style="border:1px solid var(--border2); color:var(--muted)">
+                <button type="button" @click="editing = true" class="btn btn-ghost btn-sm">
                     ✎ Editar
                 </button>
                 @if($sprint->status === 'planning')
                     <form method="POST" action="{{ route('sprints.lock', $sprint) }}">
                         @csrf
                         <button type="submit"
-                            class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest"
-                            style="background:var(--orange); color:#fff"
+                            class="btn btn-sm" style="background:var(--orange); color:#fff; border-color:var(--orange)"
                             onclick="return confirm('Travar sprint e iniciar execução?')">
                             🔒 Travar Sprint
                         </button>
@@ -38,9 +35,7 @@
                 @elseif($sprint->status === 'active')
                     <form method="POST" action="{{ route('sprints.unlock', $sprint) }}">
                         @csrf
-                        <button type="submit"
-                            class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest"
-                            style="border:1px solid var(--border2); color:var(--muted)"
+                        <button type="submit" class="btn btn-ghost btn-sm"
                             onclick="return confirm('Reabrir sprint para planejamento?')">
                             Reabrir
                         </button>
@@ -48,8 +43,7 @@
                     <form method="POST" action="{{ route('sprints.close', $sprint) }}">
                         @csrf
                         <button type="submit"
-                            class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest"
-                            style="border:1px solid var(--green); color:var(--green)"
+                            class="btn btn-sm" style="border-color:var(--green); color:var(--green)"
                             onclick="return confirm('Encerrar sprint? Tarefas pendentes voltam ao backlog.')">
                             Encerrar Sprint
                         </button>
@@ -298,10 +292,7 @@
                                             <form method="POST" action="{{ route('sprints.remove-task', [$sprint, $task]) }}"
                                                   onsubmit="return confirm('Remover da sprint?')">
                                                 @csrf @method('DELETE')
-                                                <button type="submit"
-                                                    class="text-xs px-2 py-0.5 font-mono"
-                                                    style="border:1px solid var(--border2); color:var(--muted)"
-                                                    onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+                                                <button type="submit" class="btn btn-danger btn-xs">
                                                     − Sprint
                                                 </button>
                                             </form>
@@ -413,11 +404,7 @@
 
                         <form method="POST" action="{{ route('sprints.add-task', [$sprint, $task]) }}">
                             @csrf
-                            <button type="submit"
-                                class="px-3 py-1.5 text-xs font-bold font-mono uppercase tracking-widest flex-shrink-0"
-                                style="border:1px solid var(--purple); color:var(--purple)"
-                                onmouseover="this.style.background='var(--purple)'; this.style.color='#fff'"
-                                onmouseout="this.style.background='transparent'; this.style.color='var(--purple)'">
+                            <button type="submit" class="btn btn-primary btn-xs flex-shrink-0">
                                 + Sprint
                             </button>
                         </form>

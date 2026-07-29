@@ -47,18 +47,12 @@
             @endforeach
         </select>
 
-        <button type="submit"
-            class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest transition-colors"
-            style="border:1px solid var(--border2); color:var(--muted2)"
-            onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-            onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+        <button type="submit" class="btn btn-ghost btn-sm">
             Filtrar
         </button>
 
         @if(request()->hasAny(['status','type','client_id']))
-            <a href="{{ route('meetings.index') }}"
-               class="text-xs font-mono transition-colors" style="color:var(--muted)"
-               onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+            <a href="{{ route('meetings.index') }}" class="btn btn-ghost btn-sm">
                 Limpar
             </a>
         @endif
@@ -122,14 +116,10 @@
                                 </td>
                                 <td class="text-right">
                                     <div class="flex items-center justify-end gap-3">
-                                        <a href="{{ route('meetings.show', $meeting) }}"
-                                           class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                                           onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                                        <a href="{{ route('meetings.show', $meeting) }}" class="btn btn-ghost btn-xs">
                                             Ver →
                                         </a>
-                                        <a href="{{ route('meetings.edit', $meeting) }}"
-                                           class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                                           onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                                        <a href="{{ route('meetings.edit', $meeting) }}" class="btn btn-ghost btn-xs">
                                             Editar
                                         </a>
                                     </div>

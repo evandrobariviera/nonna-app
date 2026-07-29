@@ -31,11 +31,7 @@
                     · {{ $plan->projects->count() }} projeto(s)
                 </p>
             </div>
-            <a href="{{ route('portal.projects.show', $plan) }}"
-               class="text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
-               style="background: var(--s3); color: var(--muted)"
-               onmouseover="this.style.color='var(--purple)'"
-               onmouseout="this.style.color='var(--muted)'">
+            <a href="{{ route('portal.projects.show', $plan) }}" class="btn btn-ghost btn-sm">
                 Ver →
             </a>
         </div>

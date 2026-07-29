@@ -117,18 +117,16 @@
                             </td>
                             <td class="text-right">
                                 <div class="flex items-center justify-end gap-3">
-                                    <a href="{{ route('opportunities.create', ['contact_id' => $contact->id]) }}"
-                                       class="text-xs font-mono text-[var(--orange)] hover:text-[var(--text)] transition-colors whitespace-nowrap">
+                                    <a href="{{ route('opportunities.create', ['contact_id' => $contact->id]) }}" class="btn btn-ghost btn-xs whitespace-nowrap">
                                         + Oportunidade
                                     </a>
-                                    <a href="{{ route('contacts.show', $contact) }}"
-                                       class="text-xs font-mono text-[var(--muted)] hover:text-[var(--purple)] transition-colors">
+                                    <a href="{{ route('contacts.show', $contact) }}" class="btn btn-ghost btn-xs">
                                         Ver →
                                     </a>
                                     <form method="POST" action="{{ route('contacts.destroy', $contact) }}"
                                           onsubmit="return confirm('Excluir {{ addslashes($contact->name) }}? Só funciona se não houver nenhuma associação (cliente vinculado, oportunidade, acesso ao portal, etc) — senão use o status Inativo.')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="text-xs font-mono text-[var(--muted)] hover:text-[var(--red)] transition-colors">
+                                        <button type="submit" class="btn btn-danger btn-xs">
                                             Excluir
                                         </button>
                                     </form>

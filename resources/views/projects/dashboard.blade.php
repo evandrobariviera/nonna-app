@@ -142,9 +142,7 @@
                 <span x-text="showClosed ? '⊙ Ocultar finalizados' : '○ Mostrar finalizados'"></span>
             </button>
 
-            <button @click="resetFilters()" x-show="hasActiveFilters()"
-                class="text-xs font-mono transition-colors ml-auto" style="color:var(--muted)"
-                onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+            <button @click="resetFilters()" x-show="hasActiveFilters()" class="btn btn-ghost btn-sm ml-auto">
                 ✕ Limpar filtros
             </button>
 
@@ -252,14 +250,12 @@
                                     <td class="text-xs font-mono" style="color:var(--muted)" x-text="p.done_tasks + '/' + p.total_tasks"></td>
                                     <td class="row-actions">
                                         <div class="flex items-center gap-2 justify-end">
-                                            <button @click="openEdit(p)" style="color:var(--muted)"
-                                                onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'"
-                                                title="Editar">
+                                            <button @click="openEdit(p)" class="btn btn-ghost btn-xs" title="Editar">
                                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                                                 </svg>
                                             </button>
-                                            <a :href="p.url" class="text-xs font-bold font-mono" style="color:var(--purple)">Abrir →</a>
+                                            <a :href="p.url" class="btn btn-ghost btn-xs">Abrir →</a>
                                         </div>
                                     </td>
                                 </tr>
@@ -284,10 +280,7 @@
 
                     {{-- Lápis de edição rápida --}}
                     <button @click="openEdit(p)"
-                        class="absolute top-2 right-2 p-1.5 rounded transition-colors z-10"
-                        style="color:var(--muted)"
-                        onmouseover="this.style.color='var(--purple)'; this.style.background='var(--s2)'"
-                        onmouseout="this.style.color='var(--muted)'; this.style.background='transparent'"
+                        class="btn btn-ghost btn-xs absolute top-2 right-2 z-10"
                         title="Editar">
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
@@ -404,17 +397,12 @@
                     {{-- Footer --}}
                     <div class="px-4 py-3 flex items-center justify-between gap-2"
                          style="border-top:1px solid var(--border2)">
-                        <a x-show="p.macroplan_url" :href="p.macroplan_url || '#'"
-                           class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                           onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                        <a x-show="p.macroplan_url" :href="p.macroplan_url || '#'" class="btn btn-ghost btn-xs">
                             ↗ Planejamento
                         </a>
                         <span x-show="!p.macroplan_url" class="text-xs font-mono" style="color:var(--border2)">Sem planejamento</span>
 
-                        <a :href="p.url"
-                           class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white transition-opacity"
-                           style="background:var(--purple)"
-                           onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                        <a :href="p.url" class="btn btn-primary btn-sm">
                             Abrir →
                         </a>
                     </div>
@@ -478,11 +466,8 @@
                 </div>
 
                 <div class="px-5 py-4 flex items-center justify-end gap-3" style="border-top:1px solid var(--border2)">
-                    <button @click="editOpen = false" class="px-4 py-2 text-xs font-mono" style="color:var(--muted)">Cancelar</button>
-                    <button @click="saveEdit()" :disabled="editSaving"
-                        class="px-5 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white transition-opacity"
-                        style="background:var(--purple)"
-                        onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                    <button @click="editOpen = false" class="btn btn-ghost btn-sm">Cancelar</button>
+                    <button @click="saveEdit()" :disabled="editSaving" class="btn btn-primary btn-sm">
                         <span x-show="!editSaving">Salvar</span>
                         <span x-show="editSaving">Salvando…</span>
                     </button>

@@ -11,11 +11,7 @@
             </div>
             <div class="flex items-center gap-2">
                 <span class="badge badge-{{ $contact->statusColor() }}">{{ $contact->statusLabel() }}</span>
-                <a href="{{ route('contacts.edit', $contact) }}"
-                   class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest transition-colors"
-                   style="border:1px solid var(--border2); color:var(--muted2)"
-                   onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-                   onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+                <a href="{{ route('contacts.edit', $contact) }}" class="btn btn-ghost btn-sm">
                     Editar
                 </a>
                 <a href="{{ route('opportunities.create', ['contact_id' => $contact->id]) }}"
@@ -103,9 +99,7 @@
                     <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
                         Oportunidades ({{ $contact->opportunities->count() }})
                     </p>
-                    <a href="{{ route('opportunities.create', ['contact_id' => $contact->id]) }}"
-                       class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                       onmouseover="this.style.color='var(--orange)'" onmouseout="this.style.color='var(--muted)'">
+                    <a href="{{ route('opportunities.create', ['contact_id' => $contact->id]) }}" class="btn btn-ghost btn-xs">
                         + Nova →
                     </a>
                 </div>
@@ -144,9 +138,7 @@
                                             {{ $opp->created_at->format('d/m/Y') }}
                                         </td>
                                         <td class="text-right">
-                                            <a href="{{ route('opportunities.show', $opp) }}"
-                                               class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                                               onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                                            <a href="{{ route('opportunities.show', $opp) }}" class="btn btn-ghost btn-xs">
                                                 Ver →
                                             </a>
                                         </td>

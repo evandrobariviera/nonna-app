@@ -83,26 +83,17 @@
                                 </div>
 
                                 {{-- Ações --}}
-                                <div class="flex items-center gap-1" style="flex-shrink:0">
-                                    <a href="{{ route('automations.logs', $automation) }}"
-                                       title="Ver logs"
-                                       class="flex items-center px-2 py-1.5 text-xs transition-colors"
-                                       style="color:var(--muted)"
-                                       onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                                <div class="flex items-center gap-2" style="flex-shrink:0">
+                                    <a href="{{ route('automations.logs', $automation) }}" title="Ver logs" class="btn btn-ghost btn-xs">
                                         Logs
                                     </a>
-                                    <a href="{{ route('automations.edit', $automation) }}"
-                                       class="flex items-center px-2 py-1.5 text-xs transition-colors"
-                                       style="color:var(--muted)"
-                                       onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                                    <a href="{{ route('automations.edit', $automation) }}" class="btn btn-ghost btn-xs">
                                         Editar
                                     </a>
                                     <form action="{{ route('automations.destroy', $automation) }}" method="POST"
                                           onsubmit="return confirm('Remover esta automação?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="px-2 py-1.5 text-xs transition-colors"
-                                                style="color:var(--muted); background:none; border:none; cursor:pointer"
-                                                onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+                                        <button type="submit" class="btn btn-danger btn-xs">
                                             Remover
                                         </button>
                                     </form>

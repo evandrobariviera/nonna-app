@@ -17,11 +17,7 @@
         <div class="flex items-center gap-2">
             @php $color = $client->statusColor() @endphp
             <span class="badge badge-{{ $color }}">{{ $client->statusLabel() }}</span>
-            <a href="{{ route('clients.edit', $client) }}"
-               class="px-4 py-2 text-xs font-bold transition-colors"
-               style="border:1px solid var(--border2); color:var(--muted2)"
-               onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-               onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+            <a href="{{ route('clients.edit', $client) }}" class="btn btn-ghost btn-sm">
                 Editar
             </a>
         </div>
@@ -440,7 +436,7 @@
                             Salvar
                         </button>
                         <button type="button" @click="addForm = false"
-                                class="px-4 py-2 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] transition-colors">
+                                class="btn btn-ghost btn-sm">
                             Cancelar
                         </button>
                     </div>
@@ -509,8 +505,7 @@
                                               onsubmit="return confirm('Remover esta credencial?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit"
-                                                    class="text-xs font-mono text-[var(--muted)] hover:text-[var(--red)] transition-colors">
+                                            <button type="submit" class="btn btn-danger btn-xs">
                                                 Remover
                                             </button>
                                         </form>
@@ -580,7 +575,7 @@
                             Salvar
                         </button>
                         <button type="button" @click="addForm = false"
-                                class="px-4 py-2 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] transition-colors">
+                                class="btn btn-ghost btn-sm">
                             Cancelar
                         </button>
                     </div>
@@ -626,8 +621,7 @@
                                               onsubmit="return confirm('Remover este link?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit"
-                                                    class="text-xs font-mono text-[var(--muted)] hover:text-[var(--red)] transition-colors">
+                                            <button type="submit" class="btn btn-danger btn-xs">
                                                 Remover
                                             </button>
                                         </form>
@@ -727,13 +721,10 @@
                             <span class="text-sm" style="color:var(--muted2)">Contato principal deste cliente</span>
                         </label>
                         <div class="flex gap-3">
-                            <button type="submit"
-                                    class="px-5 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
-                                    style="background:var(--purple)">
+                            <button type="submit" class="btn btn-primary btn-sm">
                                 Vincular
                             </button>
-                            <button type="button" @click="mode = null"
-                                    class="px-4 py-2 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] transition-colors">
+                            <button type="button" @click="mode = null" class="btn btn-ghost btn-sm">
                                 Cancelar
                             </button>
                         </div>
@@ -798,7 +789,7 @@
                             Criar e Vincular
                         </button>
                         <button type="button" @click="mode = null"
-                                class="px-4 py-2 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] transition-colors">
+                                class="btn btn-ghost btn-sm">
                             Cancelar
                         </button>
                     </div>
@@ -932,19 +923,16 @@
                                     <td class="text-right">
                                         <div class="flex items-center justify-end gap-3">
                                             <template x-if="editId !== '{{ $contact->id }}'">
-                                                <button type="button" @click="editId = '{{ $contact->id }}'"
-                                                        class="text-xs font-mono text-[var(--muted)] hover:text-[var(--purple)] transition-colors">
+                                                <button type="button" @click="editId = '{{ $contact->id }}'" class="btn btn-ghost btn-xs">
                                                     Editar papel
                                                 </button>
                                             </template>
                                             <template x-if="editId === '{{ $contact->id }}'">
                                                 <div class="flex gap-2">
-                                                    <button type="submit" form="edit-contact-{{ $contact->id }}"
-                                                            class="text-xs font-mono text-[var(--purple)] hover:underline">
+                                                    <button type="submit" form="edit-contact-{{ $contact->id }}" class="btn btn-primary btn-xs">
                                                         Salvar
                                                     </button>
-                                                    <button type="button" @click="editId = null"
-                                                            class="text-xs font-mono text-[var(--muted)]">
+                                                    <button type="button" @click="editId = null" class="btn btn-ghost btn-xs">
                                                         Cancelar
                                                     </button>
                                                 </div>
@@ -953,8 +941,7 @@
                                                   action="{{ route('clients.contacts.unlink', [$client, $contact]) }}"
                                                   onsubmit="return confirm('Desvincular {{ $contact->name }} deste cliente?')">
                                                 @csrf @method('DELETE')
-                                                <button type="submit"
-                                                        class="text-xs font-mono text-[var(--muted)] hover:text-[var(--red)] transition-colors">
+                                                <button type="submit" class="btn btn-danger btn-xs">
                                                     Desvincular
                                                 </button>
                                             </form>
@@ -1005,13 +992,10 @@
                             @endforeach
 
                             <div class="flex justify-end gap-3 pt-2">
-                                <button type="button" @click="closeSubs()"
-                                        class="px-4 py-2 text-sm font-semibold rounded-lg"
-                                        style="color:var(--muted); background:var(--s3)">
+                                <button type="button" @click="closeSubs()" class="btn btn-ghost btn-sm">
                                     Cancelar
                                 </button>
-                                <button type="submit"
-                                        class="btn-primary px-4 py-2 text-sm rounded-lg font-semibold">
+                                <button type="submit" class="btn btn-primary btn-sm">
                                     Salvar
                                 </button>
                             </div>
@@ -1099,13 +1083,10 @@
                                    class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
                         </div>
                         <div class="flex gap-2">
-                            <button type="submit"
-                                    class="px-4 py-2.5 text-xs font-bold font-mono uppercase tracking-widest text-white"
-                                    style="background: var(--purple);">
+                            <button type="submit" class="btn btn-primary btn-sm">
                                 Salvar
                             </button>
-                            <button type="button" @click="budgetForm = false"
-                                    class="px-3 py-2.5 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)]">
+                            <button type="button" @click="budgetForm = false" class="btn btn-ghost btn-sm">
                                 Cancelar
                             </button>
                         </div>
@@ -1127,8 +1108,7 @@
                                         <form method="POST" action="{{ route('clients.ad-budgets.destroy', [$client, $budget]) }}"
                                               onsubmit="return confirm('Remover este registro de orçamento?')">
                                             @csrf @method('DELETE')
-                                            <button type="submit" style="color:var(--muted)"
-                                                onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                            <button type="submit" class="btn btn-danger btn-xs">✕</button>
                                         </form>
                                     </div>
                                 </div>
@@ -1221,7 +1201,7 @@
                             Salvar
                         </button>
                         <button type="button" @click="addForm = false"
-                                class="px-4 py-2 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] transition-colors">
+                                class="btn btn-ghost btn-sm">
                             Cancelar
                         </button>
                     </div>
@@ -1398,19 +1378,16 @@
                                                 Metas
                                             </button>
                                             <template x-if="editId !== '{{ $account->id }}'">
-                                                <button type="button" @click="editId = '{{ $account->id }}'"
-                                                        class="text-xs font-mono text-[var(--muted)] hover:text-[var(--purple)] transition-colors">
+                                                <button type="button" @click="editId = '{{ $account->id }}'" class="btn btn-ghost btn-xs">
                                                     Editar
                                                 </button>
                                             </template>
                                             <template x-if="editId === '{{ $account->id }}'">
                                                 <div class="flex gap-2">
-                                                    <button type="submit" form="edit-account-{{ $account->id }}"
-                                                            class="text-xs font-mono text-[var(--purple)] hover:underline">
+                                                    <button type="submit" form="edit-account-{{ $account->id }}" class="btn btn-primary btn-xs">
                                                         Salvar
                                                     </button>
-                                                    <button type="button" @click="editId = null"
-                                                            class="text-xs font-mono text-[var(--muted)] hover:text-[var(--text)]">
+                                                    <button type="button" @click="editId = null" class="btn btn-ghost btn-xs">
                                                         Cancelar
                                                     </button>
                                                 </div>
@@ -1420,8 +1397,7 @@
                                                   onsubmit="return confirm('Remover esta conta?')">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit"
-                                                        class="text-xs font-mono text-[var(--muted)] hover:text-[var(--red)] transition-colors">
+                                                <button type="submit" class="btn btn-danger btn-xs">
                                                     Remover
                                                 </button>
                                             </form>
@@ -1540,8 +1516,7 @@
                                                                           action="{{ route('clients.ad-accounts.billing.destroy', [$client, $account, $doc]) }}"
                                                                           onsubmit="return confirm('Remover este documento?')">
                                                                         @csrf @method('DELETE')
-                                                                        <button type="submit" style="color:var(--muted)"
-                                                                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                                                        <button type="submit" class="btn btn-danger btn-xs">✕</button>
                                                                     </form>
                                                                 </div>
                                                             </div>
@@ -1753,9 +1728,7 @@
                                         <span class="text-xs" style="color:var(--muted)">Sem projetos</span>
                                     @endif
                                 </div>
-                                <a href="{{ route('macroplans.edit', $plan) }}"
-                                   class="text-xs font-mono flex-shrink-0 transition-colors" style="color:var(--muted)"
-                                   onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                                <a href="{{ route('macroplans.edit', $plan) }}" class="btn btn-ghost btn-xs flex-shrink-0">
                                     Editar →
                                 </a>
                             </div>
@@ -1872,7 +1845,7 @@
                             Salvar
                         </button>
                         <button type="button" @click="addForm = false"
-                                class="px-4 py-2 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] transition-colors">
+                                class="btn btn-ghost btn-sm">
                             Cancelar
                         </button>
                     </div>
@@ -1919,7 +1892,7 @@
                                     </td>
                                     <td class="text-right whitespace-nowrap">
                                         <button type="button" @click="editId = editId === '{{ $integration->id }}' ? null : '{{ $integration->id }}'"
-                                                class="text-xs font-mono text-[var(--muted)] hover:text-[var(--purple)] transition-colors mr-3">
+                                                class="btn btn-ghost btn-xs mr-3">
                                             <span x-text="editId === '{{ $integration->id }}' ? 'Fechar' : 'Editar'"></span>
                                         </button>
                                         <form method="POST" class="inline"
@@ -1927,8 +1900,7 @@
                                               onsubmit="return confirm('Remover este número de atendimento? Conversas e diagnósticos já gerados não são apagados.')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit"
-                                                    class="text-xs font-mono text-[var(--muted)] hover:text-[var(--red)] transition-colors">
+                                            <button type="submit" class="btn btn-danger btn-xs">
                                                 Remover
                                             </button>
                                         </form>
@@ -2000,13 +1972,10 @@
                                                 </div>
                                             </div>
                                             <div class="flex gap-3">
-                                                <button type="submit"
-                                                        class="px-5 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
-                                                        style="background: var(--purple);">
+                                                <button type="submit" class="btn btn-primary btn-sm">
                                                     Salvar alterações
                                                 </button>
-                                                <button type="button" @click="editId = null"
-                                                        class="px-4 py-2 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] transition-colors">
+                                                <button type="button" @click="editId = null" class="btn btn-ghost btn-sm">
                                                     Cancelar
                                                 </button>
                                             </div>
@@ -2051,10 +2020,7 @@
                                               onsubmit="return confirm('Remover acesso de {{ $portalContact->name }}?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-xs font-semibold"
-                                                    style="color: var(--muted)"
-                                                    onmouseover="this.style.color='var(--red)'"
-                                                    onmouseout="this.style.color='var(--muted)'">
+                                            <button type="submit" class="btn btn-danger btn-xs">
                                                 Remover
                                             </button>
                                         </form>

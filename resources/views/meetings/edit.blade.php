@@ -231,9 +231,7 @@
                     style="background:var(--purple)">
                     Salvar Alterações
                 </button>
-                <a href="{{ route('meetings.show', $meeting) }}"
-                   class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                   onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                <a href="{{ route('meetings.show', $meeting) }}" class="btn btn-ghost btn-sm">
                     Cancelar
                 </a>
             </div>

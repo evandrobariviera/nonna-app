@@ -97,8 +97,7 @@
                     Cadastrar + Criar Oportunidade →
                 </button>
 
-                <a href="{{ route('contacts.index') }}"
-                   class="text-xs font-mono text-[var(--muted)] hover:text-[var(--text)] transition-colors">
+                <a href="{{ route('contacts.index') }}" class="btn btn-ghost btn-sm">
                     Cancelar
                 </a>
             </div>

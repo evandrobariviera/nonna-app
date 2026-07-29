@@ -287,11 +287,7 @@
                                          border:1px solid {{ $notSent ? 'var(--border2)' : ($isApproved ? 'rgba(34,197,94,.25)' : ($isChanges ? 'rgba(255,140,0,.25)' : 'rgba(106,90,205,.25)')) }}">
                                 {{ $round->displayStatusLabel() }}
                             </span>
-                            <a href="{{ route('tasks.show', $round->task_id) }}"
-                               class="text-xs font-semibold px-3 py-1 transition-colors"
-                               style="border:1px solid var(--border2); color:var(--muted2)"
-                               onmouseover="this.style.color='var(--purple)'; this.style.borderColor='rgba(106,90,205,.3)'"
-                               onmouseout="this.style.color='var(--muted2)'; this.style.borderColor='var(--border2)'">
+                            <a href="{{ route('tasks.show', $round->task_id) }}" class="btn btn-ghost btn-xs">
                                 Ver Tarefa →
                             </a>
                         </div>

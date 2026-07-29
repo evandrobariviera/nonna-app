@@ -66,8 +66,7 @@
             <div class="card card-body-lg" x-data="{ editing: {{ $campaign->description ? 'false' : 'true' }} }">
                 <div class="flex items-center justify-between mb-2">
                     <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Descrição da campanha</p>
-                    <button type="button" @click="editing = !editing" class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                        onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                    <button type="button" @click="editing = !editing" class="btn btn-ghost btn-xs">
                         <span x-text="editing ? 'Cancelar' : 'Editar'"></span>
                     </button>
                 </div>
@@ -204,7 +203,7 @@
             </div>
 
             {{-- INSIGHTS --}}
-            @include('campaigns.partials._insights-panel', ['insights' => $insights])
+            @include('campaigns.partials._insights-panel', ['insights' => $insights, 'openByDefault' => true])
 
             {{-- CONJUNTOS DE ANÚNCIOS / CRIATIVOS --}}
             @include('campaigns.partials._adsets-breakdown', ['campaign' => $campaign, 'adsetStats' => $adsetStats, 'adStats' => $adStats, 'periodLabel' => $periodLabel])
@@ -308,8 +307,8 @@
                                                     class="w-full px-3 py-2 text-xs focus:outline-none resize-none"
                                                     style="background:var(--s3); border:1px solid var(--border2); color:var(--text); line-height:1.55">{{ $log->description }}</textarea>
                                                 <div class="flex items-center gap-3 mt-2">
-                                                    <button type="submit" class="text-xs font-mono text-[var(--purple)] hover:underline">Salvar</button>
-                                                    <button type="button" @click="editId = null" class="text-xs font-mono" style="color:var(--muted)">Cancelar</button>
+                                                    <button type="submit" class="btn btn-success btn-xs">Salvar</button>
+                                                    <button type="button" @click="editId = null" class="btn btn-ghost btn-xs">Cancelar</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -317,15 +316,12 @@
                                 </div>
                                 @if($log->logged_by === auth()->id())
                                     <div class="flex items-start gap-2 flex-shrink-0" x-show="editId !== '{{ $log->id }}'">
-                                        <button type="button" @click="editId = '{{ $log->id }}'"
-                                            class="text-xs mt-1 transition-colors" style="color:var(--muted)"
-                                            onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">Editar</button>
+                                        <button type="button" @click="editId = '{{ $log->id }}'" class="btn btn-ghost btn-xs">Editar</button>
                                         <form method="POST"
                                               action="{{ route('campaign-logs.destroy', [$campaign, $log]) }}"
                                               onsubmit="return confirm('Remover registro?')">
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="text-xs mt-1 flex-shrink-0 transition-colors" style="color:var(--muted)"
-                                                onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                            <button type="submit" class="btn btn-danger btn-xs">✕</button>
                                         </form>
                                     </div>
                                 @endif
@@ -474,7 +470,7 @@
                     @csrf @method('PATCH')
                     <textarea name="optimization_locked_reason" rows="2" placeholder="Motivo (deixe em branco pra destravar)"
                               class="w-full px-3 py-2 text-sm mb-2" style="background:var(--s3); border:1px solid var(--border2); color:var(--text); resize:vertical">{{ $campaign->optimization_locked_reason }}</textarea>
-                    <button type="submit" class="btn btn-sm" style="border:1px solid var(--border2); color:var(--text)">
+                    <button type="submit" class="btn btn-ghost btn-sm">
                         {{ $campaign->optimization_locked_reason ? 'Atualizar' : 'Travar' }}
                     </button>
                 </form>
@@ -507,10 +503,7 @@
                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'"
                     ></textarea>
                     <div class="flex justify-end mt-2" x-show="description.trim().length > 0" x-cloak>
-                        <button type="submit"
-                            class="px-4 py-2 text-xs font-semibold text-white"
-                            style="background:var(--purple)"
-                            onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                        <button type="submit" class="btn btn-primary btn-sm">
                             Registrar
                         </button>
                     </div>
@@ -562,8 +555,8 @@
                                                     class="w-full px-3 py-2 text-xs focus:outline-none resize-none"
                                                     style="background:var(--s3); border:1px solid var(--border2); color:var(--text); line-height:1.55">{{ $log->description }}</textarea>
                                                 <div class="flex items-center gap-3 mt-2">
-                                                    <button type="submit" class="text-xs font-mono text-[var(--purple)] hover:underline">Salvar</button>
-                                                    <button type="button" @click="editId = null" class="text-xs font-mono" style="color:var(--muted)">Cancelar</button>
+                                                    <button type="submit" class="btn btn-success btn-xs">Salvar</button>
+                                                    <button type="button" @click="editId = null" class="btn btn-ghost btn-xs">Cancelar</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -571,15 +564,12 @@
                                 </div>
                                 @if($log->logged_by === auth()->id())
                                     <div class="flex items-start gap-2 flex-shrink-0" x-show="editId !== '{{ $log->id }}'">
-                                        <button type="button" @click="editId = '{{ $log->id }}'"
-                                            class="text-xs mt-1 transition-colors" style="color:var(--muted)"
-                                            onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">Editar</button>
+                                        <button type="button" @click="editId = '{{ $log->id }}'" class="btn btn-ghost btn-xs">Editar</button>
                                         <form method="POST"
                                               action="{{ route('campaign-logs.destroy', [$campaign, $log]) }}"
                                               onsubmit="return confirm('Remover registro?')">
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="text-xs mt-1 flex-shrink-0 transition-colors" style="color:var(--muted)"
-                                                onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                            <button type="submit" class="btn btn-danger btn-xs">✕</button>
                                         </form>
                                     </div>
                                 @endif

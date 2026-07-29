@@ -175,13 +175,11 @@
                                     </td>
                                     <td>
                                         @if($opp->stage === 'ganho' && $opp->client_id)
-                                            <a href="{{ route('clients.show', $opp->client_id) }}"
-                                               class="text-xs font-mono text-[var(--purple)] hover:text-[var(--text)] transition-colors">
+                                            <a href="{{ route('clients.show', $opp->client_id) }}" class="btn btn-ghost btn-xs">
                                                 Ver Cliente →
                                             </a>
                                         @else
-                                            <a href="{{ route('opportunities.show', $opp) }}"
-                                               class="text-xs font-mono text-[var(--muted)] hover:text-[var(--text)] transition-colors">
+                                            <a href="{{ route('opportunities.show', $opp) }}" class="btn btn-ghost btn-xs">
                                                 Ver →
                                             </a>
                                         @endif

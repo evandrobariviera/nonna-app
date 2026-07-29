@@ -35,8 +35,7 @@
                               onsubmit="return confirm('Remover sua foto de perfil?')">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="text-xs font-semibold transition-colors" style="color:var(--muted)"
-                                    onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+                            <button type="submit" class="btn btn-danger btn-xs">
                                 Remover foto
                             </button>
                         </form>

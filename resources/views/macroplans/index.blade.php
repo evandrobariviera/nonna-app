@@ -46,9 +46,7 @@
         </button>
 
         @if(request()->hasAny(['status','client_id','mostrar_concluidos']))
-            <a href="{{ route('macroplans.index') }}"
-               class="text-xs font-mono transition-colors" style="color:var(--muted)"
-               onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+            <a href="{{ route('macroplans.index') }}" class="btn btn-ghost btn-sm">
                 Limpar
             </a>
         @endif
@@ -115,9 +113,7 @@
                                 <x-status-dropdown-cell :options="\App\Models\MacroPlan::$statuses" :current="$plan->status"
                                     :action="route('macroplans.update-status', $plan)" :width="120" />
                                 <td class="text-right">
-                                    <a href="{{ route('macroplans.edit', $plan) }}"
-                                       class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                                       onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                                    <a href="{{ route('macroplans.edit', $plan) }}" class="btn btn-ghost btn-xs">
                                         Editar →
                                     </a>
                                 </td>

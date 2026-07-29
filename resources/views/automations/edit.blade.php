@@ -226,15 +226,10 @@
                         Automação ativa
                     </label>
                     <div class="flex gap-3">
-                        <a href="{{ route('automations.index') }}"
-                           class="px-4 py-2 text-sm font-semibold transition-colors"
-                           style="color:var(--muted)"
-                           onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                        <a href="{{ route('automations.index') }}" class="btn btn-ghost btn-sm">
                             Cancelar
                         </a>
-                        <button type="submit"
-                                class="px-5 py-2 text-sm font-semibold text-white"
-                                style="background:var(--purple)">
+                        <button type="submit" class="btn btn-primary btn-sm">
                             Salvar Alterações
                         </button>
                     </div>

@@ -104,9 +104,7 @@
         <button type="submit" class="btn btn-ghost btn-sm">Filtrar</button>
 
         @if(request()->hasAny(['client_id', 'ad_campaign_id', 'platform', 'status', 'period', 'group_by']))
-            <a href="{{ route('campaigns.index') }}"
-               class="text-xs font-mono transition-colors" style="color:var(--muted)"
-               onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+            <a href="{{ route('campaigns.index') }}" class="btn btn-ghost btn-sm">
                 Limpar
             </a>
         @endif

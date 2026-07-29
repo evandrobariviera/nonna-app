@@ -130,8 +130,7 @@
                         style="background: var(--purple);">
                     Criar Oportunidade
                 </button>
-                <a href="{{ route('opportunities.index') }}"
-                   class="text-xs font-mono text-[var(--muted)] hover:text-[var(--text)] transition-colors">
+                <a href="{{ route('opportunities.index') }}" class="btn btn-ghost btn-sm">
                     Cancelar
                 </a>
             </div>

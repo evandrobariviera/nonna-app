@@ -132,8 +132,7 @@
                                     <option value="aprovador">Aprovador</option>
                                 </select>
                                 <input type="hidden" :name="'executor_ids[]'" :value="item.id">
-                                <button type="button" @click="remove(idx)" style="color:var(--muted)"
-                                    onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                <button type="button" @click="remove(idx)" class="btn btn-danger btn-xs">✕</button>
                             </div>
                         </template>
                     </div>
@@ -197,12 +196,10 @@
                 </div>
 
                 <div class="col-span-2 md:col-span-3 flex items-center gap-3 pt-2">
-                    <button type="submit"
-                        class="px-5 py-2.5 text-xs font-bold font-mono uppercase tracking-widest text-white"
-                        style="background:var(--purple)">
+                    <button type="submit" class="btn btn-primary btn-sm">
                         Criar Ticket
                     </button>
-                    <a href="{{ route('tickets.index') }}" class="text-xs font-mono" style="color:var(--muted)">Cancelar</a>
+                    <a href="{{ route('tickets.index') }}" class="btn btn-ghost btn-sm">Cancelar</a>
                 </div>
             </form>
         </div>

@@ -1,7 +1,10 @@
-{{-- Painel de insights (colapsado por padrão) — usado em campaigns/index.blade.php
-     e campaigns/show.blade.php. Recebe $insights (Collection<CampaignInsight>,
-     com campaign/adset/ad eager-loaded). --}}
-<div class="mb-6" x-data="{ open: false }">
+{{-- Painel de insights — usado em campaigns/index.blade.php (colapsado por
+     padrão, lista com vários clientes) e campaigns/show.blade.php (aberto por
+     padrão, já que ali é sobre uma única campanha). Recebe $insights
+     (Collection<CampaignInsight>, com campaign/adset/ad eager-loaded) e,
+     opcionalmente, $openByDefault (bool, default false). --}}
+@php($openByDefault = $openByDefault ?? false)
+<div class="mb-6" x-data="{ open: {{ $openByDefault ? 'true' : 'false' }} }">
     <button @click="open = !open" type="button"
         class="text-xs font-mono uppercase tracking-widest transition-colors flex items-center gap-2 mb-3"
         style="color:var(--muted)"
@@ -42,8 +45,7 @@
                                     <form method="POST" action="{{ route('campaign-insights.update-status', $insight) }}">
                                         @csrf @method('PATCH')
                                         <input type="hidden" name="status" value="lido">
-                                        <button type="submit" class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                                            onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                                        <button type="submit" class="btn btn-ghost btn-xs">
                                             Marcar como lido
                                         </button>
                                     </form>
@@ -51,15 +53,14 @@
                                 <form method="POST" action="{{ route('campaign-insights.update-status', $insight) }}">
                                     @csrf @method('PATCH')
                                     <input type="hidden" name="status" value="resolvido">
-                                    <button type="submit" class="text-xs font-mono transition-colors" style="color:var(--green)">
+                                    <button type="submit" class="btn btn-success btn-xs">
                                         Resolver
                                     </button>
                                 </form>
                                 <form method="POST" action="{{ route('campaign-insights.update-status', $insight) }}">
                                     @csrf @method('PATCH')
                                     <input type="hidden" name="status" value="descartado">
-                                    <button type="submit" class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                                        onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+                                    <button type="submit" class="btn btn-danger btn-xs">
                                         Descartar
                                     </button>
                                 </form>

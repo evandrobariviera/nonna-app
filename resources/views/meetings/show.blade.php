@@ -12,11 +12,7 @@
             </div>
             <div class="flex items-center gap-2">
                 <span class="badge badge-{{ $meeting->statusColor() }}">{{ $meeting->statusLabel() }}</span>
-                <a href="{{ route('meetings.edit', $meeting) }}"
-                   class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest transition-colors"
-                   style="border:1px solid var(--border2); color:var(--muted2)"
-                   onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-                   onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+                <a href="{{ route('meetings.edit', $meeting) }}" class="btn btn-ghost btn-sm">
                     Editar
                 </a>
             </div>
@@ -160,19 +156,13 @@
                             <p class="text-sm whitespace-pre-wrap" style="color:var(--text)">{{ $meeting->next_steps }}</p>
                         @endif
                         <div class="mt-4">
-                            <a href="{{ route('meetings.edit', $meeting) }}#ata"
-                               class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                               onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                            <a href="{{ route('meetings.edit', $meeting) }}#ata" class="btn btn-ghost btn-xs">
                                 Editar ATA →
                             </a>
                         </div>
                     @else
                         <p class="text-sm mb-4" style="color:var(--muted)">Nenhuma ATA registrada ainda.</p>
-                        <a href="{{ route('meetings.edit', $meeting) }}#ata"
-                           class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest transition-colors"
-                           style="border:1px solid var(--border2); color:var(--muted2)"
-                           onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-                           onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+                        <a href="{{ route('meetings.edit', $meeting) }}#ata" class="btn btn-ghost btn-sm">
                             + Registrar ATA
                         </a>
                     @endif
@@ -214,11 +204,7 @@
                     <form method="POST" action="{{ route('meetings.destroy', $meeting) }}"
                           onsubmit="return confirm('Remover esta reunião permanentemente?')">
                         @csrf @method('DELETE')
-                        <button type="submit"
-                            class="w-full px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest transition-colors"
-                            style="border:1px solid var(--red); color:var(--red)"
-                            onmouseover="this.style.background='rgba(239,68,68,.08)'"
-                            onmouseout="this.style.background='transparent'">
+                        <button type="submit" class="btn btn-danger btn-sm w-full">
                             Remover Reunião
                         </button>
                     </form>

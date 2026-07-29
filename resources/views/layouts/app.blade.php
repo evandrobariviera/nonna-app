@@ -110,18 +110,12 @@
 
             {{-- Footer --}}
             <div class="border-t px-5 py-3 flex items-center justify-between" style="border-color:var(--border2)">
-                <a href="{{ route('profile.edit') }}"
-                   class="text-xs font-semibold transition-colors"
-                   style="color:var(--muted)"
-                   onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                <a href="{{ route('profile.edit') }}" class="btn btn-ghost btn-xs">
                     Perfil
                 </a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit"
-                            class="text-xs font-semibold transition-colors"
-                            style="color:var(--muted); background:none; border:none; cursor:pointer"
-                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+                    <button type="submit" class="btn btn-ghost btn-xs">
                         Sair
                     </button>
                 </form>
@@ -225,15 +219,14 @@
                                             <form method="POST" action="{{ route('notifications.update-status', $n) }}">
                                                 @csrf @method('PATCH')
                                                 <input type="hidden" name="status" value="lido">
-                                                <button type="submit" class="text-xs font-mono" style="color:var(--muted)"
-                                                        onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                                                <button type="submit" class="btn btn-ghost btn-xs">
                                                     Marcar como lido
                                                 </button>
                                             </form>
                                             <form method="POST" action="{{ route('notifications.update-status', $n) }}">
                                                 @csrf @method('PATCH')
                                                 <input type="hidden" name="status" value="resolvido">
-                                                <button type="submit" class="text-xs font-mono" style="color:var(--green)">
+                                                <button type="submit" class="btn btn-success btn-xs">
                                                     Resolver
                                                 </button>
                                             </form>

@@ -110,8 +110,7 @@
                     Salvar Alterações
                 </button>
 
-                <a href="{{ route('contacts.show', $contact) }}"
-                   class="text-xs font-mono text-[var(--muted)] hover:text-[var(--text)] transition-colors">
+                <a href="{{ route('contacts.show', $contact) }}" class="btn btn-ghost btn-sm">
                     Cancelar
                 </a>
             </div>

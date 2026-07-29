@@ -61,9 +61,7 @@
         </button>
 
         @if(request()->hasAny(['status', 'vencidos']))
-            <a href="{{ route('contracts.index') }}"
-               class="text-xs font-mono transition-colors" style="color:var(--muted)"
-               onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+            <a href="{{ route('contracts.index') }}" class="btn btn-ghost btn-sm">
                 Limpar
             </a>
         @endif

@@ -154,9 +154,7 @@
                                     <option value="unico">Único</option>
                                     <option value="anual">Anual</option>
                                 </select>
-                                <button type="button" @click="items.splice(index, 1)"
-                                        class="text-xs font-mono flex-shrink-0" style="color:var(--muted)"
-                                        onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                <button type="button" @click="items.splice(index, 1)" class="btn btn-danger btn-xs flex-shrink-0">✕</button>
                             </div>
                         </template>
                     </div>
@@ -189,9 +187,7 @@
                 <form method="POST" action="{{ route('clients.contracts.destroy', [$client, $contract]) }}"
                       onsubmit="return confirm('Remover este contrato e seus anexos?')">
                     @csrf @method('DELETE')
-                    <button type="submit"
-                            class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+                    <button type="submit" class="btn btn-danger btn-xs">
                         Remover contrato
                     </button>
                 </form>
@@ -257,16 +253,13 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-3 flex-shrink-0">
-                                <a href="{{ $attachment->url() }}" target="_blank"
-                                   class="text-xs transition-colors" style="color:var(--muted)"
-                                   onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                                <a href="{{ $attachment->url() }}" target="_blank" class="btn btn-ghost btn-xs">
                                     ↓ Baixar
                                 </a>
                                 <form method="POST" action="{{ route('contract-attachments.destroy', [$contract, $attachment]) }}"
                                       onsubmit="return confirm('Remover anexo?')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="text-xs transition-colors" style="color:var(--muted)"
-                                        onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                    <button type="submit" class="btn btn-danger btn-xs">✕</button>
                                 </form>
                             </div>
                         </div>

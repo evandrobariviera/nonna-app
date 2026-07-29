@@ -297,9 +297,7 @@
                                      style="background:var(--s3); border:1px solid var(--border2)">
                                     <span x-text="item.name" style="color:var(--text); font-weight:500"></span>
                                     <input type="hidden" :name="'observer_ids[]'" :value="item.id">
-                                    <button type="button" @click="remove(idx)"
-                                        class="text-xs transition-colors" style="color:var(--muted)"
-                                        onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                    <button type="button" @click="remove(idx)" class="btn btn-danger btn-xs">✕</button>
                                 </div>
                             </template>
                         </div>
@@ -413,16 +411,13 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3 flex-shrink-0">
-                                    <a href="{{ $attachment->url() }}" target="_blank"
-                                       class="text-xs transition-colors" style="color:var(--muted)"
-                                       onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                                    <a href="{{ $attachment->url() }}" target="_blank" class="btn btn-ghost btn-xs">
                                         ↓ Baixar
                                     </a>
                                     <form method="POST" action="{{ route('task-attachments.destroy', [$task, $attachment]) }}"
                                           onsubmit="return confirm('Remover anexo?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="text-xs transition-colors" style="color:var(--muted)"
-                                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                        <button type="submit" class="btn btn-danger btn-xs">✕</button>
                                     </form>
                                 </div>
                             </div>
@@ -454,9 +449,7 @@
                                             @endif
                                         </div>
                                     </div>
-                                    <a href="{{ $file['url'] }}" target="_blank" rel="noopener"
-                                       class="text-xs flex-shrink-0 transition-colors" style="color:var(--muted)"
-                                       onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                                    <a href="{{ $file['url'] }}" target="_blank" rel="noopener" class="btn btn-ghost btn-xs flex-shrink-0">
                                         Abrir →
                                     </a>
                                 </div>
@@ -528,16 +521,13 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3 flex-shrink-0">
-                                    <a href="{{ $attachment->url() }}" target="_blank"
-                                       class="text-xs transition-colors" style="color:var(--muted)"
-                                       onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                                    <a href="{{ $attachment->url() }}" target="_blank" class="btn btn-ghost btn-xs">
                                         ↓ Baixar
                                     </a>
                                     <form method="POST" action="{{ route('task-attachments.destroy', [$task, $attachment]) }}"
                                           onsubmit="return confirm('Remover anexo?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="text-xs transition-colors" style="color:var(--muted)"
-                                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                        <button type="submit" class="btn btn-danger btn-xs">✕</button>
                                     </form>
                                 </div>
                             </div>
@@ -757,15 +747,12 @@
                                 </div>
                                 @if($comment->user_id === auth()->id())
                                     <div class="flex items-start gap-2 flex-shrink-0" x-show="editId !== '{{ $comment->id }}'">
-                                        <button type="button" @click="editId = '{{ $comment->id }}'"
-                                            class="text-xs mt-1 transition-colors" style="color:var(--muted)"
-                                            onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">Editar</button>
+                                        <button type="button" @click="editId = '{{ $comment->id }}'" class="btn btn-ghost btn-xs">Editar</button>
                                         <form method="POST"
                                               action="{{ route('task-comments.destroy', [$task, $comment]) }}"
                                               onsubmit="return confirm('Remover comentário?')">
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="text-xs mt-1 flex-shrink-0 transition-colors" style="color:var(--muted)"
-                                                onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                            <button type="submit" class="btn btn-danger btn-xs">✕</button>
                                         </form>
                                     </div>
                                 @endif

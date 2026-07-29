@@ -105,11 +105,7 @@
                         : 'border:1px solid var(--border2); color:var(--muted)'">
                     <span x-text="showDone ? '⊙ Ocultar finalizadas' : '○ Mostrar finalizadas'"></span>
                 </button>
-                <button @click="addCol = addCol === 'backlog' ? null : 'backlog'"
-                class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest transition-colors"
-                style="border:1px solid var(--border2); color:var(--muted2)"
-                onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-                onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+                <button @click="addCol = addCol === 'backlog' ? null : 'backlog'" class="btn btn-primary btn-sm">
                     + Nova Tarefa
                 </button>
             </div>
@@ -229,9 +225,7 @@
                                     <option value="aprovador">Aprovador</option>
                                 </select>
                                 <input type="hidden" :name="'executor_ids[]'" :value="item.id">
-                                <button type="button" @click="remove(idx)"
-                                    class="ml-1" style="color:var(--muted)"
-                                    onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                <button type="button" @click="remove(idx)" class="btn btn-danger btn-xs ml-1">✕</button>
                             </div>
                         </template>
                     </div>
@@ -322,9 +316,7 @@
                                     <p class="text-xs font-semibold leading-snug flex-1" style="color:var(--text)">
                                         {{ $task->title }}
                                     </p>
-                                    <button @click="editTaskId = '{{ $task->id }}'"
-                                        class="text-xs flex-shrink-0 transition-colors" style="color:var(--muted)"
-                                        onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                                    <button @click="editTaskId = '{{ $task->id }}'" class="btn btn-ghost btn-xs flex-shrink-0">
                                         ✎
                                     </button>
                                 </div>
@@ -392,30 +384,19 @@
                                             <form method="POST" action="{{ $standalone ? route('tasks.updateStatusStandalone', [$project, $task]) : route('tasks.update-status', [$macroplan, $project, $task]) }}">
                                                 @csrf @method('PATCH')
                                                 <input type="hidden" name="status" value="{{ $targetKey }}">
-                                                <button type="submit"
-                                                    class="text-xs px-2 py-0.5 font-mono transition-colors"
-                                                    style="border:1px solid var(--border2); color:var(--muted)"
-                                                    onmouseover="this.style.borderColor='var(--{{ $targetCol['color'] === 'muted' ? 'border2' : $targetCol['color'] }})';"
-                                                    onmouseout="this.style.borderColor='var(--border2)';">
+                                                <button type="submit" class="btn btn-ghost btn-xs">
                                                     → {{ $targetCol['label'] }}
                                                 </button>
                                             </form>
                                         @endif
                                     @endforeach
-                                    <a href="{{ route('tasks.show', $task) }}"
-                                       class="text-xs px-2 py-0.5 font-mono transition-colors"
-                                       style="border:1px solid var(--border2); color:var(--muted)"
-                                       onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-                                       onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted)'">
+                                    <a href="{{ route('tasks.show', $task) }}" class="btn btn-ghost btn-xs">
                                         Abrir →
                                     </a>
                                     <form method="POST" action="{{ $standalone ? route('tasks.destroyStandalone', [$project, $task]) : route('tasks.destroy', [$macroplan, $project, $task]) }}"
                                           onsubmit="return confirm('Remover?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit"
-                                            class="text-xs px-2 py-0.5 font-mono transition-colors"
-                                            style="border:1px solid var(--border2); color:var(--muted)"
-                                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+                                        <button type="submit" class="btn btn-danger btn-xs">
                                             ✕
                                         </button>
                                     </form>
@@ -527,9 +508,7 @@
                                                         <option value="aprovador" :selected="item.role === 'aprovador'">Aprovador</option>
                                                     </select>
                                                     <input type="hidden" :name="'executor_ids[]'" :value="item.id">
-                                                    <button type="button" @click="remove(idx)"
-                                                        style="color:var(--muted)"
-                                                        onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                                    <button type="button" @click="remove(idx)" class="btn btn-danger btn-xs">✕</button>
                                                 </div>
                                             </template>
                                         </div>
@@ -555,13 +534,10 @@
                                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $task->description }}</textarea>
 
                                     <div class="flex gap-2">
-                                        <button type="submit"
-                                            class="px-3 py-1.5 text-xs font-bold font-mono uppercase text-white"
-                                            style="background:var(--purple)">
+                                        <button type="submit" class="btn btn-primary btn-xs">
                                             Salvar
                                         </button>
-                                        <button type="button" @click="editTaskId = null"
-                                            class="text-xs font-mono" style="color:var(--muted)">
+                                        <button type="button" @click="editTaskId = null" class="btn btn-ghost btn-xs">
                                             Cancelar
                                         </button>
                                     </div>

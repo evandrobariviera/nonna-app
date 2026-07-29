@@ -113,8 +113,7 @@
                         <form method="POST" action="{{ route('macroplans.attachments.destroy', [$macroplan, $attachment]) }}"
                               onsubmit="return confirm('Remover anexo?')">
                             @csrf @method('DELETE')
-                            <button type="submit" style="color:var(--muted)"
-                                onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                            <button type="submit" class="btn btn-danger btn-xs">✕</button>
                         </form>
                     </div>
                 @endforeach
@@ -125,11 +124,7 @@
                 <form method="POST" action="{{ route('macroplans.destroy', $macroplan) }}"
                       onsubmit="return confirm('Remover este planejamento e todos os projetos?')">
                     @csrf @method('DELETE')
-                    <button type="submit"
-                        class="w-full px-3 py-2 text-xs font-mono transition-colors"
-                        style="border:1px solid var(--border2); color:var(--muted)"
-                        onmouseover="this.style.borderColor='var(--red)'; this.style.color='var(--red)'"
-                        onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted)'">
+                    <button type="submit" class="btn btn-danger btn-sm w-full">
                         Remover Planejamento
                     </button>
                 </form>
@@ -338,20 +333,14 @@
                         }">
                             <div class="flex items-center justify-between mb-3">
                                 <label class="block text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Pilares de Comunicação</label>
-                                <button type="button" @click="addPilar()"
-                                    class="text-xs font-mono px-3 py-1.5 transition-colors"
-                                    style="border:1px solid var(--border2); color:var(--muted2)"
-                                    onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-                                    onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+                                <button type="button" @click="addPilar()" class="btn btn-ghost btn-xs">
                                     + Pilar
                                 </button>
                             </div>
                             <div class="space-y-3">
                                 <template x-for="(pilar, i) in pilares" :key="i">
                                     <div class="px-4 py-3 rounded relative" style="background:var(--s3); border:1px solid var(--border2)">
-                                        <button type="button" @click="removePilar(i)"
-                                            class="absolute top-2 right-2 text-xs font-mono transition-colors" style="color:var(--muted)"
-                                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                        <button type="button" @click="removePilar(i)" class="btn btn-danger btn-xs absolute top-2 right-2">✕</button>
                                         <input type="text" :name="'pilares['+i+'][nome]'" x-model="pilar.nome"
                                             placeholder="Nome do pilar (ex: Autoridade e Prova Social)"
                                             class="w-full px-3 py-1.5 text-sm font-bold focus:outline-none mb-2"
@@ -381,20 +370,14 @@
                         }">
                             <div class="flex items-center justify-between mb-3">
                                 <label class="block text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Linha do Tempo</label>
-                                <button type="button" @click="addMes()"
-                                    class="text-xs font-mono px-3 py-1.5 transition-colors"
-                                    style="border:1px solid var(--border2); color:var(--muted2)"
-                                    onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-                                    onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+                                <button type="button" @click="addMes()" class="btn btn-ghost btn-xs">
                                     + Mês
                                 </button>
                             </div>
                             <div class="grid grid-cols-2 gap-3">
                                 <template x-for="(mesItem, i) in meses" :key="i">
                                     <div class="px-4 py-3 rounded relative" style="background:var(--s3); border:1px solid var(--border2)">
-                                        <button type="button" @click="removeMes(i)"
-                                            class="absolute top-2 right-2 text-xs font-mono transition-colors" style="color:var(--muted)"
-                                            onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                        <button type="button" @click="removeMes(i)" class="btn btn-danger btn-xs absolute top-2 right-2">✕</button>
                                         <input type="text" :name="'linha_tempo['+i+'][mes]'" x-model="mesItem.mes"
                                             placeholder="Ex: Julho"
                                             class="w-full px-3 py-1.5 text-sm font-bold focus:outline-none mb-2"
@@ -414,13 +397,10 @@
                                                     class="flex-1 px-3 py-1.5 text-xs focus:outline-none"
                                                     style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"
                                                     onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
-                                                <button type="button" @click="removeItem(i, j)"
-                                                    class="text-xs font-mono flex-shrink-0" style="color:var(--muted)"
-                                                    onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+                                                <button type="button" @click="removeItem(i, j)" class="btn btn-danger btn-xs flex-shrink-0">✕</button>
                                             </div>
                                         </template>
-                                        <button type="button" @click="addItem(i)"
-                                            class="text-xs font-mono" style="color:var(--purple)">
+                                        <button type="button" @click="addItem(i)" class="btn btn-ghost btn-xs">
                                             + Item
                                         </button>
                                     </div>
@@ -466,11 +446,7 @@
                             <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Bloco 03</p>
                             <h2 class="text-base font-bold" style="color:var(--text)">Arquitetura de Projetos</h2>
                         </div>
-                        <button @click="addOpen = !addOpen"
-                            class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest transition-colors"
-                            style="border:1px solid var(--border2); color:var(--muted2)"
-                            onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-                            onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+                        <button @click="addOpen = !addOpen" class="btn btn-primary btn-sm">
                             + Novo Projeto
                         </button>
                     </div>
@@ -545,13 +521,10 @@
                             </div>
 
                             <div class="flex gap-3">
-                                <button type="submit"
-                                    class="px-5 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
-                                    style="background:var(--purple)">
+                                <button type="submit" class="btn btn-primary btn-sm">
                                     Adicionar Projeto
                                 </button>
-                                <button type="button" @click="addOpen = false"
-                                    class="text-xs font-mono transition-colors" style="color:var(--muted)">
+                                <button type="button" @click="addOpen = false" class="btn btn-ghost btn-sm">
                                     Cancelar
                                 </button>
                             </div>
@@ -600,17 +573,12 @@
                                             @endif
                                         </div>
                                         <div class="flex items-center gap-3 flex-shrink-0">
-                                            <a href="{{ route('macroplans.projects.show', [$macroplan, $project]) }}"
-                                               class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                                               onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">Ver →</a>
-                                            <button type="button" @click="editId = '{{ $project->id }}'"
-                                                class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                                                onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">Editar</button>
+                                            <a href="{{ route('macroplans.projects.show', [$macroplan, $project]) }}" class="btn btn-ghost btn-xs">Ver →</a>
+                                            <button type="button" @click="editId = '{{ $project->id }}'" class="btn btn-ghost btn-xs">Editar</button>
                                             <form method="POST" action="{{ route('macroplans.projects.destroy', [$macroplan, $project]) }}"
                                                   onsubmit="return confirm('Remover projeto {{ addslashes($project->title) }}?')">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" class="text-xs font-mono transition-colors" style="color:var(--muted)"
-                                                    onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Remover</button>
+                                                <button type="submit" class="btn btn-danger btn-xs">Remover</button>
                                             </form>
                                         </div>
                                     </div>
@@ -1141,13 +1109,10 @@
                                         @endif
 
                                         <div class="flex gap-3">
-                                            <button type="submit"
-                                                class="px-5 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
-                                                style="background:var(--purple)">
+                                            <button type="submit" class="btn btn-primary btn-sm">
                                                 Salvar Projeto
                                             </button>
-                                            <button type="button" @click="editId = null"
-                                                class="text-xs font-mono transition-colors" style="color:var(--muted)">
+                                            <button type="button" @click="editId = null" class="btn btn-ghost btn-sm">
                                                 Cancelar
                                             </button>
                                         </div>

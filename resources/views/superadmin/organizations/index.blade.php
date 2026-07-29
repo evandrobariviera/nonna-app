@@ -66,11 +66,7 @@
                             {{ $org->created_at->format('d/m/Y') }}
                         </td>
                         <td class="px-5 py-3.5 text-right">
-                            <a href="{{ route('superadmin.organizations.edit', $org) }}"
-                               class="text-xs font-semibold transition-colors"
-                               style="color: var(--muted)"
-                               onmouseover="this.style.color='var(--purple)'"
-                               onmouseout="this.style.color='var(--muted)'">
+                            <a href="{{ route('superadmin.organizations.edit', $org) }}" class="btn btn-ghost btn-xs">
                                 Editar
                             </a>
                         </td>

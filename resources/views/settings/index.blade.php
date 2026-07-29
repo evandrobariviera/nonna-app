@@ -317,26 +317,16 @@
                             @endif
 
                             <div class="flex items-center gap-2 pt-1 border-t" style="border-color:var(--border2)">
-                                <button type="button"
-                                        @click="open({{ $integration->toJson() }})"
-                                        class="text-xs font-semibold transition-colors"
-                                        style="color:var(--muted)"
-                                        onmouseover="this.style.color='var(--purple)'"
-                                        onmouseout="this.style.color='var(--muted)'">
+                                <button type="button" @click="open({{ $integration->toJson() }})" class="btn btn-ghost btn-xs">
                                     Editar
                                 </button>
                                 {{-- credentials nunca vem no toJson() (hidden no model) - segredo nunca chega ao browser --}}
-                                <span style="color:var(--border2)">·</span>
                                 <form method="POST"
                                       action="{{ route('settings.integrations.destroy', $integration) }}"
                                       onsubmit="return confirm('Remover esta integração?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit"
-                                            class="text-xs font-semibold transition-colors"
-                                            style="color:var(--muted)"
-                                            onmouseover="this.style.color='var(--red)'"
-                                            onmouseout="this.style.color='var(--muted)'">
+                                    <button type="submit" class="btn btn-danger btn-xs">
                                         Remover
                                     </button>
                                 </form>
@@ -611,27 +601,19 @@
                                 </td>
                                 <td class="px-5 py-3.5">
                                     @if(!$isOrgOwner)
-                                        <div class="flex items-center gap-3 justify-end">
+                                        <div class="flex items-center gap-2 justify-end">
                                             <button type="button"
                                                     @click="open({{ json_encode(['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'role' => $role, 'function_roles' => $member->pivot->function_roles ?? [], 'avatar_url' => $member->avatarUrl()]) }})"
-                                                    class="text-xs font-semibold transition-colors"
-                                                    style="color:var(--muted)"
-                                                    onmouseover="this.style.color='var(--purple)'"
-                                                    onmouseout="this.style.color='var(--muted)'">
+                                                    class="btn btn-ghost btn-xs">
                                                 Editar
                                             </button>
                                             @if(!$isSelf)
-                                                <span style="color:var(--border2)">·</span>
                                                 <form method="POST"
                                                       action="{{ route('settings.members.destroy', $member) }}"
                                                       onsubmit="return confirm('Remover {{ $member->name }} da organização?')">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit"
-                                                            class="text-xs font-semibold transition-colors"
-                                                            style="color:var(--muted)"
-                                                            onmouseover="this.style.color='var(--red)'"
-                                                            onmouseout="this.style.color='var(--muted)'">
+                                                    <button type="submit" class="btn btn-danger btn-xs">
                                                         Remover
                                                     </button>
                                                 </form>
@@ -809,26 +791,18 @@
                                     {{ $sector->users->pluck('name')->implode(', ') ?: '— nenhum membro alocado —' }}
                                 </td>
                                 <td class="px-5 py-3.5">
-                                    <div class="flex items-center gap-3 justify-end">
+                                    <div class="flex items-center gap-2 justify-end">
                                         <button type="button"
                                                 @click="open({{ json_encode(['id' => $sector->id, 'name' => $sector->name, 'user_ids' => $sector->users->pluck('id')->all()]) }})"
-                                                class="text-xs font-semibold transition-colors"
-                                                style="color:var(--muted)"
-                                                onmouseover="this.style.color='var(--purple)'"
-                                                onmouseout="this.style.color='var(--muted)'">
+                                                class="btn btn-ghost btn-xs">
                                             Editar
                                         </button>
-                                        <span style="color:var(--border2)">·</span>
                                         <form method="POST"
                                               action="{{ route('settings.sectors.destroy', $sector) }}"
                                               onsubmit="return confirm('Remover o setor {{ $sector->name }}?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit"
-                                                    class="text-xs font-semibold transition-colors"
-                                                    style="color:var(--muted)"
-                                                    onmouseover="this.style.color='var(--red)'"
-                                                    onmouseout="this.style.color='var(--muted)'">
+                                            <button type="submit" class="btn btn-danger btn-xs">
                                                 Remover
                                             </button>
                                         </form>
@@ -1108,11 +1082,7 @@
                                               onsubmit="return confirm('Revogar token {{ $token->name }}?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit"
-                                                    class="text-xs font-semibold transition-colors"
-                                                    style="color:var(--muted)"
-                                                    onmouseover="this.style.color='var(--red)'"
-                                                    onmouseout="this.style.color='var(--muted)'">
+                                            <button type="submit" class="btn btn-danger btn-xs">
                                                 Revogar
                                             </button>
                                         </form>

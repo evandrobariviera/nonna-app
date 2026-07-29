@@ -24,22 +24,14 @@
             @if($diagnostic->status === 'draft')
                 <form method="POST" action="{{ route('clients.diagnostics.complete', [$client, $diagnostic]) }}">
                     @csrf
-                    <button type="submit"
-                            class="px-4 py-2 text-xs font-bold transition-colors"
-                            style="border:1px solid var(--green); color:var(--green)"
-                            onmouseover="this.style.background='rgba(52,211,153,.1)'"
-                            onmouseout="this.style.background='transparent'">
+                    <button type="submit" class="btn btn-success btn-sm">
                         Marcar Concluído
                     </button>
                 </form>
             @else
                 <form method="POST" action="{{ route('clients.diagnostics.reopen', [$client, $diagnostic]) }}">
                     @csrf
-                    <button type="submit"
-                            class="px-4 py-2 text-xs font-bold transition-colors"
-                            style="border:1px solid var(--border2); color:var(--muted2)"
-                            onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-                            onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+                    <button type="submit" class="btn btn-ghost btn-sm">
                         Reabrir Edição
                     </button>
                 </form>
@@ -558,16 +550,14 @@
                                                 @endif
                                             </div>
                                             <div class="flex items-center gap-2">
-                                                <button type="button" @click="editId = '{{ $comp->id }}'"
-                                                        class="text-xs font-mono text-[var(--muted)] hover:text-[var(--purple)] transition-colors">
+                                                <button type="button" @click="editId = '{{ $comp->id }}'" class="btn btn-ghost btn-xs">
                                                     Editar
                                                 </button>
                                                 <form method="POST"
                                                       action="{{ route('diagnostics.competitors.destroy', [$client, $diagnostic, $comp]) }}"
                                                       onsubmit="return confirm('Remover este concorrente?')">
                                                     @csrf @method('DELETE')
-                                                    <button type="submit"
-                                                            class="text-xs font-mono text-[var(--muted)] hover:text-[var(--red)] transition-colors">
+                                                    <button type="submit" class="btn btn-danger btn-xs">
                                                         Remover
                                                     </button>
                                                 </form>
@@ -772,14 +762,12 @@
                                             </p>
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <button type="button" @click="editId = '{{ $persona->id }}'"
-                                                    class="text-xs font-mono text-[var(--muted)] hover:text-[var(--purple)] transition-colors">Editar</button>
+                                            <button type="button" @click="editId = '{{ $persona->id }}'" class="btn btn-ghost btn-xs">Editar</button>
                                             <form method="POST"
                                                   action="{{ route('diagnostics.personas.destroy', [$client, $diagnostic, $persona]) }}"
                                                   onsubmit="return confirm('Remover esta persona?')">
                                                 @csrf @method('DELETE')
-                                                <button type="submit"
-                                                        class="text-xs font-mono text-[var(--muted)] hover:text-[var(--red)] transition-colors">Remover</button>
+                                                <button type="submit" class="btn btn-danger btn-xs">Remover</button>
                                             </form>
                                         </div>
                                     </div>
