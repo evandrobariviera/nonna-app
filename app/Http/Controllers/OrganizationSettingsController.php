@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AiAgent;
 use App\Models\NotificationTemplate;
+use App\Models\Sector;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -17,13 +18,14 @@ class OrganizationSettingsController extends Controller
         $members      = $org->users()->withPivot(['role', 'function_roles'])->orderBy('name')->get();
         $apiTokens    = $org->tokens()->orderByDesc('created_at')->get();
         $aiAgents     = AiAgent::where('is_active', true)->orderBy('name')->get();
+        $sectors      = Sector::with('users:id,name')->orderBy('name')->get();
 
         $notificationTemplates = NotificationTemplate::where('organization_id', $org->id)
             ->get()
             ->groupBy('type')
             ->map(fn ($group) => $group->keyBy('channel'));
 
-        return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens', 'aiAgents', 'notificationTemplates'));
+        return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens', 'aiAgents', 'notificationTemplates', 'sectors'));
     }
 
     public function createToken(Request $request): RedirectResponse

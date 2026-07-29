@@ -123,8 +123,11 @@ class Automation extends Model
         };
     }
 
-    // Verifica se esta automação deve disparar dado um gatilho e dados de mudança
-    public function matches(string $triggerType, array $changeData): bool
+    // Verifica se esta automação deve disparar dado um gatilho e dados de mudança.
+    // $entity é opcional — só é usado hoje pelo filtro extra de `destination`
+    // (status_changed), que precisa olhar o estado atual da entidade, não só
+    // o from/to do próprio changeData.
+    public function matches(string $triggerType, array $changeData, ?Model $entity = null): bool
     {
         if ($this->trigger_type !== $triggerType) {
             return false;
@@ -135,7 +138,13 @@ class Automation extends Model
         if ($triggerType === 'status_changed') {
             $fromMatch = empty($config['from']) || $config['from'] === '*' || $config['from'] === ($changeData['from'] ?? null);
             $toMatch   = empty($config['to'])   || $config['to']   === '*' || $config['to']   === ($changeData['to'] ?? null);
-            return $fromMatch && $toMatch;
+
+            $destinationMatch = true;
+            if (!empty($config['destination']) && $config['destination'] !== '*') {
+                $destinationMatch = $entity && $config['destination'] === ($entity->destination ?? null);
+            }
+
+            return $fromMatch && $toMatch && $destinationMatch;
         }
 
         if ($triggerType === 'field_updated') {

@@ -247,6 +247,11 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::patch('/insights/{insight}/status', [CampaignInsightController::class, 'updateStatus'])
         ->name('campaign-insights.update-status');
 
+    Route::get('/notificacoes', [\App\Http\Controllers\NotificationController::class, 'index'])
+        ->name('notifications.index');
+    Route::patch('/notificacoes/{notification}/status', [\App\Http\Controllers\NotificationController::class, 'updateStatus'])
+        ->name('notifications.update-status');
+
     // ── Contratos do cliente ──
     Route::post('/clientes/{client}/contratos', [ContractController::class, 'store'])
         ->name('clients.contracts.store');
@@ -559,6 +564,13 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
             ->name('settings.members.update');
         Route::delete('/configuracoes/equipe/{user}', [OrganizationMemberController::class, 'destroy'])
             ->name('settings.members.destroy');
+
+        Route::post('/configuracoes/setores', [\App\Http\Controllers\SectorController::class, 'store'])
+            ->name('settings.sectors.store');
+        Route::patch('/configuracoes/setores/{sector}', [\App\Http\Controllers\SectorController::class, 'update'])
+            ->name('settings.sectors.update');
+        Route::delete('/configuracoes/setores/{sector}', [\App\Http\Controllers\SectorController::class, 'destroy'])
+            ->name('settings.sectors.destroy');
 
         Route::post('/configuracoes/mensagens', [\App\Http\Controllers\NotificationTemplateController::class, 'update'])
             ->name('settings.notification-templates.update');

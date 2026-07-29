@@ -27,7 +27,7 @@
 
         {{-- Tabs --}}
         <div class="flex gap-1 mb-6 border-b" style="border-color:var(--border)">
-            @foreach(['geral' => 'Geral', 'integracoes' => 'Integrações', 'equipe' => 'Equipe', 'mensagens' => 'Mensagens Padrão', 'api' => 'API & Tokens'] as $key => $label)
+            @foreach(['geral' => 'Geral', 'integracoes' => 'Integrações', 'equipe' => 'Equipe', 'setores' => 'Setores', 'mensagens' => 'Mensagens Padrão', 'api' => 'API & Tokens'] as $key => $label)
                 <button @click="tab = '{{ $key }}'"
                         class="tab-btn px-4 py-2.5 text-sm font-semibold transition-colors"
                         :class="tab === '{{ $key }}'
@@ -46,6 +46,11 @@
                         <span class="ml-1 text-xs px-1.5 py-px rounded-full"
                               style="background:var(--s3); color:var(--muted)">
                             {{ $members->count() }}
+                        </span>
+                    @elseif($key === 'setores')
+                        <span class="ml-1 text-xs px-1.5 py-px rounded-full"
+                              style="background:var(--s3); color:var(--muted)">
+                            {{ $sectors->count() }}
                         </span>
                     @endif
                 </button>
@@ -743,6 +748,164 @@
                             <button type="submit"
                                     class="btn-primary px-4 py-2 text-sm rounded-lg font-semibold"
                                     x-text="editing ? 'Salvar Alterações' : 'Criar Membro'">
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- ══ TAB SETORES ══ --}}
+        <div x-show="tab === 'setores'" x-cloak
+             x-data="{
+                modal: false,
+                editing: null,
+                form: { name: '', user_ids: [] },
+                open(sector) {
+                    if (sector) {
+                        this.editing = sector;
+                        this.form = { name: sector.name, user_ids: sector.user_ids || [] };
+                    } else {
+                        this.editing = null;
+                        this.form = { name: '', user_ids: [] };
+                    }
+                    this.modal = true;
+                },
+                close() { this.modal = false; this.editing = null; }
+             }">
+
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <h2 class="text-sm font-bold" style="color:var(--text)">Setores</h2>
+                    <p class="text-xs mt-0.5 max-w-lg" style="color:var(--muted)">
+                        Grupos usados pra rotear notificação interna (ex: "quando uma tarefa com destino X for
+                        concluída, avisa o setor Y" — configurado na tela de Automações). Não tem relação com os
+                        papéis funcionais da aba Equipe.
+                    </p>
+                </div>
+                <button @click="open(null)"
+                        class="btn-primary px-4 py-2 text-sm rounded-lg font-semibold flex items-center gap-2">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                    </svg>
+                    Novo Setor
+                </button>
+            </div>
+
+            <div class="card overflow-hidden">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr style="border-bottom:1px solid var(--border); background:var(--s3)">
+                            <th class="text-left px-5 py-3 text-xs font-semibold" style="color:var(--muted)">Setor</th>
+                            <th class="text-left px-5 py-3 text-xs font-semibold" style="color:var(--muted)">Membros</th>
+                            <th class="px-5 py-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($sectors as $sector)
+                            <tr style="border-bottom:1px solid var(--border2)">
+                                <td class="px-5 py-3.5 font-semibold" style="color:var(--text)">{{ $sector->name }}</td>
+                                <td class="px-5 py-3.5 text-xs" style="color:var(--muted)">
+                                    {{ $sector->users->pluck('name')->implode(', ') ?: '— nenhum membro alocado —' }}
+                                </td>
+                                <td class="px-5 py-3.5">
+                                    <div class="flex items-center gap-3 justify-end">
+                                        <button type="button"
+                                                @click="open({{ json_encode(['id' => $sector->id, 'name' => $sector->name, 'user_ids' => $sector->users->pluck('id')->all()]) }})"
+                                                class="text-xs font-semibold transition-colors"
+                                                style="color:var(--muted)"
+                                                onmouseover="this.style.color='var(--purple)'"
+                                                onmouseout="this.style.color='var(--muted)'">
+                                            Editar
+                                        </button>
+                                        <span style="color:var(--border2)">·</span>
+                                        <form method="POST"
+                                              action="{{ route('settings.sectors.destroy', $sector) }}"
+                                              onsubmit="return confirm('Remover o setor {{ $sector->name }}?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="text-xs font-semibold transition-colors"
+                                                    style="color:var(--muted)"
+                                                    onmouseover="this.style.color='var(--red)'"
+                                                    onmouseout="this.style.color='var(--muted)'">
+                                                Remover
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="px-5 py-8 text-center text-xs" style="color:var(--muted)">
+                                    Nenhum setor cadastrado ainda.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            {{-- Modal Novo / Editar Setor --}}
+            <div x-show="modal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                 x-transition:enter="transition duration-150"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100">
+                <div class="absolute inset-0 bg-black/60" @click="close()"></div>
+                <div class="relative w-full max-w-md rounded-xl shadow-2xl p-6"
+                     style="background:var(--s1); border:1px solid var(--border)"
+                     x-transition:enter="transition duration-150"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100">
+
+                    <h3 class="text-base font-bold mb-5" style="color:var(--text)"
+                        x-text="editing ? 'Editar Setor' : 'Novo Setor'"></h3>
+
+                    <form :action="editing
+                              ? '{{ url('configuracoes/setores') }}/' + editing.id
+                              : '{{ route('settings.sectors.store') }}'"
+                          method="POST" class="space-y-4">
+                        @csrf
+                        <input type="hidden" name="_method" value="PATCH" :disabled="!editing">
+
+                        <div>
+                            <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Nome do Setor</label>
+                            <input type="text" name="name" x-model="form.name" required
+                                   placeholder="Ex: Tráfego"
+                                   class="w-full rounded-lg border px-3 py-2 text-sm"
+                                   style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold mb-2" style="color:var(--muted)">Membros deste setor</label>
+                            <div style="display:flex; flex-wrap:wrap; gap:6px">
+                                @foreach($members as $member)
+                                    <label style="cursor:pointer; position:relative">
+                                        <input type="checkbox"
+                                               name="user_ids[]"
+                                               value="{{ $member->id }}"
+                                               x-model="form.user_ids"
+                                               style="position:absolute; opacity:0; width:0; height:0; pointer-events:none">
+                                        <span :style="form.user_ids.includes({{ $member->id }})
+                                                ? 'background:rgba(106,90,205,.12); border-color:rgba(106,90,205,.4); color:var(--purple);'
+                                                : 'background:var(--s3); border-color:var(--border2); color:var(--muted);'"
+                                              style="display:inline-block; padding:4px 12px; border-radius:100px; font-size:11px; font-weight:600; border:1px solid; transition:all .12s; user-select:none">
+                                            {{ $member->name }}
+                                        </span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-3 pt-2">
+                            <button type="button" @click="close()"
+                                    class="px-4 py-2 text-sm font-semibold rounded-lg"
+                                    style="color:var(--muted); background:var(--s3)">
+                                Cancelar
+                            </button>
+                            <button type="submit"
+                                    class="btn-primary px-4 py-2 text-sm rounded-lg font-semibold"
+                                    x-text="editing ? 'Salvar Alterações' : 'Criar Setor'">
                             </button>
                         </div>
                     </form>

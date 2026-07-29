@@ -181,6 +181,79 @@
                     </svg>
                 </button>
 
+                {{-- Notificações --}}
+                @auth
+                    @php
+                        $unreadNotifications = \App\Models\InternalNotification::where('user_id', auth()->id())
+                            ->where('status', 'novo')
+                            ->orderByDesc('generated_at')
+                            ->limit(8)
+                            ->get();
+                    @endphp
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open"
+                            class="relative flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
+                            style="color:var(--muted)"
+                            onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
+                            onmouseout="this.style.background=''; this.style.color='var(--muted)'"
+                            title="Notificações">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                            </svg>
+                            @if($unreadNotifications->count() > 0)
+                                <span class="absolute -top-0.5 -right-0.5 flex items-center justify-center rounded-full text-white"
+                                      style="background:var(--orange); font-size:9px; min-width:15px; height:15px; padding:0 3px; line-height:15px">
+                                    {{ $unreadNotifications->count() }}
+                                </span>
+                            @endif
+                        </button>
+                        <div x-show="open" @click.outside="open = false" x-cloak
+                             class="absolute right-0 mt-1 z-30"
+                             style="width:340px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.15)">
+                            <div class="px-4 py-3" style="border-bottom:1px solid var(--border2)">
+                                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted)">Notificações</p>
+                            </div>
+                            <div style="max-height:360px; overflow-y:auto">
+                                @forelse($unreadNotifications as $n)
+                                    <div class="px-4 py-3 flex flex-col gap-1.5" style="border-bottom:1px solid var(--border2)">
+                                        <a href="{{ $n->link ?? '#' }}" class="text-sm font-semibold" style="color:var(--text)">{{ $n->title }}</a>
+                                        @if($n->body)
+                                            <p class="text-xs" style="color:var(--muted2); line-height:1.5">{{ $n->body }}</p>
+                                        @endif
+                                        <div class="flex items-center gap-3 mt-0.5">
+                                            <form method="POST" action="{{ route('notifications.update-status', $n) }}">
+                                                @csrf @method('PATCH')
+                                                <input type="hidden" name="status" value="lido">
+                                                <button type="submit" class="text-xs font-mono" style="color:var(--muted)"
+                                                        onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                                                    Marcar como lido
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ route('notifications.update-status', $n) }}">
+                                                @csrf @method('PATCH')
+                                                <input type="hidden" name="status" value="resolvido">
+                                                <button type="submit" class="text-xs font-mono" style="color:var(--green)">
+                                                    Resolver
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="px-4 py-8 text-center">
+                                        <p class="text-xs" style="color:var(--muted)">Nenhuma notificação nova.</p>
+                                    </div>
+                                @endforelse
+                            </div>
+                            <a href="{{ route('notifications.index') }}"
+                               class="block px-4 py-2.5 text-center text-xs font-mono transition-colors"
+                               style="color:var(--purple); border-top:1px solid var(--border2)">
+                                Ver todas →
+                            </a>
+                        </div>
+                    </div>
+                @endauth
+
                 {{-- Badge ambiente --}}
                 <span class="badge badge-purple">
                     Nonna OS

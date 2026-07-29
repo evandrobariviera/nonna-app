@@ -25,7 +25,7 @@ class AutomationEngine
             ->get();
 
         foreach ($automations as $automation) {
-            if ($automation->matches($triggerType, $changeData)) {
+            if ($automation->matches($triggerType, $changeData, $entity)) {
                 AutomationJob::dispatch($automation, $entityType, $entity->getKey(), $changeData);
             }
         }

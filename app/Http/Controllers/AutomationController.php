@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Automation;
 use App\Models\AiAgent;
+use App\Models\Sector;
 use Illuminate\Http\Request;
 
 class AutomationController extends Controller
@@ -29,6 +30,7 @@ class AutomationController extends Controller
             'actionTypes'  => Automation::$actionTypes,
             'agents'       => $agents,
             'taskStatuses' => \App\Models\Task::$statuses,
+            'sectors'      => Sector::orderBy('name')->get(),
         ]);
     }
 
@@ -75,6 +77,7 @@ class AutomationController extends Controller
             'actionTypes'  => Automation::$actionTypes,
             'agents'       => $agents,
             'taskStatuses' => \App\Models\Task::$statuses,
+            'sectors'      => Sector::orderBy('name')->get(),
         ]);
     }
 

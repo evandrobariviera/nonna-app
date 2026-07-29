@@ -94,6 +94,17 @@
                                 </select>
                             </div>
                         </div>
+                        <div x-show="entityType === 'task'" x-cloak class="mt-3">
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">SÓ SE O DESTINO DA TAREFA FOR (OPCIONAL)</label>
+                            <select name="trigger_config[destination]"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                <option value="*" {{ ($automation->trigger_config['destination'] ?? '*') === '*' ? 'selected' : '' }}>Qualquer destino</option>
+                                @foreach(\App\Models\Task::$destinations as $value => $label)
+                                    <option value="{{ $value }}" {{ ($automation->trigger_config['destination'] ?? '') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
 
                     <div x-show="triggerType === 'field_updated'" x-cloak>
@@ -175,11 +186,22 @@
                     <div x-show="actionType === 'send_notification'" x-cloak class="grid gap-3">
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">NOTIFICAR QUEM</label>
-                            <select name="action_config[to]"
+                            <select name="action_config[to]" x-model="notifyTo"
                                     class="w-full px-3 py-2.5 text-sm focus:outline-none"
                                     style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                                @foreach(['executor' => 'Executor', 'creator' => 'Criador', 'all' => 'Todos'] as $v => $l)
+                                @foreach(['executor' => 'Executor', 'creator' => 'Criador', 'all' => 'Todos', 'sector' => 'Um setor'] as $v => $l)
                                     <option value="{{ $v }}" {{ ($automation->action_config['to'] ?? '') === $v ? 'selected' : '' }}>{{ $l }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div x-show="notifyTo === 'sector'" x-cloak>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">QUAL SETOR *</label>
+                            <select name="action_config[sector_id]"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                <option value="">Selecione...</option>
+                                @foreach($sectors as $sector)
+                                    <option value="{{ $sector->id }}" {{ ($automation->action_config['sector_id'] ?? '') === $sector->id ? 'selected' : '' }}>{{ $sector->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -228,6 +250,7 @@ function automationBuilder() {
         entityType: '{{ old('entity_type', $automation->entity_type) }}',
         triggerType: '{{ old('trigger_type', $automation->trigger_type) }}',
         actionType: '{{ old('action_type', $automation->action_type) }}',
+        notifyTo: '{{ old('action_config.to', $automation->action_config['to'] ?? 'executor') }}',
     }
 }
 </script>

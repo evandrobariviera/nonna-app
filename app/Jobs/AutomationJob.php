@@ -8,10 +8,13 @@ use App\Models\Task;
 use App\Models\Project;
 use App\Models\AdCampaign;
 use App\Models\AiAgent;
+use App\Models\Sector;
 use App\Services\AiService;
 use App\Services\ContextResolver;
+use App\Services\NotificationService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -55,13 +58,13 @@ class AutomationJob implements ShouldQueue
                 'status'         => 'success',
                 'input_snapshot' => $context,
                 'output'         => $output,
-                'duration_ms'    => now()->diffInMilliseconds($startedAt),
+                'duration_ms'    => (int) round(abs(now()->diffInMilliseconds($startedAt))),
             ]);
         } catch (\Throwable $e) {
             $log->update([
                 'status'        => 'failed',
                 'error_message' => $e->getMessage(),
-                'duration_ms'   => now()->diffInMilliseconds($startedAt),
+                'duration_ms'   => (int) round(abs(now()->diffInMilliseconds($startedAt))),
             ]);
 
             Log::error("AutomationJob falhou [{$this->automation->name}]", [
@@ -82,7 +85,7 @@ class AutomationJob implements ShouldQueue
             'run_ai_agent'      => $this->runAiAgent($config, $context),
             'send_webhook'      => $this->sendWebhook($config, $context, $entity),
             'update_field'      => $this->updateField($config, $entity),
-            'send_notification' => $this->sendNotification($config, $entity),
+            'send_notification' => $this->sendNotification($config, $entity, $context),
             default             => throw new \RuntimeException("Tipo de ação desconhecido: {$this->automation->action_type}"),
         };
     }
@@ -129,18 +132,75 @@ class AutomationJob implements ShouldQueue
         return "Campo '{$field}' atualizado para '{$value}'.";
     }
 
-    private function sendNotification(array $config, mixed $entity): string
+    private function sendNotification(array $config, mixed $entity, array $context): string
     {
-        // Implementação futura: integrar com sistema de notificações
-        $to      = $config['to'] ?? 'creator';
-        $message = $config['message'] ?? 'Automação executada.';
+        $to = $config['to'] ?? 'creator';
 
-        Log::info("Notificação via automação [{$this->automation->name}]: {$message}", [
-            'to'        => $to,
-            'entity_id' => $this->entityId,
-        ]);
+        $recipients = $this->resolveRecipients($to, $config, $entity);
+        if ($recipients->isEmpty()) {
+            return "Nenhum destinatário resolvido pra '{$to}' — notificação não criada.";
+        }
 
-        return "Notificação enviada para '{$to}': {$message}";
+        $message = $this->interpolate($config['message'] ?? 'Automação executada.', $context);
+        $title   = $context['task_title'] ?? $context['campaign_name'] ?? $context['project_name'] ?? $this->automation->name;
+        $link    = $this->resolveLink($entity);
+
+        app(NotificationService::class)->notifyUsers(
+            $recipients,
+            'automation',
+            $title,
+            $message,
+            $link,
+            $entity instanceof \Illuminate\Database\Eloquent\Model ? $entity : null
+        );
+
+        return "Notificação criada pra " . $recipients->count() . " usuário(s) ('{$to}'): {$message}";
+    }
+
+    /**
+     * @return Collection<int, \App\Models\User>
+     */
+    private function resolveRecipients(string $to, array $config, mixed $entity): Collection
+    {
+        if ($to === 'sector') {
+            $sector = !empty($config['sector_id']) ? Sector::find($config['sector_id']) : null;
+            return $sector ? $sector->users : collect();
+        }
+
+        if (!$entity instanceof Task) {
+            // Executor/criador/envolvidos só existem pra Tarefa hoje — outras
+            // entidades (Projeto/Campanha) só suportam notificação por setor.
+            return collect();
+        }
+
+        return match ($to) {
+            // creator() pode devolver um Contact (chamado aberto por alguém de
+            // fora) — só faz sentido notificar internamente quando for User.
+            'executor' => collect([$entity->executor])->filter(),
+            'creator'  => collect([$entity->creator()])->filter(fn ($c) => $c instanceof \App\Models\User),
+            'all'      => $entity->executors->concat($entity->responsibles)->concat($entity->observers),
+            default    => collect(),
+        };
+    }
+
+    private function resolveLink(mixed $entity): ?string
+    {
+        return match (true) {
+            $entity instanceof Task => route('tasks.show', $entity),
+            default                  => null,
+        };
+    }
+
+    private function interpolate(string $message, array $context): string
+    {
+        $replacements = [];
+        foreach ($context as $key => $value) {
+            if (is_scalar($value) || $value === null) {
+                $replacements['{' . $key . '}'] = (string) $value;
+            }
+        }
+
+        return strtr($message, $replacements);
     }
 
     private function resolveEntity(): mixed
