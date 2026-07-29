@@ -1,8 +1,8 @@
 <x-portal-layout>
-    <x-slot name="title">Diagnóstico de Atendimento</x-slot>
+    <x-slot name="title">Atendimento Assistido</x-slot>
 
     <div class="mb-8">
-        <h1 class="text-2xl font-black" style="color: var(--text)">Diagnóstico de Atendimento</h1>
+        <h1 class="text-2xl font-black" style="color: var(--text)">Atendimento Assistido</h1>
         <p class="text-sm mt-1" style="color: var(--muted)">
             Análise periódica das conversas de atendimento via WhatsApp — {{ $client->company_name }}.
         </p>

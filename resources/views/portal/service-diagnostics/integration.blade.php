@@ -30,7 +30,7 @@
 @endphp
 
 <x-portal-layout>
-    <x-slot name="title">Diagnóstico de Atendimento · {{ $integration->label }}</x-slot>
+    <x-slot name="title">Atendimento Assistido · {{ $integration->label }}</x-slot>
 
     <div class="mb-6">
         <a href="{{ route('portal.service-diagnostics.index') }}" class="text-xs" style="color:var(--muted)">← Voltar</a>

@@ -330,7 +330,7 @@
         </a>
         <a href="{{ route('service-diagnostics.index') }}"
            class="nav-sub-item {{ request()->routeIs('service-diagnostics.*') ? 'active' : '' }}">
-            Diagnóstico de Atendimento
+            Atendimento Assistido
         </a>
         <a href="{{ route('automations.index') }}"
            class="nav-sub-item {{ request()->routeIs('automations.*') ? 'active' : '' }}">

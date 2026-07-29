@@ -9,7 +9,7 @@
 @endphp
 
 <x-portal-layout>
-    <x-slot name="title">Diagnóstico de Atendimento · Versão {{ $diagnostic->version }}</x-slot>
+    <x-slot name="title">Atendimento Assistido · Versão {{ $diagnostic->version }}</x-slot>
 
     <div class="mb-6">
         <a href="{{ route('portal.service-diagnostics.integration', $integration) }}" class="text-xs" style="color:var(--muted)">← Voltar ao histórico</a>

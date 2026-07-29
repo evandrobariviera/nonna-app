@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <span class="text-sm font-semibold" style="color:var(--text)">Diagnóstico de Atendimento</span>
+        <span class="text-sm font-semibold" style="color:var(--text)">Atendimento Assistido</span>
     </x-slot>
 
     <div style="max-width:960px">

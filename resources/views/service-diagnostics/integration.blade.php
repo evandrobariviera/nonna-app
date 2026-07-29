@@ -38,7 +38,7 @@
 <x-app-layout>
     <x-slot name="header">
         <span class="text-sm font-semibold" style="color:var(--text)">
-            <a href="{{ route('service-diagnostics.index') }}" style="color:var(--muted)">Diagnóstico de Atendimento</a>
+            <a href="{{ route('service-diagnostics.index') }}" style="color:var(--muted)">Atendimento Assistido</a>
             <span style="color:var(--muted)">/</span>
             {{ $integration->client->company_name }} · {{ $integration->label }}
         </span>

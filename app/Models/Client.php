@@ -273,7 +273,7 @@ class Client extends Model
             'contatos vinculados'          => $this->contacts()->count(),
             'integrações de atendimento'   => $this->integrations()->count(),
             'conversas de atendimento'     => $this->serviceConversations()->count(),
-            'diagnósticos de atendimento'  => $this->serviceDiagnostics()->count(),
+            'diagnósticos de atendimento assistido' => $this->serviceDiagnostics()->count(),
             'links salvos'                 => $this->links()->count(),
             'onboarding'                   => $this->onboarding ? 1 : 0,
         ];

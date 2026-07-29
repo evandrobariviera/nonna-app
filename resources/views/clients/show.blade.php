@@ -1753,7 +1753,7 @@
             </div>
 
             <p class="text-xs text-[var(--muted2)] mb-4 max-w-2xl">
-                Números de WhatsApp (via uazapi) alocados a este cliente para o Diagnóstico de Atendimento.
+                Números de WhatsApp (via uazapi) alocados a este cliente para o Atendimento Assistido.
                 Só mensagens de números cadastrados aqui são aceitas pelo webhook de ingestão.
             </p>
 
@@ -1857,7 +1857,7 @@
                 <div class="tab-placeholder">
                     <div class="tab-placeholder-icon">📱</div>
                     <div class="tab-placeholder-title">Nenhum número de atendimento cadastrado</div>
-                    <div class="tab-placeholder-desc">Conecte um número de WhatsApp (uazapi) para começar a alimentar o Diagnóstico de Atendimento deste cliente.</div>
+                    <div class="tab-placeholder-desc">Conecte um número de WhatsApp (uazapi) para começar a alimentar o Atendimento Assistido deste cliente.</div>
                 </div>
             @else
                 <div class="card">
