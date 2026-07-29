@@ -57,8 +57,17 @@ class CampaignInsightService
                 ->get();
 
             foreach ($campaigns as $campaign) {
+                // Só gera diagnóstico de IA no dia em que a campanha entra em
+                // atraso de otimização — enquanto ela permanece atrasada sem
+                // ação, ou enquanto ainda está dentro do prazo, não reprocessa.
+                if (!$campaign->isDueForInsightCheck()) {
+                    continue;
+                }
+
                 $created = array_merge($created, $this->checkCampaign($client, $campaign));
                 $created = array_merge($created, $this->checkAdsetsAndAds($client, $campaign));
+
+                $campaign->update(['last_insight_checked_at' => now()]);
             }
         }
 

@@ -19,7 +19,7 @@ class AdCampaign extends Model
         'objective', 'start_date', 'end_date',
         'raw_data', 'last_synced_at',
         'management_status', 'management_situation', 'optimization_tier', 'last_optimized_at',
-        'target_cost_per_result', 'target_roas', 'optimization_locked_reason',
+        'last_insight_checked_at', 'target_cost_per_result', 'target_roas', 'optimization_locked_reason',
     ];
 
     protected $casts = [
@@ -28,6 +28,7 @@ class AdCampaign extends Model
         'end_date'         => 'date',
         'last_synced_at'   => 'datetime',
         'last_optimized_at' => 'datetime',
+        'last_insight_checked_at' => 'datetime',
         'target_cost_per_result' => 'decimal:2',
         'target_roas'            => 'decimal:2',
     ];
@@ -195,5 +196,26 @@ class AdCampaign extends Model
         }
 
         return $this->nextOptimizationDueAt()->isPast();
+    }
+
+    /**
+     * Verdadeiro só no ciclo em que a campanha entrou em atraso de otimização
+     * e ainda não recebeu a checagem de insight desse ciclo — usado pra gerar
+     * o diagnóstico de IA uma única vez por atraso, não todo dia enquanto a
+     * campanha permanece parada esperando otimização.
+     */
+    public function isDueForInsightCheck(): bool
+    {
+        if (!$this->isOptimizationOverdue()) {
+            return false;
+        }
+
+        $cycleStart = $this->last_optimized_at ?? $this->created_at;
+
+        if ($cycleStart && $this->last_insight_checked_at?->gte($cycleStart)) {
+            return false;
+        }
+
+        return true;
     }
 }
