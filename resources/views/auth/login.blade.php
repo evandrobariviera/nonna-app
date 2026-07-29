@@ -1,6 +1,4 @@
 <x-guest-layout>
-    <x-slot name="title">Entrar — {{ config('app.name', 'Nonna OS') }}</x-slot>
-
     <div class="mb-8">
         <h2 class="text-2xl font-black mb-1" style="color: var(--text)">Bem-vindo de volta</h2>
         <p class="text-sm" style="color: var(--muted)">Entre com suas credenciais para continuar</p>

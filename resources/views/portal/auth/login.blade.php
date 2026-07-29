@@ -1,6 +1,4 @@
 <x-guest-layout>
-    <x-slot name="title">Portal do Cliente — {{ config('app.name', 'Nonna OS') }}</x-slot>
-
     <div class="mb-8">
         <h2 class="text-2xl font-black mb-1" style="color: var(--text)">Portal do Cliente</h2>
         <p class="text-sm" style="color: var(--muted)">Entre com suas credenciais para acompanhar seus projetos</p>

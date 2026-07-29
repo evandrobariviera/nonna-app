@@ -9,7 +9,7 @@
     <link rel="icon" href="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/FAVICON-300x300.png" sizes="192x192">
     <link rel="apple-touch-icon" href="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/FAVICON-300x300.png">
 
-    <title>{{ $title ?? config('app.name', 'Nonna OS') }}</title>
+    <title>{{ config('app.name', 'Nonna Agência Digital — Do posicionamento à conversão!') }}</title>
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=syne:700,800,900&display=swap" rel="stylesheet" />
@@ -96,7 +96,7 @@
                 <div style="flex:1; display:flex; flex-direction:column; justify-content:center">
                     <div style="font-size:11px; font-weight:700; text-transform:uppercase;
                                 letter-spacing:.14em; color:#FF8C00; margin-bottom:20px">
-                        Sistema Operacional
+                        Do posicionamento à conversão
                     </div>
                     <h1 style="font-family:'Syne',sans-serif; font-size:clamp(2rem,2.6vw,3rem);
                                font-weight:900; color:#fff; letter-spacing:-.02em;
@@ -106,7 +106,7 @@
                     </h1>
                     <p style="color:rgba(255,255,255,.38); font-size:13px; line-height:1.7;
                                max-width:280px; margin:0">
-                        Diagnósticos, macroplanejamentos, projetos e tarefas — integrados ao ClickUp via n8n.
+                        Diagnósticos estratégicos, macroplanejamentos e projetos multidisciplinares — centralizados em um único sistema, do brief à entrega.
                     </p>
                 </div>
 

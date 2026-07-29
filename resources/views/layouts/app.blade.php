@@ -20,7 +20,7 @@
     <link rel="icon" href="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/FAVICON-300x300.png" sizes="192x192">
     <link rel="apple-touch-icon" href="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/FAVICON-300x300.png">
 
-    <title>{{ config('app.name', 'Nonna OS') }}</title>
+    <title>{{ config('app.name', 'Nonna Agência Digital — Do posicionamento à conversão!') }}</title>
 
     {{-- Flash prevention: aplica dark antes do Alpine inicializar --}}
     <script>if(localStorage.getItem('nonna-theme')==='dark')document.documentElement.classList.add('dark')</script>
