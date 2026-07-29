@@ -122,7 +122,13 @@ class ContextResolver
             ->get();
 
         if ($logs->isEmpty()) {
-            return 'Nenhuma otimização ou comentário registrado nos últimos 14 dias.';
+            // Deixa explícito que ausência de registro não é uma decisão
+            // deliberada da equipe — sem essa ressalva, a IA já interpretou
+            // silêncio como "a equipe avaliou e decidiu manter assim", o que
+            // é enganoso (ninguém necessariamente revisou ainda).
+            return 'Nenhuma otimização ou comentário registrado nos últimos 14 dias — '
+                . 'isso não significa que a campanha foi revisada e aprovada, apenas que não há '
+                . 'registro de nenhuma ação recente da equipe.';
         }
 
         return $logs->map(function (CampaignLog $log) {
