@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdCampaign;
+use App\Models\CampaignInsight;
+use App\Services\CampaignInsightService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -115,6 +117,21 @@ class CampaignController extends Controller
         // Por padrão só mostra quem teve veiculação de verdade no período - reduz
         // a visão. Filtro de status continua funcionando por cima disso normalmente.
         $campaigns = $campaigns->filter->had_activity_in_period->values();
+
+        // "Como está indo" — insights gerados por IA, só os kinds seguros pra
+        // mostrar ao cliente (client_summary já vem em linguagem de resultado,
+        // sem jargão), agrupados por campanha.
+        $insightsByCampaign = CampaignInsight::where('client_id', $client->id)
+            ->whereIn('kind', CampaignInsightService::CLIENT_VISIBLE_KINDS)
+            ->whereIn('status', ['novo', 'lido'])
+            ->whereNotNull('client_summary')
+            ->orderByDesc('generated_at')
+            ->get()
+            ->groupBy('ad_campaign_id');
+
+        $campaigns->each(function ($campaign) use ($insightsByCampaign) {
+            $campaign->client_insights = $insightsByCampaign->get($campaign->id, collect());
+        });
 
         // Gasto diário dos últimos 14 dias pro mini-gráfico (janela fixa, independente
         // do período selecionado acima - é só contexto visual de tendência recente).

@@ -19,6 +19,7 @@ class AdCampaign extends Model
         'objective', 'start_date', 'end_date',
         'raw_data', 'last_synced_at',
         'management_status', 'management_situation', 'optimization_tier', 'last_optimized_at',
+        'target_cost_per_result', 'target_roas', 'optimization_locked_reason',
     ];
 
     protected $casts = [
@@ -27,6 +28,8 @@ class AdCampaign extends Model
         'end_date'         => 'date',
         'last_synced_at'   => 'datetime',
         'last_optimized_at' => 'datetime',
+        'target_cost_per_result' => 'decimal:2',
+        'target_roas'            => 'decimal:2',
     ];
 
     // ── Status de gestão interna (não confundir com `status`, que é o espelho
@@ -98,6 +101,26 @@ class AdCampaign extends Model
     public function adsets(): HasMany
     {
         return $this->hasMany(AdAdset::class);
+    }
+
+    /**
+     * Benchmark em cascata: override da campanha, senão o padrão da conta
+     * (client_ad_accounts). Sem valor em nenhum nível = sem benchmark
+     * configurado (não existe padrão global sensato de custo por resultado
+     * — varia demais por objetivo/nicho).
+     */
+    public function resolveTargetCostPerResult(): ?float
+    {
+        $value = $this->target_cost_per_result ?? $this->adAccount?->target_cost_per_result;
+
+        return $value !== null ? (float) $value : null;
+    }
+
+    public function resolveTargetRoas(): ?float
+    {
+        $value = $this->target_roas ?? $this->adAccount?->target_roas;
+
+        return $value !== null ? (float) $value : null;
     }
 
     public function snapshots(): HasMany

@@ -438,6 +438,48 @@
                 </div>
             </div>
 
+            {{-- METAS DESTA CAMPANHA — override opcional do padrão da conta;
+                 vazio usa o valor herdado (mostrado como placeholder). --}}
+            <div class="card card-body">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Metas desta campanha</p>
+                <p class="text-xs mb-3" style="color:var(--muted)">
+                    Deixe em branco pra usar o padrão da conta de anúncios ({{ $campaign->adAccount?->target_cost_per_result ? 'R$ ' . number_format($campaign->adAccount->target_cost_per_result, 2, ',', '.') : '—' }} / {{ $campaign->adAccount?->target_roas ? number_format($campaign->adAccount->target_roas, 1, ',', '.') . 'x' : '—' }}).
+                </p>
+                <form method="POST" action="{{ route('campaigns.update-targets', $campaign) }}" class="flex flex-col gap-2">
+                    @csrf @method('PATCH')
+                    <div>
+                        <label class="block text-xs mb-1" style="color:var(--muted)">Custo/resultado (R$)</label>
+                        <input type="number" step="0.01" min="0" name="target_cost_per_result" value="{{ $campaign->target_cost_per_result }}"
+                               class="w-full px-3 py-2 text-sm" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    </div>
+                    <div>
+                        <label class="block text-xs mb-1" style="color:var(--muted)">ROAS (x)</label>
+                        <input type="number" step="0.1" min="0" name="target_roas" value="{{ $campaign->target_roas }}"
+                               class="w-full px-3 py-2 text-sm" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm mt-1">Salvar Metas</button>
+                </form>
+            </div>
+
+            {{-- TRAVA DE OTIMIZAÇÃO — presença de motivo = travado. Enquanto
+                 travada, a campanha não gera insight de IA nenhum. --}}
+            <div class="card card-body">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">
+                    {{ $campaign->optimization_locked_reason ? '🔒 ' : '' }}Travar Otimização
+                </p>
+                <p class="text-xs mb-3" style="color:var(--muted)">
+                    Enquanto travada, essa campanha não gera nenhum insight automático de IA — use quando houver um motivo pra equipe não mexer, mesmo com métricas fora do padrão.
+                </p>
+                <form method="POST" action="{{ route('campaigns.update-lock', $campaign) }}">
+                    @csrf @method('PATCH')
+                    <textarea name="optimization_locked_reason" rows="2" placeholder="Motivo (deixe em branco pra destravar)"
+                              class="w-full px-3 py-2 text-sm mb-2" style="background:var(--s3); border:1px solid var(--border2); color:var(--text); resize:vertical">{{ $campaign->optimization_locked_reason }}</textarea>
+                    <button type="submit" class="btn btn-sm" style="border:1px solid var(--border2); color:var(--text)">
+                        {{ $campaign->optimization_locked_reason ? 'Atualizar' : 'Travar' }}
+                    </button>
+                </form>
+            </div>
+
             {{-- COMENTÁRIO — mesmo padrão da Otimização (input acima, histórico abaixo) --}}
             <div class="card card-body">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Comentário</p>

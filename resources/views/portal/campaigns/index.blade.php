@@ -180,6 +180,15 @@
                         </div>
                     @endif
 
+                    @if($campaign->client_insights->isNotEmpty())
+                        <div class="px-6 py-3 flex flex-col gap-2" style="border-bottom: 1px solid var(--border2)">
+                            <p class="text-xs font-bold uppercase tracking-widest" style="color: var(--muted)">Como está indo</p>
+                            @foreach($campaign->client_insights as $insight)
+                                <p class="text-sm" style="color: var(--muted2); line-height: 1.6">{{ $insight->client_summary }}</p>
+                            @endforeach
+                        </div>
+                    @endif
+
                     <div class="px-6 py-4 grid grid-cols-2 sm:grid-cols-5 gap-4">
                         <div>
                             <p class="text-xs font-bold uppercase tracking-wide mb-1" style="color: var(--muted)">Investimento</p>

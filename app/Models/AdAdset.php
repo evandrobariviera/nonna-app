@@ -17,7 +17,7 @@ class AdAdset extends Model
         'organization_id', 'ad_campaign_id',
         'platform', 'external_id', 'campaign_external_id',
         'name', 'status', 'daily_budget', 'lifetime_budget',
-        'targeting', 'raw_data', 'last_synced_at',
+        'targeting', 'raw_data', 'last_synced_at', 'optimization_locked_reason',
     ];
 
     protected $casts = [

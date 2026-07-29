@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\AdCampaign;
 use App\Models\AdAdset;
 use App\Models\AdAd;
+use App\Models\CampaignLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -101,7 +102,36 @@ class ContextResolver
             'roas_last_7_days'   => $last7d['roas'] !== null ? number_format($last7d['roas'], 2, ',', '.') . 'x' : '—',
             'spend_previous_7_days' => number_format($prev7d['spend'], 2, ',', '.'),
             'cpa_previous_7_days'   => $prev7d['cpa'] !== null ? number_format($prev7d['cpa'], 2, ',', '.') : '—',
+            'historico_otimizacoes' => self::optimizationHistory($campaign),
         ]);
+    }
+
+    /**
+     * Resumo em texto dos últimos 14 dias de CampaignLog (otimizações e
+     * comentários já registrados pelo gestor) — sem isso a IA pode sugerir
+     * algo que já foi feito, porque hoje ela só vê números, não o histórico
+     * humano. Limitado às 8 entradas mais recentes pra não inflar o prompt.
+     */
+    private static function optimizationHistory(AdCampaign $campaign): string
+    {
+        $logs = $campaign->logs()
+            ->with('user')
+            ->where('created_at', '>=', now()->subDays(14))
+            ->orderByDesc('created_at')
+            ->limit(8)
+            ->get();
+
+        if ($logs->isEmpty()) {
+            return 'Nenhuma otimização ou comentário registrado nos últimos 14 dias.';
+        }
+
+        return $logs->map(function (CampaignLog $log) {
+            $label = CampaignLog::$types[$log->type]['label'] ?? $log->type;
+            $author = $log->user?->name ?? 'equipe';
+            $date = $log->created_at->format('d/m');
+
+            return "{$date} ({$author}) — {$label}: {$log->description}";
+        })->implode("\n");
     }
 
     public static function forAdset(AdAdset $adset): array

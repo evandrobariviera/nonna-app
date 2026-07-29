@@ -204,6 +204,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('campaigns.update-situation');
     Route::patch('/campanhas/{campaign}/tier', [CampaignController::class, 'updateOptimizationTier'])
         ->name('campaigns.update-tier');
+    Route::patch('/campanhas/{campaign}/metas', [CampaignController::class, 'updateTargets'])
+        ->name('campaigns.update-targets');
+    Route::patch('/campanhas/{campaign}/trava', [CampaignController::class, 'updateOptimizationLock'])
+        ->name('campaigns.update-lock');
+    Route::patch('/conjuntos/{adset}/trava', [CampaignController::class, 'updateAdsetOptimizationLock'])
+        ->name('adsets.update-lock');
     Route::post('/campanhas/{campaign}/otimizar', [CampaignController::class, 'markOptimized'])
         ->name('campaigns.mark-optimized');
 

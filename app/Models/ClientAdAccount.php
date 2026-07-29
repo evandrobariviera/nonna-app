@@ -31,6 +31,8 @@ class ClientAdAccount extends Model
         'last_billing_sent_at',
         'budget_status',
         'responsible_user_id',
+        'target_cost_per_result',
+        'target_roas',
     ];
 
     protected $casts = [
@@ -38,6 +40,8 @@ class ClientAdAccount extends Model
         'balance_synced_at'          => 'datetime',
         'budget_automation_enabled'  => 'boolean',
         'last_billing_sent_at'       => 'datetime',
+        'target_cost_per_result'     => 'decimal:2',
+        'target_roas'                => 'decimal:2',
     ];
 
     public static array $platforms = [

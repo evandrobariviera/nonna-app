@@ -27,11 +27,16 @@
             </thead>
             @foreach($campaign->adsets as $adset)
                 @php($adsetRow = $adsetStats->get($adset->external_id))
-                <tbody x-data="{ open: false }">
+                <tbody x-data="{ open: false, lockOpen: false }">
                     <tr>
-                        <td>
+                        <td class="whitespace-nowrap">
                             <button type="button" @click="open = !open" class="text-xs" style="color:var(--muted)">
                                 <span :class="open ? 'rotate-90' : ''" class="inline-block transition-transform">▶</span>
+                            </button>
+                            <button type="button" @click="lockOpen = !lockOpen" class="text-xs ml-1"
+                                    style="color:{{ $adset->optimization_locked_reason ? 'var(--orange)' : 'var(--muted)' }}"
+                                    title="{{ $adset->optimization_locked_reason ? 'Travado: ' . $adset->optimization_locked_reason : 'Travar otimização deste conjunto' }}">
+                                🔒
                             </button>
                         </td>
                         <td class="font-semibold text-[var(--text)]">{{ $adset->name }}</td>
@@ -45,6 +50,20 @@
                         </td>
                         <td class="text-xs font-mono text-[var(--muted2)]">
                             {{ ($adsetRow->roas ?? null) !== null ? number_format($adsetRow->roas, 2, ',', '.') . 'x' : '—' }}
+                        </td>
+                    </tr>
+                    <tr x-show="lockOpen" x-cloak>
+                        <td></td>
+                        <td colspan="6" class="!py-2">
+                            <form method="POST" action="{{ route('adsets.update-lock', $adset) }}" class="flex items-center gap-2">
+                                @csrf @method('PATCH')
+                                <input type="text" name="optimization_locked_reason" value="{{ $adset->optimization_locked_reason }}"
+                                       placeholder="Motivo pra travar (deixe em branco pra destravar)"
+                                       class="flex-1 px-2 py-1.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                <button type="submit" class="btn btn-xs" style="border:1px solid var(--border2); color:var(--text)">
+                                    {{ $adset->optimization_locked_reason ? 'Atualizar' : 'Travar' }}
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     <tr x-show="open" x-cloak>

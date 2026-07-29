@@ -25,6 +25,7 @@ class CampaignInsight extends Model
         'status',
         'title',
         'summary',
+        'client_summary',
         'metrics_snapshot',
         'agent_id',
         'generated_at',
@@ -47,6 +48,7 @@ class CampaignInsight extends Model
         'saldo_baixo'    => 'Saldo acabando',
         'creative_fatigue'           => 'Fadiga de criativo',
         'adset_budget_concentration' => 'Conjunto concentrando verba',
+        'cost_per_result_above_target' => 'Custo por resultado acima da meta',
     ];
 
     public static array $severities = [

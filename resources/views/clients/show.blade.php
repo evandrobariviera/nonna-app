@@ -1022,7 +1022,7 @@
         </div>
 
         {{-- TAB: CONTAS DE ANÚNCIOS --}}
-        <div x-show="tab === 'contas'" x-cloak x-data="{ addForm: false, editId: null, budgetForm: false, budgetHistory: false, billingOpenId: null }">
+        <div x-show="tab === 'contas'" x-cloak x-data="{ addForm: false, editId: null, budgetForm: false, budgetHistory: false, billingOpenId: null, metasOpenId: null }">
 
             {{-- ORÇAMENTO DE ANÚNCIOS --}}
             @php
@@ -1393,6 +1393,10 @@
                                                     Boletos ({{ $account->billingDocuments->count() }})
                                                 </button>
                                             @endif
+                                            <button type="button" @click="metasOpenId = metasOpenId === '{{ $account->id }}' ? null : '{{ $account->id }}'"
+                                                    class="text-xs font-mono text-[var(--muted)] hover:text-[var(--purple)] transition-colors">
+                                                Metas
+                                            </button>
                                             <template x-if="editId !== '{{ $account->id }}'">
                                                 <button type="button" @click="editId = '{{ $account->id }}'"
                                                         class="text-xs font-mono text-[var(--muted)] hover:text-[var(--purple)] transition-colors">
@@ -1429,6 +1433,36 @@
                                             @csrf
                                             @method('PATCH')
                                         </form>
+                                    </td>
+                                </tr>
+                                <tr x-show="metasOpenId === '{{ $account->id }}'" x-cloak>
+                                    <td colspan="10" style="background:var(--s2)">
+                                        <div class="p-4">
+                                            <h4 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-3">
+                                                Metas de Performance — {{ $account->platformLabel() }} · {{ $account->account_id }}
+                                            </h4>
+                                            <p class="text-xs mb-3" style="color:var(--muted)">
+                                                Padrão herdado por toda campanha desta conta, salvo quando a campanha define sua própria meta. Deixe em branco pra não avaliar esse critério.
+                                            </p>
+                                            <form method="POST" action="{{ route('clients.ad-accounts.update', [$client, $account]) }}"
+                                                  class="grid grid-cols-3 gap-3 items-end">
+                                                @csrf
+                                                @method('PATCH')
+                                                <div>
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Meta de custo/resultado (R$)</label>
+                                                    <input type="number" step="0.01" min="0" name="target_cost_per_result"
+                                                           value="{{ $account->target_cost_per_result }}"
+                                                           class="w-full bg-[var(--s3)] border border-[var(--border2)] text-xs font-mono text-[var(--text)] px-2 py-2 focus:outline-none focus:border-[var(--purple)]">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Meta de ROAS (x)</label>
+                                                    <input type="number" step="0.1" min="0" name="target_roas"
+                                                           value="{{ $account->target_roas }}"
+                                                           class="w-full bg-[var(--s3)] border border-[var(--border2)] text-xs font-mono text-[var(--text)] px-2 py-2 focus:outline-none focus:border-[var(--purple)]">
+                                                </div>
+                                                <button type="submit" class="btn btn-primary btn-sm">Salvar Metas</button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                                 @if($account->hasBillingTracking())

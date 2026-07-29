@@ -34,19 +34,32 @@ class ClientAdAccountController extends Controller
     {
         abort_unless($adAccount->client_id === $client->id, 403);
 
+        // "sometimes" em tudo: esse endpoint é compartilhado pelo formulário
+        // completo de edição da conta e pelo formulário separado de "Metas de
+        // Performance" (só target_cost_per_result/target_roas) — sem isso, um
+        // campo ausente do formulário de Metas seria validado como nulo e
+        // apagaria o valor salvo dos outros campos.
         $data = $request->validate([
-            'platform'        => 'required|string|max:50',
-            'platform_custom' => 'required_if:platform,outros|nullable|string|max:100',
-            'account_id'      => 'required|string|max:100',
-            'account_name'    => 'nullable|string|max:150',
-            'sheet_tab_name'  => 'nullable|string|max:150',
-            'status'          => 'required|in:ativo,pausado,suspenso',
-            'notes'           => 'nullable|string',
-            'payment_method'  => 'nullable|in:pix,cartao,boleto',
-            'balance'         => 'nullable|numeric|min:0',
+            'platform'        => 'sometimes|required|string|max:50',
+            'platform_custom' => 'sometimes|required_if:platform,outros|nullable|string|max:100',
+            'account_id'      => 'sometimes|required|string|max:100',
+            'account_name'    => 'sometimes|nullable|string|max:150',
+            'sheet_tab_name'  => 'sometimes|nullable|string|max:150',
+            'status'          => 'sometimes|required|in:ativo,pausado,suspenso',
+            'notes'           => 'sometimes|nullable|string',
+            'payment_method'  => 'sometimes|nullable|in:pix,cartao,boleto',
+            'balance'         => 'sometimes|nullable|numeric|min:0',
+            'target_cost_per_result' => 'sometimes|nullable|numeric|min:0',
+            'target_roas'            => 'sometimes|nullable|numeric|min:0',
         ]);
 
-        $data['budget_automation_enabled'] = $request->boolean('budget_automation_enabled');
+        // budget_automation_enabled é um checkbox — some do request quando
+        // desmarcado, então só reagimos a ele quando o formulário completo
+        // de edição foi de fato submetido (sinalizado pela presença de
+        // "platform", que o formulário de Metas não envia).
+        if ($request->has('platform')) {
+            $data['budget_automation_enabled'] = $request->boolean('budget_automation_enabled');
+        }
 
         // Editar o saldo na mão sempre marca a origem como manual, mesmo que
         // a última sincronização tenha vindo da API — evita que o próximo

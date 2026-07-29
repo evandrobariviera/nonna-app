@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdAdset;
 use App\Models\AdCampaign;
 use App\Models\CampaignInsight;
 use App\Models\CampaignLog;
@@ -403,6 +404,40 @@ class CampaignController extends Controller
         $campaign->update($data);
 
         return back()->with('success', 'Descrição atualizada.');
+    }
+
+    public function updateTargets(Request $request, AdCampaign $campaign)
+    {
+        $data = $request->validate([
+            'target_cost_per_result' => 'nullable|numeric|min:0',
+            'target_roas'            => 'nullable|numeric|min:0',
+        ]);
+
+        $campaign->update($data);
+
+        return back()->with('success', 'Metas da campanha atualizadas.');
+    }
+
+    public function updateOptimizationLock(Request $request, AdCampaign $campaign)
+    {
+        $data = $request->validate([
+            'optimization_locked_reason' => 'nullable|string|max:1000',
+        ]);
+
+        $campaign->update($data);
+
+        return back()->with('success', $data['optimization_locked_reason'] ? 'Otimização travada.' : 'Otimização destravada.');
+    }
+
+    public function updateAdsetOptimizationLock(Request $request, AdAdset $adset)
+    {
+        $data = $request->validate([
+            'optimization_locked_reason' => 'nullable|string|max:1000',
+        ]);
+
+        $adset->update($data);
+
+        return back()->with('success', $data['optimization_locked_reason'] ? 'Conjunto travado.' : 'Conjunto destravado.');
     }
 
     public function updateManagementStatus(Request $request, AdCampaign $campaign)

@@ -21,6 +21,19 @@ class CampaignInsightService
     private const CREATIVE_FATIGUE_CTR_WORSE_PCT = 50;
     private const CREATIVE_FATIGUE_MIN_IMPRESSIONS = 1000;
 
+    // Kinds que fazem sentido mostrar pro cliente no Portal — fica de fora
+    // creative_fatigue/adset_budget_concentration (granularidade operacional
+    // interna; a equipe já está de olho nisso, não ajuda o cliente e pode
+    // soar alarmante sem contexto).
+    public const CLIENT_VISIBLE_KINDS = [
+        'budget_overrun',
+        'budget_idle',
+        'saldo_baixo',
+        'roas_drop',
+        'cpa_spike',
+        'cost_per_result_above_target',
+    ];
+
     public function __construct(private AiService $aiService)
     {
     }
@@ -91,6 +104,13 @@ class CampaignInsightService
 
     private function checkCampaign(Client $client, AdCampaign $campaign): array
     {
+        // Campanha travada pelo gestor ("não mexe nisso") — pula toda a
+        // detecção pra ela, não só a narrativa. Ver checkAdsetsAndAds() pra
+        // trava por conjunto individual.
+        if ($campaign->optimization_locked_reason) {
+            return [];
+        }
+
         $insights = [];
 
         $last7d = ContextResolver::campaignMetrics($campaign, 7, 0);
@@ -115,22 +135,52 @@ class CampaignInsightService
             }
         }
 
-        // ROAS abaixo do ponto de equilíbrio — só faz sentido pra campanha
-        // orientada a venda; Meta não rastreia valor monetário em objetivos
-        // de mensagem/lead/engajamento, então revenue fica sempre 0 ali e
-        // dispararia falso-positivo pra praticamente toda campanha desse tipo.
-        if ($this->isSalesOriented($campaign)
-            && $last7d['roas'] !== null && $last7d['roas'] < 1.0 && $last7d['spend'] > 0
+        // ROAS abaixo da meta — só faz sentido pra campanha orientada a venda
+        // (Meta não rastreia valor monetário em objetivos de mensagem/lead,
+        // revenue fica sempre 0 ali) OU quando o gestor configurou uma meta
+        // de ROAS explícita pra essa campanha/conta — configuração explícita
+        // vale mais que o heurístico por objetivo.
+        $targetRoas = $campaign->resolveTargetRoas();
+        $roasThreshold = $targetRoas ?? 1.0;
+
+        if (($this->isSalesOriented($campaign) || $targetRoas !== null)
+            && $last7d['roas'] !== null && $last7d['roas'] < $roasThreshold && $last7d['spend'] > 0
             && !$this->hasRecentOpenInsight($client, 'roas_drop', $campaign->id)) {
             $metrics = [
                 'roas_last_7_days'  => $last7d['roas'],
+                'roas_target'       => $roasThreshold,
                 'spend_last_7_days' => round($last7d['spend'], 2),
             ];
             $insights[] = $this->createInsight(
                 $client, $campaign->client_ad_account_id, $campaign->id, 'roas_drop', 'atencao',
-                "ROAS da campanha \"{$campaign->name}\" abaixo de 1x",
+                "ROAS da campanha \"{$campaign->name}\" abaixo da meta de " . number_format($roasThreshold, 1, ',', '.') . 'x',
                 $metrics, $campaign
             );
+        }
+
+        // Custo por resultado acima da meta contratada — só roda se existir
+        // benchmark configurado (conta ou campanha); sem isso não há régua
+        // pra comparar. Reaproveita os mesmos limiares de severidade do CPA
+        // em alta, só que o "antes" é a meta em vez do período anterior.
+        $targetCostPerResult = $campaign->resolveTargetCostPerResult();
+        if ($targetCostPerResult !== null && $targetCostPerResult > 0
+            && $last7d['cpa'] !== null && $last7d['cpa'] > $targetCostPerResult
+            && !$this->hasRecentOpenInsight($client, 'cost_per_result_above_target', $campaign->id)) {
+            $deltaPct = (($last7d['cpa'] - $targetCostPerResult) / $targetCostPerResult) * 100;
+
+            if ($deltaPct >= self::CPA_SPIKE_ATENCAO_PCT) {
+                $severity = $deltaPct >= self::CPA_SPIKE_CRITICO_PCT ? 'critico' : 'atencao';
+                $metrics = [
+                    'cpa_last_7_days'         => round($last7d['cpa'], 2),
+                    'target_cost_per_result'  => round($targetCostPerResult, 2),
+                    'delta_pct'               => round($deltaPct, 1),
+                ];
+                $insights[] = $this->createInsight(
+                    $client, $campaign->client_ad_account_id, $campaign->id, 'cost_per_result_above_target', $severity,
+                    "Custo por resultado da campanha \"{$campaign->name}\" está " . round($deltaPct) . '% acima da meta',
+                    $metrics, $campaign
+                );
+            }
         }
 
         return $insights;
@@ -153,29 +203,44 @@ class CampaignInsightService
      */
     private function checkAdsetsAndAds(Client $client, AdCampaign $campaign): array
     {
+        // Campanha travada trava tudo dentro dela também.
+        if ($campaign->optimization_locked_reason) {
+            return [];
+        }
+
         $insights = [];
         $campaignLast7d = ContextResolver::campaignMetrics($campaign, 7, 0);
 
         $adsets = $campaign->adsets()->where('status', 'active')->get();
+        $targetRoas = $campaign->resolveTargetRoas();
+        $roasThreshold = $targetRoas ?? 1.0;
 
         foreach ($adsets as $adset) {
+            // Conjunto travado individualmente — pula concentração de verba
+            // e fadiga de criativo só dele, sem afetar os outros conjuntos
+            // da mesma campanha.
+            if ($adset->optimization_locked_reason) {
+                continue;
+            }
+
             $adsetLast7d = ContextResolver::entityMetrics($campaign->client_ad_account_id, 'adset', $adset->external_id, 7, 0);
 
             if ($campaignLast7d['spend'] > 0 && $adsetLast7d['spend'] > 0) {
                 $share = ($adsetLast7d['spend'] / $campaignLast7d['spend']) * 100;
 
-                if ($this->isSalesOriented($campaign)
+                if (($this->isSalesOriented($campaign) || $targetRoas !== null)
                     && $share >= self::ADSET_BUDGET_SHARE_ATENCAO_PCT
-                    && $adsetLast7d['roas'] !== null && $adsetLast7d['roas'] < 1.0
+                    && $adsetLast7d['roas'] !== null && $adsetLast7d['roas'] < $roasThreshold
                     && !$this->hasRecentOpenInsight($client, 'adset_budget_concentration', $campaign->id, $adset->id)) {
                     $metrics = [
                         'spend_share_pct'   => round($share, 1),
                         'spend_last_7_days' => round($adsetLast7d['spend'], 2),
                         'roas_last_7_days'  => $adsetLast7d['roas'],
+                        'roas_target'       => $roasThreshold,
                     ];
                     $insights[] = $this->createInsight(
                         $client, $campaign->client_ad_account_id, $campaign->id, 'adset_budget_concentration', 'atencao',
-                        "Conjunto \"{$adset->name}\" concentra " . round($share) . "% da verba da campanha \"{$campaign->name}\" com ROAS abaixo de 1x",
+                        "Conjunto \"{$adset->name}\" concentra " . round($share) . "% da verba da campanha \"{$campaign->name}\" com ROAS abaixo da meta de " . number_format($roasThreshold, 1, ',', '.') . 'x',
                         $metrics, $adset, $adset->id
                     );
                 }
@@ -284,6 +349,7 @@ class CampaignInsightService
             'status'               => 'novo',
             'title'                => $title,
             'summary'              => $narrative['summary'] ?? null,
+            'client_summary'       => $narrative['client_summary'] ?? null,
             'metrics_snapshot'     => $metrics,
             'agent_id'             => $narrative['agent_id'] ?? null,
             'generated_at'         => now(),
@@ -294,7 +360,9 @@ class CampaignInsightService
      * Gera a narrativa via IA se houver um agente configurado para insights de
      * campanha (Organization->settings.campaign_insights.agent_id). Degrada
      * graciosamente (retorna null) se não houver agente ou a chamada falhar —
-     * o insight ainda é criado, só sem texto explicativo.
+     * o insight ainda é criado, só sem texto explicativo. Kinds em
+     * CLIENT_VISIBLE_KINDS ganham uma segunda chamada (mesmo agente, mesmo
+     * contexto) pedindo a versão em linguagem de resultado pro Portal.
      */
     private function generateNarrative(Client $client, string $kind, array $metrics, ?Model $entity): ?array
     {
@@ -315,9 +383,10 @@ class CampaignInsightService
         $message = 'Com base nos dados acima, escreva um diagnóstico curto (2 a 3 frases) e uma recomendação '
             . 'prática em português para a equipe de tráfego pago.';
 
+        $result = ['agent_id' => $agent->id];
+
         try {
-            $summary = $this->aiService->run($agent, $message, $context, null, $client->id, 'campaign_insight');
-            return ['summary' => $summary, 'agent_id' => $agent->id];
+            $result['summary'] = $this->aiService->run($agent, $message, $context, null, $client->id, 'campaign_insight');
         } catch (\Throwable $e) {
             Log::warning('CampaignInsightService: falha ao gerar narrativa de IA', [
                 'error'     => $e->getMessage(),
@@ -326,6 +395,27 @@ class CampaignInsightService
             ]);
             return null;
         }
+
+        if (in_array($kind, self::CLIENT_VISIBLE_KINDS, true)) {
+            $clientMessage = 'Com base nos dados acima, explique em 2 a 3 frases, em português, em linguagem simples '
+                . 'e sem jargão técnico (evite termos como CPA/ROAS sem explicar, e não cite valores de conta interna), '
+                . 'o que está acontecendo com essa campanha e o que a equipe está fazendo a respeito — pro cliente '
+                . 'responsável por ela, focando em resultado e contexto.';
+
+            try {
+                $result['client_summary'] = $this->aiService->run($agent, $clientMessage, $context, null, $client->id, 'campaign_insight');
+            } catch (\Throwable $e) {
+                Log::warning('CampaignInsightService: falha ao gerar narrativa de cliente', [
+                    'error'     => $e->getMessage(),
+                    'kind'      => $kind,
+                    'client_id' => $client->id,
+                ]);
+                // Sem narrativa de cliente não impede o insight de ser criado
+                // (mesma degradação graciosa da narrativa interna).
+            }
+        }
+
+        return $result;
     }
 
     private function resolveAgent(): ?AiAgent
