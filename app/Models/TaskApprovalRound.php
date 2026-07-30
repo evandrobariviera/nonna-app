@@ -18,7 +18,7 @@ class TaskApprovalRound extends Model
 
     protected $fillable = [
         'task_id', 'round_number', 'submitted_by', 'submitted_at', 'sent_at',
-        'status', 'notes', 'resolved_at',
+        'status', 'notes', 'resolved_at', 'handled_at',
         'portal_decided_by', 'portal_decided_by_contact_id', 'portal_decision', 'portal_comment', 'portal_decided_at',
     ];
 
@@ -26,6 +26,7 @@ class TaskApprovalRound extends Model
         'submitted_at'      => 'datetime',
         'sent_at'           => 'datetime',
         'resolved_at'       => 'datetime',
+        'handled_at'        => 'datetime',
         'portal_decided_at' => 'datetime',
     ];
 
@@ -71,6 +72,14 @@ class TaskApprovalRound extends Model
     public function isResolved(): bool
     {
         return in_array($this->status, ['approved', 'changes_requested', 'cancelled']);
+    }
+
+    // "Tratada" pela agência (ex: já roteou a tarefa de volta pra Sprint depois de
+    // um ajuste pedido) — só afeta visibilidade na Central de Aprovações, não é
+    // um novo status da rodada. Ver migration 2026_07_30_000007.
+    public function isHandled(): bool
+    {
+        return $this->handled_at !== null;
     }
 
     public function statusLabel(): string

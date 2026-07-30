@@ -426,6 +426,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('approvals.resend');
     Route::post('/aprovacoes/tokens/{token}/reenviar', [\App\Http\Controllers\ApprovalDashboardController::class, 'resendToken'])
         ->name('approvals.resend-token');
+    Route::patch('/aprovacoes/{round}/tarefa-status', [\App\Http\Controllers\ApprovalDashboardController::class, 'updateTaskStatus'])
+        ->name('approvals.update-task-status');
 
     // ── Dashboard global de projetos ──
     Route::get('/projetos', [ProjectController::class, 'dashboard'])

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\Task;
 use App\Models\TaskApprovalRound;
 use App\Models\TaskApprovalToken;
 use App\Services\TaskApprovalService;
@@ -17,7 +18,7 @@ class ApprovalDashboardController extends Controller
         $stats = [
             'awaiting_send'  => TaskApprovalRound::where('status', 'pending')->whereNull('sent_at')->count(),
             'pending'        => TaskApprovalRound::where('status', 'pending')->whereNotNull('sent_at')->count(),
-            'changes'        => TaskApprovalRound::where('status', 'changes_requested')->count(),
+            'changes'        => TaskApprovalRound::where('status', 'changes_requested')->whereNull('handled_at')->count(),
             'approved_today' => TaskApprovalRound::where('status', 'approved')
                 ->whereDate('resolved_at', today())->count(),
             'approved_total' => TaskApprovalRound::where('status', 'approved')->count(),
@@ -50,6 +51,11 @@ class ApprovalDashboardController extends Controller
     {
         $query = TaskApprovalRound::with(['task.client', 'tokens.contact', 'submittedBy'])
             ->whereHas('task')
+            // Rodada com ajuste pedido some daqui assim que a agência "trata" ela
+            // (roteia a tarefa de volta via o quick-select de status/situação) —
+            // continua intacta no histórico da tarefa/portal, só não polui mais
+            // a Central de Aprovações.
+            ->where(fn ($q) => $q->where('status', '!=', 'changes_requested')->orWhereNull('handled_at'))
             ->orderByDesc('submitted_at');
 
         if ($request->filled('status')) {
@@ -90,7 +96,8 @@ class ApprovalDashboardController extends Controller
                 ->orderByDesc('submitted_at')->limit(20)->get(),
             'pending'           => $base()->where('status', 'pending')->whereNotNull('sent_at')
                 ->orderByDesc('submitted_at')->limit(20)->get(),
-            'changes_requested' => $base()->where('status', 'changes_requested')
+            // Ver comentário em roundsAndBoard() sobre handled_at.
+            'changes_requested' => $base()->where('status', 'changes_requested')->whereNull('handled_at')
                 ->orderByDesc('resolved_at')->limit(20)->get(),
             'approved'          => $base()->where('status', 'approved')
                 ->orderByDesc('resolved_at')->limit(20)->get(),
@@ -145,5 +152,27 @@ class ApprovalDashboardController extends Controller
         $service->resendToken($token);
 
         return back()->with('success', 'Reenviado.');
+    }
+
+    // Quick-select de status/situação direto na Central de Aprovações — pra depois
+    // de um "Ajustes Solicitados" já rotear a tarefa (Sprint) sem precisar abrir a
+    // tarefa. Rodada com ajuste pedido sai da Central assim que isso é usado nela
+    // (handled_at) — continua intacta no histórico, só some daqui.
+    public function updateTaskStatus(Request $request, TaskApprovalRound $round)
+    {
+        $situationKeys = array_keys(array_filter(Task::$situations, fn ($k) => $k !== '', ARRAY_FILTER_USE_KEY));
+
+        $data = $request->validate([
+            'status'    => 'required|in:' . implode(',', array_keys(Task::$statuses)),
+            'situation' => 'nullable|in:' . implode(',', $situationKeys),
+        ]);
+
+        $round->task->update($data);
+
+        if ($round->status === 'changes_requested') {
+            $round->update(['handled_at' => now()]);
+        }
+
+        return back()->with('success', 'Status da tarefa atualizado.');
     }
 }
