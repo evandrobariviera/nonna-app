@@ -275,7 +275,9 @@ class TaskApprovalService
     {
         $round->update(['status' => $status, 'resolved_at' => now()]);
 
-        $round->task->update(['status' => $status === 'changes_requested' ? 'ajuste_alteracao' : 'despacho_agendamento']);
+        $round->task->update($status === 'changes_requested'
+            ? ['status' => 'ajuste_alteracao', 'situation' => 'Alteração Solicitada']
+            : ['status' => 'despacho_agendamento']);
     }
 
     private function dispatchWebhook(TaskApprovalRound $round, TaskApprovalToken $approvalToken, Contact $contact): void

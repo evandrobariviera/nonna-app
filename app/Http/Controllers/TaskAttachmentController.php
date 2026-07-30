@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DeliverableFeedback;
 use App\Models\Task;
 use App\Models\TaskAttachment;
 use App\Services\TaskApprovalService;
@@ -46,6 +47,14 @@ class TaskAttachmentController extends Controller
     public function destroy(Task $task, TaskAttachment $attachment)
     {
         abort_unless($attachment->task_id === $task->id, 403);
+
+        // Excluir um entregável que já tem retorno do cliente apagaria o
+        // feedback junto (FK com cascadeOnDelete) — perderia o histórico da
+        // rodada. Se precisa de uma versão nova, é só anexar o arquivo
+        // corrigido; o antigo fica registrado na rodada em que foi enviado.
+        if (DeliverableFeedback::where('attachment_id', $attachment->id)->exists()) {
+            return back()->with('warning', 'Esse arquivo já tem retorno do cliente registrado e não pode ser removido — anexe o material corrigido como um novo arquivo.');
+        }
 
         Storage::disk($attachment->disk)->delete($attachment->disk_path);
         $attachment->delete();
