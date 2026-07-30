@@ -840,17 +840,30 @@
                 <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Contexto</p>
                 <div class="flex flex-col gap-4">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Cliente</p>
-                        @if($task->client)
-                            <a href="{{ route('clients.show', $task->client) }}"
-                               @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('clients.preview', $task->client) }}') }"
-                               class="text-sm font-semibold transition-colors" style="color:var(--purple)"
-                               onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
-                                {{ $task->client->company_name }}
-                            </a>
-                        @else
-                            <p class="text-sm" style="color:var(--muted)">—</p>
-                        @endif
+                        <div class="flex items-center justify-between mb-1">
+                            <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Cliente</p>
+                            @if($task->client)
+                                <a href="{{ route('clients.show', $task->client) }}"
+                                   @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('clients.preview', $task->client) }}') }"
+                                   class="text-xs font-semibold transition-colors" style="color:var(--purple)"
+                                   onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
+                                    Abrir →
+                                </a>
+                            @endif
+                        </div>
+                        <form method="POST" action="{{ route('tasks.update-client', $task) }}">
+                            @csrf @method('PATCH')
+                            <select name="client_id"
+                                onchange="if({{ $task->project_id ? 'true' : 'false' }} && !confirm('Trocar o cliente vai desvincular a tarefa do projeto atual ({{ addslashes($task->project?->title) }}). Continuar?')) { this.value='{{ $task->client_id }}'; return; } this.form.submit()"
+                                class="w-full px-3 py-2 text-sm focus:outline-none"
+                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                @foreach($clients as $c)
+                                    <option value="{{ $c->id }}" {{ $task->client_id === $c->id ? 'selected' : '' }}>
+                                        {{ $c->company_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </form>
                     </div>
 
                     @if($task->project?->macro_plan_id)

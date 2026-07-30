@@ -100,6 +100,8 @@ class TaskController extends Controller
             ? Project::where('client_id', $task->client_id)->orderBy('title')->get(['id', 'title'])
             : collect();
 
+        $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
+
         $chat = AiChat::where('entity_type', 'task')
             ->where('entity_id', $task->id)
             ->first();
@@ -120,7 +122,7 @@ class TaskController extends Controller
                 ->values()
             : collect();
 
-        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages', 'clientProjects'));
+        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages', 'clientProjects', 'clients'));
     }
 
     public function updateInline(Request $request, Task $task)
@@ -308,6 +310,28 @@ class TaskController extends Controller
         $task->update(['project_id' => $data['project_id']]);
 
         return redirect()->back()->with('success', 'Projeto atualizado.');
+    }
+
+    // Troca o cliente da tarefa. Bloqueia se houver rodada de aprovação pendente
+    // (os tokens/contatos da rodada são do cliente atual — trocar no meio quebraria
+    // o vínculo). Se a tarefa estiver vinculada a um projeto, desvincula (projeto
+    // pertence a um único cliente — não dá pra manter o vínculo com o cliente novo).
+    public function updateClient(Request $request, Task $task)
+    {
+        $data = $request->validate(['client_id' => 'required|uuid|exists:pgsql.clients,id']);
+
+        if ($data['client_id'] === $task->client_id) {
+            return redirect()->back();
+        }
+
+        abort_if($task->approvalRounds()->where('status', 'pending')->exists(), 422, 'Essa tarefa tem uma rodada de aprovação pendente — resolva ou cancele antes de trocar o cliente.');
+
+        $task->update([
+            'client_id'  => $data['client_id'],
+            'project_id' => null,
+        ]);
+
+        return redirect()->back()->with('success', 'Cliente atualizado.');
     }
 
     public function updateStatus(Request $request, MacroPlan $macroplan, Project $project, Task $task)
