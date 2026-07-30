@@ -66,7 +66,13 @@ services:
         failure_action: rollback
         monitor: 300s            # sempre > start_period + 1 retry, senão o Swarm pode concluir o update antes do healthcheck ter chance real de passar
       restart_policy:
-        condition: on-failure
+        # "on-failure" só reinicia em saída com erro — se o container sair
+        # limpo (code 0) sem um substituto assumir de verdade, o serviço fica
+        # travado em zero réplicas até alguém forçar manualmente (achado real,
+        # 2026-07-30: os dois containers do serviço apareciam "exited - code
+        # 0" durante um timeout de produção). "any" reinicia sempre, é o
+        # recomendado pra serviço que deve ficar sempre no ar.
+        condition: any
         delay: 5s
         max_attempts: 3
       labels:
