@@ -126,6 +126,40 @@ class TaskApprovalService
     }
 
     /**
+     * Reenvia a notificação só pra quem ainda não respondeu (status pending) —
+     * ex: e-mail de um aprovador estava errado, foi corrigido no cadastro do
+     * contato, e agora precisa notificar de novo. Diferente de sendToClient():
+     * não mexe em sent_at (a rodada já foi enviada uma vez) e não reenvia pra
+     * quem já aprovou/pediu ajuste (já respondeu, não precisa de novo aviso).
+     *
+     * @return int  quantos contatos foram notificados de novo
+     */
+    public function resendPending(TaskApprovalRound $round): int
+    {
+        $round->loadMissing('tokens.contact');
+
+        $pending = $round->tokens->where('status', 'pending');
+
+        foreach ($pending as $token) {
+            $this->dispatchWebhook($round, $token, $token->contact);
+        }
+
+        return $pending->count();
+    }
+
+    /**
+     * Reenvia pra um único aprovador específico (não a rodada inteira) — caso
+     * mais cirúrgico: só esse contato tinha o e-mail errado, os outros já
+     * receberam certo e não precisam de outro aviso.
+     */
+    public function resendToken(TaskApprovalToken $token): void
+    {
+        $token->loadMissing('contact', 'round');
+
+        $this->dispatchWebhook($token->round, $token, $token->contact);
+    }
+
+    /**
      * Registra o feedback peça por peça de um contato.
      * Depois verifica se todos os aprovadores já responderam (unanimidade).
      *

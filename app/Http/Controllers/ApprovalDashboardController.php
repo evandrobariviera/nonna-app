@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\TaskApprovalRound;
+use App\Models\TaskApprovalToken;
 use App\Services\TaskApprovalService;
 use Illuminate\Http\Request;
 
@@ -109,5 +110,40 @@ class ApprovalDashboardController extends Controller
         $service->sendToClient($round);
 
         return back()->with('success', 'Enviado! Os contatos foram notificados.');
+    }
+
+    // Reenvia só pra quem ainda não respondeu (ex: e-mail estava errado, foi
+    // corrigido, precisa notificar de novo) — não mexe em quem já aprovou ou
+    // pediu ajuste.
+    public function resend(TaskApprovalRound $round, TaskApprovalService $service)
+    {
+        if (!$round->sent_at) {
+            return back()->with('warning', 'Essa rodada ainda não foi enviada — use "Enviar pro Cliente" primeiro.');
+        }
+
+        if ($round->status !== 'pending') {
+            return back()->with('warning', 'Essa rodada já foi resolvida — não há mais ninguém aguardando resposta.');
+        }
+
+        $count = $service->resendPending($round);
+
+        if ($count === 0) {
+            return back()->with('warning', 'Não há ninguém pendente nessa rodada pra reenviar.');
+        }
+
+        return back()->with('success', "Reenviado pra {$count} aprovador(es) que ainda não responderam.");
+    }
+
+    // Reenvia só pra um aprovador específico — caso mais cirúrgico (só o
+    // e-mail dele estava errado, os outros já receberam certo).
+    public function resendToken(TaskApprovalToken $token, TaskApprovalService $service)
+    {
+        if (!$token->isPending()) {
+            return back()->with('warning', 'Esse aprovador já respondeu — não há o que reenviar.');
+        }
+
+        $service->resendToken($token);
+
+        return back()->with('success', 'Reenviado.');
     }
 }

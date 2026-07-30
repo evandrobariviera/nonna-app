@@ -119,6 +119,16 @@
                                                   style="color:{{ $token->status === 'approved' ? 'var(--green)' : ($token->status === 'changes_requested' ? 'var(--orange)' : 'var(--muted)') }}">
                                                 {{ $token->status === 'approved' ? '✓' : ($token->status === 'changes_requested' ? '✎' : '·') }}
                                             </span>
+                                            @if($round->sent_at && $token->isPending())
+                                                <form method="POST" action="{{ route('approvals.resend-token', $token) }}">
+                                                    @csrf
+                                                    <button type="submit" class="text-xs" style="color:var(--muted)"
+                                                            title="Reenviar só pra {{ $token->contact->name }}"
+                                                            onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                                                        ↻
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </div>
                                     @endforeach
 
@@ -145,6 +155,15 @@
                                     <button type="submit" class="text-xs font-semibold px-3 py-1 text-white"
                                             style="background:var(--purple)">
                                         Enviar pro Cliente
+                                    </button>
+                                </form>
+                            @elseif($isPending && $round->sent_at)
+                                <form method="POST" action="{{ route('approvals.resend', $round) }}">
+                                    @csrf
+                                    <button type="submit" class="text-xs font-semibold px-3 py-1"
+                                            style="color:var(--purple); border:1px solid var(--purple)"
+                                            title="Reenviar só pra quem ainda não respondeu">
+                                        ↻ Reenviar
                                     </button>
                                 </form>
                             @endif
