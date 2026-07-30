@@ -19,7 +19,7 @@ class Task extends Model
 
     protected $fillable = [
         'organization_id', 'project_id', 'macro_plan_id', 'sprint_id', 'client_id',
-        'title', 'description', 'task_type', 'destination', 'status', 'situation',
+        'title', 'description', 'caption', 'task_type', 'destination', 'status', 'situation',
         'priority',
         'executor_id', 'created_by', 'contact_id',
         'due_date', 'approval_date', 'publish_date',

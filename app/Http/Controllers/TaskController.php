@@ -150,6 +150,7 @@ class TaskController extends Controller
         $data = $request->validate([
             'title'              => 'required|string|max:300',
             'description'        => 'nullable|string',
+            'caption'            => 'nullable|string',
             'task_type'          => 'required|in:' . implode(',', array_keys(Task::$types)),
             'destination'        => 'nullable|in:' . implode(',', array_keys(Task::$destinations)),
             'situation'          => 'nullable|in:' . implode(',', $situationKeys),

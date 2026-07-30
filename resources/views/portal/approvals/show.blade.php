@@ -32,6 +32,13 @@
         @endif
     </div>
 
+    @if($round->caption)
+        <div class="card p-6 mb-6">
+            <h2 class="text-sm font-bold uppercase tracking-wide mb-3" style="color: var(--muted)">Legenda</h2>
+            <p class="text-sm whitespace-pre-wrap" style="color: var(--text); line-height: 1.7">{{ $round->caption }}</p>
+        </div>
+    @endif
+
     {{-- QUEM FALTA APROVAR / QUEM JÁ APROVOU (rodada atual) --}}
     @if($round->tokens->count() > 1)
         <div class="card p-6 mb-6">
@@ -72,9 +79,15 @@
                         @if($r->resolved_at)
                             <p class="text-xs mb-2" style="color: var(--muted)">{{ $r->resolved_at->format('d/m/Y') }}</p>
                         @endif
+                        @if($r->caption)
+                            <p class="text-xs mb-2 italic" style="color: var(--muted)">"{{ $r->caption }}"</p>
+                        @endif
                         @foreach($r->tokens as $t)
                             @if($t->overall_comment)
                                 <p class="text-xs pl-2 mb-1" style="color: var(--muted); border-left: 2px solid var(--border2); margin-left: 2px">{{ explode(' ', $t->contact->name)[0] }}: {{ $t->overall_comment }}</p>
+                            @endif
+                            @if($t->caption_status === 'changes_requested' && $t->caption_comment)
+                                <p class="text-xs pl-2 mb-1" style="color: var(--muted); border-left: 2px solid var(--border2); margin-left: 2px">{{ explode(' ', $t->contact->name)[0] }} (legenda): {{ $t->caption_comment }}</p>
                             @endif
                             @foreach($t->feedbacks->where('status', 'changes_requested') as $fb)
                                 <p class="text-xs pl-2 mb-1" style="color: var(--muted); border-left: 2px solid var(--border2); margin-left: 2px">{{ $fb->attachment?->filename ?? 'Arquivo removido' }}: {{ $fb->comment }}</p>

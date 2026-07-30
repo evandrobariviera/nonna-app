@@ -124,9 +124,15 @@
                     @if($r->resolved_at)
                         <p class="mono" style="font-size:10px; color:var(--muted); margin:0 0 6px">{{ $r->resolved_at->format('d/m/Y') }}</p>
                     @endif
+                    @if($r->caption)
+                        <p class="approver-feedback" style="font-style:italic">"{{ $r->caption }}"</p>
+                    @endif
                     @foreach($r->tokens as $t)
                         @if($t->overall_comment)
                             <p class="approver-feedback">{{ explode(' ', $t->contact->name)[0] }}: "{{ $t->overall_comment }}"</p>
+                        @endif
+                        @if($t->caption_status === 'changes_requested' && $t->caption_comment)
+                            <p class="approver-feedback">{{ explode(' ', $t->contact->name)[0] }} (legenda): {{ $t->caption_comment }}</p>
                         @endif
                         @foreach($t->feedbacks->where('status', 'changes_requested') as $fb)
                             <p class="approver-feedback">{{ $fb->attachment?->filename ?? 'Arquivo removido' }}: {{ $fb->comment }}</p>
@@ -150,14 +156,59 @@
         @endif
 
         {{-- FORM COM ESTADO CENTRALIZADO --}}
+        @php $hasCaption = filled($approvalToken->round->caption); @endphp
         <form method="POST"
               action="{{ route('approval.submit', $approvalToken->token) }}"
               x-data="{
                   decisions: {},
-                  get pending() { return {{ $deliverables->count() }} - Object.keys(this.decisions).length; },
+                  get pending() { return {{ $deliverables->count() + ($hasCaption ? 1 : 0) }} - Object.keys(this.decisions).length; },
                   decide(idx, val) { this.decisions[idx] = val; }
               }">
             @csrf
+
+            @if($hasCaption)
+            <div class="piece-card" :class="decisions.caption ? 'decided' : ''">
+                <div class="piece-header">
+                    <span style="font-size:22px; line-height:1">✍️</span>
+                    <div style="flex:1; min-width:0">
+                        <p style="margin:0; font-size:13px; font-weight:600">Legenda</p>
+                    </div>
+                    <span class="badge badge-pending"  x-show="!decisions.caption">PENDENTE</span>
+                    <span class="badge badge-approved" x-show="decisions.caption === 'approved'" x-cloak>APROVADO</span>
+                    <span class="badge badge-changes"  x-show="decisions.caption === 'changes_requested'" x-cloak>AJUSTES</span>
+                </div>
+
+                <div style="padding:14px 18px; border-bottom:1px solid var(--border)">
+                    <p style="font-size:13px; white-space:pre-wrap; margin:0; color:var(--text); line-height:1.6">{{ $approvalToken->round->caption }}</p>
+                </div>
+
+                <div class="piece-body">
+                    <input type="hidden" name="caption_status" :value="decisions.caption ?? ''">
+
+                    <span class="label-sm">Sua avaliação</span>
+                    <div style="display:flex; gap:8px; margin-bottom:14px">
+                        <button type="button" class="btn-decision"
+                                :class="decisions.caption === 'approved' ? 'sel-approve' : ''"
+                                @click="decide('caption', 'approved')">
+                            ✓ Aprovar
+                        </button>
+                        <button type="button" class="btn-decision"
+                                :class="decisions.caption === 'changes_requested' ? 'sel-changes' : ''"
+                                @click="decide('caption', 'changes_requested')">
+                            ✎ Solicitar Ajustes
+                        </button>
+                    </div>
+
+                    <div x-show="decisions.caption === 'changes_requested'" x-cloak>
+                        <span class="label-sm">Descreva os ajustes <span style="color:var(--orange)">*</span></span>
+                        <textarea class="textarea-pub"
+                                  name="caption_comment"
+                                  placeholder="Ex: Trocar a chamada, ajustar o tom do texto..."
+                                  rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            @endif
 
             @foreach($deliverables as $idx => $file)
             <div class="piece-card" :class="decisions[{{ $idx }}] ? 'decided' : ''">

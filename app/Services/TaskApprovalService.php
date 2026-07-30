@@ -86,6 +86,9 @@ class TaskApprovalService
             'submitted_at' => now(),
             'status'       => 'pending',
             'notes'        => $notes,
+            // Snapshot: se a legenda mudar depois, essa rodada continua mostrando
+            // o texto exato que foi avaliado — igual aos anexos (round_number).
+            'caption'      => $task->caption,
         ]);
 
         $task->update(['status' => 'aprovacao']);
@@ -185,10 +188,20 @@ class TaskApprovalService
      * Registra o feedback peça por peça de um contato.
      * Depois verifica se todos os aprovadores já responderam (unanimidade).
      *
+     * A legenda (se a rodada tiver uma) é avaliada à parte de cada arquivo —
+     * o aprovador pode aprovar o material e pedir ajuste só no texto (ou vice-
+     * versa), por isso entra como decisão própria em vez de mais um item de
+     * $feedbacks.
+     *
      * @param  array<array{attachment_id: string, status: string, comment: ?string}>  $feedbacks
      */
-    public function submitFeedback(TaskApprovalToken $token, array $feedbacks, ?string $overallComment = null): void
-    {
+    public function submitFeedback(
+        TaskApprovalToken $token,
+        array $feedbacks,
+        ?string $overallComment = null,
+        ?string $captionStatus = null,
+        ?string $captionComment = null,
+    ): void {
         foreach ($feedbacks as $item) {
             DeliverableFeedback::create([
                 'token_id'      => $token->id,
@@ -198,11 +211,14 @@ class TaskApprovalService
             ]);
         }
 
-        $hasChanges = collect($feedbacks)->contains('status', 'changes_requested');
+        $hasChanges = collect($feedbacks)->contains('status', 'changes_requested')
+            || $captionStatus === 'changes_requested';
 
         $token->update([
             'status'          => $hasChanges ? 'changes_requested' : 'approved',
             'overall_comment' => $overallComment,
+            'caption_status'  => $captionStatus,
+            'caption_comment' => $captionComment,
             'reviewed_at'     => now(),
         ]);
 

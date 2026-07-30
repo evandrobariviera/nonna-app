@@ -318,6 +318,15 @@
                             style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $task->description }}</textarea>
                     </div>
 
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Legenda</label>
+                        <textarea name="caption" rows="5"
+                            placeholder="Texto que vai junto do material pro cliente aprovar..."
+                            class="w-full px-4 py-3 text-sm focus:outline-none resize-none leading-relaxed"
+                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $task->caption }}</textarea>
+                        <p class="text-xs mt-1.5" style="color:var(--muted2)">Diferente do Briefing acima — esse texto é o que o cliente vê e avalia na Central de Aprovações.</p>
+                    </div>
+
                     <div class="flex items-center gap-3 pt-2" style="border-top:1px solid var(--border2)">
                         <button type="submit"
                             class="px-5 py-2.5 text-sm font-semibold text-white"
@@ -335,6 +344,15 @@
                 <div x-show="!editing" class="card card-body-lg">
                     <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Briefing / Descrição</p>
                     <div class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.75">{{ $task->description }}</div>
+                </div>
+            @endif
+
+            {{-- LEGENDA --}}
+            @if($task->caption)
+                <div x-show="!editing" class="card card-body-lg">
+                    <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.1em">Legenda</p>
+                    <p class="text-xs mb-4" style="color:var(--muted2)">Texto que vai junto do material pra aprovação do cliente.</p>
+                    <div class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.75">{{ $task->caption }}</div>
                 </div>
             @endif
 
@@ -629,6 +647,34 @@
                                                                style="color:var(--muted); letter-spacing:.07em">Comentário Geral</p>
                                                             <p class="text-sm whitespace-pre-wrap"
                                                                style="color:var(--text); line-height:1.65">{{ $token->overall_comment }}</p>
+                                                        </div>
+                                                    @endif
+
+                                                    {{-- Decisão sobre a legenda --}}
+                                                    @if($round->caption && $token->caption_status)
+                                                        @php $captionChange = $token->caption_status === 'changes_requested'; @endphp
+                                                        <div class="flex gap-3 px-3 py-2.5"
+                                                             style="background:{{ $captionChange ? 'rgba(255,140,0,.04)' : 'rgba(34,197,94,.03)' }};
+                                                                    border:1px solid {{ $captionChange ? 'rgba(255,140,0,.2)' : 'rgba(34,197,94,.15)' }}">
+                                                            <span class="text-xl flex-shrink-0 mt-0.5 leading-none">✍️</span>
+                                                            <div class="flex-1 min-w-0">
+                                                                <div class="flex items-start justify-between gap-2 flex-wrap mb-1">
+                                                                    <span class="text-sm font-medium leading-snug" style="color:var(--text)">Legenda</span>
+                                                                    <span class="text-xs font-semibold flex-shrink-0 px-2 py-0.5"
+                                                                          style="background:{{ $captionChange ? 'rgba(255,140,0,.12)' : 'rgba(34,197,94,.12)' }};
+                                                                                 color:{{ $captionChange ? 'var(--orange)' : '#22c55e' }}">
+                                                                        {{ $captionChange ? '✎ Ajustes' : '✓ Aprovado' }}
+                                                                    </span>
+                                                                </div>
+                                                                @if($token->caption_comment)
+                                                                    <p class="text-sm whitespace-pre-wrap"
+                                                                       style="color:{{ $captionChange ? 'var(--text)' : 'var(--muted2)' }}; line-height:1.6">
+                                                                        {{ $token->caption_comment }}
+                                                                    </p>
+                                                                @elseif(!$captionChange)
+                                                                    <p class="text-xs" style="color:var(--muted)">Sem comentários.</p>
+                                                                @endif
+                                                            </div>
                                                         </div>
                                                     @endif
 

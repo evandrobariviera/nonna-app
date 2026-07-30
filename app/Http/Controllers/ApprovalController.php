@@ -43,18 +43,24 @@ class ApprovalController extends Controller
             return redirect()->route('approval.show', $token);
         }
 
+        $hasCaption = filled($approvalToken->round->caption);
+
         $request->validate([
             'feedbacks'                => 'required|array|min:1',
             'feedbacks.*.attachment_id'=> 'required|uuid|exists:task_attachments,id',
             'feedbacks.*.status'       => 'required|in:approved,changes_requested',
             'feedbacks.*.comment'      => 'nullable|string|max:1000',
             'overall_comment'          => 'nullable|string|max:2000',
+            'caption_status'           => [$hasCaption ? 'required' : 'nullable', 'in:approved,changes_requested'],
+            'caption_comment'          => ['nullable', 'string', 'max:1000', 'required_if:caption_status,changes_requested'],
         ]);
 
         $this->service->submitFeedback(
             $approvalToken,
             $request->feedbacks,
             $request->overall_comment,
+            $request->caption_status,
+            $request->caption_comment,
         );
 
         $approvalToken->refresh();
