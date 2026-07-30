@@ -47,7 +47,7 @@
                                     </form>
                                 @elseif($col['key'] === 'changes_requested')
                                     <div class="mt-2 monday-fill-td relative" style="height:26px">
-                                        @include('partials._status-fill', ['task' => $round->task, 'statusUrl' => route('approvals.update-task-status', $round)])
+                                        @include('partials._status-fill', ['task' => $round->task, 'statusUrl' => route('approvals.update-task-status', $round), 'showCurrent' => false])
                                     </div>
                                 @endif
                             </div>
@@ -202,13 +202,13 @@
                             <div>
                                 <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Status</p>
                                 <div class="monday-fill-td relative" style="width:160px; height:30px">
-                                    @include('partials._status-fill', ['task' => $round->task, 'statusUrl' => route('approvals.update-task-status', $round)])
+                                    @include('partials._status-fill', ['task' => $round->task, 'statusUrl' => route('approvals.update-task-status', $round), 'showCurrent' => false])
                                 </div>
                             </div>
                             <div>
                                 <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Situação</p>
-                                <div class="{{ $round->task->situation ? 'monday-fill-td' : '' }} relative" style="width:180px; height:30px">
-                                    @include('partials._situacao-fill', ['task' => $round->task, 'situacaoUrl' => route('approvals.update-task-status', $round)])
+                                <div class="monday-fill-td relative" style="width:180px; height:30px">
+                                    @include('partials._situacao-fill', ['task' => $round->task, 'situacaoUrl' => route('approvals.update-task-status', $round), 'showCurrent' => false])
                                 </div>
                             </div>
                         </div>

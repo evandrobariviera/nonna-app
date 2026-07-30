@@ -1,14 +1,25 @@
 {{-- Botão de preenchimento colorido + dropdown de Status (padrão "Monday").
      Espera no escopo: $task, $statusUrl.
+     Opcional: $showCurrent (default true) — false mostra o botão "vazio"
+     (neutro, sem o valor atual preenchido) mesmo a tarefa já tendo um status;
+     usado quando o widget funciona como uma AÇÃO a escolher (ex: roteamento
+     rápido na Central de Aprovações), não como exibição do estado atual —
+     mostrar o valor já preenchido ali dava a entender que já tinha sido
+     escolhido/tratado.
      Precisa de um ancestral com x-data contendo statusOpen/statusStyle (e
      situacaoOpen, se usado ao lado de _situacao-fill, pra fechar um ao abrir
      o outro) e de um container (<td>/<div>) com position:relative + tamanho
      definido — funciona em tabela ou fora dela, o botão preenche 100% do pai. --}}
+@php $showCurrent = $showCurrent ?? true; @endphp
 <button @click="statusOpen = !statusOpen; situacaoOpen = false; statusStyle = dropdownStyle($el, 'bottom-left')" type="button"
         style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-               gap:4px; background:{{ $task->statusHex() }}; color:#fff; font-size:11px;
-               font-weight:700; cursor:pointer; border:none; overflow:hidden">
-    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:calc(100% - 20px)">{{ $task->statusLabel() }}</span>
+               gap:4px; background:{{ $showCurrent ? $task->statusHex() : 'var(--s2)' }};
+               color:{{ $showCurrent ? '#fff' : 'var(--muted)' }}; font-size:11px;
+               font-weight:{{ $showCurrent ? '700' : '400' }}; cursor:pointer;
+               border:{{ $showCurrent ? 'none' : '1px dashed var(--border2)' }}; overflow:hidden">
+    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:calc(100% - 20px)">
+        {{ $showCurrent ? $task->statusLabel() : 'Selecionar status' }}
+    </span>
     <span style="opacity:.8; flex-shrink:0">▾</span>
 </button>
 
@@ -22,7 +33,7 @@
                 <input type="hidden" name="status" value="{{ $key }}">
                 <button type="submit"
                     class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
-                    style="color:{{ $task->status === $key ? 'var(--purple)' : 'var(--text)' }}"
+                    style="color:{{ $showCurrent && $task->status === $key ? 'var(--purple)' : 'var(--text)' }}"
                     onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
                     <span class="inline-block w-2 h-2 rounded-full flex-shrink-0"
                           style="background:{{ \App\Models\Task::colorHex($s['color']) }}"></span>
