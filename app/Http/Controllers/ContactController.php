@@ -10,6 +10,22 @@ class ContactController extends Controller
 {
     public function index(Request $request)
     {
+        $contacts = $this->filteredContacts($request);
+
+        return view('contacts.index', compact('contacts'));
+    }
+
+    // Fragmento da listagem — chamado via fetch por live-filter.js conforme o
+    // usuário digita/filtra, sem recarregar a página inteira.
+    public function results(Request $request)
+    {
+        $contacts = $this->filteredContacts($request);
+
+        return view('contacts._results', compact('contacts'));
+    }
+
+    private function filteredContacts(Request $request)
+    {
         $query = Contact::with('assignedTo')
             ->orderByDesc('created_at');
 
@@ -30,9 +46,7 @@ class ContactController extends Controller
             $query->where('source', $source);
         }
 
-        $contacts = $query->paginate(30)->withQueryString();
-
-        return view('contacts.index', compact('contacts'));
+        return $query->paginate(30)->withQueryString();
     }
 
     public function create()

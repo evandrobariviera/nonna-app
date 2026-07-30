@@ -10,18 +10,7 @@ class ContractController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Contract::with('client');
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->boolean('vencidos')) {
-            $query->whereDate('end_date', '<', now())
-                ->whereNotIn('status', ['encerrado', 'cancelado']);
-        }
-
-        $contracts = $query->orderByDesc('start_date')->get();
+        $contracts = $this->filteredContracts($request);
 
         $activeContracts = Contract::whereNotIn('status', ['encerrado', 'cancelado'])->get();
 
@@ -35,6 +24,31 @@ class ContractController extends Controller
         ];
 
         return view('contracts.index', compact('contracts', 'stats'));
+    }
+
+    // Fragmento da listagem — chamado via fetch por live-filter.js conforme o
+    // usuário filtra, sem recarregar a página inteira (stats do topo não mudam).
+    public function results(Request $request)
+    {
+        $contracts = $this->filteredContracts($request);
+
+        return view('contracts._results', compact('contracts'));
+    }
+
+    private function filteredContracts(Request $request)
+    {
+        $query = Contract::with('client');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->boolean('vencidos')) {
+            $query->whereDate('end_date', '<', now())
+                ->whereNotIn('status', ['encerrado', 'cancelado']);
+        }
+
+        return $query->orderByDesc('start_date')->get();
     }
 
     public function store(Request $request, Client $client)

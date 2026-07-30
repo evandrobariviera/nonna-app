@@ -47,7 +47,9 @@
     @endif
 
     {{-- Filtros --}}
-    <form method="GET" action="{{ route('contracts.index') }}" class="flex flex-wrap items-center gap-3 mb-5">
+    <form method="GET" action="{{ route('contracts.index') }}" class="flex flex-wrap items-center gap-3 mb-5"
+          data-live-filter data-results-url="{{ route('contracts.results') }}" data-target="#contracts-results">
+        <input type="hidden" name="vencidos" value="{{ request('vencidos') }}">
         <select name="status"
             style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
             <option value="">Todos os status</option>
@@ -56,10 +58,6 @@
             @endforeach
         </select>
 
-        <button type="submit" class="btn btn-ghost btn-sm">
-            Filtrar
-        </button>
-
         @if(request()->hasAny(['status', 'vencidos']))
             <a href="{{ route('contracts.index') }}" class="btn btn-ghost btn-sm">
                 Limpar
@@ -67,60 +65,7 @@
         @endif
     </form>
 
-    <div class="card">
-        @if($contracts->isEmpty())
-            <div class="px-6 py-16 text-center" style="color:var(--muted)">
-                <p class="text-sm mb-3">Nenhum contrato encontrado.</p>
-                <p class="text-xs">Acesse a página de um cliente e abra a aba "Contratos" para criar o primeiro.</p>
-            </div>
-        @else
-            <table class="nonna-table">
-                <thead>
-                    <tr>
-                        <th>Cliente</th>
-                        <th>Título</th>
-                        <th>Status</th>
-                        <th>Vigência</th>
-                        <th>Fee</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($contracts as $contract)
-                        @php
-                            $isVencido = $contract->end_date
-                                && $contract->end_date->isPast()
-                                && !in_array($contract->status, ['encerrado', 'cancelado']);
-                        @endphp
-                        <tr>
-                            <td class="font-semibold text-[var(--text)]">
-                                <a href="{{ route('clients.show', [$contract->client, 'tab' => 'contratos']) }}"
-                                   class="hover:underline">{{ $contract->client->company_name }}</a>
-                            </td>
-                            <td class="text-[var(--text)]">{{ $contract->title }}</td>
-                            <x-status-dropdown-cell :options="\App\Models\Contract::$statuses" :current="$contract->status"
-                                :action="route('clients.contracts.update-status', [$contract->client, $contract])" :width="130" />
-                            <td class="text-xs {{ $isVencido ? 'font-semibold' : '' }}" style="color:{{ $isVencido ? 'var(--red)' : 'var(--muted)' }}">
-                                {{ $contract->periodLabel() }}
-                                @if($isVencido) · vencido @endif
-                            </td>
-                            <td class="text-xs font-mono text-[var(--muted2)]">
-                                {{ $contract->fee_value ? 'R$ ' . number_format($contract->fee_value, 2, ',', '.') : '—' }}
-                                @if($contract->fee_type)
-                                    <span style="color:var(--muted)">/ {{ $contract->feeTypeLabel() }}</span>
-                                @endif
-                            </td>
-                            <td class="text-right">
-                                <a href="{{ route('clients.contracts.show', [$contract->client, $contract]) }}"
-                                   class="text-xs font-mono hover:underline"
-                                   style="color:var(--purple)">
-                                    Abrir
-                                </a>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @endif
+    <div id="contracts-results">
+        @include('contracts._results')
     </div>
 </x-app-layout>

@@ -72,6 +72,11 @@ Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'ind
 // ── CRM: Clientes (autenticado) ──
 Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
 
+    // Precisa vir ANTES do resource() — senão "resultados" colide com o {client}
+    // wildcard de clients.show (Laravel casa rotas na ordem de registro).
+    Route::get('/clientes/resultados', [ClientController::class, 'results'])
+        ->name('clients.results');
+
     Route::resource('clientes', ClientController::class)->parameters([
         'clientes' => 'client',
     ])->names([
@@ -190,6 +195,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Contratos (dashboard geral da agência) ──
     Route::get('/contratos', [ContractController::class, 'index'])
         ->name('contracts.index');
+    Route::get('/contratos/resultados', [ContractController::class, 'results'])
+        ->name('contracts.results');
 
     // ── Campanhas (dashboard interno + insights de IA) ──
     Route::get('/campanhas', [CampaignController::class, 'index'])
@@ -271,6 +278,11 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('contract-attachments.destroy');
 
     // ── CRM: Contatos ──
+    // Precisa vir ANTES do resource() — senão "resultados" colide com o {contact}
+    // wildcard de contacts.show (Laravel casa rotas na ordem de registro).
+    Route::get('/contatos/resultados', [ContactController::class, 'results'])
+        ->name('contacts.results');
+
     Route::resource('contatos', ContactController::class)->parameters([
         'contatos' => 'contact',
     ])->names([

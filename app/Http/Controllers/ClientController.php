@@ -10,6 +10,22 @@ class ClientController extends Controller
 {
     public function index(Request $request)
     {
+        $clients = $this->filteredClients($request);
+
+        return view('clients.index', compact('clients'));
+    }
+
+    // Fragmento da listagem — chamado via fetch por live-filter.js conforme o
+    // usuário digita/filtra, sem recarregar a página inteira.
+    public function results(Request $request)
+    {
+        $clients = $this->filteredClients($request);
+
+        return view('clients._results', compact('clients'));
+    }
+
+    private function filteredClients(Request $request)
+    {
         $query = Client::query();
 
         if ($request->filled('q')) {
@@ -25,9 +41,7 @@ class ClientController extends Controller
             $query->where('status', $request->status);
         }
 
-        $clients = $query->orderBy('company_name')->paginate(25)->withQueryString();
-
-        return view('clients.index', compact('clients'));
+        return $query->orderBy('company_name')->paginate(25)->withQueryString();
     }
 
     public function create()
