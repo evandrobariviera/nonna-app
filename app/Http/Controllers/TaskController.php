@@ -77,6 +77,7 @@ class TaskController extends Controller
         $task->load([
             'client.links',
             'project.macroPlan.client',
+            'project.macroPlan.attachments',
             'macroPlan',
             'sprint',
             'executor',

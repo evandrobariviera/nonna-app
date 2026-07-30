@@ -868,7 +868,16 @@
 
                     @if($task->project?->macro_plan_id)
                         <div>
-                            <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Planejamento</p>
+                            <div class="flex items-center justify-between mb-1">
+                                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Planejamento</p>
+                                @if($htmlAttachment = $task->project->macroPlan->htmlAttachment())
+                                    <a href="{{ $htmlAttachment->url() }}" target="_blank" rel="noopener"
+                                       class="text-xs font-semibold transition-colors" style="color:var(--purple)"
+                                       onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
+                                        Ver HTML ↗
+                                    </a>
+                                @endif
+                            </div>
                             <a href="{{ route('macroplans.edit', $task->project->macro_plan_id) }}"
                                @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('macroplans.preview', $task->project->macro_plan_id) }}') }"
                                class="text-sm font-medium leading-snug block transition-colors" style="color:var(--text)"
