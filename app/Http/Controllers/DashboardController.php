@@ -145,6 +145,16 @@ class DashboardController extends Controller
             ->limit(8)
             ->get();
 
+        // ── Pendências de cadastro (transversal, não é seção por papel) ──
+        // Restrito a whereNull('sprint_id') de propósito, pra bater exatamente
+        // com o que aparece na Fila quando o usuário clicar no link.
+        $pendingTasksCount = Task::pendente()->whereNull('sprint_id')->count();
+        $pendingTasksSample = Task::pendente()->whereNull('sprint_id')
+            ->with('client')
+            ->orderByRaw('due_date NULLS LAST')
+            ->limit(6)
+            ->get();
+
         return view('dashboard', compact(
             'activeSprint', 'sprintTotal', 'sprintDone', 'sprintProgress',
             'myAdjustmentTasks', 'myProductionTasks', 'myReadyForProductionTasks',
@@ -153,7 +163,8 @@ class DashboardController extends Controller
             'clientsWithoutActivePlan', 'plansExpiringSoon', 'activePlans',
             'teamMeetingsToday', 'openTickets',
             'roundsPending', 'roundsAwaitingSendCount', 'roundsApproved', 'roundsChangesRequested',
-            'headsTickets', 'headsRevisaoInterna'
+            'headsTickets', 'headsRevisaoInterna',
+            'pendingTasksCount', 'pendingTasksSample'
         ));
     }
 

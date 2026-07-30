@@ -21,6 +21,7 @@ class Client extends Model
     protected $fillable = [
         'clickup_task_id',
         'company_name',
+        'is_internal',
         'logo_path',
         'logo_disk',
         'tax_id',
@@ -58,6 +59,7 @@ class Client extends Model
         'registration_completed_at' => 'datetime',
         'responsible_birthdate'     => 'date',
         'billing_day'               => 'integer',
+        'is_internal'               => 'boolean',
     ];
 
     public static array $statuses = [

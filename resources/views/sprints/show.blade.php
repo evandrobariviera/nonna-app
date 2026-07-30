@@ -1,8 +1,17 @@
 <x-app-layout>
     <x-slot name="header">{{ $sprint->title }}</x-slot>
 
+    @if($errors->any())
+        <div class="mb-5 px-4 py-3 text-sm font-semibold"
+             style="background:rgba(220,38,38,.08); border:1px solid rgba(220,38,38,.25); color:var(--red)">
+            @foreach($errors->all() as $error)
+                <p>{{ $error }}</p>
+            @endforeach
+        </div>
+    @endif
+
     {{-- HEADER DA SPRINT --}}
-    <div x-data="{ editing: {{ $errors->any() ? 'true' : 'false' }} }" class="mb-6">
+    <div x-data="{ editing: {{ $errors->hasAny(['title','starts_at','ends_at','status']) ? 'true' : 'false' }} }" class="mb-6">
         <div class="flex items-center justify-between flex-wrap gap-3">
             <template x-if="!editing">
                 <div class="flex items-center gap-3 flex-wrap">

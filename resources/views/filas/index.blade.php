@@ -7,14 +7,15 @@
     </x-slot>
 
     {{-- ══ STATS ══ --}}
-    <div class="grid grid-cols-5 gap-3 mb-5">
+    <div class="grid grid-cols-6 gap-3 mb-5">
         @php
             $statsConfig = [
-                ['label' => 'Na Fila',   'value' => $stats['total'],     'color' => 'var(--text)',   'filter' => null],
-                ['label' => 'Projetos',  'value' => $stats['projetos'],  'color' => 'var(--purple)', 'filter' => 'origin=projeto'],
-                ['label' => 'Tickets',   'value' => $stats['tickets'],   'color' => 'var(--orange)', 'filter' => 'origin=ticket'],
-                ['label' => 'Atrasadas', 'value' => $stats['atrasadas'], 'color' => 'var(--red)',    'filter' => 'atrasadas=1'],
-                ['label' => 'Clientes',  'value' => $stats['clientes'],  'color' => 'var(--muted2)', 'filter' => null],
+                ['label' => 'Na Fila',      'value' => $stats['total'],      'color' => 'var(--text)',   'filter' => null],
+                ['label' => 'Projetos',     'value' => $stats['projetos'],   'color' => 'var(--purple)', 'filter' => 'origin=projeto'],
+                ['label' => 'Tickets',      'value' => $stats['tickets'],    'color' => 'var(--orange)', 'filter' => 'origin=ticket'],
+                ['label' => 'Atrasadas',    'value' => $stats['atrasadas'],  'color' => 'var(--red)',    'filter' => 'atrasadas=1'],
+                ['label' => 'Pendências',   'value' => $stats['pendencias'], 'color' => 'var(--red)',    'filter' => 'pendencia=1'],
+                ['label' => 'Clientes',     'value' => $stats['clientes'],   'color' => 'var(--muted2)', 'filter' => null],
             ];
         @endphp
         @foreach($statsConfig as $s)

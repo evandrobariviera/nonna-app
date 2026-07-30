@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Tenantable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -322,6 +323,38 @@ class Task extends Model
             ->wherePivot('role', 'observador')
             ->withPivot('role')
             ->withTimestamps();
+    }
+
+    /**
+     * Tarefa "pendente" = provavelmente veio incompleta do import do ClickUp
+     * (campo não mapeado caiu no valor padrão da coluna, ou faltou vínculo
+     * essencial). Usado pro card de pendências do Dashboard, filtro da Fila
+     * e pra bloquear entrada em Sprint (ver SprintController::addTask()).
+     */
+    public function scopePendente(Builder $query): Builder
+    {
+        return $query->where(function (Builder $q) {
+            $q->where('task_type', 'criacao')
+                ->orWhere('origin', 'projeto')
+                ->orWhereNull('destination')
+                ->orWhere(fn (Builder $q2) => $q2->whereNull('situation')->orWhere('situation', ''))
+                ->orWhereNull('due_date')
+                ->orWhereNull('approval_date')
+                ->orWhereHas('client', fn (Builder $q2) => $q2->where('is_internal', true))
+                ->orWhereDoesntHave('executors', fn (Builder $q2) => $q2->where('task_executors.role', 'executor'))
+                ->orWhereDoesntHave('responsibles');
+        });
+    }
+
+    /**
+     * Checagem pontual (1 registro) — reaproveita scopePendente() em vez de
+     * duplicar a regra em PHP. Custa 1 query por chamada: não usar em loop
+     * sobre uma lista grande (ver SprintController::show(), que é a única
+     * exceção aceita porque a lista de uma sprint é pequena).
+     */
+    public function isPendente(): bool
+    {
+        return static::whereKey($this->getKey())->pendente()->exists();
     }
 
     /**

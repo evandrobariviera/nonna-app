@@ -74,6 +74,30 @@
 
     </div>
 
+    {{-- ── Pendências de cadastro (transversal, sempre visível independente do papel) ── --}}
+    <div class="card px-5 py-4 mb-6">
+        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
+            ⚠️ Pendências de Cadastro ({{ $pendingTasksCount }})
+        </h4>
+        @if($pendingTasksSample->isEmpty())
+            <p class="text-xs" style="color:var(--muted)">Nenhuma pendência de cadastro no momento. 🎉</p>
+        @else
+            <div class="flex flex-col gap-2">
+                @foreach($pendingTasksSample as $task)
+                    <a href="{{ route('tasks.show', $task) }}"
+                       class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--red)"
+                       onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $task->title }}</p>
+                        <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->company_name ?? '—' }}</span>
+                    </a>
+                @endforeach
+            </div>
+            <a href="{{ route('fila.index', ['pendencia' => 1]) }}" class="block mt-3 text-xs font-mono" style="color:var(--purple)">
+                Ver todas na Fila →
+            </a>
+        @endif
+    </div>
+
     {{-- ── LINHA 2: camada operacional da sprint (minhas tarefas por etapa) ──
          Kanban de verdade (arrastar-e-soltar entre colunas, ver resources/js/kanban-dnd.js).
          "Pronto para Produção" não é um status próprio no modelo — é status=backlog com

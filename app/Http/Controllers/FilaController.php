@@ -37,9 +37,14 @@ class FilaController extends Controller
         if ($request->boolean('atrasadas')) {
             $query->whereNotNull('due_date')->where('due_date', '<', today());
         }
+        if ($request->boolean('pendencia')) {
+            $query->pendente();
+        }
         if ($request->filled('search')) {
             $query->where('title', 'ilike', '%' . $request->search . '%');
         }
+
+        $pendenciasCount = (clone $query)->pendente()->count();
 
         $tasks = $query->get();
 
@@ -61,11 +66,12 @@ class FilaController extends Controller
         $activeSprint = $sprints->firstWhere('status', 'active');
 
         $stats = [
-            'total'     => $tasks->count(),
-            'projetos'  => $tasks->where('is_ticket', false)->count(),
-            'tickets'   => $tasks->where('is_ticket', true)->count(),
-            'atrasadas' => $tasks->filter(fn($t) => $t->isOverdue())->count(),
-            'clientes'  => $tasks->pluck('client_id')->filter()->unique()->count(),
+            'total'       => $tasks->count(),
+            'projetos'    => $tasks->where('is_ticket', false)->count(),
+            'tickets'     => $tasks->where('is_ticket', true)->count(),
+            'atrasadas'   => $tasks->filter(fn($t) => $t->isOverdue())->count(),
+            'clientes'    => $tasks->pluck('client_id')->filter()->unique()->count(),
+            'pendencias'  => $pendenciasCount,
         ];
 
         return view('filas.index', compact(

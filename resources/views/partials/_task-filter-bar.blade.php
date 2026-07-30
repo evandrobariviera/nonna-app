@@ -8,7 +8,7 @@
      (valor atual do group_by), $clearUrl (string). Opcional: $extraHidden (array name=>value). --}}
 @php
     $extraHidden = $extraHidden ?? [];
-    $filterKeys = array_map(fn ($k) => $prefix . $k, ['search', 'client_id', 'project_id', 'origin', 'task_type', 'atrasadas', 'mostrar_fechados']);
+    $filterKeys = array_map(fn ($k) => $prefix . $k, ['search', 'client_id', 'project_id', 'origin', 'task_type', 'atrasadas', 'pendencia', 'mostrar_fechados']);
 @endphp
 
 <form method="GET" action="{{ $formAction }}"
@@ -86,6 +86,15 @@
             class="w-4 h-4" style="accent-color:var(--red)">
         <label for="{{ $prefix }}chk_atrasadas" class="text-sm font-medium cursor-pointer" style="color:var(--red)">
             Só atrasadas
+        </label>
+    </div>
+
+    <div class="flex items-center gap-2 pb-0.5">
+        <input type="checkbox" name="{{ $prefix }}pendencia" value="1" id="{{ $prefix }}chk_pendencia"
+            {{ request($prefix . 'pendencia') ? 'checked' : '' }}
+            class="w-4 h-4" style="accent-color:var(--red)">
+        <label for="{{ $prefix }}chk_pendencia" class="text-sm font-medium cursor-pointer" style="color:var(--red)">
+            Só pendências
         </label>
     </div>
 

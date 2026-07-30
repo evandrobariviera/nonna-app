@@ -105,6 +105,9 @@ class SprintController extends Controller
         if ($request->boolean('list_atrasadas')) {
             $listTasks = $listTasks->filter(fn ($t) => $t->isOverdue());
         }
+        if ($request->boolean('list_pendencia')) {
+            $listTasks = $listTasks->filter(fn ($t) => $t->isPendente());
+        }
         if ($request->filled('list_search')) {
             $search = mb_strtolower($request->get('list_search'));
             $listTasks = $listTasks->filter(fn ($t) => str_contains(mb_strtolower($t->title), $search));
@@ -191,6 +194,12 @@ class SprintController extends Controller
     public function addTask(Sprint $sprint, Task $task)
     {
         abort_if($sprint->status === 'closed', 403, 'Sprint encerrada.');
+
+        if ($task->isPendente()) {
+            throw ValidationException::withMessages([
+                'pendencia' => "Tarefa \"{$task->title}\" tem pendências de cadastro e não pode ser adicionada à sprint. Corrija-a antes de adicioná-la.",
+            ]);
+        }
 
         $task->update(['sprint_id' => $sprint->id]);
 
