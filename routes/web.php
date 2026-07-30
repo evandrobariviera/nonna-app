@@ -456,6 +456,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('tasks.update-priority');
     Route::patch('/tarefas/{task}/situacao', [TaskController::class, 'updateSituation'])
         ->name('tasks.update-situation');
+    Route::patch('/tarefas/{task}/legenda', [TaskController::class, 'updateCaption'])
+        ->name('tasks.update-caption');
     Route::patch('/tarefas/{task}/responsavel', [TaskController::class, 'updateResponsavel'])
         ->name('tasks.update-responsavel');
     Route::patch('/tarefas/{task}/executor-direto', [TaskController::class, 'updateExecutorDirect'])

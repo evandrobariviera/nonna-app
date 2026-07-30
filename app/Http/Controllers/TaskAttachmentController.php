@@ -15,33 +15,37 @@ class TaskAttachmentController extends Controller
     public function store(Request $request, Task $task, TaskApprovalService $approvalService)
     {
         $request->validate([
-            'file' => 'required|file|max:102400', // 100 MB
-            'kind' => 'required|in:insumo,entregavel',
+            'files'   => 'required|array|min:1', // carrossel/múltiplas peças de uma vez
+            'files.*' => 'file|max:102400', // 100 MB
+            'kind'    => 'required|in:insumo,entregavel',
         ]);
 
-        $file = $request->file('file');
         $disk = config('filesystems.default', 'r2');
-        $path = $file->store("tasks/{$task->id}", $disk);
 
-        TaskAttachment::create([
-            'task_id'     => $task->id,
-            'filename'    => $file->getClientOriginalName(),
-            'disk_path'   => $path,
-            'disk'        => $disk,
-            'mime_type'   => $file->getMimeType(),
-            'size'        => $file->getSize(),
-            'uploaded_by' => Auth::id(),
-            'kind'        => $request->kind,
-        ]);
+        foreach ($request->file('files') as $file) {
+            $path = $file->store("tasks/{$task->id}", $disk);
+
+            TaskAttachment::create([
+                'task_id'     => $task->id,
+                'filename'    => $file->getClientOriginalName(),
+                'disk_path'   => $path,
+                'disk'        => $disk,
+                'mime_type'   => $file->getMimeType(),
+                'size'        => $file->getSize(),
+                'uploaded_by' => Auth::id(),
+                'kind'        => $request->kind,
+            ]);
+        }
 
         // A tarefa pode já estar em Aprovação + situação "Enviar para o cliente"
-        // esperando só o anexo — reavalia agora que o arquivo chegou, porque o
-        // upload não passa pelo TaskObserver (não muda status/situação da tarefa).
+        // esperando só o anexo — reavalia agora que o(s) arquivo(s) chegaram, porque
+        // o upload não passa pelo TaskObserver (não muda status/situação da tarefa).
         $roundCreated = $approvalService->maybeAutoSubmitOnApprovalTransition($task);
 
         $redirect = redirect()->route('tasks.show', $task);
+        $label = $request->file('files') && count($request->file('files')) > 1 ? 'Arquivos anexados.' : 'Arquivo anexado.';
 
-        return $roundCreated ? $redirect : $redirect->with('success', 'Arquivo anexado.');
+        return $roundCreated ? $redirect : $redirect->with('success', $label);
     }
 
     public function destroy(Task $task, TaskAttachment $attachment)

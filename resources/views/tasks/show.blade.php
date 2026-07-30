@@ -318,15 +318,6 @@
                             style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $task->description }}</textarea>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Legenda</label>
-                        <textarea name="caption" rows="5"
-                            placeholder="Texto que vai junto do material pro cliente aprovar..."
-                            class="w-full px-4 py-3 text-sm focus:outline-none resize-none leading-relaxed"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $task->caption }}</textarea>
-                        <p class="text-xs mt-1.5" style="color:var(--muted2)">Diferente do Briefing acima — esse texto é o que o cliente vê e avalia na Central de Aprovações.</p>
-                    </div>
-
                     <div class="flex items-center gap-3 pt-2" style="border-top:1px solid var(--border2)">
                         <button type="submit"
                             class="px-5 py-2.5 text-sm font-semibold text-white"
@@ -347,14 +338,35 @@
                 </div>
             @endif
 
-            {{-- LEGENDA --}}
-            @if($task->caption)
-                <div x-show="!editing" class="card card-body-lg">
-                    <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.1em">Legenda</p>
-                    <p class="text-xs mb-4" style="color:var(--muted2)">Texto que vai junto do material pra aprovação do cliente.</p>
-                    <div class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.75">{{ $task->caption }}</div>
+            {{-- LEGENDA (sempre visível, com edição própria — é o que o cliente avalia) --}}
+            <div class="card card-body-lg" x-data="{ editingCaption: false }">
+                <div class="flex items-center justify-between mb-1">
+                    <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Legenda</p>
+                    <button type="button" @click="editingCaption = !editingCaption" class="text-xs font-semibold" style="color:var(--purple)">
+                        <span x-text="editingCaption ? 'Cancelar' : (@js((bool) $task->caption) ? 'Editar' : '+ Adicionar')"></span>
+                    </button>
                 </div>
-            @endif
+                <p class="text-xs mb-4" style="color:var(--muted2)">Texto que vai junto do material pra aprovação do cliente — diferente do Briefing acima, que é interno.</p>
+
+                <div x-show="!editingCaption">
+                    @if($task->caption)
+                        <div class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.75">{{ $task->caption }}</div>
+                    @else
+                        <p class="text-sm" style="color:var(--muted)">Nenhuma legenda ainda.</p>
+                    @endif
+                </div>
+
+                <form method="POST" action="{{ route('tasks.update-caption', $task) }}" x-show="editingCaption" x-cloak>
+                    @csrf @method('PATCH')
+                    <textarea name="caption" rows="5"
+                        placeholder="Texto que vai junto do material pro cliente aprovar..."
+                        class="w-full px-4 py-3 text-sm focus:outline-none resize-none leading-relaxed"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $task->caption }}</textarea>
+                    <button type="submit" class="mt-3 px-4 py-2 text-sm font-semibold text-white" style="background:var(--purple)">
+                        Salvar Legenda
+                    </button>
+                </form>
+            </div>
 
             {{-- CAMPOS (visualização) — só o que não aparece na lateral (Situação/Origem/Destino/
                  Método de Aprovação já estão nos cards Contexto/Aprovação da sidebar) --}}
@@ -402,8 +414,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                         </svg>
                         <span class="text-sm font-medium">Clique para anexar ou arraste arquivos</span>
-                        <span class="text-xs mt-1" style="color:var(--muted2)">Máx. 50 MB por arquivo</span>
-                        <input type="file" name="file" x-ref="fileInputInsumo" class="hidden"
+                        <span class="text-xs mt-1" style="color:var(--muted2)">Vários de uma vez · Máx. 50 MB por arquivo</span>
+                        <input type="file" name="files[]" multiple x-ref="fileInputInsumo" class="hidden"
                                @change="$el.closest('form').submit()">
                     </label>
                 </form>
@@ -504,8 +516,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                         </svg>
                         <span class="text-sm font-medium">Clique para anexar ou arraste arquivos</span>
-                        <span class="text-xs mt-1" style="color:var(--muted2)">Máx. 50 MB por arquivo</span>
-                        <input type="file" name="file" x-ref="fileInputEntregavel" class="hidden"
+                        <span class="text-xs mt-1" style="color:var(--muted2)">Vários de uma vez (ex: carrossel) · Máx. 50 MB por arquivo</span>
+                        <input type="file" name="files[]" multiple x-ref="fileInputEntregavel" class="hidden"
                                @change="$el.closest('form').submit()">
                     </label>
                 </form>
