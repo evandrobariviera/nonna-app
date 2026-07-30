@@ -21,7 +21,6 @@ class ApprovalController extends Controller
                 // ajuste em cada uma) — pra o aprovador ver o quadro completo, não só
                 // a rodada atual.
                 'round.task.approvalRounds.tokens.contact',
-                'round.task.approvalRounds.tokens.feedbacks.attachment',
                 'contact',
             ])
             ->firstOrFail();
@@ -43,25 +42,12 @@ class ApprovalController extends Controller
             return redirect()->route('approval.show', $token);
         }
 
-        $hasCaption = filled($approvalToken->round->caption);
-
-        $request->validate([
-            'feedbacks'                => 'required|array|min:1',
-            'feedbacks.*.attachment_id'=> 'required|uuid|exists:task_attachments,id',
-            'feedbacks.*.status'       => 'required|in:approved,changes_requested',
-            'feedbacks.*.comment'      => 'nullable|string|max:1000',
-            'overall_comment'          => 'nullable|string|max:2000',
-            'caption_status'           => [$hasCaption ? 'required' : 'nullable', 'in:approved,changes_requested'],
-            'caption_comment'          => ['nullable', 'string', 'max:1000', 'required_if:caption_status,changes_requested'],
+        $data = $request->validate([
+            'decision' => 'required|in:approved,changes_requested',
+            'comment'  => ['nullable', 'string', 'max:2000', 'required_if:decision,changes_requested'],
         ]);
 
-        $this->service->submitFeedback(
-            $approvalToken,
-            $request->feedbacks,
-            $request->overall_comment,
-            $request->caption_status,
-            $request->caption_comment,
-        );
+        $this->service->submitDecision($approvalToken, $data['decision'], $data['comment'] ?? null);
 
         $approvalToken->refresh();
 

@@ -16,12 +16,10 @@
         .mono { font-family: 'IBM Plex Mono', monospace; }
         .label-sm { font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
 
-        .piece-card { background: var(--s1); border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; transition: border-color .2s; }
-        .piece-card.decided { border-color: var(--border2); }
-        .piece-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
-        .piece-body { padding: 18px; }
+        .piece-card { background: var(--s1); border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
 
-        .preview-img { width: 100%; max-height: 460px; object-fit: contain; background: #000; display: block; border-bottom: 1px solid var(--border); }
+        .preview-img { width: 100%; max-height: 460px; object-fit: contain; background: #000; display: block; }
+        .preview-img + .preview-img { border-top: 1px solid var(--border); }
 
         .btn-decision { flex: 1; padding: 12px 10px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; border: 2px solid var(--border2); cursor: pointer; transition: all .15s; background: transparent; color: var(--muted2); }
         .btn-decision.sel-approve  { border-color: #22c55e; background: rgba(34,197,94,.12); color: #22c55e; }
@@ -33,6 +31,7 @@
 
         .file-link { display: flex; align-items: center; gap: 10px; padding: 14px; background: var(--s2); border: 1px solid var(--border); color: var(--text); text-decoration: none; font-size: 13px; }
         .file-link:hover { border-color: var(--purple); }
+        .file-link + .file-link { border-top: 1px solid var(--border); }
 
         .badge { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .1em; padding: 3px 8px; }
         .badge-pending  { background: rgba(100,100,130,.2); color: var(--muted); }
@@ -131,21 +130,36 @@
                         @if($t->overall_comment)
                             <p class="approver-feedback">{{ explode(' ', $t->contact->name)[0] }}: "{{ $t->overall_comment }}"</p>
                         @endif
-                        @if($t->caption_status === 'changes_requested' && $t->caption_comment)
-                            <p class="approver-feedback">{{ explode(' ', $t->contact->name)[0] }} (legenda): {{ $t->caption_comment }}</p>
-                        @endif
-                        @foreach($t->feedbacks->where('status', 'changes_requested') as $fb)
-                            <p class="approver-feedback">{{ $fb->attachment?->filename ?? 'Arquivo removido' }}: {{ $fb->comment }}</p>
-                        @endforeach
                     @endforeach
                 </div>
             @endforeach
         </div>
         @endif
 
-        @if($deliverables->isEmpty())
-            <p style="text-align:center; color:var(--muted); padding:48px 0">Nenhum arquivo disponível para avaliação.</p>
-        @else
+        {{-- MATERIAL --}}
+        @if($deliverables->isNotEmpty())
+        <div class="piece-card">
+            @foreach($deliverables as $file)
+                @if($file->isImage())
+                    <img src="{{ $file->url() }}" alt="{{ $file->filename }}" class="preview-img">
+                @else
+                    <a href="{{ $file->url() }}" target="_blank" class="file-link">
+                        <span style="font-size:22px">{{ $file->icon() }}</span>
+                        <span>{{ $file->filename }}</span>
+                        <span style="margin-left:auto; font-size:10px; color:var(--muted); font-family:'IBM Plex Mono',monospace">↗ abrir</span>
+                    </a>
+                @endif
+            @endforeach
+        </div>
+        @endif
+
+        {{-- LEGENDA --}}
+        @if($approvalToken->round->caption)
+        <div class="piece-card" style="padding:18px">
+            <span class="label-sm">Legenda</span>
+            <p style="font-size:14px; white-space:pre-wrap; margin:0; color:var(--text); line-height:1.6">{{ $approvalToken->round->caption }}</p>
+        </div>
+        @endif
 
         @if($errors->any())
         <div style="border:1px solid rgba(239,68,68,.3); background:rgba(239,68,68,.06); padding:12px 16px; margin-bottom:20px">
@@ -155,138 +169,43 @@
         </div>
         @endif
 
-        {{-- FORM COM ESTADO CENTRALIZADO --}}
-        @php $hasCaption = filled($approvalToken->round->caption); @endphp
-        <form method="POST"
-              action="{{ route('approval.submit', $approvalToken->token) }}"
-              x-data="{
-                  decisions: {},
-                  get pending() { return {{ $deliverables->count() + ($hasCaption ? 1 : 0) }} - Object.keys(this.decisions).length; },
-                  decide(idx, val) { this.decisions[idx] = val; }
-              }">
-            @csrf
+        {{-- DECISÃO ÚNICA PRA TUDO (material + legenda juntos) --}}
+        <div x-data="{ decision: null }">
+            <form method="POST" action="{{ route('approval.submit', $approvalToken->token) }}">
+                @csrf
+                <input type="hidden" name="decision" x-model="decision">
 
-            @if($hasCaption)
-            <div class="piece-card" :class="decisions.caption ? 'decided' : ''">
-                <div class="piece-header">
-                    <span style="font-size:22px; line-height:1">✍️</span>
-                    <div style="flex:1; min-width:0">
-                        <p style="margin:0; font-size:13px; font-weight:600">Legenda</p>
-                    </div>
-                    <span class="badge badge-pending"  x-show="!decisions.caption">PENDENTE</span>
-                    <span class="badge badge-approved" x-show="decisions.caption === 'approved'" x-cloak>APROVADO</span>
-                    <span class="badge badge-changes"  x-show="decisions.caption === 'changes_requested'" x-cloak>AJUSTES</span>
+                <span class="label-sm">Sua avaliação</span>
+                <div style="display:flex; gap:8px; margin-bottom:14px">
+                    <button type="button" class="btn-decision"
+                            :class="decision === 'approved' ? 'sel-approve' : ''"
+                            @click="decision = 'approved'">
+                        ✓ Aprovar Item
+                    </button>
+                    <button type="button" class="btn-decision"
+                            :class="decision === 'changes_requested' ? 'sel-changes' : ''"
+                            @click="decision = 'changes_requested'">
+                        ✎ Solicitar Ajuste
+                    </button>
                 </div>
 
-                <div style="padding:14px 18px; border-bottom:1px solid var(--border)">
-                    <p style="font-size:13px; white-space:pre-wrap; margin:0; color:var(--text); line-height:1.6">{{ $approvalToken->round->caption }}</p>
+                <div style="background:var(--s1); border:1px solid var(--border); padding:18px; margin-bottom:20px">
+                    <span class="label-sm">
+                        Comentário
+                        <span x-show="decision === 'changes_requested'" style="color:var(--orange)">(obrigatório)</span>
+                        <span x-show="decision !== 'changes_requested'" style="color:var(--muted); font-size:8px">(opcional)</span>
+                    </span>
+                    <textarea class="textarea-pub" name="comment"
+                              :required="decision === 'changes_requested'"
+                              placeholder="Descreva o que precisa ajustar..."
+                              rows="3"></textarea>
                 </div>
 
-                <div class="piece-body">
-                    <input type="hidden" name="caption_status" :value="decisions.caption ?? ''">
-
-                    <span class="label-sm">Sua avaliação</span>
-                    <div style="display:flex; gap:8px; margin-bottom:14px">
-                        <button type="button" class="btn-decision"
-                                :class="decisions.caption === 'approved' ? 'sel-approve' : ''"
-                                @click="decide('caption', 'approved')">
-                            ✓ Aprovar
-                        </button>
-                        <button type="button" class="btn-decision"
-                                :class="decisions.caption === 'changes_requested' ? 'sel-changes' : ''"
-                                @click="decide('caption', 'changes_requested')">
-                            ✎ Solicitar Ajustes
-                        </button>
-                    </div>
-
-                    <div x-show="decisions.caption === 'changes_requested'" x-cloak>
-                        <span class="label-sm">Descreva os ajustes <span style="color:var(--orange)">*</span></span>
-                        <textarea class="textarea-pub"
-                                  name="caption_comment"
-                                  placeholder="Ex: Trocar a chamada, ajustar o tom do texto..."
-                                  rows="3"></textarea>
-                    </div>
-                </div>
-            </div>
-            @endif
-
-            @foreach($deliverables as $idx => $file)
-            <div class="piece-card" :class="decisions[{{ $idx }}] ? 'decided' : ''">
-
-                <div class="piece-header">
-                    <span style="font-size:22px; line-height:1">{{ $file->icon() }}</span>
-                    <div style="flex:1; min-width:0">
-                        <p style="margin:0; font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ $file->filename }}</p>
-                        <p class="mono" style="margin:0; font-size:10px; color:var(--muted)">{{ $file->sizeForHumans() }}</p>
-                    </div>
-                    <span class="badge badge-pending"  x-show="!decisions[{{ $idx }}]">PENDENTE</span>
-                    <span class="badge badge-approved" x-show="decisions[{{ $idx }}] === 'approved'" x-cloak>APROVADO</span>
-                    <span class="badge badge-changes"  x-show="decisions[{{ $idx }}] === 'changes_requested'" x-cloak>AJUSTES</span>
-                </div>
-
-                @if($file->isImage())
-                    <img src="{{ $file->url() }}" alt="{{ $file->filename }}" class="preview-img">
-                @else
-                    <div style="padding:14px 18px; border-bottom:1px solid var(--border)">
-                        <a href="{{ $file->url() }}" target="_blank" class="file-link">
-                            <span style="font-size:22px">{{ $file->icon() }}</span>
-                            <span>{{ $file->filename }}</span>
-                            <span style="margin-left:auto; font-size:10px; color:var(--muted); font-family:'IBM Plex Mono',monospace">↗ abrir</span>
-                        </a>
-                    </div>
-                @endif
-
-                <div class="piece-body">
-                    <input type="hidden" name="feedbacks[{{ $idx }}][attachment_id]" value="{{ $file->id }}">
-                    <input type="hidden" name="feedbacks[{{ $idx }}][status]" :value="decisions[{{ $idx }}] ?? ''">
-
-                    <span class="label-sm">Sua avaliação</span>
-                    <div style="display:flex; gap:8px; margin-bottom:14px">
-                        <button type="button" class="btn-decision"
-                                :class="decisions[{{ $idx }}] === 'approved' ? 'sel-approve' : ''"
-                                @click="decide({{ $idx }}, 'approved')">
-                            ✓ Aprovar
-                        </button>
-                        <button type="button" class="btn-decision"
-                                :class="decisions[{{ $idx }}] === 'changes_requested' ? 'sel-changes' : ''"
-                                @click="decide({{ $idx }}, 'changes_requested')">
-                            ✎ Solicitar Ajustes
-                        </button>
-                    </div>
-
-                    <div x-show="decisions[{{ $idx }}] === 'changes_requested'" x-cloak>
-                        <span class="label-sm">Descreva os ajustes <span style="color:var(--orange)">*</span></span>
-                        <textarea class="textarea-pub"
-                                  name="feedbacks[{{ $idx }}][comment]"
-                                  placeholder="Ex: Alterar a cor do botão, ajustar o texto do título..."
-                                  rows="3"></textarea>
-                    </div>
-                </div>
-            </div>
-            @endforeach
-
-            {{-- COMENTÁRIO GERAL --}}
-            <div style="background:var(--s1); border:1px solid var(--border); padding:18px; margin-bottom:24px">
-                <span class="label-sm">Comentário geral <span style="color:var(--muted); font-size:8px">(opcional)</span></span>
-                <textarea class="textarea-pub" name="overall_comment"
-                          placeholder="Observações gerais sobre o material..."
-                          rows="3"></textarea>
-            </div>
-
-            {{-- PENDING INDICATOR --}}
-            <div x-show="pending > 0" x-cloak style="text-align:center; margin-bottom:12px">
-                <p class="mono" style="font-size:11px; color:var(--muted)">
-                    Avalie todas as peças para enviar
-                    (<span x-text="pending"></span> restante(s))
-                </p>
-            </div>
-
-            <button type="submit" class="submit-btn" :disabled="pending > 0">
-                Enviar Avaliação
-            </button>
-
-        </form>
-        @endif
+                <button type="submit" class="submit-btn" :disabled="decision === null">
+                    Enviar Avaliação
+                </button>
+            </form>
+        </div>
 
     </main>
 

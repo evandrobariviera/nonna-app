@@ -662,66 +662,9 @@
                                                         </div>
                                                     @endif
 
-                                                    {{-- Decisão sobre a legenda --}}
-                                                    @if($round->caption && $token->caption_status)
-                                                        @php $captionChange = $token->caption_status === 'changes_requested'; @endphp
-                                                        <div class="flex gap-3 px-3 py-2.5"
-                                                             style="background:{{ $captionChange ? 'rgba(255,140,0,.04)' : 'rgba(34,197,94,.03)' }};
-                                                                    border:1px solid {{ $captionChange ? 'rgba(255,140,0,.2)' : 'rgba(34,197,94,.15)' }}">
-                                                            <span class="text-xl flex-shrink-0 mt-0.5 leading-none">✍️</span>
-                                                            <div class="flex-1 min-w-0">
-                                                                <div class="flex items-start justify-between gap-2 flex-wrap mb-1">
-                                                                    <span class="text-sm font-medium leading-snug" style="color:var(--text)">Legenda</span>
-                                                                    <span class="text-xs font-semibold flex-shrink-0 px-2 py-0.5"
-                                                                          style="background:{{ $captionChange ? 'rgba(255,140,0,.12)' : 'rgba(34,197,94,.12)' }};
-                                                                                 color:{{ $captionChange ? 'var(--orange)' : '#22c55e' }}">
-                                                                        {{ $captionChange ? '✎ Ajustes' : '✓ Aprovado' }}
-                                                                    </span>
-                                                                </div>
-                                                                @if($token->caption_comment)
-                                                                    <p class="text-sm whitespace-pre-wrap"
-                                                                       style="color:{{ $captionChange ? 'var(--text)' : 'var(--muted2)' }}; line-height:1.6">
-                                                                        {{ $token->caption_comment }}
-                                                                    </p>
-                                                                @elseif(!$captionChange)
-                                                                    <p class="text-xs" style="color:var(--muted)">Sem comentários.</p>
-                                                                @endif
-                                                            </div>
-                                                        </div>
+                                                    @if(!$token->overall_comment)
+                                                        <p class="text-xs" style="color:var(--muted)">Sem comentários.</p>
                                                     @endif
-
-                                                    {{-- Feedback por peça --}}
-                                                    @foreach($token->feedbacks as $feedback)
-                                                        @php $needsChange = $feedback->status === 'changes_requested'; @endphp
-                                                        <div class="flex gap-3 px-3 py-2.5"
-                                                             style="background:{{ $needsChange ? 'rgba(255,140,0,.04)' : 'rgba(34,197,94,.03)' }};
-                                                                    border:1px solid {{ $needsChange ? 'rgba(255,140,0,.2)' : 'rgba(34,197,94,.15)' }}">
-                                                            <span class="text-xl flex-shrink-0 mt-0.5 leading-none">
-                                                                {{ $feedback->attachment?->icon() ?? '📎' }}
-                                                            </span>
-                                                            <div class="flex-1 min-w-0">
-                                                                <div class="flex items-start justify-between gap-2 flex-wrap mb-1">
-                                                                    <span class="text-sm font-medium leading-snug"
-                                                                          style="color:var(--text); word-break:break-all">
-                                                                        {{ $feedback->attachment?->filename ?? '—' }}
-                                                                    </span>
-                                                                    <span class="text-xs font-semibold flex-shrink-0 px-2 py-0.5"
-                                                                          style="background:{{ $needsChange ? 'rgba(255,140,0,.12)' : 'rgba(34,197,94,.12)' }};
-                                                                                 color:{{ $needsChange ? 'var(--orange)' : '#22c55e' }}">
-                                                                        {{ $needsChange ? '✎ Ajustes' : '✓ Aprovado' }}
-                                                                    </span>
-                                                                </div>
-                                                                @if($feedback->comment)
-                                                                    <p class="text-sm whitespace-pre-wrap"
-                                                                       style="color:{{ $needsChange ? 'var(--text)' : 'var(--muted2)' }}; line-height:1.6">
-                                                                        {{ $feedback->comment }}
-                                                                    </p>
-                                                                @elseif(!$needsChange)
-                                                                    <p class="text-xs" style="color:var(--muted)">Sem comentários.</p>
-                                                                @endif
-                                                            </div>
-                                                        </div>
-                                                    @endforeach
                                                 </div>
                                             </div>
                                         @else

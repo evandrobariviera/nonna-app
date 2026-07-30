@@ -86,12 +86,6 @@
                             @if($t->overall_comment)
                                 <p class="text-xs pl-2 mb-1" style="color: var(--muted); border-left: 2px solid var(--border2); margin-left: 2px">{{ explode(' ', $t->contact->name)[0] }}: {{ $t->overall_comment }}</p>
                             @endif
-                            @if($t->caption_status === 'changes_requested' && $t->caption_comment)
-                                <p class="text-xs pl-2 mb-1" style="color: var(--muted); border-left: 2px solid var(--border2); margin-left: 2px">{{ explode(' ', $t->contact->name)[0] }} (legenda): {{ $t->caption_comment }}</p>
-                            @endif
-                            @foreach($t->feedbacks->where('status', 'changes_requested') as $fb)
-                                <p class="text-xs pl-2 mb-1" style="color: var(--muted); border-left: 2px solid var(--border2); margin-left: 2px">{{ $fb->attachment?->filename ?? 'Arquivo removido' }}: {{ $fb->comment }}</p>
-                            @endforeach
                         @endforeach
                     </div>
                 @endforeach

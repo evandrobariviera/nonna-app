@@ -106,7 +106,6 @@ class TaskController extends Controller
             'createdBy',
             'latestApprovalRound.tokens.contact',
             'approvalRounds.tokens.contact',
-            'approvalRounds.tokens.feedbacks.attachment',
         ]);
 
         $users  = User::orderBy('name')->get(['id', 'name']);
