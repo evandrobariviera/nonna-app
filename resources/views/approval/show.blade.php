@@ -63,6 +63,27 @@
         <span class="mono" style="font-size:10px; color:var(--muted)">Rodada #{{ $approvalToken->round->round_number }}</span>
     </header>
 
+    {{-- OUTROS JOBS DO MESMO CLIENTE NESTE MÊS — navegação, cada um com decisão própria --}}
+    @if($batch->count() > 1)
+    <div style="background:var(--s1); border-bottom:1px solid var(--border); padding:16px 20px">
+        <div style="max-width:680px; margin:0 auto">
+            <span class="label-sm" style="margin-bottom:10px">
+                {{ $approvalToken->round->task->client->company_name }} · {{ ucfirst($approvalToken->round->submitted_at->translatedFormat('F')) }}
+            </span>
+            <div style="display:flex; gap:8px; flex-wrap:wrap">
+                @foreach($batch as $i => $t)
+                    @php $isCurrent = $t->id === $approvalToken->id; @endphp
+                    <a href="{{ route('approval.show', $t->token) }}"
+                       title="{{ $t->round->task->title }}"
+                       style="display:inline-flex; align-items:center; gap:5px; padding:8px 14px; font-size:13px; font-weight:700; text-decoration:none; border:2px solid {{ $isCurrent ? 'var(--purple)' : ($t->status !== 'pending' ? '#22c55e' : 'var(--border2)') }}; background:{{ $isCurrent ? 'var(--purple)' : ($t->status !== 'pending' ? 'rgba(34,197,94,.1)' : 'transparent') }}; color:{{ $isCurrent ? '#fff' : ($t->status !== 'pending' ? '#22c55e' : 'var(--muted2)') }}">
+                        @if(!$isCurrent && $t->status !== 'pending')✓@endif {{ $i + 1 }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
     <main style="max-width:680px; margin:0 auto; padding:32px 16px 80px">
 
         {{-- CONTEXTO --}}
