@@ -107,7 +107,6 @@
                     <option value="pending"            {{ request('status') === 'pending'            ? 'selected' : '' }}>Aguardando Resposta</option>
                     <option value="changes_requested"  {{ request('status') === 'changes_requested'  ? 'selected' : '' }}>Ajustes Solicitados</option>
                     <option value="approved"           {{ request('status') === 'approved'           ? 'selected' : '' }}>Aprovado</option>
-                    <option value="cancelled"          {{ request('status') === 'cancelled'          ? 'selected' : '' }}>Cancelado</option>
                 </select>
             </div>
 

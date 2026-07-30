@@ -54,8 +54,12 @@ class ApprovalDashboardController extends Controller
             // Rodada com ajuste pedido some daqui assim que a agência "trata" ela
             // (roteia a tarefa de volta via o quick-select de status/situação) —
             // continua intacta no histórico da tarefa/portal, só não polui mais
-            // a Central de Aprovações.
+            // a Central de Aprovações. Cancelada some sempre — cancelar já é a
+            // ação definitiva, não precisa de "tratar" depois (não fica visível
+            // nem filtrando por status=cancelled de propósito; histórico continua
+            // na tarefa/portal).
             ->where(fn ($q) => $q->where('status', '!=', 'changes_requested')->orWhereNull('handled_at'))
+            ->where('status', '!=', 'cancelled')
             ->orderByDesc('submitted_at');
 
         if ($request->filled('status')) {
