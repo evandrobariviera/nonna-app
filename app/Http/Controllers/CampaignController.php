@@ -42,6 +42,19 @@ class CampaignController extends Controller
 
     public function index(Request $request)
     {
+        return view('campaigns.index', $this->campaignsData($request));
+    }
+
+    // Fragmento (stats + insights + tabela) — chamado via fetch por live-filter.js
+    // conforme o usuário filtra, sem recarregar a página inteira. Recalcula tudo (não
+    // só a query de $data): stats/insights têm o mesmo escopo de filtro que a tabela.
+    public function results(Request $request)
+    {
+        return view('campaigns._results', $this->campaignsData($request));
+    }
+
+    private function campaignsData(Request $request): array
+    {
         $clientId   = $request->get('client_id') ?: null;
         $campaignId = $request->get('ad_campaign_id') ?: null;
         $platform   = $request->get('platform') ?: null;
@@ -239,10 +252,10 @@ class CampaignController extends Controller
             ? AdCampaign::groupCollection($campaigns, $groupBy)->sortByDesc(fn ($g) => $g->filter->isOptimizationOverdue()->count())
             : null;
 
-        return view('campaigns.index', compact(
+        return compact(
             'campaigns', 'campaignsGrouped', 'groupBy', 'stats', 'openInsights', 'clients', 'campaignOptions',
             'periodLabel', 'period', 'statusFilter', 'clientId', 'campaignId', 'platform'
-        ));
+        );
     }
 
     public function show(Request $request, AdCampaign $campaign)

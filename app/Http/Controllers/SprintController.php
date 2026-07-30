@@ -84,8 +84,48 @@ class SprintController extends Controller
                 ->values();
         }
 
-        // Lista filtrável (aba "Lista") — mesmo conjunto de tarefas da sprint, filtrado com
-        // exatamente os mesmos filtros da Fila (ver partials/_task-filter-bar.blade.php).
+        [$listTasks, $listGrouped, $listGroupBy] = $this->filteredListTasks($request, $sprint);
+
+        // Backlog disponível para adicionar (sem sprint, status backlog)
+        $backlogTasks = Task::with(['client', 'project.macroPlan', 'executor'])
+            ->whereNull('sprint_id')
+            ->whereNotIn('status', ['cancelado', 'concluido'])
+            ->orderBy('due_date')
+            ->get();
+
+        $clients      = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $users        = User::orderBy('name')->get(['id', 'name']);
+        $projects     = Project::with('client:id,company_name')
+            ->whereNotIn('status', ['concluido', 'cancelado'])
+            ->orderBy('title')
+            ->get(['id', 'title', 'client_id']);
+        $sprints      = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get();
+        $activeSprint = $sprints->firstWhere('status', 'active');
+
+        return view('sprints.show', compact(
+            'sprint', 'kanban', 'listTasks', 'listGrouped', 'listGroupBy',
+            'backlogTasks', 'clients', 'users', 'projects', 'sprints', 'activeSprint'
+        ));
+    }
+
+    // Fragmento da aba Lista — chamado via fetch por live-filter.js conforme o
+    // usuário filtra, sem recarregar a página inteira (Board/Planejamento ficam intocados).
+    public function listResults(Request $request, Sprint $sprint)
+    {
+        $sprint->load(['tasks.executor', 'tasks.executors', 'tasks.client', 'tasks.project', 'tasks.attachments']);
+
+        [$listTasks, $listGrouped, $listGroupBy] = $this->filteredListTasks($request, $sprint);
+
+        $sprints      = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get();
+        $activeSprint = $sprints->firstWhere('status', 'active');
+
+        return view('sprints._list-results', compact('listTasks', 'listGrouped', 'listGroupBy', 'sprints', 'activeSprint'));
+    }
+
+    // Lista filtrável (aba "Lista") — mesmo conjunto de tarefas da sprint, filtrado com
+    // exatamente os mesmos filtros da Fila (ver partials/_task-filter-bar.blade.php).
+    private function filteredListTasks(Request $request, Sprint $sprint): array
+    {
         $listTasks = $sprint->tasks;
         if (!$request->boolean('list_mostrar_fechados')) {
             $listTasks = $listTasks->whereNotIn('status', ['concluido', 'cancelado']);
@@ -117,26 +157,7 @@ class SprintController extends Controller
         $listGroupBy = $request->get('list_group_by', 'cliente');
         $listGrouped = Task::groupCollection($listTasks, $listGroupBy)->sortByDesc->count();
 
-        // Backlog disponível para adicionar (sem sprint, status backlog)
-        $backlogTasks = Task::with(['client', 'project.macroPlan', 'executor'])
-            ->whereNull('sprint_id')
-            ->whereNotIn('status', ['cancelado', 'concluido'])
-            ->orderBy('due_date')
-            ->get();
-
-        $clients      = Client::orderBy('company_name')->get(['id', 'company_name']);
-        $users        = User::orderBy('name')->get(['id', 'name']);
-        $projects     = Project::with('client:id,company_name')
-            ->whereNotIn('status', ['concluido', 'cancelado'])
-            ->orderBy('title')
-            ->get(['id', 'title', 'client_id']);
-        $sprints      = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get();
-        $activeSprint = $sprints->firstWhere('status', 'active');
-
-        return view('sprints.show', compact(
-            'sprint', 'kanban', 'listTasks', 'listGrouped', 'listGroupBy',
-            'backlogTasks', 'clients', 'users', 'projects', 'sprints', 'activeSprint'
-        ));
+        return [$listTasks, $listGrouped, $listGroupBy];
     }
 
     public function update(Request $request, Sprint $sprint)

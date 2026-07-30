@@ -13,7 +13,10 @@
 
 <form method="GET" action="{{ $formAction }}"
       x-data="{ selectedClient: '{{ request($prefix . 'client_id') }}', selectedProject: '{{ request($prefix . 'project_id') }}' }"
-      class="card card-body mb-5 flex flex-wrap items-end gap-3">
+      class="card card-body mb-5 flex flex-wrap items-end gap-3"
+      @if(isset($resultsUrl) && isset($resultsTarget))
+          data-live-filter data-results-url="{{ $resultsUrl }}" data-target="{{ $resultsTarget }}"
+      @endif>
 
     @foreach($extraHidden as $name => $value)
         <input type="hidden" name="{{ $name }}" value="{{ $value }}">
@@ -108,7 +111,6 @@
     </div>
 
     <div class="flex gap-2">
-        <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
         @if(request()->hasAny($filterKeys))
             <a href="{{ $clearUrl }}" class="btn btn-ghost btn-sm">✕ Limpar</a>
         @endif

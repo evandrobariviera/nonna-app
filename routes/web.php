@@ -201,6 +201,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Campanhas (dashboard interno + insights de IA) ──
     Route::get('/campanhas', [CampaignController::class, 'index'])
         ->name('campaigns.index');
+    // Precisa vir ANTES de /{campaign} — senão "resultados" colide com o wildcard.
+    Route::get('/campanhas/resultados', [CampaignController::class, 'results'])
+        ->name('campaigns.results');
     Route::get('/campanhas/{campaign}', [CampaignController::class, 'show'])
         ->name('campaigns.show');
     Route::patch('/campanhas/{campaign}/descricao', [CampaignController::class, 'updateDescription'])
@@ -335,6 +338,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Macroplanejamentos ──
     Route::get('/planejamentos', [MacroPlanController::class, 'index'])
         ->name('macroplans.index');
+    Route::get('/planejamentos/resultados', [MacroPlanController::class, 'results'])
+        ->name('macroplans.results');
     Route::get('/planejamentos/novo', [MacroPlanController::class, 'create'])
         ->name('macroplans.create');
     Route::post('/planejamentos', [MacroPlanController::class, 'store'])
@@ -365,10 +370,15 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Filas (backlog aguardando sprint) ──
     Route::get('/filas', [FilaController::class, 'index'])
         ->name('fila.index');
+    Route::get('/filas/resultados', [FilaController::class, 'results'])
+        ->name('fila.results');
 
     // ── Lista global de tarefas ──
     Route::get('/tarefas', [TaskController::class, 'index'])
         ->name('tasks.index');
+    // Precisa vir ANTES de /tarefas/{task} — senão "resultados" colide com o wildcard.
+    Route::get('/tarefas/resultados', [TaskController::class, 'results'])
+        ->name('tasks.results');
     Route::post('/tarefas/lote', [TaskController::class, 'bulkUpdate'])
         ->name('tasks.bulkUpdate');
 
@@ -457,6 +467,7 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::get('/sprints/nova', [SprintController::class, 'create'])->name('sprints.create');
     Route::post('/sprints', [SprintController::class, 'store'])->name('sprints.store');
     Route::get('/sprints/{sprint}', [SprintController::class, 'show'])->name('sprints.show');
+    Route::get('/sprints/{sprint}/lista/resultados', [SprintController::class, 'listResults'])->name('sprints.list-results');
     Route::patch('/sprints/{sprint}', [SprintController::class, 'update'])->name('sprints.update');
     Route::post('/sprints/{sprint}/travar', [SprintController::class, 'lock'])->name('sprints.lock');
     Route::post('/sprints/{sprint}/reabrir', [SprintController::class, 'unlock'])->name('sprints.unlock');

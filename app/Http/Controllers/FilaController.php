@@ -13,6 +13,22 @@ class FilaController extends Controller
 {
     public function index(Request $request)
     {
+        $data = $this->filteredTasksData($request);
+
+        $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
+
+        return view('filas.index', [...$data, ...compact('clients')]);
+    }
+
+    // Fragmento (stats + tabela agrupada) — chamado via fetch por live-filter.js
+    // conforme o usuário filtra, sem recarregar a página inteira.
+    public function results(Request $request)
+    {
+        return view('filas._results', $this->filteredTasksData($request));
+    }
+
+    private function filteredTasksData(Request $request): array
+    {
         $query = Task::with(['client', 'project.macroPlan', 'executor', 'executors'])
             ->whereNull('sprint_id')
             ->orderByRaw("due_date NULLS LAST")
@@ -51,13 +67,6 @@ class FilaController extends Controller
         $groupBy = $request->get('group_by', 'cliente');
         $grouped = Task::groupCollection($tasks, $groupBy)->sortByDesc->count();
 
-        $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);
-        $users    = User::orderBy('name')->get(['id', 'name']);
-        $projects = Project::with('client:id,company_name')
-            ->whereNotIn('status', ['concluido', 'cancelado'])
-            ->orderBy('title')
-            ->get(['id', 'title', 'client_id']);
-
         $sprints = Sprint::whereIn('status', ['active', 'planning'])
             ->orderByRaw("CASE status WHEN 'active' THEN 0 ELSE 1 END")
             ->orderByDesc('starts_at')
@@ -74,10 +83,13 @@ class FilaController extends Controller
             'pendencias'  => $pendenciasCount,
         ];
 
-        return view('filas.index', compact(
-            'tasks', 'grouped', 'groupBy', 'clients', 'users', 'projects',
-            'sprints', 'activeSprint', 'stats'
-        ));
+        $users = User::orderBy('name')->get(['id', 'name']);
+        $projects = Project::with('client:id,company_name')
+            ->whereNotIn('status', ['concluido', 'cancelado'])
+            ->orderBy('title')
+            ->get(['id', 'title', 'client_id']);
+
+        return compact('tasks', 'grouped', 'groupBy', 'sprints', 'activeSprint', 'stats', 'users', 'projects');
     }
 
 }

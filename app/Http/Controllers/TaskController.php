@@ -19,6 +19,29 @@ class TaskController extends Controller
 {
     public function index(Request $request)
     {
+        $tasks    = $this->filteredTasks($request);
+        $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $users    = User::orderBy('name')->get(['id', 'name']);
+        $sprints  = Sprint::orderByDesc('starts_at')->get(['id', 'title', 'status']);
+        $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
+
+        return view('tasks.index', compact('tasks', 'clients', 'users', 'sprints', 'projects'));
+    }
+
+    // Fragmento da listagem — chamado via fetch por live-filter.js conforme o
+    // usuário digita/filtra, sem recarregar a página inteira.
+    public function results(Request $request)
+    {
+        $tasks    = $this->filteredTasks($request);
+        $users    = User::orderBy('name')->get(['id', 'name']);
+        $sprints  = Sprint::orderByDesc('starts_at')->get(['id', 'title', 'status']);
+        $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
+
+        return view('tasks._results', compact('tasks', 'users', 'sprints', 'projects'));
+    }
+
+    private function filteredTasks(Request $request)
+    {
         $query = Task::with(['client', 'executor', 'executors', 'project.macroPlan', 'sprint'])
             ->where('is_ticket', false)
             ->orderByRaw("CASE status
@@ -63,13 +86,7 @@ class TaskController extends Controller
             $query->whereNotIn('status', ['concluido', 'cancelado']);
         }
 
-        $tasks    = $query->paginate(40)->withQueryString();
-        $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);
-        $users    = User::orderBy('name')->get(['id', 'name']);
-        $sprints  = Sprint::orderByDesc('starts_at')->get(['id', 'title', 'status']);
-        $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
-
-        return view('tasks.index', compact('tasks', 'clients', 'users', 'sprints', 'projects'));
+        return $query->paginate(40)->withQueryString();
     }
 
     public function show(Task $task)

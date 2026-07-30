@@ -13,6 +13,23 @@ class MacroPlanController extends Controller
     // Lista global de todos os macroplanejamentos
     public function index(Request $request)
     {
+        $macroplans = $this->filteredMacroplans($request);
+        $clients    = Client::orderBy('company_name')->get(['id', 'company_name']);
+
+        return view('macroplans.index', compact('macroplans', 'clients'));
+    }
+
+    // Fragmento da listagem — chamado via fetch por live-filter.js conforme o
+    // usuário filtra, sem recarregar a página inteira.
+    public function results(Request $request)
+    {
+        $macroplans = $this->filteredMacroplans($request);
+
+        return view('macroplans._results', compact('macroplans'));
+    }
+
+    private function filteredMacroplans(Request $request)
+    {
         $query = MacroPlan::with(['client', 'responsible'])
             ->orderByDesc('period_start');
 
@@ -28,10 +45,7 @@ class MacroPlanController extends Controller
             $query->where('status', '!=', 'concluido');
         }
 
-        $macroplans = $query->paginate(20)->withQueryString();
-        $clients    = Client::orderBy('company_name')->get(['id', 'company_name']);
-
-        return view('macroplans.index', compact('macroplans', 'clients'));
+        return $query->paginate(20)->withQueryString();
     }
 
     public function create(Request $request)
