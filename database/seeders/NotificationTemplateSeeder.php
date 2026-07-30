@@ -5,13 +5,21 @@ namespace Database\Seeders;
 use App\Models\NotificationTemplate;
 use App\Models\Organization;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class NotificationTemplateSeeder extends Seeder
 {
     /**
      * Textos padrão por gatilho e canal — só preenche o que ainda não
-     * existe (firstOrCreate), então nunca sobrescreve um texto que a
-     * agência já tenha customizado em Configurações > Mensagens Padrão.
+     * existe, então nunca sobrescreve um texto que a agência já tenha
+     * customizado em Configurações > Mensagens Padrão.
+     *
+     * Roda em TODO boot do container (entrypoint.sh) — por isso monta a
+     * lista inteira em memória e faz UMA query de leitura + UMA de escrita
+     * (insertOrIgnore em lote), em vez de um firstOrCreate() por
+     * organização × tipo × canal (era ~150-200 round-trips sequenciais ao
+     * banco por boot, sem nunca inserir nada depois do primeiro deploy —
+     * suspeito real de lentidão no deploy, achado em 2026-07-30).
      */
     public function run(): void
     {
@@ -99,15 +107,50 @@ class NotificationTemplateSeeder extends Seeder
             ],
         ];
 
-        Organization::all()->each(function (Organization $organization) use ($templates) {
+        $organizationIds = Organization::pluck('id');
+        if ($organizationIds->isEmpty()) {
+            return;
+        }
+
+        // Uma leitura só: todos os (organization_id, type, channel) já gravados,
+        // pra saber o que falta sem perguntar linha por linha.
+        $existing = NotificationTemplate::whereIn('organization_id', $organizationIds)
+            ->get(['organization_id', 'type', 'channel'])
+            ->map(fn ($row) => $row->organization_id . '|' . $row->type . '|' . $row->channel)
+            ->flip();
+
+        $now = now();
+        $rows = [];
+
+        foreach ($organizationIds as $organizationId) {
             foreach ($templates as $type => $channels) {
                 foreach ($channels as $channel => $content) {
-                    NotificationTemplate::firstOrCreate(
-                        ['organization_id' => $organization->id, 'type' => $type, 'channel' => $channel],
-                        $content
-                    );
+                    if (isset($existing["{$organizationId}|{$type}|{$channel}"])) {
+                        continue;
+                    }
+
+                    $rows[] = [
+                        'id'              => (string) Str::uuid(),
+                        'organization_id' => $organizationId,
+                        'type'            => $type,
+                        'channel'         => $channel,
+                        'subject'         => $content['subject'] ?? null,
+                        'body'            => $content['body'],
+                        'created_at'      => $now,
+                        'updated_at'      => $now,
+                    ];
                 }
             }
-        });
+        }
+
+        if (empty($rows)) {
+            return;
+        }
+
+        // Uma escrita só (lote) — insertOrIgnore por segurança contra corrida
+        // entre containers subindo ao mesmo tempo num rolling update.
+        foreach (array_chunk($rows, 200) as $chunk) {
+            NotificationTemplate::query()->insertOrIgnore($chunk);
+        }
     }
 }
