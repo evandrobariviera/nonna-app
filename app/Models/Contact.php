@@ -31,13 +31,11 @@ class Contact extends Authenticatable
         'assigned_to',  // FK users (bigint)
         'created_by',   // FK users (bigint)
         'password',
-        'portal_access_enabled',
     ];
 
     protected function casts(): array
     {
         return [
-            'portal_access_enabled' => 'boolean',
             'portal_last_login_at'  => 'datetime',
             'password'              => 'hashed',
         ];
@@ -95,8 +93,16 @@ class Contact extends Authenticatable
     {
         return $this->belongsToMany(Client::class, 'client_contacts', 'contact_id', 'client_id')
             ->using(ClientContact::class)
-            ->withPivot(['role', 'is_primary'])
+            ->withPivot(['role', 'is_primary', 'portal_access_enabled'])
             ->withTimestamps();
+    }
+
+    // Tem o Portal liberado em pelo menos um cliente — não confundir com "tem
+    // senha definida" (isso só diz que já fez algum acesso alguma vez, mesmo
+    // que hoje esteja revogado em todo mundo).
+    public function hasAnyPortalAccess(): bool
+    {
+        return $this->clients()->wherePivot('portal_access_enabled', true)->exists();
     }
 
     // Delete de verdade só é permitido quando não sobra NENHUMA associação —
@@ -111,7 +117,7 @@ class Contact extends Authenticatable
             'comentários no portal'       => TaskComment::where('contact_id', $this->id)->count(),
         ];
 
-        if ($this->portal_access_enabled) {
+        if ($this->hasAnyPortalAccess()) {
             $checks['acesso ao portal ativo'] = 1;
         }
 

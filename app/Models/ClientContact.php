@@ -24,10 +24,12 @@ class ClientContact extends Pivot
         'contact_id',
         'role',
         'is_primary',
+        'portal_access_enabled',
     ];
 
     protected $casts = [
-        'is_primary' => 'boolean',
+        'is_primary'             => 'boolean',
+        'portal_access_enabled'  => 'boolean',
     ];
 
     public function roleLabel(): string

@@ -36,9 +36,8 @@ class LoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         $credentials = [
-            'email'                  => Str::lower(trim((string) $this->string('email'))),
-            'password'               => $this->string('password'),
-            'portal_access_enabled'  => true,
+            'email'    => Str::lower(trim((string) $this->string('email'))),
+            'password' => $this->string('password'),
         ];
 
         if (! Auth::guard('portal')->attempt($credentials, $this->boolean('remember'))) {

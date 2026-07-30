@@ -1991,8 +1991,8 @@
 
         {{-- ══ TAB PORTAL ══ --}}
         @php
-            $portalContacts = $client->contacts()->where('portal_access_enabled', true)->orderBy('name')->get();
-            $availableContacts = $client->contacts()->where('portal_access_enabled', false)->orderBy('name')->get();
+            $portalContacts = $client->contacts()->wherePivot('portal_access_enabled', true)->orderBy('name')->get();
+            $availableContacts = $client->contacts()->wherePivot('portal_access_enabled', false)->orderBy('name')->get();
         @endphp
         <div x-show="tab === 'portal'" x-cloak>
             <div class="max-w-lg">
@@ -2060,7 +2060,7 @@
                                 Senha inicial
                             </label>
                             <input type="text" name="password"
-                                   required placeholder="Mínimo 8 caracteres"
+                                   placeholder="Mínimo 8 caracteres — deixe em branco se o contato já tem senha (de outro cliente)"
                                    class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
                                    style="background: var(--s2); border-color: var(--border2); color: var(--text)">
                             @error('password')

@@ -164,7 +164,7 @@ class Client extends Model
     {
         return $this->belongsToMany(Contact::class, 'client_contacts', 'client_id', 'contact_id')
             ->using(ClientContact::class)
-            ->withPivot(['role', 'is_primary'])
+            ->withPivot(['role', 'is_primary', 'portal_access_enabled'])
             ->withTimestamps();
     }
 

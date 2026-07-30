@@ -20,11 +20,11 @@ class ResolvePortalClientContext
     public function handle(Request $request, Closure $next): Response
     {
         $contact = Auth::guard('portal')->user();
-        $clients = $contact->clients()->get();
+        $clients = $contact->clients()->wherePivot('portal_access_enabled', true)->get();
 
         if ($clients->isEmpty()) {
             Auth::guard('portal')->logout();
-            abort(403, 'Este contato não está vinculado a nenhum cliente.');
+            abort(403, 'Este contato não tem acesso ao Portal liberado em nenhum cliente.');
         }
 
         $clientId = $request->session()->get('portal_current_client_id');
