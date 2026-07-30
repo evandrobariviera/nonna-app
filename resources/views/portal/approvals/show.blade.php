@@ -32,6 +32,60 @@
         @endif
     </div>
 
+    {{-- QUEM FALTA APROVAR / QUEM JÁ APROVOU (rodada atual) --}}
+    @if($round->tokens->count() > 1)
+        <div class="card p-6 mb-6">
+            <h2 class="text-sm font-bold uppercase tracking-wide mb-3" style="color: var(--muted)">Aprovadores desta rodada</h2>
+            <div class="flex flex-col gap-2">
+                @foreach($round->tokens as $t)
+                    @php
+                        $tsc = $statusColors[$t->status] ?? $statusColors['pending'];
+                        $tLabel = $t->status === 'approved' ? 'Aprovou' : ($t->status === 'changes_requested' ? 'Pediu ajuste' : 'Aguardando');
+                    @endphp
+                    <div class="flex items-center justify-between text-sm">
+                        <span style="color: var(--text)">{{ explode(' ', $t->contact->name)[0] }}</span>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background: {{ $tsc['bg'] }}; color: {{ $tsc['text'] }}">{{ $tLabel }}</span>
+                    </div>
+                    @if($t->status === 'changes_requested' && $t->overall_comment)
+                        <p class="text-xs pl-2" style="color: var(--muted); border-left: 2px solid var(--border2); margin-left: 2px">{{ $t->overall_comment }}</p>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    {{-- HISTÓRICO DE RODADAS ANTERIORES --}}
+    @php
+        $otherRounds = $round->task->approvalRounds->where('id', '!=', $round->id)->sortByDesc('round_number');
+    @endphp
+    @if($otherRounds->isNotEmpty())
+        <div class="card p-6 mb-6">
+            <h2 class="text-sm font-bold uppercase tracking-wide mb-3" style="color: var(--muted)">Histórico de Rodadas Anteriores</h2>
+            <div class="flex flex-col gap-4">
+                @foreach($otherRounds as $r)
+                    @php $rsc = $statusColors[$r->status] ?? $statusColors['pending']; @endphp
+                    <div class="{{ !$loop->last ? 'pb-4' : '' }}" style="{{ !$loop->last ? 'border-bottom: 1px solid var(--border2)' : '' }}">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-semibold" style="color: var(--text)">Rodada #{{ $r->round_number }}</span>
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background: {{ $rsc['bg'] }}; color: {{ $rsc['text'] }}">{{ $r->displayStatusLabel() }}</span>
+                        </div>
+                        @if($r->resolved_at)
+                            <p class="text-xs mb-2" style="color: var(--muted)">{{ $r->resolved_at->format('d/m/Y') }}</p>
+                        @endif
+                        @foreach($r->tokens as $t)
+                            @if($t->overall_comment)
+                                <p class="text-xs pl-2 mb-1" style="color: var(--muted); border-left: 2px solid var(--border2); margin-left: 2px">{{ explode(' ', $t->contact->name)[0] }}: {{ $t->overall_comment }}</p>
+                            @endif
+                            @foreach($t->feedbacks->where('status', 'changes_requested') as $fb)
+                                <p class="text-xs pl-2 mb-1" style="color: var(--muted); border-left: 2px solid var(--border2); margin-left: 2px">{{ $fb->attachment?->filename ?? 'Arquivo removido' }}: {{ $fb->comment }}</p>
+                            @endforeach
+                        @endforeach
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     @if($deliverables->isNotEmpty())
         <div class="card p-6 mb-6">
             <h2 class="text-sm font-bold uppercase tracking-wide mb-4" style="color: var(--muted)">Arquivos para Aprovação</h2>

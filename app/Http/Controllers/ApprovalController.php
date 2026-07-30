@@ -16,6 +16,12 @@ class ApprovalController extends Controller
             ->with([
                 'round.task.client',
                 'round.submittedBy',
+                'round.tokens.contact',
+                // Histórico de todas as rodadas da mesma tarefa (quem aprovou/pediu
+                // ajuste em cada uma) — pra o aprovador ver o quadro completo, não só
+                // a rodada atual.
+                'round.task.approvalRounds.tokens.contact',
+                'round.task.approvalRounds.tokens.feedbacks.attachment',
                 'contact',
             ])
             ->firstOrFail();

@@ -39,6 +39,14 @@
         .badge-approved { background: rgba(34,197,94,.15); color: #22c55e; }
         .badge-changes  { background: rgba(255,140,0,.15); color: var(--orange); }
 
+        .approvers-box { background: var(--s1); border: 1px solid var(--border); padding: 16px 18px; margin-bottom: 24px; }
+        .approver-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+        .approver-row + .approver-row { border-top: 1px solid var(--border); }
+        .approver-feedback { font-size: 12px; color: var(--muted2); margin: 4px 0 0; line-height: 1.5; border-left: 2px solid var(--border2); padding-left: 10px; }
+
+        .history-item { padding: 12px 0; }
+        .history-item + .history-item { border-top: 1px solid var(--border); }
+
         .submit-btn { width: 100%; padding: 16px; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; background: var(--purple); color: #fff; border: none; cursor: pointer; transition: opacity .15s; letter-spacing: .04em; }
         .submit-btn:disabled { opacity: .3; cursor: not-allowed; }
         .submit-btn:not(:disabled):hover { opacity: .88; }
@@ -73,6 +81,59 @@
         <div style="background:var(--s1); border-left:3px solid var(--purple); border-top:1px solid var(--border); border-right:1px solid var(--border); border-bottom:1px solid var(--border); padding:14px 18px; margin-bottom:24px">
             <span class="label-sm" style="margin-bottom:4px">Observações do time</span>
             <p style="font-size:13px; color:var(--muted2); margin:0; line-height:1.6">{{ $approvalToken->round->notes }}</p>
+        </div>
+        @endif
+
+        {{-- QUEM FALTA APROVAR / QUEM JÁ APROVOU (rodada atual) --}}
+        @if($approvalToken->round->tokens->count() > 1)
+        <div class="approvers-box">
+            <span class="label-sm" style="margin-bottom:8px">Aprovadores desta rodada</span>
+            @foreach($approvalToken->round->tokens as $t)
+                <div class="approver-row">
+                    <span style="{{ $t->id === $approvalToken->id ? 'font-weight:700' : '' }}">
+                        {{ explode(' ', $t->contact->name)[0] }}{{ $t->id === $approvalToken->id ? ' (você)' : '' }}
+                    </span>
+                    <span class="badge badge-{{ $t->status === 'approved' ? 'approved' : ($t->status === 'changes_requested' ? 'changes' : 'pending') }}">
+                        {{ $t->status === 'approved' ? 'APROVOU' : ($t->status === 'changes_requested' ? 'PEDIU AJUSTE' : 'AGUARDANDO') }}
+                    </span>
+                </div>
+                @if($t->status === 'changes_requested' && $t->overall_comment)
+                    <p class="approver-feedback">"{{ $t->overall_comment }}"</p>
+                @endif
+            @endforeach
+        </div>
+        @endif
+
+        {{-- HISTÓRICO DE RODADAS ANTERIORES --}}
+        @php
+            $otherRounds = $approvalToken->round->task->approvalRounds
+                ->where('id', '!=', $approvalToken->round_id)
+                ->sortByDesc('round_number');
+        @endphp
+        @if($otherRounds->isNotEmpty())
+        <div class="approvers-box">
+            <span class="label-sm" style="margin-bottom:8px">Histórico de rodadas anteriores</span>
+            @foreach($otherRounds as $r)
+                <div class="history-item">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px">
+                        <span style="font-size:13px; font-weight:600">Rodada #{{ $r->round_number }}</span>
+                        <span class="badge badge-{{ $r->status === 'approved' ? 'approved' : ($r->status === 'changes_requested' ? 'changes' : 'pending') }}">
+                            {{ $r->displayStatusLabel() }}
+                        </span>
+                    </div>
+                    @if($r->resolved_at)
+                        <p class="mono" style="font-size:10px; color:var(--muted); margin:0 0 6px">{{ $r->resolved_at->format('d/m/Y') }}</p>
+                    @endif
+                    @foreach($r->tokens as $t)
+                        @if($t->overall_comment)
+                            <p class="approver-feedback">{{ explode(' ', $t->contact->name)[0] }}: "{{ $t->overall_comment }}"</p>
+                        @endif
+                        @foreach($t->feedbacks->where('status', 'changes_requested') as $fb)
+                            <p class="approver-feedback">{{ $fb->attachment?->filename ?? 'Arquivo removido' }}: {{ $fb->comment }}</p>
+                        @endforeach
+                    @endforeach
+                </div>
+            @endforeach
         </div>
         @endif
 

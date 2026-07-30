@@ -34,6 +34,14 @@ class ApprovalController extends Controller
 
         abort_if($round->task->client_id !== $client->id, 403);
 
+        // Quem mais precisa aprovar/já aprovou nesta rodada + histórico de rodadas
+        // anteriores da mesma tarefa (com o que foi pedido de ajuste em cada uma).
+        $round->load([
+            'tokens.contact',
+            'task.approvalRounds.tokens.contact',
+            'task.approvalRounds.tokens.feedbacks.attachment',
+        ]);
+
         $deliverables = $round->deliverables();
 
         return view('portal.approvals.show', compact('client', 'round', 'deliverables'));
