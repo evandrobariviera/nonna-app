@@ -13,6 +13,23 @@ class MeetingController extends Controller
 {
     public function index(Request $request)
     {
+        $meetings = $this->filteredMeetings($request);
+        $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);
+
+        return view('meetings.index', compact('meetings', 'clients'));
+    }
+
+    // Fragmento da listagem — chamado via fetch por live-filter.js conforme o
+    // usuário filtra, sem recarregar a página inteira.
+    public function results(Request $request)
+    {
+        $meetings = $this->filteredMeetings($request);
+
+        return view('meetings._results', compact('meetings'));
+    }
+
+    private function filteredMeetings(Request $request)
+    {
         $query = Meeting::with(['client', 'organizer', 'participants'])
             ->orderBy('scheduled_at', 'desc');
 
@@ -26,10 +43,7 @@ class MeetingController extends Controller
             $query->where('client_id', $request->client_id);
         }
 
-        $meetings = $query->paginate(20)->withQueryString();
-        $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);
-
-        return view('meetings.index', compact('meetings', 'clients'));
+        return $query->paginate(20)->withQueryString();
     }
 
     public function create()

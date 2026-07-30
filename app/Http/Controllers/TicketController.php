@@ -14,6 +14,29 @@ class TicketController extends Controller
 {
     public function index(Request $request)
     {
+        $tickets  = $this->filteredTickets($request);
+        $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $users    = User::orderBy('name')->get(['id', 'name']);
+        $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
+        $sprints  = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get(['id', 'title', 'status']);
+
+        return view('tickets.index', compact('tickets', 'clients', 'users', 'projects', 'sprints'));
+    }
+
+    // Fragmento da listagem — chamado via fetch por live-filter.js conforme o
+    // usuário digita/filtra, sem recarregar a página inteira.
+    public function results(Request $request)
+    {
+        $tickets  = $this->filteredTickets($request);
+        $users    = User::orderBy('name')->get(['id', 'name']);
+        $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
+        $sprints  = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get(['id', 'title', 'status']);
+
+        return view('tickets._results', compact('tickets', 'users', 'projects', 'sprints'));
+    }
+
+    private function filteredTickets(Request $request)
+    {
         $query = Task::with(['client', 'executor', 'executors', 'project'])
             ->where('is_ticket', true)
             // Depois que o chamado é triado pra uma Sprint, ele passa a ser
@@ -39,13 +62,7 @@ class TicketController extends Controller
             $query->where('title', 'ilike', '%' . $request->search . '%');
         }
 
-        $tickets  = $query->paginate(30)->withQueryString();
-        $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);
-        $users    = User::orderBy('name')->get(['id', 'name']);
-        $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
-        $sprints  = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get(['id', 'title', 'status']);
-
-        return view('tickets.index', compact('tickets', 'clients', 'users', 'projects', 'sprints'));
+        return $query->paginate(30)->withQueryString();
     }
 
     public function create()

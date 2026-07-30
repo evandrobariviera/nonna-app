@@ -11,19 +11,7 @@ class ApprovalDashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $query = TaskApprovalRound::with(['task.client', 'tokens.contact', 'submittedBy'])
-            ->whereHas('task')
-            ->orderByDesc('submitted_at');
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('client_id')) {
-            $query->whereHas('task', fn ($q) => $q->where('client_id', $request->client_id));
-        }
-
-        $rounds = $query->paginate(30)->withQueryString();
+        [$rounds, $board] = $this->roundsAndBoard($request);
 
         $stats = [
             'awaiting_send'  => TaskApprovalRound::where('status', 'pending')->whereNull('sent_at')->count(),
@@ -45,9 +33,37 @@ class ApprovalDashboardController extends Controller
             ->orderBy('company_name')
             ->get(['id', 'company_name']);
 
+        return view('approvals.index', compact('rounds', 'stats', 'clients', 'board'));
+    }
+
+    // Fragmento (Quadros + Lista) — chamado via fetch por live-filter.js conforme o
+    // usuário filtra, sem recarregar a página inteira (cards de stats ficam intocados).
+    public function results(Request $request)
+    {
+        [$rounds, $board] = $this->roundsAndBoard($request);
+
+        return view('approvals._results', compact('rounds', 'board'));
+    }
+
+    private function roundsAndBoard(Request $request): array
+    {
+        $query = TaskApprovalRound::with(['task.client', 'tokens.contact', 'submittedBy'])
+            ->whereHas('task')
+            ->orderByDesc('submitted_at');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('client_id')) {
+            $query->whereHas('task', fn ($q) => $q->where('client_id', $request->client_id));
+        }
+
+        $rounds = $query->paginate(30)->withQueryString();
+
         $board = $this->buildBoard($request->input('client_id'));
 
-        return view('approvals.index', compact('rounds', 'stats', 'clients', 'board'));
+        return [$rounds, $board];
     }
 
     /**

@@ -320,6 +320,11 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('opportunities.lose');
 
     // ── Agenda (Reuniões) ──
+    // Precisa vir ANTES do resource() — senão "resultados" colide com o {meeting}
+    // wildcard de meetings.show (Laravel casa rotas na ordem de registro).
+    Route::get('/agenda/resultados', [MeetingController::class, 'results'])
+        ->name('meetings.results');
+
     Route::resource('agenda', MeetingController::class)->parameters([
         'agenda' => 'meeting',
     ])->names([
@@ -413,6 +418,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Dashboard central de aprovações ──
     Route::get('/aprovacoes', [\App\Http\Controllers\ApprovalDashboardController::class, 'index'])
         ->name('approvals.index');
+    Route::get('/aprovacoes/resultados', [\App\Http\Controllers\ApprovalDashboardController::class, 'results'])
+        ->name('approvals.results');
     Route::post('/aprovacoes/{round}/enviar', [\App\Http\Controllers\ApprovalDashboardController::class, 'send'])
         ->name('approvals.send');
 
@@ -478,6 +485,7 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
 
     // ── Tickets (tarefas avulsas) ──
     Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
+    Route::get('/tickets/resultados', [TicketController::class, 'results'])->name('tickets.results');
     Route::get('/tickets/novo', [TicketController::class, 'create'])->name('tickets.create');
     Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
     Route::patch('/tickets/{task}/status', [TicketController::class, 'updateStatus'])->name('tickets.update-status');
