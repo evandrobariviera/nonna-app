@@ -37,7 +37,7 @@
                                 </div>
                                 @if($col['key'] === 'awaiting_send')
                                     <form method="POST" action="{{ route('approvals.send', $round) }}"
-                                          onsubmit="return confirm('Enviar essa rodada para o cliente agora?')" class="mt-2">
+                                          @submit.prevent="if (await $store.confirmDialog.ask('Enviar essa rodada para o cliente agora?')) $el.submit()" class="mt-2">
                                         @csrf
                                         <button type="submit" class="text-xs font-semibold px-2.5 py-1 text-white"
                                                 style="background:var(--purple)">
@@ -140,7 +140,7 @@
                         <div class="flex items-start gap-3 flex-shrink-0">
                             @if($notSent)
                                 <form method="POST" action="{{ route('approvals.send', $round) }}"
-                                      onsubmit="return confirm('Enviar essa rodada para o cliente agora?')">
+                                      @submit.prevent="if (await $store.confirmDialog.ask('Enviar essa rodada para o cliente agora?')) $el.submit()">
                                     @csrf
                                     <button type="submit" class="text-xs font-semibold px-3 py-1 text-white"
                                             style="background:var(--purple)">

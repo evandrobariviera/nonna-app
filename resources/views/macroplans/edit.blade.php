@@ -111,7 +111,7 @@
                             {{ $attachment->icon() }} {{ $attachment->filename }}
                         </a>
                         <form method="POST" action="{{ route('macroplans.attachments.destroy', [$macroplan, $attachment]) }}"
-                              onsubmit="return confirm('Remover anexo?')">
+                              @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-danger btn-xs">✕</button>
                         </form>
@@ -122,7 +122,7 @@
             {{-- Remover --}}
             <div class="mt-3">
                 <form method="POST" action="{{ route('macroplans.destroy', $macroplan) }}"
-                      onsubmit="return confirm('Remover este planejamento e todos os projetos?')">
+                      @submit.prevent="if (await $store.confirmDialog.ask('Remover este planejamento e todos os projetos?')) $el.submit()">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-sm w-full">
                         Remover Planejamento
@@ -576,7 +576,7 @@
                                             <a href="{{ route('macroplans.projects.show', [$macroplan, $project]) }}" class="btn btn-ghost btn-xs">Ver →</a>
                                             <button type="button" @click="editId = '{{ $project->id }}'" class="btn btn-ghost btn-xs">Editar</button>
                                             <form method="POST" action="{{ route('macroplans.projects.destroy', [$macroplan, $project]) }}"
-                                                  onsubmit="return confirm('Remover projeto {{ addslashes($project->title) }}?')">
+                                                  @submit.prevent="if (await $store.confirmDialog.ask('Remover projeto {{ addslashes($project->title) }}?')) $el.submit()">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="btn btn-danger btn-xs">Remover</button>
                                             </form>

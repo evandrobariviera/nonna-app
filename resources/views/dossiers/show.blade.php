@@ -52,10 +52,10 @@
 
                 {{-- Avançar fase --}}
                 @if(!$dossier->isAprovado())
-                    <form method="POST" action="{{ route('clients.dossiers.avancar-fase', [$client, $dossier]) }}">
+                    <form method="POST" action="{{ route('clients.dossiers.avancar-fase', [$client, $dossier]) }}"
+                          @submit.prevent="if (await $store.confirmDialog.ask('Avançar para a próxima fase?')) $el.submit()">
                         @csrf
-                        <button type="submit" class="btn btn-ghost btn-sm"
-                                onclick="return confirm('Avançar para a próxima fase?')">
+                        <button type="submit" class="btn btn-ghost btn-sm">
                             Avançar fase →
                         </button>
                     </form>
@@ -75,7 +75,7 @@
 
                 {{-- Remover --}}
                 <form method="POST" action="{{ route('clients.dossiers.destroy', [$client, $dossier]) }}"
-                      onsubmit="return confirm('Remover este dossiê e todos os seus dados?')">
+                      @submit.prevent="if (await $store.confirmDialog.ask('Remover este dossiê e todos os seus dados?')) $el.submit()">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">
                         Remover

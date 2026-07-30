@@ -38,7 +38,7 @@
 
     {{-- Botão de confirmação --}}
     <form method="POST" action="{{ route('superadmin.reset-operacional.execute') }}"
-          onsubmit="return confirm('Tem certeza? Esta ação apagará todos os dados operacionais de produção.')">
+          @submit.prevent="if (await $store.confirmDialog.ask('Tem certeza? Esta ação apagará todos os dados operacionais de produção.')) $el.submit()">
         @csrf
         <button type="submit" class="btn btn-danger">
             Executar Reset Operacional

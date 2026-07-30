@@ -32,7 +32,7 @@
                     <p class="text-xs mt-2" style="color:var(--muted)">JPG, PNG ou WEBP, até 3 MB.</p>
                     @if($user->avatar_path)
                         <form method="POST" action="{{ route('profile.avatar.destroy') }}" class="mt-2"
-                              onsubmit="return confirm('Remover sua foto de perfil?')">
+                              @submit.prevent="if (await $store.confirmDialog.ask('Remover sua foto de perfil?')) $el.submit()">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-danger btn-xs">

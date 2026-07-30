@@ -60,7 +60,7 @@
                                 Ver →
                             </a>
                             <form method="POST" action="{{ route('contacts.destroy', $contact) }}"
-                                  onsubmit="return confirm('Excluir {{ addslashes($contact->name) }}? Só funciona se não houver nenhuma associação (cliente vinculado, oportunidade, acesso ao portal, etc) — senão use o status Inativo.')">
+                                  @submit.prevent="if (await $store.confirmDialog.ask('Excluir {{ addslashes($contact->name) }}? Só funciona se não houver nenhuma associação (cliente vinculado, oportunidade, acesso ao portal, etc) — senão use o status Inativo.')) $el.submit()">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn btn-danger btn-xs">
                                     Excluir

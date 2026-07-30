@@ -11,7 +11,7 @@
     <link href="https://fonts.bunny.net/css?family=syne:700,800&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="antialiased" style="background: var(--bg); color: var(--text)">
+<body class="antialiased" x-data="{}" style="background: var(--bg); color: var(--text)">
 
     <header style="background: #1c1c2e; border-bottom: 1px solid rgba(255,255,255,.06)">
         <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
@@ -62,6 +62,8 @@
 
         {{ $slot }}
     </main>
+
+    <x-confirm-dialog-modal />
 
 </body>
 </html>

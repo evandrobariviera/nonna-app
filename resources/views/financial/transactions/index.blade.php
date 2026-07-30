@@ -209,7 +209,7 @@
                                 :action="route('financial-transactions.update', $transaction)" :width="120" />
                             <td class="text-right">
                                 <form method="POST" action="{{ route('financial-transactions.destroy', $transaction) }}"
-                                      onsubmit="return confirm('Remover este lançamento?')">
+                                      @submit.prevent="if (await $store.confirmDialog.ask('Remover este lançamento?')) $el.submit()">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="text-xs font-mono hover:underline" style="color:var(--muted)">Remover</button>
                                 </form>

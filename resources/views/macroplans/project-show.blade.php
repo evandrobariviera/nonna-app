@@ -394,7 +394,7 @@
                                         Abrir →
                                     </a>
                                     <form method="POST" action="{{ $standalone ? route('tasks.destroyStandalone', [$project, $task]) : route('tasks.destroy', [$macroplan, $project, $task]) }}"
-                                          onsubmit="return confirm('Remover?')">
+                                          @submit.prevent="if (await $store.confirmDialog.ask('Remover?')) $el.submit()">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-danger btn-xs">
                                             ✕

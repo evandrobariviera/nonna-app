@@ -555,7 +555,7 @@
                                                 </button>
                                                 <form method="POST"
                                                       action="{{ route('diagnostics.competitors.destroy', [$client, $diagnostic, $comp]) }}"
-                                                      onsubmit="return confirm('Remover este concorrente?')">
+                                                      @submit.prevent="if (await $store.confirmDialog.ask('Remover este concorrente?')) $el.submit()">
                                                     @csrf @method('DELETE')
                                                     <button type="submit" class="btn btn-danger btn-xs">
                                                         Remover
@@ -765,7 +765,7 @@
                                             <button type="button" @click="editId = '{{ $persona->id }}'" class="btn btn-ghost btn-xs">Editar</button>
                                             <form method="POST"
                                                   action="{{ route('diagnostics.personas.destroy', [$client, $diagnostic, $persona]) }}"
-                                                  onsubmit="return confirm('Remover esta persona?')">
+                                                  @submit.prevent="if (await $store.confirmDialog.ask('Remover esta persona?')) $el.submit()">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="btn btn-danger btn-xs">Remover</button>
                                             </form>

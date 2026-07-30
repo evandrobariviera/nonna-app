@@ -41,7 +41,7 @@
                 </span>
                 @unless($diagnostic->isPublished())
                     <form method="POST" action="{{ route('service-diagnostics.publish', [$integration, $diagnostic]) }}"
-                          onsubmit="return confirm('Publicar este diagnóstico? Ele passa a ficar visível pro cliente no Portal.')">
+                          @submit.prevent="if (await $store.confirmDialog.ask('Publicar este diagnóstico? Ele passa a ficar visível pro cliente no Portal.')) $el.submit()">
                         @csrf
                         <button type="submit"
                                 class="px-4 py-1.5 text-xs font-bold font-mono uppercase tracking-widest text-white"

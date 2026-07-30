@@ -33,27 +33,27 @@
                     ✎ Editar
                 </button>
                 @if($sprint->status === 'planning')
-                    <form method="POST" action="{{ route('sprints.lock', $sprint) }}">
+                    <form method="POST" action="{{ route('sprints.lock', $sprint) }}"
+                          @submit.prevent="if (await $store.confirmDialog.ask('Travar sprint e iniciar execução?')) $el.submit()">
                         @csrf
                         <button type="submit"
-                            class="btn btn-sm" style="background:var(--orange); color:#fff; border-color:var(--orange)"
-                            onclick="return confirm('Travar sprint e iniciar execução?')">
+                            class="btn btn-sm" style="background:var(--orange); color:#fff; border-color:var(--orange)">
                             🔒 Travar Sprint
                         </button>
                     </form>
                 @elseif($sprint->status === 'active')
-                    <form method="POST" action="{{ route('sprints.unlock', $sprint) }}">
+                    <form method="POST" action="{{ route('sprints.unlock', $sprint) }}"
+                          @submit.prevent="if (await $store.confirmDialog.ask('Reabrir sprint para planejamento?')) $el.submit()">
                         @csrf
-                        <button type="submit" class="btn btn-ghost btn-sm"
-                            onclick="return confirm('Reabrir sprint para planejamento?')">
+                        <button type="submit" class="btn btn-ghost btn-sm">
                             Reabrir
                         </button>
                     </form>
-                    <form method="POST" action="{{ route('sprints.close', $sprint) }}">
+                    <form method="POST" action="{{ route('sprints.close', $sprint) }}"
+                          @submit.prevent="if (await $store.confirmDialog.ask('Encerrar sprint? Tarefas pendentes voltam ao backlog.')) $el.submit()">
                         @csrf
                         <button type="submit"
-                            class="btn btn-sm" style="border-color:var(--green); color:var(--green)"
-                            onclick="return confirm('Encerrar sprint? Tarefas pendentes voltam ao backlog.')">
+                            class="btn btn-sm" style="border-color:var(--green); color:var(--green)">
                             Encerrar Sprint
                         </button>
                     </form>
@@ -299,7 +299,7 @@
 
                                         @if($sprint->status !== 'closed' && !$sprint->isLocked())
                                             <form method="POST" action="{{ route('sprints.remove-task', [$sprint, $task]) }}"
-                                                  onsubmit="return confirm('Remover da sprint?')">
+                                                  @submit.prevent="if (await $store.confirmDialog.ask('Remover da sprint?')) $el.submit()">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="btn btn-danger btn-xs">
                                                     − Sprint

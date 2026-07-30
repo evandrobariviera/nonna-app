@@ -319,7 +319,7 @@
                                         <button type="button" @click="editId = '{{ $log->id }}'" class="btn btn-ghost btn-xs">Editar</button>
                                         <form method="POST"
                                               action="{{ route('campaign-logs.destroy', [$campaign, $log]) }}"
-                                              onsubmit="return confirm('Remover registro?')">
+                                              @submit.prevent="if (await $store.confirmDialog.ask('Remover registro?')) $el.submit()">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-xs">✕</button>
                                         </form>
@@ -567,7 +567,7 @@
                                         <button type="button" @click="editId = '{{ $log->id }}'" class="btn btn-ghost btn-xs">Editar</button>
                                         <form method="POST"
                                               action="{{ route('campaign-logs.destroy', [$campaign, $log]) }}"
-                                              onsubmit="return confirm('Remover registro?')">
+                                              @submit.prevent="if (await $store.confirmDialog.ask('Remover registro?')) $el.submit()">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-xs">✕</button>
                                         </form>

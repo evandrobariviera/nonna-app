@@ -415,7 +415,7 @@
                                         ↓ Baixar
                                     </a>
                                     <form method="POST" action="{{ route('task-attachments.destroy', [$task, $attachment]) }}"
-                                          onsubmit="return confirm('Remover anexo?')">
+                                          @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-danger btn-xs">✕</button>
                                     </form>
@@ -525,7 +525,7 @@
                                         ↓ Baixar
                                     </a>
                                     <form method="POST" action="{{ route('task-attachments.destroy', [$task, $attachment]) }}"
-                                          onsubmit="return confirm('Remover anexo?')">
+                                          @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-danger btn-xs">✕</button>
                                     </form>
@@ -750,7 +750,7 @@
                                         <button type="button" @click="editId = '{{ $comment->id }}'" class="btn btn-ghost btn-xs">Editar</button>
                                         <form method="POST"
                                               action="{{ route('task-comments.destroy', [$task, $comment]) }}"
-                                              onsubmit="return confirm('Remover comentário?')">
+                                              @submit.prevent="if (await $store.confirmDialog.ask('Remover comentário?')) $el.submit()">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-xs">✕</button>
                                         </form>
@@ -854,7 +854,7 @@
                         <form method="POST" action="{{ route('tasks.update-client', $task) }}">
                             @csrf @method('PATCH')
                             <select name="client_id"
-                                onchange="if({{ $task->project_id ? 'true' : 'false' }} && !confirm('Trocar o cliente vai desvincular a tarefa do projeto atual ({{ addslashes($task->project?->title) }}). Continuar?')) { this.value='{{ $task->client_id }}'; return; } this.form.submit()"
+                                @change="if ({{ $task->project_id ? 'true' : 'false' }} && !(await $store.confirmDialog.ask('Trocar o cliente vai desvincular a tarefa do projeto atual ({{ addslashes($task->project?->title) }}). Continuar?'))) { $el.value = '{{ $task->client_id }}'; return; } $el.form.submit()"
                                 class="w-full px-3 py-2 text-sm focus:outline-none"
                                 style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                                 @foreach($clients as $c)

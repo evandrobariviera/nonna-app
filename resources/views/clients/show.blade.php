@@ -502,7 +502,7 @@
                                     <td class="text-right">
                                         <form method="POST"
                                               action="{{ route('clients.credentials.destroy', [$client, $cred]) }}"
-                                              onsubmit="return confirm('Remover esta credencial?')">
+                                              @submit.prevent="if (await $store.confirmDialog.ask('Remover esta credencial?')) $el.submit()">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-xs">
@@ -618,7 +618,7 @@
                                     <td class="text-right">
                                         <form method="POST"
                                               action="{{ route('clients.links.destroy', [$client, $link]) }}"
-                                              onsubmit="return confirm('Remover este link?')">
+                                              @submit.prevent="if (await $store.confirmDialog.ask('Remover este link?')) $el.submit()">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-xs">
@@ -939,7 +939,7 @@
                                             </template>
                                             <form method="POST"
                                                   action="{{ route('clients.contacts.unlink', [$client, $contact]) }}"
-                                                  onsubmit="return confirm('Desvincular {{ $contact->name }} deste cliente?')">
+                                                  @submit.prevent="if (await $store.confirmDialog.ask('Desvincular {{ addslashes($contact->name) }} deste cliente?')) $el.submit()">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="btn btn-danger btn-xs">
                                                     Desvincular
@@ -1106,7 +1106,7 @@
                                     <div class="flex items-center gap-3">
                                         <span style="color:var(--muted)">{{ $budget->createdBy?->name }}</span>
                                         <form method="POST" action="{{ route('clients.ad-budgets.destroy', [$client, $budget]) }}"
-                                              onsubmit="return confirm('Remover este registro de orçamento?')">
+                                              @submit.prevent="if (await $store.confirmDialog.ask('Remover este registro de orçamento?')) $el.submit()">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-xs">✕</button>
                                         </form>
@@ -1394,7 +1394,7 @@
                                             </template>
                                             <form method="POST"
                                                   action="{{ route('clients.ad-accounts.destroy', [$client, $account]) }}"
-                                                  onsubmit="return confirm('Remover esta conta?')">
+                                                  @submit.prevent="if (await $store.confirmDialog.ask('Remover esta conta?')) $el.submit()">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-danger btn-xs">
@@ -1514,7 +1514,7 @@
                                                                     @endif
                                                                     <form method="POST"
                                                                           action="{{ route('clients.ad-accounts.billing.destroy', [$client, $account, $doc]) }}"
-                                                                          onsubmit="return confirm('Remover este documento?')">
+                                                                          @submit.prevent="if (await $store.confirmDialog.ask('Remover este documento?')) $el.submit()">
                                                                         @csrf @method('DELETE')
                                                                         <button type="submit" class="btn btn-danger btn-xs">✕</button>
                                                                     </form>
@@ -1897,7 +1897,7 @@
                                         </button>
                                         <form method="POST" class="inline"
                                               action="{{ route('clients.integrations.destroy', [$client, $integration]) }}"
-                                              onsubmit="return confirm('Remover este número de atendimento? Conversas e diagnósticos já gerados não são apagados.')">
+                                              @submit.prevent="if (await $store.confirmDialog.ask('Remover este número de atendimento? Conversas e diagnósticos já gerados não são apagados.')) $el.submit()">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-xs">
@@ -2017,7 +2017,7 @@
                                             Ver portal →
                                         </a>
                                         <form method="POST" action="{{ route('clients.portal-access.destroy', [$client, $portalContact]) }}"
-                                              onsubmit="return confirm('Remover acesso de {{ $portalContact->name }}?')">
+                                              @submit.prevent="if (await $store.confirmDialog.ask('Remover acesso de {{ addslashes($portalContact->name) }}?')) $el.submit()">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-xs">

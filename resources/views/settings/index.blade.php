@@ -323,7 +323,7 @@
                                 {{-- credentials nunca vem no toJson() (hidden no model) - segredo nunca chega ao browser --}}
                                 <form method="POST"
                                       action="{{ route('settings.integrations.destroy', $integration) }}"
-                                      onsubmit="return confirm('Remover esta integração?')">
+                                      @submit.prevent="if (await $store.confirmDialog.ask('Remover esta integração?')) $el.submit()">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-xs">
@@ -610,7 +610,7 @@
                                             @if(!$isSelf)
                                                 <form method="POST"
                                                       action="{{ route('settings.members.destroy', $member) }}"
-                                                      onsubmit="return confirm('Remover {{ $member->name }} da organização?')">
+                                                      @submit.prevent="if (await $store.confirmDialog.ask('Remover {{ addslashes($member->name) }} da organização?')) $el.submit()">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-danger btn-xs">
@@ -799,7 +799,7 @@
                                         </button>
                                         <form method="POST"
                                               action="{{ route('settings.sectors.destroy', $sector) }}"
-                                              onsubmit="return confirm('Remover o setor {{ $sector->name }}?')">
+                                              @submit.prevent="if (await $store.confirmDialog.ask('Remover o setor {{ addslashes($sector->name) }}?')) $el.submit()">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-xs">
@@ -1079,7 +1079,7 @@
                                     <td class="px-5 py-3.5 text-right">
                                         <form method="POST"
                                               action="{{ route('settings.tokens.delete', $token->id) }}"
-                                              onsubmit="return confirm('Revogar token {{ $token->name }}?')">
+                                              @submit.prevent="if (await $store.confirmDialog.ask('Revogar token {{ addslashes($token->name) }}?')) $el.submit()">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-xs">

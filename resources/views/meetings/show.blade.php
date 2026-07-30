@@ -202,7 +202,7 @@
                 </div>
                 <div class="px-5 py-4">
                     <form method="POST" action="{{ route('meetings.destroy', $meeting) }}"
-                          onsubmit="return confirm('Remover esta reunião permanentemente?')">
+                          @submit.prevent="if (await $store.confirmDialog.ask('Remover esta reunião permanentemente?')) $el.submit()">
                         @csrf @method('DELETE')
                         <button type="submit" class="btn btn-danger btn-sm w-full">
                             Remover Reunião

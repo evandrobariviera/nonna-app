@@ -91,7 +91,7 @@
                                         Editar
                                     </a>
                                     <form action="{{ route('automations.destroy', $automation) }}" method="POST"
-                                          onsubmit="return confirm('Remover esta automação?')">
+                                          @submit.prevent="if (await $store.confirmDialog.ask('Remover esta automação?')) $el.submit()">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-danger btn-xs">
                                             Remover

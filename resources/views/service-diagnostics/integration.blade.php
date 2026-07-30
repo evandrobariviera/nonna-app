@@ -66,7 +66,7 @@
             </p>
             @if($readiness['pending_conversations'] > 0)
                 <form method="POST" action="{{ route('service-diagnostics.generate', $integration) }}"
-                      onsubmit="return confirm('Gerar um novo diagnóstico agora, analisando as conversas desde a última rodada? Isso consome créditos de IA.')">
+                      @submit.prevent="if (await $store.confirmDialog.ask('Gerar um novo diagnóstico agora, analisando as conversas desde a última rodada? Isso consome créditos de IA.')) $el.submit()">
                     @csrf
                     <button type="submit"
                             class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"

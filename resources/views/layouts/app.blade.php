@@ -317,6 +317,8 @@
         </div>
     </div>
 
+    <x-confirm-dialog-modal />
+
     @stack('scripts')
 </body>
 </html>

@@ -185,7 +185,7 @@
 
             <div class="px-5 pb-5 -mt-2">
                 <form method="POST" action="{{ route('clients.contracts.destroy', [$client, $contract]) }}"
-                      onsubmit="return confirm('Remover este contrato e seus anexos?')">
+                      @submit.prevent="if (await $store.confirmDialog.ask('Remover este contrato e seus anexos?')) $el.submit()">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">
                         Remover contrato
@@ -257,7 +257,7 @@
                                     ↓ Baixar
                                 </a>
                                 <form method="POST" action="{{ route('contract-attachments.destroy', [$contract, $attachment]) }}"
-                                      onsubmit="return confirm('Remover anexo?')">
+                                      @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-xs">✕</button>
                                 </form>

@@ -54,7 +54,7 @@
         <button @click="apply('sprint', { sprint_id: bulkSprint })" :disabled="!bulkSprint || applying" class="btn btn-ghost btn-xs">Enviar</button>
     @endisset
 
-    <button @click="if (confirm('Excluir ' + selected.length + ' tarefa(s) selecionada(s)? Essa ação não pode ser desfeita.')) apply('delete', {})"
+    <button @click="if (await $store.confirmDialog.ask('Excluir ' + selected.length + ' tarefa(s) selecionada(s)? Essa ação não pode ser desfeita.')) apply('delete', {})"
             :disabled="applying" class="btn btn-xs ml-auto" style="color:var(--red); border:1px solid var(--red)">
         Excluir selecionadas
     </button>

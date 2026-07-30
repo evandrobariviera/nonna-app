@@ -75,7 +75,7 @@
                                 </form>
                                 <form method="POST"
                                       action="{{ route('ai.providers.keys.destroy', [$provider, $key]) }}"
-                                      onsubmit="return confirm('Remover esta chave?')">
+                                      @submit.prevent="if (await $store.confirmDialog.ask('Remover esta chave?')) $el.submit()">
                                     @csrf @method('DELETE')
                                     <button type="submit"
                                             class="text-xs px-2 py-1 rounded transition-colors"

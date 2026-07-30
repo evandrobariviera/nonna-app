@@ -98,7 +98,7 @@
                                 Editar
                             </a>
                             <form method="POST" action="{{ route('ai.agents.destroy', $agent) }}"
-                                  onsubmit="return confirm('Remover este agente?')">
+                                  @submit.prevent="if (await $store.confirmDialog.ask('Remover este agente?')) $el.submit()">
                                 @csrf @method('DELETE')
                                 <button type="submit"
                                         class="text-xs px-3 py-1.5 rounded"
