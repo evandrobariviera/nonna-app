@@ -25,7 +25,8 @@
                 @else
                     <div class="flex flex-col gap-2">
                         @foreach($colRounds as $round)
-                            <div class="block px-3 py-2" style="background:var(--s2); border-left:2px solid {{ $col['color'] }}">
+                            <div class="block px-3 py-2" style="background:var(--s2); border-left:2px solid {{ $col['color'] }}"
+                                 x-data="{ statusOpen: false, situacaoOpen: false, statusStyle: '', situacaoStyle: '' }">
                                 <a href="{{ route('tasks.show', $round->task_id) }}" class="hover:underline">
                                     <p class="text-xs font-semibold leading-snug" style="color:var(--text)">
                                         {{ $round->task?->title ?? '—' }}
@@ -45,16 +46,9 @@
                                         </button>
                                     </form>
                                 @elseif($col['key'] === 'changes_requested')
-                                    <form method="POST" action="{{ route('approvals.update-task-status', $round) }}" class="mt-2 flex flex-col gap-1">
-                                        @csrf @method('PATCH')
-                                        <select name="status" onchange="this.form.submit()"
-                                            class="text-xs px-1.5 py-1 w-full"
-                                            style="background:var(--s1); border:1px solid var(--border2); color:var(--text)">
-                                            @foreach(\App\Models\Task::$statuses as $key => $s)
-                                                <option value="{{ $key }}" {{ $round->task->status === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
-                                            @endforeach
-                                        </select>
-                                    </form>
+                                    <div class="mt-2 monday-fill-td relative" style="height:26px">
+                                        @include('partials._status-fill', ['task' => $round->task, 'statusUrl' => route('approvals.update-task-status', $round)])
+                                    </div>
                                 @endif
                             </div>
                         @endforeach
@@ -200,28 +194,23 @@
                         </div>
                     </div>
 
-                    {{-- Roteamento rápido: mandar a tarefa de volta pra Sprint (Ajuste/Revisão) sem abrir a tarefa --}}
+                    {{-- Status/Situação da tarefa — mesmo padrão (fill colorido + dropdown) das
+                         tabelas de tarefas — pra rotear pra Sprint (Ajuste/Revisão) sem abrir a tarefa --}}
                     @if($isChanges)
-                        <div class="px-5 pb-4 pt-0 flex items-center gap-2 flex-wrap">
-                            <span class="text-xs font-semibold" style="color:var(--muted)">Rotear tarefa pra:</span>
-                            <form method="POST" action="{{ route('approvals.update-task-status', $round) }}"
-                                  class="flex items-center gap-2 flex-wrap">
-                                @csrf @method('PATCH')
-                                <select name="status" onchange="this.form.submit()"
-                                    class="text-xs px-2 py-1"
-                                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
-                                    @foreach(\App\Models\Task::$statuses as $key => $s)
-                                        <option value="{{ $key }}" {{ $round->task->status === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
-                                    @endforeach
-                                </select>
-                                <select name="situation" onchange="this.form.submit()"
-                                    class="text-xs px-2 py-1"
-                                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
-                                    @foreach(\App\Models\Task::$situations as $key => $label)
-                                        <option value="{{ $key }}" {{ $round->task->situation === $key ? 'selected' : '' }}>{{ $label }}</option>
-                                    @endforeach
-                                </select>
-                            </form>
+                        <div class="px-5 pb-4 pt-0 flex items-end gap-4"
+                             x-data="{ statusOpen: false, situacaoOpen: false, statusStyle: '', situacaoStyle: '' }">
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Status</p>
+                                <div class="monday-fill-td relative" style="width:160px; height:30px">
+                                    @include('partials._status-fill', ['task' => $round->task, 'statusUrl' => route('approvals.update-task-status', $round)])
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Situação</p>
+                                <div class="{{ $round->task->situation ? 'monday-fill-td' : '' }} relative" style="width:180px; height:30px">
+                                    @include('partials._situacao-fill', ['task' => $round->task, 'situacaoUrl' => route('approvals.update-task-status', $round)])
+                                </div>
+                            </div>
                         </div>
                     @endif
 

@@ -168,18 +168,25 @@ class ApprovalDashboardController extends Controller
         return back()->with('success', 'Rodada cancelada.');
     }
 
-    // Quick-select de status/situação direto na Central de Aprovações — pra depois
-    // de um "Ajustes Solicitados" já rotear a tarefa (Sprint) sem precisar abrir a
-    // tarefa. Rodada com ajuste pedido sai da Central assim que isso é usado nela
-    // (handled_at) — continua intacta no histórico, só some daqui.
+    // Quick fill-cell de Status/Situação direto na Central de Aprovações — mesmo
+    // padrão usado nas tabelas de tarefas (Filas/Tickets) — pra depois de um
+    // "Ajustes Solicitados" já rotear a tarefa (Sprint) sem precisar abrir a
+    // tarefa. Cada dropdown submete só o campo dele (status OU situação); "sometimes"
+    // faz o outro ser ignorado em vez de exigido. Rodada com ajuste pedido sai da
+    // Central assim que isso é usado nela (handled_at) — continua intacta no
+    // histórico, só some daqui.
     public function updateTaskStatus(Request $request, TaskApprovalRound $round)
     {
         $situationKeys = array_keys(array_filter(Task::$situations, fn ($k) => $k !== '', ARRAY_FILTER_USE_KEY));
 
         $data = $request->validate([
-            'status'    => 'required|in:' . implode(',', array_keys(Task::$statuses)),
-            'situation' => 'nullable|in:' . implode(',', $situationKeys),
+            'status'    => ['sometimes', 'required', 'in:' . implode(',', array_keys(Task::$statuses))],
+            'situation' => ['sometimes', 'nullable', 'in:' . implode(',', $situationKeys)],
         ]);
+
+        if (empty($data)) {
+            return back()->with('warning', 'Nada pra atualizar.');
+        }
 
         $round->task->update($data);
 
