@@ -333,17 +333,21 @@ class Task extends Model
      */
     public function scopePendente(Builder $query): Builder
     {
-        return $query->where(function (Builder $q) {
-            $q->where('task_type', 'criacao')
-                ->orWhere('origin', 'projeto')
-                ->orWhereNull('destination')
-                ->orWhere(fn (Builder $q2) => $q2->whereNull('situation')->orWhere('situation', ''))
-                ->orWhereNull('due_date')
-                ->orWhereNull('approval_date')
-                ->orWhereHas('client', fn (Builder $q2) => $q2->where('is_internal', true))
-                ->orWhereDoesntHave('executors', fn (Builder $q2) => $q2->where('task_executors.role', 'executor'))
-                ->orWhereDoesntHave('responsibles');
-        });
+        // Tarefa encerrada (concluída/cancelada) não precisa de dado completo —
+        // é histórico, não vai mais ser trabalhada. Pendência só importa pra
+        // quem ainda vai entrar em produção/sprint.
+        return $query->whereNotIn('status', ['concluido', 'cancelado'])
+            ->where(function (Builder $q) {
+                $q->where('task_type', 'criacao')
+                    ->orWhere('origin', 'projeto')
+                    ->orWhereNull('destination')
+                    ->orWhere(fn (Builder $q2) => $q2->whereNull('situation')->orWhere('situation', ''))
+                    ->orWhereNull('due_date')
+                    ->orWhereNull('approval_date')
+                    ->orWhereHas('client', fn (Builder $q2) => $q2->where('is_internal', true))
+                    ->orWhereDoesntHave('executors', fn (Builder $q2) => $q2->where('task_executors.role', 'executor'))
+                    ->orWhereDoesntHave('responsibles');
+            });
     }
 
     /**
