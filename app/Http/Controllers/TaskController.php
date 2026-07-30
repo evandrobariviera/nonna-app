@@ -436,7 +436,15 @@ class TaskController extends Controller
                 if ($sprint->status === 'closed') {
                     return response()->json(['success' => false, 'message' => 'Essa sprint está encerrada.'], 422);
                 }
-                Task::whereIn('id', $data['task_ids'])->update(['sprint_id' => $sprint->id]);
+                // Mesma regra de SprintController::addTask() — tarefa com pendência de
+                // cadastro não entra em sprint nem individualmente nem em massa.
+                foreach ($tasks as $task) {
+                    if ($task->isPendente()) {
+                        $skipped[] = ['id' => $task->id, 'title' => $task->title, 'reason' => 'pendência de cadastro'];
+                        continue;
+                    }
+                    $task->update(['sprint_id' => $sprint->id]);
+                }
                 break;
 
             case 'delete':
