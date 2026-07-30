@@ -46,7 +46,19 @@
       "parameters": {
         "width": 400,
         "height": 220,
-        "content": "## clientes_migrados (node Config)\n\nCampo temporário (2026-07-23): lista de `client_clickup_id` separados por vírgula (bate com `clients.clickup_task_id` no App). Só se aplica à branch de Tarefa (\"Build Task Payload\") — Macroplano/Projeto não são filtrados. Tarefa de cliente fora da lista nem chega a fazer o POST pro App.\n\n**Vazio = nenhuma tarefa passa.** Precisa manter o mesmo valor sincronizado com `clickup-import.json` e `clickup-scheduled-resync.json` enquanto a migração gradual durar. Remover quando todos os clientes já tiverem migrado."
+        "content": "## clientes_migrados (node Config)\n\nCampo temporário (2026-07-23, ativado de verdade em 2026-07-30): lista de `client_clickup_id` separados por vírgula (bate com `clients.clickup_task_id` no App). Só se aplica à branch de Tarefa (\"Build Task Payload\") — Macroplano/Projeto foram desligados deste workflow (ver Sticky Note ao lado), não passam por este filtro. Tarefa de cliente fora da lista nem chega a fazer o POST pro App.\n\n**Vazio = nenhuma tarefa passa.** Precisa manter o mesmo valor sincronizado com `clickup-import.json` e `clickup-scheduled-resync.json` enquanto a migração gradual durar. Remover quando todos os clientes já tiverem migrado."
+      }
+    },
+    {
+      "id": "sticky-macro-projeto-desligado",
+      "name": "Macroplano/Projeto — desligado de propósito",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1360, -80],
+      "parameters": {
+        "width": 420,
+        "height": 220,
+        "content": "## Desconectado de propósito (2026-07-30)\n\nDecisão confirmada: Planejamento e Projeto continuam **100% lançados manualmente no App** — não vêm do ClickUp, nem em tempo real. O \"Route by List\" ainda identifica corretamente as Listas de Planejamentos (`901326341797`) e Projetos (`901326341887`) pra nunca deixar esses eventos caírem por engano na branch de Tarefa (foi exatamente isso que criou tarefas fantasma \"[ROADMAP] ...\" na migração em lote) — mas as saídas correspondentes do Switch **não estão conectadas a nada**. Os nodes \"Build Macroplan Payload\"/\"POST Import Macroplan\" e \"Build Project Payload\"/\"POST Import Project\" continuam no canvas, só não recebem nenhum dado — mantidos aqui caso a decisão mude no futuro."
       }
     },
     {
@@ -88,7 +100,7 @@
           "assignments": [
             { "id": "app_url", "name": "app_url", "type": "string", "value": "https://app.nonnaagenciadigital.com.br" },
             { "id": "incluir_fechados", "name": "incluir_fechados", "type": "boolean", "value": true },
-            { "id": "clientes_migrados", "name": "clientes_migrados", "type": "string", "value": "" }
+            { "id": "clientes_migrados", "name": "clientes_migrados", "type": "string", "value": "86ahtk6ve,86a2hrcpp,864ebhp6k,86a665c5y,86aheg09m,86aerg0p1,86aftq77p" }
           ]
         }
       }
@@ -258,8 +270,8 @@
     },
     "Route by List": {
       "main": [
-        [{ "node": "Build Macroplan Payload", "type": "main", "index": 0 }],
-        [{ "node": "Build Project Payload", "type": "main", "index": 0 }],
+        [],
+        [],
         [{ "node": "Build Task Payload", "type": "main", "index": 0 }]
       ]
     },

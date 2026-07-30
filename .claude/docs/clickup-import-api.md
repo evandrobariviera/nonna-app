@@ -43,9 +43,21 @@ O filtro fica **no n8n, não no App** (decisão explícita — a alternativa de 
 
 **Precisa manter os 3 workflows com o mesmo valor de `clientes_migrados`** — não há fonte única compartilhada entre eles (decisão consciente, ver acima). Esquecer de atualizar um dos 3 workflows ao migrar um cliente faz esse workflow continuar ignorando as tarefas dele.
 
-**Só filtra a branch de Tarefa.** As branches de Macroplano/Projeto em `clickup-realtime-sync.json` não são afetadas por este filtro — se isso virar um problema (ex: macroplano/projeto de cliente ainda não migrado entrando no App), precisa ser tratado à parte.
+**Só filtra a branch de Tarefa.** As branches de Macroplano/Projeto em `clickup-realtime-sync.json` não são afetadas por este filtro — mas ver decisão de 2026-07-30 abaixo, que resolve isso de outro jeito.
 
 **É temporário, por desenho:** remover o filtro (campo `clientes_migrados` no Config + o bloco de filtro no Code node) dos 3 workflows quando todos os clientes já tiverem migrado.
+
+## Macroplano/Projeto no `clickup-realtime-sync.json` — desligados de propósito (2026-07-30)
+
+Confirmado com o usuário: Planejamento e Projeto continuam **100% lançados manualmente no App**, nunca vindos do ClickUp (nem em lote, nem em tempo real). No `clickup-realtime-sync.json`, o node **Route by List** continua identificando corretamente as Listas de Planejamentos (`901326341797`) e Projetos (`901326341887`) — importante pra nunca deixar esses eventos caírem por engano na branch de Tarefa genérica (foi exatamente isso que criou tarefas fantasma "[ROADMAP] ..." durante um teste da migração em lote, ver incidente abaixo) — mas as duas saídas correspondentes do Switch **não estão conectadas a nada**. Os nodes "Build Macroplan Payload"/"POST Import Macroplan" e "Build Project Payload"/"POST Import Project" continuam no workflow, só desconectados — preservados caso a decisão mude no futuro, mas inertes.
+
+**Filtro de cliente ativado de verdade (2026-07-30):** a branch de Tarefa do `clickup-realtime-sync.json` estava rodando sem o campo `clientes_migrados` no Config nem o filtro correspondente no Code node — ou seja, sincronizava o workspace inteiro em tempo real, sem controle de cliente nenhum, apesar do design já estar documentado desde 2026-07-23. Corrigido: `clientes_migrados` agora tem o mesmo valor usado no workflow de migração em lote, e o filtro de data (`>= 2025-01-01`) + cliente foram adicionados ao "Build Task Payload", igual ao `clickup-import.json`. **Precisa reimportar o JSON atualizado no n8n** — a correção só existe na cópia de referência deste repo até isso ser feito.
+
+## Incidente 4 (2026-07-29) — Lista errada selecionada no workflow de migração em lote
+
+O node **Get ClickUp Tasks** do `clickup-import.json` estava configurado com `list: 901326341797` (Planejamentos) em vez da Lista operacional pretendida — provavelmente um erro ao trocar manualmente o ID pra migrar a próxima lista. Resultado: 5 tarefas fantasma `[ROADMAP] {Cliente}` (cards-resumo da Lista de Planejamentos, não a estrutura real de Macroplano) foram importadas como `tasks` soltas (`project_id` null). Bônus: o `clickup_status` recebido ("em execução") não bate com nenhum valor do mapeamento e caiu no fallback `concluido` — por isso ficaram invisíveis até na Fila (que esconde `concluido`/`cancelado` por padrão). As 5 tarefas foram apagadas.
+
+**Lição:** confira sempre o valor de `list` no node antes de rodar — o seletor nativo do ClickUp é mais seguro que editar o ID à mão.
 
 ## Autenticação
 
