@@ -428,6 +428,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('approvals.resend-token');
     Route::patch('/aprovacoes/{round}/tarefa-status', [\App\Http\Controllers\ApprovalDashboardController::class, 'updateTaskStatus'])
         ->name('approvals.update-task-status');
+    Route::post('/aprovacoes/{round}/cancelar', [\App\Http\Controllers\ApprovalDashboardController::class, 'cancel'])
+        ->name('approvals.cancel');
 
     // ── Dashboard global de projetos ──
     Route::get('/projetos', [ProjectController::class, 'dashboard'])

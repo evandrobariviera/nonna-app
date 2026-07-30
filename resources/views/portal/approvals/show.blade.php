@@ -158,7 +158,9 @@
     @else
         <div class="card p-6">
             <h2 class="text-sm font-bold uppercase tracking-wide mb-3" style="color: var(--muted)">Resultado</h2>
-            @if($round->portal_decision)
+            @if($round->status === 'cancelled')
+                <p class="text-sm" style="color: var(--text)">Esta rodada de aprovação foi cancelada pelo time da Nonna.</p>
+            @elseif($round->portal_decision)
                 <p class="text-sm" style="color: var(--text)">
                     Decidido pelo Portal em {{ $round->portal_decided_at?->format('d/m/Y \à\s H:i') }}.
                 </p>

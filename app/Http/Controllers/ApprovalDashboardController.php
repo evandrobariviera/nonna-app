@@ -154,6 +154,20 @@ class ApprovalDashboardController extends Controller
         return back()->with('success', 'Reenviado.');
     }
 
+    // Cancela a rodada — criada errada, cliente errado, motivo interno qualquer.
+    // Fecha o link público/Portal pra quem ainda não respondeu; quem já tinha
+    // respondido mantém o registro (histórico não muda).
+    public function cancel(TaskApprovalRound $round, TaskApprovalService $service)
+    {
+        if ($round->status === 'cancelled') {
+            return back()->with('warning', 'Essa rodada já estava cancelada.');
+        }
+
+        $service->cancelRound($round);
+
+        return back()->with('success', 'Rodada cancelada.');
+    }
+
     // Quick-select de status/situação direto na Central de Aprovações — pra depois
     // de um "Ajustes Solicitados" já rotear a tarefa (Sprint) sem precisar abrir a
     // tarefa. Rodada com ajuste pedido sai da Central assim que isso é usado nela

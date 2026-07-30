@@ -77,17 +77,18 @@
         <div class="flex flex-col gap-2">
             @foreach($rounds as $round)
                 @php
-                    $isPending  = $round->status === 'pending';
-                    $isChanges  = $round->status === 'changes_requested';
-                    $isApproved = $round->status === 'approved';
-                    $notSent    = $isPending && !$round->sent_at;
+                    $isPending   = $round->status === 'pending';
+                    $isChanges   = $round->status === 'changes_requested';
+                    $isApproved  = $round->status === 'approved';
+                    $isCancelled = $round->status === 'cancelled';
+                    $notSent     = $isPending && !$round->sent_at;
                     $total      = $round->tokens->count();
                     $responded  = $round->tokens->whereNotNull('reviewed_at')->count();
                     $hasChange  = $round->tokens->contains('status', 'changes_requested');
                 @endphp
 
                 <div class="card transition-all"
-                     style="border-left:3px solid {{ $notSent ? 'var(--border2)' : ($isChanges ? 'var(--orange)' : ($isApproved ? 'var(--green)' : 'var(--purple)')) }}">
+                     style="border-left:3px solid {{ $isCancelled ? 'var(--muted)' : ($notSent ? 'var(--border2)' : ($isChanges ? 'var(--orange)' : ($isApproved ? 'var(--green)' : 'var(--purple)'))) }}">
                     <div class="flex items-start justify-between gap-4 px-5 py-4 flex-wrap">
 
                         {{-- Lado esquerdo: cliente + tarefa + meta --}}
@@ -179,14 +180,23 @@
                                 </form>
                             @endif
                             <span class="text-xs font-semibold px-2.5 py-1"
-                                  style="background:{{ $notSent ? 'var(--s2)' : ($isApproved ? 'rgba(34,197,94,.12)' : ($isChanges ? 'rgba(255,140,0,.12)' : 'rgba(106,90,205,.12)')) }};
-                                         color:{{ $notSent ? 'var(--muted2)' : ($isApproved ? '#22c55e' : ($isChanges ? 'var(--orange)' : 'var(--purple)')) }};
-                                         border:1px solid {{ $notSent ? 'var(--border2)' : ($isApproved ? 'rgba(34,197,94,.25)' : ($isChanges ? 'rgba(255,140,0,.25)' : 'rgba(106,90,205,.25)')) }}">
+                                  style="background:{{ $isCancelled ? 'var(--s2)' : ($notSent ? 'var(--s2)' : ($isApproved ? 'rgba(34,197,94,.12)' : ($isChanges ? 'rgba(255,140,0,.12)' : 'rgba(106,90,205,.12)'))) }};
+                                         color:{{ $isCancelled ? 'var(--muted)' : ($notSent ? 'var(--muted2)' : ($isApproved ? '#22c55e' : ($isChanges ? 'var(--orange)' : 'var(--purple)'))) }};
+                                         border:1px solid {{ $isCancelled ? 'var(--border2)' : ($notSent ? 'var(--border2)' : ($isApproved ? 'rgba(34,197,94,.25)' : ($isChanges ? 'rgba(255,140,0,.25)' : 'rgba(106,90,205,.25)'))) }}">
                                 {{ $round->displayStatusLabel() }}
                             </span>
                             <a href="{{ route('tasks.show', $round->task_id) }}" class="btn btn-ghost btn-xs">
                                 Ver Tarefa →
                             </a>
+                            @if($round->status !== 'cancelled')
+                                <form method="POST" action="{{ route('approvals.cancel', $round) }}"
+                                      @submit.prevent="if (await $store.confirmDialog.ask('Cancelar essa rodada de aprovação? O link do cliente para de funcionar pra quem ainda não respondeu.')) $el.submit()">
+                                    @csrf
+                                    <button type="submit" class="btn btn-ghost btn-xs" style="color:var(--red)" title="Cancelar rodada">
+                                        ✕ Cancelar
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     </div>
 

@@ -160,6 +160,28 @@ class TaskApprovalService
     }
 
     /**
+     * Cancela a rodada — criada errada, cliente errado, motivo interno qualquer.
+     * Fecha todos os tokens ainda pending (o link público/Portal para de aceitar
+     * decisão, `TaskApprovalToken::isValid()` passa a recusar). Só tira a tarefa
+     * de "Aprovação" automaticamente se a rodada cancelada era a que estava
+     * ativa (pending) — se já tinha sido resolvida antes (approved/changes_
+     * requested), o status da tarefa já seguiu outro caminho depois disso e não
+     * deve ser mexido aqui.
+     */
+    public function cancelRound(TaskApprovalRound $round): void
+    {
+        $wasPending = $round->status === 'pending';
+
+        $round->tokens()->where('status', 'pending')->update(['status' => 'cancelled']);
+
+        $round->update(['status' => 'cancelled', 'resolved_at' => now()]);
+
+        if ($wasPending) {
+            $round->task->update(['status' => 'revisao_interna']);
+        }
+    }
+
+    /**
      * Registra o feedback peça por peça de um contato.
      * Depois verifica se todos os aprovadores já responderam (unanimidade).
      *

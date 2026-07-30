@@ -27,7 +27,13 @@
     <main style="flex:1; display:flex; align-items:center; justify-content:center; padding:40px 16px">
         <div style="max-width:480px; width:100%; text-align:center">
 
-            @if(!$approvalToken->isPending())
+            @if($approvalToken->status === 'cancelled')
+                <div style="font-size:48px; margin-bottom:16px">🚫</div>
+                <h1 style="font-size:22px; font-weight:800; margin:0 0 10px">Aprovação cancelada</h1>
+                <p style="font-size:14px; color:var(--muted); line-height:1.7; margin:0">
+                    Esta rodada de aprovação foi cancelada pelo time da Nonna. Se precisar de mais informações, entre em contato com o time.
+                </p>
+            @elseif(!$approvalToken->isPending())
                 <div style="font-size:48px; margin-bottom:16px">✅</div>
                 <h1 style="font-size:22px; font-weight:800; margin:0 0 10px">Avaliação já enviada</h1>
                 <p style="font-size:14px; color:var(--muted); line-height:1.7; margin:0">
