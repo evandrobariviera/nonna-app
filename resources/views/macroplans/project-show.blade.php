@@ -92,6 +92,31 @@
         @endif
     </div>
 
+    {{-- CAMPANHAS VINCULADAS — campanhas de anúncio (Meta/Google) correlacionadas
+         a este projeto. Vínculo é feito na própria página da campanha
+         (Projeto Vinculado → campanhas.update-project). --}}
+    @if($project->adCampaigns->isNotEmpty())
+        <div class="card px-5 py-4 mb-5">
+            <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">
+                Campanhas Vinculadas ({{ $project->adCampaigns->count() }})
+            </p>
+            <div class="flex flex-col gap-2">
+                @foreach($project->adCampaigns as $campaign)
+                    <a href="{{ route('campaigns.show', $campaign) }}"
+                       class="flex items-center justify-between gap-3 px-3 py-2.5 transition-colors"
+                       style="background:var(--s2); border:1px solid var(--border2)"
+                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'">
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold truncate" style="color:var(--text)">{{ $campaign->name }}</p>
+                            <p class="text-xs mt-0.5" style="color:var(--muted)">{{ $campaign->platform }} · {{ $campaign->adAccount?->account_name ?? $campaign->adAccount?->account_id }}</p>
+                        </div>
+                        <span class="badge badge-{{ $campaign->managementStatusColor() }} flex-shrink-0">{{ $campaign->managementStatusLabel() }}</span>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     {{-- KANBAN --}}
     <div x-data="{ addCol: null, editTaskId: null, showDone: false }">
 

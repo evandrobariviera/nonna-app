@@ -165,6 +165,14 @@ class Project extends Model
         return $this->hasMany(Task::class)->where('status', '!=', 'cancelado');
     }
 
+    // Campanhas de anúncio (Meta/Google, sincronizadas) vinculadas manualmente
+    // a este projeto — mesmo princípio de tasks(), mas pro lado "campanha
+    // patrocinada" do trabalho, que não nasce como Task.
+    public function adCampaigns(): HasMany
+    {
+        return $this->hasMany(AdCampaign::class);
+    }
+
     public function progressPercent(): int
     {
         if ($this->relationLoaded('tasks')) {

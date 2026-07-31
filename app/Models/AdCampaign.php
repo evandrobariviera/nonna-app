@@ -14,7 +14,7 @@ class AdCampaign extends Model
     protected $connection = 'pgsql';
 
     protected $fillable = [
-        'organization_id', 'client_ad_account_id',
+        'organization_id', 'client_ad_account_id', 'project_id',
         'platform', 'external_id', 'name', 'description', 'status',
         'objective', 'start_date', 'end_date',
         'raw_data', 'last_synced_at',
@@ -78,6 +78,13 @@ class AdCampaign extends Model
     public function adAccount(): BelongsTo
     {
         return $this->belongsTo(ClientAdAccount::class, 'client_ad_account_id');
+    }
+
+    // Projeto interno (planejamento/execução) que originou essa campanha —
+    // vínculo manual, feito depois que a campanha já chegou via sync.
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
     }
 
     // Deep link pro gerenciador da própria plataforma, já aberto na campanha

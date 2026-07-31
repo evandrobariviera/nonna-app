@@ -111,7 +111,7 @@ class ProjectController extends Controller
     {
         abort_unless($project->macro_plan_id === $macroplan->id, 403);
 
-        $project->load(['tasks.executor', 'tasks.executors', 'macroPlan.client']);
+        $project->load(['tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount']);
         $users = User::orderBy('name')->get(['id', 'name']);
 
         $kanban = [];
@@ -155,7 +155,7 @@ class ProjectController extends Controller
 
     public function showDirect(Project $project)
     {
-        $project->load(['tasks.executor', 'tasks.executors', 'macroPlan.client']);
+        $project->load(['tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount']);
         $macroplan  = $project->macroPlan;
         $users      = User::orderBy('name')->get(['id', 'name']);
 

@@ -51,6 +51,31 @@
                 @endif
             </div>
 
+            {{-- PROJETO VINCULADO — correlaciona a campanha (sync do Meta/Google) com
+                 o Projeto interno (planejamento/tarefas) que a originou. Vínculo manual. --}}
+            <div class="card card-body-lg">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Projeto Vinculado</p>
+                <form method="POST" action="{{ route('campaigns.update-project', $campaign) }}">
+                    @csrf @method('PATCH')
+                    <select name="project_id" onchange="this.form.submit()"
+                        class="w-full px-3 py-2 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        <option value="">— nenhum —</option>
+                        @foreach($clientProjects as $p)
+                            <option value="{{ $p->id }}" {{ $campaign->project_id === $p->id ? 'selected' : '' }}>
+                                {{ $p->title }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+                @if($campaign->project)
+                    <a href="{{ $campaign->project->macro_plan_id ? route('macroplans.projects.show', [$campaign->project->macro_plan_id, $campaign->project]) : route('projects.showDirect', $campaign->project) }}"
+                       class="text-xs font-semibold mt-2 inline-block" style="color:var(--purple)">
+                        Abrir projeto →
+                    </a>
+                @endif
+            </div>
+
             {{-- FILTRO DE PERÍODO --}}
             <form method="GET" action="{{ route('campaigns.show', $campaign) }}" class="flex items-center gap-2">
                 <select name="period" onchange="this.form.submit()"

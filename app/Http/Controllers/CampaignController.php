@@ -265,7 +265,13 @@ class CampaignController extends Controller
 
     public function show(Request $request, AdCampaign $campaign)
     {
-        $campaign->load('adAccount.client', 'adsets.ads');
+        $campaign->load('adAccount.client', 'adsets.ads', 'project');
+
+        // Projetos do mesmo cliente, pra vincular essa campanha a quem a originou
+        // (ver updateProject()) — mesmo princípio de $clientProjects em TaskController::show().
+        $clientProjects = $campaign->adAccount?->client_id
+            ? \App\Models\Project::where('client_id', $campaign->adAccount->client_id)->orderBy('title')->get(['id', 'title'])
+            : collect();
 
         // Histórico separado em duas listas: otimização (gatilho dedicado, "Marcar
         // otimização feita") fica junto da sessão Otimização; o resto (anotações
@@ -357,7 +363,7 @@ class CampaignController extends Controller
 
         return view('campaigns.show', compact(
             'campaign', 'optimizationLogs', 'commentLogs', 'stats', 'deltas', 'dailyStats', 'period', 'periodLabel',
-            'adsetStats', 'adStats', 'insights'
+            'adsetStats', 'adStats', 'insights', 'clientProjects'
         ));
     }
 
@@ -411,6 +417,23 @@ class CampaignController extends Controller
         }
 
         return round((($current - $previous) / $previous) * 100, 1);
+    }
+
+    // Vincula/desvincula a campanha ao Projeto interno que a originou — mesmo
+    // padrão de TaskController::updateProject() (só projeto do mesmo cliente).
+    public function updateProject(Request $request, AdCampaign $campaign)
+    {
+        $data = $request->validate(['project_id' => 'nullable|uuid|exists:pgsql.projects,id']);
+
+        if ($data['project_id']) {
+            $project = \App\Models\Project::findOrFail($data['project_id']);
+            $campaignClientId = $campaign->adAccount?->client_id;
+            abort_unless((string) $campaignClientId === (string) $project->client_id, 422, 'Esse projeto é de outro cliente.');
+        }
+
+        $campaign->update(['project_id' => $data['project_id']]);
+
+        return back()->with('success', 'Projeto vinculado.');
     }
 
     public function updateDescription(Request $request, AdCampaign $campaign)

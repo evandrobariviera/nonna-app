@@ -212,6 +212,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('campaigns.show');
     Route::patch('/campanhas/{campaign}/descricao', [CampaignController::class, 'updateDescription'])
         ->name('campaigns.update-description');
+    Route::patch('/campanhas/{campaign}/projeto', [CampaignController::class, 'updateProject'])
+        ->name('campaigns.update-project');
     Route::patch('/campanhas/{campaign}/status', [CampaignController::class, 'updateManagementStatus'])
         ->name('campaigns.update-status');
     Route::patch('/campanhas/{campaign}/situacao', [CampaignController::class, 'updateManagementSituation'])
