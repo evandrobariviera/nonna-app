@@ -27,6 +27,7 @@
     <form method="GET" action="{{ route('macroplans.index') }}" class="flex flex-wrap items-center gap-3 mb-5"
           data-live-filter data-results-url="{{ route('macroplans.results') }}" data-target="#macroplans-results">
         <input type="hidden" name="mostrar_concluidos" value="{{ request('mostrar_concluidos') }}">
+        <input type="hidden" name="mostrar_inativos" value="{{ request('mostrar_inativos') }}">
         <select name="status"
             style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
             <option value="">Todos os status</option>
@@ -43,7 +44,7 @@
             @endforeach
         </select>
 
-        @if(request()->hasAny(['status','client_id','mostrar_concluidos']))
+        @if(request()->hasAny(['status','client_id','mostrar_concluidos','mostrar_inativos']))
             <a href="{{ route('macroplans.index') }}" class="btn btn-ghost btn-sm">
                 Limpar
             </a>
@@ -57,6 +58,16 @@
            class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 transition-all"
            style="border:1px solid var(--border2); color:{{ request()->boolean('mostrar_concluidos') ? 'var(--purple)' : 'var(--muted)' }}">
             {{ request()->boolean('mostrar_concluidos') ? '⊙ Ocultar encerrados' : '○ Mostrar encerrados' }}
+        </a>
+
+        @php
+            $toggleInativos = request()->except('mostrar_inativos', 'page');
+            if (!request()->boolean('mostrar_inativos')) $toggleInativos['mostrar_inativos'] = '1';
+        @endphp
+        <a href="{{ route('macroplans.index', $toggleInativos) }}"
+           class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 transition-all"
+           style="border:1px solid var(--border2); color:{{ request()->boolean('mostrar_inativos') ? 'var(--purple)' : 'var(--muted)' }}">
+            {{ request()->boolean('mostrar_inativos') ? '⊙ Ocultar clientes inativos' : '○ Mostrar clientes inativos' }}
         </a>
     </form>
 

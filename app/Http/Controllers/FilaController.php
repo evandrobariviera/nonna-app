@@ -38,6 +38,12 @@ class FilaController extends Controller
             $query->whereNotIn('status', ['concluido', 'cancelado']);
         }
 
+        // Tarefa de cliente inativo some da fila por padrão — nada é alterado no
+        // cliente/tarefa, só escondido daqui (reversível: cliente reativou, some o filtro).
+        if (!$request->boolean('mostrar_inativos')) {
+            $query->whereHas('client', fn ($q) => $q->where('status', '!=', 'inactive'));
+        }
+
         if ($request->filled('client_id')) {
             $query->where('client_id', $request->client_id);
         }

@@ -1,5 +1,18 @@
 <x-app-layout>
-    <x-slot name="header">Projetos & Campanhas</x-slot>
+    <x-slot name="header">
+        <div class="flex items-center justify-between w-full">
+            <span>Projetos & Campanhas</span>
+            @php
+                $toggleInativos = request()->except('mostrar_inativos');
+                if (!request()->boolean('mostrar_inativos')) $toggleInativos['mostrar_inativos'] = '1';
+            @endphp
+            <a href="{{ route('projects.dashboard', $toggleInativos) }}"
+               class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 transition-all"
+               style="border:1px solid var(--border2); color:{{ request()->boolean('mostrar_inativos') ? 'var(--purple)' : 'var(--muted)' }}">
+                {{ request()->boolean('mostrar_inativos') ? '⊙ Ocultar clientes inativos' : '○ Mostrar clientes inativos' }}
+            </a>
+        </div>
+    </x-slot>
 
     <div
         x-data="projectDashboard({{ $projectsJson }}, {{ $macroplansJson }}, {{ $statusOptionsJson }}, {{ $disciplineLabelsJson }})"

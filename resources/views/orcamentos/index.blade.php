@@ -5,6 +5,15 @@
                 <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Rotina</p>
                 <h1 class="text-xl font-black" style="color:var(--text)">Orçamentos</h1>
             </div>
+            @php
+                $toggleInativos = request()->except('mostrar_inativos');
+                if (!request()->boolean('mostrar_inativos')) $toggleInativos['mostrar_inativos'] = '1';
+            @endphp
+            <a href="{{ route('orcamentos.index', $toggleInativos) }}"
+               class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 transition-all"
+               style="border:1px solid var(--border2); color:{{ request()->boolean('mostrar_inativos') ? 'var(--purple)' : 'var(--muted)' }}">
+                {{ request()->boolean('mostrar_inativos') ? '⊙ Ocultar clientes inativos' : '○ Mostrar clientes inativos' }}
+            </a>
         </div>
     </x-slot>
 

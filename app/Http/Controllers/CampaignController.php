@@ -73,7 +73,12 @@ class CampaignController extends Controller
         $selectedCampaign = $campaignId ? AdCampaign::with('adAccount')->find($campaignId) : null;
         $effectiveClientId = $clientId ?: $selectedCampaign?->adAccount?->client_id;
 
-        $accountsQuery = ClientAdAccount::whereIn('client_id', Client::pluck('id'));
+        // Cliente inativo some por padrão (nada é alterado no cliente/conta/campanha,
+        // só escondido daqui — reversível assim que o cliente reativa).
+        $activeClientIds = Client::when(!$request->boolean('mostrar_inativos'), fn ($q) => $q->where('status', '!=', 'inactive'))
+            ->pluck('id');
+
+        $accountsQuery = ClientAdAccount::whereIn('client_id', $activeClientIds);
         if ($effectiveClientId) {
             $accountsQuery->where('client_id', $effectiveClientId);
         }

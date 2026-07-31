@@ -76,20 +76,27 @@ class SprintController extends Controller
             'tasks.attachments',
         ]);
 
+        // Board é a mesa de produção ativa — tarefa de cliente inativo nunca aparece
+        // aqui (sem toggle; quem precisa ver isso usa a aba Lista, que tem o filtro).
+        $activeClientTasks = $sprint->tasks->filter(fn ($t) => $t->client?->status !== 'inactive');
+
         // Agrupar por status (a coluna do board é o próprio status)
         $kanban = [];
         foreach (Task::$statuses as $statusKey => $meta) {
-            $kanban[$statusKey] = $sprint->tasks
+            $kanban[$statusKey] = $activeClientTasks
                 ->where('status', $statusKey)
                 ->values();
         }
 
         [$listTasks, $listGrouped, $listGroupBy] = $this->filteredListTasks($request, $sprint);
 
-        // Backlog disponível para adicionar (sem sprint, status backlog)
+        // Backlog disponível para adicionar (sem sprint, status backlog) — cliente
+        // inativo some daqui também, mesma regra da Fila (não faz sentido puxar
+        // pra sprint uma tarefa de cliente que já saiu).
         $backlogTasks = Task::with(['client', 'project.macroPlan', 'executor'])
             ->whereNull('sprint_id')
             ->whereNotIn('status', ['cancelado', 'concluido'])
+            ->whereHas('client', fn ($q) => $q->where('status', '!=', 'inactive'))
             ->orderBy('due_date')
             ->get();
 
@@ -129,6 +136,9 @@ class SprintController extends Controller
         $listTasks = $sprint->tasks;
         if (!$request->boolean('list_mostrar_fechados')) {
             $listTasks = $listTasks->whereNotIn('status', ['concluido', 'cancelado']);
+        }
+        if (!$request->boolean('list_mostrar_inativos')) {
+            $listTasks = $listTasks->filter(fn ($t) => $t->client?->status !== 'inactive');
         }
         if ($request->filled('list_client_id')) {
             $listTasks = $listTasks->where('client_id', $request->get('list_client_id'));

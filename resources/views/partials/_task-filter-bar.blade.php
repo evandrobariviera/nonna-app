@@ -8,7 +8,7 @@
      (valor atual do group_by), $clearUrl (string). Opcional: $extraHidden (array name=>value). --}}
 @php
     $extraHidden = $extraHidden ?? [];
-    $filterKeys = array_map(fn ($k) => $prefix . $k, ['search', 'client_id', 'project_id', 'origin', 'task_type', 'atrasadas', 'pendencia', 'mostrar_fechados']);
+    $filterKeys = array_map(fn ($k) => $prefix . $k, ['search', 'client_id', 'project_id', 'origin', 'task_type', 'atrasadas', 'pendencia', 'mostrar_fechados', 'mostrar_inativos']);
 @endphp
 
 <form method="GET" action="{{ $formAction }}"
@@ -107,6 +107,15 @@
             class="w-4 h-4" style="accent-color:var(--purple)">
         <label for="{{ $prefix }}chk_mostrar_fechados" class="text-sm font-medium cursor-pointer" style="color:var(--muted)">
             Mostrar concluídas/canceladas
+        </label>
+    </div>
+
+    <div class="flex items-center gap-2 pb-0.5">
+        <input type="checkbox" name="{{ $prefix }}mostrar_inativos" value="1" id="{{ $prefix }}chk_mostrar_inativos"
+            {{ request()->boolean($prefix . 'mostrar_inativos') ? 'checked' : '' }}
+            class="w-4 h-4" style="accent-color:var(--muted)">
+        <label for="{{ $prefix }}chk_mostrar_inativos" class="text-sm font-medium cursor-pointer" style="color:var(--muted)">
+            Mostrar clientes inativos
         </label>
     </div>
 

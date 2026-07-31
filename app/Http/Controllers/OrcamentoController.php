@@ -14,11 +14,14 @@ class OrcamentoController extends Controller
     // da situação que pede mais atenção pra menos.
     public static array $groupOrder = ['aguardando_pagto', 'adicao_necessaria', 'standby', 'creditos_ativos'];
 
-    public function index(): View
+    public function index(Request $request): View
     {
         $accounts = ClientAdAccount::whereIn('platform', ClientAdAccount::billingPlatforms())
             ->with(['client', 'responsibleUser'])
             ->withCount('billingDocuments')
+            // Cliente inativo some por padrão — nada é alterado na conta/orçamento,
+            // só escondido daqui (reversível assim que o cliente reativa).
+            ->when(!$request->boolean('mostrar_inativos'), fn ($q) => $q->whereHas('client', fn ($c) => $c->where('status', '!=', 'inactive')))
             ->get()
             ->sortBy(fn (ClientAdAccount $account) => $account->client?->company_name);
 

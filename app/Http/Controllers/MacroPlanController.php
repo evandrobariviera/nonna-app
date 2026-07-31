@@ -45,6 +45,12 @@ class MacroPlanController extends Controller
             $query->where('status', '!=', 'concluido');
         }
 
+        // Cliente inativo some por padrão — nada é alterado no cliente/planejamento,
+        // só escondido daqui (reversível: cliente reativou, volta a aparecer).
+        if (!$request->boolean('mostrar_inativos')) {
+            $query->whereHas('client', fn ($q) => $q->where('status', '!=', 'inactive'));
+        }
+
         return $query->paginate(20)->withQueryString();
     }
 

@@ -65,7 +65,16 @@
             <option value="situacao" {{ $groupBy === 'situacao' ? 'selected' : '' }}>Agrupar por Situação</option>
         </select>
 
-        @if(request()->hasAny(['client_id', 'ad_campaign_id', 'platform', 'status', 'period', 'group_by']))
+        <div class="flex items-center gap-2">
+            <input type="checkbox" name="mostrar_inativos" value="1" id="chk_mostrar_inativos"
+                {{ request()->boolean('mostrar_inativos') ? 'checked' : '' }}
+                class="w-4 h-4" style="accent-color:var(--muted)">
+            <label for="chk_mostrar_inativos" class="text-xs font-medium cursor-pointer" style="color:var(--muted2)">
+                Mostrar clientes inativos
+            </label>
+        </div>
+
+        @if(request()->hasAny(['client_id', 'ad_campaign_id', 'platform', 'status', 'period', 'group_by', 'mostrar_inativos']))
             <a href="{{ route('campaigns.index') }}" class="btn btn-ghost btn-sm">
                 Limpar
             </a>

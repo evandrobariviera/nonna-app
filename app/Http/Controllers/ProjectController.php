@@ -14,6 +14,7 @@ class ProjectController extends Controller
     public function dashboard(Request $request)
     {
         $projects = Project::with(['macroPlan.client', 'client', 'tasks'])
+            ->when(!$request->boolean('mostrar_inativos'), fn ($q) => $q->whereHas('client', fn ($c) => $c->where('status', '!=', 'inactive')))
             ->orderBy('created_at', 'desc')
             ->get();
 
