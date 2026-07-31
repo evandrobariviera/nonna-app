@@ -12,6 +12,7 @@ use App\Http\Controllers\Portal\MeetingController as PortalMeetings;
 use App\Http\Controllers\Portal\TicketController as PortalTickets;
 use App\Http\Controllers\Portal\ApprovalController as PortalApprovals;
 use App\Http\Controllers\Portal\TaskCommentController as PortalTaskComments;
+use App\Http\Controllers\Portal\ProductionController as PortalProduction;
 use App\Http\Controllers\Portal\Auth\AuthenticatedSessionController as PortalSession;
 use App\Http\Controllers\Portal\ClientContextController as PortalClientContext;
 use App\Http\Controllers\ClientPortalAccessController;
@@ -674,6 +675,7 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
     Route::get('/aprovacoes', [PortalApprovals::class, 'index'])->name('approvals.index');
     Route::get('/aprovacoes/{round}', [PortalApprovals::class, 'show'])->name('approvals.show');
     Route::post('/aprovacoes/{round}/decidir', [PortalApprovals::class, 'decide'])->name('approvals.decide');
+    Route::get('/producao', [PortalProduction::class, 'index'])->name('production.index');
     Route::get('/campanhas', [PortalCampaigns::class, 'index'])->name('campaigns.index');
     Route::get('/campanhas/{campaign}', [PortalCampaigns::class, 'show'])->name('campaigns.show');
     Route::get('/boletos', [PortalBilling::class, 'index'])->name('boletos.index');
