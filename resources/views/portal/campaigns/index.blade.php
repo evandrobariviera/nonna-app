@@ -168,10 +168,16 @@
                                 </p>
                             </div>
                         </div>
-                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
-                              style="background: {{ $st['bg'] }}; color: {{ $st['text'] }}">
-                            {{ $st['label'] }}
-                        </span>
+                        <div class="flex items-center gap-3 flex-shrink-0">
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                  style="background: {{ $st['bg'] }}; color: {{ $st['text'] }}">
+                                {{ $st['label'] }}
+                            </span>
+                            <a href="{{ route('portal.campaigns.show', $campaign) }}"
+                               class="text-xs font-semibold px-3 py-1.5 rounded-lg" style="background: var(--purple); color: #fff">
+                                Ver detalhes →
+                            </a>
+                        </div>
                     </div>
 
                     @if($campaign->description)

@@ -151,6 +151,163 @@ class CampaignController extends Controller
         ));
     }
 
+    public function show(Request $request, AdCampaign $campaign): View
+    {
+        $client = app('currentPortalClient');
+        $campaign->load('adAccount', 'adsets.ads');
+
+        abort_if($campaign->adAccount?->client_id !== $client->id, 403);
+
+        $period = $request->filled('period') && array_key_exists($request->get('period'), self::$periods)
+            ? $request->get('period')
+            : '30d';
+
+        [$periodStart, $periodEnd, $periodLabel] = $this->periodRange($period);
+        [$previousStart, $previousEnd] = $this->previousPeriodRange($periodStart, $periodEnd);
+
+        $totals = $this->campaignPeriodTotals($campaign, $periodStart, $periodEnd);
+        $previousTotals = $this->campaignPeriodTotals($campaign, $previousStart, $previousEnd);
+
+        $stats = $this->buildCampaignStats($totals);
+        $previousStats = $this->buildCampaignStats($previousTotals);
+
+        $deltas = [];
+        foreach (['spend', 'impressions', 'clicks', 'reach', 'conversions', 'cpc', 'cpa', 'ctr', 'roas'] as $key) {
+            $deltas[$key] = $this->percentDelta($stats[$key], $previousStats[$key]);
+        }
+
+        $dailyStats = DB::connection('pgsql')
+            ->table('ad_daily_snapshots')
+            ->where('client_ad_account_id', $campaign->client_ad_account_id)
+            ->where('entity_level', 'campaign')
+            ->where('entity_id', $campaign->external_id)
+            ->whereBetween('snapshot_date', [$periodStart, $periodEnd])
+            ->groupBy('snapshot_date')
+            ->orderBy('snapshot_date')
+            ->selectRaw('snapshot_date, COALESCE(SUM(spend), 0) as spend, COALESCE(SUM(conversions), 0) as conversions')
+            ->get();
+
+        // Breakdown por conjunto/anúncio — só números, sem os controles de
+        // gestão (trava de otimização etc) que a tela interna tem.
+        $adsetIds = $campaign->adsets->pluck('external_id');
+
+        $adsetStats = $adsetIds->isEmpty() ? collect() : DB::connection('pgsql')
+            ->table('ad_daily_snapshots')
+            ->where('client_ad_account_id', $campaign->client_ad_account_id)
+            ->where('entity_level', 'adset')
+            ->whereIn('entity_id', $adsetIds)
+            ->whereBetween('snapshot_date', [$periodStart, $periodEnd])
+            ->groupBy('entity_id')
+            ->selectRaw('
+                entity_id,
+                COALESCE(SUM(spend), 0) AS spend,
+                COALESCE(SUM(revenue), 0) AS revenue,
+                COALESCE(SUM(clicks), 0) AS clicks,
+                COALESCE(SUM(impressions), 0) AS impressions,
+                COALESCE(SUM(conversions), 0) AS conversions
+            ')
+            ->get()
+            ->keyBy('entity_id')
+            ->map(fn ($row) => $this->buildCampaignStats($row));
+
+        $adIds = $campaign->adsets->flatMap->ads->pluck('external_id');
+
+        $adStats = $adIds->isEmpty() ? collect() : DB::connection('pgsql')
+            ->table('ad_daily_snapshots')
+            ->where('client_ad_account_id', $campaign->client_ad_account_id)
+            ->where('entity_level', 'ad')
+            ->whereIn('entity_id', $adIds)
+            ->whereBetween('snapshot_date', [$periodStart, $periodEnd])
+            ->groupBy('entity_id')
+            ->selectRaw('
+                entity_id,
+                COALESCE(SUM(spend), 0) AS spend,
+                COALESCE(SUM(revenue), 0) AS revenue,
+                COALESCE(SUM(clicks), 0) AS clicks,
+                COALESCE(SUM(impressions), 0) AS impressions,
+                COALESCE(SUM(conversions), 0) AS conversions
+            ')
+            ->get()
+            ->keyBy('entity_id')
+            ->map(fn ($row) => $this->buildCampaignStats($row));
+
+        // "Como está indo" — mesmo filtro client-safe do index() (client_summary,
+        // kinds liberados), agora restrito a essa campanha.
+        $insights = CampaignInsight::where('client_id', $client->id)
+            ->where('ad_campaign_id', $campaign->id)
+            ->whereIn('kind', CampaignInsightService::CLIENT_VISIBLE_KINDS)
+            ->whereIn('status', ['novo', 'lido'])
+            ->whereNotNull('client_summary')
+            ->orderByDesc('generated_at')
+            ->get();
+
+        // Histórico de otimizações — só o tipo "otimizacao" (o que a equipe marca
+        // como "otimização feita"), nunca os comentários/notas internas gerais
+        // (campaign_logs de outros tipos), que não têm filtro de texto client-safe.
+        $optimizationLogs = $campaign->logs()
+            ->where('type', 'otimizacao')
+            ->with('user')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('portal.campaigns.show', compact(
+            'client', 'campaign', 'stats', 'deltas', 'dailyStats', 'period', 'periodLabel',
+            'adsetStats', 'adStats', 'insights', 'optimizationLogs'
+        ));
+    }
+
+    private function campaignPeriodTotals(AdCampaign $campaign, string $start, string $end): object
+    {
+        return DB::connection('pgsql')
+            ->table('ad_daily_snapshots')
+            ->where('client_ad_account_id', $campaign->client_ad_account_id)
+            ->where('entity_level', 'campaign')
+            ->where('entity_id', $campaign->external_id)
+            ->whereBetween('snapshot_date', [$start, $end])
+            ->selectRaw('
+                COALESCE(SUM(spend), 0) AS spend,
+                COALESCE(SUM(revenue), 0) AS revenue,
+                COALESCE(SUM(clicks), 0) AS clicks,
+                COALESCE(SUM(impressions), 0) AS impressions,
+                COALESCE(SUM(conversions), 0) AS conversions,
+                COALESCE(SUM(reach), 0) AS reach
+            ')
+            ->first();
+    }
+
+    // Recalculadas em cima da soma do período (cpc/ctr/cpa/roas não podem ser
+    // somados dia a dia — têm que ser recalculados sobre o total do período).
+    private function buildCampaignStats(object $row): array
+    {
+        $spend       = (float) ($row->spend ?? 0);
+        $clicks      = (int) ($row->clicks ?? 0);
+        $impressions = (int) ($row->impressions ?? 0);
+        $conversions = (int) ($row->conversions ?? 0);
+        $revenue     = (float) ($row->revenue ?? 0);
+        $reach       = (int) ($row->reach ?? 0);
+
+        return [
+            'spend'       => $spend,
+            'impressions' => $impressions,
+            'clicks'      => $clicks,
+            'reach'       => $reach,
+            'conversions' => $conversions,
+            'cpc'         => $clicks > 0 ? round($spend / $clicks, 2) : null,
+            'cpa'         => $conversions > 0 ? round($spend / $conversions, 2) : null,
+            'ctr'         => $impressions > 0 ? round(($clicks / $impressions) * 100, 2) : null,
+            'roas'        => $spend > 0 ? round($revenue / $spend, 2) : null,
+        ];
+    }
+
+    private function percentDelta(?float $current, ?float $previous): ?float
+    {
+        if ($current === null || $previous === null || $previous == 0) {
+            return null;
+        }
+
+        return round((($current - $previous) / $previous) * 100, 1);
+    }
+
     private function buildStats(?object $agg): array
     {
         $spend = (float) ($agg->total_spend ?? 0);

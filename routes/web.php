@@ -675,6 +675,7 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
     Route::get('/aprovacoes/{round}', [PortalApprovals::class, 'show'])->name('approvals.show');
     Route::post('/aprovacoes/{round}/decidir', [PortalApprovals::class, 'decide'])->name('approvals.decide');
     Route::get('/campanhas', [PortalCampaigns::class, 'index'])->name('campaigns.index');
+    Route::get('/campanhas/{campaign}', [PortalCampaigns::class, 'show'])->name('campaigns.show');
     Route::get('/boletos', [PortalBilling::class, 'index'])->name('boletos.index');
     Route::get('/atendimento', [PortalServiceDiagnostics::class, 'index'])->name('service-diagnostics.index');
     Route::get('/atendimento/{integration}', [PortalServiceDiagnostics::class, 'integration'])->name('service-diagnostics.integration');
