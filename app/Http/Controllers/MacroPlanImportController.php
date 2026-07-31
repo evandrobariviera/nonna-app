@@ -15,7 +15,7 @@ class MacroPlanImportController extends Controller
 {
     public function create()
     {
-        $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $clients = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
 
         return view('macroplans.import', compact('clients'));
     }

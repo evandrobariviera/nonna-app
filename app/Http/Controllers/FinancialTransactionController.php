@@ -42,7 +42,7 @@ class FinancialTransactionController extends Controller
         ];
 
         $categories = FinancialCategory::active()->orderBy('name')->get()->groupBy('type');
-        $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $clients = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $contracts = Contract::whereNotIn('status', ['encerrado', 'cancelado'])
             ->with('client')
             ->get(['id', 'title', 'client_id']);

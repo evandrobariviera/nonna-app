@@ -20,7 +20,7 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         $tasks    = $this->filteredTasks($request);
-        $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $clients  = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $users    = User::orderBy('name')->get(['id', 'name']);
         $sprints  = Sprint::orderByDesc('starts_at')->get(['id', 'title', 'status']);
         $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
@@ -117,7 +117,7 @@ class TaskController extends Controller
             ? Project::where('client_id', $task->client_id)->orderBy('title')->get(['id', 'title'])
             : collect();
 
-        $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $clients = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
 
         $chat = AiChat::where('entity_type', 'task')
             ->where('entity_id', $task->id)

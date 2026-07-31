@@ -14,7 +14,7 @@ class MacroPlanController extends Controller
     public function index(Request $request)
     {
         $macroplans = $this->filteredMacroplans($request);
-        $clients    = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $clients    = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
 
         return view('macroplans.index', compact('macroplans', 'clients'));
     }
@@ -59,7 +59,7 @@ class MacroPlanController extends Controller
         $client  = $request->filled('client_id')
             ? Client::findOrFail($request->client_id)
             : null;
-        $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $clients = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $users   = User::orderBy('name')->get(['id', 'name']);
 
         return view('macroplans.create', compact('client', 'clients', 'users'));

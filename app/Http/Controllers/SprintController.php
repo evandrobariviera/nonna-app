@@ -100,7 +100,7 @@ class SprintController extends Controller
             ->orderBy('due_date')
             ->get();
 
-        $clients      = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $clients      = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $users        = User::orderBy('name')->get(['id', 'name']);
         $projects     = Project::with('client:id,company_name')
             ->whereNotIn('status', ['concluido', 'cancelado'])

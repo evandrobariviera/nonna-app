@@ -81,7 +81,7 @@ class ProjectController extends Controller
             ];
         });
 
-        $clients    = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $clients    = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $macroplans = MacroPlan::orderBy('title')->get(['id', 'title', 'client_id']);
 
         $stats = [

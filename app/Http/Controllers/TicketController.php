@@ -15,7 +15,7 @@ class TicketController extends Controller
     public function index(Request $request)
     {
         $tickets  = $this->filteredTickets($request);
-        $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $clients  = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $users    = User::orderBy('name')->get(['id', 'name']);
         $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
         $sprints  = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get(['id', 'title', 'status']);
@@ -67,7 +67,7 @@ class TicketController extends Controller
 
     public function create()
     {
-        $clients = Client::where('status', 'active')->orderBy('company_name')->get(['id', 'company_name']);
+        $clients = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $users   = User::orderBy('name')->get(['id', 'name']);
         $sprints = Sprint::whereIn('status', ['planning', 'active'])->orderByDesc('starts_at')->get();
 

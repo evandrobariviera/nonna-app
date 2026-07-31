@@ -107,7 +107,7 @@
                     <select name="client_id" class="w-full" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px">
                         <option value="">—</option>
                         @foreach($clients as $client)
-                            <option value="{{ $client->id }}">{{ $client->company_name }}</option>
+                            <option value="{{ $client->id }}">{{ $client->displayName() }}</option>
                         @endforeach
                     </select>
                 </div>

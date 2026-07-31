@@ -15,7 +15,7 @@ class FilaController extends Controller
     {
         $data = $this->filteredTasksData($request);
 
-        $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $clients = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
 
         return view('filas.index', [...$data, ...compact('clients')]);
     }

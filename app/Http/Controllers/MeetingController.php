@@ -14,7 +14,7 @@ class MeetingController extends Controller
     public function index(Request $request)
     {
         $meetings = $this->filteredMeetings($request);
-        $clients  = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $clients  = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
 
         return view('meetings.index', compact('meetings', 'clients'));
     }
@@ -49,7 +49,7 @@ class MeetingController extends Controller
     public function create()
     {
         $users        = User::orderBy('name')->get(['id', 'name']);
-        $clients      = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $clients      = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $opportunities = Opportunity::orderBy('title')->get(['id', 'title', 'client_id']);
 
         return view('meetings.create', compact('users', 'clients', 'opportunities'));
@@ -98,7 +98,7 @@ class MeetingController extends Controller
     {
         $meeting->load(['participants']);
         $users         = User::orderBy('name')->get(['id', 'name']);
-        $clients       = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $clients       = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $opportunities = Opportunity::orderBy('title')->get(['id', 'title', 'client_id']);
 
         return view('meetings.edit', compact('meeting', 'users', 'clients', 'opportunities'));

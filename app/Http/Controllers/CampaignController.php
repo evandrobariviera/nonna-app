@@ -247,7 +247,7 @@ class CampaignController extends Controller
             ->orderByDesc('generated_at')
             ->get();
 
-        $clients = Client::orderBy('company_name')->get(['id', 'company_name']);
+        $clients = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
 
         // Agrupamento opcional (mesmo padrão de Filas/Sprint) — mantém a ordenação
         // por otimização (mais atrasada primeiro) dentro de cada grupo, já que
