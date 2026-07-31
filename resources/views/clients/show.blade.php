@@ -500,14 +500,80 @@
                                         {{ $cred->notes ?: '—' }}
                                     </td>
                                     <td class="text-right">
-                                        <form method="POST"
-                                              action="{{ route('clients.credentials.destroy', [$client, $cred]) }}"
-                                              @submit.prevent="if (await $store.confirmDialog.ask('Remover esta credencial?')) $el.submit()">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-xs">
-                                                Remover
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button type="button"
+                                                    @click="editId = editId === '{{ $cred->id }}' ? null : '{{ $cred->id }}'"
+                                                    class="btn btn-ghost btn-xs">
+                                                <span x-text="editId === '{{ $cred->id }}' ? 'Cancelar' : 'Editar'"></span>
                                             </button>
+                                            <form method="POST"
+                                                  action="{{ route('clients.credentials.destroy', [$client, $cred]) }}"
+                                                  @submit.prevent="if (await $store.confirmDialog.ask('Remover esta credencial?')) $el.submit()">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-xs">
+                                                    Remover
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                {{-- Formulário de edição --}}
+                                <tr x-show="editId === '{{ $cred->id }}'" x-cloak>
+                                    <td colspan="6" style="background: var(--s2)">
+                                        <form method="POST" action="{{ route('clients.credentials.update', [$client, $cred]) }}" class="p-4 space-y-4">
+                                            @csrf @method('PATCH')
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div x-data="{ platform: '{{ $cred->platform }}' }">
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                                        Plataforma <span class="text-[var(--orange)]">*</span>
+                                                    </label>
+                                                    <select name="platform" x-model="platform" required
+                                                            class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                                        @foreach(\App\Models\ClientCredential::$platforms as $key => $label)
+                                                            <option value="{{ $key }}" {{ $cred->platform === $key ? 'selected' : '' }}>{{ $label }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    <div x-show="platform === 'outros'" class="mt-2">
+                                                        <input type="text" name="platform_custom" value="{{ $cred->platform_custom }}"
+                                                               placeholder="Qual plataforma?"
+                                                               class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2 focus:outline-none focus:border-[var(--purple)]">
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                                        URL de acesso
+                                                    </label>
+                                                    <input type="url" name="access_url" value="{{ $cred->access_url }}" placeholder="https://..."
+                                                           class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Usuário</label>
+                                                    <input type="text" name="username" value="{{ $cred->username }}"
+                                                           class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Senha</label>
+                                                    <input type="text" name="password" value="{{ $cred->password }}" autocomplete="off"
+                                                           class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)] font-mono">
+                                                </div>
+                                                <div class="col-span-2">
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Observações</label>
+                                                    <input type="text" name="notes" value="{{ $cred->notes }}" placeholder="Ex: conta da empresa, não confundir com pessoal..."
+                                                           class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                                </div>
+                                            </div>
+                                            <div class="flex gap-3">
+                                                <button type="submit"
+                                                        class="px-5 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                                                        style="background: var(--purple);">
+                                                    Salvar
+                                                </button>
+                                                <button type="button" @click="editId = null" class="btn btn-ghost btn-sm">
+                                                    Cancelar
+                                                </button>
+                                            </div>
                                         </form>
                                     </td>
                                 </tr>
