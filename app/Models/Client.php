@@ -50,6 +50,7 @@ class Client extends Model
         'billing_notes',
         // Interno
         'notes',
+        'briefing',
         'registration_token',
         'registration_completed_at',
     ];

@@ -95,6 +95,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::patch('/clientes/{client}/status', [ClientController::class, 'updateStatus'])
         ->name('clients.update-status');
 
+    Route::patch('/clientes/{client}/briefing', [ClientController::class, 'updateBriefing'])
+        ->name('clients.update-briefing');
+
     Route::post('/clientes/{client}/gerar-link', [ClientController::class, 'generateToken'])
         ->name('clients.generate-token');
 

@@ -195,6 +195,17 @@ class ClientController extends Controller
             ->with('success', 'Cliente atualizado com sucesso.');
     }
 
+    // Panorama corrido do cliente — evolui com o tempo, editável a qualquer
+    // momento (não é derivado de outra tela, é a síntese que a equipe mantém).
+    public function updateBriefing(Request $request, Client $client)
+    {
+        $client->update(['briefing' => $request->validate([
+            'briefing' => 'nullable|string',
+        ])['briefing']]);
+
+        return redirect()->back()->with('success', 'Briefing atualizado.');
+    }
+
     public function generateToken(Client $client)
     {
         $token = $client->generateRegistrationToken();

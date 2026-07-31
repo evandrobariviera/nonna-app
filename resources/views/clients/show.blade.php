@@ -1717,11 +1717,34 @@
         </div>
 
         {{-- TAB: BRIEFING --}}
-        <div x-show="tab === 'briefing'" x-cloak>
-            <div class="tab-placeholder">
-                <div class="tab-placeholder-icon">💡</div>
-                <p class="tab-placeholder-title">Briefing do Cliente</p>
-                <p class="tab-placeholder-desc">Panorama consolidado: quem é o cliente, seu posicionamento, personas, concorrentes e síntese estratégica — base de conhecimento para toda a equipe. Em breve.</p>
+        <div x-show="tab === 'briefing'" x-cloak x-data="{ editingBriefing: false }">
+            <div class="card card-body-lg">
+                <div class="flex items-center justify-between mb-1">
+                    <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Briefing do Cliente</p>
+                    <button type="button" @click="editingBriefing = !editingBriefing" class="text-xs font-semibold" style="color:var(--purple)">
+                        <span x-text="editingBriefing ? 'Cancelar' : (@js((bool) $client->briefing) ? 'Editar' : '+ Adicionar')"></span>
+                    </button>
+                </div>
+                <p class="text-xs mb-4" style="color:var(--muted2)">Panorama corrido do cliente — quem é, posicionamento, síntese estratégica. Base de conhecimento pra equipe toda, evolui com o tempo.</p>
+
+                <div x-show="!editingBriefing">
+                    @if($client->briefing)
+                        <div class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.75">{{ $client->briefing }}</div>
+                    @else
+                        <p class="text-sm" style="color:var(--muted)">Nenhum briefing registrado ainda.</p>
+                    @endif
+                </div>
+
+                <form method="POST" action="{{ route('clients.update-briefing', $client) }}" x-show="editingBriefing" x-cloak>
+                    @csrf @method('PATCH')
+                    <textarea name="briefing" rows="10"
+                        placeholder="Quem é o cliente, posicionamento, personas, concorrentes, síntese estratégica..."
+                        class="w-full px-4 py-3 text-sm focus:outline-none resize-none leading-relaxed"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $client->briefing }}</textarea>
+                    <button type="submit" class="mt-3 px-4 py-2 text-sm font-semibold text-white" style="background:var(--purple)">
+                        Salvar Briefing
+                    </button>
+                </form>
             </div>
         </div>
 
