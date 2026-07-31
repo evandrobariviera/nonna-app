@@ -23,6 +23,7 @@
 
         <div class="tab-bar">
             <button class="tab-btn" :class="{ active: tab === 'geral' }" @click="tab = 'geral'">Geral</button>
+            <button class="tab-btn" :class="{ active: tab === 'briefing' }" @click="tab = 'briefing'">Briefing</button>
             <button class="tab-btn" :class="{ active: tab === 'contatos' }" @click="tab = 'contatos'">
                 Contatos
                 @if($client->contacts->count())<span class="tab-count">{{ $client->contacts->count() }}</span>@endif
@@ -34,6 +35,14 @@
             <button class="tab-btn" :class="{ active: tab === 'links' }" @click="tab = 'links'">
                 Links
                 @if($client->links->count())<span class="tab-count">{{ $client->links->count() }}</span>@endif
+            </button>
+            <button class="tab-btn" :class="{ active: tab === 'planejamentos' }" @click="tab = 'planejamentos'">
+                Planejamentos
+                @if($activeMacroplans->count())<span class="tab-count">{{ $activeMacroplans->count() }}</span>@endif
+            </button>
+            <button class="tab-btn" :class="{ active: tab === 'campanhas' }" @click="tab = 'campanhas'">
+                Campanhas
+                @if($activeCampaigns->count())<span class="tab-count">{{ $activeCampaigns->count() }}</span>@endif
             </button>
             <button class="tab-btn" :class="{ active: tab === 'dossies' }" @click="tab = 'dossies'">
                 Dossiê
@@ -102,6 +111,19 @@
                onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
                onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
                 Ver página completa do cliente →
+            </a>
+        </div>
+
+        {{-- TAB: BRIEFING --}}
+        <div x-show="tab === 'briefing'" x-cloak>
+            @if($client->briefing)
+                <div class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.75">{{ $client->briefing }}</div>
+            @else
+                <p class="text-sm" style="color:var(--muted)">Nenhum briefing registrado ainda.</p>
+            @endif
+            <a href="{{ route('clients.show', ['client' => $client, 'tab' => 'briefing']) }}"
+               class="text-xs font-semibold mt-4 inline-block" style="color:var(--purple)">
+                {{ $client->briefing ? 'Editar na página completa →' : '+ Adicionar briefing →' }}
             </a>
         </div>
 
@@ -206,6 +228,54 @@
                                 @endif
                             </div>
                             <span style="color:var(--muted); font-size:12px">↗</span>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+
+        {{-- TAB: PLANEJAMENTOS ATIVOS --}}
+        <div x-show="tab === 'planejamentos'" x-cloak>
+            @if($activeMacroplans->isEmpty())
+                <p class="text-sm" style="color:var(--muted)">Nenhum planejamento ativo no momento.</p>
+            @else
+                <div class="flex flex-col gap-2">
+                    @foreach($activeMacroplans as $plan)
+                        <a href="{{ route('macroplans.edit', $plan) }}"
+                           class="card card-body flex items-center justify-between gap-3 transition-colors"
+                           onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'">
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold truncate" style="color:var(--text)">{{ $plan->title }}</p>
+                                @if($plan->period_start)
+                                    <p class="text-xs mt-0.5" style="color:var(--muted)">
+                                        {{ $plan->period_start->format('d/m/Y') }} @if($plan->period_end) — {{ $plan->period_end->format('d/m/Y') }} @endif
+                                    </p>
+                                @endif
+                            </div>
+                            <span class="badge badge-{{ $plan->statusColor() }} flex-shrink-0">{{ $plan->statusLabel() }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+
+        {{-- TAB: CAMPANHAS ATIVAS --}}
+        <div x-show="tab === 'campanhas'" x-cloak>
+            @if($activeCampaigns->isEmpty())
+                <p class="text-sm" style="color:var(--muted)">Nenhuma campanha ativa no momento.</p>
+            @else
+                <div class="flex flex-col gap-2">
+                    @foreach($activeCampaigns as $campaign)
+                        <a href="{{ route('campaigns.show', $campaign) }}"
+                           class="card card-body flex items-center justify-between gap-3 transition-colors"
+                           onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'">
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold truncate" style="color:var(--text)">{{ $campaign->name }}</p>
+                                <p class="text-xs mt-0.5" style="color:var(--muted)">
+                                    {{ $campaign->platform }} · {{ $campaign->adAccount?->account_name ?? $campaign->adAccount?->account_id }}
+                                </p>
+                            </div>
+                            <span class="badge badge-{{ $campaign->managementStatusColor() }} flex-shrink-0">{{ $campaign->managementStatusLabel() }}</span>
                         </a>
                     @endforeach
                 </div>

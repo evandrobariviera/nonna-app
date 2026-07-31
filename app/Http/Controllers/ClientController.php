@@ -139,9 +139,23 @@ class ClientController extends Controller
             ->limit(5)
             ->get(['id', 'title', 'status']);
 
+        // "Ativo" pra planejamento = qualquer coisa que ainda não fechou o ciclo
+        // (mesmo critério de "mostrar_fechados" usado no resto do app).
+        $activeMacroplans = $client->macroplans()
+            ->where('status', '!=', 'concluido')
+            ->orderByDesc('period_start')
+            ->get(['id', 'title', 'status', 'period_start', 'period_end']);
+
+        $adAccountIds = $client->adAccounts()->pluck('id');
+        $activeCampaigns = $adAccountIds->isEmpty() ? collect() : \App\Models\AdCampaign::whereIn('client_ad_account_id', $adAccountIds)
+            ->where('status', 'active')
+            ->with('adAccount')
+            ->orderBy('name')
+            ->get();
+
         $contactRoles = \App\Http\Controllers\ClientContactController::$roles;
 
-        return view('clients._preview', compact('client', 'recentMacroplans', 'contactRoles'));
+        return view('clients._preview', compact('client', 'recentMacroplans', 'activeMacroplans', 'activeCampaigns', 'contactRoles'));
     }
 
     public function edit(Client $client)
