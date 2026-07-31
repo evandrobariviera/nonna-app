@@ -102,8 +102,14 @@ class SprintController extends Controller
 
         $clients      = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $users        = User::orderBy('name')->get(['id', 'name']);
-        $projects     = Project::with('client:id,company_name')
+
+        // Projetos pro dropdown "Vincular a projeto" (Board) e pro filtro de Projeto
+        // (Lista) — só ativos, só de cliente ativo. Diferente da Fila, essa lista não
+        // é re-filtrada por cliente selecionado (Board não recarrega via AJAX; a Lista
+        // tem o próprio filtro client-side de Cliente→Projeto, igual à Fila).
+        $projects     = Project::with('client:id,company_name,nickname')
             ->whereNotIn('status', ['concluido', 'cancelado'])
+            ->whereHas('client', fn ($q) => $q->where('status', '!=', 'inactive'))
             ->orderBy('title')
             ->get(['id', 'title', 'client_id']);
         $sprints      = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get();

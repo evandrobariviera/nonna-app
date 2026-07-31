@@ -23,7 +23,7 @@ class TaskController extends Controller
         $clients  = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $users    = User::orderBy('name')->get(['id', 'name']);
         $sprints  = Sprint::orderByDesc('starts_at')->get(['id', 'title', 'status']);
-        $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
+        $projects = $this->visibleProjects($request);
 
         return view('tasks.index', compact('tasks', 'clients', 'users', 'sprints', 'projects'));
     }
@@ -35,9 +35,23 @@ class TaskController extends Controller
         $tasks    = $this->filteredTasks($request);
         $users    = User::orderBy('name')->get(['id', 'name']);
         $sprints  = Sprint::orderByDesc('starts_at')->get(['id', 'title', 'status']);
-        $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
+        $projects = $this->visibleProjects($request);
 
         return view('tasks._results', compact('tasks', 'users', 'sprints', 'projects'));
+    }
+
+    // Projetos pro dropdown "Vincular a projeto" da barra de ações em massa —
+    // só ativos, só de cliente ativo, e restrito ao cliente filtrado no momento
+    // (evita listar dezenas de projetos de outros clientes misturados, e some
+    // com as entradas "fantasma" de clientes duplicados/inativos).
+    private function visibleProjects(Request $request)
+    {
+        return Project::with('client:id,company_name,nickname')
+            ->whereNotIn('status', ['concluido', 'cancelado'])
+            ->whereHas('client', fn ($q) => $q->where('status', '!=', 'inactive'))
+            ->when($request->filled('client_id'), fn ($q) => $q->where('client_id', $request->client_id))
+            ->orderBy('title')
+            ->get(['id', 'title', 'client_id']);
     }
 
     private function filteredTasks(Request $request)

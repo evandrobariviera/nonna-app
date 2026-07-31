@@ -17,7 +17,7 @@ class TicketController extends Controller
         $tickets  = $this->filteredTickets($request);
         $clients  = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $users    = User::orderBy('name')->get(['id', 'name']);
-        $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
+        $projects = $this->visibleProjects($request);
         $sprints  = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get(['id', 'title', 'status']);
 
         return view('tickets.index', compact('tickets', 'clients', 'users', 'projects', 'sprints'));
@@ -29,10 +29,22 @@ class TicketController extends Controller
     {
         $tickets  = $this->filteredTickets($request);
         $users    = User::orderBy('name')->get(['id', 'name']);
-        $projects = Project::with('client:id,company_name')->orderBy('title')->get(['id', 'title', 'client_id']);
+        $projects = $this->visibleProjects($request);
         $sprints  = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get(['id', 'title', 'status']);
 
         return view('tickets._results', compact('tickets', 'users', 'projects', 'sprints'));
+    }
+
+    // Projetos pro dropdown "Vincular a projeto" da barra de ações em massa —
+    // só ativos, só de cliente ativo, e restrito ao cliente filtrado no momento.
+    private function visibleProjects(Request $request)
+    {
+        return Project::with('client:id,company_name,nickname')
+            ->whereNotIn('status', ['concluido', 'cancelado'])
+            ->whereHas('client', fn ($q) => $q->where('status', '!=', 'inactive'))
+            ->when($request->filled('client_id'), fn ($q) => $q->where('client_id', $request->client_id))
+            ->orderBy('title')
+            ->get(['id', 'title', 'client_id']);
     }
 
     private function filteredTickets(Request $request)

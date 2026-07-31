@@ -191,7 +191,22 @@
     {{-- Ações: Sprint --}}
     <td style="width:110px">
         <div class="row-actions flex items-center gap-1.5">
-            @if($sprints->count() > 0)
+            @if($task->sprint_id)
+                {{-- Tarefa já está numa sprint (view Lista da Sprint) — ação é o
+                     inverso: devolver pra Fila. Trava se a sprint estiver bloqueada,
+                     mesma regra de SprintController::removeTask(). --}}
+                @if(!$task->sprint?->isLocked())
+                    <form method="POST" action="{{ route('sprints.remove-task', [$task->sprint_id, $task]) }}"
+                          @submit.prevent="if (await $store.confirmDialog.ask('Devolver esta tarefa pra Fila?')) $el.submit()">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn btn-xs" style="color:var(--orange); border:1px solid var(--orange)">
+                            ← Fila
+                        </button>
+                    </form>
+                @else
+                    <span class="text-xs" style="color:var(--muted)" title="Sprint travada">🔒</span>
+                @endif
+            @elseif($sprints->count() > 0)
                 <div x-data="{ sprintOpen: false, sprintStyle: '' }" class="relative flex items-stretch">
                     @if($activeSprint)
                         <form method="POST" action="{{ route('sprints.add-task', [$activeSprint, $task]) }}">
