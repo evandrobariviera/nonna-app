@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="header">Planejamento — {{ $macroplan->client->company_name }}</x-slot>
+    <x-slot name="header">Planejamento — {{ $macroplan->client->displayName() }}</x-slot>
 
     {{-- BREADCRUMB + STATUS --}}
     <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -12,7 +12,7 @@
                class="text-xs font-semibold transition-colors"
                style="color:var(--muted)"
                onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
-                {{ $macroplan->client->company_name }}
+                {{ $macroplan->client->displayName() }}
             </a>
             <span style="color:var(--border2)">/</span>
             <span class="text-xs font-semibold" style="color:var(--text)">{{ $macroplan->title }}</span>

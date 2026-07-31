@@ -118,7 +118,7 @@
                         <option value="">Todos os clientes</option>
                         @foreach($clients as $c)
                             <option value="{{ $c->id }}" {{ request('client_id') === $c->id ? 'selected' : '' }}>
-                                {{ $c->company_name }}
+                                {{ $c->displayName() }}
                             </option>
                         @endforeach
                     </select>

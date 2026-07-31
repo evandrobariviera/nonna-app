@@ -93,7 +93,7 @@
                 style="background:var(--s3); border:1px solid var(--border2); color:var(--text); min-width:160px">
                 <option value="">Todos os clientes</option>
                 @foreach($clients as $c)
-                    <option value="{{ $c->id }}">{{ $c->company_name }}</option>
+                    <option value="{{ $c->id }}">{{ $c->displayName() }}</option>
                 @endforeach
             </select>
 

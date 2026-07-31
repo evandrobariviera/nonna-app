@@ -16,7 +16,7 @@
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
                         <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $meeting->title }}</p>
                         <div class="flex items-center gap-2 mt-1">
-                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->company_name ?? '—' }}</span>
+                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->displayName() ?? '—' }}</span>
                             <span class="text-xs font-mono" style="color:var(--purple)">{{ $meeting->scheduled_at->format('H:i') }}</span>
                         </div>
                     </a>
@@ -40,7 +40,7 @@
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
                         <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $ticket->title }}</p>
                         <div class="flex items-center gap-2 mt-1">
-                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $ticket->client?->company_name ?? '—' }}</span>
+                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $ticket->client?->displayName() ?? '—' }}</span>
                             @if($ticket->due_date)
                                 <span class="text-xs font-mono" style="color:{{ $ticket->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">{{ $ticket->due_date->format('d/m') }}</span>
                             @endif
@@ -78,7 +78,7 @@
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
                         <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $round->task->title }}</p>
                         <div class="flex items-center gap-2 mt-1">
-                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->task->client?->company_name ?? '—' }}</span>
+                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->task->client?->displayName() ?? '—' }}</span>
                             <span class="text-xs font-mono" style="color:var(--muted)">rodada {{ $round->round_number }} · {{ $round->submitted_at->diffForHumans() }}</span>
                         </div>
                     </a>
@@ -102,7 +102,7 @@
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
                         <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $round->task->title }}</p>
                         <div class="flex items-center gap-2 mt-1">
-                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->task->client?->company_name ?? '—' }}</span>
+                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->task->client?->displayName() ?? '—' }}</span>
                             <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->resolved_at?->diffForHumans() }}</span>
                         </div>
                     </a>
@@ -126,7 +126,7 @@
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
                         <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $round->task->title }}</p>
                         <div class="flex items-center gap-2 mt-1">
-                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->task->client?->company_name ?? '—' }}</span>
+                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->task->client?->displayName() ?? '—' }}</span>
                             <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->resolved_at?->diffForHumans() }}</span>
                         </div>
                     </a>

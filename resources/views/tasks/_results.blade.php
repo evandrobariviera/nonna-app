@@ -74,7 +74,7 @@
                     {{-- Cliente --}}
                     <td>
                         <span class="text-sm font-medium" style="color:var(--text)">
-                            {{ $task->client?->company_name ?? '—' }}
+                            {{ $task->client?->displayName() ?? '—' }}
                         </span>
                     </td>
 

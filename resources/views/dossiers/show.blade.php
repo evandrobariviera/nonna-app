@@ -3,7 +3,7 @@
         <a href="{{ route('clients.show', $client) }}"
            class="transition-colors" style="color:var(--muted)"
            onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
-            {{ $client->company_name }}
+            {{ $client->displayName() }}
         </a>
         <span style="color:var(--border2)" class="mx-2">/</span>
         <span style="color:var(--text)">Dossiê v{{ $dossier->version }}</span>

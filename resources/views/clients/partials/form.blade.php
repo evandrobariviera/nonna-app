@@ -42,6 +42,15 @@ $selectStyle = "background:var(--s1); border:1px solid var(--border2); color:var
             @error('company_name') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
         </div>
 
+        <div class="md:col-span-2">
+            <label class="stat-label block mb-2">Apelido</label>
+            <input type="text" name="nickname" value="{{ old('nickname', $client->nickname) }}"
+                placeholder="Como o time chama esse cliente no dia a dia (opcional)"
+                class="w-full px-3 py-2 text-sm" style="{{ $inputStyle }}">
+            @error('nickname') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
+            <p class="text-xs mt-1" style="color:var(--muted)">Se preenchido, aparece no lugar da razão social nas listagens e telas internas.</p>
+        </div>
+
         <div>
             <label class="stat-label block mb-2">CPF / CNPJ</label>
             <input type="text" name="tax_id" value="{{ old('tax_id', $client->tax_id) }}"

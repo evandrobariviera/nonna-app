@@ -1,18 +1,18 @@
 <x-app-layout>
-    <x-slot name="header">{{ $client->company_name }}</x-slot>
+    <x-slot name="header">{{ $client->displayName() }}</x-slot>
 
     {{-- BREADCRUMB + AÇÕES --}}
     <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div class="flex items-center gap-3">
             @if($client->logoUrl())
-                <img src="{{ $client->logoUrl() }}" alt="{{ $client->company_name }}"
+                <img src="{{ $client->logoUrl() }}" alt="{{ $client->displayName() }}"
                      class="h-6 w-6 rounded-md object-cover flex-shrink-0" style="border:1px solid var(--border2)">
             @endif
             <a href="{{ route('clients.index') }}" class="text-xs font-semibold transition-colors"
                style="color:var(--muted)"
                onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">← Clientes</a>
             <span style="color:var(--border2)">/</span>
-            <span class="text-xs font-semibold" style="color:var(--text)">{{ $client->company_name }}</span>
+            <span class="text-xs font-semibold" style="color:var(--text)">{{ $client->displayName() }}</span>
         </div>
         <div class="flex items-center gap-2">
             @php $color = $client->statusColor() @endphp
@@ -117,6 +117,12 @@
                                 <p class="stat-label mb-1">Razão Social</p>
                                 <p class="text-sm font-bold" style="color:var(--text)">{{ $client->company_name }}</p>
                             </div>
+                            @if($client->nickname)
+                            <div class="col-span-2">
+                                <p class="stat-label mb-1">Apelido</p>
+                                <p class="text-sm font-bold" style="color:var(--text)">{{ $client->nickname }}</p>
+                            </div>
+                            @endif
                             @if($client->tax_id)
                             <div>
                                 <p class="stat-label mb-1">CPF / CNPJ</p>

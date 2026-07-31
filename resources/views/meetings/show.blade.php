@@ -98,7 +98,7 @@
                                 <dd>
                                     <a href="{{ route('clients.show', $meeting->client) }}"
                                        class="font-semibold hover:underline" style="color:var(--purple)">
-                                        {{ $meeting->client->company_name }}
+                                        {{ $meeting->client->displayName() }}
                                     </a>
                                 </dd>
                             </div>

@@ -129,7 +129,7 @@
                                             </a>
                                         </td>
                                         <td class="text-xs" style="color:var(--muted2)">
-                                            {{ $opp->client->company_name ?? '—' }}
+                                            {{ $opp->client->displayName() ?? '—' }}
                                         </td>
                                         <td>
                                             <span class="badge badge-{{ $opp->stageColor() }}">{{ $opp->stageLabel() }}</span>
@@ -171,7 +171,7 @@
                                 <li>
                                     <a href="{{ route('clients.show', $client) }}"
                                        class="font-semibold text-sm hover:underline block" style="color:var(--text)">
-                                        {{ $client->company_name }}
+                                        {{ $client->displayName() }}
                                     </a>
                                     @if($client->pivot->role)
                                         <span class="text-xs" style="color:var(--muted)">

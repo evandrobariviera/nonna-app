@@ -232,7 +232,7 @@
                                 <div class="px-4 py-3">
                                     {{-- Cliente --}}
                                     <p class="text-xs font-mono mb-1" style="color:var(--purple)">
-                                        {{ $task->client?->company_name ?? '—' }}
+                                        {{ $task->client?->displayName() ?? '—' }}
                                         @if($task->project)
                                             <span style="color:var(--border2)"> / </span>
                                             <span style="color:var(--muted)">{{ $task->project->title }}</span>
@@ -357,7 +357,7 @@
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                         <option value="">Todos os clientes</option>
                         @foreach($clients as $c)
-                            <option value="{{ $c->id }}">{{ $c->company_name }}</option>
+                            <option value="{{ $c->id }}">{{ $c->displayName() }}</option>
                         @endforeach
                     </select>
                     <span class="text-xs font-mono" style="color:var(--muted)">
@@ -376,7 +376,7 @@
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="text-xs font-mono font-bold" style="color:var(--purple)">
-                                    {{ $task->client?->company_name ?? '—' }}
+                                    {{ $task->client?->displayName() ?? '—' }}
                                 </span>
                                 @if($task->project)
                                     <span class="text-xs font-mono" style="color:var(--muted)">/ {{ $task->project->title }}</span>

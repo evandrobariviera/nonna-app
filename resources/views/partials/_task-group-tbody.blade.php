@@ -5,7 +5,7 @@
 
     if ($groupBy === 'cliente') {
         $firstTask = $groupTasks->first();
-        $groupLabel = $firstTask->client?->company_name ?? 'Sem cliente';
+        $groupLabel = $firstTask->client?->displayName() ?? 'Sem cliente';
         $groupInitials = strtoupper(substr($groupLabel, 0, 2));
         $groupSubLabel = null;
         $groupColor = 'var(--grad)';

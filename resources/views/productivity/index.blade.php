@@ -175,7 +175,7 @@
                         <div>
                             <div class="flex items-center justify-between mb-1">
                                 <a href="{{ route('clients.show', $row->client) }}" class="text-sm font-medium hover:underline" style="color:var(--text)">
-                                    {{ $row->client->company_name }}
+                                    {{ $row->client->displayName() }}
                                 </a>
                                 <span class="text-sm font-bold" style="color:var(--purple)">{{ $row->count }}</span>
                             </div>
@@ -313,7 +313,7 @@
                             <tr style="border-bottom:1px solid var(--border2)">
                                 <td class="py-2">
                                     <a href="{{ route('clients.show', $row->client) }}" class="font-medium hover:underline" style="color:var(--text)">
-                                        {{ $row->client->company_name }}
+                                        {{ $row->client->displayName() }}
                                     </a>
                                 </td>
                                 <td class="text-right py-2" style="color:var(--text)">{{ $row->total }}</td>

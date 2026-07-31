@@ -33,7 +33,7 @@
                                     </p>
                                 </a>
                                 <div class="flex items-center gap-2 mt-1 flex-wrap">
-                                    <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->task?->client?->company_name ?? '—' }}</span>
+                                    <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->task?->client?->displayName() ?? '—' }}</span>
                                     <span class="text-xs font-mono" style="color:var(--muted)">rodada {{ $round->round_number }}</span>
                                 </div>
                                 @if($col['key'] === 'awaiting_send')
@@ -90,7 +90,7 @@
                             <div class="flex items-center gap-2 mb-1 flex-wrap">
                                 <span class="text-xs font-semibold uppercase tracking-widest"
                                       style="color:var(--purple)">
-                                    {{ $round->task?->client?->company_name ?? '—' }}
+                                    {{ $round->task?->client?->displayName() ?? '—' }}
                                 </span>
                                 <span style="color:var(--border2)">·</span>
                                 <span class="text-xs" style="color:var(--muted)">Rodada #{{ $round->round_number }}</span>

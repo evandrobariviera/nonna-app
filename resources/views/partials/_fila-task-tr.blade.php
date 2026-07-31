@@ -47,9 +47,9 @@
     {{-- Cliente --}}
     <td style="width:150px; max-width:150px">
         <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:136px"
-             title="{{ $task->client?->company_name }}">
+             title="{{ $task->client?->displayName() }}">
             <span class="text-sm font-medium" style="color:var(--text)">
-                {{ $task->client?->company_name ?? '—' }}
+                {{ $task->client?->displayName() ?? '—' }}
             </span>
         </div>
     </td>

@@ -266,7 +266,7 @@
                     <h3 class="text-xs font-mono uppercase tracking-widest mb-3" style="color: var(--green);">Cliente Criado</h3>
                     <a href="{{ route('clients.show', $opportunity->client_id) }}"
                        class="text-sm font-semibold text-[var(--text)] hover:text-[var(--purple)] transition-colors">
-                        {{ $opportunity->client->company_name ?? '—' }}
+                        {{ $opportunity->client?->displayName() ?? '—' }}
                     </a>
                     <div class="mt-2">
                         <a href="{{ route('clients.show', $opportunity->client_id) }}"

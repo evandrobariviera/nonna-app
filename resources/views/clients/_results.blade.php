@@ -38,7 +38,7 @@
                                 <a href="{{ route('clients.show', $client) }}"
                                    class="font-bold text-sm hover:underline"
                                    style="color:var(--text)">
-                                    {{ $client->company_name }}
+                                    {{ $client->displayName() }}
                                 </a>
                                 @if($client->trade_name)
                                     <p class="text-xs mt-0.5" style="color:var(--muted)">{{ $client->trade_name }}</p>
@@ -77,7 +77,7 @@
                                         Editar
                                     </a>
                                     <form method="POST" action="{{ route('clients.destroy', $client) }}"
-                                          @submit.prevent="if (await $store.confirmDialog.ask('Excluir {{ addslashes($client->company_name) }}? Só funciona se não houver nenhuma associação (contratos, contas, tarefas, etc) — senão use o status Inativo.')) $el.submit()">
+                                          @submit.prevent="if (await $store.confirmDialog.ask('Excluir {{ addslashes($client->displayName()) }}? Só funciona se não houver nenhuma associação (contratos, contas, tarefas, etc) — senão use o status Inativo.')) $el.submit()">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-danger btn-xs">
                                             Excluir

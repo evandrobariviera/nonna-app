@@ -67,7 +67,7 @@
                                         <td class="font-semibold text-[var(--text)]">
                                             <a href="{{ route('clients.show', [$account->client_id, 'tab' => 'contas']) }}"
                                                style="color:var(--text)">
-                                                {{ $account->client?->company_name ?? '—' }}
+                                                {{ $account->client?->displayName() ?? '—' }}
                                             </a>
                                         </td>
 

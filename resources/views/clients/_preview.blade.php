@@ -7,11 +7,11 @@
     <div class="sticky top-0 z-10 px-6 pt-5" style="background:var(--bg); border-bottom:1px solid var(--border2)">
         <div class="flex items-start gap-3 mb-4">
             @if($client->logoUrl())
-                <img src="{{ $client->logoUrl() }}" alt="{{ $client->company_name }}"
+                <img src="{{ $client->logoUrl() }}" alt="{{ $client->displayName() }}"
                      class="h-10 w-10 rounded-lg object-cover flex-shrink-0" style="border:1px solid var(--border2)">
             @endif
             <div class="min-w-0 flex-1">
-                <p class="text-base font-bold truncate" style="color:var(--text)">{{ $client->company_name }}</p>
+                <p class="text-base font-bold truncate" style="color:var(--text)">{{ $client->displayName() }}</p>
                 <div class="flex items-center gap-2 mt-1">
                     <span class="badge badge-{{ $client->statusColor() }}">{{ $client->statusLabel() }}</span>
                     @if($client->segment)

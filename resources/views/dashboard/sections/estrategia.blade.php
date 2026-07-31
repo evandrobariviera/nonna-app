@@ -14,7 +14,7 @@
                     <a href="{{ route('clients.show', [$client, 'tab' => 'planejamentos']) }}"
                        class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--red)"
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $client->company_name }}</p>
+                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $client->displayName() }}</p>
                     </a>
                 @endforeach
             </div>
@@ -35,7 +35,7 @@
                     <a href="{{ route('macroplans.edit', $plan) }}"
                        class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--orange)"
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $plan->client?->company_name ?? '—' }}</p>
+                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $plan->client?->displayName() ?? '—' }}</p>
                         <p class="text-xs font-mono mt-0.5" style="color:var(--orange)">
                             {{ $daysLeft <= 0 ? 'vence hoje' : $daysLeft . ' dia' . ($daysLeft !== 1 ? 's' : '') }} · {{ $plan->period_end->format('d/m') }}
                         </p>
@@ -58,7 +58,7 @@
                     <a href="{{ route('macroplans.edit', $plan) }}"
                        class="block px-3 py-2 transition-colors" style="background:var(--s2)"
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $plan->client?->company_name ?? '—' }}</p>
+                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $plan->client?->displayName() ?? '—' }}</p>
                         <p class="text-xs font-mono mt-0.5" style="color:var(--muted)">{{ $plan->periodLabel() }}</p>
                     </a>
                 @endforeach
@@ -85,7 +85,7 @@
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
                         <p class="text-xs font-semibold" style="color:var(--text)">{{ $meeting->title }}</p>
                         <div class="flex items-center gap-2 mt-0.5">
-                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->company_name ?? '—' }}</span>
+                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->displayName() ?? '—' }}</span>
                             <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->scheduled_at->format('d/m') }}</span>
                         </div>
                     </a>
@@ -109,7 +109,7 @@
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
                         <p class="text-xs font-semibold" style="color:var(--text)">{{ $meeting->title }}</p>
                         <div class="flex items-center gap-2 mt-0.5">
-                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->company_name ?? '—' }}</span>
+                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->displayName() ?? '—' }}</span>
                             <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->scheduled_at->format('d/m') }}</span>
                         </div>
                     </a>

@@ -9,7 +9,7 @@
             <span style="color:var(--border2)">/</span>
             <a href="{{ route('clients.show', $client) }}" class="text-xs font-semibold transition-colors"
                style="color:var(--muted)"
-               onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">{{ $client->company_name }}</a>
+               onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">{{ $client->displayName() }}</a>
             <span style="color:var(--border2)">/</span>
             <span class="text-xs font-semibold" style="color:var(--text)">Editar</span>
         </div>

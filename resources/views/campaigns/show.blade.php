@@ -40,7 +40,7 @@
                            @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('clients.preview', $campaign->adAccount->client) }}') }"
                            class="transition-colors" style="color:var(--text)"
                            onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'">
-                            {{ $campaign->adAccount->client->company_name }}
+                            {{ $campaign->adAccount->client->displayName() }}
                         </a>
                     @else
                         —
@@ -351,7 +351,7 @@
                                @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('clients.preview', $campaign->adAccount->client) }}') }"
                                class="text-sm font-semibold transition-colors" style="color:var(--purple)"
                                onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
-                                {{ $campaign->adAccount->client->company_name }}
+                                {{ $campaign->adAccount->client->displayName() }}
                             </a>
                         @else
                             <p class="text-sm" style="color:var(--muted)">—</p>

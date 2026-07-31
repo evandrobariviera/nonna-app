@@ -37,7 +37,7 @@
                             <td>
                                 <a href="{{ route('clients.show', $plan->client) }}"
                                    class="text-xs font-semibold hover:underline" style="color:var(--purple)">
-                                    {{ $plan->client->company_name }}
+                                    {{ $plan->client->displayName() }}
                                 </a>
                             </td>
                             <td class="text-xs font-mono whitespace-nowrap" style="color:var(--muted2)">

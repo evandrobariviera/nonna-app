@@ -21,6 +21,7 @@ class Client extends Model
     protected $fillable = [
         'clickup_task_id',
         'company_name',
+        'nickname',
         'is_internal',
         'logo_path',
         'logo_disk',
@@ -114,6 +115,15 @@ class Client extends Model
         $token = Str::random(48);
         $this->update(['registration_token' => $token]);
         return $token;
+    }
+
+    // Nome pra exibição operacional (listagens, dropdowns, cabeçalhos) — apelido
+    // se tiver, senão a razão social. NUNCA usar em contrato, financeiro ou no
+    // cadastro público: esses continuam mostrando company_name diretamente,
+    // porque ali o nome legal é o que importa.
+    public function displayName(): string
+    {
+        return $this->nickname ?: $this->company_name;
     }
 
     public function statusLabel(): string

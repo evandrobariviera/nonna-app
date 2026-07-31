@@ -46,7 +46,7 @@
         <select name="{{ $prefix }}client_id" x-model="selectedClient" @change="selectedProject = ''" class="filter-select w-full">
             <option value="">Todos os clientes</option>
             @foreach($clients as $c)
-                <option value="{{ $c->id }}">{{ $c->company_name }}</option>
+                <option value="{{ $c->id }}">{{ $c->displayName() }}</option>
             @endforeach
         </select>
     </div>
@@ -57,7 +57,7 @@
             <option value="">Todos os projetos</option>
             @foreach($projects as $p)
                 <option value="{{ $p->id }}" x-bind:hidden="selectedClient && selectedClient !== '{{ $p->client_id }}'">
-                    {{ $p->title }} @if($p->client)({{ $p->client->company_name }})@endif
+                    {{ $p->title }} @if($p->client)({{ $p->client->displayName() }})@endif
                 </option>
             @endforeach
         </select>

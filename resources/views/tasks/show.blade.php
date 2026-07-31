@@ -173,7 +173,7 @@
                            @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('clients.preview', $task->client) }}') }"
                            style="color:var(--purple); font-weight:500"
                            onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
-                            {{ $task->client?->company_name }}
+                            {{ $task->client?->displayName() }}
                         </a>
                         @if($task->project->macro_plan_id)
                             <span style="color:var(--border2)">›</span>
@@ -860,7 +860,7 @@
                                 style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                                 @foreach($clients as $c)
                                     <option value="{{ $c->id }}" {{ $task->client_id === $c->id ? 'selected' : '' }}>
-                                        {{ $c->company_name }}
+                                        {{ $c->displayName() }}
                                     </option>
                                 @endforeach
                             </select>

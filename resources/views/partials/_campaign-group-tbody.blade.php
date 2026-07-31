@@ -10,7 +10,7 @@
         $groupColor = 'var(--' . (\App\Models\AdCampaign::$managementSituationColors[$situationKey] ?? 'muted') . ')';
     } else {
         $firstCampaign = $groupCampaigns->first();
-        $groupLabel = $firstCampaign->adAccount?->client?->company_name ?? 'Sem cliente';
+        $groupLabel = $firstCampaign->adAccount?->client?->displayName() ?? 'Sem cliente';
         $groupColor = 'var(--grad)';
     }
     $groupInitials = strtoupper(substr($groupLabel, 0, 2));

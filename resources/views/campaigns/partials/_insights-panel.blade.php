@@ -30,7 +30,7 @@
                                     <span class="font-bold text-sm" style="color:var(--text)">{{ $insight->title }}</span>
                                 </div>
                                 <p class="text-xs font-mono mb-1" style="color:var(--muted)">
-                                    {{ $insight->client->company_name }}
+                                    {{ $insight->client->displayName() }}
                                     @if($insight->campaign) · {{ $insight->campaign->name }} @endif
                                     @if($insight->adset) → {{ $insight->adset->name }} @endif
                                     @if($insight->ad) → {{ $insight->ad->name }} @endif

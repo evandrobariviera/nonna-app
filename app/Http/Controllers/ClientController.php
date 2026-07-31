@@ -31,6 +31,7 @@ class ClientController extends Controller
         if ($request->filled('q')) {
             $query->where(function ($q) use ($request) {
                 $q->where('company_name', 'ilike', '%' . $request->q . '%')
+                  ->orWhere('nickname', 'ilike', '%' . $request->q . '%')
                   ->orWhere('tax_id', 'ilike', '%' . $request->q . '%')
                   ->orWhere('contact_email', 'ilike', '%' . $request->q . '%')
                   ->orWhere('responsible_name', 'ilike', '%' . $request->q . '%');
@@ -60,6 +61,7 @@ class ClientController extends Controller
     {
         $data = $request->validate([
             'company_name'            => 'required|string|max:255',
+            'nickname'                => 'nullable|string|max:150',
             'logo'                    => 'nullable|image|mimes:jpeg,jpg,png,webp|max:3072',
             'tax_id'                  => 'nullable|string|max:20',
             'website'                 => 'nullable|url|max:255',
@@ -151,6 +153,7 @@ class ClientController extends Controller
     {
         $data = $request->validate([
             'company_name'            => 'required|string|max:255',
+            'nickname'                => 'nullable|string|max:150',
             'logo'                    => 'nullable|image|mimes:jpeg,jpg,png,webp|max:3072',
             'remove_logo'             => 'nullable|boolean',
             'tax_id'                  => 'nullable|string|max:20',

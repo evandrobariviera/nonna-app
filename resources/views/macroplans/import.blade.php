@@ -36,7 +36,7 @@
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                     <option value="">Selecione...</option>
                     @foreach($clients as $c)
-                        <option value="{{ $c->id }}" {{ old('client_id') === $c->id ? 'selected' : '' }}>{{ $c->company_name }}</option>
+                        <option value="{{ $c->id }}" {{ old('client_id') === $c->id ? 'selected' : '' }}>{{ $c->displayName() }}</option>
                     @endforeach
                 </select>
                 @error('client_id')

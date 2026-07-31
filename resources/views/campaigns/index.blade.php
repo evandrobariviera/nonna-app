@@ -22,7 +22,7 @@
             style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
             <option value="">Todos os clientes</option>
             @foreach($clients as $c)
-                <option value="{{ $c->id }}" {{ $clientId === $c->id ? 'selected' : '' }}>{{ $c->company_name }}</option>
+                <option value="{{ $c->id }}" {{ $clientId === $c->id ? 'selected' : '' }}>{{ $c->displayName() }}</option>
             @endforeach
         </select>
 
@@ -31,7 +31,7 @@
             <option value="">Todas as campanhas</option>
             @foreach($campaignOptions as $opt)
                 <option value="{{ $opt->id }}" {{ $campaignId === $opt->id ? 'selected' : '' }}>
-                    {{ $clientId ? $opt->name : ($opt->adAccount?->client?->company_name . ' — ' . $opt->name) }}
+                    {{ $clientId ? $opt->name : ($opt->adAccount?->client?->displayName() . ' — ' . $opt->name) }}
                 </option>
             @endforeach
         </select>

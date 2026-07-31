@@ -18,7 +18,7 @@
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
                         <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $ticket->title }}</p>
                         <div class="flex items-center gap-2 mt-1">
-                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $ticket->client?->company_name ?? '—' }}</span>
+                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $ticket->client?->displayName() ?? '—' }}</span>
                             @if($ticket->due_date)
                                 <span class="text-xs font-mono" style="color:{{ $ticket->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">{{ $ticket->due_date->format('d/m') }}</span>
                             @endif
@@ -44,7 +44,7 @@
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
                         <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $task->title }}</p>
                         <div class="flex items-center gap-2 mt-1">
-                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->company_name ?? '—' }}</span>
+                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->displayName() ?? '—' }}</span>
                             @if($task->due_date)
                                 <span class="text-xs font-mono" style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">{{ $task->due_date->format('d/m') }}</span>
                             @endif

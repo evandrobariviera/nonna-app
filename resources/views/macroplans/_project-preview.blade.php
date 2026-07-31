@@ -8,7 +8,7 @@
             <span class="badge badge-{{ $project->statusColor() }}">{{ $project->statusLabel() }}</span>
             <span class="badge badge-{{ $project->typeColor() }}">{{ $project->typeLabel() }}</span>
             @if($project->client)
-                <span class="text-xs" style="color:var(--muted)">{{ $project->client->company_name }}</span>
+                <span class="text-xs" style="color:var(--muted)">{{ $project->client->displayName() }}</span>
             @endif
         </div>
     </div>

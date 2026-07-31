@@ -10,7 +10,7 @@
                 <span style="color:var(--border2)">/</span>
                 <a href="{{ route('macroplans.edit', $macroplan) }}" style="color:var(--muted)"
                    onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
-                    {{ $macroplan->client->company_name }}
+                    {{ $macroplan->client->displayName() }}
                 </a>
                 <span style="color:var(--border2)">/</span>
                 <a href="{{ route('macroplans.edit', [$macroplan, 'bloco' => 'bloco3']) }}" style="color:var(--muted)"

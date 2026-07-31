@@ -7,7 +7,7 @@
         <div class="flex items-center gap-2 mt-2 flex-wrap">
             <span class="badge badge-{{ $macroplan->statusColor() }}">{{ $macroplan->statusLabel() }}</span>
             @if($macroplan->client)
-                <span class="text-xs" style="color:var(--muted)">{{ $macroplan->client->company_name }}</span>
+                <span class="text-xs" style="color:var(--muted)">{{ $macroplan->client->displayName() }}</span>
             @endif
         </div>
     </div>

@@ -38,7 +38,7 @@
                         @foreach($clients as $c)
                             <option value="{{ $c->id }}"
                                 {{ old('client_id', $client?->id) === $c->id ? 'selected' : '' }}>
-                                {{ $c->company_name }}
+                                {{ $c->displayName() }}
                             </option>
                         @endforeach
                     </select>

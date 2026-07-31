@@ -25,7 +25,7 @@
         <select name="client_id" class="filter-select">
             <option value="">Todos os clientes</option>
             @foreach($clients as $c)
-                <option value="{{ $c->id }}" {{ request('client_id') === $c->id ? 'selected' : '' }}>{{ $c->company_name }}</option>
+                <option value="{{ $c->id }}" {{ request('client_id') === $c->id ? 'selected' : '' }}>{{ $c->displayName() }}</option>
             @endforeach
         </select>
 

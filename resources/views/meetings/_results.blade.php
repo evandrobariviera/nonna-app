@@ -45,7 +45,7 @@
                                 @if($meeting->client)
                                     <a href="{{ route('clients.show', $meeting->client) }}"
                                        class="text-xs font-semibold hover:underline" style="color:var(--purple)">
-                                        {{ $meeting->client->company_name }}
+                                        {{ $meeting->client->displayName() }}
                                     </a>
                                 @else
                                     <span style="color:var(--muted)">—</span>

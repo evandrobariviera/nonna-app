@@ -61,7 +61,7 @@
                            onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
                             <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $meeting->title }}</p>
                             <div class="flex items-center gap-2 mt-1">
-                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->company_name ?? '—' }}</span>
+                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->displayName() ?? '—' }}</span>
                                 <span class="text-xs font-mono" style="color:var(--purple)">
                                     {{ $meeting->scheduled_at->format('H:i') }}
                                 </span>
@@ -88,7 +88,7 @@
                        class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--red)"
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
                         <p class="text-xs font-semibold" style="color:var(--text)">{{ $task->title }}</p>
-                        <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->company_name ?? '—' }}</span>
+                        <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->displayName() ?? '—' }}</span>
                     </a>
                 @endforeach
             </div>
@@ -134,7 +134,7 @@
                              onclick="window.location='{{ route('tasks.show', $task) }}'">
                             <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $task->title }}</p>
                             <div class="flex items-center gap-2 mt-1">
-                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->company_name ?? '—' }}</span>
+                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->displayName() ?? '—' }}</span>
                                 @if($task->due_date)
                                     <span class="text-xs font-mono" style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">
                                         {{ $task->due_date->format('d/m') }}

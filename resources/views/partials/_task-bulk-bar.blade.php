@@ -39,7 +39,7 @@
     <select x-model="bulkProject" class="filter-select">
         <option value="">Vincular a projeto…</option>
         @foreach($projects as $p)
-            <option value="{{ $p->id }}">{{ $p->title }} — {{ $p->client?->company_name ?? '—' }}</option>
+            <option value="{{ $p->id }}">{{ $p->title }} — {{ $p->client?->displayName() ?? '—' }}</option>
         @endforeach
     </select>
     <button @click="apply('project', { project_id: bulkProject })" :disabled="!bulkProject || applying" class="btn btn-ghost btn-xs">Vincular</button>

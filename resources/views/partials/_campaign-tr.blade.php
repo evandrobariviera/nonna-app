@@ -9,7 +9,7 @@
 @endphp
 <tr class="{{ $rowClass }}" x-show="groupOpen">
     <td class="font-semibold text-[var(--text)]">
-        {{ $campaign->adAccount?->client?->company_name ?? '—' }}
+        {{ $campaign->adAccount?->client?->displayName() ?? '—' }}
     </td>
     <td>
         <div class="flex items-center gap-2 flex-wrap">
