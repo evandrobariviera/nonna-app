@@ -160,6 +160,11 @@ class Client extends Model
         return $this->hasOne(ClientOnboarding::class);
     }
 
+    public function meetings(): HasMany
+    {
+        return $this->hasMany(Meeting::class)->orderByDesc('scheduled_at');
+    }
+
     public function contacts(): BelongsToMany
     {
         return $this->belongsToMany(Contact::class, 'client_contacts', 'client_id', 'contact_id')

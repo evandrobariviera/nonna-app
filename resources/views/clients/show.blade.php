@@ -80,8 +80,8 @@
             <button class="tab-btn" :class="{ active: tab === 'dossies' }" @click="tab = 'dossies'">
                 Dossiê de Marca
             </button>
-            <button class="tab-btn" :class="{ active: tab === 'atas' }" @click="tab = 'atas'">
-                Atas
+            <button class="tab-btn" :class="{ active: tab === 'reunioes' }" @click="tab = 'reunioes'">
+                Reuniões
             </button>
             <button class="tab-btn" :class="{ active: tab === 'briefing' }" @click="tab = 'briefing'">
                 Briefing
@@ -1665,13 +1665,55 @@
             @endif
         </div>
 
-        {{-- TAB: ATAS --}}
-        <div x-show="tab === 'atas'" x-cloak>
-            <div class="tab-placeholder">
-                <div class="tab-placeholder-icon">📝</div>
-                <p class="tab-placeholder-title">Atas de Reuniões</p>
-                <p class="tab-placeholder-desc">Histórico de reuniões do cliente. Cole o texto corrido e a IA estrutura a ata automaticamente. Em breve.</p>
+        {{-- TAB: REUNIÕES --}}
+        <div x-show="tab === 'reunioes'" x-cloak>
+            <div class="flex items-center justify-between mb-4">
+                <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
+                    {{ $client->meetings->count() }} reunião{{ $client->meetings->count() !== 1 ? 'ões' : '' }}
+                </p>
+                <a href="{{ route('meetings.create', ['client_id' => $client->id]) }}"
+                   class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                   style="background:var(--purple)">
+                    + Nova Reunião
+                </a>
             </div>
+
+            @if($client->meetings->isEmpty())
+                <div class="px-6 py-12 text-center" style="color:var(--muted)">
+                    <p class="text-sm mb-2">Nenhuma reunião registrada ainda.</p>
+                    <a href="{{ route('meetings.create', ['client_id' => $client->id]) }}"
+                       class="text-sm font-semibold" style="color:var(--purple)">
+                        Agendar primeira reunião →
+                    </a>
+                </div>
+            @else
+                <div class="flex flex-col gap-3">
+                    @foreach($client->meetings as $meeting)
+                        <div class="card px-5 py-4">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="font-bold text-sm" style="color:var(--text)">{{ $meeting->title }}</span>
+                                        <span class="badge badge-{{ $meeting->statusColor() }}">{{ $meeting->statusLabel() }}</span>
+                                        @if($meeting->hasAta())
+                                            <span class="badge badge-purple">📝 Ata registrada</span>
+                                        @endif
+                                    </div>
+                                    <p class="text-xs font-mono mb-2" style="color:var(--muted)">
+                                        {{ $meeting->typeLabel() }} · {{ $meeting->scheduled_at->format('d/m/Y \à\s H:i') }}
+                                    </p>
+                                    @if($meeting->hasAta())
+                                        <p class="text-xs" style="color:var(--muted2)">{{ \Illuminate\Support\Str::limit($meeting->ata, 140) }}</p>
+                                    @endif
+                                </div>
+                                <a href="{{ route('meetings.show', $meeting) }}" class="btn btn-ghost btn-xs flex-shrink-0">
+                                    Ver →
+                                </a>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
 
         {{-- TAB: BRIEFING --}}

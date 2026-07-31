@@ -133,7 +133,7 @@
                             style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                             <option value="">— sem cliente —</option>
                             @foreach($clients as $c)
-                                <option value="{{ $c->id }}" {{ old('client_id') === $c->id ? 'selected' : '' }}>{{ $c->company_name }}</option>
+                                <option value="{{ $c->id }}" {{ old('client_id', request('client_id')) === $c->id ? 'selected' : '' }}>{{ $c->company_name }}</option>
                             @endforeach
                         </select>
                     </div>
