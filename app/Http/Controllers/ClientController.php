@@ -37,8 +37,15 @@ class ClientController extends Controller
             });
         }
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        // Sem parâmetro (primeiro load) → "Ativo" por padrão. "todos" (opção
+        // "Todos os status" do filtro) mostra tudo, incluindo lead/inativo.
+        // Sentinela não-vazia de propósito: live-filter.js remove parâmetros
+        // vazios do form antes de montar a query string, então um valor ""
+        // pra "todos" nunca chegaria no results() depois da primeira interação.
+        $statusFilter = $request->filled('status') ? $request->status : 'active';
+
+        if ($statusFilter !== 'todos') {
+            $query->where('status', $statusFilter);
         }
 
         return $query->orderBy('company_name')->paginate(25)->withQueryString();

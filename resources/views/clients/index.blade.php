@@ -22,11 +22,12 @@
                 class="flex-1 min-w-0 px-4 py-2 text-sm font-medium"
                 style="background:var(--s2); border:1px solid var(--border2); color:var(--text); outline:none; max-width:360px">
 
+            @php $selectedStatus = request()->filled('status') ? request('status') : 'active'; @endphp
             <select name="status"
                 style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; font-family:'Syne',sans-serif; outline:none; cursor:pointer">
-                <option value="">Todos os status</option>
+                <option value="todos" {{ $selectedStatus === 'todos' ? 'selected' : '' }}>Todos os status</option>
                 @foreach(App\Models\Client::$statuses as $key => $s)
-                    <option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
+                    <option value="{{ $key }}" {{ $selectedStatus === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
                 @endforeach
             </select>
         </form>
