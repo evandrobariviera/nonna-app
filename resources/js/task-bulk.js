@@ -3,6 +3,7 @@ export function registerTaskBulk() {
         selected: [],
         bulkStatus: '',
         bulkExecutor: '',
+        bulkResponsavel: '',
         bulkSituation: '',
         bulkProject: '',
         bulkSprint: '',

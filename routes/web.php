@@ -46,6 +46,7 @@ use App\Http\Controllers\MacroPlanImportController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\OpportunityController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectAttachmentController;
 use App\Http\Controllers\SprintController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\TaskApprovalController;
@@ -452,6 +453,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('projects.update-macroplan');
     Route::delete('/projetos/{project}', [ProjectController::class, 'destroyDirect'])
         ->name('projects.destroyDirect');
+    Route::patch('/projetos/{project}/editar', [ProjectController::class, 'updateDirect'])
+        ->name('projects.updateDirect');
+    Route::post('/projetos/{project}/anexos', [ProjectAttachmentController::class, 'store'])
+        ->name('project-attachments.store');
+    Route::delete('/projetos/{project}/anexos/{attachment}', [ProjectAttachmentController::class, 'destroy'])
+        ->name('project-attachments.destroy');
     Route::post('/projetos/{project}/tarefas', [TaskController::class, 'storeStandalone'])
         ->name('tasks.storeStandalone');
     Route::patch('/projetos/{project}/tarefas/{task}', [TaskController::class, 'updateStandalone'])

@@ -430,9 +430,10 @@ class TaskController extends Controller
         $data = $request->validate([
             'task_ids'    => 'required|array|min:1',
             'task_ids.*'  => 'uuid|exists:pgsql.tasks,id',
-            'action'      => 'required|in:status,executor,situation,project,sprint,delete',
+            'action'      => 'required|in:status,executor,responsavel,situation,project,sprint,delete',
             'status'      => 'required_if:action,status|in:' . implode(',', array_keys(Task::$statuses)),
-            'executor_id' => 'nullable|exists:pgsql.users,id',
+            'executor_id'     => 'nullable|exists:pgsql.users,id',
+            'responsavel_id'  => 'nullable|exists:pgsql.users,id',
             'situation'   => 'nullable|in:' . implode(',', $situationKeys),
             'project_id'  => 'required_if:action,project|uuid|exists:pgsql.projects,id',
             'sprint_id'   => 'required_if:action,sprint|uuid|exists:pgsql.sprints,id',
@@ -481,6 +482,23 @@ class TaskController extends Controller
                         $task->executors()->attach($data['executor_id'], ['role' => 'executor']);
                     }
                     $task->updateQuietly(['executor_id' => $data['executor_id'] ?? null]);
+                }
+                break;
+
+            case 'responsavel':
+                foreach ($tasks as $task) {
+                    TaskExecutor::where('task_id', $task->id)->where('role', 'responsavel')->delete();
+                    if (!empty($data['responsavel_id'])) {
+                        // Mesmo cuidado do updateResponsavel()/updateExecutorDirect() — solta
+                        // qualquer linha existente desse usuário na tarefa antes de anexar como
+                        // responsável, senão colide com a constraint task_executors_task_id_user_id_unique.
+                        TaskExecutor::where('task_id', $task->id)->where('user_id', $data['responsavel_id'])->delete();
+                        $task->executors()->attach($data['responsavel_id'], ['role' => 'responsavel']);
+
+                        if ($task->executor_id == $data['responsavel_id']) {
+                            $task->updateQuietly(['executor_id' => null]);
+                        }
+                    }
                 }
                 break;
 

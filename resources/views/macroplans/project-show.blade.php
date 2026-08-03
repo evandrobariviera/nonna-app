@@ -1,6 +1,7 @@
 <x-app-layout>
     <x-slot name="header">Projeto — {{ $project->title }}</x-slot>
 
+    <div x-data="{ editingProject: false }">
     {{-- BREADCRUMB + AÇÕES --}}
     <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div class="flex items-center gap-2 flex-wrap text-xs font-semibold">
@@ -40,6 +41,9 @@
                 </select>
             </form>
             <span class="badge badge-{{ $project->statusColor() }}">{{ $project->statusLabel() }}</span>
+            <button type="button" @click="editingProject = !editingProject" class="btn btn-ghost btn-xs">
+                <span x-text="editingProject ? 'Fechar edição' : 'Editar Projeto'"></span>
+            </button>
             <form method="POST"
                   action="{{ $standalone ? route('projects.destroyDirect', $project) : route('macroplans.projects.destroy', [$macroplan, $project]) }}"
                   @submit.prevent="if (await $store.confirmDialog.ask('Excluir o projeto {{ addslashes($project->title) }} e {{ $totalTasks }} tarefa(s) vinculada(s)? Essa ação não pode ser desfeita.')) $el.submit()">
@@ -47,6 +51,15 @@
                 <button type="submit" class="btn btn-danger btn-xs">Excluir Projeto</button>
             </form>
         </div>
+    </div>
+
+    <div x-show="editingProject" x-cloak class="card mb-6">
+        @include('macroplans._project-edit-form', [
+            'project' => $project,
+            'formAction' => $standalone ? route('projects.updateDirect', $project) : route('macroplans.projects.update', [$macroplan, $project]),
+            'cancelAction' => 'editingProject = false',
+        ])
+    </div>
     </div>
 
     @if(session('success'))
@@ -96,6 +109,37 @@
                 {{ $project->objective }}
             </p>
         @endif
+    </div>
+
+    {{-- ANEXOS --}}
+    <div class="card px-5 py-4 mb-5">
+        <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">
+            Anexos
+            @if($project->attachments->count() > 0)
+                <span class="ml-1 px-1.5 py-0.5" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $project->attachments->count() }}</span>
+            @endif
+        </p>
+        <form method="POST" action="{{ route('project-attachments.store', $project) }}"
+              enctype="multipart/form-data" class="mb-2">
+            @csrf
+            <label class="flex items-center justify-center w-full py-3 cursor-pointer text-center transition-colors"
+                   style="border:1px dashed var(--border2); color:var(--muted); font-size:11px">
+                + Anexar arquivo
+                <input type="file" name="file" class="hidden" @change="$el.closest('form').submit()">
+            </label>
+        </form>
+        @foreach($project->attachments as $attachment)
+            <div class="flex items-center justify-between gap-2 px-2 py-1.5 text-xs" style="background:var(--s2)">
+                <a href="{{ $attachment->url() }}" target="_blank" class="truncate hover:underline" style="color:var(--text)">
+                    {{ $attachment->icon() }} {{ $attachment->filename }}
+                </a>
+                <form method="POST" action="{{ route('project-attachments.destroy', [$project, $attachment]) }}"
+                      @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="btn btn-danger btn-xs">✕</button>
+                </form>
+            </div>
+        @endforeach
     </div>
 
     {{-- CAMPANHAS VINCULADAS — campanhas de anúncio (Meta/Google) correlacionadas

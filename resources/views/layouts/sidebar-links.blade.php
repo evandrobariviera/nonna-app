@@ -151,7 +151,7 @@
 </div>
 
 {{-- Fluxo --}}
-<div x-data="{ open: {{ request()->routeIs('macroplans.*') || request()->routeIs('projects.*') || request()->routeIs('fila.*') || request()->routeIs('clients.dossiers.*') ? 'true' : 'false' }} }">
+<div x-data="{ open: {{ request()->routeIs('macroplans.*') || request()->routeIs('projects.*') || request()->routeIs('fila.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -164,10 +164,6 @@
         </svg>
     </button>
     <div x-show="open" x-transition style="display:none">
-        <a href="{{ route('clients.index') }}"
-           class="nav-sub-item {{ request()->routeIs('clients.dossiers.*') ? 'active' : '' }}">
-            Dossiê de Marca
-        </a>
         <a href="{{ route('macroplans.index') }}"
            class="nav-sub-item {{ request()->routeIs('macroplans.*') && !request()->routeIs('projects.*') ? 'active' : '' }}">
             Planejamentos (Roadmaps)

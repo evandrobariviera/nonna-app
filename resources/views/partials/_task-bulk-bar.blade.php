@@ -26,6 +26,15 @@
     </select>
     <button @click="apply('executor', { executor_id: bulkExecutor === 'null' ? null : bulkExecutor })" :disabled="!bulkExecutor || applying" class="btn btn-ghost btn-xs">Aplicar</button>
 
+    <select x-model="bulkResponsavel" class="filter-select">
+        <option value="">Responsável…</option>
+        <option value="null">— Remover responsável —</option>
+        @foreach($users as $u)
+            <option value="{{ $u->id }}">{{ $u->name }}</option>
+        @endforeach
+    </select>
+    <button @click="apply('responsavel', { responsavel_id: bulkResponsavel === 'null' ? null : bulkResponsavel })" :disabled="!bulkResponsavel || applying" class="btn btn-ghost btn-xs">Aplicar</button>
+
     <select x-model="bulkSituation" class="filter-select">
         <option value="">Situação…</option>
         @foreach(\App\Models\Task::$situations as $key => $label)

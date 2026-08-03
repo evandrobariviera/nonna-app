@@ -177,6 +177,11 @@ class Project extends Model
         return $this->hasMany(AdCampaign::class);
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(ProjectAttachment::class)->orderBy('created_at');
+    }
+
     public function progressPercent(): int
     {
         if ($this->relationLoaded('tasks')) {

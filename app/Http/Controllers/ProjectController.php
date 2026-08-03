@@ -111,7 +111,7 @@ class ProjectController extends Controller
     {
         abort_unless($project->macro_plan_id === $macroplan->id, 403);
 
-        $project->load(['tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount']);
+        $project->load(['tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount', 'attachments']);
         $users = User::orderBy('name')->get(['id', 'name']);
 
         $kanban = [];
@@ -155,7 +155,7 @@ class ProjectController extends Controller
 
     public function showDirect(Project $project)
     {
-        $project->load(['tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount']);
+        $project->load(['tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount', 'attachments']);
         $macroplan  = $project->macroPlan;
         $users      = User::orderBy('name')->get(['id', 'name']);
 
@@ -234,7 +234,25 @@ class ProjectController extends Controller
     public function update(Request $request, MacroPlan $macroplan, Project $project)
     {
         abort_unless($project->macro_plan_id === $macroplan->id, 403);
+        $this->applyUpdate($request, $project);
 
+        return redirect()->route('macroplans.edit', [$macroplan, 'bloco' => 'bloco3'])
+            ->with('success', 'Projeto atualizado.');
+    }
+
+    // Edição de projeto standalone (sem macroplanejamento) direto da própria
+    // página do projeto — antes só dava pra editar contexto/briefings entrando
+    // no macroplano (e só existia pra projetos vinculados a um).
+    public function updateDirect(Request $request, Project $project)
+    {
+        $this->applyUpdate($request, $project);
+
+        return redirect()->route('projects.showDirect', $project)
+            ->with('success', 'Projeto atualizado.');
+    }
+
+    private function applyUpdate(Request $request, Project $project): void
+    {
         $data = $request->validate([
             'title'             => 'required|string|max:200',
             'objective'         => 'nullable|string',
@@ -285,9 +303,6 @@ class ProjectController extends Controller
         $data['pecas']               = $data['pecas'] ?? [];
 
         $project->update($data);
-
-        return redirect()->route('macroplans.edit', [$macroplan, 'bloco' => 'bloco3'])
-            ->with('success', 'Projeto atualizado.');
     }
 
     public function destroy(MacroPlan $macroplan, Project $project)
