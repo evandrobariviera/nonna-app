@@ -576,7 +576,7 @@
                                             <a href="{{ route('macroplans.projects.show', [$macroplan, $project]) }}" class="btn btn-ghost btn-xs">Ver →</a>
                                             <button type="button" @click="editId = '{{ $project->id }}'" class="btn btn-ghost btn-xs">Editar</button>
                                             <form method="POST" action="{{ route('macroplans.projects.destroy', [$macroplan, $project]) }}"
-                                                  @submit.prevent="if (await $store.confirmDialog.ask('Remover projeto {{ addslashes($project->title) }}?')) $el.submit()">
+                                                  @submit.prevent="if (await $store.confirmDialog.ask('Excluir o projeto {{ addslashes($project->title) }} e todas as suas tarefas vinculadas? Essa ação não pode ser desfeita.')) $el.submit()">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="btn btn-danger btn-xs">Remover</button>
                                             </form>

@@ -40,6 +40,12 @@
                 </select>
             </form>
             <span class="badge badge-{{ $project->statusColor() }}">{{ $project->statusLabel() }}</span>
+            <form method="POST"
+                  action="{{ $standalone ? route('projects.destroyDirect', $project) : route('macroplans.projects.destroy', [$macroplan, $project]) }}"
+                  @submit.prevent="if (await $store.confirmDialog.ask('Excluir o projeto {{ addslashes($project->title) }} e {{ $totalTasks }} tarefa(s) vinculada(s)? Essa ação não pode ser desfeita.')) $el.submit()">
+                @csrf @method('DELETE')
+                <button type="submit" class="btn btn-danger btn-xs">Excluir Projeto</button>
+            </form>
         </div>
     </div>
 

@@ -29,6 +29,8 @@ class Project extends Model
         'briefing_social',
         'briefing_seo',
         'briefing_email',
+        'briefing_estrategia',
+        'briefing_relacionamento',
         'status',
         'type',
         'brief_status',
@@ -118,6 +120,8 @@ class Project extends Model
         'social'   => 'Social Media',
         'seo'      => 'SEO',
         'email'    => 'E-mail Marketing',
+        'estrategia'     => 'Estratégia',
+        'relacionamento' => 'Relacionamento / CS',
     ];
 
     public static array $statuses = [

@@ -210,7 +210,7 @@ class ProjectController extends Controller
             'start_date'    => 'nullable|date',
             'end_date'      => 'nullable|date',
             'disciplines'   => 'nullable|array',
-            'disciplines.*' => 'in:criacao,web,trafego,setup,social,seo,email',
+            'disciplines.*' => 'in:criacao,web,trafego,setup,social,seo,email,estrategia,relacionamento',
         ]);
 
         $position = $macroplan->projects()->max('position') + 1;
@@ -240,7 +240,7 @@ class ProjectController extends Controller
             'objective'         => 'nullable|string',
             'type'              => 'nullable|in:projeto,campanha',
             'disciplines'       => 'nullable|array',
-            'disciplines.*'     => 'in:criacao,web,trafego,setup,social,seo,email',
+            'disciplines.*'     => 'in:criacao,web,trafego,setup,social,seo,email,estrategia,relacionamento',
             'briefing_criacao'  => 'nullable|string',
             'briefing_web'      => 'nullable|string',
             'briefing_trafego'  => 'nullable|string',
@@ -248,6 +248,8 @@ class ProjectController extends Controller
             'briefing_social'   => 'nullable|string',
             'briefing_seo'      => 'nullable|string',
             'briefing_email'    => 'nullable|string',
+            'briefing_estrategia'     => 'nullable|string',
+            'briefing_relacionamento' => 'nullable|string',
             'status'            => 'required|in:' . implode(',', array_keys(Project::$statuses)),
             'tags'              => 'nullable|array',
             'tags.*'            => 'nullable|string|max:100',
@@ -291,10 +293,22 @@ class ProjectController extends Controller
     public function destroy(MacroPlan $macroplan, Project $project)
     {
         abort_unless($project->macro_plan_id === $macroplan->id, 403);
+        $project->tasks()->delete();
         $project->delete();
 
         return redirect()->route('macroplans.edit', [$macroplan, 'bloco' => 'bloco3'])
-            ->with('success', 'Projeto removido.');
+            ->with('success', 'Projeto e tarefas vinculadas removidos.');
+    }
+
+    // Exclusão de projeto standalone (sem macroplanejamento) — mesma lógica de
+    // destroy() acima, mas sem exigir macroplano na rota.
+    public function destroyDirect(Project $project)
+    {
+        $project->tasks()->delete();
+        $project->delete();
+
+        return redirect()->route('projects.dashboard')
+            ->with('success', 'Projeto e tarefas vinculadas removidos.');
     }
 
     public function quickUpdate(Request $request, Project $project): \Illuminate\Http\JsonResponse

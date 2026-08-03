@@ -450,6 +450,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('projects.preview');
     Route::patch('/projetos/{project}/planejamento', [ProjectController::class, 'updateMacroplan'])
         ->name('projects.update-macroplan');
+    Route::delete('/projetos/{project}', [ProjectController::class, 'destroyDirect'])
+        ->name('projects.destroyDirect');
     Route::post('/projetos/{project}/tarefas', [TaskController::class, 'storeStandalone'])
         ->name('tasks.storeStandalone');
     Route::patch('/projetos/{project}/tarefas/{task}', [TaskController::class, 'updateStandalone'])

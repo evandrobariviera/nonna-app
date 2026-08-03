@@ -130,6 +130,8 @@ class ImportClickupProjetos extends Command
                 'briefing_social' => null,
                 'briefing_seo'    => null,
                 'briefing_email'  => null,
+                'briefing_estrategia'     => null,
+                'briefing_relacionamento' => null,
                 'status'          => $status,
                 'clickup_task_id' => $project->task_id,
                 'launched_at'     => $created,

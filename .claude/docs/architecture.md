@@ -285,7 +285,12 @@ Versionado. Um cliente pode ter múltiplos diagnósticos ao longo do tempo.
 | briefing_web | text nullable | Briefing para Head Web/Tech |
 | briefing_trafego | text nullable | Briefing para Head de Tráfego |
 | briefing_setup | text nullable | Briefing para Setup/Tracking |
-| status | enum: draft/active/completed/cancelled | |
+| briefing_social | text nullable | Briefing para Social Media |
+| briefing_seo | text nullable | Briefing para SEO |
+| briefing_email | text nullable | Briefing para E-mail Marketing |
+| briefing_estrategia | text nullable | Briefing para Estratégia |
+| briefing_relacionamento | text nullable | Briefing para Relacionamento/CS |
+| status | enum: em_planejamento/aprovacao/em_execucao/stand_by/concluido/cancelado | |
 | clickup_task_id | string nullable | Preenchido após lançamento no ClickUp |
 | launched_at | timestamp nullable | |
 | created_at / updated_at | timestamps | |
