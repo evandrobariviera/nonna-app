@@ -61,8 +61,11 @@ class MacroPlanImportController extends Controller
                 'title'          => $parsed['title'],
                 // Coluna tem default '1.0' mas não é nullable — passar null
                 // explícito (quando a Capa não traz versão, ou o rótulo mudou
-                // de novo) quebra o insert em vez de cair no default.
-                'version'        => $parsed['version'] ?: '1.0',
+                // de novo) quebra o insert em vez de cair no default. Limit()
+                // é rede de segurança contra o campo "Versão" vir mais longo
+                // que a coluna aguenta (varchar(150) — já aconteceu com
+                // templates que colocam um rótulo descritivo ali).
+                'version'        => \Illuminate\Support\Str::limit($parsed['version'] ?: '1.0', 150, ''),
                 'responsible_id' => $responsibleId,
                 'period_start'   => $data['period_start'],
                 'period_end'     => $data['period_end'],
