@@ -109,4 +109,47 @@ class OrganizationMemberController extends Controller
 
         return back()->with('success', 'Membro removido da organização.')->with('tab', 'equipe');
     }
+
+    // Vincula um usuário órfão (existe em `users` mas não em nenhuma organização —
+    // normalmente sobra de registro público de teste) à organização atual, virando
+    // um membro de verdade. Alternativa ao destroyOrphan() abaixo.
+    public function attach(Request $request, User $user): RedirectResponse
+    {
+        $org = app('currentOrganization');
+        abort_if($org->users()->where('user_id', $user->id)->exists(), 422, 'Esse usuário já faz parte desta organização.');
+
+        $validFunctionRoles = array_keys(OrganizationUser::$functionRoles);
+        $data = $request->validate([
+            'role' => ['required', 'in:admin,manager,member'],
+        ]);
+
+        $org->users()->attach($user->id, [
+            'id'             => Str::uuid(),
+            'role'           => $data['role'],
+            'function_roles' => json_encode([]),
+        ]);
+
+        return back()->with('success', 'Usuário adicionado à organização.')->with('tab', 'equipe');
+    }
+
+    // Exclusão definitiva de usuário órfão (nunca pertenceu a uma organização, então
+    // "remover da equipe" não se aplica). Não usar em membro de verdade — pra isso é
+    // destroy() acima (detach). Se o usuário tiver qualquer registro vinculado
+    // (tarefa criada, planejamento, anexo etc.) a FK do Postgres bloqueia o delete —
+    // não tentamos adivinhar isso na mão, só devolvemos o erro de forma legível.
+    public function destroyOrphan(User $user): RedirectResponse
+    {
+        abort_if($user->organizations()->exists(), 422, 'Esse usuário pertence a uma organização — remova-o pela lista de Equipe.');
+        abort_if($user->id === auth()->id(), 403);
+
+        try {
+            $user->delete();
+        } catch (\Illuminate\Database\QueryException $e) {
+            return back()
+                ->withErrors(['orphan_delete' => 'Não foi possível excluir — esse usuário tem registros vinculados no sistema (tarefas, planejamentos, anexos etc).'])
+                ->with('tab', 'equipe');
+        }
+
+        return back()->with('success', 'Usuário excluído.')->with('tab', 'equipe');
+    }
 }

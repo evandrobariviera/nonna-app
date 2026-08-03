@@ -624,6 +624,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
             ->name('settings.members.update');
         Route::delete('/configuracoes/equipe/{user}', [OrganizationMemberController::class, 'destroy'])
             ->name('settings.members.destroy');
+        Route::post('/configuracoes/usuarios-orfaos/{user}/vincular', [OrganizationMemberController::class, 'attach'])
+            ->name('settings.orphan-users.attach');
+        Route::delete('/configuracoes/usuarios-orfaos/{user}', [OrganizationMemberController::class, 'destroyOrphan'])
+            ->name('settings.orphan-users.destroy');
 
         Route::post('/configuracoes/setores', [\App\Http\Controllers\SectorController::class, 'store'])
             ->name('settings.sectors.store');

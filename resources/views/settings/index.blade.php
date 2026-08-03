@@ -627,6 +627,68 @@
                 </table>
             </div>
 
+            {{-- Usuários sem organização — normalmente sobra de registro público de
+                 teste (/register): existem em `users` mas não aparecem em nenhuma
+                 lista do sistema porque nunca foram vinculados a uma organização. --}}
+            @if($orphanUsers->isNotEmpty())
+                <div class="mt-8">
+                    <div class="mb-3">
+                        <h2 class="text-sm font-bold" style="color:var(--text)">
+                            Usuários sem Organização
+                            <span class="ml-1 text-xs px-1.5 py-px rounded-full" style="background:var(--s3); color:var(--muted)">{{ $orphanUsers->count() }}</span>
+                        </h2>
+                        <p class="text-xs mt-0.5" style="color:var(--muted)">
+                            Cadastrados no sistema (geralmente via tela pública de registro/teste) mas nunca vinculados a esta organização — não aparecem em nenhuma outra tela.
+                        </p>
+                    </div>
+
+                    <div class="card overflow-hidden">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr style="border-bottom:1px solid var(--border); background:var(--s3)">
+                                    <th class="text-left px-5 py-3 text-xs font-semibold" style="color:var(--muted)">Usuário</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold" style="color:var(--muted)">E-mail</th>
+                                    <th class="text-left px-5 py-3 text-xs font-semibold" style="color:var(--muted)">Cadastrado em</th>
+                                    <th class="px-5 py-3"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($orphanUsers as $orphan)
+                                    <tr style="border-bottom:1px solid var(--border2)">
+                                        <td class="px-5 py-3.5">
+                                            <span class="font-semibold" style="color:var(--text)">{{ $orphan->name }}</span>
+                                        </td>
+                                        <td class="px-5 py-3.5 text-xs" style="color:var(--muted)">{{ $orphan->email }}</td>
+                                        <td class="px-5 py-3.5 text-xs font-mono" style="color:var(--muted)">{{ $orphan->created_at->format('d/m/Y') }}</td>
+                                        <td class="px-5 py-3.5">
+                                            <div class="flex items-center gap-2 justify-end">
+                                                <form method="POST" action="{{ route('settings.orphan-users.attach', $orphan) }}"
+                                                      class="flex items-center gap-1.5">
+                                                    @csrf
+                                                    <select name="role" class="text-xs rounded-lg border px-2 py-1.5"
+                                                            style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                                        @foreach(\App\Models\OrganizationUser::$roles as $key => $label)
+                                                            @continue($key === 'owner')
+                                                            <option value="{{ $key }}" {{ $key === 'member' ? 'selected' : '' }}>{{ $label }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    <button type="submit" class="btn btn-primary btn-xs">Adicionar à Equipe</button>
+                                                </form>
+                                                <form method="POST" action="{{ route('settings.orphan-users.destroy', $orphan) }}"
+                                                      @submit.prevent="if (await $store.confirmDialog.ask('Excluir permanentemente {{ addslashes($orphan->name) }} ({{ addslashes($orphan->email) }})? Essa ação não pode ser desfeita.')) $el.submit()">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger btn-xs">Excluir</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+
             {{-- Modal Novo / Editar Membro --}}
             <div x-show="modal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
                  x-transition:enter="transition duration-150"

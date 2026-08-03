@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AiAgent;
 use App\Models\NotificationTemplate;
 use App\Models\Sector;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -20,12 +21,18 @@ class OrganizationSettingsController extends Controller
         $aiAgents     = AiAgent::where('is_active', true)->orderBy('name')->get();
         $sectors      = Sector::with('users:id,name')->orderBy('name')->get();
 
+        // Usuários que existem em `users` mas não pertencem a nenhuma organização —
+        // normalmente sobras de registro público de teste (/register). Sem isso, esses
+        // usuários não aparecem em lugar nenhum do sistema (nem na Equipe, que só lista
+        // membros da organização atual).
+        $orphanUsers = User::doesntHave('organizations')->orderByDesc('created_at')->get();
+
         $notificationTemplates = NotificationTemplate::where('organization_id', $org->id)
             ->get()
             ->groupBy('type')
             ->map(fn ($group) => $group->keyBy('channel'));
 
-        return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens', 'aiAgents', 'notificationTemplates', 'sectors'));
+        return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens', 'aiAgents', 'notificationTemplates', 'sectors', 'orphanUsers'));
     }
 
     public function createToken(Request $request): RedirectResponse
