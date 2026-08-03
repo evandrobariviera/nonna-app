@@ -167,13 +167,25 @@
         </div>
     @endif
 
-    {{-- KANBAN --}}
-    <div x-data="{ addCol: null, editTaskId: null, showDone: false }">
+    {{-- TAREFAS: Quadro (Kanban) ou Fila (lista) --}}
+    <div x-data="{ addCol: null, editTaskId: null, showDone: false, view: 'quadro' }">
 
         <div class="flex items-center justify-between mb-4">
             <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Tarefas</p>
             <div class="flex items-center gap-2">
-                <button @click="showDone = !showDone"
+                <div class="flex items-center" style="border:1px solid var(--border2)">
+                    <button @click="view = 'quadro'" type="button"
+                        class="text-xs font-mono px-3 py-1.5 transition-all"
+                        :style="view === 'quadro' ? 'background:var(--purple); color:#fff' : 'color:var(--muted)'">
+                        Quadro
+                    </button>
+                    <button @click="view = 'fila'" type="button"
+                        class="text-xs font-mono px-3 py-1.5 transition-all"
+                        :style="view === 'fila' ? 'background:var(--purple); color:#fff' : 'color:var(--muted)'">
+                        Fila
+                    </button>
+                </div>
+                <button @click="showDone = !showDone" x-show="view === 'quadro'"
                     class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 transition-all"
                     :style="showDone
                         ? 'border:1px solid var(--purple); color:var(--purple)'
@@ -353,6 +365,7 @@
             </form>
         </div>
 
+        <div x-show="view === 'quadro'">
         {{-- ── COLUNAS KANBAN ── --}}
         <div id="project-board" class="flex gap-4 overflow-x-auto pb-2" style="align-items: start;"
              data-kanban-board data-status-field="status">
@@ -653,6 +666,35 @@
             </div>
             </div>{{-- /x-show showDone --}}
         @endif
+        </div>{{-- /x-show view === 'quadro' --}}
+
+        {{-- ── FILA (lista) ── --}}
+        <div x-show="view === 'fila'" x-cloak x-data="taskBulk()">
+            @php
+                $filaTasks = $project->tasks->where('status', '!=', 'cancelado')->values();
+                $filaProjects = collect([$project->loadMissing('client')]);
+            @endphp
+            @include('partials._task-bulk-bar', ['users' => $users, 'projects' => $filaProjects])
+            @if($filaTasks->isEmpty())
+                <div class="px-4 py-6 text-center text-xs rounded"
+                     style="border:1px dashed var(--border2); color:var(--muted)">
+                    Sem tarefas
+                </div>
+            @else
+                <div class="card overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="nonna-table">
+                            @include('partials._task-thead')
+                            <tbody x-data="{ groupOpen: true }">
+                                @foreach($filaTasks as $task)
+                                    @include('partials._fila-task-tr', ['task' => $task, 'activeSprint' => $activeSprint, 'sprints' => $sprints])
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+        </div>
 
     </div>{{-- /x-data kanban --}}
 

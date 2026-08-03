@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\MacroPlan;
 use App\Models\Project;
+use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -127,9 +128,10 @@ class ProjectController extends Controller
         $standalone = false;
 
         $clientMacroplans = MacroPlan::where('client_id', $project->client_id)->orderBy('title')->get(['id', 'title']);
+        [$sprints, $activeSprint] = $this->sprintsForFila();
 
         return view('macroplans.project-show', compact(
-            'macroplan', 'project', 'users', 'kanban', 'cancelled', 'progress', 'totalTasks', 'doneTasks', 'standalone', 'clientMacroplans'
+            'macroplan', 'project', 'users', 'kanban', 'cancelled', 'progress', 'totalTasks', 'doneTasks', 'standalone', 'clientMacroplans', 'sprints', 'activeSprint'
         ));
     }
 
@@ -172,10 +174,23 @@ class ProjectController extends Controller
         $standalone = true;
 
         $clientMacroplans = MacroPlan::where('client_id', $project->client_id)->orderBy('title')->get(['id', 'title']);
+        [$sprints, $activeSprint] = $this->sprintsForFila();
 
         return view('macroplans.project-show', compact(
-            'macroplan', 'project', 'users', 'kanban', 'cancelled', 'progress', 'totalTasks', 'doneTasks', 'standalone', 'clientMacroplans'
+            'macroplan', 'project', 'users', 'kanban', 'cancelled', 'progress', 'totalTasks', 'doneTasks', 'standalone', 'clientMacroplans', 'sprints', 'activeSprint'
         ));
+    }
+
+    // Sprints abertas (pra oferecer "→ Sprint" na view de Fila da página do
+    // projeto) — mesmo critério do FilaController.
+    private function sprintsForFila(): array
+    {
+        $sprints = Sprint::whereIn('status', ['active', 'planning'])
+            ->orderByRaw("CASE status WHEN 'active' THEN 0 ELSE 1 END")
+            ->orderByDesc('starts_at')
+            ->get();
+
+        return [$sprints, $sprints->firstWhere('status', 'active')];
     }
 
     // Reatribui o projeto a um planejamento (ou desvincula, se null) direto
@@ -229,6 +244,41 @@ class ProjectController extends Controller
 
         return redirect()->route('macroplans.edit', [$macroplan, 'bloco' => 'bloco3'])
             ->with('success', 'Projeto adicionado.');
+    }
+
+    // Criação de projeto/campanha avulso, sem macroplanejamento por trás —
+    // cobre demandas isoladas de cliente que não nascem de um ciclo de
+    // planejamento. Mesmos campos de store(), mas cliente é escolhido
+    // manualmente em vez de herdado do macroplano.
+    public function storeDirect(Request $request)
+    {
+        $data = $request->validate([
+            'client_id'     => 'required|uuid|exists:pgsql.clients,id',
+            'title'         => 'required|string|max:200',
+            'type'          => 'nullable|in:projeto,campanha',
+            'objective'     => 'nullable|string',
+            'start_date'    => 'nullable|date',
+            'end_date'      => 'nullable|date',
+            'disciplines'   => 'nullable|array',
+            'disciplines.*' => 'in:criacao,web,trafego,setup,social,seo,email,estrategia,relacionamento',
+        ]);
+
+        $position = Project::where('client_id', $data['client_id'])->max('position') + 1;
+
+        $project = Project::create([
+            'client_id'  => $data['client_id'],
+            'position'   => $position,
+            'title'      => $data['title'],
+            'type'       => $data['type'] ?? 'projeto',
+            'objective'  => $data['objective'] ?? null,
+            'start_date' => $data['start_date'] ?? null,
+            'end_date'   => $data['end_date'] ?? null,
+            'disciplines'=> $data['disciplines'] ?? [],
+            'status'     => 'em_planejamento',
+        ]);
+
+        return redirect()->route('projects.showDirect', $project)
+            ->with('success', 'Projeto criado.');
     }
 
     public function update(Request $request, MacroPlan $macroplan, Project $project)

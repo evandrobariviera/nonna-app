@@ -2,17 +2,110 @@
     <x-slot name="header">
         <div class="flex items-center justify-between w-full">
             <span>Projetos & Campanhas</span>
-            @php
-                $toggleInativos = request()->except('mostrar_inativos');
-                if (!request()->boolean('mostrar_inativos')) $toggleInativos['mostrar_inativos'] = '1';
-            @endphp
-            <a href="{{ route('projects.dashboard', $toggleInativos) }}"
-               class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 transition-all"
-               style="border:1px solid var(--border2); color:{{ request()->boolean('mostrar_inativos') ? 'var(--purple)' : 'var(--muted)' }}">
-                {{ request()->boolean('mostrar_inativos') ? '⊙ Ocultar clientes inativos' : '○ Mostrar clientes inativos' }}
-            </a>
+            <div class="flex items-center gap-2">
+                @php
+                    $toggleInativos = request()->except('mostrar_inativos');
+                    if (!request()->boolean('mostrar_inativos')) $toggleInativos['mostrar_inativos'] = '1';
+                @endphp
+                <a href="{{ route('projects.dashboard', $toggleInativos) }}"
+                   class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 transition-all"
+                   style="border:1px solid var(--border2); color:{{ request()->boolean('mostrar_inativos') ? 'var(--purple)' : 'var(--muted)' }}">
+                    {{ request()->boolean('mostrar_inativos') ? '⊙ Ocultar clientes inativos' : '○ Mostrar clientes inativos' }}
+                </a>
+                <button @click="$dispatch('toggle-new-project')" class="btn btn-primary btn-sm">
+                    + Novo Projeto
+                </button>
+            </div>
         </div>
     </x-slot>
+
+    {{-- Criação de projeto/campanha avulso — sem macroplanejamento por trás.
+         Escopo Alpine próprio (fora do projectDashboard) porque é um POST
+         clássico com redirect, não precisa integrar com o JSON da listagem. --}}
+    <div x-data="{ addOpen: false }" @toggle-new-project.window="addOpen = !addOpen" class="mb-5">
+        <div x-show="addOpen" x-cloak class="card px-5 py-5 space-y-4">
+            <form method="POST" action="{{ route('projects.storeDirect') }}" class="space-y-4">
+                @csrf
+
+                <div class="grid grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                            Cliente <span style="color:var(--orange)">*</span>
+                        </label>
+                        <select name="client_id" required
+                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            <option value="">Selecione...</option>
+                            @foreach($clients as $c)
+                                <option value="{{ $c->id }}">{{ $c->displayName() }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Tipo</label>
+                        <select name="type"
+                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            @foreach(\App\Models\Project::$types as $key => $t)
+                                <option value="{{ $key }}">{{ $t['label'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                            Nome <span style="color:var(--orange)">*</span>
+                        </label>
+                        <input type="text" name="title" required
+                            placeholder="Ex: Chamado — Ajuste na Landing Page"
+                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Objetivo</label>
+                    <textarea name="objective" rows="2"
+                        placeholder="O que este projeto/campanha precisa alcançar?"
+                        class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Início</label>
+                        <input type="date" name="start_date"
+                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Término</label>
+                        <input type="date" name="end_date"
+                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Disciplinas Envolvidas</label>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach(\App\Models\Project::$disciplines as $key => $label)
+                            <label class="flex items-center gap-1.5 text-xs cursor-pointer px-3 py-1.5"
+                                   style="border:1px solid var(--border2); color:var(--muted2)">
+                                <input type="checkbox" name="disciplines[]" value="{{ $key }}"
+                                    style="accent-color:var(--purple)">
+                                {{ $label }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="submit" class="btn btn-primary btn-sm">Criar Projeto</button>
+                    <button type="button" @click="addOpen = false" class="btn btn-ghost btn-sm">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <div
         x-data="projectDashboard({{ $projectsJson }}, {{ $macroplansJson }}, {{ $statusOptionsJson }}, {{ $disciplineLabelsJson }})"

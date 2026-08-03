@@ -443,6 +443,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('projects.dashboard');
     Route::patch('/projetos/{project}/quick', [ProjectController::class, 'quickUpdate'])
         ->name('projects.quickUpdate');
+    Route::post('/projetos', [ProjectController::class, 'storeDirect'])
+        ->name('projects.storeDirect');
 
     // ── Projeto standalone (sem macroplanejamento vinculado) ──
     Route::get('/projetos/{project}/ver', [ProjectController::class, 'showDirect'])
