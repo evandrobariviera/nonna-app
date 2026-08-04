@@ -121,4 +121,15 @@ class Meeting extends Model
         return $this->belongsToMany(User::class, 'meeting_participants', 'meeting_id', 'user_id')
             ->withTimestamps();
     }
+
+    public function contacts(): BelongsToMany
+    {
+        return $this->belongsToMany(Contact::class, 'meeting_contacts', 'meeting_id', 'contact_id')
+            ->withTimestamps();
+    }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(MeetingAttachment::class);
+    }
 }

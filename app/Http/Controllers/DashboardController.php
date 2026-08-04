@@ -41,18 +41,20 @@ class DashboardController extends Controller
             ->where('situation', 'Pronto para produção')
             ->with('client')->orderBy('due_date')->limit(8)->get();
 
-        // Agenda: só os compromissos de hoje (não só "Agendada" — "Para Agendar"
-        // também conta, é o status padrão de uma reunião recém-criada).
-        $myMeetings = Meeting::where(function ($q) use ($userId) {
+        // Agenda: todos os compromissos pendentes (não só hoje — "Para Agendar"
+        // também conta, é o status padrão de uma reunião recém-criada), agrupados
+        // por status pro quadro "Agenda" do dashboard. Sem limite: é um recorte
+        // pessoal (organizador ou participante), tende a ficar pequeno.
+        $myMeetingsAgenda = Meeting::where(function ($q) use ($userId) {
                 $q->where('organized_by', $userId)
                   ->orWhereHas('participants', fn ($q2) => $q2->where('users.id', $userId));
             })
             ->whereNotIn('status', ['realizada', 'cancelada'])
-            ->whereDate('scheduled_at', today())
             ->with('client')
             ->orderBy('scheduled_at')
-            ->limit(6)
             ->get();
+
+        $myMeetingsByStatus = $myMeetingsAgenda->groupBy('status');
 
         // ── Seção "Estratégia" ──
         $today = today();
@@ -158,7 +160,7 @@ class DashboardController extends Controller
         return view('dashboard', compact(
             'activeSprint', 'sprintTotal', 'sprintDone', 'sprintProgress',
             'myAdjustmentTasks', 'myProductionTasks', 'myReadyForProductionTasks',
-            'myMeetings',
+            'myMeetingsByStatus',
             'meetingsPosReuniao', 'meetingsRealizadas',
             'clientsWithoutActivePlan', 'plansExpiringSoon', 'activePlans',
             'teamMeetingsToday', 'openTickets',

@@ -7,71 +7,91 @@
         $firstName = explode(' ', Auth::user()->name)[0];
     @endphp
 
-    {{-- ── LINHA 1: boas-vindas + sprint (70%) | agenda (30%) ── --}}
-    <div class="grid gap-4 mb-6" style="grid-template-columns: 7fr 3fr; align-items: stretch">
-
-        {{-- Coluna 1 --}}
-        <div class="flex flex-col gap-4">
-            <div>
-                <h1 class="text-xl font-black" style="color:var(--text)">{{ $greeting }}, {{ $firstName }} 👋</h1>
-                <p class="text-sm mt-1" style="color:var(--muted)">Aqui está o resumo do que precisa da sua atenção hoje.</p>
-            </div>
-
-            <div class="card px-5 py-4">
-                @if($activeSprint)
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-sm font-bold" style="color:var(--text)">
-                            🏃 Sprint atual · {{ $activeSprint->title }}
-                        </span>
-                        <a href="{{ route('sprints.show', $activeSprint) }}" class="text-xs font-mono" style="color:var(--purple)">
-                            Ver Sprint →
-                        </a>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="flex-1">
-                            <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--border2)">
-                                <div class="h-2 rounded-full transition-all"
-                                     style="width:{{ $sprintProgress }}%; background:{{ $sprintProgress >= 100 ? 'var(--green)' : 'var(--grad)' }}"></div>
-                            </div>
-                        </div>
-                        <span class="text-sm font-black flex-shrink-0" style="color:var(--text)">{{ $sprintProgress }}%</span>
-                        <span class="text-xs font-mono flex-shrink-0" style="color:var(--muted)">{{ $sprintDone }} / {{ $sprintTotal }} concluídas</span>
-                    </div>
-                @else
-                    <p class="text-sm" style="color:var(--muted)">🏃 Nenhuma sprint ativa no momento.</p>
-                @endif
-            </div>
+    {{-- ── LINHA 1: boas-vindas + sprint ── --}}
+    <div class="flex flex-col gap-4 mb-6">
+        <div>
+            <h1 class="text-xl font-black" style="color:var(--text)">{{ $greeting }}, {{ $firstName }} 👋</h1>
+            <p class="text-sm mt-1" style="color:var(--muted)">Aqui está o resumo do que precisa da sua atenção hoje.</p>
         </div>
 
-        {{-- Coluna 2: Agenda --}}
-        <div class="card px-5 py-4 flex flex-col" style="height:100%">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-bold" style="color:var(--text)">
-                    📅 Agenda de Hoje ({{ $myMeetings->count() }})
-                </h3>
-                <a href="{{ route('meetings.index') }}" class="text-xs font-mono" style="color:var(--purple)">Ver agenda</a>
-            </div>
-            @if($myMeetings->isEmpty())
-                <p class="text-xs" style="color:var(--muted)">Nenhum compromisso agendado pra hoje.</p>
-            @else
-                <div class="flex flex-col gap-2">
-                    @foreach($myMeetings as $meeting)
-                        <a href="{{ route('meetings.show', $meeting) }}" class="block px-3 py-2 transition-colors"
-                           style="background:var(--s2)"
-                           onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $meeting->title }}</p>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->displayName() ?? '—' }}</span>
-                                <span class="text-xs font-mono" style="color:var(--purple)">
-                                    {{ $meeting->scheduled_at->format('H:i') }}
-                                </span>
-                            </div>
-                        </a>
-                    @endforeach
+        <div class="card px-5 py-4">
+            @if($activeSprint)
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm font-bold" style="color:var(--text)">
+                        🏃 Sprint atual · {{ $activeSprint->title }}
+                    </span>
+                    <a href="{{ route('sprints.show', $activeSprint) }}" class="text-xs font-mono" style="color:var(--purple)">
+                        Ver Sprint →
+                    </a>
                 </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex-1">
+                        <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--border2)">
+                            <div class="h-2 rounded-full transition-all"
+                                 style="width:{{ $sprintProgress }}%; background:{{ $sprintProgress >= 100 ? 'var(--green)' : 'var(--grad)' }}"></div>
+                        </div>
+                    </div>
+                    <span class="text-sm font-black flex-shrink-0" style="color:var(--text)">{{ $sprintProgress }}%</span>
+                    <span class="text-xs font-mono flex-shrink-0" style="color:var(--muted)">{{ $sprintDone }} / {{ $sprintTotal }} concluídas</span>
+                </div>
+            @else
+                <p class="text-sm" style="color:var(--muted)">🏃 Nenhuma sprint ativa no momento.</p>
             @endif
         </div>
+    </div>
 
+    {{-- ── LINHA 1.5: Agenda — quadro por status (para_agendar/agendada/pos_reuniao) ──
+         Estático (sem drag-and-drop) — mudar status é só na própria página da reunião. --}}
+    @php
+        $agendaStatuses = ['para_agendar', 'agendada', 'pos_reuniao'];
+    @endphp
+    <div class="mb-6" x-data="{ filterType: '' }">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold" style="color:var(--text)">📅 Agenda</h3>
+            <select x-model="filterType"
+                class="px-3 py-1.5 text-xs font-mono focus:outline-none"
+                style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2)">
+                <option value="">Todos os tipos</option>
+                @foreach(\App\Models\Meeting::$types as $key => $label)
+                    <option value="{{ $key }}">{{ $label }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="grid gap-4" style="grid-template-columns: repeat(3, 1fr)">
+            @foreach($agendaStatuses as $status)
+                @php $statusMeetings = $myMeetingsByStatus->get($status, collect()); @endphp
+                <div class="card px-5 py-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-bold" style="color:var(--text)">
+                            {{ \App\Models\Meeting::$statuses[$status]['label'] }} (<span>{{ $statusMeetings->count() }}</span>)
+                        </h4>
+                        <a href="{{ route('meetings.index', ['status' => $status]) }}"
+                           class="text-xs font-mono" style="color:var(--purple)">Ver agenda</a>
+                    </div>
+                    <div class="flex flex-col gap-2" style="min-height:40px">
+                        @forelse($statusMeetings as $meeting)
+                            @php $isToday = $meeting->scheduled_at->isToday(); @endphp
+                            <a href="{{ route('meetings.show', $meeting) }}"
+                               x-show="!filterType || filterType === '{{ $meeting->type }}'"
+                               class="block px-3 py-2 transition-colors"
+                               style="background:{{ $isToday ? 'rgba(52,211,153,.10)' : 'var(--s2)' }}; {{ $isToday ? 'border-left:2px solid var(--green)' : '' }}"
+                               onmouseover="this.style.background='var(--s3)'"
+                               onmouseout="this.style.background='{{ $isToday ? 'rgba(52,211,153,.10)' : 'var(--s2)' }}'">
+                                <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $meeting->title }}</p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->displayName() ?? '—' }}</span>
+                                    <span class="text-xs font-mono" style="color:var(--purple)">
+                                        {{ $meeting->scheduled_at->format('d/m H:i') }}
+                                    </span>
+                                </div>
+                            </a>
+                        @empty
+                            <p class="text-xs" style="color:var(--muted)">Nada por aqui. 🎉</p>
+                        @endforelse
+                    </div>
+                </div>
+            @endforeach
+        </div>
     </div>
 
     {{-- ── Pendências de cadastro (transversal, sempre visível independente do papel) ── --}}

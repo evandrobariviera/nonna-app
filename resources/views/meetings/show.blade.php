@@ -26,6 +26,13 @@
         </div>
     @endif
 
+    @if(session('warning'))
+        <div class="mb-5 px-4 py-3 text-sm font-semibold"
+             style="background:rgba(255,140,0,.08); border:1px solid rgba(255,140,0,.25); color:var(--orange)">
+            ⚠ {{ session('warning') }}
+        </div>
+    @endif
+
     {{-- Mudar status rápido --}}
     <div class="flex flex-wrap gap-2 mb-5">
         <span class="text-xs font-mono self-center" style="color:var(--muted)">Mover para:</span>
@@ -195,12 +202,99 @@
                 </div>
             </div>
 
+            {{-- Contatos --}}
+            <div class="card">
+                <div class="px-5 py-4" style="border-bottom:1px solid var(--border2)">
+                    <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Contatos</p>
+                </div>
+                <div class="px-5 py-4">
+                    @if($meeting->contacts->isEmpty())
+                        <p class="text-sm" style="color:var(--muted)">Nenhum contato vinculado.</p>
+                    @else
+                        <ul class="space-y-2">
+                            @foreach($meeting->contacts as $contact)
+                                <li>
+                                    <p class="text-sm font-semibold" style="color:var(--text)">{{ $contact->name }}</p>
+                                    @if($contact->company_name)
+                                        <p class="text-xs" style="color:var(--muted)">{{ $contact->company_name }}</p>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Anexos --}}
+            <div class="card">
+                <div class="px-5 py-4" style="border-bottom:1px solid var(--border2)">
+                    <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
+                        Anexos
+                        @if($meeting->attachments->count() > 0)
+                            <span class="ml-1 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $meeting->attachments->count() }}</span>
+                        @endif
+                    </p>
+                </div>
+                <div class="px-5 py-4">
+                    <form method="POST" action="{{ route('meeting-attachments.store', $meeting) }}"
+                          enctype="multipart/form-data"
+                          x-data="{ dragging: false }"
+                          @dragover.prevent="dragging = true"
+                          @dragleave.prevent="dragging = false"
+                          @drop.prevent="dragging = false; $refs.meetingFileInput.files = $event.dataTransfer.files; $el.submit()">
+                        @csrf
+                        <label
+                            :style="dragging ? 'border-color:var(--purple); background:rgba(106,90,205,.04)' : ''"
+                            class="flex flex-col items-center justify-center w-full py-5 cursor-pointer transition-colors"
+                            style="border:2px dashed var(--border2); color:var(--muted)">
+                            <span class="text-xs font-medium">Clique para anexar ou arraste</span>
+                            <span class="text-xs mt-1" style="color:var(--muted2)">Máx. 100 MB por arquivo</span>
+                            <input type="file" name="files[]" multiple x-ref="meetingFileInput" class="hidden"
+                                   @change="$el.closest('form').submit()">
+                        </label>
+                    </form>
+
+                    @if($meeting->attachments->isNotEmpty())
+                        <div class="mt-3 flex flex-col gap-1.5">
+                            @foreach($meeting->attachments as $attachment)
+                                <div class="flex items-center justify-between gap-2 px-3 py-2"
+                                     style="background:var(--s2); border:1px solid var(--border2)">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <span class="text-base flex-shrink-0">{{ $attachment->icon() }}</span>
+                                        <a href="{{ $attachment->url() }}" target="_blank"
+                                           class="text-xs font-medium truncate hover:underline"
+                                           style="color:var(--text)">
+                                            {{ $attachment->filename }}
+                                        </a>
+                                    </div>
+                                    <form method="POST" action="{{ route('meeting-attachments.destroy', [$meeting, $attachment]) }}"
+                                          @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-xs flex-shrink-0">✕</button>
+                                    </form>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+
             {{-- Ações --}}
             <div class="card">
                 <div class="px-5 py-4" style="border-bottom:1px solid var(--border2)">
                     <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Ações</p>
                 </div>
                 <div class="px-5 py-4">
+                    @if($meeting->client)
+                        <form method="POST" action="{{ route('meetings.notify', $meeting) }}" class="mb-2">
+                            @csrf
+                            <button type="submit" class="btn btn-ghost btn-sm w-full">
+                                📣 Notificar Contatos
+                            </button>
+                        </form>
+                    @else
+                        <p class="text-xs mb-2" style="color:var(--muted)">Vincule um cliente para poder notificar contatos.</p>
+                    @endif
                     <form method="POST" action="{{ route('meetings.destroy', $meeting) }}"
                           @submit.prevent="if (await $store.confirmDialog.ask('Remover esta reunião permanentemente?')) $el.submit()">
                         @csrf @method('DELETE')

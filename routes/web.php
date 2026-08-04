@@ -43,6 +43,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\MacroPlanController;
 use App\Http\Controllers\MacroPlanAttachmentController;
 use App\Http\Controllers\MacroPlanImportController;
+use App\Http\Controllers\MeetingAttachmentController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\OpportunityController;
 use App\Http\Controllers\ProjectController;
@@ -346,6 +347,14 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
 
     Route::patch('/agenda/{meeting}/status', [MeetingController::class, 'updateStatus'])
         ->name('meetings.update-status');
+
+    Route::post('/agenda/{meeting}/notificar', [MeetingController::class, 'notify'])
+        ->name('meetings.notify');
+
+    Route::post('/agenda/{meeting}/anexos', [MeetingAttachmentController::class, 'store'])
+        ->name('meeting-attachments.store');
+    Route::delete('/agenda/{meeting}/anexos/{attachment}', [MeetingAttachmentController::class, 'destroy'])
+        ->name('meeting-attachments.destroy');
 
     // ── Macroplanejamentos ──
     Route::get('/planejamentos', [MacroPlanController::class, 'index'])

@@ -21,7 +21,7 @@
         @endif
 
         <form method="POST" action="{{ route('meetings.store') }}"
-              x-data="{ modality: '{{ old('modality','online') }}' }">
+              x-data="{ modality: '{{ old('modality','online') }}', clientId: '{{ old('client_id', request('client_id')) }}' }">
             @csrf
 
             <div class="card p-6 space-y-5">
@@ -128,7 +128,7 @@
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
                             Cliente (opcional)
                         </label>
-                        <select name="client_id"
+                        <select name="client_id" x-model="clientId"
                             class="w-full px-4 py-2.5 text-sm focus:outline-none"
                             style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                             <option value="">— sem cliente —</option>
@@ -179,6 +179,24 @@
                                     class="rounded"
                                     style="accent-color:var(--purple)">
                                 {{ $u->name }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Contatos --}}
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                        Contatos (para notificações)
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+                        @foreach($contacts as $c)
+                            <label class="flex items-center gap-2 text-sm cursor-pointer py-1" style="color:var(--text)"
+                                x-show="!clientId || [{{ $c->clients->pluck('id')->map(fn ($id) => "'{$id}'")->implode(',') }}].includes(clientId)">
+                                <input type="checkbox" name="contacts[]" value="{{ $c->id }}"
+                                    {{ in_array($c->id, old('contacts', [])) ? 'checked' : '' }}
+                                    style="accent-color:var(--purple)">
+                                {{ $c->name }}
                             </label>
                         @endforeach
                     </div>

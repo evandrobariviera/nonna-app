@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\Contact;
 use App\Models\Meeting;
+use App\Models\NotificationTemplate;
 use App\Models\Opportunity;
 use App\Models\User;
+use App\Services\NotificationDispatchService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -51,8 +54,12 @@ class MeetingController extends Controller
         $users        = User::orderBy('name')->get(['id', 'name']);
         $clients      = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $opportunities = Opportunity::orderBy('title')->get(['id', 'title', 'client_id']);
+        // Traz todos os contatos com os clientes vinculados — o filtro por cliente
+        // selecionado no form acontece no client-side (Alpine), já que o
+        // client_id pode mudar sem recarregar a página.
+        $contacts = Contact::with('clients:id')->orderBy('name')->get(['id', 'name']);
 
-        return view('meetings.create', compact('users', 'clients', 'opportunities'));
+        return view('meetings.create', compact('users', 'clients', 'opportunities', 'contacts'));
     }
 
     public function store(Request $request)
@@ -72,15 +79,20 @@ class MeetingController extends Controller
             'agenda'           => 'nullable|string',
             'participants'     => 'nullable|array',
             'participants.*'   => 'exists:users,id',
+            'contacts'         => 'nullable|array',
+            'contacts.*'       => 'exists:contacts,id',
         ]);
 
         $meeting = Meeting::create([
-            ...$data,
+            ...collect($data)->except(['contacts'])->all(),
             'created_by' => Auth::id(),
         ]);
 
         if (!empty($data['participants'])) {
             $meeting->participants()->sync($data['participants']);
+        }
+        if (!empty($data['contacts'])) {
+            $meeting->contacts()->sync($data['contacts']);
         }
 
         return redirect()->route('meetings.show', $meeting)
@@ -89,19 +101,20 @@ class MeetingController extends Controller
 
     public function show(Meeting $meeting)
     {
-        $meeting->load(['client', 'opportunity', 'organizer', 'participants', 'createdBy']);
+        $meeting->load(['client', 'opportunity', 'organizer', 'participants', 'contacts', 'createdBy', 'attachments.uploadedBy']);
 
         return view('meetings.show', compact('meeting'));
     }
 
     public function edit(Meeting $meeting)
     {
-        $meeting->load(['participants']);
+        $meeting->load(['participants', 'contacts']);
         $users         = User::orderBy('name')->get(['id', 'name']);
         $clients       = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $opportunities = Opportunity::orderBy('title')->get(['id', 'title', 'client_id']);
+        $contacts      = Contact::with('clients:id')->orderBy('name')->get(['id', 'name']);
 
-        return view('meetings.edit', compact('meeting', 'users', 'clients', 'opportunities'));
+        return view('meetings.edit', compact('meeting', 'users', 'clients', 'opportunities', 'contacts'));
     }
 
     public function update(Request $request, Meeting $meeting)
@@ -123,6 +136,8 @@ class MeetingController extends Controller
             'next_steps'       => 'nullable|string',
             'participants'     => 'nullable|array',
             'participants.*'   => 'exists:users,id',
+            'contacts'         => 'nullable|array',
+            'contacts.*'       => 'exists:contacts,id',
         ]);
 
         // Mark ata_recorded_at when ata is filled for the first time
@@ -133,6 +148,7 @@ class MeetingController extends Controller
         $meeting->update($data);
 
         $meeting->participants()->sync($data['participants'] ?? []);
+        $meeting->contacts()->sync($data['contacts'] ?? []);
 
         return redirect()->route('meetings.show', $meeting)
             ->with('success', 'Reunião atualizada.');
@@ -147,6 +163,29 @@ class MeetingController extends Controller
         $meeting->update(['status' => $data['status']]);
 
         return redirect()->back()->with('success', 'Status atualizado.');
+    }
+
+    public function notify(Meeting $meeting, NotificationDispatchService $service)
+    {
+        if (!$meeting->client) {
+            return back()->with('warning', 'Vincule um cliente à reunião para notificar contatos.');
+        }
+
+        $meeting->loadMissing('contacts');
+        if ($meeting->contacts->isEmpty()) {
+            return back()->with('warning', 'Nenhum contato vinculado a esta reunião.');
+        }
+
+        foreach ($meeting->contacts as $contact) {
+            foreach (array_keys(NotificationTemplate::$channels) as $channel) {
+                $service->dispatch('reuniao_lembrete', $channel, $meeting->client, $contact, [
+                    'data_reuniao' => $meeting->scheduled_at->format('d/m/Y H:i'),
+                    'link_reuniao' => $meeting->online_link ?? '',
+                ]);
+            }
+        }
+
+        return back()->with('success', 'Notificação enviada aos contatos.');
     }
 
     public function destroy(Meeting $meeting)
