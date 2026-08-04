@@ -7,37 +7,54 @@
         $firstName = explode(' ', Auth::user()->name)[0];
     @endphp
 
-    {{-- ── LINHA 1: boas-vindas + sprint ── --}}
-    <div class="flex flex-col gap-4 mb-6">
-        <div>
-            <h1 class="text-xl font-black" style="color:var(--text)">{{ $greeting }}, {{ $firstName }} 👋</h1>
-            <p class="text-sm mt-1" style="color:var(--muted)">Aqui está o resumo do que precisa da sua atenção hoje.</p>
+    {{-- ── LINHA 1: boas-vindas + sprint (principal) | pendências de cadastro (cardo) ── --}}
+    <div class="grid gap-4 mb-6" style="grid-template-columns: 7fr 3fr; align-items: start">
+
+        {{-- Coluna 1 --}}
+        <div class="flex flex-col gap-4">
+            <div>
+                <h1 class="text-xl font-black" style="color:var(--text)">{{ $greeting }}, {{ $firstName }} 👋</h1>
+                <p class="text-sm mt-1" style="color:var(--muted)">Aqui está o resumo do que precisa da sua atenção hoje.</p>
+            </div>
+
+            <div class="card px-5 py-4">
+                @if($activeSprint)
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-sm font-bold" style="color:var(--text)">
+                            🏃 Sprint atual · {{ $activeSprint->title }}
+                        </span>
+                        <a href="{{ route('sprints.show', $activeSprint) }}" class="text-xs font-mono" style="color:var(--purple)">
+                            Ver Sprint →
+                        </a>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1">
+                            <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--border2)">
+                                <div class="h-2 rounded-full transition-all"
+                                     style="width:{{ $sprintProgress }}%; background:{{ $sprintProgress >= 100 ? 'var(--green)' : 'var(--grad)' }}"></div>
+                            </div>
+                        </div>
+                        <span class="text-sm font-black flex-shrink-0" style="color:var(--text)">{{ $sprintProgress }}%</span>
+                        <span class="text-xs font-mono flex-shrink-0" style="color:var(--muted)">{{ $sprintDone }} / {{ $sprintTotal }} concluídas</span>
+                    </div>
+                @else
+                    <p class="text-sm" style="color:var(--muted)">🏃 Nenhuma sprint ativa no momento.</p>
+                @endif
+            </div>
         </div>
 
-        <div class="card px-5 py-4">
-            @if($activeSprint)
-                <div class="flex items-center justify-between mb-1">
-                    <span class="text-sm font-bold" style="color:var(--text)">
-                        🏃 Sprint atual · {{ $activeSprint->title }}
-                    </span>
-                    <a href="{{ route('sprints.show', $activeSprint) }}" class="text-xs font-mono" style="color:var(--purple)">
-                        Ver Sprint →
-                    </a>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="flex-1">
-                        <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--border2)">
-                            <div class="h-2 rounded-full transition-all"
-                                 style="width:{{ $sprintProgress }}%; background:{{ $sprintProgress >= 100 ? 'var(--green)' : 'var(--grad)' }}"></div>
-                        </div>
-                    </div>
-                    <span class="text-sm font-black flex-shrink-0" style="color:var(--text)">{{ $sprintProgress }}%</span>
-                    <span class="text-xs font-mono flex-shrink-0" style="color:var(--muted)">{{ $sprintDone }} / {{ $sprintTotal }} concluídas</span>
-                </div>
-            @else
-                <p class="text-sm" style="color:var(--muted)">🏃 Nenhuma sprint ativa no momento.</p>
-            @endif
-        </div>
+        {{-- Coluna 2: Pendências de Cadastro — só o número, sem listagem --}}
+        <a href="{{ route('fila.index', ['pendencia' => 1]) }}"
+           class="card px-5 py-4 flex flex-col items-center justify-center text-center transition-colors"
+           style="{{ $pendingTasksCount > 0 ? 'border-color:rgba(239,68,68,.3)' : '' }}"
+           onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+            <span class="text-3xl font-black" style="color:{{ $pendingTasksCount > 0 ? 'var(--red)' : 'var(--text)' }}">
+                {{ $pendingTasksCount }}
+            </span>
+            <span class="text-xs font-mono mt-1" style="color:var(--muted)">
+                ⚠️ {{ $pendingTasksCount === 1 ? 'tarefa com cadastro incompleto' : 'tarefas com cadastro incompleto' }}
+            </span>
+        </a>
     </div>
 
     {{-- ── LINHA 1.5: Agenda — quadro por status (para_agendar/agendada/pos_reuniao) ──
@@ -92,30 +109,6 @@
                 </div>
             @endforeach
         </div>
-    </div>
-
-    {{-- ── Pendências de cadastro (transversal, sempre visível independente do papel) ── --}}
-    <div class="card px-5 py-4 mb-6">
-        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
-            ⚠️ Pendências de Cadastro ({{ $pendingTasksCount }})
-        </h4>
-        @if($pendingTasksSample->isEmpty())
-            <p class="text-xs" style="color:var(--muted)">Nenhuma pendência de cadastro no momento. 🎉</p>
-        @else
-            <div class="flex flex-col gap-2">
-                @foreach($pendingTasksSample as $task)
-                    <a href="{{ route('tasks.show', $task) }}"
-                       class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--red)"
-                       onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $task->title }}</p>
-                        <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->displayName() ?? '—' }}</span>
-                    </a>
-                @endforeach
-            </div>
-            <a href="{{ route('fila.index', ['pendencia' => 1]) }}" class="block mt-3 text-xs font-mono" style="color:var(--purple)">
-                Ver todas na Fila →
-            </a>
-        @endif
     </div>
 
     {{-- ── LINHA 2: camada operacional da sprint (minhas tarefas por etapa) ──
