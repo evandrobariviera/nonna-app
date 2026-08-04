@@ -88,14 +88,7 @@ class DashboardController extends Controller
             ->orderBy('period_end')
             ->get();
 
-        // ── Seção "Atendimento" ──
-        $teamMeetingsToday = Meeting::whereNotIn('status', ['cancelada'])
-            ->whereDate('scheduled_at', $today)
-            ->with('client')
-            ->orderBy('scheduled_at')
-            ->limit(8)
-            ->get();
-
+        // ── Seção "Operação" (papel Atendimento) ──
         $openTickets = Task::where('is_ticket', true)
             ->whereNotIn('status', ['concluido', 'cancelado'])
             ->whereNull('sprint_id') // já triado pra uma Sprint = aparece só lá, não duplica aqui
@@ -159,7 +152,7 @@ class DashboardController extends Controller
             'myMeetingsByStatus',
             'meetingsPosReuniao', 'meetingsRealizadas',
             'clientsWithoutActivePlan', 'plansExpiringSoon', 'activePlans',
-            'teamMeetingsToday', 'openTickets',
+            'openTickets',
             'roundsPending', 'roundsAwaitingSendCount', 'roundsApproved', 'roundsChangesRequested',
             'headsTickets', 'headsRevisaoInterna',
             'pendingTasksCount'

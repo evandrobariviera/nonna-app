@@ -5,42 +5,54 @@
         $hour = now()->hour;
         $greeting = $hour < 12 ? 'Bom dia' : ($hour < 18 ? 'Boa tarde' : 'Boa noite');
         $firstName = explode(' ', Auth::user()->name)[0];
+
+        // Administrador vê todas as funções, não só as que tem atribuídas — mesma
+        // regra já usada em /visoes/{role}. Calculado aqui em cima porque a seção
+        // "Operação" (Atendimento) é destacada logo abaixo da Agenda, fora do loop
+        // por função mais abaixo — precisa saber se o usuário tem o papel antes disso.
+        $dashboardRoles = ($isOrgAdmin ?? false)
+            ? array_keys(\App\Models\OrganizationUser::$functionRoles)
+            : ($userFunctionRoles ?? []);
+        // Direção Criativa e Head de Tecnologia compartilham uma única seção
+        // "Heads"; Atendimento vira a seção "Operação" destacada — nenhum dos
+        // dois passa pelo loop genérico por função mais abaixo.
+        $headsRoles = ['head_criativa', 'head_tech'];
+        $showHeadsSection = !empty(array_intersect($dashboardRoles, $headsRoles));
+        $showOperacaoSection = in_array('atendimento', $dashboardRoles);
     @endphp
 
-    {{-- ── LINHA 1: boas-vindas + sprint (principal) | pendências de cadastro (cardo) ── --}}
-    <div class="grid gap-4 mb-6" style="grid-template-columns: 7fr 3fr; align-items: start">
+    {{-- ── LINHA 1: boas-vindas (full width) + sprint (principal) | pendências de cadastro (cardo) ── --}}
+    <div class="mb-4">
+        <h1 class="text-xl font-black" style="color:var(--text)">{{ $greeting }}, {{ $firstName }} 👋</h1>
+        <p class="text-sm mt-1" style="color:var(--muted)">Aqui está o resumo do que precisa da sua atenção hoje.</p>
+    </div>
 
-        {{-- Coluna 1 --}}
-        <div class="flex flex-col gap-4">
-            <div>
-                <h1 class="text-xl font-black" style="color:var(--text)">{{ $greeting }}, {{ $firstName }} 👋</h1>
-                <p class="text-sm mt-1" style="color:var(--muted)">Aqui está o resumo do que precisa da sua atenção hoje.</p>
-            </div>
+    <div class="grid gap-4 mb-6" style="grid-template-columns: 7fr 3fr; align-items: stretch">
 
-            <div class="card px-5 py-4">
-                @if($activeSprint)
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-sm font-bold" style="color:var(--text)">
-                            🏃 Sprint atual · {{ $activeSprint->title }}
-                        </span>
-                        <a href="{{ route('sprints.show', $activeSprint) }}" class="text-xs font-mono" style="color:var(--purple)">
-                            Ver Sprint →
-                        </a>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="flex-1">
-                            <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--border2)">
-                                <div class="h-2 rounded-full transition-all"
-                                     style="width:{{ $sprintProgress }}%; background:{{ $sprintProgress >= 100 ? 'var(--green)' : 'var(--grad)' }}"></div>
-                            </div>
+        {{-- Coluna 1: Sprint --}}
+        <div class="card px-5 py-4">
+            @if($activeSprint)
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm font-bold" style="color:var(--text)">
+                        🏃 Sprint atual · {{ $activeSprint->title }}
+                    </span>
+                    <a href="{{ route('sprints.show', $activeSprint) }}" class="text-xs font-mono" style="color:var(--purple)">
+                        Ver Sprint →
+                    </a>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex-1">
+                        <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--border2)">
+                            <div class="h-2 rounded-full transition-all"
+                                 style="width:{{ $sprintProgress }}%; background:{{ $sprintProgress >= 100 ? 'var(--green)' : 'var(--grad)' }}"></div>
                         </div>
-                        <span class="text-sm font-black flex-shrink-0" style="color:var(--text)">{{ $sprintProgress }}%</span>
-                        <span class="text-xs font-mono flex-shrink-0" style="color:var(--muted)">{{ $sprintDone }} / {{ $sprintTotal }} concluídas</span>
                     </div>
-                @else
-                    <p class="text-sm" style="color:var(--muted)">🏃 Nenhuma sprint ativa no momento.</p>
-                @endif
-            </div>
+                    <span class="text-sm font-black flex-shrink-0" style="color:var(--text)">{{ $sprintProgress }}%</span>
+                    <span class="text-xs font-mono flex-shrink-0" style="color:var(--muted)">{{ $sprintDone }} / {{ $sprintTotal }} concluídas</span>
+                </div>
+            @else
+                <p class="text-sm" style="color:var(--muted)">🏃 Nenhuma sprint ativa no momento.</p>
+            @endif
         </div>
 
         {{-- Coluna 2: Pendências de Cadastro — só o número, sem listagem --}}
@@ -111,6 +123,14 @@
         </div>
     </div>
 
+    {{-- ── Operação (seção "Atendimento" destacada logo abaixo da Agenda) ── --}}
+    @if($showOperacaoSection)
+        <div class="mb-6">
+            <h2 class="text-base font-bold mb-3" style="color:var(--text)">Operação</h2>
+            @include('dashboard.sections.atendimento')
+        </div>
+    @endif
+
     {{-- ── LINHA 2: camada operacional da sprint (minhas tarefas por etapa) ──
          Kanban de verdade (arrastar-e-soltar entre colunas, ver resources/js/kanban-dnd.js).
          "Pronto para Produção" não é um status próprio no modelo — é status=backlog com
@@ -174,20 +194,12 @@
     @endpush
 
     {{-- ── SEÇÕES POR FUNÇÃO ── --}}
-    {{-- Administrador vê todas as funções, não só as que tem atribuídas — mesma regra já usada em /visoes/{role}. --}}
-    @php
-        $dashboardRoles = ($isOrgAdmin ?? false)
-            ? array_keys(\App\Models\OrganizationUser::$functionRoles)
-            : ($userFunctionRoles ?? []);
-        // Direção Criativa e Head de Tecnologia compartilham uma única seção
-        // "Heads" — não faz sentido separar por setor pro que eles precisam ver aqui.
-        $headsRoles = ['head_criativa', 'head_tech'];
-        $showHeadsSection = !empty(array_intersect($dashboardRoles, $headsRoles));
-    @endphp
+    {{-- $dashboardRoles/$headsRoles/$showHeadsSection calculados lá em cima (perto da
+         saudação) porque "Operação" (Atendimento) já usa $dashboardRoles antes daqui. --}}
     @if(!empty($dashboardRoles))
         <div class="flex flex-col gap-6">
             @foreach($dashboardRoles as $role)
-                @continue(in_array($role, $headsRoles))
+                @continue(in_array($role, $headsRoles) || $role === 'atendimento')
                 @if(isset(\App\Models\OrganizationUser::$functionRoles[$role]))
                     <div>
                         <h2 class="text-base font-bold mb-3" style="color:var(--text)">
@@ -195,8 +207,6 @@
                         </h2>
                         @if($role === 'estrategia')
                             @include('dashboard.sections.estrategia')
-                        @elseif($role === 'atendimento')
-                            @include('dashboard.sections.atendimento')
                         @else
                             <div class="card px-5 py-4">
                                 <p class="text-xs" style="color:var(--muted)">
