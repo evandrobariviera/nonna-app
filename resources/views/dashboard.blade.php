@@ -8,17 +8,17 @@
 
         // Administrador vê todas as funções, não só as que tem atribuídas — mesma
         // regra já usada em /visoes/{role}. Calculado aqui em cima porque a seção
-        // "Operação" (Atendimento) é destacada logo abaixo da Agenda, fora do loop
-        // por função mais abaixo — precisa saber se o usuário tem o papel antes disso.
+        // "Atendimento" é destacada logo abaixo da Agenda, fora do loop por função
+        // mais abaixo — precisa saber se o usuário tem o papel antes disso.
         $dashboardRoles = ($isOrgAdmin ?? false)
             ? array_keys(\App\Models\OrganizationUser::$functionRoles)
             : ($userFunctionRoles ?? []);
         // Direção Criativa e Head de Tecnologia compartilham uma única seção
-        // "Heads"; Atendimento vira a seção "Operação" destacada — nenhum dos
-        // dois passa pelo loop genérico por função mais abaixo.
+        // "Heads"; Atendimento vira uma seção destacada — nenhum dos dois passa
+        // pelo loop genérico por função mais abaixo.
         $headsRoles = ['head_criativa', 'head_tech'];
         $showHeadsSection = !empty(array_intersect($dashboardRoles, $headsRoles));
-        $showOperacaoSection = in_array('atendimento', $dashboardRoles);
+        $showAtendimentoSection = in_array('atendimento', $dashboardRoles);
     @endphp
 
     {{-- ── LINHA 1: boas-vindas (full width) + sprint (principal) | pendências de cadastro (cardo) ── --}}
@@ -123,18 +123,19 @@
         </div>
     </div>
 
-    {{-- ── Operação (seção "Atendimento" destacada logo abaixo da Agenda) ── --}}
-    @if($showOperacaoSection)
+    {{-- ── Atendimento (seção destacada logo abaixo da Agenda) ── --}}
+    @if($showAtendimentoSection)
         <div class="mb-6">
-            <h2 class="text-base font-bold mb-3" style="color:var(--text)">Operação</h2>
+            <h2 class="text-base font-bold mb-3" style="color:var(--text)">Atendimento</h2>
             @include('dashboard.sections.atendimento')
         </div>
     @endif
 
-    {{-- ── LINHA 2: camada operacional da sprint (minhas tarefas por etapa) ──
+    {{-- ── LINHA 2: "Operação" — camada operacional da sprint (minhas tarefas por etapa) ──
          Kanban de verdade (arrastar-e-soltar entre colunas, ver resources/js/kanban-dnd.js).
          "Pronto para Produção" não é um status próprio no modelo — é status=backlog com
          situation="Pronto para produção" — por isso carrega data-extra além de data-status. --}}
+    <h2 class="text-base font-bold mb-3" style="color:var(--text)">Operação</h2>
     @php
         $quadros = [
             ['emoji' => '🔧', 'label' => 'Ajuste / Alteração',   'tasks' => $myAdjustmentTasks,         'status' => 'ajuste_alteracao', 'extra' => null],
