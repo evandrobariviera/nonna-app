@@ -131,6 +131,14 @@
         </div>
     @endif
 
+    {{-- ── Heads (entre Atendimento e Operação) ── --}}
+    @if($showHeadsSection)
+        <div class="mb-6">
+            <h2 class="text-base font-bold mb-3" style="color:var(--text)">Heads</h2>
+            @include('dashboard.sections.heads')
+        </div>
+    @endif
+
     {{-- ── LINHA 2: "Operação" — camada operacional da sprint (minhas tarefas por etapa) ──
          Kanban de verdade (arrastar-e-soltar entre colunas, ver resources/js/kanban-dnd.js).
          "Pronto para Produção" não é um status próprio no modelo — é status=backlog com
@@ -195,8 +203,9 @@
     @endpush
 
     {{-- ── SEÇÕES POR FUNÇÃO ── --}}
-    {{-- $dashboardRoles/$headsRoles/$showHeadsSection calculados lá em cima (perto da
-         saudação) porque "Operação" (Atendimento) já usa $dashboardRoles antes daqui. --}}
+    {{-- $dashboardRoles/$headsRoles/$showHeadsSection/$showAtendimentoSection calculados
+         lá em cima (perto da saudação) porque Atendimento e Heads já foram destacados
+         antes daqui, fora deste loop. --}}
     @if(!empty($dashboardRoles))
         <div class="flex flex-col gap-6">
             @foreach($dashboardRoles as $role)
@@ -218,13 +227,6 @@
                     </div>
                 @endif
             @endforeach
-
-            @if($showHeadsSection)
-                <div>
-                    <h2 class="text-base font-bold mb-3" style="color:var(--text)">Heads</h2>
-                    @include('dashboard.sections.heads')
-                </div>
-            @endif
         </div>
     @endif
 
