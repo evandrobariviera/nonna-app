@@ -113,6 +113,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('service-diagnostics.generate');
     Route::get('/atendimento/{integration}/diagnosticos/{diagnostic}', [\App\Http\Controllers\ServiceDiagnosticController::class, 'show'])
         ->name('service-diagnostics.show');
+    Route::get('/atendimento/{integration}/diagnosticos/{diagnostic}/imprimir', [\App\Http\Controllers\ServiceDiagnosticController::class, 'print'])
+        ->name('service-diagnostics.print');
     Route::post('/atendimento/{integration}/diagnosticos/{diagnostic}/publicar', [\App\Http\Controllers\ServiceDiagnosticController::class, 'publish'])
         ->name('service-diagnostics.publish');
 

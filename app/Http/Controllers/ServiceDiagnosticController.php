@@ -72,6 +72,16 @@ class ServiceDiagnosticController extends Controller
         return view('service-diagnostics.show', compact('integration', 'diagnostic'));
     }
 
+    public function print(ClientIntegration $integration, ServiceDiagnostic $diagnostic)
+    {
+        abort_unless($diagnostic->client_integration_id === $integration->id, 404);
+
+        $integration->load('client');
+        $diagnostic->load('personas', 'aiAgent', 'recommendations');
+
+        return view('service-diagnostics.print', compact('integration', 'diagnostic'));
+    }
+
     public function generate(ClientIntegration $integration, ServiceDiagnosticGenerator $generator): RedirectResponse
     {
         try {
