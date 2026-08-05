@@ -19,6 +19,7 @@
         $headsRoles = ['head_criativa', 'head_tech'];
         $showHeadsSection = !empty(array_intersect($dashboardRoles, $headsRoles));
         $showAtendimentoSection = in_array('atendimento', $dashboardRoles);
+        $showTrafegoSection = in_array('trafego', $dashboardRoles);
     @endphp
 
     {{-- ── LINHA 1: boas-vindas (full width) + sprint (principal) | pendências de cadastro (cardo) ── --}}
@@ -139,6 +140,14 @@
         </div>
     @endif
 
+    {{-- ── Mídia Paga (papel Tráfego) ── --}}
+    @if($showTrafegoSection)
+        <div class="mb-6">
+            <h2 class="text-base font-bold mb-3" style="color:var(--text)">📢 Mídia Paga</h2>
+            @include('dashboard.sections.midia-paga')
+        </div>
+    @endif
+
     {{-- ── LINHA 2: "Operação" — camada operacional da sprint (minhas tarefas por etapa) ──
          Kanban de verdade (arrastar-e-soltar entre colunas, ver resources/js/kanban-dnd.js).
          "Pronto para Produção" não é um status próprio no modelo — é status=backlog com
@@ -203,13 +212,13 @@
     @endpush
 
     {{-- ── SEÇÕES POR FUNÇÃO ── --}}
-    {{-- $dashboardRoles/$headsRoles/$showHeadsSection/$showAtendimentoSection calculados
-         lá em cima (perto da saudação) porque Atendimento e Heads já foram destacados
-         antes daqui, fora deste loop. --}}
+    {{-- $dashboardRoles/$headsRoles/$showHeadsSection/$showAtendimentoSection/$showTrafegoSection
+         calculados lá em cima (perto da saudação) porque Atendimento, Heads e Mídia Paga já
+         foram destacados antes daqui, fora deste loop. --}}
     @if(!empty($dashboardRoles))
         <div class="flex flex-col gap-6">
             @foreach($dashboardRoles as $role)
-                @continue(in_array($role, $headsRoles) || $role === 'atendimento')
+                @continue(in_array($role, $headsRoles) || $role === 'atendimento' || $role === 'trafego')
                 @if(isset(\App\Models\OrganizationUser::$functionRoles[$role]))
                     <div>
                         <h2 class="text-base font-bold mb-3" style="color:var(--text)">

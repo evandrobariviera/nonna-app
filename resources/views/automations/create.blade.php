@@ -214,6 +214,7 @@
                                 <option value="creator">Criador da tarefa</option>
                                 <option value="all">Todos os envolvidos</option>
                                 <option value="sector">Um setor</option>
+                                <option value="role">Um papel funcional</option>
                             </select>
                         </div>
                         <div x-show="notifyTo === 'sector'" x-cloak>
@@ -227,11 +228,31 @@
                                 @endforeach
                             </select>
                         </div>
+                        <div x-show="notifyTo === 'role'" x-cloak>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">QUAL PAPEL FUNCIONAL *</label>
+                            <select name="action_config[role]"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                <option value="">Selecione...</option>
+                                @foreach($functionRoles as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs mt-1" style="color:var(--muted)">Notifica todo mundo que tem esse papel atribuído (Configurações → membros).</p>
+                        </div>
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">MENSAGEM</label>
                             <textarea name="action_config[message]" rows="2"
                                       class="w-full px-3 py-2.5 text-sm focus:outline-none resize-none"
                                       style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">IDENTIFICADOR — OPCIONAL</label>
+                            <input type="text" name="action_config[kind]"
+                                   placeholder="Ex: criativo_pronto_campanha"
+                                   class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                   style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            <p class="text-xs mt-1" style="color:var(--muted)">Usado pra filtrar esse tipo de notificação em painéis específicos. Deixe em branco se não precisar.</p>
                         </div>
                     </div>
                 </div>

@@ -25,12 +25,13 @@ class AutomationController extends Controller
         $agents = AiAgent::where('is_active', true)->orderBy('name')->get();
 
         return view('automations.create', [
-            'entityTypes'  => Automation::$entityTypes,
-            'triggerTypes' => Automation::$triggerTypes,
-            'actionTypes'  => Automation::$actionTypes,
-            'agents'       => $agents,
-            'taskStatuses' => \App\Models\Task::$statuses,
-            'sectors'      => Sector::orderBy('name')->get(),
+            'entityTypes'   => Automation::$entityTypes,
+            'triggerTypes'  => Automation::$triggerTypes,
+            'actionTypes'   => Automation::$actionTypes,
+            'agents'        => $agents,
+            'taskStatuses'  => \App\Models\Task::$statuses,
+            'sectors'       => Sector::orderBy('name')->get(),
+            'functionRoles' => \App\Models\OrganizationUser::$functionRoles,
         ]);
     }
 
@@ -71,13 +72,14 @@ class AutomationController extends Controller
         $agents = AiAgent::where('is_active', true)->orderBy('name')->get();
 
         return view('automations.edit', [
-            'automation'   => $automation,
-            'entityTypes'  => Automation::$entityTypes,
-            'triggerTypes' => Automation::$triggerTypes,
-            'actionTypes'  => Automation::$actionTypes,
-            'agents'       => $agents,
-            'taskStatuses' => \App\Models\Task::$statuses,
-            'sectors'      => Sector::orderBy('name')->get(),
+            'automation'    => $automation,
+            'entityTypes'   => Automation::$entityTypes,
+            'triggerTypes'  => Automation::$triggerTypes,
+            'actionTypes'   => Automation::$actionTypes,
+            'agents'        => $agents,
+            'taskStatuses'  => \App\Models\Task::$statuses,
+            'sectors'       => Sector::orderBy('name')->get(),
+            'functionRoles' => \App\Models\OrganizationUser::$functionRoles,
         ]);
     }
 

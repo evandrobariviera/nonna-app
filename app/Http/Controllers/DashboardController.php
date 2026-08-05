@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdCampaign;
 use App\Models\Client;
+use App\Models\ClientAdAccount;
+use App\Models\InternalNotification;
 use App\Models\MacroPlan;
 use App\Models\Meeting;
 use App\Models\Sprint;
@@ -146,6 +149,37 @@ class DashboardController extends Controller
         // é exibido no dashboard (cardo com o número), sem listagem de amostra.
         $pendingTasksCount = Task::pendente()->whereNull('sprint_id')->count();
 
+        // ── Seção "Mídia Paga" (papel Tráfego) ──
+        // Coluna 1: fila compartilhada — gerada pela automação "Notificar Tráfego" (ver
+        // /automacoes) sempre que uma tarefa de Campanhas Patrocinadas chega em Despacho ou
+        // Concluído. unique('source_id') porque o fan-out cria 1 linha por destinatário do
+        // papel Tráfego — aqui é 1 card por tarefa, não por pessoa.
+        $creativosProntos = InternalNotification::where('kind', 'criativo_pronto_campanha')
+            ->whereIn('status', ['novo', 'lido'])
+            ->orderBy('generated_at')
+            ->get()
+            ->unique('source_id')
+            ->values();
+
+        $creativosProntosTasks = Task::whereIn('id', $creativosProntos->pluck('source_id'))
+            ->with('client')
+            ->get()
+            ->keyBy('id');
+
+        $budgetsNeedingAddition = ClientAdAccount::where('budget_status', 'adicao_necessaria')
+            ->whereHas('client', fn ($q) => $q->where('status', '!=', 'inactive'))
+            ->with('client')
+            ->orderBy('created_at')
+            ->get();
+
+        $campaignsNeedingOptimization = AdCampaign::where('status', 'active')
+            ->whereHas('adAccount.client', fn ($q) => $q->where('status', '!=', 'inactive'))
+            ->with('adAccount.client')
+            ->orderByRaw('last_optimized_at ASC NULLS FIRST')
+            ->get()
+            ->filter(fn ($c) => $c->isOptimizationOverdue())
+            ->values();
+
         return view('dashboard', compact(
             'activeSprint', 'sprintTotal', 'sprintDone', 'sprintProgress',
             'myAdjustmentTasks', 'myProductionTasks', 'myReadyForProductionTasks',
@@ -155,8 +189,26 @@ class DashboardController extends Controller
             'openTickets',
             'roundsPending', 'roundsAwaitingSendCount', 'roundsApproved', 'roundsChangesRequested',
             'headsTickets', 'headsRevisaoInterna',
-            'pendingTasksCount'
+            'pendingTasksCount',
+            'creativosProntos', 'creativosProntosTasks', 'budgetsNeedingAddition', 'campaignsNeedingOptimization'
         ));
+    }
+
+    // Resolve todas as cópias da notificação (uma por destinatário do papel Tráfego, fan-out)
+    // de uma vez — fila compartilhada, qualquer gestor de Tráfego fecha pra todo mundo.
+    public function resolveCriativoAlert(Task $task)
+    {
+        abort_unless(
+            in_array('trafego', app('userFunctionRoles', [])) || in_array(app('currentOrgRole'), ['owner', 'admin']),
+            403
+        );
+
+        InternalNotification::where('kind', 'criativo_pronto_campanha')
+            ->where('source_id', $task->id)
+            ->whereIn('status', ['novo', 'lido'])
+            ->update(['status' => 'resolvido']);
+
+        return redirect()->route('dashboard')->with('success', 'Notificação resolvida.');
     }
 
     private function executorTasksQuery(string $userId): Builder

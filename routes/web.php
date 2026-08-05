@@ -71,6 +71,8 @@ Route::get('/', function () {
 // ── Dashboard ──
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])->name('dashboard');
+Route::patch('/dashboard/midia-paga/criativos/{task}/resolver', [\App\Http\Controllers\DashboardController::class, 'resolveCriativoAlert'])
+    ->middleware(['auth', 'verified'])->name('dashboard.midia-paga.resolve-criativo');
 
 // ── CRM: Clientes (autenticado) ──
 Route::middleware(['auth', 'verified', 'not-client'])->group(function () {

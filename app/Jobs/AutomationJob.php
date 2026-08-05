@@ -8,7 +8,9 @@ use App\Models\Task;
 use App\Models\Project;
 use App\Models\AdCampaign;
 use App\Models\AiAgent;
+use App\Models\OrganizationUser;
 use App\Models\Sector;
+use App\Models\User;
 use App\Services\AiService;
 use App\Services\ContextResolver;
 use App\Services\NotificationService;
@@ -144,10 +146,11 @@ class AutomationJob implements ShouldQueue
         $message = $this->interpolate($config['message'] ?? 'Automação executada.', $context);
         $title   = $context['task_title'] ?? $context['campaign_name'] ?? $context['project_name'] ?? $this->automation->name;
         $link    = $this->resolveLink($entity);
+        $kind    = $config['kind'] ?? 'automation';
 
         app(NotificationService::class)->notifyUsers(
             $recipients,
-            'automation',
+            $kind,
             $title,
             $message,
             $link,
@@ -165,6 +168,15 @@ class AutomationJob implements ShouldQueue
         if ($to === 'sector') {
             $sector = !empty($config['sector_id']) ? Sector::find($config['sector_id']) : null;
             return $sector ? $sector->users : collect();
+        }
+
+        if ($to === 'role') {
+            $role = $config['role'] ?? null;
+            if (!$role) {
+                return collect();
+            }
+            $userIds = OrganizationUser::whereJsonContains('function_roles', $role)->pluck('user_id');
+            return User::whereIn('id', $userIds)->get();
         }
 
         if (!$entity instanceof Task) {
