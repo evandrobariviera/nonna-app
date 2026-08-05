@@ -8,6 +8,7 @@ use App\Models\AdCampaign;
 use App\Models\AdAdset;
 use App\Models\AdAd;
 use App\Models\CampaignLog;
+use App\Models\Opportunity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -16,13 +17,28 @@ class ContextResolver
     public static function for(Model $entity): array
     {
         return match (true) {
-            $entity instanceof Task       => self::forTask($entity),
-            $entity instanceof Project    => self::forProject($entity),
-            $entity instanceof AdCampaign => self::forCampaign($entity),
-            $entity instanceof AdAdset    => self::forAdset($entity),
-            $entity instanceof AdAd       => self::forAd($entity),
-            default                       => [],
+            $entity instanceof Task        => self::forTask($entity),
+            $entity instanceof Project     => self::forProject($entity),
+            $entity instanceof AdCampaign  => self::forCampaign($entity),
+            $entity instanceof AdAdset     => self::forAdset($entity),
+            $entity instanceof AdAd        => self::forAd($entity),
+            $entity instanceof Opportunity => self::forOpportunity($entity),
+            default                        => [],
         };
+    }
+
+    public static function forOpportunity(Opportunity $opportunity): array
+    {
+        $opportunity->loadMissing(['client', 'contact', 'assignedTo']);
+
+        return [
+            'opportunity_id'    => $opportunity->id,
+            'opportunity_title' => $opportunity->title ?? '',
+            'opportunity_stage' => $opportunity->stageLabel(),
+            'client_name'       => $opportunity->client?->displayName() ?? $opportunity->contact?->name ?? '',
+            'assigned_to_name'  => $opportunity->assignedTo?->name ?? '',
+            'proposed_fee'      => $opportunity->proposed_fee !== null ? number_format((float) $opportunity->proposed_fee, 2, ',', '.') : '',
+        ];
     }
 
     public static function forTask(Task $task): array

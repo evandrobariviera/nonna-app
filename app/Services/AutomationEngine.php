@@ -37,6 +37,7 @@ class AutomationEngine
             $entity instanceof \App\Models\Task        => 'task',
             $entity instanceof \App\Models\Project     => 'project',
             $entity instanceof \App\Models\AdCampaign  => 'campaign',
+            $entity instanceof \App\Models\Opportunity => 'opportunity',
             default                                     => null,
         };
     }

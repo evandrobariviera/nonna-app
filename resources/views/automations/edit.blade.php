@@ -72,25 +72,25 @@
                     <div x-show="triggerType === 'status_changed'" x-cloak>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DE (STATUS)</label>
+                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DE (OPCIONAL)</label>
                                 <select name="trigger_config[from]"
                                         class="w-full px-3 py-2.5 text-sm focus:outline-none"
                                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                                    <option value="*" {{ ($automation->trigger_config['from'] ?? '') === '*' ? 'selected' : '' }}>Qualquer</option>
-                                    @foreach($taskStatuses as $value => $info)
-                                        <option value="{{ $value }}" {{ ($automation->trigger_config['from'] ?? '') === $value ? 'selected' : '' }}>{{ $info['label'] }}</option>
-                                    @endforeach
+                                    <option value="*" {{ ($automation->trigger_config['from'] ?? '*') === '*' ? 'selected' : '' }}>Qualquer</option>
+                                    <template x-for="[val, label] in Object.entries((conditionFieldsMap[entityType]||{})[primaryField()]?.options || {})" :key="val">
+                                        <option :value="val" x-text="label" :selected="val === '{{ $automation->trigger_config['from'] ?? '' }}'"></option>
+                                    </template>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">PARA (STATUS)</label>
+                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">PARA</label>
                                 <select name="trigger_config[to]"
                                         class="w-full px-3 py-2.5 text-sm focus:outline-none"
                                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                                     <option value="">Selecione...</option>
-                                    @foreach($taskStatuses as $value => $info)
-                                        <option value="{{ $value }}" {{ ($automation->trigger_config['to'] ?? '') === $value ? 'selected' : '' }}>{{ $info['label'] }}</option>
-                                    @endforeach
+                                    <template x-for="[val, label] in Object.entries((conditionFieldsMap[entityType]||{})[primaryField()]?.options || {})" :key="val">
+                                        <option :value="val" x-text="label" :selected="val === '{{ $automation->trigger_config['to'] ?? '' }}'"></option>
+                                    </template>
                                 </select>
                             </div>
                         </div>
@@ -356,6 +356,12 @@ function automationBuilder() {
         fieldUpdatedField: '{{ old('trigger_config.field', $automation->trigger_config['field'] ?? '') }}',
         conditionsLogic: '{{ old('trigger_config.conditions_logic', $automation->trigger_config['conditions_logic'] ?? 'and') }}',
         conditions: {!! json_encode(old('trigger_config.conditions', $automation->trigger_config['conditions'] ?? [])) !!},
+        primaryField() {
+            const fields = conditionFieldsMap[this.entityType] || {};
+            if (fields.status) return 'status';
+            if (fields.stage) return 'stage';
+            return Object.keys(fields)[0] || '';
+        },
     }
 }
 </script>

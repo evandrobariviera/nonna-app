@@ -8,6 +8,7 @@ use App\Models\Task;
 use App\Models\Project;
 use App\Models\AdCampaign;
 use App\Models\AiAgent;
+use App\Models\Opportunity;
 use App\Models\FunctionalRole;
 use App\Models\Sector;
 use App\Models\User;
@@ -198,8 +199,9 @@ class AutomationJob implements ShouldQueue
     private function resolveLink(mixed $entity): ?string
     {
         return match (true) {
-            $entity instanceof Task => route('tasks.show', $entity),
-            default                  => null,
+            $entity instanceof Task        => route('tasks.show', $entity),
+            $entity instanceof Opportunity => route('opportunities.show', $entity),
+            default                         => null,
         };
     }
 
@@ -218,10 +220,11 @@ class AutomationJob implements ShouldQueue
     private function resolveEntity(): mixed
     {
         return match ($this->entityType) {
-            'task'     => Task::find($this->entityId),
-            'project'  => Project::find($this->entityId),
-            'campaign' => AdCampaign::find($this->entityId),
-            default    => null,
+            'task'        => Task::find($this->entityId),
+            'project'     => Project::find($this->entityId),
+            'campaign'    => AdCampaign::find($this->entityId),
+            'opportunity' => Opportunity::find($this->entityId),
+            default       => null,
         };
     }
 }

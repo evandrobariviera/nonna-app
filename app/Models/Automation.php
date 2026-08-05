@@ -30,9 +30,10 @@ class Automation extends Model
     // ── Definições de tipos ────────────────────────────────────────────────
 
     public static array $entityTypes = [
-        'task'     => 'Tarefa',
-        'project'  => 'Projeto',
-        'campaign' => 'Campanha',
+        'task'        => 'Tarefa',
+        'project'     => 'Projeto',
+        'campaign'    => 'Campanha',
+        'opportunity' => 'Oportunidade',
     ];
 
     public static array $triggerTypes = [
@@ -80,6 +81,12 @@ class Automation extends Model
                     'responsavel' => 'Responsável',
                     'observador'  => 'Observador',
                 ]],
+            ];
+        }
+
+        if ($entityType === 'opportunity') {
+            return [
+                'stage' => ['label' => 'Estágio', 'options' => self::labelMap(Opportunity::$stages)],
             ];
         }
 
