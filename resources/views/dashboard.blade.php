@@ -69,6 +69,14 @@
         </a>
     </div>
 
+    {{-- ── Carga da Sprint: tarefas da sprint ativa agrupadas por executor (visual, avatar + status) ── --}}
+    @if($activeSprint)
+        <div class="mb-6">
+            <h2 class="text-base font-bold mb-3" style="color:var(--text)">⚡ Carga da Sprint</h2>
+            @include('dashboard.sections.carga_sprint')
+        </div>
+    @endif
+
     {{-- ── LINHA 1.5: Agenda — quadro por status (para_agendar/agendada/pos_reuniao) ──
          Estático (sem drag-and-drop) — mudar status é só na própria página da reunião. --}}
     @php

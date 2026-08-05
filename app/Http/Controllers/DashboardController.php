@@ -19,12 +19,35 @@ class DashboardController extends Controller
 
         $activeSprint = Sprint::where('status', 'active')->first();
         if ($activeSprint) {
-            $activeSprint->load('tasks');
+            $activeSprint->load(['tasks.executor', 'tasks.executors']);
             $sprintTotal = $activeSprint->tasks->whereNotIn('status', ['cancelado'])->count();
             $sprintDone  = $activeSprint->tasks->where('status', 'concluido')->count();
             $sprintProgress = $sprintTotal > 0 ? (int) round(($sprintDone / $sprintTotal) * 100) : 0;
+
+            // "Carga da Sprint": tarefas agrupadas por executor (papel 'executor' na
+            // pivot task_executors, com fallback pro campo legado executor_id — mesma
+            // regra de Task::executorGroupKey()), com contagem por status pra dar uma
+            // visão visual de quem está sobrecarregado e em que etapa.
+            $sprintTasksByExecutor = $activeSprint->tasks
+                ->whereNotIn('status', ['cancelado'])
+                ->groupBy(function (Task $task) {
+                    $exec = $task->executors->first(fn ($u) => $u->pivot->role === 'executor') ?? $task->executor;
+                    return $exec?->id ?? '__sem_executor__';
+                })
+                ->map(function ($tasks) {
+                    $exec = $tasks->first()->executors->first(fn ($u) => $u->pivot->role === 'executor')
+                         ?? $tasks->first()->executor;
+                    return [
+                        'executor'     => $exec, // null = "Sem executor"
+                        'total'        => $tasks->count(),
+                        'statusCounts' => $tasks->groupBy('status')->map->count(),
+                    ];
+                })
+                ->sortByDesc('total')
+                ->values();
         } else {
             $sprintTotal = $sprintDone = $sprintProgress = 0;
+            $sprintTasksByExecutor = collect();
         }
 
         // Camada operacional: minhas tarefas por etapa (sempre como executor)
@@ -147,7 +170,7 @@ class DashboardController extends Controller
         $pendingTasksCount = Task::pendente()->whereNull('sprint_id')->count();
 
         return view('dashboard', compact(
-            'activeSprint', 'sprintTotal', 'sprintDone', 'sprintProgress',
+            'activeSprint', 'sprintTotal', 'sprintDone', 'sprintProgress', 'sprintTasksByExecutor',
             'myAdjustmentTasks', 'myProductionTasks', 'myReadyForProductionTasks',
             'myMeetingsByStatus',
             'meetingsPosReuniao', 'meetingsRealizadas',
