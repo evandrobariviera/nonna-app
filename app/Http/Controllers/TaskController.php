@@ -310,16 +310,10 @@ class TaskController extends Controller
         TaskExecutor::where('task_id', $task->id)->where('role', 'responsavel')->delete();
 
         if ($data['responsavel_id']) {
-            // task_executors só permite 1 linha por (task_id, user_id) — se esse usuário já
-            // estava na tarefa com outro papel (ex: executor), precisa soltar essa linha antes,
-            // senão o attach() abaixo colide com a constraint (bug real, 2026-07-24: 500 ao
-            // tentar tornar responsável alguém que já era executor da mesma tarefa).
-            TaskExecutor::where('task_id', $task->id)->where('user_id', $data['responsavel_id'])->delete();
+            // A mesma pessoa pode ser executor E responsável na mesma tarefa (task_executors
+            // permite 1 linha por (task_id, user_id, role) — não mexe na linha de executor
+            // dessa pessoa, só na de responsável).
             $task->executors()->attach($data['responsavel_id'], ['role' => 'responsavel']);
-
-            if ($task->executor_id == $data['responsavel_id']) {
-                $task->updateQuietly(['executor_id' => null]);
-            }
 
             if (!$wasAlready) {
                 AutomationEngine::evaluate('executor_added', $task, ['role' => 'responsavel', 'user_id' => $data['responsavel_id']]);
@@ -339,9 +333,7 @@ class TaskController extends Controller
         TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->delete();
 
         if ($data['executor_id']) {
-            // Mesmo cuidado do updateResponsavel() — solta qualquer linha existente desse
-            // usuário na tarefa (ex: se ele já era o responsável) antes de anexar como executor.
-            TaskExecutor::where('task_id', $task->id)->where('user_id', $data['executor_id'])->delete();
+            // Mesma pessoa pode já ser responsável — não mexe na linha dela, só na de executor.
             $task->executors()->attach($data['executor_id'], ['role' => 'executor']);
             $task->updateQuietly(['executor_id' => $data['executor_id']]);
 
@@ -495,11 +487,7 @@ class TaskController extends Controller
                 foreach ($tasks as $task) {
                     TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->delete();
                     if (!empty($data['executor_id'])) {
-                        // Mesmo cuidado do updateResponsavel()/updateExecutorDirect() — solta
-                        // qualquer linha existente desse usuário na tarefa (ex: já era o
-                        // responsável) antes de anexar como executor, senão colide com a
-                        // constraint task_executors_task_id_user_id_unique.
-                        TaskExecutor::where('task_id', $task->id)->where('user_id', $data['executor_id'])->delete();
+                        // Mesma pessoa pode já ser responsável — não mexe na linha dela.
                         $task->executors()->attach($data['executor_id'], ['role' => 'executor']);
                     }
                     $task->updateQuietly(['executor_id' => $data['executor_id'] ?? null]);
@@ -510,15 +498,8 @@ class TaskController extends Controller
                 foreach ($tasks as $task) {
                     TaskExecutor::where('task_id', $task->id)->where('role', 'responsavel')->delete();
                     if (!empty($data['responsavel_id'])) {
-                        // Mesmo cuidado do updateResponsavel()/updateExecutorDirect() — solta
-                        // qualquer linha existente desse usuário na tarefa antes de anexar como
-                        // responsável, senão colide com a constraint task_executors_task_id_user_id_unique.
-                        TaskExecutor::where('task_id', $task->id)->where('user_id', $data['responsavel_id'])->delete();
+                        // Mesma pessoa pode já ser executor — não mexe na linha dela.
                         $task->executors()->attach($data['responsavel_id'], ['role' => 'responsavel']);
-
-                        if ($task->executor_id == $data['responsavel_id']) {
-                            $task->updateQuietly(['executor_id' => null]);
-                        }
                     }
                 }
                 break;
@@ -647,13 +628,17 @@ class TaskController extends Controller
             ->whereIn('role', ['executor', 'responsavel', 'observador'])
             ->delete();
 
+        // Papéis são independentes — a mesma pessoa pode ser executor, responsável e/ou
+        // observador ao mesmo tempo na mesma tarefa (task_executors permite 1 linha por
+        // (task_id, user_id, role)). $synced só evita duplicar attach() dentro do MESMO papel
+        // (ex: observer_ids com id repetido).
         $synced = [];
         $newlyAdded = [];
 
         if (!empty($data['executor_id'])) {
             $task->executors()->attach($data['executor_id'], ['role' => 'executor']);
             $task->updateQuietly(['executor_id' => $data['executor_id']]);
-            $synced[] = $data['executor_id'];
+            $synced[] = "executor:{$data['executor_id']}";
             if (!$before->contains("executor:{$data['executor_id']}")) {
                 $newlyAdded[] = ['role' => 'executor', 'user_id' => $data['executor_id']];
             }
@@ -661,18 +646,18 @@ class TaskController extends Controller
             $task->updateQuietly(['executor_id' => null]);
         }
 
-        if (!empty($data['responsavel_id']) && !in_array($data['responsavel_id'], $synced)) {
+        if (!empty($data['responsavel_id'])) {
             $task->executors()->attach($data['responsavel_id'], ['role' => 'responsavel']);
-            $synced[] = $data['responsavel_id'];
+            $synced[] = "responsavel:{$data['responsavel_id']}";
             if (!$before->contains("responsavel:{$data['responsavel_id']}")) {
                 $newlyAdded[] = ['role' => 'responsavel', 'user_id' => $data['responsavel_id']];
             }
         }
 
-        foreach ($data['observer_ids'] ?? [] as $uid) {
-            if (!in_array($uid, $synced)) {
+        foreach (array_unique($data['observer_ids'] ?? []) as $uid) {
+            if (!in_array("observador:{$uid}", $synced)) {
                 $task->executors()->attach($uid, ['role' => 'observador']);
-                $synced[] = $uid;
+                $synced[] = "observador:{$uid}";
                 if (!$before->contains("observador:{$uid}")) {
                     $newlyAdded[] = ['role' => 'observador', 'user_id' => $uid];
                 }
@@ -686,38 +671,46 @@ class TaskController extends Controller
 
     private function syncExecutors(Task $task, array $data): void
     {
-        $ids   = $data['executor_ids'] ?? [];
-        $roles = $data['executor_roles'] ?? [];
+        $ids           = $data['executor_ids'] ?? [];
+        $roles         = $data['executor_roles'] ?? [];
+        $responsavelId = $data['responsavel_id'] ?? null;
 
-        $syncData = [];
-        foreach ($ids as $userId) {
-            $syncData[$userId] = ['role' => $roles[$userId] ?? 'executor'];
-        }
-        // Responsável entra por último no array pra prevalecer caso a mesma pessoa também
-        // tenha sido marcada como executor (task_executors só permite 1 linha por
-        // (task_id, user_id)).
-        if (!empty($data['responsavel_id'])) {
-            $syncData[$data['responsavel_id']] = ['role' => 'responsavel'];
-        }
-
-        if (empty($syncData)) {
+        if (empty($ids) && !$responsavelId) {
             return;
         }
 
-        // sync() já devolve quem foi anexado de fato ('attached') — diferente de
-        // syncPersonnel() (que sempre apaga e re-cria tudo), aqui não precisa de before/after
-        // manual, só reagir ao que sync() diz que é novo.
-        $result = $task->executors()->sync($syncData);
+        // Papel de responsável é independente dos demais (executor/aprovador) — a mesma
+        // pessoa pode acumular os dois na mesma tarefa (task_executors permite 1 linha por
+        // (task_id, user_id, role)). sync() não dava conta disso (só 1 linha por user_id no
+        // array), então troca-se pra 2 blocos delete+attach separados por papel.
+        $before = TaskExecutor::where('task_id', $task->id)->get(['user_id', 'role'])
+            ->map(fn ($e) => "{$e->role}:{$e->user_id}");
+
+        $newlyAdded = [];
+
+        TaskExecutor::where('task_id', $task->id)->where('role', '!=', 'responsavel')->delete();
+        foreach ($ids as $userId) {
+            $role = $roles[$userId] ?? 'executor';
+            $task->executors()->attach($userId, ['role' => $role]);
+            if (!$before->contains("{$role}:{$userId}")) {
+                $newlyAdded[] = ['role' => $role, 'user_id' => $userId];
+            }
+        }
+
+        TaskExecutor::where('task_id', $task->id)->where('role', 'responsavel')->delete();
+        if ($responsavelId) {
+            $task->executors()->attach($responsavelId, ['role' => 'responsavel']);
+            if (!$before->contains("responsavel:{$responsavelId}")) {
+                $newlyAdded[] = ['role' => 'responsavel', 'user_id' => $responsavelId];
+            }
+        }
 
         if (!$task->executor_id && !empty($ids)) {
             $task->updateQuietly(['executor_id' => $ids[0]]);
         }
 
-        foreach ($result['attached'] ?? [] as $userId) {
-            AutomationEngine::evaluate('executor_added', $task, [
-                'role'    => $syncData[$userId]['role'] ?? 'executor',
-                'user_id' => $userId,
-            ]);
+        foreach ($newlyAdded as $added) {
+            AutomationEngine::evaluate('executor_added', $task, $added);
         }
     }
 

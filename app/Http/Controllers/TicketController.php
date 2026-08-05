@@ -124,27 +124,19 @@ class TicketController extends Controller
             'created_by'        => Auth::id(),
         ]);
 
-        // Sync executores + responsável — responsável entra por último no array pra
-        // prevalecer caso a mesma pessoa também tenha sido marcada como executor
-        // (task_executors só permite 1 linha por (task_id, user_id)).
+        // Sync executores + responsável — papéis independentes, a mesma pessoa pode ser
+        // executor e responsável ao mesmo tempo (task_executors permite 1 linha por
+        // (task_id, user_id, role)).
         $ids   = $data['executor_ids'] ?? [];
         $roles = $data['executor_roles'] ?? [];
-        $syncData = [];
         foreach ($ids as $userId) {
-            $syncData[$userId] = ['role' => $roles[$userId] ?? 'executor'];
+            $role = $roles[$userId] ?? 'executor';
+            $task->executors()->attach($userId, ['role' => $role]);
+            AutomationEngine::evaluate('executor_added', $task, ['role' => $role, 'user_id' => $userId]);
         }
         if (!empty($data['responsavel_id'])) {
-            $syncData[$data['responsavel_id']] = ['role' => 'responsavel'];
-        }
-        if (!empty($syncData)) {
-            $result = $task->executors()->sync($syncData);
-
-            foreach ($result['attached'] ?? [] as $userId) {
-                AutomationEngine::evaluate('executor_added', $task, [
-                    'role'    => $syncData[$userId]['role'] ?? 'executor',
-                    'user_id' => $userId,
-                ]);
-            }
+            $task->executors()->attach($data['responsavel_id'], ['role' => 'responsavel']);
+            AutomationEngine::evaluate('executor_added', $task, ['role' => 'responsavel', 'user_id' => $data['responsavel_id']]);
         }
 
         // Anexos enviados junto na criação — mesma lógica de TaskAttachmentController::store(),
