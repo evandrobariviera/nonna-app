@@ -31,7 +31,8 @@ class AutomationController extends Controller
             'agents'        => $agents,
             'taskStatuses'  => \App\Models\Task::$statuses,
             'sectors'       => Sector::orderBy('name')->get(),
-            'functionRoles' => \App\Models\OrganizationUser::$functionRoles,
+            'functionRoles' => \App\Models\FunctionalRole::where('organization_id', app('currentOrganization')->id)
+                ->orderBy('name')->pluck('name', 'key'),
         ]);
     }
 
@@ -79,7 +80,8 @@ class AutomationController extends Controller
             'agents'        => $agents,
             'taskStatuses'  => \App\Models\Task::$statuses,
             'sectors'       => Sector::orderBy('name')->get(),
-            'functionRoles' => \App\Models\OrganizationUser::$functionRoles,
+            'functionRoles' => \App\Models\FunctionalRole::where('organization_id', app('currentOrganization')->id)
+                ->orderBy('name')->pluck('name', 'key'),
         ]);
     }
 

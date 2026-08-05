@@ -63,6 +63,11 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    public function functionalRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(FunctionalRole::class, 'functional_role_user')->withTimestamps();
+    }
+
     public function currentOrganization(): ?Organization
     {
         return app()->has('currentOrganization') ? app('currentOrganization') : null;

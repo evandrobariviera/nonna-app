@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\FunctionalRole;
 use App\Models\Organization;
 use Closure;
 use Illuminate\Http\Request;
@@ -45,8 +46,10 @@ class SetTenant
                     ->first()?->pivot;
 
                 $role = $pivot?->role;
-                $raw  = $pivot?->function_roles ?? [];
-                $functionRoles = is_array($raw) ? $raw : (json_decode((string) $raw, true) ?? []);
+                $functionRoles = FunctionalRole::where('organization_id', $organization->id)
+                    ->whereHas('users', fn ($q) => $q->where('users.id', auth()->id()))
+                    ->pluck('key')
+                    ->all();
             }
 
             app()->instance('currentOrgRole', $role);

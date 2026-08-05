@@ -649,6 +649,13 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         Route::delete('/configuracoes/setores/{sector}', [\App\Http\Controllers\SectorController::class, 'destroy'])
             ->name('settings.sectors.destroy');
 
+        Route::post('/configuracoes/papeis', [\App\Http\Controllers\FunctionalRoleController::class, 'store'])
+            ->name('settings.functional-roles.store');
+        Route::patch('/configuracoes/papeis/{functionalRole}', [\App\Http\Controllers\FunctionalRoleController::class, 'update'])
+            ->name('settings.functional-roles.update');
+        Route::delete('/configuracoes/papeis/{functionalRole}', [\App\Http\Controllers\FunctionalRoleController::class, 'destroy'])
+            ->name('settings.functional-roles.destroy');
+
         Route::post('/configuracoes/mensagens', [\App\Http\Controllers\NotificationTemplateController::class, 'update'])
             ->name('settings.notification-templates.update');
         Route::post('/configuracoes/mensagens/{type}/{channel}/testar', [\App\Http\Controllers\NotificationTemplateController::class, 'test'])

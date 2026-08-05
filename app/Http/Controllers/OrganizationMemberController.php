@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\OrganizationUser;
+use App\Models\FunctionalRole;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +17,7 @@ class OrganizationMemberController extends Controller
     {
         $org = app('currentOrganization');
 
-        $validFunctionRoles = array_keys(OrganizationUser::$functionRoles);
+        $validFunctionRoles = FunctionalRole::where('organization_id', $org->id)->pluck('key')->all();
 
         $data = $request->validate([
             'name'           => ['required', 'string', 'max:255'],
@@ -42,10 +42,11 @@ class OrganizationMemberController extends Controller
         }
 
         $org->users()->attach($user->id, [
-            'id'             => Str::uuid(),
-            'role'           => $data['role'],
-            'function_roles' => $data['function_roles'] ?? [],
+            'id'   => Str::uuid(),
+            'role' => $data['role'],
         ]);
+
+        $this->syncFunctionalRoles($org->id, $user, $data['function_roles'] ?? []);
 
         return back()->with('success', 'Usuário criado e adicionado à organização.')->with('tab', 'equipe');
     }
@@ -56,7 +57,7 @@ class OrganizationMemberController extends Controller
 
         abort_unless($org->users()->where('user_id', $user->id)->exists(), 403);
 
-        $validFunctionRoles = array_keys(OrganizationUser::$functionRoles);
+        $validFunctionRoles = FunctionalRole::where('organization_id', $org->id)->pluck('key')->all();
 
         $data = $request->validate([
             'name'             => ['required', 'string', 'max:255'],
@@ -90,9 +91,10 @@ class OrganizationMemberController extends Controller
         $user->update($updateData);
 
         $org->users()->updateExistingPivot($user->id, [
-            'role'           => $data['role'],
-            'function_roles' => $data['function_roles'] ?? [],
+            'role' => $data['role'],
         ]);
+
+        $this->syncFunctionalRoles($org->id, $user, $data['function_roles'] ?? []);
 
         return back()->with('success', 'Usuário atualizado.')->with('tab', 'equipe');
     }
@@ -118,15 +120,13 @@ class OrganizationMemberController extends Controller
         $org = app('currentOrganization');
         abort_if($org->users()->where('user_id', $user->id)->exists(), 422, 'Esse usuário já faz parte desta organização.');
 
-        $validFunctionRoles = array_keys(OrganizationUser::$functionRoles);
         $data = $request->validate([
             'role' => ['required', 'in:admin,manager,member'],
         ]);
 
         $org->users()->attach($user->id, [
-            'id'             => Str::uuid(),
-            'role'           => $data['role'],
-            'function_roles' => [],
+            'id'   => Str::uuid(),
+            'role' => $data['role'],
         ]);
 
         return back()->with('success', 'Usuário adicionado à organização.')->with('tab', 'equipe');
@@ -151,5 +151,23 @@ class OrganizationMemberController extends Controller
         }
 
         return back()->with('success', 'Usuário excluído.')->with('tab', 'equipe');
+    }
+
+    // sync() troca TODO o relacionamento do usuário (o pivot não tem organization_id) — pra
+    // não apagar papéis que ele tenha em outra organização, preserva o que não é desta org e
+    // só substitui a seleção desta.
+    private function syncFunctionalRoles(string $organizationId, User $user, array $keys): void
+    {
+        $orgRoleIds = FunctionalRole::where('organization_id', $organizationId)->pluck('id');
+
+        $selectedIds = FunctionalRole::where('organization_id', $organizationId)
+            ->whereIn('key', $keys)
+            ->pluck('id');
+
+        $otherOrgsIds = $user->functionalRoles()
+            ->whereNotIn('functional_roles.id', $orgRoleIds)
+            ->pluck('functional_roles.id');
+
+        $user->functionalRoles()->sync($otherOrgsIds->merge($selectedIds));
     }
 }

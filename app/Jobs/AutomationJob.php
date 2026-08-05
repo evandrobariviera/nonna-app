@@ -8,7 +8,7 @@ use App\Models\Task;
 use App\Models\Project;
 use App\Models\AdCampaign;
 use App\Models\AiAgent;
-use App\Models\OrganizationUser;
+use App\Models\FunctionalRole;
 use App\Models\Sector;
 use App\Models\User;
 use App\Services\AiService;
@@ -175,8 +175,8 @@ class AutomationJob implements ShouldQueue
             if (!$role) {
                 return collect();
             }
-            $userIds = OrganizationUser::whereJsonContains('function_roles', $role)->pluck('user_id');
-            return User::whereIn('id', $userIds)->get();
+            $functionalRole = FunctionalRole::where('key', $role)->first();
+            return $functionalRole ? $functionalRole->users : collect();
         }
 
         if (!$entity instanceof Task) {

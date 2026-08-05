@@ -67,7 +67,7 @@ class Organization extends Model
     {
         return $this->belongsToMany(User::class, 'organization_users', 'organization_id', 'user_id')
             ->using(OrganizationUser::class)
-            ->withPivot(['role', 'function_roles'])
+            ->withPivot(['role'])
             ->withTimestamps();
     }
 

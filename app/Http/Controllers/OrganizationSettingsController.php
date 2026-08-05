@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AiAgent;
+use App\Models\FunctionalRole;
 use App\Models\NotificationTemplate;
 use App\Models\Sector;
 use App\Models\User;
@@ -16,10 +17,15 @@ class OrganizationSettingsController extends Controller
     {
         $org          = app('currentOrganization');
         $integrations = $org->integrations()->orderBy('provider')->orderBy('label')->get();
-        $members      = $org->users()->withPivot(['role', 'function_roles'])->orderBy('name')->get();
+        $members      = $org->users()->withPivot(['role'])->with('functionalRoles')->orderBy('name')->get();
         $apiTokens    = $org->tokens()->orderByDesc('created_at')->get();
         $aiAgents     = AiAgent::where('is_active', true)->orderBy('name')->get();
         $sectors      = Sector::with('users:id,name')->orderBy('name')->get();
+        $functionalRoles = FunctionalRole::where('organization_id', $org->id)
+            ->withCount('users')
+            ->orderByDesc('is_protected')
+            ->orderBy('name')
+            ->get();
 
         // Usuários que existem em `users` mas não pertencem a nenhuma organização —
         // normalmente sobras de registro público de teste (/register). Sem isso, esses
@@ -32,7 +38,7 @@ class OrganizationSettingsController extends Controller
             ->groupBy('type')
             ->map(fn ($group) => $group->keyBy('channel'));
 
-        return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens', 'aiAgents', 'notificationTemplates', 'sectors', 'orphanUsers'));
+        return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens', 'aiAgents', 'notificationTemplates', 'sectors', 'orphanUsers', 'functionalRoles'));
     }
 
     public function createToken(Request $request): RedirectResponse

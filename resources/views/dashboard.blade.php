@@ -10,8 +10,11 @@
         // regra já usada em /visoes/{role}. Calculado aqui em cima porque a seção
         // "Atendimento" é destacada logo abaixo da Agenda, fora do loop por função
         // mais abaixo — precisa saber se o usuário tem o papel antes disso.
+        $orgFunctionalRoles = \App\Models\FunctionalRole::where('organization_id', $currentOrg?->id)
+            ->orderBy('name')
+            ->get();
         $dashboardRoles = ($isOrgAdmin ?? false)
-            ? array_keys(\App\Models\OrganizationUser::$functionRoles)
+            ? $orgFunctionalRoles->pluck('key')->all()
             : ($userFunctionRoles ?? []);
         // Direção Criativa e Head de Tecnologia compartilham uma única seção
         // "Heads"; Atendimento vira uma seção destacada — nenhum dos dois passa
@@ -20,6 +23,7 @@
         $showHeadsSection = !empty(array_intersect($dashboardRoles, $headsRoles));
         $showAtendimentoSection = in_array('atendimento', $dashboardRoles);
         $showTrafegoSection = in_array('trafego', $dashboardRoles);
+        $functionRoleLabels = $orgFunctionalRoles->pluck('name', 'key');
     @endphp
 
     {{-- ── LINHA 1: boas-vindas (full width) + sprint (principal) | pendências de cadastro (cardo) ── --}}
@@ -219,17 +223,17 @@
         <div class="flex flex-col gap-6">
             @foreach($dashboardRoles as $role)
                 @continue(in_array($role, $headsRoles) || $role === 'atendimento' || $role === 'trafego')
-                @if(isset(\App\Models\OrganizationUser::$functionRoles[$role]))
+                @if($functionRoleLabels->has($role))
                     <div>
                         <h2 class="text-base font-bold mb-3" style="color:var(--text)">
-                            {{ \App\Models\OrganizationUser::$functionRoles[$role] }}
+                            {{ $functionRoleLabels[$role] }}
                         </h2>
                         @if($role === 'estrategia')
                             @include('dashboard.sections.estrategia')
                         @else
                             <div class="card px-5 py-4">
                                 <p class="text-xs" style="color:var(--muted)">
-                                    Painel de <strong>{{ \App\Models\OrganizationUser::$functionRoles[$role] }}</strong> em construção — em breve.
+                                    Painel de <strong>{{ $functionRoleLabels[$role] }}</strong> em construção — em breve.
                                 </p>
                             </div>
                         @endif

@@ -27,7 +27,7 @@
 
         {{-- Tabs --}}
         <div class="flex gap-1 mb-6 border-b" style="border-color:var(--border)">
-            @foreach(['geral' => 'Geral', 'integracoes' => 'Integrações', 'equipe' => 'Equipe', 'setores' => 'Setores', 'mensagens' => 'Mensagens Padrão', 'api' => 'API & Tokens'] as $key => $label)
+            @foreach(['geral' => 'Geral', 'integracoes' => 'Integrações', 'equipe' => 'Equipe', 'setores' => 'Setores', 'papeis' => 'Papéis Funcionais', 'mensagens' => 'Mensagens Padrão', 'api' => 'API & Tokens'] as $key => $label)
                 <button @click="tab = '{{ $key }}'"
                         class="tab-btn px-4 py-2.5 text-sm font-semibold transition-colors"
                         :class="tab === '{{ $key }}'
@@ -51,6 +51,11 @@
                         <span class="ml-1 text-xs px-1.5 py-px rounded-full"
                               style="background:var(--s3); color:var(--muted)">
                             {{ $sectors->count() }}
+                        </span>
+                    @elseif($key === 'papeis')
+                        <span class="ml-1 text-xs px-1.5 py-px rounded-full"
+                              style="background:var(--s3); color:var(--muted)">
+                            {{ $functionalRoles->count() }}
                         </span>
                     @endif
                 </button>
@@ -603,7 +608,7 @@
                                     @if(!$isOrgOwner)
                                         <div class="flex items-center gap-2 justify-end">
                                             <button type="button"
-                                                    @click="open({{ json_encode(['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'role' => $role, 'function_roles' => $member->pivot->function_roles ?? [], 'avatar_url' => $member->avatarUrl()]) }})"
+                                                    @click="open({{ json_encode(['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'role' => $role, 'function_roles' => $member->functionalRoles->pluck('key')->all(), 'avatar_url' => $member->avatarUrl()]) }})"
                                                     class="btn btn-ghost btn-xs">
                                                 Editar
                                             </button>
@@ -765,18 +770,18 @@
                         <div>
                             <label class="block text-xs font-semibold mb-2" style="color:var(--muted)">Papéis funcionais (dashboards)</label>
                             <div style="display:flex; flex-wrap:wrap; gap:6px">
-                                @foreach(\App\Models\OrganizationUser::$functionRoles as $frKey => $frLabel)
+                                @foreach($functionalRoles as $fr)
                                     <label style="cursor:pointer; position:relative">
                                         <input type="checkbox"
                                                name="function_roles[]"
-                                               value="{{ $frKey }}"
+                                               value="{{ $fr->key }}"
                                                x-model="form.function_roles"
                                                style="position:absolute; opacity:0; width:0; height:0; pointer-events:none">
-                                        <span :style="form.function_roles.includes('{{ $frKey }}')
+                                        <span :style="form.function_roles.includes('{{ $fr->key }}')
                                                 ? 'background:rgba(106,90,205,.12); border-color:rgba(106,90,205,.4); color:var(--purple);'
                                                 : 'background:var(--s3); border-color:var(--border2); color:var(--muted);'"
                                               style="display:inline-block; padding:4px 12px; border-radius:100px; font-size:11px; font-weight:600; border:1px solid; transition:all .12s; user-select:none">
-                                            {{ $frLabel }}
+                                            {{ $fr->name }}
                                         </span>
                                     </label>
                                 @endforeach
@@ -942,6 +947,142 @@
                             <button type="submit"
                                     class="btn-primary px-4 py-2 text-sm rounded-lg font-semibold"
                                     x-text="editing ? 'Salvar Alterações' : 'Criar Setor'">
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- ══ TAB PAPÉIS FUNCIONAIS ══ --}}
+        <div x-show="tab === 'papeis'" x-cloak
+             x-data="{
+                modal: false,
+                editing: null,
+                form: { name: '' },
+                open(role) {
+                    if (role) {
+                        this.editing = role;
+                        this.form = { name: role.name };
+                    } else {
+                        this.editing = null;
+                        this.form = { name: '' };
+                    }
+                    this.modal = true;
+                },
+                close() { this.modal = false; this.editing = null; }
+             }">
+
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <h2 class="text-sm font-bold" style="color:var(--text)">Papéis Funcionais</h2>
+                    <p class="text-xs mt-0.5 max-w-lg" style="color:var(--muted)">
+                        O que cada pessoa faz na agência (ex: Tráfego, Design) — controla o que aparece pra ela no
+                        Dashboard e pode ser usado como destinatário de notificação na tela de Automações. Não tem
+                        relação com os Setores.
+                    </p>
+                </div>
+                <button @click="open(null)"
+                        class="btn-primary px-4 py-2 text-sm rounded-lg font-semibold flex items-center gap-2">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                    </svg>
+                    Novo Papel
+                </button>
+            </div>
+
+            <div class="card overflow-hidden">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr style="border-bottom:1px solid var(--border); background:var(--s3)">
+                            <th class="text-left px-5 py-3 text-xs font-semibold" style="color:var(--muted)">Papel</th>
+                            <th class="text-left px-5 py-3 text-xs font-semibold" style="color:var(--muted)">Pessoas</th>
+                            <th class="px-5 py-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($functionalRoles as $fr)
+                            <tr style="border-bottom:1px solid var(--border2)">
+                                <td class="px-5 py-3.5 font-semibold" style="color:var(--text)">
+                                    {{ $fr->name }}
+                                    @if($fr->is_protected)
+                                        <span class="ml-1 text-xs" style="color:var(--muted)" title="Usado por uma seção do sistema — não pode ser removido">🔒</span>
+                                    @endif
+                                </td>
+                                <td class="px-5 py-3.5 text-xs" style="color:var(--muted)">
+                                    {{ $fr->users_count }} {{ $fr->users_count === 1 ? 'pessoa' : 'pessoas' }}
+                                </td>
+                                <td class="px-5 py-3.5">
+                                    <div class="flex items-center gap-2 justify-end">
+                                        <button type="button"
+                                                @click="open({{ json_encode(['id' => $fr->id, 'name' => $fr->name]) }})"
+                                                class="btn btn-ghost btn-xs">
+                                            Editar
+                                        </button>
+                                        @if(!$fr->is_protected)
+                                            <form method="POST"
+                                                  action="{{ route('settings.functional-roles.destroy', $fr) }}"
+                                                  @submit.prevent="if (await $store.confirmDialog.ask('Remover o papel {{ addslashes($fr->name) }}?')) $el.submit()">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-xs">
+                                                    Remover
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="px-5 py-8 text-center text-xs" style="color:var(--muted)">
+                                    Nenhum papel funcional cadastrado ainda.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            {{-- Modal Novo / Editar Papel --}}
+            <div x-show="modal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                 x-transition:enter="transition duration-150"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100">
+                <div class="absolute inset-0 bg-black/60" @click="close()"></div>
+                <div class="relative w-full max-w-md rounded-xl shadow-2xl p-6"
+                     style="background:var(--s1); border:1px solid var(--border)"
+                     x-transition:enter="transition duration-150"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100">
+
+                    <h3 class="text-base font-bold mb-5" style="color:var(--text)"
+                        x-text="editing ? 'Editar Papel' : 'Novo Papel'"></h3>
+
+                    <form :action="editing
+                              ? '{{ url('configuracoes/papeis') }}/' + editing.id
+                              : '{{ route('settings.functional-roles.store') }}'"
+                          method="POST" class="space-y-4">
+                        @csrf
+                        <input type="hidden" name="_method" value="PATCH" :disabled="!editing">
+
+                        <div>
+                            <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Nome do Papel</label>
+                            <input type="text" name="name" x-model="form.name" required
+                                   placeholder="Ex: Growth"
+                                   class="w-full rounded-lg border px-3 py-2 text-sm"
+                                   style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                        </div>
+
+                        <div class="flex justify-end gap-3 pt-2">
+                            <button type="button" @click="close()"
+                                    class="px-4 py-2 text-sm font-semibold rounded-lg"
+                                    style="color:var(--muted); background:var(--s3)">
+                                Cancelar
+                            </button>
+                            <button type="submit"
+                                    class="btn-primary px-4 py-2 text-sm rounded-lg font-semibold"
+                                    x-text="editing ? 'Salvar Alterações' : 'Criar Papel'">
                             </button>
                         </div>
                     </form>
