@@ -98,6 +98,7 @@ class TicketController extends Controller
             'executor_ids'       => 'nullable|array',
             'executor_ids.*'     => 'exists:users,id',
             'executor_roles'     => 'nullable|array',
+            'responsavel_id'     => 'nullable|exists:users,id',
             'sprint_id'          => 'nullable|uuid|exists:sprints,id',
             'due_date'           => 'nullable|date',
             'approval_date'      => 'nullable|date',
@@ -119,14 +120,19 @@ class TicketController extends Controller
             'created_by'        => Auth::id(),
         ]);
 
-        // Sync executores adicionais
+        // Sync executores + responsável — responsável entra por último no array pra
+        // prevalecer caso a mesma pessoa também tenha sido marcada como executor
+        // (task_executors só permite 1 linha por (task_id, user_id)).
         $ids   = $data['executor_ids'] ?? [];
         $roles = $data['executor_roles'] ?? [];
-        if (!empty($ids)) {
-            $syncData = [];
-            foreach ($ids as $userId) {
-                $syncData[$userId] = ['role' => $roles[$userId] ?? 'executor'];
-            }
+        $syncData = [];
+        foreach ($ids as $userId) {
+            $syncData[$userId] = ['role' => $roles[$userId] ?? 'executor'];
+        }
+        if (!empty($data['responsavel_id'])) {
+            $syncData[$data['responsavel_id']] = ['role' => 'responsavel'];
+        }
+        if (!empty($syncData)) {
             $task->executors()->sync($syncData);
         }
 

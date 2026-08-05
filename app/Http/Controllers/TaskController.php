@@ -570,6 +570,7 @@ class TaskController extends Controller
             'executor_ids'       => 'nullable|array',
             'executor_ids.*'     => 'exists:users,id',
             'executor_roles'     => 'nullable|array',
+            'responsavel_id'     => 'nullable|exists:users,id',
             'due_date'           => 'nullable|date',
             'approval_date'      => 'nullable|date',
             'publish_date'       => 'nullable|date',
@@ -643,18 +644,24 @@ class TaskController extends Controller
         $ids   = $data['executor_ids'] ?? [];
         $roles = $data['executor_roles'] ?? [];
 
-        if (empty($ids)) {
-            return;
-        }
-
         $syncData = [];
         foreach ($ids as $userId) {
             $syncData[$userId] = ['role' => $roles[$userId] ?? 'executor'];
         }
+        // Responsável entra por último no array pra prevalecer caso a mesma pessoa também
+        // tenha sido marcada como executor (task_executors só permite 1 linha por
+        // (task_id, user_id)).
+        if (!empty($data['responsavel_id'])) {
+            $syncData[$data['responsavel_id']] = ['role' => 'responsavel'];
+        }
+
+        if (empty($syncData)) {
+            return;
+        }
 
         $task->executors()->sync($syncData);
 
-        if (!$task->executor_id) {
+        if (!$task->executor_id && !empty($ids)) {
             $task->updateQuietly(['executor_id' => $ids[0]]);
         }
     }

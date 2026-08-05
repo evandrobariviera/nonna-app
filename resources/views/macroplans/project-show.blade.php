@@ -296,6 +296,18 @@
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                 </div>
 
+                {{-- Responsável --}}
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Responsável</label>
+                    <select name="responsavel_id" class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        <option value="">— nenhum —</option>
+                        @foreach($users as $u)
+                            <option value="{{ $u->id }}">{{ $u->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
                 {{-- Executores (múltiplos) --}}
                 <div class="col-span-2 md:col-span-3" x-data="executorPicker()">
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Executores</label>
@@ -308,7 +320,6 @@
                                     class="text-xs focus:outline-none ml-1"
                                     style="background:var(--s3); color:var(--muted); border:none">
                                     <option value="executor">Executor</option>
-                                    <option value="responsavel">Responsável</option>
                                     <option value="aprovador">Aprovador</option>
                                 </select>
                                 <input type="hidden" :name="'executor_ids[]'" :value="item.id">
