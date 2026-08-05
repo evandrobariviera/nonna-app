@@ -855,7 +855,7 @@
                                 <td class="px-5 py-3.5">
                                     <div class="flex items-center gap-2 justify-end">
                                         <button type="button"
-                                                @click="open({{ json_encode(['id' => $sector->id, 'name' => $sector->name, 'user_ids' => $sector->users->pluck('id')->all()]) }})"
+                                                @click="open({{ json_encode(['id' => $sector->id, 'name' => $sector->name, 'user_ids' => $sector->users->pluck('id')->map(fn ($id) => (string) $id)->all()]) }})"
                                                 class="btn btn-ghost btn-xs">
                                             Editar
                                         </button>
@@ -922,7 +922,7 @@
                                                value="{{ $member->id }}"
                                                x-model="form.user_ids"
                                                style="position:absolute; opacity:0; width:0; height:0; pointer-events:none">
-                                        <span :style="form.user_ids.includes({{ $member->id }})
+                                        <span :style="form.user_ids.includes('{{ $member->id }}')
                                                 ? 'background:rgba(106,90,205,.12); border-color:rgba(106,90,205,.4); color:var(--purple);'
                                                 : 'background:var(--s3); border-color:var(--border2); color:var(--muted);'"
                                               style="display:inline-block; padding:4px 12px; border-radius:100px; font-size:11px; font-weight:600; border:1px solid; transition:all .12s; user-select:none">
