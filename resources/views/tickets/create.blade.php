@@ -4,6 +4,7 @@
     <div class="max-w-3xl mx-auto">
         <div class="card px-6 py-6">
             <form method="POST" action="{{ route('tickets.store') }}"
+                  enctype="multipart/form-data"
                   class="grid grid-cols-2 gap-4 md:grid-cols-3"
                   x-data="executorPicker()">
                 @csrf
@@ -205,6 +206,16 @@
                         placeholder="Detalhes do pedido, contexto, links..."
                         class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ old('description') }}</textarea>
+                </div>
+
+                {{-- Anexos --}}
+                <div class="col-span-2 md:col-span-3">
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Anexos</label>
+                    <input type="file" name="files[]" multiple
+                        class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    @error('files') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
+                    @error('files.*') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="col-span-2 md:col-span-3 flex items-center gap-3 pt-2">

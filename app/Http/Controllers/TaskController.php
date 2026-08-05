@@ -9,6 +9,7 @@ use App\Models\MacroPlan;
 use App\Models\Project;
 use App\Models\Sprint;
 use App\Models\Task;
+use App\Models\TaskAttachment;
 use App\Models\TaskExecutor;
 use App\Models\TaskStatusTransition;
 use App\Models\User;
@@ -213,6 +214,7 @@ class TaskController extends Controller
         ]);
 
         $this->syncExecutors($task, $data);
+        $this->storeAttachments($task, $request);
 
         return redirect()->route('macroplans.projects.show', [$macroplan, $project])
             ->with('success', 'Tarefa criada.');
@@ -233,6 +235,7 @@ class TaskController extends Controller
         ]);
 
         $this->syncExecutors($task, $data);
+        $this->storeAttachments($task, $request);
 
         return redirect()->route('projects.showDirect', $project)
             ->with('success', 'Tarefa criada.');
@@ -582,6 +585,8 @@ class TaskController extends Controller
             'requester_name'     => 'nullable|string|max:150',
             'requester_whatsapp' => 'nullable|string|max:30',
             'requester_channel'  => 'nullable|in:' . implode(',', array_keys(Task::$requesterChannels)),
+            'files'              => 'nullable|array',
+            'files.*'            => 'file|max:102400', // 100 MB, mesmo limite de TaskAttachmentController
         ];
     }
 
@@ -663,6 +668,30 @@ class TaskController extends Controller
 
         if (!$task->executor_id && !empty($ids)) {
             $task->updateQuietly(['executor_id' => $ids[0]]);
+        }
+    }
+
+    // Anexos enviados junto na criação — mesma lógica de TaskAttachmentController::store(),
+    // sempre como "insumo" (material de referência; ainda não existe entregável nesse ponto).
+    private function storeAttachments(Task $task, Request $request): void
+    {
+        if (!$request->hasFile('files')) {
+            return;
+        }
+
+        $disk = config('filesystems.default', 'r2');
+        foreach ($request->file('files') as $file) {
+            $path = $file->store("tasks/{$task->id}", $disk);
+            TaskAttachment::create([
+                'task_id'     => $task->id,
+                'filename'    => $file->getClientOriginalName(),
+                'disk_path'   => $path,
+                'disk'        => $disk,
+                'mime_type'   => $file->getMimeType(),
+                'size'        => $file->getSize(),
+                'uploaded_by' => Auth::id(),
+                'kind'        => 'insumo',
+            ]);
         }
     }
 }

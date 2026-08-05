@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Project;
 use App\Models\Sprint;
 use App\Models\Task;
+use App\Models\TaskAttachment;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -109,6 +110,8 @@ class TicketController extends Controller
             'requester_name'     => 'nullable|string|max:150',
             'requester_whatsapp' => 'nullable|string|max:30',
             'requester_channel'  => 'nullable|in:' . implode(',', array_keys(Task::$requesterChannels)),
+            'files'              => 'nullable|array',
+            'files.*'            => 'file|max:102400', // 100 MB, mesmo limite de TaskAttachmentController
         ]);
 
         $task = Task::create([
@@ -134,6 +137,25 @@ class TicketController extends Controller
         }
         if (!empty($syncData)) {
             $task->executors()->sync($syncData);
+        }
+
+        // Anexos enviados junto na criação — mesma lógica de TaskAttachmentController::store(),
+        // sempre como "insumo" (material de referência; ainda não existe entregável nesse ponto).
+        if ($request->hasFile('files')) {
+            $disk = config('filesystems.default', 'r2');
+            foreach ($request->file('files') as $file) {
+                $path = $file->store("tasks/{$task->id}", $disk);
+                TaskAttachment::create([
+                    'task_id'     => $task->id,
+                    'filename'    => $file->getClientOriginalName(),
+                    'disk_path'   => $path,
+                    'disk'        => $disk,
+                    'mime_type'   => $file->getMimeType(),
+                    'size'        => $file->getSize(),
+                    'uploaded_by' => Auth::id(),
+                    'kind'        => 'insumo',
+                ]);
+            }
         }
 
         return redirect()->route('tickets.index')->with('success', 'Ticket criado com sucesso.');
