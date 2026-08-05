@@ -34,7 +34,9 @@ class AutomationEngine
     private static function resolveEntityType(Model $entity): ?string
     {
         return match (true) {
-            $entity instanceof \App\Models\Task        => 'task',
+            // Ticket é a mesma tabela/model de Tarefa (Task.is_ticket) — entidades diferentes
+            // pro motor de Automações, mesmo model por baixo.
+            $entity instanceof \App\Models\Task        => $entity->is_ticket ? 'ticket' : 'task',
             $entity instanceof \App\Models\Project     => 'project',
             $entity instanceof \App\Models\AdCampaign  => 'campaign',
             $entity instanceof \App\Models\Opportunity => 'opportunity',

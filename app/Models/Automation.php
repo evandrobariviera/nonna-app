@@ -31,6 +31,7 @@ class Automation extends Model
 
     public static array $entityTypes = [
         'task'        => 'Tarefa',
+        'ticket'      => 'Ticket',
         'project'     => 'Projeto',
         'campaign'    => 'Campanha',
         'opportunity' => 'Oportunidade',
@@ -50,6 +51,7 @@ class Automation extends Model
         'send_webhook'      => 'Enviar Webhook',
         'update_field'      => 'Atualizar Campo',
         'send_notification' => 'Enviar Notificação',
+        'create_record'     => 'Criar Tarefa/Ticket',
     ];
 
     // Campos de data disponíveis pro gatilho "Data alcançada" (só Tarefa por enquanto).
@@ -67,6 +69,13 @@ class Automation extends Model
      */
     public static function conditionFieldsFor(string $entityType): array
     {
+        // Ticket é a mesma tabela de Tarefa (Task.is_ticket=true) — mesmos campos de condição,
+        // sem repetir a lista (o filtro "é ticket?" não existe mais aqui porque a entidade em
+        // si já decide isso).
+        if ($entityType === 'ticket') {
+            return self::conditionFieldsFor('task');
+        }
+
         if ($entityType === 'task') {
             return [
                 'status'      => ['label' => 'Status',      'options' => self::labelMap(Task::$statuses)],
@@ -75,7 +84,6 @@ class Automation extends Model
                 'destination' => ['label' => 'Destino',      'options' => Task::$destinations],
                 'origin'      => ['label' => 'Origem',       'options' => Task::$origins],
                 'priority'    => ['label' => 'Prioridade',   'options' => self::labelMap(Task::$priorities)],
-                'is_ticket'   => ['label' => 'É ticket?',    'options' => ['0' => 'Não', '1' => 'Sim']],
                 'role'        => ['label' => 'Papel (Responsável/Executor)', 'options' => [
                     'executor'    => 'Executor',
                     'responsavel' => 'Responsável',
@@ -165,6 +173,7 @@ class Automation extends Model
             'send_webhook'      => 'POST → ' . ($config['url'] ?? '?'),
             'update_field'      => 'Campo "' . ($config['field'] ?? '?') . '" = "' . ($config['value'] ?? '?') . '"',
             'send_notification' => 'Notificar ' . ($config['to'] ?? '?'),
+            'create_record'     => 'Criar ' . (($config['record_type'] ?? 'ticket') === 'task' ? 'Tarefa' : 'Ticket'),
             default             => $this->action_type,
         };
     }

@@ -89,6 +89,7 @@ class AutomationJob implements ShouldQueue
             'send_webhook'      => $this->sendWebhook($config, $context, $entity),
             'update_field'      => $this->updateField($config, $entity),
             'send_notification' => $this->sendNotification($config, $entity, $context),
+            'create_record'     => $this->createRecord($config, $context, $entity),
             default             => throw new \RuntimeException("Tipo de ação desconhecido: {$this->automation->action_type}"),
         };
     }
@@ -133,6 +134,44 @@ class AutomationJob implements ShouldQueue
         $entity->update([$field => $value]);
 
         return "Campo '{$field}' atualizado para '{$value}'.";
+    }
+
+    // Cria uma Tarefa avulsa ou um Ticket (mesma tabela, Task.is_ticket) como resultado da
+    // automação — sem projeto (fica avulsa, mesmo padrão de origin=roadmap/ticket já usado no
+    // sistema). tasks.client_id é NOT NULL no banco, então sem cliente resolvido cai no cliente
+    // interno (clients.is_internal) — o mesmo sinal que Task::scopePendente() já usa pra jogar
+    // a tarefa na fila de Pendências de Cadastro, sem precisar de tratamento de erro novo aqui.
+    private function createRecord(array $config, array $context, mixed $entity): string
+    {
+        $isTicket = ($config['record_type'] ?? 'ticket') === 'ticket';
+
+        $clientId = $config['client_id'] ?? null;
+        if ($clientId === 'inherit') {
+            $clientId = $entity->client_id ?? null;
+        }
+        if (!$clientId) {
+            $clientId = \App\Models\Client::where('is_internal', true)->value('id');
+        }
+
+        // Job roda em background (sem middleware de tenant), então o trait Tenantable não tem
+        // organização atual pra herdar sozinho — resolve explicitamente aqui, priorizando a
+        // organização da própria entidade que disparou a automação.
+        $organizationId = $entity->organization_id ?? $this->automation->createdBy?->organizations()->value('organizations.id');
+
+        $task = Task::create([
+            'organization_id' => $organizationId,
+            'title'       => $this->interpolate($config['title'] ?? 'Nova tarefa', $context),
+            'description' => $this->interpolate($config['description'] ?? '', $context),
+            'task_type'   => $config['task_type'] ?? 'estrategia',
+            'client_id'   => $clientId,
+            'is_ticket'   => $isTicket,
+            'origin'      => 'automation',
+            'status'      => 'backlog',
+            'due_date'    => !empty($config['due_in_days']) ? now()->addDays((int) $config['due_in_days']) : null,
+            'created_by'  => $this->automation->created_by,
+        ]);
+
+        return "Registro criado: {$task->id} ({$task->title}).";
     }
 
     private function sendNotification(array $config, mixed $entity, array $context): string
@@ -220,11 +259,11 @@ class AutomationJob implements ShouldQueue
     private function resolveEntity(): mixed
     {
         return match ($this->entityType) {
-            'task'        => Task::find($this->entityId),
-            'project'     => Project::find($this->entityId),
-            'campaign'    => AdCampaign::find($this->entityId),
-            'opportunity' => Opportunity::find($this->entityId),
-            default       => null,
+            'task', 'ticket' => Task::find($this->entityId),
+            'project'        => Project::find($this->entityId),
+            'campaign'       => AdCampaign::find($this->entityId),
+            'opportunity'    => Opportunity::find($this->entityId),
+            default          => null,
         };
     }
 }

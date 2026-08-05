@@ -83,6 +83,7 @@ class Task extends Model
         'projeto'    => 'Projeto',
         'roadmap'    => 'Roadmap',
         'ticket'     => 'Ticket',
+        'automation' => 'Automação',
     ];
 
     // Situação = sub-status cru vindo do ClickUp (texto livre). As chaves abaixo são

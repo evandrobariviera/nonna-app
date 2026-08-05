@@ -17,6 +17,7 @@ class CheckAutomationDateTriggers extends Command
     public function handle(): int
     {
         $automations = Automation::where('trigger_type', 'date_reached')
+            ->whereIn('entity_type', ['task', 'ticket'])
             ->where('is_active', true)
             ->get();
 
@@ -28,7 +29,11 @@ class CheckAutomationDateTriggers extends Command
                 continue;
             }
 
-            $tasks = Task::whereDate($dateField, today())->get();
+            // Ticket e Tarefa são a mesma tabela (Task.is_ticket) — a automação já escolheu
+            // qual das duas entidades quer, então filtra aqui pra não misturar as duas.
+            $tasks = Task::whereDate($dateField, today())
+                ->where('is_ticket', $automation->entity_type === 'ticket')
+                ->get();
 
             foreach ($tasks as $task) {
                 if (!$automation->conditionsMatch($task)) {
@@ -38,7 +43,7 @@ class CheckAutomationDateTriggers extends Command
                 // Idempotência: não dispara de novo pra mesma tarefa se o comando já rodou
                 // com sucesso hoje (proteção contra o schedule:work rodar mais de uma vez).
                 $alreadyFiredToday = AutomationLog::where('automation_id', $automation->id)
-                    ->where('entity_type', 'task')
+                    ->where('entity_type', $automation->entity_type)
                     ->where('entity_id', $task->id)
                     ->where('status', 'success')
                     ->whereDate('ran_at', today())
@@ -48,7 +53,7 @@ class CheckAutomationDateTriggers extends Command
                     continue;
                 }
 
-                AutomationJob::dispatch($automation, 'task', $task->id, ['date_field' => $dateField]);
+                AutomationJob::dispatch($automation, $automation->entity_type, $task->id, ['date_field' => $dateField]);
                 $dispatched++;
             }
         }

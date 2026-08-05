@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Automation;
 use App\Models\AiAgent;
+use App\Models\Client;
 use App\Models\Sector;
+use App\Models\Task;
 use Illuminate\Http\Request;
 
 class AutomationController extends Controller
@@ -32,6 +34,8 @@ class AutomationController extends Controller
             'dateFields'      => Automation::$dateFields,
             'conditionFields' => $this->conditionFieldsByEntity(),
             'sectors'         => Sector::orderBy('name')->get(),
+            'clients'         => Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(),
+            'taskTypes'       => Task::$types,
             'functionRoles'   => \App\Models\FunctionalRole::where('organization_id', app('currentOrganization')->id)
                 ->orderBy('name')->pluck('name', 'key'),
         ]);
@@ -42,10 +46,10 @@ class AutomationController extends Controller
         $data = $request->validate([
             'name'          => 'required|string|max:255',
             'description'   => 'nullable|string',
-            'entity_type'   => 'required|in:task,project,campaign',
+            'entity_type'   => 'required|in:task,ticket,project,campaign,opportunity',
             'trigger_type'  => 'required|in:status_changed,field_updated,date_reached,executor_added,created,manual',
             'trigger_config'=> 'nullable|array',
-            'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification',
+            'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification,create_record',
             'action_config' => 'nullable|array',
             'is_active'     => 'boolean',
         ]);
@@ -82,6 +86,8 @@ class AutomationController extends Controller
             'dateFields'      => Automation::$dateFields,
             'conditionFields' => $this->conditionFieldsByEntity(),
             'sectors'         => Sector::orderBy('name')->get(),
+            'clients'         => Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(),
+            'taskTypes'       => Task::$types,
             'functionRoles'   => \App\Models\FunctionalRole::where('organization_id', app('currentOrganization')->id)
                 ->orderBy('name')->pluck('name', 'key'),
         ]);
@@ -92,10 +98,10 @@ class AutomationController extends Controller
         $data = $request->validate([
             'name'          => 'required|string|max:255',
             'description'   => 'nullable|string',
-            'entity_type'   => 'required|in:task,project,campaign',
+            'entity_type'   => 'required|in:task,ticket,project,campaign,opportunity',
             'trigger_type'  => 'required|in:status_changed,field_updated,date_reached,executor_added,created,manual',
             'trigger_config'=> 'nullable|array',
-            'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification',
+            'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification,create_record',
             'action_config' => 'nullable|array',
             'is_active'     => 'boolean',
         ]);

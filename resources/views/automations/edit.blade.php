@@ -317,6 +317,65 @@
                             <p class="text-xs mt-1" style="color:var(--muted)">Usado pra filtrar esse tipo de notificação em painéis específicos. Deixe em branco se não precisar.</p>
                         </div>
                     </div>
+
+                    <div x-show="actionType === 'create_record'" x-cloak class="grid gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">TIPO DE REGISTRO</label>
+                            <select name="action_config[record_type]"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                <option value="ticket" {{ ($automation->action_config['record_type'] ?? 'ticket') === 'ticket' ? 'selected' : '' }}>Ticket</option>
+                                <option value="task" {{ ($automation->action_config['record_type'] ?? 'ticket') === 'task' ? 'selected' : '' }}>Tarefa avulsa</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">TÍTULO *</label>
+                            <input type="text" name="action_config[title]"
+                                   value="{{ $automation->action_config['title'] ?? '' }}"
+                                   placeholder="Ex: Follow-up — {opportunity_title}"
+                                   class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                   style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            <p class="text-xs mt-1" style="color:var(--muted)">Variáveis disponíveis: {task_title}, {client_name}, {project_name}, {opportunity_title}...</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DESCRIÇÃO (OPCIONAL)</label>
+                            <textarea name="action_config[description]" rows="2"
+                                      class="w-full px-3 py-2.5 text-sm focus:outline-none resize-none"
+                                      style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $automation->action_config['description'] ?? '' }}</textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">TIPO</label>
+                                <select name="action_config[task_type]"
+                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                    @foreach($taskTypes as $value => $label)
+                                        <option value="{{ $value }}" {{ ($automation->action_config['task_type'] ?? 'estrategia') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">VENCE EM (DIAS, OPCIONAL)</label>
+                                <input type="number" name="action_config[due_in_days]" min="0"
+                                       value="{{ $automation->action_config['due_in_days'] ?? '' }}"
+                                       placeholder="Ex: 3"
+                                       class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                       style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">CLIENTE</label>
+                            <select name="action_config[client_id]"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                <option value="inherit" {{ ($automation->action_config['client_id'] ?? 'inherit') === 'inherit' ? 'selected' : '' }}>— usar cliente da tarefa/oportunidade que disparou —</option>
+                                @foreach($clients as $client)
+                                    <option value="{{ $client->id }}" {{ ($automation->action_config['client_id'] ?? '') === $client->id ? 'selected' : '' }}>{{ $client->displayName() }}</option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs mt-1" style="color:var(--muted)">Sem cliente resolvido, o registro criado entra na fila de Pendências de Cadastro.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
