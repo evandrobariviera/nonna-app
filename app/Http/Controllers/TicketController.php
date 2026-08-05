@@ -8,6 +8,7 @@ use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\TaskAttachment;
 use App\Models\User;
+use App\Services\AutomationEngine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -136,7 +137,14 @@ class TicketController extends Controller
             $syncData[$data['responsavel_id']] = ['role' => 'responsavel'];
         }
         if (!empty($syncData)) {
-            $task->executors()->sync($syncData);
+            $result = $task->executors()->sync($syncData);
+
+            foreach ($result['attached'] ?? [] as $userId) {
+                AutomationEngine::evaluate('executor_added', $task, [
+                    'role'    => $syncData[$userId]['role'] ?? 'executor',
+                    'user_id' => $userId,
+                ]);
+            }
         }
 
         // Anexos enviados junto na criação — mesma lógica de TaskAttachmentController::store(),

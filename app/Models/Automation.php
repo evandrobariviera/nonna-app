@@ -38,6 +38,8 @@ class Automation extends Model
     public static array $triggerTypes = [
         'status_changed' => 'Status mudou',
         'field_updated'  => 'Campo atualizado',
+        'date_reached'   => 'Data alcançada',
+        'executor_added' => 'Responsável/Executor adicionado',
         'created'        => 'Criado',
         'manual'         => 'Manual (botão)',
     ];
@@ -49,20 +51,47 @@ class Automation extends Model
         'send_notification' => 'Enviar Notificação',
     ];
 
-    // Campos que cada entity_type expõe para triggers
-    public static array $entityFields = [
-        'task' => [
-            'status'    => ['label' => 'Status',    'values' => 'Task::$statuses'],
-            'situation' => ['label' => 'Situação',   'values' => 'Task::$situations'],
-            'task_type' => ['label' => 'Tipo',       'values' => 'Task::$types'],
-        ],
-        'project' => [
-            'status' => ['label' => 'Status', 'values' => []],
-        ],
-        'campaign' => [
-            'status' => ['label' => 'Status', 'values' => []],
-        ],
+    // Campos de data disponíveis pro gatilho "Data alcançada" (só Tarefa por enquanto).
+    public static array $dateFields = [
+        'due_date'      => 'Vencimento',
+        'approval_date' => 'Data de Aprovação',
+        'publish_date'  => 'Data de Publicação',
     ];
+
+    /**
+     * Campos disponíveis pra montar condições (bloco "SE") por entity_type — usado tanto no
+     * builder de condições da UI quanto por conditionsMatch(). Substitui o antigo
+     * $entityFields (nunca chegou a ser usado de verdade — só tinha referências em string
+     * pros arrays de valores, não os arrays em si).
+     */
+    public static function conditionFieldsFor(string $entityType): array
+    {
+        if ($entityType === 'task') {
+            return [
+                'status'      => ['label' => 'Status',      'options' => self::labelMap(Task::$statuses)],
+                'situation'   => ['label' => 'Situação',     'options' => Task::$situations],
+                'task_type'   => ['label' => 'Tipo',         'options' => Task::$types],
+                'destination' => ['label' => 'Destino',      'options' => Task::$destinations],
+                'origin'      => ['label' => 'Origem',       'options' => Task::$origins],
+                'priority'    => ['label' => 'Prioridade',   'options' => self::labelMap(Task::$priorities)],
+                'is_ticket'   => ['label' => 'É ticket?',    'options' => ['0' => 'Não', '1' => 'Sim']],
+                'role'        => ['label' => 'Papel (Responsável/Executor)', 'options' => [
+                    'executor'    => 'Executor',
+                    'responsavel' => 'Responsável',
+                    'observador'  => 'Observador',
+                ]],
+            ];
+        }
+
+        return [
+            'status' => ['label' => 'Status', 'options' => []],
+        ];
+    }
+
+    private static function labelMap(array $withLabels): array
+    {
+        return collect($withLabels)->map(fn ($meta) => $meta['label'] ?? $meta)->all();
+    }
 
     // ── Relationships ──────────────────────────────────────────────────────
 
@@ -97,17 +126,27 @@ class Automation extends Model
     {
         $config = $this->trigger_config ?? [];
 
-        return match ($this->trigger_type) {
+        $base = match ($this->trigger_type) {
             'status_changed' => sprintf(
                 'Status "%s" → "%s"',
                 $config['from'] ?? '*',
                 $config['to'] ?? '*'
             ),
             'field_updated'  => 'Campo "' . ($config['field'] ?? '?') . '" atualizado',
+            'date_reached'   => 'Quando "' . (self::$dateFields[$config['date_field'] ?? ''] ?? '?') . '" chega',
+            'executor_added' => 'Responsável/Executor adicionado',
             'created'        => 'Ao ser criado',
             'manual'         => 'Acionado manualmente',
             default          => $this->trigger_type,
         };
+
+        $conditionCount = count($config['conditions'] ?? []);
+        if ($conditionCount > 0) {
+            $logic = strtoupper($config['conditions_logic'] ?? 'and') === 'OR' ? 'OU' : 'E';
+            $base .= " + {$conditionCount} condição(ões) em {$logic}";
+        }
+
+        return $base;
     }
 
     public function actionSummary(): string
@@ -123,10 +162,9 @@ class Automation extends Model
         };
     }
 
-    // Verifica se esta automação deve disparar dado um gatilho e dados de mudança.
-    // $entity é opcional — só é usado hoje pelo filtro extra de `destination`
-    // (status_changed), que precisa olhar o estado atual da entidade, não só
-    // o from/to do próprio changeData.
+    // Verifica se esta automação deve disparar dado um gatilho e dados de mudança. $entity é
+    // opcional — usado tanto pelo from/to quanto pelas condições extras (conditionsMatch()),
+    // que olham o estado atual da entidade, não só o changeData do próprio evento.
     public function matches(string $triggerType, array $changeData, ?Model $entity = null): bool
     {
         if ($this->trigger_type !== $triggerType) {
@@ -139,18 +177,58 @@ class Automation extends Model
             $fromMatch = empty($config['from']) || $config['from'] === '*' || $config['from'] === ($changeData['from'] ?? null);
             $toMatch   = empty($config['to'])   || $config['to']   === '*' || $config['to']   === ($changeData['to'] ?? null);
 
-            $destinationMatch = true;
-            if (!empty($config['destination']) && $config['destination'] !== '*') {
-                $destinationMatch = $entity && $config['destination'] === ($entity->destination ?? null);
-            }
-
-            return $fromMatch && $toMatch && $destinationMatch;
+            return $fromMatch && $toMatch && $this->conditionsMatch($entity, $changeData);
         }
 
         if ($triggerType === 'field_updated') {
-            return ($config['field'] ?? null) === ($changeData['field'] ?? null);
+            if (($config['field'] ?? null) !== ($changeData['field'] ?? null)) {
+                return false;
+            }
+
+            $fromMatch = empty($config['from']) || $config['from'] === '*' || $config['from'] === ($changeData['from'] ?? null);
+            $toMatch   = empty($config['to'])   || $config['to']   === '*' || $config['to']   === ($changeData['to'] ?? null);
+
+            return $fromMatch && $toMatch && $this->conditionsMatch($entity, $changeData);
+        }
+
+        if (in_array($triggerType, ['date_reached', 'executor_added'], true)) {
+            return $this->conditionsMatch($entity, $changeData);
         }
 
         return true;
+    }
+
+    /**
+     * Avalia a lista de condições extras (trigger_config.conditions, combinadas por
+     * trigger_config.conditions_logic = 'and'|'or') contra o changeData do evento (prioridade)
+     * ou o estado atual da entidade. Sem condições configuradas, sempre bate (comportamento
+     * anterior, quando só existia o filtro fixo de `destination`).
+     */
+    public function conditionsMatch(?Model $entity, array $changeData = []): bool
+    {
+        $conditions = $this->trigger_config['conditions'] ?? [];
+        if (empty($conditions)) {
+            return true;
+        }
+
+        $logic = $this->trigger_config['conditions_logic'] ?? 'and';
+
+        $results = array_map(function (array $condition) use ($entity, $changeData) {
+            $field = $condition['field'] ?? null;
+            if (!$field) {
+                return true;
+            }
+
+            $actual = array_key_exists($field, $changeData) ? $changeData[$field] : $entity?->{$field};
+            if (is_bool($actual)) {
+                $actual = $actual ? '1' : '0';
+            }
+
+            $matches = (string) $actual === (string) ($condition['value'] ?? '');
+
+            return ($condition['operator'] ?? '=') === '!=' ? !$matches : $matches;
+        }, $conditions);
+
+        return $logic === 'or' ? in_array(true, $results, true) : !in_array(false, $results, true);
     }
 }

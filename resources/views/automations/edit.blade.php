@@ -94,25 +94,109 @@
                                 </select>
                             </div>
                         </div>
-                        <div x-show="entityType === 'task'" x-cloak class="mt-3">
-                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">SÓ SE O DESTINO DA TAREFA FOR (OPCIONAL)</label>
-                            <select name="trigger_config[destination]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                                <option value="*" {{ ($automation->trigger_config['destination'] ?? '*') === '*' ? 'selected' : '' }}>Qualquer destino</option>
-                                @foreach(\App\Models\Task::$destinations as $value => $label)
-                                    <option value="{{ $value }}" {{ ($automation->trigger_config['destination'] ?? '') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </div>
                     </div>
 
                     <div x-show="triggerType === 'field_updated'" x-cloak>
-                        <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">CAMPO MONITORADO</label>
-                        <input type="text" name="trigger_config[field]"
-                               value="{{ $automation->trigger_config['field'] ?? '' }}"
-                               class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                               style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">CAMPO MONITORADO *</label>
+                                <select name="trigger_config[field]" x-model="fieldUpdatedField"
+                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                    <option value="">Selecione...</option>
+                                    <template x-for="[key, meta] in Object.entries(conditionFieldsMap[entityType] || {})" :key="key">
+                                        <option :value="key" x-text="meta.label" :selected="key === fieldUpdatedField"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DE (OPCIONAL)</label>
+                                <select name="trigger_config[from]"
+                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                    <option value="*" {{ ($automation->trigger_config['from'] ?? '*') === '*' ? 'selected' : '' }}>Qualquer valor</option>
+                                    <template x-for="[val, label] in Object.entries((conditionFieldsMap[entityType]||{})[fieldUpdatedField]?.options || {})" :key="val">
+                                        <option :value="val" x-text="label" :selected="val === '{{ $automation->trigger_config['from'] ?? '' }}'"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">PARA</label>
+                                <select name="trigger_config[to]"
+                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                    <option value="">Qualquer valor</option>
+                                    <template x-for="[val, label] in Object.entries((conditionFieldsMap[entityType]||{})[fieldUpdatedField]?.options || {})" :key="val">
+                                        <option :value="val" x-text="label" :selected="val === '{{ $automation->trigger_config['to'] ?? '' }}'"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="triggerType === 'date_reached'" x-cloak>
+                        <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">QUAL DATA *</label>
+                        <select name="trigger_config[date_field]"
+                                class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            <option value="">Selecione...</option>
+                            @foreach($dateFields as $value => $label)
+                                <option value="{{ $value }}" {{ ($automation->trigger_config['date_field'] ?? '') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs mt-1" style="color:var(--muted)">Checado 1x por dia (07:00) — dispara pras tarefas cuja data cai em hoje.</p>
+                    </div>
+
+                    <div x-show="triggerType === 'executor_added'" x-cloak>
+                        <p class="text-sm" style="color:var(--muted)">Dispara quando alguém é adicionado como Responsável, Executor ou Observador de uma tarefa. Pra filtrar só um papel específico, use a condição "Papel (Responsável/Executor)" abaixo.</p>
+                    </div>
+
+                    {{-- Condições extras — E/OU, aparece pros gatilhos que fazem sentido combinar com filtro --}}
+                    <div x-show="['status_changed','field_updated','date_reached','executor_added'].includes(triggerType)" x-cloak
+                         class="pt-3" style="border-top:1px solid var(--border2)">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-xs font-semibold" style="color:var(--muted); letter-spacing:.05em">CONDIÇÕES EXTRAS (OPCIONAL)</label>
+                            <div x-show="conditions.length > 1" class="flex items-center gap-1.5 text-xs">
+                                <button type="button" @click="conditionsLogic = 'and'"
+                                        :style="conditionsLogic === 'and' ? 'color:var(--purple); font-weight:700' : 'color:var(--muted)'">E</button>
+                                <span style="color:var(--muted)">/</span>
+                                <button type="button" @click="conditionsLogic = 'or'"
+                                        :style="conditionsLogic === 'or' ? 'color:var(--purple); font-weight:700' : 'color:var(--muted)'">OU</button>
+                                <span style="color:var(--muted)">entre as condições</span>
+                            </div>
+                        </div>
+                        <input type="hidden" name="trigger_config[conditions_logic]" :value="conditionsLogic">
+
+                        <template x-for="(cond, idx) in conditions" :key="idx">
+                            <div class="flex items-center gap-2 mb-2">
+                                <select :name="'trigger_config[conditions][' + idx + '][field]'" x-model="cond.field"
+                                        class="flex-1 px-2 py-1.5 text-xs focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                    <option value="">Campo...</option>
+                                    <template x-for="[key, meta] in Object.entries(conditionFieldsMap[entityType] || {})" :key="key">
+                                        <option :value="key" x-text="meta.label"></option>
+                                    </template>
+                                </select>
+                                <select :name="'trigger_config[conditions][' + idx + '][operator]'" x-model="cond.operator"
+                                        class="px-2 py-1.5 text-xs focus:outline-none" style="width:76px; background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                    <option value="=">é</option>
+                                    <option value="!=">não é</option>
+                                </select>
+                                <select :name="'trigger_config[conditions][' + idx + '][value]'" x-model="cond.value"
+                                        class="flex-1 px-2 py-1.5 text-xs focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                    <option value="">Valor...</option>
+                                    <template x-for="[val, label] in Object.entries((conditionFieldsMap[entityType]||{})[cond.field]?.options || {})" :key="val">
+                                        <option :value="val" x-text="label"></option>
+                                    </template>
+                                </select>
+                                <button type="button" @click="conditions.splice(idx, 1)" class="btn btn-danger btn-xs">✕</button>
+                            </div>
+                        </template>
+                        <button type="button" @click="conditions.push({field: '', operator: '=', value: ''})"
+                                class="text-xs font-mono" style="color:var(--purple)">
+                            + Adicionar condição
+                        </button>
                     </div>
                 </div>
             </div>
@@ -261,12 +345,17 @@
 
 @push('scripts')
 <script>
+const conditionFieldsMap = @json($conditionFields);
+
 function automationBuilder() {
     return {
         entityType: '{{ old('entity_type', $automation->entity_type) }}',
         triggerType: '{{ old('trigger_type', $automation->trigger_type) }}',
         actionType: '{{ old('action_type', $automation->action_type) }}',
         notifyTo: '{{ old('action_config.to', $automation->action_config['to'] ?? 'executor') }}',
+        fieldUpdatedField: '{{ old('trigger_config.field', $automation->trigger_config['field'] ?? '') }}',
+        conditionsLogic: '{{ old('trigger_config.conditions_logic', $automation->trigger_config['conditions_logic'] ?? 'and') }}',
+        conditions: {!! json_encode(old('trigger_config.conditions', $automation->trigger_config['conditions'] ?? [])) !!},
     }
 }
 </script>

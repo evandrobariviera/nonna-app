@@ -25,13 +25,15 @@ class AutomationController extends Controller
         $agents = AiAgent::where('is_active', true)->orderBy('name')->get();
 
         return view('automations.create', [
-            'entityTypes'   => Automation::$entityTypes,
-            'triggerTypes'  => Automation::$triggerTypes,
-            'actionTypes'   => Automation::$actionTypes,
-            'agents'        => $agents,
-            'taskStatuses'  => \App\Models\Task::$statuses,
-            'sectors'       => Sector::orderBy('name')->get(),
-            'functionRoles' => \App\Models\FunctionalRole::where('organization_id', app('currentOrganization')->id)
+            'entityTypes'     => Automation::$entityTypes,
+            'triggerTypes'    => Automation::$triggerTypes,
+            'actionTypes'     => Automation::$actionTypes,
+            'agents'          => $agents,
+            'taskStatuses'    => \App\Models\Task::$statuses,
+            'dateFields'      => Automation::$dateFields,
+            'conditionFields' => $this->conditionFieldsByEntity(),
+            'sectors'         => Sector::orderBy('name')->get(),
+            'functionRoles'   => \App\Models\FunctionalRole::where('organization_id', app('currentOrganization')->id)
                 ->orderBy('name')->pluck('name', 'key'),
         ]);
     }
@@ -42,7 +44,7 @@ class AutomationController extends Controller
             'name'          => 'required|string|max:255',
             'description'   => 'nullable|string',
             'entity_type'   => 'required|in:task,project,campaign',
-            'trigger_type'  => 'required|in:status_changed,field_updated,created,manual',
+            'trigger_type'  => 'required|in:status_changed,field_updated,date_reached,executor_added,created,manual',
             'trigger_config'=> 'nullable|array',
             'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification',
             'action_config' => 'nullable|array',
@@ -73,14 +75,16 @@ class AutomationController extends Controller
         $agents = AiAgent::where('is_active', true)->orderBy('name')->get();
 
         return view('automations.edit', [
-            'automation'    => $automation,
-            'entityTypes'   => Automation::$entityTypes,
-            'triggerTypes'  => Automation::$triggerTypes,
-            'actionTypes'   => Automation::$actionTypes,
-            'agents'        => $agents,
-            'taskStatuses'  => \App\Models\Task::$statuses,
-            'sectors'       => Sector::orderBy('name')->get(),
-            'functionRoles' => \App\Models\FunctionalRole::where('organization_id', app('currentOrganization')->id)
+            'automation'      => $automation,
+            'entityTypes'     => Automation::$entityTypes,
+            'triggerTypes'    => Automation::$triggerTypes,
+            'actionTypes'     => Automation::$actionTypes,
+            'agents'          => $agents,
+            'taskStatuses'    => \App\Models\Task::$statuses,
+            'dateFields'      => Automation::$dateFields,
+            'conditionFields' => $this->conditionFieldsByEntity(),
+            'sectors'         => Sector::orderBy('name')->get(),
+            'functionRoles'   => \App\Models\FunctionalRole::where('organization_id', app('currentOrganization')->id)
                 ->orderBy('name')->pluck('name', 'key'),
         ]);
     }
@@ -91,7 +95,7 @@ class AutomationController extends Controller
             'name'          => 'required|string|max:255',
             'description'   => 'nullable|string',
             'entity_type'   => 'required|in:task,project,campaign',
-            'trigger_type'  => 'required|in:status_changed,field_updated,created,manual',
+            'trigger_type'  => 'required|in:status_changed,field_updated,date_reached,executor_added,created,manual',
             'trigger_config'=> 'nullable|array',
             'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification',
             'action_config' => 'nullable|array',
@@ -135,5 +139,14 @@ class AutomationController extends Controller
         $logs = $automation->logs()->latest('ran_at')->paginate(30);
 
         return view('automations.logs', compact('automation', 'logs'));
+    }
+
+    // Campos de condição disponíveis por entity_type — a UI troca de lista conforme o
+    // usuário troca a entidade selecionada, então manda o mapa inteiro de uma vez.
+    private function conditionFieldsByEntity(): array
+    {
+        return collect(array_keys(Automation::$entityTypes))
+            ->mapWithKeys(fn ($type) => [$type => Automation::conditionFieldsFor($type)])
+            ->all();
     }
 }

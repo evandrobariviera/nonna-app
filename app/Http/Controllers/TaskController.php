@@ -13,6 +13,7 @@ use App\Models\TaskAttachment;
 use App\Models\TaskExecutor;
 use App\Models\TaskStatusTransition;
 use App\Models\User;
+use App\Services\AutomationEngine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -300,6 +301,12 @@ class TaskController extends Controller
     {
         $data = $request->validate(['responsavel_id' => 'nullable|exists:users,id']);
 
+        // Guarda quem já era responsável antes de mexer, pra só disparar a automação de
+        // "Responsável/Executor adicionado" quando for alguém genuinely novo — sem isso,
+        // re-salvar o mesmo responsável pareceria uma adição nova toda vez.
+        $wasAlready = $data['responsavel_id']
+            && TaskExecutor::where('task_id', $task->id)->where('role', 'responsavel')->where('user_id', $data['responsavel_id'])->exists();
+
         TaskExecutor::where('task_id', $task->id)->where('role', 'responsavel')->delete();
 
         if ($data['responsavel_id']) {
@@ -313,6 +320,10 @@ class TaskController extends Controller
             if ($task->executor_id == $data['responsavel_id']) {
                 $task->updateQuietly(['executor_id' => null]);
             }
+
+            if (!$wasAlready) {
+                AutomationEngine::evaluate('executor_added', $task, ['role' => 'responsavel', 'user_id' => $data['responsavel_id']]);
+            }
         }
 
         return redirect()->back()->with('success', 'Responsável atualizado.');
@@ -322,6 +333,9 @@ class TaskController extends Controller
     {
         $data = $request->validate(['executor_id' => 'nullable|exists:users,id']);
 
+        $wasAlready = $data['executor_id']
+            && TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->where('user_id', $data['executor_id'])->exists();
+
         TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->delete();
 
         if ($data['executor_id']) {
@@ -330,6 +344,10 @@ class TaskController extends Controller
             TaskExecutor::where('task_id', $task->id)->where('user_id', $data['executor_id'])->delete();
             $task->executors()->attach($data['executor_id'], ['role' => 'executor']);
             $task->updateQuietly(['executor_id' => $data['executor_id']]);
+
+            if (!$wasAlready) {
+                AutomationEngine::evaluate('executor_added', $task, ['role' => 'executor', 'user_id' => $data['executor_id']]);
+            }
         } else {
             $task->updateQuietly(['executor_id' => null]);
         }
@@ -617,16 +635,28 @@ class TaskController extends Controller
 
     private function syncPersonnel(Task $task, array $data): void
     {
+        // Guarda quem já estava em cada papel antes de apagar tudo e re-anexar — o método
+        // sempre refaz o vínculo do zero mesmo quando nada mudou, então sem essa comparação a
+        // automação de "Responsável/Executor adicionado" dispararia à toa em todo salvamento.
+        $before = TaskExecutor::where('task_id', $task->id)
+            ->whereIn('role', ['executor', 'responsavel', 'observador'])
+            ->get(['user_id', 'role'])
+            ->map(fn ($e) => "{$e->role}:{$e->user_id}");
+
         TaskExecutor::where('task_id', $task->id)
             ->whereIn('role', ['executor', 'responsavel', 'observador'])
             ->delete();
 
         $synced = [];
+        $newlyAdded = [];
 
         if (!empty($data['executor_id'])) {
             $task->executors()->attach($data['executor_id'], ['role' => 'executor']);
             $task->updateQuietly(['executor_id' => $data['executor_id']]);
             $synced[] = $data['executor_id'];
+            if (!$before->contains("executor:{$data['executor_id']}")) {
+                $newlyAdded[] = ['role' => 'executor', 'user_id' => $data['executor_id']];
+            }
         } else {
             $task->updateQuietly(['executor_id' => null]);
         }
@@ -634,13 +664,23 @@ class TaskController extends Controller
         if (!empty($data['responsavel_id']) && !in_array($data['responsavel_id'], $synced)) {
             $task->executors()->attach($data['responsavel_id'], ['role' => 'responsavel']);
             $synced[] = $data['responsavel_id'];
+            if (!$before->contains("responsavel:{$data['responsavel_id']}")) {
+                $newlyAdded[] = ['role' => 'responsavel', 'user_id' => $data['responsavel_id']];
+            }
         }
 
         foreach ($data['observer_ids'] ?? [] as $uid) {
             if (!in_array($uid, $synced)) {
                 $task->executors()->attach($uid, ['role' => 'observador']);
                 $synced[] = $uid;
+                if (!$before->contains("observador:{$uid}")) {
+                    $newlyAdded[] = ['role' => 'observador', 'user_id' => $uid];
+                }
             }
+        }
+
+        foreach ($newlyAdded as $added) {
+            AutomationEngine::evaluate('executor_added', $task, $added);
         }
     }
 
@@ -664,10 +704,20 @@ class TaskController extends Controller
             return;
         }
 
-        $task->executors()->sync($syncData);
+        // sync() já devolve quem foi anexado de fato ('attached') — diferente de
+        // syncPersonnel() (que sempre apaga e re-cria tudo), aqui não precisa de before/after
+        // manual, só reagir ao que sync() diz que é novo.
+        $result = $task->executors()->sync($syncData);
 
         if (!$task->executor_id && !empty($ids)) {
             $task->updateQuietly(['executor_id' => $ids[0]]);
+        }
+
+        foreach ($result['attached'] ?? [] as $userId) {
+            AutomationEngine::evaluate('executor_added', $task, [
+                'role'    => $syncData[$userId]['role'] ?? 'executor',
+                'user_id' => $userId,
+            ]);
         }
     }
 
