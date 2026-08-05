@@ -28,7 +28,7 @@
     }
 @endphp
 
-<tbody x-data="{ groupOpen: true }">
+<tbody x-data="{ groupOpen: {{ ($defaultOpen ?? true) ? 'true' : 'false' }} }">
     {{-- Cabeçalho do grupo --}}
     <tr class="group-header-row" style="background:var(--s2)">
         <td colspan="12" style="padding:10px 16px">

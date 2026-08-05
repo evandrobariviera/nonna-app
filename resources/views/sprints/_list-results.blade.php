@@ -7,12 +7,14 @@
         <p class="tab-placeholder-desc">Ajuste os filtros ou volte para o Board.</p>
     </div>
 @else
+    @include('sprints._carga-sprint')
+
     <div class="card overflow-hidden">
         <div class="overflow-x-auto">
             <table class="nonna-table">
                 @include('partials._task-thead')
                 @foreach($listGrouped as $groupKey => $groupTasks)
-                    @include('partials._task-group-tbody', ['groupBy' => $listGroupBy, 'groupKey' => $groupKey, 'groupTasks' => $groupTasks, 'activeSprint' => $activeSprint, 'sprints' => $sprints])
+                    @include('partials._task-group-tbody', ['groupBy' => $listGroupBy, 'groupKey' => $groupKey, 'groupTasks' => $groupTasks, 'activeSprint' => $activeSprint, 'sprints' => $sprints, 'defaultOpen' => false])
                 @endforeach
             </table>
         </div>

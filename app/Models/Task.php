@@ -325,6 +325,11 @@ class Task extends Model
             ->withTimestamps();
     }
 
+    public function statusTransitions(): HasMany
+    {
+        return $this->hasMany(TaskStatusTransition::class)->orderBy('changed_at');
+    }
+
     /**
      * Tarefa "pendente" = provavelmente veio incompleta do import do ClickUp
      * (campo não mapeado caiu no valor padrão da coluna, ou faltou vínculo

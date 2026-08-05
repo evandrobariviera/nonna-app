@@ -74,6 +74,7 @@ class SprintController extends Controller
             'tasks.client',
             'tasks.project',
             'tasks.attachments',
+            'tasks.statusTransitions',
         ]);
 
         // Board é a mesa de produção ativa — tarefa de cliente inativo nunca aparece
@@ -89,6 +90,8 @@ class SprintController extends Controller
         }
 
         [$listTasks, $listGrouped, $listGroupBy] = $this->filteredListTasks($request, $sprint);
+        $chartTasks = $this->applyCommonFilters($request, $sprint->tasks);
+        [$sprintTasksByExecutor, $statusVolumeByDay] = $this->sprintLoadData($listTasks, $chartTasks, $sprint);
 
         // Backlog disponível para adicionar (sem sprint, status backlog) — cliente
         // inativo some daqui também, mesma regra da Fila (não faz sentido puxar
@@ -117,7 +120,8 @@ class SprintController extends Controller
 
         return view('sprints.show', compact(
             'sprint', 'kanban', 'listTasks', 'listGrouped', 'listGroupBy',
-            'backlogTasks', 'clients', 'users', 'projects', 'sprints', 'activeSprint'
+            'backlogTasks', 'clients', 'users', 'projects', 'sprints', 'activeSprint',
+            'sprintTasksByExecutor', 'statusVolumeByDay'
         ));
     }
 
@@ -125,14 +129,53 @@ class SprintController extends Controller
     // usuário filtra, sem recarregar a página inteira (Board/Planejamento ficam intocados).
     public function listResults(Request $request, Sprint $sprint)
     {
-        $sprint->load(['tasks.executor', 'tasks.executors', 'tasks.client', 'tasks.project', 'tasks.attachments']);
+        $sprint->load(['tasks.executor', 'tasks.executors', 'tasks.client', 'tasks.project', 'tasks.attachments', 'tasks.statusTransitions']);
 
         [$listTasks, $listGrouped, $listGroupBy] = $this->filteredListTasks($request, $sprint);
+        $chartTasks = $this->applyCommonFilters($request, $sprint->tasks);
+        [$sprintTasksByExecutor, $statusVolumeByDay] = $this->sprintLoadData($listTasks, $chartTasks, $sprint);
 
         $sprints      = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get();
         $activeSprint = $sprints->firstWhere('status', 'active');
 
-        return view('sprints._list-results', compact('listTasks', 'listGrouped', 'listGroupBy', 'sprints', 'activeSprint'));
+        return view('sprints._list-results', compact(
+            'listTasks', 'listGrouped', 'listGroupBy', 'sprints', 'activeSprint',
+            'sprintTasksByExecutor', 'statusVolumeByDay'
+        ));
+    }
+
+    // Filtros comuns entre a lista (aba "Lista") e o gráfico de "Carga da Sprint" — tudo
+    // exceto o corte de concluído/cancelado, que cada chamador decide por conta (a lista
+    // respeita o toggle "mostrar fechados"; o gráfico de volume por dia sempre inclui, ver
+    // sprintLoadData()).
+    private function applyCommonFilters(Request $request, \Illuminate\Support\Collection $tasks): \Illuminate\Support\Collection
+    {
+        if (!$request->boolean('list_mostrar_inativos')) {
+            $tasks = $tasks->filter(fn ($t) => $t->client?->status !== 'inactive');
+        }
+        if ($request->filled('list_client_id')) {
+            $tasks = $tasks->where('client_id', $request->get('list_client_id'));
+        }
+        if ($request->filled('list_project_id')) {
+            $tasks = $tasks->where('project_id', $request->get('list_project_id'));
+        }
+        if ($request->filled('list_origin')) {
+            $tasks = $tasks->where('origin', $request->get('list_origin'));
+        }
+        if ($request->filled('list_task_type')) {
+            $tasks = $tasks->where('task_type', $request->get('list_task_type'));
+        }
+        if ($request->boolean('list_atrasadas')) {
+            $tasks = $tasks->filter(fn ($t) => $t->isOverdue());
+        }
+        if ($request->boolean('list_pendencia')) {
+            $tasks = $tasks->filter(fn ($t) => $t->isPendente());
+        }
+        if ($request->filled('list_search')) {
+            $search = mb_strtolower($request->get('list_search'));
+            $tasks = $tasks->filter(fn ($t) => str_contains(mb_strtolower($t->title), $search));
+        }
+        return $tasks->values();
     }
 
     // Lista filtrável (aba "Lista") — mesmo conjunto de tarefas da sprint, filtrado com
@@ -143,37 +186,78 @@ class SprintController extends Controller
         if (!$request->boolean('list_mostrar_fechados')) {
             $listTasks = $listTasks->whereNotIn('status', ['concluido', 'cancelado']);
         }
-        if (!$request->boolean('list_mostrar_inativos')) {
-            $listTasks = $listTasks->filter(fn ($t) => $t->client?->status !== 'inactive');
-        }
-        if ($request->filled('list_client_id')) {
-            $listTasks = $listTasks->where('client_id', $request->get('list_client_id'));
-        }
-        if ($request->filled('list_project_id')) {
-            $listTasks = $listTasks->where('project_id', $request->get('list_project_id'));
-        }
-        if ($request->filled('list_origin')) {
-            $listTasks = $listTasks->where('origin', $request->get('list_origin'));
-        }
-        if ($request->filled('list_task_type')) {
-            $listTasks = $listTasks->where('task_type', $request->get('list_task_type'));
-        }
-        if ($request->boolean('list_atrasadas')) {
-            $listTasks = $listTasks->filter(fn ($t) => $t->isOverdue());
-        }
-        if ($request->boolean('list_pendencia')) {
-            $listTasks = $listTasks->filter(fn ($t) => $t->isPendente());
-        }
-        if ($request->filled('list_search')) {
-            $search = mb_strtolower($request->get('list_search'));
-            $listTasks = $listTasks->filter(fn ($t) => str_contains(mb_strtolower($t->title), $search));
-        }
-        $listTasks = $listTasks->values();
+        $listTasks = $this->applyCommonFilters($request, $listTasks);
 
         $listGroupBy = $request->get('list_group_by', 'cliente');
         $listGrouped = Task::groupCollection($listTasks, $listGroupBy)->sortByDesc->count();
 
         return [$listTasks, $listGrouped, $listGroupBy];
+    }
+
+    // Monta os dois dados do bloco "Carga da Sprint" (aba Lista, acima da tabela):
+    // (a) tarefas agrupadas por executor (avatar + total + breakdown por status) a partir
+    //     do conjunto já filtrado da lista — reage aos mesmos filtros da tabela abaixo dele;
+    // (b) volume de tarefas por status ao longo dos dias, reconstruído ponto-no-tempo a
+    //     partir de task_status_transitions — sempre inclui concluído/cancelado (senão o
+    //     gráfico nunca mostraria entregas com "mostrar fechados" desligado, que é o padrão).
+    private function sprintLoadData(\Illuminate\Support\Collection $listTasks, \Illuminate\Support\Collection $chartTasks, Sprint $sprint): array
+    {
+        $tasksByExecutor = $listTasks
+            ->groupBy(function ($t) {
+                $exec = $t->executors->first(fn ($u) => $u->pivot->role === 'executor') ?? $t->executor;
+                return $exec?->id ?? '__sem_executor__';
+            })
+            ->map(function ($tasks) {
+                $exec = $tasks->first()->executors->first(fn ($u) => $u->pivot->role === 'executor')
+                     ?? $tasks->first()->executor;
+                return [
+                    'executor'     => $exec, // null = "Sem executor"
+                    'total'        => $tasks->count(),
+                    'statusCounts' => $tasks->groupBy('status')->map->count(),
+                ];
+            })
+            ->sortByDesc('total')
+            ->values();
+
+        $start = $sprint->starts_at->copy()->startOfDay();
+        $end   = min(today(), $sprint->ends_at->copy()->startOfDay());
+        $days  = collect();
+        if ($start->lte($end)) {
+            for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+                $days->push($d->copy());
+            }
+        }
+
+        $counts = []; // [dateString][status] => int
+        foreach ($chartTasks as $task) {
+            $transitions = $task->statusTransitions; // já ordenado por changed_at (relação)
+            $ptr = 0;
+            $n = $transitions->count();
+            $current = null;
+            foreach ($days as $day) {
+                $cutoff = $day->copy()->endOfDay();
+                while ($ptr < $n && $transitions[$ptr]->changed_at->lte($cutoff)) {
+                    $current = $transitions[$ptr]->to_status;
+                    $ptr++;
+                }
+                if ($current !== null) {
+                    $dateKey = $day->toDateString();
+                    $counts[$dateKey][$current] = ($counts[$dateKey][$current] ?? 0) + 1;
+                }
+            }
+        }
+
+        $statusVolumeByDay = $days->map(function ($day) use ($counts) {
+            $dayCounts = $counts[$day->toDateString()] ?? [];
+            return [
+                'date'   => $day,
+                'label'  => $day->translatedFormat('d/m'),
+                'counts' => $dayCounts,
+                'total'  => array_sum($dayCounts),
+            ];
+        });
+
+        return [$tasksByExecutor, $statusVolumeByDay];
     }
 
     public function update(Request $request, Sprint $sprint)
