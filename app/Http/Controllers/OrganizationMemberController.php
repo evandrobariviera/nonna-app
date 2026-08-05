@@ -44,7 +44,7 @@ class OrganizationMemberController extends Controller
         $org->users()->attach($user->id, [
             'id'             => Str::uuid(),
             'role'           => $data['role'],
-            'function_roles' => json_encode($data['function_roles'] ?? []),
+            'function_roles' => $data['function_roles'] ?? [],
         ]);
 
         return back()->with('success', 'Usuário criado e adicionado à organização.')->with('tab', 'equipe');
@@ -91,7 +91,7 @@ class OrganizationMemberController extends Controller
 
         $org->users()->updateExistingPivot($user->id, [
             'role'           => $data['role'],
-            'function_roles' => json_encode($data['function_roles'] ?? []),
+            'function_roles' => $data['function_roles'] ?? [],
         ]);
 
         return back()->with('success', 'Usuário atualizado.')->with('tab', 'equipe');
@@ -126,7 +126,7 @@ class OrganizationMemberController extends Controller
         $org->users()->attach($user->id, [
             'id'             => Str::uuid(),
             'role'           => $data['role'],
-            'function_roles' => json_encode([]),
+            'function_roles' => [],
         ]);
 
         return back()->with('success', 'Usuário adicionado à organização.')->with('tab', 'equipe');
