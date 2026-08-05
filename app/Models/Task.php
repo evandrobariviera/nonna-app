@@ -332,10 +332,13 @@ class Task extends Model
     }
 
     /**
-     * Tarefa "pendente" = provavelmente veio incompleta do import do ClickUp
-     * (campo não mapeado caiu no valor padrão da coluna, ou faltou vínculo
-     * essencial). Usado pro card de pendências do Dashboard, filtro da Fila
-     * e pra bloquear entrada em Sprint (ver SprintController::addTask()).
+     * Tarefa "pendente" = falta algum dado essencial pra entrar em produção/sprint (datas,
+     * destino, executor, responsável, descrição, origem, situação). Usado pro card de
+     * pendências do Dashboard, filtro da Fila e pra bloquear entrada em Sprint (ver
+     * SprintController::addTask()). Antes travava também por task_type=criacao e
+     * origin=projeto (bandeira fixa, não checagem de campo faltando) e cliente interno —
+     * critérios tirados por pedido explícito do usuário (2026-08-05): rígido demais, travava
+     * tarefa completa só por causa do tipo/origem.
      */
     public function scopePendente(Builder $query): Builder
     {
@@ -344,13 +347,12 @@ class Task extends Model
         // quem ainda vai entrar em produção/sprint.
         return $query->whereNotIn('status', ['concluido', 'cancelado'])
             ->where(function (Builder $q) {
-                $q->where('task_type', 'criacao')
-                    ->orWhere('origin', 'projeto')
-                    ->orWhereNull('destination')
+                $q->whereNull('destination')
                     ->orWhere(fn (Builder $q2) => $q2->whereNull('situation')->orWhere('situation', ''))
                     ->orWhereNull('due_date')
                     ->orWhereNull('approval_date')
-                    ->orWhereHas('client', fn (Builder $q2) => $q2->where('is_internal', true))
+                    ->orWhereNull('origin')
+                    ->orWhere(fn (Builder $q2) => $q2->whereNull('description')->orWhere('description', ''))
                     ->orWhereDoesntHave('executors', fn (Builder $q2) => $q2->where('task_executors.role', 'executor'))
                     ->orWhereDoesntHave('responsibles');
             });
