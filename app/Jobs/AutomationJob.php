@@ -225,6 +225,7 @@ class AutomationJob implements ShouldQueue
         $reviewDate->setTimeFromTimeString($entity->scheduled_at->format('H:i:s'));
 
         $reviewMeeting = Meeting::create([
+            'organization_id'  => $organizationId,
             'title'            => 'Revisão Interna — ' . $entity->client->displayName(),
             'type'             => 'revisao_interna',
             'modality'         => $entity->modality,
@@ -247,7 +248,8 @@ class AutomationJob implements ShouldQueue
                 'Revisão interna agendada — ' . $macroPlan->title,
                 'Reunião de revisão interna marcada para ' . $reviewMeeting->scheduled_at->format('d/m/Y H:i') . '.',
                 route('meetings.show', $reviewMeeting),
-                $reviewMeeting
+                $reviewMeeting,
+                $organizationId
             );
         }
 
@@ -268,13 +270,18 @@ class AutomationJob implements ShouldQueue
         $link    = $this->resolveLink($entity);
         $kind    = $config['kind'] ?? 'automation';
 
+        $organizationId = $entity instanceof \Illuminate\Database\Eloquent\Model
+            ? ($entity->organization_id ?? $this->automation->createdBy?->organizations()->value('organizations.id'))
+            : $this->automation->createdBy?->organizations()->value('organizations.id');
+
         app(NotificationService::class)->notifyUsers(
             $recipients,
             $kind,
             $title,
             $message,
             $link,
-            $entity instanceof \Illuminate\Database\Eloquent\Model ? $entity : null
+            $entity instanceof \Illuminate\Database\Eloquent\Model ? $entity : null,
+            $organizationId
         );
 
         return "Notificação criada pra " . $recipients->count() . " usuário(s) ('{$to}'): {$message}";
