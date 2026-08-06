@@ -13,6 +13,7 @@ use App\Models\Task;
 use App\Models\TaskApprovalRound;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -173,8 +174,22 @@ class DashboardController extends Controller
             ->orderBy('created_at')
             ->get();
 
+        // `status` só reflete se o anunciante desligou a campanha manualmente na Meta/Google —
+        // não pega campanhas que expiraram sozinhas por stop_time (a API não atualiza `status`
+        // nesse caso, só o `effective_status`, que não sincronizamos hoje). Por isso, mesmo
+        // filtro que Campanhas Patrocinadas já usa: só entra quem teve gasto ou impressão de
+        // verdade nos últimos 7 dias — sinal real de que ainda está veiculando.
         $campaignsNeedingOptimization = AdCampaign::where('status', 'active')
             ->whereHas('adAccount.client', fn ($q) => $q->where('status', '!=', 'inactive'))
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('ad_daily_snapshots')
+                    ->whereColumn('ad_daily_snapshots.client_ad_account_id', 'ad_campaigns.client_ad_account_id')
+                    ->whereColumn('ad_daily_snapshots.entity_id', 'ad_campaigns.external_id')
+                    ->where('ad_daily_snapshots.entity_level', 'campaign')
+                    ->where('ad_daily_snapshots.snapshot_date', '>=', today()->subDays(7))
+                    ->where(fn ($q) => $q->where('ad_daily_snapshots.spend', '>', 0)->orWhere('ad_daily_snapshots.impressions', '>', 0));
+            })
             ->with('adAccount.client')
             ->orderByRaw('last_optimized_at ASC NULLS FIRST')
             ->get()
