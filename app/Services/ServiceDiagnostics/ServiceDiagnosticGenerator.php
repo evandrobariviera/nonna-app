@@ -2,6 +2,7 @@
 
 namespace App\Services\ServiceDiagnostics;
 
+use App\Models\AdAd;
 use App\Models\AiAgent;
 use App\Models\ClientIntegration;
 use App\Models\ServiceConversation;
@@ -56,10 +57,25 @@ class ServiceDiagnosticGenerator
         ) {
             $version = (int) (ServiceDiagnostic::where('client_integration_id', $integration->id)->max('version') ?? 0) + 1;
 
-            $salesConfirmed = max(0, (int) ($aiResult['sales_confirmed'] ?? 0));
-            $salesInNegotiation = max(0, (int) ($aiResult['sales_in_negotiation'] ?? 0));
+            // conversation_outcomes (classificação por conversa) é a fonte de verdade quando a
+            // IA devolve ela — dá pra cruzar com atribuição de anúncio por conversa. Sem isso
+            // (falha pontual da IA nesse campo específico), cai pro agregado antigo do período
+            // inteiro, que não permite quebrar por campanha mas não derruba o diagnóstico.
+            $outcomesByPhone = collect($aiResult['conversation_outcomes'] ?? [])
+                ->filter(fn ($o) => !empty($o['contact_phone']))
+                ->keyBy(fn ($o) => $o['contact_phone']);
+
+            if ($outcomesByPhone->isNotEmpty()) {
+                $salesConfirmed = $outcomesByPhone->where('outcome', 'confirmado')->count();
+                $salesInNegotiation = $outcomesByPhone->where('outcome', 'negociacao')->count();
+            } else {
+                $salesConfirmed = max(0, (int) ($aiResult['sales_confirmed'] ?? 0));
+                $salesInNegotiation = max(0, (int) ($aiResult['sales_in_negotiation'] ?? 0));
+            }
+
             $totalConversations = $conversations->count();
             $conversionRate = $totalConversations > 0 ? round($salesConfirmed / $totalConversations * 100, 2) : 0;
+            $adAttribution = $this->computeAdAttribution($conversations, $outcomesByPhone);
 
             $breakdown = [
                 'velocidade'   => $this->normalizeResponseTimeScore($avgFirstResponseMinutes),
@@ -104,6 +120,7 @@ class ServiceDiagnosticGenerator
                 'gaps'                       => $gaps,
                 'strengths'                  => $aiResult['strengths'] ?? null,
                 'campaign_insights'          => $aiResult['campaign_insights'] ?? null,
+                'ad_attribution'             => $adAttribution,
             ]);
 
             foreach (($aiResult['personas'] ?? []) as $i => $p) {
@@ -198,6 +215,71 @@ class ServiceDiagnosticGenerator
         return count($deltas) > 0 ? (int) round(array_sum($deltas) / count($deltas)) : null;
     }
 
+    /**
+     * Quantas conversas (e quantas venderam) cada campanha/anúncio da Meta gerou no período —
+     * cruza service_conversations.ad_source_id (capturado na 1ª mensagem via
+     * UazapiMessageIngestor) com AdAd.external_id, já sincronizado pelo AdSync pra dashboards
+     * de Campanhas. Conversa sem anúncio (ou com anúncio que não bate com nada sincronizado)
+     * cai em bucket próprio, pra dar contraste pago vs. orgânico no relatório.
+     *
+     * @param  \Illuminate\Support\Collection<int, ServiceConversation>  $conversations
+     */
+    private function computeAdAttribution($conversations, \Illuminate\Support\Collection $outcomesByPhone): array
+    {
+        $sourceIds = $conversations->pluck('ad_source_id')->filter()->unique()->values();
+
+        $adsByExternalId = $sourceIds->isEmpty()
+            ? collect()
+            : AdAd::whereIn('external_id', $sourceIds)->with('adset.campaign')->get()->keyBy('external_id');
+
+        $buckets = [];
+
+        foreach ($conversations as $conversation) {
+            $bucketKey = 'organico';
+            $campaignId = null;
+            $campaignName = 'Orgânico / Direto';
+
+            if ($conversation->ad_source_id) {
+                $campaign = $adsByExternalId->get($conversation->ad_source_id)?->adset?->campaign;
+                if ($campaign) {
+                    $bucketKey = $campaign->id;
+                    $campaignId = $campaign->id;
+                    $campaignName = $campaign->name;
+                } else {
+                    $bucketKey = 'anuncio_sem_sync';
+                    $campaignName = 'Anúncio (não sincronizado)';
+                }
+            }
+
+            $buckets[$bucketKey] ??= [
+                'campaign_id'          => $campaignId,
+                'campaign_name'        => $campaignName,
+                'total_conversations'  => 0,
+                'sales_confirmed'      => 0,
+                'sales_in_negotiation' => 0,
+            ];
+            $buckets[$bucketKey]['total_conversations']++;
+
+            $outcome = $outcomesByPhone->get($conversation->contact_phone)['outcome'] ?? null;
+            if ($outcome === 'confirmado') {
+                $buckets[$bucketKey]['sales_confirmed']++;
+            } elseif ($outcome === 'negociacao') {
+                $buckets[$bucketKey]['sales_in_negotiation']++;
+            }
+        }
+
+        return collect($buckets)
+            ->map(function (array $b) {
+                $b['conversion_rate'] = $b['total_conversations'] > 0
+                    ? round($b['sales_confirmed'] / $b['total_conversations'] * 100, 1)
+                    : 0.0;
+                return $b;
+            })
+            ->sortByDesc('total_conversations')
+            ->values()
+            ->all();
+    }
+
     // Recomendações ainda pendentes do diagnóstico mais recente, indexadas por título
     // (minúsculo) - usado pra encadear a mesma recomendação entre versões.
     private function previousPendingRecommendations(ClientIntegration $integration)
@@ -246,8 +328,9 @@ CONVERSAS:
 
 Responda SOMENTE com um objeto JSON com exatamente esta estrutura:
 {
-  "sales_confirmed": <int - quantas conversas terminaram em venda/fechamento confirmado>,
-  "sales_in_negotiation": <int - quantas ainda estão em negociação ativa>,
+  "conversation_outcomes": [{"contact_phone": "<telefone EXATO como aparece no cabeçalho \"### Conversa com Nome (telefone)\" de CADA conversa acima, sem exceção, mesmo as sem venda>", "outcome": "confirmado"|"negociacao"|"nao_convertido"}],
+  "sales_confirmed": <int - quantas conversas terminaram em venda/fechamento confirmado (deve bater com a contagem de "confirmado" em conversation_outcomes)>,
+  "sales_in_negotiation": <int - quantas ainda estão em negociação ativa (deve bater com a contagem de "negociacao" em conversation_outcomes)>,
   "consistencia_score": <int 0-100 - quão consistente é o processo/script de atendimento entre as conversas>,
   "sentimento_score": <int 0-100 - sentimento médio dos clientes ao longo das conversas>,
   "funnel_summary": {

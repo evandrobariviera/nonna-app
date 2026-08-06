@@ -63,6 +63,18 @@ class UazapiMessageIngestor
         if (!$conversation->exists) {
             $conversation->client_id  = $integration->client_id;
             $conversation->started_at = $sentAt;
+
+            // Atribuição de anúncio (Meta "Clique para o WhatsApp") — só existe na primeira
+            // mensagem da conversa, a uazapi replica o contextInfo original do WhatsApp ali.
+            // Capturado só na criação de propósito: uma 2ª mensagem na mesma thread nunca
+            // carrega esse bloco (ou carrega o de uma mensagem RESPONDIDA, que não é a
+            // origem real da conversa) — sobrescrever depois estragaria a atribuição.
+            $adReply = $message['content']['contextInfo']['externalAdReply'] ?? null;
+            if ($adReply) {
+                $conversation->ad_source_id = $adReply['sourceID'] ?? null;
+                $conversation->ad_title     = $adReply['title'] ?? null;
+                $conversation->ad_ctwa_clid = $adReply['ctwaClid'] ?? null;
+            }
         }
 
         $conversation->contact_name  = $chat['wa_contactName'] ?? $chat['name'] ?? $conversation->contact_name;

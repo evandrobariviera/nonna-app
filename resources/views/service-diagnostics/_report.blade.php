@@ -166,6 +166,31 @@
     </div>
 @endif
 
+{{-- Origem dos Leads (Anúncios) --}}
+@if(!empty($diagnostic->ad_attribution))
+    <div class="card mb-6">
+        <div class="card-header"><h3 class="text-sm font-bold" style="color:var(--text)">Origem dos Leads (Anúncios)</h3></div>
+        <div class="card-body">
+            <table class="nonna-table">
+                <thead>
+                    <tr><th>Campanha</th><th>Conversas</th><th>Confirmadas</th><th>Em Negociação</th><th>Taxa de Conversão</th></tr>
+                </thead>
+                <tbody>
+                    @foreach($diagnostic->ad_attribution as $attribution)
+                        <tr @if(!$attribution['campaign_id']) style="opacity:.7" @endif>
+                            <td class="font-semibold" style="color:var(--text)">{{ $attribution['campaign_name'] }}</td>
+                            <td class="text-sm" style="color:var(--text)">{{ $attribution['total_conversations'] }}</td>
+                            <td class="text-sm" style="color:var(--green)">{{ $attribution['sales_confirmed'] }}</td>
+                            <td class="text-sm" style="color:var(--orange)">{{ $attribution['sales_in_negotiation'] }}</td>
+                            <td class="text-sm font-mono" style="color:var(--text)">{{ number_format($attribution['conversion_rate'], 1, ',', '.') }}%</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+@endif
+
 {{-- Insights de campanha --}}
 @if(!empty($diagnostic->campaign_insights))
     <div class="card mb-6">

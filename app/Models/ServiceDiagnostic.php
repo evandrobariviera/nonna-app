@@ -36,6 +36,7 @@ class ServiceDiagnostic extends Model
         'gaps',
         'strengths',
         'campaign_insights',
+        'ad_attribution',
         'published_at',
     ];
 
@@ -56,6 +57,7 @@ class ServiceDiagnostic extends Model
         'gaps'                        => 'array',
         'strengths'                   => 'array',
         'campaign_insights'           => 'array',
+        'ad_attribution'              => 'array',
         'published_at'                => 'datetime',
     ];
 
