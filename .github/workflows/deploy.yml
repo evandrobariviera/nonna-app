@@ -4,6 +4,15 @@ on:
   push:
     branches: [main]
 
+# Sem isso, pushes em sequência rápida disparam deploys em paralelo — todos
+# tentando `docker service update` no MESMO serviço do Swarm ao mesmo tempo.
+# `cancel-in-progress: false` enfileira (não cancela o que já está rodando,
+# que faz SSH de verdade no servidor — cancelar no meio podia deixar o
+# serviço pela metade); cada push espera sua vez e roda o deploy completo.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 env:
   REGISTRY: ghcr.io
   IMAGE: ghcr.io/evandrobariviera/nonna-app
