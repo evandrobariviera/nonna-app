@@ -53,6 +53,31 @@
         </div>
     @endif
 
+    {{-- Produção (entregáveis) --}}
+    @if($deliverables->isNotEmpty())
+        <div>
+            <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Produção ({{ $deliverables->count() }})</p>
+            <div class="grid grid-cols-3 gap-2">
+                @foreach($deliverables as $d)
+                    <a href="{{ $d->url() }}" target="_blank"
+                       class="card flex items-center justify-center overflow-hidden transition-colors"
+                       style="aspect-ratio:1; padding:0"
+                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'"
+                       title="{{ $d->filename }}">
+                        @if($d->isImage())
+                            <img src="{{ $d->url() }}" alt="{{ $d->filename }}" class="w-full h-full object-cover">
+                        @else
+                            <div class="flex flex-col items-center gap-1 px-2 text-center">
+                                <span style="font-size:22px">{{ $d->icon() }}</span>
+                                <span class="text-xs truncate w-full" style="color:var(--muted)">{{ $d->filename }}</span>
+                            </div>
+                        @endif
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     {{-- Link pra página completa --}}
     <a href="{{ $project->macro_plan_id ? route('macroplans.projects.show', [$project->macro_plan_id, $project]) : route('projects.showDirect', $project) }}"
        class="text-center px-4 py-2.5 text-xs font-bold transition-colors"

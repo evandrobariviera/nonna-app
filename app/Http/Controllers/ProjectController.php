@@ -152,7 +152,15 @@ class ProjectController extends Controller
         $totalTasks = $project->tasks()->where('status', '!=', 'cancelado')->count();
         $doneTasks  = $project->tasks()->where('status', 'concluido')->count();
 
-        return view('macroplans._project-preview', compact('project', 'recentTasks', 'progress', 'totalTasks', 'doneTasks'));
+        // Só o que foi produzido (entregável) — insumo (referência recebida) não
+        // entra aqui, mesmo critério já usado na varredura de aprovação.
+        $deliverables = \App\Models\TaskAttachment::whereIn('task_id', $project->tasks()->pluck('tasks.id'))
+            ->where('kind', 'entregavel')
+            ->orderByDesc('created_at')
+            ->limit(24)
+            ->get();
+
+        return view('macroplans._project-preview', compact('project', 'recentTasks', 'progress', 'totalTasks', 'doneTasks', 'deliverables'));
     }
 
     public function showDirect(Project $project)
