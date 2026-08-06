@@ -15,6 +15,13 @@ use Illuminate\Support\Str;
 
 class ServiceDiagnosticGenerator
 {
+    // Orçamento de caracteres pra transcrição (não pro prompt inteiro) por chamada de IA —
+    // conservador o bastante pra deixar folga pro resto do prompt (instruções, JSON de
+    // resposta) e pro completion (max_tokens do agente) dentro do teto de 128k tokens dos
+    // modelos disponíveis hoje (gpt-4o/gpt-4o-mini). ~4 caracteres por token em português é
+    // uma estimativa realista; 300k caracteres ≈ 75k tokens de transcrição, sobra bastante.
+    private const MAX_TRANSCRIPT_CHARS = 300000;
+
     public function __construct(private AiService $aiService)
     {
     }
@@ -38,7 +45,46 @@ class ServiceDiagnosticGenerator
             throw new \RuntimeException("Nenhuma conversa encontrada entre {$periodStart->format('d/m/Y')} e {$periodEnd->format('d/m/Y')}.");
         }
 
+        // Período grande demais (muita conversa acumulada desde o último diagnóstico) estoura
+        // o limite de contexto do modelo se mandar tudo numa chamada só. Em vez de falhar,
+        // quebra em pedaços cronologicamente contíguos e gera uma versão por pedaço — cada
+        // diagnóstico continua completo e coerente (não é um resumo truncado de nada), só o
+        // período coberto por cada versão fica menor. resolvePeriod() do próximo diagnóstico
+        // sempre parte do fim do ÚLTIMO pedaço, então nada fica sem cobertura.
+        $batches = $this->splitIntoBatches($conversations);
+
+        $diagnostic = null;
+        $lastCovered = $periodStart;
+
+        foreach ($batches as $index => $batchConversations) {
+            $isLastBatch = $index === array_key_last($batches);
+            $batchEnd = $isLastBatch ? $periodEnd : $batchConversations->max('last_message_at');
+
+            $diagnostic = $this->generateForBatch(
+                $integration, $agent, $generatedBy, $batchConversations, $lastCovered, $batchEnd
+            );
+
+            $lastCovered = $batchEnd;
+        }
+
+        return $diagnostic;
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, ServiceConversation>  $conversations
+     */
+    private function generateForBatch(
+        ClientIntegration $integration,
+        AiAgent $agent,
+        string $generatedBy,
+        $conversations,
+        Carbon $periodStart,
+        Carbon $periodEnd
+    ): ServiceDiagnostic {
         $avgFirstResponseMinutes = $this->computeAvgFirstResponseMinutes($conversations);
+        // Consultado de novo a cada lote (não só 1x fora do loop) de propósito: quando o
+        // período é dividido em vários lotes, o lote 2 precisa enxergar as recomendações
+        // pendentes que o lote 1 acabou de criar, não as de antes de rodar generate().
         $previousRecommendations = $this->previousPendingRecommendations($integration);
 
         $userMessage = $this->buildPrompt($conversations, $periodStart, $periodEnd, $previousRecommendations);
@@ -189,6 +235,50 @@ class ServiceDiagnosticGenerator
         $end = now();
 
         return [$start, $end];
+    }
+
+    /**
+     * Quebra as conversas em pedaços cronologicamente contíguos (ordenados por started_at)
+     * cujo texto total fica dentro de MAX_TRANSCRIPT_CHARS — cada pedaço vira uma chamada de
+     * IA e um ServiceDiagnostic próprio. Uma conversa sozinha maior que o orçamento (rara)
+     * ainda assim forma um pedaço próprio, em vez de travar o processo inteiro.
+     *
+     * @param  \Illuminate\Support\Collection<int, ServiceConversation>  $conversations
+     * @return array<int, \Illuminate\Support\Collection<int, ServiceConversation>>
+     */
+    private function splitIntoBatches($conversations): array
+    {
+        $sorted = $conversations->sortBy('started_at')->values();
+
+        $batches = [];
+        $current = collect();
+        $currentChars = 0;
+
+        foreach ($sorted as $conversation) {
+            $conversationChars = $this->estimateConversationChars($conversation);
+
+            if ($currentChars > 0 && ($currentChars + $conversationChars) > self::MAX_TRANSCRIPT_CHARS) {
+                $batches[] = $current;
+                $current = collect();
+                $currentChars = 0;
+            }
+
+            $current->push($conversation);
+            $currentChars += $conversationChars;
+        }
+
+        if ($current->isNotEmpty()) {
+            $batches[] = $current;
+        }
+
+        return $batches;
+    }
+
+    private function estimateConversationChars(ServiceConversation $conversation): int
+    {
+        // +40 de margem por mensagem (cabeçalho "[dd/mm HH:mm] Nome: ") — aproximado, não
+        // precisa ser exato, só o suficiente pra não estourar o orçamento por sub-medir.
+        return $conversation->messages->sum(fn ($m) => strlen($m->body ?? '') + 40) + 60;
     }
 
     private function computeAvgFirstResponseMinutes($conversations): ?int
