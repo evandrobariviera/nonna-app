@@ -121,6 +121,18 @@
                                 </dd>
                             </div>
                         @endif
+                        @if($meeting->macroPlan)
+                            <div>
+                                <dt class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Planejamento</dt>
+                                <dd class="flex items-center gap-2">
+                                    <a href="{{ route('macroplans.edit', $meeting->macroPlan) }}"
+                                       class="font-semibold hover:underline" style="color:var(--purple)">
+                                        {{ $meeting->macroPlan->title }}
+                                    </a>
+                                    <span class="badge badge-{{ $meeting->macroPlan->statusColor() }}">{{ $meeting->macroPlan->statusLabel() }}</span>
+                                </dd>
+                            </div>
+                        @endif
                         <div>
                             <dt class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Organizador</dt>
                             <dd style="color:var(--text)">{{ $meeting->organizer->name ?? '—' }}</dd>
