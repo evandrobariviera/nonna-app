@@ -222,7 +222,11 @@
 </div>
 
 {{-- Aprovações --}}
-@php $_approvalPending = \App\Models\TaskApprovalRound::whereIn('status',['pending','changes_requested'])->count(); @endphp
+@php
+    $_approvalPending = \App\Models\TaskApprovalRound::where('status', 'pending')
+        ->orWhere(fn ($q) => $q->where('status', 'changes_requested')->whereNull('handled_at'))
+        ->count();
+@endphp
 <a href="{{ route('approvals.index') }}"
    class="nav-group-trigger {{ request()->routeIs('approvals.*') ? 'open' : '' }}"
    style="{{ request()->routeIs('approvals.*') ? 'color:var(--orange);' : '' }}">

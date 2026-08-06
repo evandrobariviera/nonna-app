@@ -118,6 +118,7 @@ class DashboardController extends Controller
             ->get();
 
         $roundsChangesRequested = TaskApprovalRound::where('status', 'changes_requested')
+            ->whereNull('handled_at') // já tratada (roteada de volta pra Sprint) — não é mais "pendente de olhar"
             ->with('task.client')
             ->orderByDesc('resolved_at')
             ->limit(8)
