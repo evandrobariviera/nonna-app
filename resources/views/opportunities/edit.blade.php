@@ -1,13 +1,13 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div>
-            <p class="text-xs font-mono text-[var(--muted)] uppercase tracking-widest mb-1">
-                <a href="{{ route('opportunities.show', $opportunity) }}" class="hover:text-[var(--purple)]">{{ $opportunity->title }}</a> /
-                Editar
-            </p>
-            <h1 class="text-2xl font-black text-[var(--text)]">Editar Oportunidade</h1>
-        </div>
-    </x-slot>
+    <x-slot name="header">Editar Oportunidade</x-slot>
+
+    <div class="mb-6">
+        <p class="text-xs font-mono text-[var(--muted)] uppercase tracking-widest mb-1">
+            <a href="{{ route('opportunities.show', $opportunity) }}" class="hover:text-[var(--purple)]">{{ $opportunity->title }}</a> /
+            Editar
+        </p>
+        <h1 class="text-2xl font-black text-[var(--text)]">Editar Oportunidade</h1>
+    </div>
 
     <div class="py-4 max-w-2xl mx-auto">
 

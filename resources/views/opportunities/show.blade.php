@@ -1,20 +1,22 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-start justify-between">
-            <div>
-                <p class="text-xs font-mono text-[var(--muted)] uppercase tracking-widest mb-1">
-                    <a href="{{ route('opportunities.index') }}" class="hover:text-[var(--purple)]">Oportunidades</a> /
-                    {{ $opportunity->title }}
-                </p>
-                <h1 class="text-2xl font-black text-[var(--text)]">{{ $opportunity->title }}</h1>
-                <div class="mt-1">
-                    <span class="badge badge-{{ $opportunity->stageColor() }}">
-                        {{ $opportunity->stageLabel() }}
-                    </span>
-                </div>
-            </div>
+    <x-slot name="header">{{ $opportunity->title }}</x-slot>
 
-            @if($opportunity->isOpen())
+    {{-- BREADCRUMB + AÇÕES --}}
+    <div class="flex items-start justify-between mb-6 flex-wrap gap-3">
+        <div>
+            <p class="text-xs font-mono text-[var(--muted)] uppercase tracking-widest mb-1">
+                <a href="{{ route('opportunities.index') }}" class="hover:text-[var(--purple)]">Oportunidades</a> /
+                {{ $opportunity->title }}
+            </p>
+            <h1 class="text-2xl font-black text-[var(--text)]">{{ $opportunity->title }}</h1>
+            <div class="mt-1">
+                <span class="badge badge-{{ $opportunity->stageColor() }}">
+                    {{ $opportunity->stageLabel() }}
+                </span>
+            </div>
+        </div>
+
+        @if($opportunity->isOpen())
                 <div class="flex items-center gap-3" x-data="{ winModal: false, loseModal: false }">
 
                     <a href="{{ route('opportunities.edit', $opportunity) }}"
@@ -129,9 +131,8 @@
                     </div>
 
                 </div>
-            @endif
-        </div>
-    </x-slot>
+        @endif
+    </div>
 
     <div class="py-8 px-6 grid grid-cols-3 gap-6">
 
