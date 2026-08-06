@@ -111,7 +111,7 @@ class MeetingController extends Controller
      */
     public function preview(Meeting $meeting)
     {
-        $meeting->load(['client', 'organizer', 'macroPlan']);
+        $meeting->load(['client', 'organizer', 'macroPlan', 'attachments']);
 
         return view('meetings._preview', compact('meeting'));
     }

@@ -40,6 +40,23 @@
         </div>
     @endif
 
+    {{-- Anexos --}}
+    @if($meeting->attachments->isNotEmpty())
+        <div>
+            <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Anexos ({{ $meeting->attachments->count() }})</p>
+            <div class="flex flex-col gap-2">
+                @foreach($meeting->attachments as $attachment)
+                    <a href="{{ $attachment->url() }}" target="_blank"
+                       class="card card-body flex items-center justify-between gap-3 transition-colors"
+                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'">
+                        <span class="text-sm font-medium truncate" style="color:var(--text)">{{ $attachment->icon() }} {{ $attachment->filename }}</span>
+                        <span class="text-xs font-mono flex-shrink-0" style="color:var(--muted)">{{ $attachment->sizeForHumans() }}</span>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     {{-- Link pra página completa --}}
     <a href="{{ route('meetings.show', $meeting) }}"
        class="text-center px-4 py-2.5 text-xs font-bold transition-colors"
