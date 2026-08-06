@@ -22,6 +22,17 @@ class AdDataUpserter
 
         DB::connection('pgsql')->transaction(function () use ($organizationId, $clientAdAccountId, $platform, $campaigns, &$counts) {
             foreach ($campaigns as $campaignData) {
+                $status = $campaignData['status'] ?? 'active';
+
+                // Meta/Google só reportam `status` como "desligada manualmente" — uma
+                // campanha que expira sozinha por end_date (stop_time) continua chegando
+                // como "active" pra sempre, porque a API não atualiza esse campo nesse
+                // caso (só o effective_status, que não sincronizamos). Corrige aqui, toda
+                // sincronização, senão volta a ficar errado no próximo ciclo.
+                if ($status === 'active' && !empty($campaignData['end_date']) && $campaignData['end_date'] < now()->toDateString()) {
+                    $status = 'paused';
+                }
+
                 $campaign = AdCampaign::updateOrCreate(
                     [
                         'client_ad_account_id' => $clientAdAccountId,
@@ -31,7 +42,7 @@ class AdDataUpserter
                         'organization_id' => $organizationId,
                         'platform'        => $platform,
                         'name'            => $campaignData['name'],
-                        'status'          => $campaignData['status'] ?? 'active',
+                        'status'          => $status,
                         'objective'       => $campaignData['objective'] ?? null,
                         'start_date'      => $campaignData['start_date'] ?? null,
                         'end_date'        => $campaignData['end_date'] ?? null,
