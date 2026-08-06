@@ -106,6 +106,16 @@ class MeetingController extends Controller
         return view('meetings.show', compact('meeting'));
     }
 
+    /**
+     * Preview leve para o painel lateral (canvas) — não a página completa.
+     */
+    public function preview(Meeting $meeting)
+    {
+        $meeting->load(['client', 'organizer', 'macroPlan']);
+
+        return view('meetings._preview', compact('meeting'));
+    }
+
     public function edit(Meeting $meeting)
     {
         $meeting->load(['participants', 'contacts']);

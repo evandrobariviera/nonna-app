@@ -35,6 +35,7 @@ class Automation extends Model
         'project'     => 'Projeto',
         'campaign'    => 'Campanha',
         'opportunity' => 'Oportunidade',
+        'meeting'     => 'Reunião',
     ];
 
     public static array $triggerTypes = [
@@ -50,8 +51,9 @@ class Automation extends Model
         'run_ai_agent'      => 'Rodar Agente de IA',
         'send_webhook'      => 'Enviar Webhook',
         'update_field'      => 'Atualizar Campo',
-        'send_notification' => 'Enviar Notificação',
-        'create_record'     => 'Criar Tarefa/Ticket',
+        'send_notification'       => 'Enviar Notificação',
+        'create_record'           => 'Criar Tarefa/Ticket',
+        'create_macroplan_review' => 'Criar Macroplanejamento + Reunião de Revisão Interna',
     ];
 
     // Campos de data disponíveis pro gatilho "Data alcançada" (só Tarefa por enquanto).
@@ -95,6 +97,13 @@ class Automation extends Model
         if ($entityType === 'opportunity') {
             return [
                 'stage' => ['label' => 'Estágio', 'options' => self::labelMap(Opportunity::$stages)],
+            ];
+        }
+
+        if ($entityType === 'meeting') {
+            return [
+                'status' => ['label' => 'Status', 'options' => self::labelMap(Meeting::$statuses)],
+                'type'   => ['label' => 'Tipo',   'options' => Meeting::$types],
             ];
         }
 
@@ -174,6 +183,7 @@ class Automation extends Model
             'update_field'      => 'Campo "' . ($config['field'] ?? '?') . '" = "' . ($config['value'] ?? '?') . '"',
             'send_notification' => 'Notificar ' . ($config['to'] ?? '?'),
             'create_record'     => 'Criar ' . (($config['record_type'] ?? 'ticket') === 'task' ? 'Tarefa' : 'Ticket'),
+            'create_macroplan_review' => 'Cria Macroplanejamento + Reunião de Revisão Interna',
             default             => $this->action_type,
         };
     }

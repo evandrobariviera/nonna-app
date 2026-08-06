@@ -355,6 +355,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::post('/agenda/{meeting}/notificar', [MeetingController::class, 'notify'])
         ->name('meetings.notify');
 
+    Route::get('/agenda/{meeting}/preview', [MeetingController::class, 'preview'])
+        ->name('meetings.preview');
+
     Route::post('/agenda/{meeting}/anexos', [MeetingAttachmentController::class, 'store'])
         ->name('meeting-attachments.store');
     Route::delete('/agenda/{meeting}/anexos/{attachment}', [MeetingAttachmentController::class, 'destroy'])

@@ -9,6 +9,7 @@ use App\Models\AdAdset;
 use App\Models\AdAd;
 use App\Models\CampaignLog;
 use App\Models\Opportunity;
+use App\Models\Meeting;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -23,8 +24,23 @@ class ContextResolver
             $entity instanceof AdAdset     => self::forAdset($entity),
             $entity instanceof AdAd        => self::forAd($entity),
             $entity instanceof Opportunity => self::forOpportunity($entity),
+            $entity instanceof Meeting     => self::forMeeting($entity),
             default                        => [],
         };
+    }
+
+    public static function forMeeting(Meeting $meeting): array
+    {
+        $meeting->loadMissing(['client', 'organizer']);
+
+        return [
+            'meeting_id'    => $meeting->id,
+            'meeting_title' => $meeting->title ?? '',
+            'meeting_type'  => $meeting->typeLabel(),
+            'meeting_date'  => $meeting->scheduled_at?->format('d/m/Y H:i') ?? '',
+            'client_name'   => $meeting->client?->displayName() ?? '',
+            'organizer_name'=> $meeting->organizer?->name ?? '',
+        ];
     }
 
     public static function forOpportunity(Opportunity $opportunity): array

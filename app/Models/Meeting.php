@@ -22,6 +22,7 @@ class Meeting extends Model
         'status',
         'client_id',
         'opportunity_id',
+        'macro_plan_id',
         'organized_by',
         'created_by',
         'scheduled_at',
@@ -49,6 +50,7 @@ class Meeting extends Model
         'setor_sync'                => 'De Setor (Sync de Qualidade)',
         'distribuicao_sprint'       => 'Distribuição (Sprint Planning)',
         'evento_captacao'           => 'Evento ou Captação Externa',
+        'revisao_interna'           => 'Revisão Interna (Planejamento)',
         'outros'                    => 'Outros',
     ];
 
@@ -99,6 +101,11 @@ class Meeting extends Model
     public function opportunity(): BelongsTo
     {
         return $this->belongsTo(Opportunity::class);
+    }
+
+    public function macroPlan(): BelongsTo
+    {
+        return $this->belongsTo(MacroPlan::class);
     }
 
     public function organizer(): BelongsTo

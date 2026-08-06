@@ -8,6 +8,8 @@ use App\Models\Task;
 use App\Models\Project;
 use App\Models\AdCampaign;
 use App\Models\AiAgent;
+use App\Models\MacroPlan;
+use App\Models\Meeting;
 use App\Models\Opportunity;
 use App\Models\FunctionalRole;
 use App\Models\Sector;
@@ -90,6 +92,7 @@ class AutomationJob implements ShouldQueue
             'update_field'      => $this->updateField($config, $entity),
             'send_notification' => $this->sendNotification($config, $entity, $context),
             'create_record'     => $this->createRecord($config, $context, $entity),
+            'create_macroplan_review' => $this->createMacroplanReview($config, $entity),
             default             => throw new \RuntimeException("Tipo de ação desconhecido: {$this->automation->action_type}"),
         };
     }
@@ -174,6 +177,83 @@ class AutomationJob implements ShouldQueue
         return "Registro criado: {$task->id} ({$task->title}).";
     }
 
+    // Cria o Macroplanejamento a partir de uma Reunião de planejamento realizada, linka a
+    // reunião original a ele, agenda a Reunião de Revisão Interna pro próximo dia útil
+    // (já linkada ao mesmo Macro) e notifica o Papel Funcional configurado. Ação
+    // específica (não genérica como create_record) por decisão de escopo: encadear a
+    // criação de 2 registros diferentes, um referenciando o outro, não cabe num
+    // action_config genérico sem construir um motor de ações em sequência — combinado
+    // que essa automação em particular vem pronta no código, só o gatilho é configurável.
+    private function createMacroplanReview(array $config, mixed $entity): string
+    {
+        if (!$entity instanceof Meeting) {
+            throw new \RuntimeException('create_macroplan_review só funciona com entidade Reunião.');
+        }
+
+        // Idempotente: se o status oscilar de novo pra "realizada", não recria um
+        // segundo Macro/Reunião pra mesma reunião original.
+        if ($entity->macro_plan_id) {
+            return "Reunião já vinculada ao Macroplanejamento {$entity->macro_plan_id} — nada feito.";
+        }
+
+        if (!$entity->client_id) {
+            throw new \RuntimeException('Reunião sem cliente vinculado — não é possível criar o Macroplanejamento.');
+        }
+
+        $entity->loadMissing('client');
+
+        $organizationId = $entity->organization_id ?? $this->automation->createdBy?->organizations()->value('organizations.id');
+
+        $macroPlan = MacroPlan::create([
+            'organization_id' => $organizationId,
+            'client_id'       => $entity->client_id,
+            'responsible_id'  => $entity->organized_by,
+            'created_by'      => $this->automation->created_by,
+            'title'           => $entity->client->displayName() . ' — Planejamento ' . now()->format('m/Y'),
+            'period_start'    => now(),
+            'period_end'      => now()->addDays(89),
+            'status'          => 'em_planejamento',
+        ]);
+
+        $entity->update(['macro_plan_id' => $macroPlan->id]);
+
+        // Próximo dia útil (pula sábado/domingo), no mesmo horário da reunião original.
+        $reviewDate = now()->addDay();
+        while ($reviewDate->isWeekend()) {
+            $reviewDate->addDay();
+        }
+        $reviewDate->setTimeFromTimeString($entity->scheduled_at->format('H:i:s'));
+
+        $reviewMeeting = Meeting::create([
+            'title'            => 'Revisão Interna — ' . $entity->client->displayName(),
+            'type'             => 'revisao_interna',
+            'modality'         => $entity->modality,
+            'status'           => 'agendada',
+            'client_id'        => $entity->client_id,
+            'macro_plan_id'    => $macroPlan->id,
+            'organized_by'     => $entity->organized_by,
+            'created_by'       => $this->automation->created_by,
+            'scheduled_at'     => $reviewDate,
+            'duration_minutes' => $entity->duration_minutes,
+        ]);
+
+        $role = !empty($config['role']) ? FunctionalRole::where('key', $config['role'])->first() : null;
+        $recipients = $role ? $role->users : collect();
+
+        if ($recipients->isNotEmpty()) {
+            app(NotificationService::class)->notifyUsers(
+                $recipients,
+                'automation',
+                'Revisão interna agendada — ' . $macroPlan->title,
+                'Reunião de revisão interna marcada para ' . $reviewMeeting->scheduled_at->format('d/m/Y H:i') . '.',
+                route('meetings.show', $reviewMeeting),
+                $reviewMeeting
+            );
+        }
+
+        return "Macroplanejamento {$macroPlan->id} criado; Reunião de Revisão Interna agendada para {$reviewMeeting->scheduled_at->format('d/m/Y H:i')}.";
+    }
+
     private function sendNotification(array $config, mixed $entity, array $context): string
     {
         $to = $config['to'] ?? 'creator';
@@ -240,6 +320,7 @@ class AutomationJob implements ShouldQueue
         return match (true) {
             $entity instanceof Task        => route('tasks.show', $entity),
             $entity instanceof Opportunity => route('opportunities.show', $entity),
+            $entity instanceof Meeting     => route('meetings.show', $entity),
             default                         => null,
         };
     }
@@ -263,6 +344,7 @@ class AutomationJob implements ShouldQueue
             'project'        => Project::find($this->entityId),
             'campaign'       => AdCampaign::find($this->entityId),
             'opportunity'    => Opportunity::find($this->entityId),
+            'meeting'        => Meeting::find($this->entityId),
             default          => null,
         };
     }

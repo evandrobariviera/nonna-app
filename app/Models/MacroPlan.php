@@ -121,6 +121,11 @@ class MacroPlan extends Model
         return $this->hasMany(MacroPlanAttachment::class)->latest();
     }
 
+    public function meetings(): HasMany
+    {
+        return $this->hasMany(Meeting::class)->orderBy('scheduled_at');
+    }
+
     // Anexo HTML original do planejamento (import via skill externa) — quem prefere
     // ver o documento fonte em vez da versão renderizada no App usa esse link.
     public function htmlAttachment(): ?MacroPlanAttachment

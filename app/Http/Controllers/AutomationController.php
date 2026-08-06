@@ -46,10 +46,10 @@ class AutomationController extends Controller
         $data = $request->validate([
             'name'          => 'required|string|max:255',
             'description'   => 'nullable|string',
-            'entity_type'   => 'required|in:task,ticket,project,campaign,opportunity',
+            'entity_type'   => 'required|in:task,ticket,project,campaign,opportunity,meeting',
             'trigger_type'  => 'required|in:status_changed,field_updated,date_reached,executor_added,created,manual',
             'trigger_config'=> 'nullable|array',
-            'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification,create_record',
+            'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification,create_record,create_macroplan_review',
             'action_config' => 'nullable|array',
             'is_active'     => 'boolean',
         ]);
@@ -98,10 +98,10 @@ class AutomationController extends Controller
         $data = $request->validate([
             'name'          => 'required|string|max:255',
             'description'   => 'nullable|string',
-            'entity_type'   => 'required|in:task,ticket,project,campaign,opportunity',
+            'entity_type'   => 'required|in:task,ticket,project,campaign,opportunity,meeting',
             'trigger_type'  => 'required|in:status_changed,field_updated,date_reached,executor_added,created,manual',
             'trigger_config'=> 'nullable|array',
-            'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification,create_record',
+            'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification,create_record,create_macroplan_review',
             'action_config' => 'nullable|array',
             'is_active'     => 'boolean',
         ]);

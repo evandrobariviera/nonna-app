@@ -88,6 +88,32 @@
                 </button>
             </div>
 
+            {{-- Reuniões ligadas --}}
+            <div class="card mt-3 p-3">
+                <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                    Reuniões
+                    @if($macroplan->meetings->count() > 0)
+                        <span class="ml-1 px-1.5 py-0.5" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $macroplan->meetings->count() }}</span>
+                    @endif
+                </p>
+                @if($macroplan->meetings->isEmpty())
+                    <p class="text-xs py-1" style="color:var(--muted)">Nenhuma reunião ligada ainda.</p>
+                @else
+                    @foreach($macroplan->meetings as $m)
+                        <button type="button" @click="$store.sidePanel.open('{{ route('meetings.preview', $m) }}')"
+                                class="w-full flex flex-col gap-1 px-2 py-1.5 mb-1 text-left transition-colors"
+                                style="background:var(--s2); border:none; cursor:pointer"
+                                onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+                            <span class="text-xs font-semibold truncate" style="color:var(--text)">{{ $m->title }}</span>
+                            <span class="flex items-center gap-1.5 flex-wrap">
+                                <span class="badge badge-{{ $m->statusColor() }}">{{ $m->statusLabel() }}</span>
+                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $m->scheduled_at->format('d/m/y H:i') }}</span>
+                            </span>
+                        </button>
+                    @endforeach
+                @endif
+            </div>
+
             {{-- Anexos --}}
             <div class="card mt-3 p-3">
                 <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">

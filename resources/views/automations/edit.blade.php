@@ -376,6 +376,27 @@
                             <p class="text-xs mt-1" style="color:var(--muted)">Sem cliente resolvido, o registro criado entra na fila de Pendências de Cadastro.</p>
                         </div>
                     </div>
+
+                    <div x-show="actionType === 'create_macroplan_review'" x-cloak class="grid gap-3">
+                        <p class="text-sm" style="color:var(--muted)">
+                            Cria um Macroplanejamento vinculado à Reunião que disparou, agenda automaticamente uma
+                            Reunião de Revisão Interna pro próximo dia útil (já linkada ao mesmo Macro) e notifica
+                            o papel funcional abaixo. Pensado pro gatilho "Status mudou" de Pós-Reunião → Realizada
+                            numa Reunião do tipo Macroplanejamento.
+                        </p>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">PAPEL FUNCIONAL A NOTIFICAR *</label>
+                            <select name="action_config[role]"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                <option value="">Selecione...</option>
+                                @foreach($functionRoles as $value => $label)
+                                    <option value="{{ $value }}" {{ ($automation->action_config['role'] ?? '') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs mt-1" style="color:var(--muted)">Notifica todo mundo com esse papel quando o Macro e a reunião de revisão forem criados.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
