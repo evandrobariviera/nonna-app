@@ -242,6 +242,8 @@ class AutomationJob implements ShouldQueue
         $recipients = $role ? $role->users : collect();
 
         if ($recipients->isNotEmpty()) {
+            $reviewMeeting->participants()->sync($recipients->pluck('id'));
+
             app(NotificationService::class)->notifyUsers(
                 $recipients,
                 'automation',
