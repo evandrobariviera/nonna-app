@@ -35,10 +35,15 @@ class ServiceDiagnosticGenerator
 
         [$periodStart, $periodEnd] = $this->resolvePeriod($integration);
 
+        // Sem raw_payload aqui de propósito — é jsonb pesado (algumas mensagens carregam
+        // thumbnail em base64 do externalAdReply da Meta) e nada abaixo usa esse campo; puxar
+        // ele pra milhares de mensagens deixa a consulta visivelmente lenta à toa.
         $conversations = ServiceConversation::where('client_integration_id', $integration->id)
             ->where('is_group', false)
             ->whereHas('messages', fn ($q) => $q->whereBetween('sent_at', [$periodStart, $periodEnd]))
-            ->with(['messages' => fn ($q) => $q->whereBetween('sent_at', [$periodStart, $periodEnd])->orderBy('sent_at')])
+            ->with(['messages' => fn ($q) => $q->whereBetween('sent_at', [$periodStart, $periodEnd])
+                ->orderBy('sent_at')
+                ->select(['id', 'conversation_id', 'direction', 'sender_name', 'body', 'sent_at'])])
             ->get();
 
         if ($conversations->isEmpty()) {
