@@ -40,6 +40,14 @@
                                         Marcar como lido
                                     </button>
                                 </form>
+                            @else
+                                <form method="POST" action="{{ route('notifications.update-status', $n) }}">
+                                    @csrf @method('PATCH')
+                                    <input type="hidden" name="status" value="novo">
+                                    <button type="submit" class="btn btn-ghost btn-xs">
+                                        Marcar como não lido
+                                    </button>
+                                </form>
                             @endif
                             @if($n->status !== 'resolvido')
                                 <form method="POST" action="{{ route('notifications.update-status', $n) }}">
