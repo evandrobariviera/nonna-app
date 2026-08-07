@@ -31,6 +31,11 @@ class FilaController extends Controller
     {
         $query = Task::with(['client', 'project.macroPlan', 'executor', 'executors'])
             ->whereNull('sprint_id')
+            // Chamado (is_ticket=true) só entra aqui depois de "enviado pra Fila"
+            // (queued_at) — antes disso fica só na tela de Tickets (triagem, protege
+            // a Fila de chamado ainda não avaliado). Tarefa de projeto não passa por
+            // essa checagem, sempre aparece.
+            ->where(fn ($q) => $q->where('is_ticket', false)->orWhereNotNull('queued_at'))
             ->orderByRaw("due_date NULLS LAST")
             ->orderBy('created_at');
 

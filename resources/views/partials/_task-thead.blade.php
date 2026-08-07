@@ -12,6 +12,6 @@
         <th style="width:120px">Destino</th>
         <th style="width:140px; padding-left:16px">Status</th>
         <th style="width:150px">Situação</th>
-        <th style="width:110px"></th>
+        <th style="width:140px"></th>
     </tr>
 </thead>

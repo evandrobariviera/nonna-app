@@ -25,7 +25,7 @@ class Task extends Model
         'due_date', 'approval_date', 'publish_date',
         'approval_location', 'approval_method', 'internal_approval',
         'requester_name', 'requester_whatsapp', 'requester_channel',
-        'origin', 'is_ticket', 'clickup_task_id', 'launched_at', 'custom_fields', 'clickup_attachments',
+        'origin', 'is_ticket', 'queued_at', 'clickup_task_id', 'launched_at', 'custom_fields', 'clickup_attachments',
     ];
 
     protected $casts = [
@@ -33,6 +33,7 @@ class Task extends Model
         'approval_date'     => 'date',
         'publish_date'      => 'date',
         'launched_at'       => 'datetime',
+        'queued_at'         => 'datetime',
         'is_ticket'         => 'boolean',
         'internal_approval' => 'boolean',
         'custom_fields'          => 'array',

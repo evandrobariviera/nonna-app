@@ -268,6 +268,17 @@ class TaskController extends Controller
             ->with('success', 'Tarefa atualizada.');
     }
 
+    // Chamado sai da tela de Tickets (triagem) e passa a aparecer na Fila. Só faz
+    // sentido pra chamado avulso — tarefa de projeto já nasce direto na Fila.
+    public function sendToFila(Task $task)
+    {
+        abort_unless($task->is_ticket, 403);
+
+        $task->update(['queued_at' => now()]);
+
+        return redirect()->back()->with('success', 'Chamado enviado para a Fila.');
+    }
+
     public function updatePriority(Request $request, Task $task)
     {
         $task->update(['priority' => $request->validate([

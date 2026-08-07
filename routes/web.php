@@ -499,6 +499,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('tasks.update-project');
     Route::patch('/tarefas/{task}/cliente', [TaskController::class, 'updateClient'])
         ->name('tasks.update-client');
+    Route::post('/tarefas/{task}/fila', [TaskController::class, 'sendToFila'])
+        ->name('tasks.send-to-fila');
     Route::delete('/projetos/{project}/tarefas/{task}', [TaskController::class, 'destroyStandalone'])
         ->name('tasks.destroyStandalone');
 

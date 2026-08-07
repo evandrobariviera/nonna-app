@@ -57,6 +57,11 @@ class TicketController extends Controller
             // executado por lá — mantê-lo aqui também duplicaria a tarefa nas
             // duas telas. Some daqui automaticamente se saída da sprint reverter.
             ->whereNull('sprint_id')
+            // Chamado nasce só aqui (triagem — protege a Fila de coisa ainda não
+            // avaliada, já que cai primeiro no Atendimento). Some daqui assim que
+            // alguém manda pra Fila (queued_at) — some também naturalmente se for
+            // direto pra uma Sprint (sprint_id, acima), sem nunca passar pela Fila.
+            ->whereNull('queued_at')
             ->orderByDesc('created_at');
 
         if (!$request->boolean('mostrar_fechados')) {

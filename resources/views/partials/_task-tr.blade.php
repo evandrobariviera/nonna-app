@@ -153,33 +153,43 @@
     </td>
 
     {{-- Ações --}}
-    <td style="width:110px">
+    <td style="width:130px">
         <div class="row-actions flex items-center gap-1.5">
-            @if($context === 'fila' && isset($sprints) && $sprints->isNotEmpty())
-                <div x-data="{ sprintOpen: false, sprintStyle: '' }" class="relative">
-                    <button @click="sprintOpen = !sprintOpen; sprintStyle = dropdownStyle($el, 'bottom-right')" type="button" class="btn btn-ghost btn-xs">
-                        → Sprint
+            @if($context === 'ticket')
+                {{-- Chamado nasce em triagem (Tickets) — precisa ser mandado explicitamente
+                     pra Fila ou direto pra uma Sprint; nenhuma das duas é automática. --}}
+                <form method="POST" action="{{ route('tasks.send-to-fila', $task) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-ghost btn-xs" title="Enviar para a Fila">
+                        → Fila
                     </button>
-                    <template x-teleport="body">
-                        <div x-show="sprintOpen" @click.outside="sprintOpen = false" x-close-on-scroll="sprintOpen" x-cloak
-                             class="rounded shadow-lg py-1"
-                             :style="sprintStyle + 'background:var(--s1); border:1px solid var(--border2); min-width:160px'">
-                            @foreach($sprints as $sp)
-                                <form method="POST" action="{{ route('tasks.assign-sprint', $task) }}">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="sprint_id" value="{{ $sp->id }}">
-                                    <button type="submit"
-                                        class="w-full text-left px-3 py-1.5 text-xs"
-                                        style="color:var(--text)"
-                                        onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
-                                        {{ $sp->title }}
-                                        @if($sp->status === 'active') <span class="badge badge-green" style="font-size:9px">ativa</span> @endif
-                                    </button>
-                                </form>
-                            @endforeach
-                        </div>
-                    </template>
-                </div>
+                </form>
+
+                @if(isset($sprints) && $sprints->isNotEmpty())
+                    <div x-data="{ sprintOpen: false, sprintStyle: '' }" class="relative">
+                        <button @click="sprintOpen = !sprintOpen; sprintStyle = dropdownStyle($el, 'bottom-right')" type="button" class="btn btn-ghost btn-xs">
+                            → Sprint
+                        </button>
+                        <template x-teleport="body">
+                            <div x-show="sprintOpen" @click.outside="sprintOpen = false" x-close-on-scroll="sprintOpen" x-cloak
+                                 class="rounded shadow-lg py-1"
+                                 :style="sprintStyle + 'background:var(--s1); border:1px solid var(--border2); min-width:160px'">
+                                @foreach($sprints as $sp)
+                                    <form method="POST" action="{{ route('sprints.add-task', [$sp, $task]) }}">
+                                        @csrf
+                                        <button type="submit"
+                                            class="w-full text-left px-3 py-1.5 text-xs"
+                                            style="color:var(--text)"
+                                            onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                                            {{ $sp->title }}
+                                            @if($sp->status === 'active') <span class="badge badge-green" style="font-size:9px">ativa</span> @endif
+                                        </button>
+                                    </form>
+                                @endforeach
+                            </div>
+                        </template>
+                    </div>
+                @endif
             @endif
         </div>
     </td>
