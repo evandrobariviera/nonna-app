@@ -6,7 +6,7 @@
             <form method="POST" action="{{ route('tickets.store') }}"
                   enctype="multipart/form-data"
                   class="grid grid-cols-2 gap-4 md:grid-cols-3"
-                  x-data="{ ...executorPicker(), selectedClient: '{{ old('client_id') }}', selectedProject: '{{ old('project_id') }}' }">
+                  x-data="{ ...executorPicker(), selectedClient: '{{ old('client_id') }}', selectedProject: '{{ old('project_id') }}', allProjects: @js($projects->map(fn ($p) => ['id' => $p->id, 'title' => $p->title, 'client_id' => $p->client_id])) }">
                 @csrf
 
                 {{-- Título --}}
@@ -47,12 +47,12 @@
                         class="w-full px-4 py-2.5 text-sm focus:outline-none"
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                         <option value="">— sem vínculo (fica em Tickets) —</option>
-                        @foreach($projects as $p)
-                            <option value="{{ $p->id }}" x-bind:hidden="selectedClient && selectedClient !== '{{ $p->client_id }}'"
-                                {{ old('project_id') === $p->id ? 'selected' : '' }}>
-                                {{ $p->title }}
-                            </option>
-                        @endforeach
+                        {{-- Opções montadas via JS (não com x-bind:hidden num <option> fixo) —
+                             navegador não reaplica hidden de forma confiável dentro do popup
+                             nativo do <select>; só cria de fato as opções do cliente escolhido. --}}
+                        <template x-for="p in allProjects.filter(p => !selectedClient || p.client_id === selectedClient)" :key="p.id">
+                            <option :value="p.id" x-text="p.title"></option>
+                        </template>
                     </select>
                     <p class="text-xs mt-1" style="color:var(--muted)">Selecionar já manda direto pra Fila, pulando a triagem.</p>
                     @error('project_id') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror

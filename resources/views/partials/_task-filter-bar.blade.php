@@ -13,8 +13,19 @@
     $filterKeys = array_map(fn ($k) => $prefix . $k, ['search', 'client_id', 'project_id', 'origin', 'task_type', 'status', 'executor_id', 'responsavel_id', 'atrasadas', 'pendencia', 'mostrar_fechados', 'mostrar_inativos']);
 @endphp
 
+@php
+    // Opções do Projeto são montadas via JS (não com x-bind:hidden num <option> fixo) —
+    // o navegador não reaplica hidden de forma confiável dentro do popup nativo do
+    // <select>; só cria de fato as opções do cliente escolhido.
+    $projectOptions = $projects->map(fn ($p) => [
+        'id'        => $p->id,
+        'client_id' => $p->client_id,
+        'label'     => $p->title . ($p->client ? ' (' . $p->client->displayName() . ')' : ''),
+    ]);
+@endphp
+
 <form method="GET" action="{{ $formAction }}"
-      x-data="{ selectedClient: '{{ request($prefix . 'client_id') }}', selectedProject: '{{ request($prefix . 'project_id') }}' }"
+      x-data="{ selectedClient: '{{ request($prefix . 'client_id') }}', selectedProject: '{{ request($prefix . 'project_id') }}', allProjects: @js($projectOptions) }"
       class="card card-body mb-5 flex flex-wrap items-end gap-3"
       @if(isset($resultsUrl) && isset($resultsTarget))
           data-live-filter data-results-url="{{ $resultsUrl }}" data-target="{{ $resultsTarget }}"
@@ -57,11 +68,9 @@
         <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Projeto</label>
         <select name="{{ $prefix }}project_id" x-model="selectedProject" class="filter-select w-full">
             <option value="">Todos os projetos</option>
-            @foreach($projects as $p)
-                <option value="{{ $p->id }}" x-bind:hidden="selectedClient && selectedClient !== '{{ $p->client_id }}'">
-                    {{ $p->title }} @if($p->client)({{ $p->client->displayName() }})@endif
-                </option>
-            @endforeach
+            <template x-for="p in allProjects.filter(p => !selectedClient || p.client_id === selectedClient)" :key="p.id">
+                <option :value="p.id" x-text="p.label"></option>
+            </template>
         </select>
     </div>
 
