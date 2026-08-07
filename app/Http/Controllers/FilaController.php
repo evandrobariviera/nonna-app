@@ -56,6 +56,23 @@ class FilaController extends Controller
         if ($request->filled('task_type')) {
             $query->where('task_type', $request->task_type);
         }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('executor_id')) {
+            $id = $request->executor_id;
+            $query->where(function ($q) use ($id) {
+                $q->whereHas('executors', fn ($qq) => $qq->where('role', 'executor')->where('user_id', $id))
+                  ->orWhere(function ($q2) use ($id) {
+                      $q2->where('executor_id', $id)
+                         ->whereDoesntHave('executors', fn ($qq) => $qq->where('role', 'executor'));
+                  });
+            });
+        }
+        if ($request->filled('responsavel_id')) {
+            $id = $request->responsavel_id;
+            $query->whereHas('executors', fn ($qq) => $qq->where('role', 'responsavel')->where('user_id', $id));
+        }
         if ($request->boolean('atrasadas')) {
             $query->whereNotNull('due_date')->where('due_date', '<', today());
         }

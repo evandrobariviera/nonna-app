@@ -163,7 +163,7 @@
         </div>
     </div>
 
-    <div x-data="{ tab: '{{ request('view', 'board') }}', clientFilter: '', selectMode: false, ...taskBulk() }" x-cloak>
+    <div x-data="{ tab: '{{ request('view', 'list') }}', clientFilter: '', selectMode: false, ...taskBulk() }" x-cloak>
 
         {{-- TABS --}}
         <div class="flex items-center gap-1 mb-5" style="border-bottom:1px solid var(--border2)">
@@ -349,6 +349,7 @@
                 'extraHidden'   => ['view' => 'list'],
                 'clients'       => $clients,
                 'projects'      => $projects,
+                'users'         => $users,
                 'groupBy'       => $listGroupBy,
                 'clearUrl'      => route('sprints.show', ['sprint' => $sprint, 'view' => 'list', 'list_group_by' => $listGroupBy]),
                 'resultsUrl'    => route('sprints.list-results', $sprint),

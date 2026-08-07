@@ -43,6 +43,7 @@
         'prefix'        => '',
         'clients'       => $clients,
         'projects'      => $projects,
+        'users'         => $users,
         'groupBy'       => $groupBy,
         'clearUrl'      => route('fila.index', ['group_by' => $groupBy]),
         'resultsUrl'    => route('fila.results'),

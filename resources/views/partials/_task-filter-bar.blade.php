@@ -4,11 +4,13 @@
      cliente esconde no <select> de Projeto qualquer projeto de outro cliente. $projects já
      vem filtrado pra só projetos ativos (não concluído/cancelado) — feito no controller.
 
-     Espera: $formAction (string), $prefix ('' ou 'list_'), $clients, $projects, $groupBy
-     (valor atual do group_by), $clearUrl (string). Opcional: $extraHidden (array name=>value). --}}
+     Espera: $formAction (string), $prefix ('' ou 'list_'), $clients, $projects, $users,
+     $groupBy (valor atual do group_by), $clearUrl (string). Opcional: $extraHidden (array
+     name=>value). Filtro por Executor/Responsável/Status é independente do agrupamento —
+     dá pra agrupar por Cliente e ainda assim filtrar só as tarefas de um Executor específico. --}}
 @php
     $extraHidden = $extraHidden ?? [];
-    $filterKeys = array_map(fn ($k) => $prefix . $k, ['search', 'client_id', 'project_id', 'origin', 'task_type', 'atrasadas', 'pendencia', 'mostrar_fechados', 'mostrar_inativos']);
+    $filterKeys = array_map(fn ($k) => $prefix . $k, ['search', 'client_id', 'project_id', 'origin', 'task_type', 'status', 'executor_id', 'responsavel_id', 'atrasadas', 'pendencia', 'mostrar_fechados', 'mostrar_inativos']);
 @endphp
 
 <form method="GET" action="{{ $formAction }}"
@@ -79,6 +81,38 @@
             <option value="">Todos os tipos</option>
             @foreach(\App\Models\Task::$types as $key => $label)
                 <option value="{{ $key }}" {{ request($prefix . 'task_type') === $key ? 'selected' : '' }}>{{ $label }}</option>
+            @endforeach
+        </select>
+    </div>
+
+    <div class="w-px self-stretch" style="background:var(--border2)"></div>
+
+    <div class="min-w-40">
+        <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Status</label>
+        <select name="{{ $prefix }}status" class="filter-select w-full">
+            <option value="">Todos os status</option>
+            @foreach(\App\Models\Task::$statuses as $key => $s)
+                <option value="{{ $key }}" {{ request($prefix . 'status') === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
+            @endforeach
+        </select>
+    </div>
+
+    <div class="min-w-44">
+        <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Executor</label>
+        <select name="{{ $prefix }}executor_id" class="filter-select w-full">
+            <option value="">Todos os executores</option>
+            @foreach($users as $u)
+                <option value="{{ $u->id }}" {{ (string) request($prefix . 'executor_id') === (string) $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
+            @endforeach
+        </select>
+    </div>
+
+    <div class="min-w-44">
+        <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Responsável</label>
+        <select name="{{ $prefix }}responsavel_id" class="filter-select w-full">
+            <option value="">Todos os responsáveis</option>
+            @foreach($users as $u)
+                <option value="{{ $u->id }}" {{ (string) request($prefix . 'responsavel_id') === (string) $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
             @endforeach
         </select>
     </div>

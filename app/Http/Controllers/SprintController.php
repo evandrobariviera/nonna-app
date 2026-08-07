@@ -172,6 +172,23 @@ class SprintController extends Controller
         if ($request->filled('list_task_type')) {
             $tasks = $tasks->where('task_type', $request->get('list_task_type'));
         }
+        if ($request->filled('list_status')) {
+            $tasks = $tasks->where('status', $request->get('list_status'));
+        }
+        if ($request->filled('list_executor_id')) {
+            $id = $request->get('list_executor_id');
+            $tasks = $tasks->filter(function ($t) use ($id) {
+                $execList = $t->executors->filter(fn ($u) => $u->pivot->role === 'executor');
+                if ($execList->isEmpty() && $t->executor) {
+                    $execList = collect([$t->executor]);
+                }
+                return $execList->contains('id', $id);
+            });
+        }
+        if ($request->filled('list_responsavel_id')) {
+            $id = $request->get('list_responsavel_id');
+            $tasks = $tasks->filter(fn ($t) => $t->executors->contains(fn ($u) => $u->pivot->role === 'responsavel' && (string) $u->id === (string) $id));
+        }
         if ($request->boolean('list_atrasadas')) {
             $tasks = $tasks->filter(fn ($t) => $t->isOverdue());
         }
