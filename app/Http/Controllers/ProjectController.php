@@ -140,7 +140,7 @@ class ProjectController extends Controller
      */
     public function preview(Project $project)
     {
-        $project->load(['client', 'macroPlan']);
+        $project->load(['client', 'macroPlan', 'attachments' => fn ($q) => $q->orderByDesc('created_at')]);
 
         $recentTasks = $project->tasks()
             ->where('status', '!=', 'cancelado')

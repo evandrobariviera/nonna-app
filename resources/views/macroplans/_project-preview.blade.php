@@ -36,6 +36,25 @@
         <p class="text-xs mt-2" style="color:var(--muted)">{{ $doneTasks }} de {{ $totalTasks }} tarefas concluídas</p>
     </div>
 
+    {{-- Anexos do projeto --}}
+    @if($project->attachments->isNotEmpty())
+        <div>
+            <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Anexos do projeto</p>
+            <div class="flex flex-col gap-2">
+                @foreach($project->attachments as $a)
+                    <a href="{{ $a->url() }}" target="_blank"
+                       class="card card-body flex items-center gap-2 transition-colors"
+                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'"
+                       title="{{ $a->filename }}">
+                        <span style="font-size:16px">{{ $a->icon() }}</span>
+                        <span class="text-sm font-medium truncate" style="color:var(--text)">{{ $a->filename }}</span>
+                        <span class="text-xs flex-shrink-0 ml-auto" style="color:var(--muted)">{{ $a->sizeForHumans() }}</span>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     {{-- Tarefas recentes --}}
     @if($recentTasks->isNotEmpty())
         <div>
@@ -52,6 +71,15 @@
             </div>
         </div>
     @endif
+
+    {{-- Link pra página completa --}}
+    <a href="{{ $project->macro_plan_id ? route('macroplans.projects.show', [$project->macro_plan_id, $project]) : route('projects.showDirect', $project) }}"
+       class="text-center px-4 py-2.5 text-xs font-bold transition-colors"
+       style="border:1px solid var(--border2); color:var(--muted2)"
+       onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
+       onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+        Ver página completa do projeto →
+    </a>
 
     {{-- Produção (entregáveis) --}}
     @if($deliverables->isNotEmpty())
@@ -77,13 +105,4 @@
             </div>
         </div>
     @endif
-
-    {{-- Link pra página completa --}}
-    <a href="{{ $project->macro_plan_id ? route('macroplans.projects.show', [$project->macro_plan_id, $project]) : route('projects.showDirect', $project) }}"
-       class="text-center px-4 py-2.5 text-xs font-bold transition-colors"
-       style="border:1px solid var(--border2); color:var(--muted2)"
-       onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-       onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
-        Ver página completa do projeto →
-    </a>
 </div>
