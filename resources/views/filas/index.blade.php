@@ -52,5 +52,7 @@
     <div id="filas-results">
         @include('filas._results')
     </div>
+    <x-badge-fill-menu />
+    <x-person-fill-menu :users="$users" />
 
 </x-app-layout>

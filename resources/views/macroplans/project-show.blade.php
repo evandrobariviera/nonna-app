@@ -717,6 +717,8 @@
         </div>
 
     </div>{{-- /x-data kanban --}}
+    <x-badge-fill-menu />
+    <x-person-fill-menu :users="$users" />
 
     {{-- BRIEFINGS --}}
     @if($project->disciplines)

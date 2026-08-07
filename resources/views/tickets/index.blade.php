@@ -60,5 +60,7 @@
     <div id="tickets-results">
         @include('tickets._results')
     </div>
+    <x-badge-fill-menu />
+    <x-person-fill-menu :users="$users" />
 
 </x-app-layout>

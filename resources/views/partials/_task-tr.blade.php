@@ -21,9 +21,10 @@
         default   => '',
     };
 
-    // Estado inicial do Alpine (linha) pras células "Monday fill" ficarem reativas — atualizado
-    // localmente pelo _person-fill/_status-fill/_situacao-fill via applyFill() (AJAX, sem
-    // reload), sem depender do servidor devolver nada além de "deu certo".
+    // Estado inicial do Alpine (linha) pras células "Monday fill" ficarem reativas —
+    // atualizado localmente quando o menu único (badgeFill/personFill, ver
+    // resources/js/monday-fill.js) dispara badge-fill-applied/person-fill-applied
+    // depois de um PATCH bem-sucedido (AJAX, sem reload).
     $respUser = $respList->first();
     $execUser = $execList->first();
     $jsStr    = fn (?string $v) => $v === null ? 'null' : "'" . addslashes($v) . "'";
@@ -31,12 +32,18 @@
 
 <tr class="{{ $priorityClass }} {{ $task->isOverdue() ? 'row-overdue' : '' }}"
     x-data="{
-        statusOpen: false, situacaoOpen: false, respOpen: false, execOpen: false,
-        statusStyle: '', situacaoStyle: '', respStyle: '', execStyle: '',
         statusKey: '{{ $task->status }}', statusLabel: {{ $jsStr($task->statusLabel()) }}, statusColor: '{{ $task->statusHex() }}',
         situacaoKey: '{{ $task->situation ?? '' }}', situacaoLabel: {{ $jsStr($hasSituation ? $task->situationLabel() : '—') }}, situacaoColor: '{{ $hasSituation ? $task->situationColor() : '' }}',
         respName: {{ $jsStr($respUser?->name) }}, respAvatarUrl: {{ $jsStr($respUser?->avatarUrl()) }}, respInitials: {{ $jsStr($respUser ? strtoupper(substr($respUser->name, 0, 2)) : null) }},
         execName: {{ $jsStr($execUser?->name) }}, execAvatarUrl: {{ $jsStr($execUser?->avatarUrl()) }}, execInitials: {{ $jsStr($execUser ? strtoupper(substr($execUser->name, 0, 2)) : null) }}
+    }"
+    @badge-fill-applied.window="if ($event.detail.taskId === '{{ $task->id }}') {
+        if ($event.detail.field === 'status') { statusKey = $event.detail.key; statusLabel = $event.detail.label; statusColor = $event.detail.color }
+        else { situacaoKey = $event.detail.key; situacaoLabel = $event.detail.label; situacaoColor = $event.detail.color }
+    }"
+    @person-fill-applied.window="if ($event.detail.taskId === '{{ $task->id }}') {
+        if ($event.detail.role === 'responsavel') { respName = $event.detail.name; respAvatarUrl = $event.detail.avatarUrl; respInitials = $event.detail.initials }
+        else { execName = $event.detail.name; execAvatarUrl = $event.detail.avatarUrl; execInitials = $event.detail.initials }
     }">
 
     {{-- Checkbox --}}

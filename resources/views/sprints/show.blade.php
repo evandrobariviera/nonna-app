@@ -358,6 +358,8 @@
             <div id="sprint-list-results">
                 @include('sprints._list-results')
             </div>
+            <x-badge-fill-menu />
+            <x-person-fill-menu :users="$users" />
         </div>
 
         {{-- ── TAB PLANEJAMENTO ── --}}
