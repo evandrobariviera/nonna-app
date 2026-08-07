@@ -203,11 +203,11 @@
             <p class="text-xs font-mono uppercase tracking-widest mb-4" style="color:var(--muted)">Nova Tarefa</p>
             <form method="POST" action="{{ $standalone ? route('tasks.storeStandalone', $project) : route('tasks.store', [$macroplan, $project]) }}"
                   enctype="multipart/form-data"
-                  class="grid grid-cols-2 gap-4 md:grid-cols-3">
+                  class="grid grid-cols-2 gap-4 md:grid-cols-4">
                 @csrf
 
                 {{-- Título --}}
-                <div class="col-span-2 md:col-span-3">
+                <div class="col-span-2 md:col-span-4">
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">
                         Título <span style="color:var(--orange)">*</span>
                     </label>
@@ -220,7 +220,7 @@
                 {{-- Tipo --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Tipo</label>
-                    <select name="task_type" class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                    <select name="task_type" class="w-full px-3 py-2.5 text-sm focus:outline-none"
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                         @foreach(\App\Models\Task::$types as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
@@ -231,7 +231,7 @@
                 {{-- Destino --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Destino</label>
-                    <select name="destination" class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                    <select name="destination" class="w-full px-3 py-2.5 text-sm focus:outline-none"
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                         <option value="">— sem destino —</option>
                         @foreach(\App\Models\Task::$destinations as $key => $label)
@@ -243,7 +243,7 @@
                 {{-- Status --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Status</label>
-                    <select name="status" class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                    <select name="status" class="w-full px-3 py-2.5 text-sm focus:outline-none"
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                         @foreach(\App\Models\Task::$statuses as $key => $s)
                             @if($key !== 'cancelado')
@@ -256,7 +256,7 @@
                 {{-- Origem --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Origem</label>
-                    <select name="origin" class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                    <select name="origin" class="w-full px-3 py-2.5 text-sm focus:outline-none"
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                         @foreach(\App\Models\Task::$origins as $key => $label)
                             <option value="{{ $key }}" {{ $key === 'projeto' ? 'selected' : '' }}>{{ $label }}</option>
@@ -267,7 +267,7 @@
                 {{-- Método de Aprovação --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Método de Aprovação</label>
-                    <select name="approval_method" class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                    <select name="approval_method" class="w-full px-3 py-2.5 text-sm focus:outline-none"
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                         <option value="">— não definido —</option>
                         @foreach(\App\Models\Task::$approvalMethods as $key => $label)
@@ -276,31 +276,21 @@
                     </select>
                 </div>
 
-                {{-- Vencimento --}}
+                {{-- Situação --}}
                 <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Vencimento</label>
-                    <input type="date" name="due_date" class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Situação</label>
+                    <select name="situation" class="w-full px-3 py-2.5 text-sm focus:outline-none"
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                </div>
-
-                {{-- Data de Aprovação --}}
-                <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Data de Aprovação</label>
-                    <input type="date" name="approval_date" class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                </div>
-
-                {{-- Data de Publicação --}}
-                <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Data de Publicação</label>
-                    <input type="date" name="publish_date" class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        @foreach(\App\Models\Task::$situations as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
                 </div>
 
                 {{-- Responsável --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Responsável</label>
-                    <select name="responsavel_id" class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                    <select name="responsavel_id" class="w-full px-3 py-2.5 text-sm focus:outline-none"
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                         <option value="">— nenhum —</option>
                         @foreach($users as $u)
@@ -309,8 +299,39 @@
                     </select>
                 </div>
 
+                {{-- Vencimento --}}
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Vencimento</label>
+                    <input type="date" name="due_date" class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                </div>
+
+                {{-- Data de Aprovação --}}
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Data de Aprovação</label>
+                    <input type="date" name="approval_date" class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                </div>
+
+                {{-- Data de Publicação --}}
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Data de Publicação</label>
+                    <input type="date" name="publish_date" class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                </div>
+
+                {{-- Aprovação Interna --}}
+                <div class="flex items-center gap-2">
+                    <input type="hidden" name="internal_approval" value="0">
+                    <input type="checkbox" name="internal_approval" value="1" id="internal_approval_new"
+                        class="w-4 h-4" style="accent-color:var(--purple)">
+                    <label for="internal_approval_new" class="text-xs font-mono" style="color:var(--muted)">
+                        Aprovação Interna
+                    </label>
+                </div>
+
                 {{-- Executores (múltiplos) --}}
-                <div class="col-span-2 md:col-span-3" x-data="executorPicker()">
+                <div class="col-span-2 md:col-span-4" x-data="executorPicker()">
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Executores</label>
                     <div class="flex flex-wrap gap-2 mb-2" x-show="selected.length > 0">
                         <template x-for="(item, idx) in selected" :key="item.id">
@@ -337,41 +358,21 @@
                     </select>
                 </div>
 
-                {{-- Aprovação Interna --}}
-                <div class="flex items-center gap-2">
-                    <input type="hidden" name="internal_approval" value="0">
-                    <input type="checkbox" name="internal_approval" value="1" id="internal_approval_new"
-                        class="w-4 h-4" style="accent-color:var(--purple)">
-                    <label for="internal_approval_new" class="text-xs font-mono" style="color:var(--muted)">
-                        Aprovação Interna
-                    </label>
-                </div>
-
-                {{-- Situação --}}
-                <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Situação</label>
-                    <input type="text" name="situation" placeholder="Ex: Em Redação, Aguardando Arte..."
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                </div>
-
                 {{-- Descrição --}}
-                <div class="col-span-2 md:col-span-3">
+                <div class="col-span-2 md:col-span-4">
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Descrição</label>
-                    <textarea name="description" rows="2" placeholder="Briefing ou observações..."
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"></textarea>
+                    <x-rich-editor name="description" min-height="180px" />
                 </div>
 
                 {{-- Anexos --}}
-                <div class="col-span-2 md:col-span-3">
+                <div class="col-span-2 md:col-span-4">
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Anexos</label>
                     <input type="file" name="files[]" multiple
                         class="w-full px-4 py-2.5 text-sm focus:outline-none"
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                 </div>
 
-                <div class="col-span-2 md:col-span-3 flex items-center gap-3">
+                <div class="col-span-2 md:col-span-4 flex items-center gap-3">
                     <button type="submit"
                         class="px-5 py-2.5 text-xs font-bold font-mono uppercase tracking-widest text-white"
                         style="background:var(--purple)">
@@ -630,10 +631,12 @@
                                     </div>
 
                                     {{-- Situação --}}
-                                    <input type="text" name="situation" value="{{ $task->situation }}"
-                                        placeholder="Situação (sub-status)"
-                                        class="w-full px-2 py-1.5 text-xs focus:outline-none"
+                                    <select name="situation" class="w-full px-2 py-1.5 text-xs focus:outline-none"
                                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                        @foreach(\App\Models\Task::$situations as $key => $label)
+                                            <option value="{{ $key }}" {{ ($task->situation ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
 
                                     {{-- Descrição --}}
                                     <textarea name="description" rows="2"

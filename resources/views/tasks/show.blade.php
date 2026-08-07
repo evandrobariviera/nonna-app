@@ -312,10 +312,7 @@
 
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Descrição / Briefing</label>
-                        <textarea name="description" rows="5"
-                            placeholder="Briefing, detalhes, links de referência..."
-                            class="w-full px-4 py-3 text-sm focus:outline-none resize-none leading-relaxed"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $task->description }}</textarea>
+                        <x-rich-editor name="description" :value="$task->description" min-height="180px" />
                     </div>
 
                     <div class="flex items-center gap-3 pt-2" style="border-top:1px solid var(--border2)">
@@ -334,7 +331,9 @@
             @if($task->description)
                 <div x-show="!editing" class="card card-body-lg">
                     <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Briefing / Descrição</p>
-                    <div class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.75">{{ $task->description }}</div>
+                    <div class="rich-editor" style="padding:0; margin:0; min-height:0; cursor:default; resize:none; overflow:visible">
+                        <div class="ProseMirror">{!! $task->description !!}</div>
+                    </div>
                 </div>
             @endif
 
