@@ -18,7 +18,7 @@ class TicketController extends Controller
     {
         $tickets  = $this->filteredTickets($request);
         $clients  = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
-        $users    = User::orderBy('name')->get(['id', 'name']);
+        $users    = User::orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']);
         $projects = $this->visibleProjects($request);
         $sprints  = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get(['id', 'title', 'status']);
 
@@ -30,7 +30,7 @@ class TicketController extends Controller
     public function results(Request $request)
     {
         $tickets  = $this->filteredTickets($request);
-        $users    = User::orderBy('name')->get(['id', 'name']);
+        $users    = User::orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']);
         $projects = $this->visibleProjects($request);
         $sprints  = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get(['id', 'title', 'status']);
 
@@ -82,7 +82,7 @@ class TicketController extends Controller
     public function create()
     {
         $clients = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
-        $users   = User::orderBy('name')->get(['id', 'name']);
+        $users   = User::orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']);
         $sprints = Sprint::whereIn('status', ['planning', 'active'])->orderByDesc('starts_at')->get();
 
         return view('tickets.create', compact('clients', 'users', 'sprints'));

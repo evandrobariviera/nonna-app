@@ -104,7 +104,10 @@ class SprintController extends Controller
             ->get();
 
         $clients      = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
-        $users        = User::orderBy('name')->get(['id', 'name']);
+        // avatar_path/avatar_disk também, não só id+name — o dropdown de Responsável/Executor
+        // (_person-fill.blade.php) precisa disso pra mostrar a foto certa assim que a pessoa é
+        // escolhida (sem esperar reload), não só o avatar de quem já estava atribuído.
+        $users        = User::orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']);
 
         // Projetos pro dropdown "Vincular a projeto" (Board) e pro filtro de Projeto
         // (Lista) — só ativos, só de cliente ativo. Diferente da Fila, essa lista não

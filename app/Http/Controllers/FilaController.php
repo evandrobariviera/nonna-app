@@ -89,7 +89,7 @@ class FilaController extends Controller
             'pendencias'  => $pendenciasCount,
         ];
 
-        $users = User::orderBy('name')->get(['id', 'name']);
+        $users = User::orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']);
 
         // Projetos pro dropdown "Vincular a projeto" da barra de ações em massa —
         // só ativos, só de cliente ativo, e restrito ao cliente filtrado no momento

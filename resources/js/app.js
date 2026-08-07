@@ -7,6 +7,7 @@ import { registerKanbanDnd } from './kanban-dnd.js';
 import { registerSidePanel } from './side-panel.js';
 import { registerLiveFilter } from './live-filter.js';
 import { registerConfirmDialog } from './confirm-dialog.js';
+import { registerInlinePatch } from './inline-patch.js';
 
 window.Alpine = Alpine;
 
@@ -19,5 +20,6 @@ registerKanbanDnd();
 registerSidePanel(Alpine);
 registerLiveFilter();
 registerConfirmDialog(Alpine);
+registerInlinePatch();
 
 Alpine.start();

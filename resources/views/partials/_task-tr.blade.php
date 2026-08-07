@@ -20,10 +20,24 @@
         'medio'   => 'priority-medio',
         default   => '',
     };
+
+    // Estado inicial do Alpine (linha) pras células "Monday fill" ficarem reativas — atualizado
+    // localmente pelo _person-fill/_status-fill/_situacao-fill via applyFill() (AJAX, sem
+    // reload), sem depender do servidor devolver nada além de "deu certo".
+    $respUser = $respList->first();
+    $execUser = $execList->first();
+    $jsStr    = fn (?string $v) => $v === null ? 'null' : "'" . addslashes($v) . "'";
 @endphp
 
 <tr class="{{ $priorityClass }} {{ $task->isOverdue() ? 'row-overdue' : '' }}"
-    x-data="{ statusOpen: false, situacaoOpen: false, respOpen: false, execOpen: false, statusStyle: '', situacaoStyle: '', respStyle: '', execStyle: '' }">
+    x-data="{
+        statusOpen: false, situacaoOpen: false, respOpen: false, execOpen: false,
+        statusStyle: '', situacaoStyle: '', respStyle: '', execStyle: '',
+        statusKey: '{{ $task->status }}', statusLabel: {{ $jsStr($task->statusLabel()) }}, statusColor: '{{ $task->statusHex() }}',
+        situacaoKey: '{{ $task->situation ?? '' }}', situacaoLabel: {{ $jsStr($hasSituation ? $task->situationLabel() : '—') }}, situacaoColor: '{{ $hasSituation ? $task->situationColor() : '' }}',
+        respName: {{ $jsStr($respUser?->name) }}, respAvatarUrl: {{ $jsStr($respUser?->avatarUrl()) }}, respInitials: {{ $jsStr($respUser ? strtoupper(substr($respUser->name, 0, 2)) : null) }},
+        execName: {{ $jsStr($execUser?->name) }}, execAvatarUrl: {{ $jsStr($execUser?->avatarUrl()) }}, execInitials: {{ $jsStr($execUser ? strtoupper(substr($execUser->name, 0, 2)) : null) }}
+    }">
 
     {{-- Checkbox --}}
     <td class="text-center">
@@ -123,12 +137,12 @@
 
     {{-- Status (Monday fill clicável + dropdown) --}}
     <td class="monday-fill-td relative" style="width:140px">
-        @include('partials._status-fill', ['task' => $task, 'statusUrl' => $statusUrl])
+        @include('partials._status-fill', ['task' => $task, 'statusUrl' => $statusUrl, 'ajax' => true])
     </td>
 
     {{-- Situação (Monday fill clicável + dropdown) --}}
     <td class="{{ $hasSituation ? 'monday-fill-td' : '' }} relative" style="width:150px">
-        @include('partials._situacao-fill', ['task' => $task, 'situacaoUrl' => $situacaoUrl])
+        @include('partials._situacao-fill', ['task' => $task, 'situacaoUrl' => $situacaoUrl, 'ajax' => true])
     </td>
 
     {{-- Ações --}}
