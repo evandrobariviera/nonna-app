@@ -140,9 +140,13 @@ class SprintController extends Controller
 
         $sprints      = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get();
         $activeSprint = $sprints->firstWhere('status', 'active');
+        // _person-fill.blade.php (dropdown de Responsável/Executor na linha) precisa de
+        // $users — em show() isso já vinha do escopo da página inteira; aqui (fragmento
+        // AJAX) precisa ser buscado também, senão o @foreach($users as $u) quebra a 500.
+        $users        = User::orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']);
 
         return view('sprints._list-results', compact(
-            'listTasks', 'listGrouped', 'listGroupBy', 'sprints', 'activeSprint',
+            'listTasks', 'listGrouped', 'listGroupBy', 'sprints', 'activeSprint', 'users',
             'sprintTasksByExecutor', 'statusVolumeByDay'
         ));
     }
