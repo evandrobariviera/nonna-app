@@ -84,13 +84,14 @@ class TicketController extends Controller
         return $query->paginate(30)->withQueryString();
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $clients = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
-        $users   = User::orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']);
-        $sprints = Sprint::whereIn('status', ['planning', 'active'])->orderByDesc('starts_at')->get();
+        $clients  = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
+        $users    = User::orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']);
+        $sprints  = Sprint::whereIn('status', ['planning', 'active'])->orderByDesc('starts_at')->get();
+        $projects = $this->visibleProjects($request);
 
-        return view('tickets.create', compact('clients', 'users', 'sprints'));
+        return view('tickets.create', compact('clients', 'users', 'sprints', 'projects'));
     }
 
     public function store(Request $request)
@@ -101,6 +102,7 @@ class TicketController extends Controller
             'task_type'          => 'required|in:' . implode(',', array_keys(Task::$types)),
             'destination'        => 'nullable|in:' . implode(',', array_keys(Task::$destinations)),
             'client_id'          => 'required|uuid|exists:clients,id',
+            'project_id'         => 'nullable|uuid|exists:projects,id',
             'executor_id'        => 'nullable|exists:users,id',
             'executor_ids'       => 'nullable|array',
             'executor_ids.*'     => 'exists:users,id',
@@ -120,11 +122,19 @@ class TicketController extends Controller
             'files.*'            => 'file|max:102400', // 100 MB, mesmo limite de TaskAttachmentController
         ]);
 
+        if (!empty($data['project_id'])) {
+            $project = Project::findOrFail($data['project_id']);
+            abort_unless($project->client_id === $data['client_id'], 422, 'Esse projeto/campanha é de outro cliente.');
+        }
+
         $task = Task::create([
             ...$data,
             'is_ticket'         => true,
             'origin'            => 'ticket',
             'status'            => 'backlog',
+            // Chamado sem projeto/campanha vinculado precisa de triagem manual (fica em
+            // Tickets). Já vindo com o "nível do meio" identificado, pula direto pra Fila.
+            'queued_at'         => !empty($data['project_id']) ? now() : null,
             'internal_approval' => $request->boolean('internal_approval'),
             'created_by'        => Auth::id(),
         ]);

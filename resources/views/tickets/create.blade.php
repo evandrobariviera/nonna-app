@@ -6,7 +6,7 @@
             <form method="POST" action="{{ route('tickets.store') }}"
                   enctype="multipart/form-data"
                   class="grid grid-cols-2 gap-4 md:grid-cols-3"
-                  x-data="executorPicker()">
+                  x-data="{ ...executorPicker(), selectedClient: '{{ old('client_id') }}', selectedProject: '{{ old('project_id') }}' }">
                 @csrf
 
                 {{-- Título --}}
@@ -27,7 +27,7 @@
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">
                         Cliente <span style="color:var(--orange)">*</span>
                     </label>
-                    <select name="client_id" required
+                    <select name="client_id" required x-model="selectedClient" @change="selectedProject = ''"
                         class="w-full px-4 py-2.5 text-sm focus:outline-none"
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                         <option value="">— selecione —</option>
@@ -38,6 +38,24 @@
                         @endforeach
                     </select>
                     @error('client_id') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Projeto / Campanha --}}
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Projeto / Campanha</label>
+                    <select name="project_id" x-model="selectedProject"
+                        class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        <option value="">— sem vínculo (fica em Tickets) —</option>
+                        @foreach($projects as $p)
+                            <option value="{{ $p->id }}" x-bind:hidden="selectedClient && selectedClient !== '{{ $p->client_id }}'"
+                                {{ old('project_id') === $p->id ? 'selected' : '' }}>
+                                {{ $p->title }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs mt-1" style="color:var(--muted)">Selecionar já manda direto pra Fila, pulando a triagem.</p>
+                    @error('project_id') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
                 </div>
 
                 {{-- Tipo --}}
