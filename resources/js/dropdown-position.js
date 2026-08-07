@@ -7,9 +7,22 @@ export function registerDropdownPosition() {
 
         const r = el.getBoundingClientRect();
         const gap = 4;
+        // Altura estimada do maior menu que usa este helper (lista de usuários do
+        // _person-fill-menu, max-height:280px) — sem isso, uma linha perto do fim da
+        // tabela abria o menu pra baixo e ele nascia fora da viewport (cortado pela
+        // barra de tarefas do SO, por ex). Vira pra cima quando não sobra espaço embaixo
+        // mas sobra em cima; do contrário mantém a direção pedida.
+        const estimatedHeight = 280;
+        let vertical = anchor.startsWith('bottom') ? 'bottom' : 'top';
+        if (vertical === 'bottom' && window.innerHeight - r.bottom < estimatedHeight && r.top > estimatedHeight) {
+            vertical = 'top';
+        } else if (vertical === 'top' && r.top < estimatedHeight && window.innerHeight - r.bottom > estimatedHeight) {
+            vertical = 'bottom';
+        }
+
         let css = 'position:fixed; z-index:9999;';
 
-        css += anchor.startsWith('bottom')
+        css += vertical === 'bottom'
             ? `top:${r.bottom + gap}px;`
             : `bottom:${window.innerHeight - r.top + gap}px;`;
 
