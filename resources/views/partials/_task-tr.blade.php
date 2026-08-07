@@ -23,7 +23,7 @@
 @endphp
 
 <tr class="{{ $priorityClass }} {{ $task->isOverdue() ? 'row-overdue' : '' }}"
-    x-data="{ statusOpen: false, situacaoOpen: false, statusStyle: '', situacaoStyle: '' }">
+    x-data="{ statusOpen: false, situacaoOpen: false, respOpen: false, execOpen: false, statusStyle: '', situacaoStyle: '', respStyle: '', execStyle: '' }">
 
     {{-- Checkbox --}}
     <td class="text-center">
@@ -79,22 +79,14 @@
         @endif
     </td>
 
-    {{-- Responsável --}}
-    <td style="width:44px; text-align:center; padding:0 4px">
-        @if($respList->isNotEmpty())
-            <x-user-avatar :user="$respList->first()" size="7" color="var(--orange)" class="mx-auto" title="{{ $respList->first()->name }}" />
-        @else
-            <span class="text-xs" style="color:var(--muted)">—</span>
-        @endif
+    {{-- Responsável (avatar clicável + dropdown pra trocar direto da lista) --}}
+    <td class="relative" style="width:44px; text-align:center; padding:0 4px">
+        @include('partials._person-fill', ['task' => $task, 'role' => 'responsavel', 'currentUser' => $respList->first()])
     </td>
 
-    {{-- Executor --}}
-    <td style="width:44px; text-align:center; padding:0 4px">
-        @if($execList->isNotEmpty())
-            <x-user-avatar :user="$execList->first()" size="7" color="var(--purple)" class="mx-auto" title="{{ $execList->first()->name }}" />
-        @else
-            <span class="text-xs" style="color:var(--muted)">—</span>
-        @endif
+    {{-- Executor (avatar clicável + dropdown pra trocar direto da lista) --}}
+    <td class="relative" style="width:44px; text-align:center; padding:0 4px">
+        @include('partials._person-fill', ['task' => $task, 'role' => 'executor', 'currentUser' => $execList->first()])
     </td>
 
     {{-- Data de Aprovação --}}

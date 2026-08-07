@@ -16,7 +16,7 @@
 @endphp
 
 <tr class="{{ $priorityClass }} {{ $task->isOverdue() ? 'row-overdue' : '' }}"
-    x-show="groupOpen" x-data="{ statusOpen: false, situacaoOpen: false, statusStyle: '', situacaoStyle: '' }">
+    x-show="groupOpen" x-data="{ statusOpen: false, situacaoOpen: false, respOpen: false, execOpen: false, statusStyle: '', situacaoStyle: '', respStyle: '', execStyle: '' }">
 
     {{-- Checkbox --}}
     <td class="text-center">
@@ -69,22 +69,14 @@
         @endif
     </td>
 
-    {{-- Responsável --}}
-    <td style="width:44px; text-align:center; padding:0 4px">
-        @if($respList->isNotEmpty())
-            <x-user-avatar :user="$respList->first()" size="7" color="var(--orange)" class="mx-auto" title="{{ $respList->first()->name }}" />
-        @else
-            <span class="text-xs" style="color:var(--muted)">—</span>
-        @endif
+    {{-- Responsável (avatar clicável + dropdown pra trocar direto da lista) --}}
+    <td class="relative" style="width:44px; text-align:center; padding:0 4px">
+        @include('partials._person-fill', ['task' => $task, 'role' => 'responsavel', 'currentUser' => $respList->first()])
     </td>
 
-    {{-- Executor --}}
-    <td style="width:44px; text-align:center; padding:0 4px">
-        @if($execList->isNotEmpty())
-            <x-user-avatar :user="$execList->first()" size="7" color="var(--purple)" class="mx-auto" title="{{ $execList->first()->name }}" />
-        @else
-            <span class="text-xs" style="color:var(--muted)">—</span>
-        @endif
+    {{-- Executor (avatar clicável + dropdown pra trocar direto da lista) --}}
+    <td class="relative" style="width:44px; text-align:center; padding:0 4px">
+        @include('partials._person-fill', ['task' => $task, 'role' => 'executor', 'currentUser' => $execList->first()])
     </td>
 
     {{-- Data de Aprovação (ou prazo como fallback) --}}
@@ -119,7 +111,7 @@
 
     {{-- Status (Monday fill clicável + dropdown) --}}
     <td class="monday-fill-td relative" style="width:140px">
-        <button @click="statusOpen = !statusOpen; situacaoOpen = false; statusStyle = dropdownStyle($el, 'bottom-left')" type="button"
+        <button @click="statusOpen = !statusOpen; situacaoOpen = false; respOpen = false; execOpen = false; statusStyle = dropdownStyle($el, 'bottom-left')" type="button"
                 style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
                        gap:4px; background:{{ $task->statusHex() }}; color:#fff; font-size:11px;
                        font-weight:700; cursor:pointer; border:none; overflow:hidden">
@@ -151,7 +143,7 @@
 
     {{-- Situação (Monday fill clicável + dropdown) --}}
     <td class="{{ $hasSituation ? 'monday-fill-td' : '' }} relative" style="width:150px">
-        <button @click="situacaoOpen = !situacaoOpen; statusOpen = false; situacaoStyle = dropdownStyle($el, 'bottom-left')" type="button"
+        <button @click="situacaoOpen = !situacaoOpen; statusOpen = false; respOpen = false; execOpen = false; situacaoStyle = dropdownStyle($el, 'bottom-left')" type="button"
                 style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
                        gap:4px; {{ $hasSituation ? 'background:' . $task->situationColor() . '; color:#fff;' : 'background:transparent; color:var(--muted);' }}
                        font-size:11px; font-weight:{{ $hasSituation ? '700' : '400' }};
