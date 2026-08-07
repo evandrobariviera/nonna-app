@@ -10,6 +10,7 @@ const DEBOUNCE_MS = 400;
 
 export function registerLiveFilter() {
     document.querySelectorAll('form[data-live-filter]').forEach(initLiveFilterForm);
+    window.refreshLiveFilter = refreshLiveFilter;
 }
 
 function initLiveFilterForm(form) {
@@ -65,4 +66,16 @@ function initLiveFilterForm(form) {
     form.querySelectorAll('select, input[type="checkbox"], input[type="radio"]').forEach((el) => {
         el.addEventListener('change', runSearch);
     });
+
+    // Exposto no próprio elemento pra outros scripts (ex: inline-patch.js) poderem forçar um
+    // refresh dos resultados sem duplicar a lógica de montar querystring/fetch/troca de HTML
+    // daqui — usado depois de uma edição em linha que pode ter mudado o agrupamento atual
+    // (ex: mudar Status enquanto a lista está agrupada por Status).
+    form._liveFilterRefresh = runSearch;
+}
+
+// Atualiza o resultado da tela (se ela tiver um form[data-live-filter]) sem recarregar nada —
+// no-op silencioso se a tela atual não usa live-filter.
+export function refreshLiveFilter() {
+    document.querySelector('form[data-live-filter]')?._liveFilterRefresh?.();
 }
