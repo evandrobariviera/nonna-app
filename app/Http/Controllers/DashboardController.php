@@ -229,9 +229,12 @@ class DashboardController extends Controller
 
     private function executorTasksQuery(string $userId): Builder
     {
+        // whereHas('executors', ...) sem filtrar role pegava QUALQUER papel da tabela
+        // pivot (responsável/observador inclusos) — "Operação" no Dashboard é
+        // exclusivamente sobre o que a pessoa executa, não sobre onde ela é responsável.
         return Task::where(function ($q) use ($userId) {
             $q->where('executor_id', $userId)
-              ->orWhereHas('executors', fn ($q2) => $q2->where('users.id', $userId));
+              ->orWhereHas('executors', fn ($q2) => $q2->where('users.id', $userId)->where('task_executors.role', 'executor'));
         });
     }
 }
