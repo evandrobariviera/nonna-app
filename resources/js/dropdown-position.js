@@ -24,14 +24,19 @@ export function registerDropdownPosition() {
 // Diretiva x-close-on-scroll="statusOpen" — como o dropdown usa position:fixed
 // calculado só no clique, ele não acompanha o scroll depois de aberto. Em vez
 // de recalcular a posição a cada pixel rolado (frágil), fecha o menu assim que
-// qualquer scroll acontecer (padrão comum pra popovers/dropdowns).
+// a PÁGINA rolar (padrão comum pra popovers/dropdowns) — mas ignora o scroll
+// que acontece dentro do próprio menu (ex: lista de usuários com overflow-y:auto
+// no _person-fill.blade.php), senão rolar a lista fecha ela imediatamente.
 export function registerCloseOnScroll(Alpine) {
     Alpine.directive('close-on-scroll', (el, { expression }, { effect, evaluateLater }) => {
         const getIsOpen = evaluateLater(expression);
         const setClosed = evaluateLater(`${expression} = false`);
         let listening = false;
 
-        const handler = () => setClosed(() => {});
+        const handler = (event) => {
+            if (el.contains(event.target)) return;
+            setClosed(() => {});
+        };
 
         effect(() => {
             getIsOpen((isOpen) => {
