@@ -5,6 +5,18 @@
 // abertos), deixando a página lenta pra carregar/hidratar. Cada linha só guarda seu
 // próprio valor atual (texto/avatar); a lista de opções vive uma vez só, fora da tabela
 // (ver components/badge-fill-menu.blade.php e components/person-fill-menu.blade.php).
+// Só vale a pena re-buscar a lista inteira (fecha/pisca a tabela) quando o campo que acabou
+// de mudar é justamente o critério de agrupamento ATUAL da tela — ex: mudou o Executor mas a
+// tela está agrupada por Cliente, a tarefa continua no grupo certo, não precisa de nada do
+// servidor. Sem isso, toda edição (mesmo sem afetar agrupamento nenhum) recarregava a tabela
+// à toa, fechando o dropdown com uma piscada visível.
+function refreshLiveFilterIfGroupedBy(...groupKeys) {
+    const select = document.querySelector('form[data-live-filter] select[name$="group_by"]');
+    if (select && groupKeys.includes(select.value)) {
+        window.refreshLiveFilter?.();
+    }
+}
+
 export function registerMondayFill(Alpine) {
     Alpine.store('badgeFill', {
         open: false,
@@ -36,6 +48,7 @@ export function registerMondayFill(Alpine) {
                     detail: { taskId, field, key, label, color },
                 }));
                 this.open = false;
+                if (field === 'status') refreshLiveFilterIfGroupedBy('status');
             });
         },
     });
@@ -72,6 +85,7 @@ export function registerMondayFill(Alpine) {
                     detail: { taskId, role, name, avatarUrl, initials },
                 }));
                 this.open = false;
+                refreshLiveFilterIfGroupedBy(role);
             });
         },
     });

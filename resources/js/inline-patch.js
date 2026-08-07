@@ -29,16 +29,14 @@ export function registerInlinePatch() {
     // estado reativo local e fecha o dropdown) se a resposta vier OK. Em falha, avisa e deixa o
     // valor exibido como estava (sem "desfazer" nada, porque nada foi aplicado ainda).
     //
-    // Depois do sucesso, também pede um refresh da lista (live-filter.js) em segundo plano —
-    // a atualização local já mostra o novo valor na hora, mas quando a tela está agrupada por
-    // Status/Executor/Responsável a tarefa só troca de grupo visualmente depois que o servidor
-    // reagrupa de novo (grupo é calculado lá, não dá pra mover a linha certo só no JS). Sem
-    // form[data-live-filter] na tela (ex: outro contexto futuro), é um no-op silencioso.
+    // Não recarrega a lista sozinho — quem decide isso é quem chama (ver
+    // refreshLiveFilterIfGroupedBy em monday-fill.js), porque só faz sentido re-buscar o HTML
+    // (e com isso fechar/piscar a tabela inteira) quando o campo alterado é justamente o
+    // agrupamento atual da tela; do contrário a atualização local já basta.
     window.applyFill = function (url, data, onSuccess) {
         window.inlinePatch(url, data).then((ok) => {
             if (ok) {
                 onSuccess();
-                window.refreshLiveFilter?.();
             } else {
                 alert('Falha ao salvar. Atualize a página e tente novamente.');
             }
