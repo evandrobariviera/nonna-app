@@ -580,6 +580,7 @@ class TaskController extends Controller
             'description'        => 'nullable|string',
             'task_type'          => 'required|in:' . implode(',', array_keys(Task::$types)),
             'destination'        => 'nullable|in:' . implode(',', array_keys(Task::$destinations)),
+            'priority'           => 'nullable|in:urgente,medio,normal',
             'executor_id'        => 'nullable|exists:users,id',
             'executor_ids'       => 'nullable|array',
             'executor_ids.*'     => 'exists:users,id',

@@ -217,13 +217,86 @@
                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
                 </div>
 
-                {{-- Tipo --}}
+                {{-- Data de Aprovação --}}
                 <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Tipo</label>
-                    <select name="task_type" class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Data de Aprovação</label>
+                    <input type="date" name="approval_date" class="w-full px-3 py-2.5 text-sm focus:outline-none"
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                        @foreach(\App\Models\Task::$types as $key => $label)
-                            <option value="{{ $key }}">{{ $label }}</option>
+                </div>
+
+                {{-- Data de Publicação --}}
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Data de Publicação</label>
+                    <input type="date" name="publish_date" class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                </div>
+
+                {{-- Vencimento --}}
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Vencimento</label>
+                    <input type="date" name="due_date" class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                </div>
+
+                {{-- Prioridade --}}
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Prioridade</label>
+                    <select name="priority" class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        <option value="normal" selected>Normal</option>
+                        @foreach(\App\Models\Task::$priorities as $key => $p)
+                            <option value="{{ $key }}">{{ $p['label'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Responsável --}}
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Responsável</label>
+                    <select name="responsavel_id" class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        <option value="">— nenhum —</option>
+                        @foreach($users as $u)
+                            <option value="{{ $u->id }}">{{ $u->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Executores (múltiplos) --}}
+                <div x-data="executorPicker()">
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Executores</label>
+                    <div class="flex flex-wrap gap-2 mb-2" x-show="selected.length > 0">
+                        <template x-for="(item, idx) in selected" :key="item.id">
+                            <div class="flex items-center gap-1 px-2 py-1 text-xs"
+                                 style="background:var(--s3); border:1px solid var(--border2)">
+                                <span x-text="item.name" style="color:var(--text)"></span>
+                                <select :name="'executor_roles[' + item.id + ']'"
+                                    class="text-xs focus:outline-none ml-1"
+                                    style="background:var(--s3); color:var(--muted); border:none">
+                                    <option value="executor">Executor</option>
+                                    <option value="aprovador">Aprovador</option>
+                                </select>
+                                <input type="hidden" :name="'executor_ids[]'" :value="item.id">
+                                <button type="button" @click="remove(idx)" class="btn btn-danger btn-xs ml-1">✕</button>
+                            </div>
+                        </template>
+                    </div>
+                    <select @change="add($event)" class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        <option value="">+ Adicionar executor</option>
+                        @foreach($users as $u)
+                            <option value="{{ $u->id }}" data-name="{{ $u->name }}">{{ $u->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Origem --}}
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Origem</label>
+                    <select name="origin" class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        @foreach(\App\Models\Task::$origins as $key => $label)
+                            <option value="{{ $key }}" {{ $key === 'projeto' ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -235,6 +308,29 @@
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                         <option value="">— sem destino —</option>
                         @foreach(\App\Models\Task::$destinations as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Tipo --}}
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Tipo</label>
+                    <select name="task_type" class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        @foreach(\App\Models\Task::$types as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Método de Aprovação --}}
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Método de Aprovação</label>
+                    <select name="approval_method" class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        <option value="">— não definido —</option>
+                        @foreach(\App\Models\Task::$approvalMethods as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
                         @endforeach
                     </select>
@@ -253,29 +349,6 @@
                     </select>
                 </div>
 
-                {{-- Origem --}}
-                <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Origem</label>
-                    <select name="origin" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                        @foreach(\App\Models\Task::$origins as $key => $label)
-                            <option value="{{ $key }}" {{ $key === 'projeto' ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Método de Aprovação --}}
-                <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Método de Aprovação</label>
-                    <select name="approval_method" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                        <option value="">— não definido —</option>
-                        @foreach(\App\Models\Task::$approvalMethods as $key => $label)
-                            <option value="{{ $key }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
                 {{-- Situação --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Situação</label>
@@ -283,77 +356,6 @@
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                         @foreach(\App\Models\Task::$situations as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Responsável --}}
-                <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Responsável</label>
-                    <select name="responsavel_id" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                        <option value="">— nenhum —</option>
-                        @foreach($users as $u)
-                            <option value="{{ $u->id }}">{{ $u->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Vencimento --}}
-                <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Vencimento</label>
-                    <input type="date" name="due_date" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                </div>
-
-                {{-- Data de Aprovação --}}
-                <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Data de Aprovação</label>
-                    <input type="date" name="approval_date" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                </div>
-
-                {{-- Data de Publicação --}}
-                <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Data de Publicação</label>
-                    <input type="date" name="publish_date" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                </div>
-
-                {{-- Aprovação Interna --}}
-                <div class="flex items-center gap-2">
-                    <input type="hidden" name="internal_approval" value="0">
-                    <input type="checkbox" name="internal_approval" value="1" id="internal_approval_new"
-                        class="w-4 h-4" style="accent-color:var(--purple)">
-                    <label for="internal_approval_new" class="text-xs font-mono" style="color:var(--muted)">
-                        Aprovação Interna
-                    </label>
-                </div>
-
-                {{-- Executores (múltiplos) --}}
-                <div class="col-span-2 md:col-span-4" x-data="executorPicker()">
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Executores</label>
-                    <div class="flex flex-wrap gap-2 mb-2" x-show="selected.length > 0">
-                        <template x-for="(item, idx) in selected" :key="item.id">
-                            <div class="flex items-center gap-1 px-2 py-1 text-xs"
-                                 style="background:var(--s3); border:1px solid var(--border2)">
-                                <span x-text="item.name" style="color:var(--text)"></span>
-                                <select :name="'executor_roles[' + item.id + ']'"
-                                    class="text-xs focus:outline-none ml-1"
-                                    style="background:var(--s3); color:var(--muted); border:none">
-                                    <option value="executor">Executor</option>
-                                    <option value="aprovador">Aprovador</option>
-                                </select>
-                                <input type="hidden" :name="'executor_ids[]'" :value="item.id">
-                                <button type="button" @click="remove(idx)" class="btn btn-danger btn-xs ml-1">✕</button>
-                            </div>
-                        </template>
-                    </div>
-                    <select @change="add($event)" class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                        <option value="">+ Adicionar executor</option>
-                        @foreach($users as $u)
-                            <option value="{{ $u->id }}" data-name="{{ $u->name }}">{{ $u->name }}</option>
                         @endforeach
                     </select>
                 </div>
