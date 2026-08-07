@@ -300,16 +300,46 @@ class SprintController extends Controller
         return redirect()->route('sprints.show', $sprint)->with('success', 'Sprint reaberta para planejamento.');
     }
 
+    // Regra de negócio: sprint só encerra sem tarefa pendente — força o time a decidir o
+    // destino de cada tarefa (concluir, cancelar ou mover pra próxima sprint via
+    // moveIncompleteToNext()) em vez de deixar tudo cair no Backlog automaticamente.
     public function close(Sprint $sprint)
     {
-        // Tarefas não concluídas voltam ao backlog
-        $sprint->tasks()
-            ->whereNotIn('status', ['concluido', 'cancelado'])
-            ->update(['sprint_id' => null]);
+        $pendingCount = $sprint->tasks()->whereNotIn('status', ['concluido', 'cancelado'])->count();
+
+        if ($pendingCount > 0) {
+            return redirect()->route('sprints.show', $sprint)
+                ->with('error', "Não é possível encerrar: {$pendingCount} tarefa(s) ainda não concluída(s). Mova as pendentes para a próxima Sprint antes de encerrar.");
+        }
 
         $sprint->update(['status' => 'closed']);
 
-        return redirect()->route('sprints.show', $sprint)->with('success', 'Sprint encerrada. Tarefas pendentes voltaram ao backlog.');
+        return redirect()->route('sprints.show', $sprint)->with('success', 'Sprint encerrada.');
+    }
+
+    // Escape hatch da regra acima: joga tudo que não terminou pra sprint em Planejamento
+    // mais próxima (a de starts_at mais cedo) — de propósito não cai mais no Backlog
+    // sozinho, precisa existir uma próxima sprint pronta pra receber.
+    public function moveIncompleteToNext(Sprint $sprint)
+    {
+        $nextSprint = Sprint::where('status', 'planning')
+            ->where('id', '!=', $sprint->id)
+            ->orderBy('starts_at')
+            ->first();
+
+        if (!$nextSprint) {
+            return redirect()->route('sprints.show', $sprint)
+                ->with('error', 'Nenhuma próxima Sprint (em Planejamento) encontrada. Crie a próxima Sprint antes de mover as tarefas pendentes.');
+        }
+
+        // update() em massa (não each->update()) pula Observers de propósito — mesma regra
+        // de bulk actions do resto do app (ver TaskController::bulkUpdate).
+        $moved = $sprint->tasks()
+            ->whereNotIn('status', ['concluido', 'cancelado'])
+            ->update(['sprint_id' => $nextSprint->id]);
+
+        return redirect()->route('sprints.show', $sprint)
+            ->with('success', "{$moved} tarefa(s) movida(s) para a Sprint \"{$nextSprint->title}\".");
     }
 
     public function addTask(Sprint $sprint, Task $task)

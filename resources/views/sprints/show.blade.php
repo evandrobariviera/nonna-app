@@ -49,8 +49,18 @@
                             Reabrir
                         </button>
                     </form>
+                    @php $pendingCount = $sprint->tasks->whereNotIn('status', ['concluido', 'cancelado'])->count(); @endphp
+                    @if($pendingCount > 0)
+                        <form method="POST" action="{{ route('sprints.move-incomplete', $sprint) }}"
+                              @submit.prevent="if (await $store.confirmDialog.ask('Mover {{ $pendingCount }} tarefa(s) pendente(s) para a próxima Sprint (em Planejamento)?')) $el.submit()">
+                            @csrf
+                            <button type="submit" class="btn btn-sm" style="border-color:var(--orange); color:var(--orange)">
+                                Mover Pendentes pra Próxima Sprint ({{ $pendingCount }})
+                            </button>
+                        </form>
+                    @endif
                     <form method="POST" action="{{ route('sprints.close', $sprint) }}"
-                          @submit.prevent="if (await $store.confirmDialog.ask('Encerrar sprint? Tarefas pendentes voltam ao backlog.')) $el.submit()">
+                          @submit.prevent="if (await $store.confirmDialog.ask('Encerrar sprint?')) $el.submit()">
                         @csrf
                         <button type="submit"
                             class="btn btn-sm" style="border-color:var(--green); color:var(--green)">
@@ -114,6 +124,13 @@
         <div class="mb-5 px-4 py-3 text-sm font-semibold"
              style="background:rgba(52,211,153,.08); border:1px solid rgba(52,211,153,.25); color:var(--green)">
             {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="mb-5 px-4 py-3 text-sm font-semibold"
+             style="background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.25); color:var(--red)">
+            {{ session('error') }}
         </div>
     @endif
 

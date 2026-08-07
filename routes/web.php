@@ -522,6 +522,7 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::post('/sprints/{sprint}/travar', [SprintController::class, 'lock'])->name('sprints.lock');
     Route::post('/sprints/{sprint}/reabrir', [SprintController::class, 'unlock'])->name('sprints.unlock');
     Route::post('/sprints/{sprint}/encerrar', [SprintController::class, 'close'])->name('sprints.close');
+    Route::post('/sprints/{sprint}/mover-pendentes', [SprintController::class, 'moveIncompleteToNext'])->name('sprints.move-incomplete');
     Route::post('/sprints/{sprint}/tarefas/{task}', [SprintController::class, 'addTask'])->name('sprints.add-task');
     Route::delete('/sprints/{sprint}/tarefas/{task}', [SprintController::class, 'removeTask'])->name('sprints.remove-task');
     Route::delete('/sprints/{sprint}', [SprintController::class, 'destroy'])->name('sprints.destroy');
