@@ -285,6 +285,10 @@ class TaskController extends Controller
             'situation' => 'nullable|in:' . implode(',', $situationKeys),
         ])['situation']]);
 
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
         return redirect()->back()->with('success', 'Situação atualizada.');
     }
 
@@ -320,6 +324,10 @@ class TaskController extends Controller
             }
         }
 
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
         return redirect()->back()->with('success', 'Responsável atualizado.');
     }
 
@@ -342,6 +350,10 @@ class TaskController extends Controller
             }
         } else {
             $task->updateQuietly(['executor_id' => null]);
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
         }
 
         return redirect()->back()->with('success', 'Executor atualizado.');

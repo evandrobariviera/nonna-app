@@ -3,12 +3,17 @@
 // do dropdown já carrega tudo que a UI precisa pra se atualizar sozinha (label/cor/nome/avatar),
 // então só precisamos saber se o PATCH deu certo.
 export function registerInlinePatch() {
+    // Importante: os controllers precisam responder com JSON (não redirect()->back())
+    // quando a chamada é AJAX — um 302 sem isso faria o fetch() seguir o redirect
+    // mantendo o verbo PATCH (só GET/HEAD/POST viram GET automaticamente), e a página de
+    // destino (ex: /filas) não aceita PATCH => 405.
     window.inlinePatch = async function (url, data) {
         try {
             const res = await fetch(url, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     'X-Requested-With': 'XMLHttpRequest',
                 },
