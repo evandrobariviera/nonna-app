@@ -26,9 +26,17 @@
         $groupTextColor = '#fff';
         $groupSubLabel = $groupBy === 'executor' ? 'Executor' : 'Responsável';
     }
+
+    // Chave estável do grupo (independe da ordem/posição do <tbody> na tabela) usada pra
+    // lembrar se o usuário abriu/fechou esse grupo através de um refresh de live-filter —
+    // ver resources/js/group-collapse.js.
+    $groupStoreKey = addslashes($groupBy . '::' . $groupKey);
 @endphp
 
-<tbody x-data="{ groupOpen: {{ ($defaultOpen ?? true) ? 'true' : 'false' }} }">
+<tbody x-data="{
+        get groupOpen() { return $store.groupCollapse.isOpen('{{ $groupStoreKey }}', {{ ($defaultOpen ?? true) ? 'true' : 'false' }}) },
+        set groupOpen(v) { $store.groupCollapse.setOpen('{{ $groupStoreKey }}', v) }
+    }">
     {{-- Cabeçalho do grupo --}}
     <tr class="group-header-row" style="background:var(--s2)">
         <td colspan="12" style="padding:10px 16px">

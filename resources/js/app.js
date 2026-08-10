@@ -9,6 +9,7 @@ import { registerLiveFilter } from './live-filter.js';
 import { registerConfirmDialog } from './confirm-dialog.js';
 import { registerInlinePatch } from './inline-patch.js';
 import { registerMondayFill } from './monday-fill.js';
+import { registerGroupCollapse } from './group-collapse.js';
 
 window.Alpine = Alpine;
 
@@ -23,5 +24,6 @@ registerLiveFilter();
 registerConfirmDialog(Alpine);
 registerInlinePatch();
 registerMondayFill(Alpine);
+registerGroupCollapse(Alpine);
 
 Alpine.start();
