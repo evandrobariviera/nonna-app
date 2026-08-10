@@ -197,7 +197,8 @@ class SprintController extends Controller
         }
         if ($request->filled('list_search')) {
             $search = mb_strtolower($request->get('list_search'));
-            $tasks = $tasks->filter(fn ($t) => str_contains(mb_strtolower($t->title), $search));
+            $tasks = $tasks->filter(fn ($t) => str_contains(mb_strtolower($t->title), $search)
+                || str_contains(mb_strtolower((string) $t->clickup_task_id), $search));
         }
         return $tasks->values();
     }

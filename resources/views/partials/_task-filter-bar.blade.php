@@ -50,7 +50,7 @@
 
     <div class="flex-1 min-w-44">
         <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Buscar</label>
-        <input type="text" name="{{ $prefix }}search" value="{{ request($prefix . 'search') }}" placeholder="Buscar por título…"
+        <input type="text" name="{{ $prefix }}search" value="{{ request($prefix . 'search') }}" placeholder="Buscar por título ou ID do ClickUp…"
             class="filter-select w-full" style="cursor:text">
     </div>
 

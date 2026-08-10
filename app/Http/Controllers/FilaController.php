@@ -85,7 +85,9 @@ class FilaController extends Controller
             $query->pendente();
         }
         if ($request->filled('search')) {
-            $query->where('title', 'ilike', '%' . $request->search . '%');
+            $search = $request->search;
+            $query->where(fn ($q) => $q->where('title', 'ilike', '%' . $search . '%')
+                ->orWhere('clickup_task_id', 'ilike', '%' . $search . '%'));
         }
 
         $pendenciasCount = (clone $query)->pendente()->count();
