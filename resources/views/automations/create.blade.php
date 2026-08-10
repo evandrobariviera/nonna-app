@@ -273,19 +273,36 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">CAMPO *</label>
-                                <input type="text" name="action_config[field]"
-                                       placeholder="Ex: status"
-                                       class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                       style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                <select name="action_config[field]" x-model="actionField"
+                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                    <option value="">Selecione...</option>
+                                    <template x-for="[key, meta] in Object.entries(conditionFieldsMap[entityType] || {})" :key="key">
+                                        <option :value="key" x-text="meta.label"></option>
+                                    </template>
+                                </select>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">NOVO VALOR *</label>
-                                <input type="text" name="action_config[value]"
+                                <select name="action_config[value]" x-model="actionValue"
+                                        x-show="Object.keys(actionFieldOptions()).length > 0"
+                                        :disabled="Object.keys(actionFieldOptions()).length === 0"
+                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                    <option value="">Selecione...</option>
+                                    <template x-for="[val, label] in Object.entries(actionFieldOptions())" :key="val">
+                                        <option :value="val" x-text="label"></option>
+                                    </template>
+                                </select>
+                                <input type="text" name="action_config[value]" x-model="actionValue"
+                                       x-show="Object.keys(actionFieldOptions()).length === 0"
+                                       :disabled="Object.keys(actionFieldOptions()).length > 0"
                                        placeholder="Ex: revisao"
                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                             </div>
                         </div>
+                        <p class="text-xs mt-1" style="color:var(--muted)">Campos sem lista fixa (título, datas, e-mails...) ficam como texto livre.</p>
                     </div>
 
                     <div x-show="actionType === 'send_notification'" x-cloak class="grid gap-3">
@@ -451,6 +468,8 @@ function automationBuilder() {
         entityType: '{{ old('entity_type', '') }}',
         triggerType: '{{ old('trigger_type', '') }}',
         actionType: '{{ old('action_type', '') }}',
+        actionField: '{{ old('action_config.field', '') }}',
+        actionValue: '{{ old('action_config.value', '') }}',
         notifyTo: '{{ old('action_config.to', 'executor') }}',
         fieldUpdatedField: '{{ old('trigger_config.field', '') }}',
         conditionsLogic: '{{ old('trigger_config.conditions_logic', 'and') }}',
@@ -460,6 +479,9 @@ function automationBuilder() {
             if (fields.status) return 'status';
             if (fields.stage) return 'stage';
             return Object.keys(fields)[0] || '';
+        },
+        actionFieldOptions() {
+            return (conditionFieldsMap[this.entityType] || {})[this.actionField]?.options || {};
         },
     }
 }

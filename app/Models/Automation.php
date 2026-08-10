@@ -94,6 +94,21 @@ class Automation extends Model
             ];
         }
 
+        if ($entityType === 'project') {
+            return [
+                'status' => ['label' => 'Status', 'options' => self::labelMap(Project::$statuses)],
+                'type'   => ['label' => 'Tipo',   'options' => self::labelMap(Project::$types)],
+            ];
+        }
+
+        if ($entityType === 'campaign') {
+            return [
+                'management_status'    => ['label' => 'Status de Gestão',   'options' => self::labelMap(AdCampaign::$managementStatuses)],
+                'management_situation' => ['label' => 'Situação',           'options' => AdCampaign::$managementSituations],
+                'optimization_tier'    => ['label' => 'Tier de Otimização', 'options' => self::labelMap(AdCampaign::$optimizationTiers)],
+            ];
+        }
+
         if ($entityType === 'opportunity') {
             return [
                 'stage' => ['label' => 'Estágio', 'options' => self::labelMap(Opportunity::$stages)],
