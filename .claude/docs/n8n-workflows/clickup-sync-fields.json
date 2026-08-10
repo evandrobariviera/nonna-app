@@ -3,9 +3,9 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Resync leve — só 5 campos, workspace inteiro\n\nDiferente do `clickup-import.json`/`clickup-scheduled-resync.json` (que reescrevem a tarefa inteira: título, cliente, projeto, tipo, origem/destino, datas...), este workflow **só atualiza**: `status`, `situação`, `responsável`, `executor` e `data de aprovação` — e só em tarefas que **já existem** no App (casadas por `clickup_task_id`). Nunca cria tarefa nova, nunca mexe em `project_id`/`client_id`/`sprint_id`. Isso permite rodar contra o **workspace inteiro do ClickUp** (não só listas migradas/conhecidas) sem o risco de vínculo errado que já causou incidente com o import completo (ver `clickup-import-api.md`, seção Incidentes).\n\n### Antes de rodar\n1. Reaproveita a credencial nativa **ClickUp API** (`ClickUp API Token`, OAuth2) já usada em `clickup-import.json` — não precisa criar credencial nova pro ClickUp.\n2. Reaproveita a credencial **HTTP Header Auth** `Nonna App Import Secret` (mesma dos outros 3 workflows).\n3. Abra o node **Config** e confira `app_url` e `team_id` (9007109877 = Nonna Agência Digital, mesmo Team usado nos outros workflows).\n4. Abra o node **Get All ClickUp Tasks** (HTTP Request) e confira a credencial + a paginação (ver Sticky Note ao lado — **não testado contra uma instância real ainda**, confira antes de deixar rodando sozinho).\n5. Rode primeiro só com o **Trigger Manual**, confira o resultado (`updated`/`skipped`/`errors`) antes de ativar o Schedule Trigger.",
-        "height": 560,
-        "width": 640
+        "content": "## Resync leve — só 5 campos, controle de local pelo node nativo\n\nDiferente do `clickup-import.json`/`clickup-scheduled-resync.json` (que reescrevem a tarefa inteira: título, cliente, projeto, tipo, origem/destino, datas...), este workflow **só atualiza**: `status`, `situação`, `responsável`, `executor` e `data de aprovação` — e só em tarefas que **já existem** no App (casadas por `clickup_task_id`). Nunca cria tarefa nova, nunca mexe em `project_id`/`client_id`/`sprint_id`.\n\n**Controle de local (2026-08-10):** em vez de puxar o workspace inteiro de uma vez (API `Get Filtered Team Tasks`, muita coisa e sem controle fino), este workflow volta a usar o **node nativo `ClickUp`** — igual aos outros 3 workflows — com uma Lista escolhida por node via seletor nativo, igual `clickup-scheduled-resync.json`. Só entram no sync as Listas que você conectar aqui.\n\n### Antes de rodar\n1. Reaproveita a credencial nativa **ClickUp API** (`ClickUp API Token`, OAuth2) já usada nos outros workflows — não precisa criar credencial nova pro ClickUp.\n2. Reaproveita a credencial **HTTP Header Auth** `Nonna App Import Secret` (mesma dos outros 3 workflows).\n3. Abra cada node **Get Tasks: Lista N** e selecione a Lista pelo seletor nativo (Team/Space/Folder/List) — vêm em branco de propósito, ver Sticky Note \"Sobre o controle de local\".\n4. Ajuste o node **Merge** se adicionar/remover alguma Lista (numberInputs precisa bater com a quantidade de nodes Get Tasks conectados).\n5. Rode primeiro só com o **Trigger Manual**, confira o resultado (`updated`/`skipped`/`errors`) antes de ativar o Schedule Trigger.",
+        "height": 620,
+        "width": 660
       },
       "id": "b1a1f001-0001-4001-8001-000000000001",
       "name": "LEIA ANTES DE RODAR",
@@ -44,12 +44,6 @@
               "name": "app_url",
               "type": "string",
               "value": "https://app.nonnaagenciadigital.com.br"
-            },
-            {
-              "id": "team_id",
-              "name": "team_id",
-              "type": "string",
-              "value": "9007109877"
             }
           ]
         },
@@ -63,56 +57,96 @@
     },
     {
       "parameters": {
-        "content": "## Pull do workspace inteiro — ⚠️ paginação não validada contra instância real\n\nUsa a **Get Filtered Team Tasks** da API do ClickUp (`GET /team/{team_id}/task`), que devolve tarefas de TODAS as Listas do Team de uma vez — diferente do node nativo `ClickUp` (usado nos outros 3 workflows), que exige escolher Lista uma a uma. Por isso é um node **HTTP Request** puro, com `Authentication: Predefined Credential Type → ClickUp API` (reaproveita a mesma credencial OAuth2).\n\n**Paginação (aba Options → Pagination do node):** 100 tarefas por página; o node está configurado pra incrementar `page` e parar quando `tasks` vier vazio. **Confira esse comportamento rodando só este node primeiro** (\"Execute step\") — é a peça menos testada do workflow.\n\n**Otimização opcional pra rodadas agendadas (não ligada por padrão):** adicionar o parâmetro `date_updated_gt` (epoch ms) puxando só tarefas atualizadas desde a última execução evitaria escanear o workspace inteiro toda vez. Deixado de fora agora porque o pedido era \"puxar todas as tarefas\" — ligar depois se o tempo de execução virar problema.\n\n**`include_closed=true`** sempre — igual aos outros workflows de resync, uma sincronização contínua precisa refletir status atual mesmo de tarefa concluída/cancelada.",
-        "height": 560,
+        "content": "## Sobre o controle de local (quais Listas entram)\n\nOs 3 nodes **Get Tasks: Lista N** vêm **em branco de propósito** — sem Team/Space/Folder/List pré-preenchido, diferente dos outros workflows deste repo. Motivo: eu não tenho confirmado neste momento o Folder correto de cada Lista candidata (Chamados, Filas, Sprints antigas, etc.) — adivinhar esse ID foi exatamente o que causou o Incidente 4 (`clickup-import-api.md`), então preferi deixar em branco a arriscar um ID errado.\n\n**Selecione pelo seletor nativo** (não digite o ID à mão) em cada node, uma Lista por node. Pra adicionar mais uma Lista: duplique um dos 3 nodes, selecione a Lista, conecte a entrada livre do **Merge**, e aumente `numberInputs` do Merge em 1. Pra remover uma: o caminho inverso.\n\n**`includeClosed: true`** em cada node — sincronização contínua deve sempre refletir o status atual, mesmo de tarefa concluída/cancelada (mesmo princípio dos outros workflows de resync).",
+        "height": 460,
         "width": 460
       },
       "id": "b1a1f001-0001-4001-8001-000000000005",
-      "name": "Sobre a paginação",
+      "name": "Sobre o controle de local",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [4448, 1152]
     },
     {
       "parameters": {
-        "method": "GET",
-        "url": "=https://api.clickup.com/api/v2/team/{{ $('Config').item.json.team_id }}/task",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "clickUpOAuth2Api",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            { "name": "include_closed", "value": "true" },
-            { "name": "subtasks", "value": "false" }
-          ]
-        },
-        "options": {
-          "pagination": {
-            "pagination": {
-              "paginationMode": "updateAParameterInEachRequest",
-              "parameters": {
-                "parameters": [
-                  { "name": "page", "value": "={{ $pageCount }}" }
-                ]
-              },
-              "paginationCompleteWhen": "other",
-              "completeExpression": "={{ $response.body.tasks.length === 0 }}",
-              "requestInterval": 300
-            }
-          }
+        "authentication": "oAuth2",
+        "operation": "getAll",
+        "filters": {
+          "includeClosed": true,
+          "subtasks": false
         }
       },
       "id": "b1a1f001-0001-4001-8001-000000000006",
-      "name": "Get All ClickUp Tasks",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [4208, 1936],
+      "name": "Get Tasks: Lista 1",
+      "type": "n8n-nodes-base.clickUp",
+      "typeVersion": 1,
+      "position": [4208, 1776],
+      "notesInFlow": true,
       "credentials": {
         "clickUpOAuth2Api": {
           "id": "9efiJS9zYSHg2PHA",
           "name": "ClickUp [Nonna Agência Digital]"
         }
-      }
+      },
+      "notes": "Em branco de propósito — selecione a Lista pelo seletor nativo (Team/Space/Folder/List). Ver Sticky Note \"Sobre o controle de local\"."
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "getAll",
+        "filters": {
+          "includeClosed": true,
+          "subtasks": false
+        }
+      },
+      "id": "b1a1f001-0001-4001-8001-000000000011",
+      "name": "Get Tasks: Lista 2",
+      "type": "n8n-nodes-base.clickUp",
+      "typeVersion": 1,
+      "position": [4208, 1936],
+      "notesInFlow": true,
+      "credentials": {
+        "clickUpOAuth2Api": {
+          "id": "9efiJS9zYSHg2PHA",
+          "name": "ClickUp [Nonna Agência Digital]"
+        }
+      },
+      "notes": "Em branco de propósito — selecione a Lista pelo seletor nativo. Duplique este node pra cada Lista adicional."
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "getAll",
+        "filters": {
+          "includeClosed": true,
+          "subtasks": false
+        }
+      },
+      "id": "b1a1f001-0001-4001-8001-000000000012",
+      "name": "Get Tasks: Lista 3",
+      "type": "n8n-nodes-base.clickUp",
+      "typeVersion": 1,
+      "position": [4208, 2096],
+      "notesInFlow": true,
+      "credentials": {
+        "clickUpOAuth2Api": {
+          "id": "9efiJS9zYSHg2PHA",
+          "name": "ClickUp [Nonna Agência Digital]"
+        }
+      },
+      "notes": "Em branco de propósito — selecione a Lista pelo seletor nativo. Se não precisar de uma 3ª Lista, desconecte do Merge e reduza numberInputs pra 2."
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 3,
+        "options": {}
+      },
+      "id": "b1a1f001-0001-4001-8001-000000000013",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [4432, 1936]
     },
     {
       "parameters": {
@@ -134,7 +168,7 @@
       "name": "Build Sync Payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [4432, 1936]
+      "position": [4656, 1936]
     },
     {
       "parameters": {
@@ -151,7 +185,7 @@
       "name": "POST Sync Fields",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [4656, 1936],
+      "position": [4880, 1936],
       "credentials": {
         "httpHeaderAuth": {
           "id": "LLdGuTMUswIGGv86",
@@ -181,9 +215,24 @@
       "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
     },
     "Config": {
-      "main": [[{ "node": "Get All ClickUp Tasks", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          { "node": "Get Tasks: Lista 1", "type": "main", "index": 0 },
+          { "node": "Get Tasks: Lista 2", "type": "main", "index": 0 },
+          { "node": "Get Tasks: Lista 3", "type": "main", "index": 0 }
+        ]
+      ]
     },
-    "Get All ClickUp Tasks": {
+    "Get Tasks: Lista 1": {
+      "main": [[{ "node": "Merge", "type": "main", "index": 0 }]]
+    },
+    "Get Tasks: Lista 2": {
+      "main": [[{ "node": "Merge", "type": "main", "index": 1 }]]
+    },
+    "Get Tasks: Lista 3": {
+      "main": [[{ "node": "Merge", "type": "main", "index": 2 }]]
+    },
+    "Merge": {
       "main": [[{ "node": "Build Sync Payload", "type": "main", "index": 0 }]]
     },
     "Build Sync Payload": {

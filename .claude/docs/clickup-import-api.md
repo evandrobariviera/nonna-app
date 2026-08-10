@@ -188,7 +188,7 @@ Contrato inalterado (ver histórico deste arquivo se precisar). Não fazem parte
 
 ## `POST /api/clickup/sync-fields` — resync leve (2026-08-10): status/situação/responsável/executor/data de aprovação
 
-Diferente de `POST /api/clickup/import`, que reescreve a tarefa inteira, este endpoint **só atualiza 5 campos** de tarefas **que já existem** no App (casadas por `clickup_task_id`). Pensado pra rodar contra o workspace inteiro do ClickUp (não só listas migradas) sem o risco de vínculo errado de Projeto/Cliente que já causou incidente com o import completo — porque **nunca cria tarefa** (não tem `title`/`client_id`, obrigatórios) e **nunca toca em** `project_id`/`client_id`/`sprint_id`/título/descrição/datas fora `approval_date`.
+Diferente de `POST /api/clickup/import`, que reescreve a tarefa inteira, este endpoint **só atualiza 5 campos** de tarefas **que já existem** no App (casadas por `clickup_task_id`) — **nunca cria tarefa** (não tem `title`/`client_id`, obrigatórios) e **nunca toca em** `project_id`/`client_id`/`sprint_id`/título/descrição/datas fora `approval_date`.
 
 Mesma autenticação do `/import` (`X-Import-Secret`).
 
@@ -221,7 +221,7 @@ Mesma autenticação do `/import` (`X-Import-Secret`).
 { "updated": 1, "skipped": 0, "errors": [] }
 ```
 
-**Workflow n8n de referência:** [`.claude/docs/n8n-workflows/clickup-sync-fields.json`](n8n-workflows/clickup-sync-fields.json) — usa a **Get Filtered Team Tasks** da API do ClickUp (`GET /team/{team_id}/task`, node HTTP Request com credencial `Predefined Credential Type → ClickUp API`, reaproveitando a mesma credencial OAuth2 dos outros workflows) pra trazer tarefas de **todas** as Listas do Team numa passada só, em vez de lista por lista. **Paginação não validada contra uma instância real ainda** — confira o node antes de deixar rodando sozinho (ver Sticky Notes no próprio workflow).
+**Workflow n8n de referência:** [`.claude/docs/n8n-workflows/clickup-sync-fields.json`](n8n-workflows/clickup-sync-fields.json) — usa o **node nativo `ClickUp`** (igual aos outros 3 workflows), com **controle de local**: uma Lista por node (3 nodes "Get Tasks: Lista N", em branco de propósito — selecionar pelo seletor nativo, não digitar o ID), unidas por um node **Merge** antes de montar o payload. Dá pra adicionar/remover Listas duplicando/removendo nodes e ajustando `numberInputs` do Merge. `includeClosed: true` sempre (sincronização contínua deve refletir status atual mesmo de tarefa fechada).
 
 ## Erros
 
