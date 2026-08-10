@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Route;
 
 // ── ClickUp Import — n8n envia dados para importar (sem Sanctum, autenticado por header X-Import-Secret)
 Route::post('/clickup/import',            [ClickupImportController::class,         'import']);
+Route::post('/clickup/sync-fields',       [ClickupImportController::class,         'syncFields']);
 Route::post('/clickup/import-macroplans', [ClickupMacroPlanImportController::class, 'import']);
 Route::post('/clickup/import-projects',   [ClickupProjectImportController::class,   'import']);
 

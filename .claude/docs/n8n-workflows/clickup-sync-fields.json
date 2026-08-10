@@ -1,0 +1,204 @@
+{
+  "name": "Nonna - Sync ClickUp (Status/Situação/Responsável/Executor/Data Aprovação)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Resync leve — só 5 campos, workspace inteiro\n\nDiferente do `clickup-import.json`/`clickup-scheduled-resync.json` (que reescrevem a tarefa inteira: título, cliente, projeto, tipo, origem/destino, datas...), este workflow **só atualiza**: `status`, `situação`, `responsável`, `executor` e `data de aprovação` — e só em tarefas que **já existem** no App (casadas por `clickup_task_id`). Nunca cria tarefa nova, nunca mexe em `project_id`/`client_id`/`sprint_id`. Isso permite rodar contra o **workspace inteiro do ClickUp** (não só listas migradas/conhecidas) sem o risco de vínculo errado que já causou incidente com o import completo (ver `clickup-import-api.md`, seção Incidentes).\n\n### Antes de rodar\n1. Reaproveita a credencial nativa **ClickUp API** (`ClickUp API Token`, OAuth2) já usada em `clickup-import.json` — não precisa criar credencial nova pro ClickUp.\n2. Reaproveita a credencial **HTTP Header Auth** `Nonna App Import Secret` (mesma dos outros 3 workflows).\n3. Abra o node **Config** e confira `app_url` e `team_id` (9007109877 = Nonna Agência Digital, mesmo Team usado nos outros workflows).\n4. Abra o node **Get All ClickUp Tasks** (HTTP Request) e confira a credencial + a paginação (ver Sticky Note ao lado — **não testado contra uma instância real ainda**, confira antes de deixar rodando sozinho).\n5. Rode primeiro só com o **Trigger Manual**, confira o resultado (`updated`/`skipped`/`errors`) antes de ativar o Schedule Trigger.",
+        "height": 560,
+        "width": 640
+      },
+      "id": "b1a1f001-0001-4001-8001-000000000001",
+      "name": "LEIA ANTES DE RODAR",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [3760, 1152]
+    },
+    {
+      "parameters": {},
+      "id": "b1a1f001-0001-4001-8001-000000000002",
+      "name": "Trigger Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [3776, 1856]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "hours", "hoursInterval": 2 }
+          ]
+        }
+      },
+      "id": "b1a1f001-0001-4001-8001-000000000003",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [3776, 2016]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "app_url",
+              "name": "app_url",
+              "type": "string",
+              "value": "https://app.nonnaagenciadigital.com.br"
+            },
+            {
+              "id": "team_id",
+              "name": "team_id",
+              "type": "string",
+              "value": "9007109877"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b1a1f001-0001-4001-8001-000000000004",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [3984, 1936]
+    },
+    {
+      "parameters": {
+        "content": "## Pull do workspace inteiro — ⚠️ paginação não validada contra instância real\n\nUsa a **Get Filtered Team Tasks** da API do ClickUp (`GET /team/{team_id}/task`), que devolve tarefas de TODAS as Listas do Team de uma vez — diferente do node nativo `ClickUp` (usado nos outros 3 workflows), que exige escolher Lista uma a uma. Por isso é um node **HTTP Request** puro, com `Authentication: Predefined Credential Type → ClickUp API` (reaproveita a mesma credencial OAuth2).\n\n**Paginação (aba Options → Pagination do node):** 100 tarefas por página; o node está configurado pra incrementar `page` e parar quando `tasks` vier vazio. **Confira esse comportamento rodando só este node primeiro** (\"Execute step\") — é a peça menos testada do workflow.\n\n**Otimização opcional pra rodadas agendadas (não ligada por padrão):** adicionar o parâmetro `date_updated_gt` (epoch ms) puxando só tarefas atualizadas desde a última execução evitaria escanear o workspace inteiro toda vez. Deixado de fora agora porque o pedido era \"puxar todas as tarefas\" — ligar depois se o tempo de execução virar problema.\n\n**`include_closed=true`** sempre — igual aos outros workflows de resync, uma sincronização contínua precisa refletir status atual mesmo de tarefa concluída/cancelada.",
+        "height": 560,
+        "width": 460
+      },
+      "id": "b1a1f001-0001-4001-8001-000000000005",
+      "name": "Sobre a paginação",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [4448, 1152]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.clickup.com/api/v2/team/{{ $('Config').item.json.team_id }}/task",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "clickUpOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "include_closed", "value": "true" },
+            { "name": "subtasks", "value": "false" }
+          ]
+        },
+        "options": {
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": {
+                "parameters": [
+                  { "name": "page", "value": "={{ $pageCount }}" }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ $response.body.tasks.length === 0 }}",
+              "requestInterval": 300
+            }
+          }
+        }
+      },
+      "id": "b1a1f001-0001-4001-8001-000000000006",
+      "name": "Get All ClickUp Tasks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [4208, 1936],
+      "credentials": {
+        "clickUpOAuth2Api": {
+          "id": "9efiJS9zYSHg2PHA",
+          "name": "ClickUp [Nonna Agência Digital]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Mapeamento Responsável/Executor — confirmado com o usuário (2026-08-10)\n\nO ClickUp não tem um custom field \"Responsável\" separado — só dois campos de pessoa existem na tarefa:\n\n- **`assignees`** (campo nativo do ClickUp, Assignee) → vira **Responsável** no App\n- **Custom field \"Executores\"** (tipo `users`) → vira **Executor** no App\n\nEsse era o bug do workflow de import completo (`clickup-import.json`): ele usava `assignees[0]` como executor e `assignees[1]` como responsável, o que quase nunca batia (maioria das tarefas só tem 1 assignee nativo) e ignorava o campo \"Executores\" completamente. Se um dia esse mapeamento mudar, ajustar aqui E em `Build Tasks Payload` de `clickup-import.json`/`clickup-realtime-sync.json`/`clickup-scheduled-resync.json` (não compartilham código).\n\nSó o **primeiro** usuário de cada campo é enviado — o endpoint `/api/clickup/sync-fields` (igual ao `syncPersonnel()` do import completo) só sincroniza 1 executor + 1 responsável por vez, mesmo que \"Executores\" tenha vários marcados no ClickUp.",
+        "height": 480,
+        "width": 460
+      },
+      "id": "b1a1f001-0001-4001-8001-000000000007",
+      "name": "Sobre o mapeamento de pessoas",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [4944, 1152]
+    },
+    {
+      "parameters": {
+        "jsCode": "const allTasks = $input.all().map(item => item.json);\n\nfunction findField(task, pattern, type) {\n  return (task.custom_fields || []).find(f => {\n    const nameMatch = (f.name || '').toLowerCase().includes(pattern);\n    return type ? (nameMatch && f.type === type) : nameMatch;\n  });\n}\n\n// drop_down: value é um índice numérico dentro de type_config.options\nfunction resolveDropdown(field) {\n  if (!field || field.value === undefined || field.value === null) return null;\n  const opts = (field.type_config && field.type_config.options) || [];\n  const opt = opts[field.value];\n  return opt ? opt.name : null;\n}\n\n// date: value é epoch em ms (string ou número)\nfunction resolveDate(value) {\n  if (!value) return null;\n  const ms = typeof value === 'string' ? parseInt(value, 10) : value;\n  if (!ms) return null;\n  return new Date(ms).toISOString().substring(0, 10);\n}\n\n// Responsável = assignee NATIVO do ClickUp (não é custom field).\n// Executor = custom field \"Executores\" (tipo users) — ver Sticky Note \"Sobre o\n// mapeamento de pessoas\". Só o primeiro de cada é enviado (endpoint sincroniza 1 de\n// cada, mesma limitação do import completo).\nconst payload = allTasks.map(t => {\n  const executoresField = findField(t, 'executores', 'users');\n  const executorEmail = (executoresField && Array.isArray(executoresField.value) && executoresField.value[0])\n    ? executoresField.value[0].email\n    : null;\n\n  const responsavelEmail = (t.assignees && t.assignees[0]) ? t.assignees[0].email : null;\n\n  const situationLabel = resolveDropdown(findField(t, 'situa'));\n\n  const dataAprovacaoField = findField(t, 'data de aprova');\n  const approvalDate = resolveDate(dataAprovacaoField ? dataAprovacaoField.value : null);\n\n  return {\n    clickup_task_id: t.id,\n    clickup_status: (t.status && t.status.status) || null,\n    situation: situationLabel,\n    executor_email: executorEmail,\n    responsavel_email: responsavelEmail,\n    approval_date: approvalDate,\n  };\n});\n\nreturn [{ json: { tasks: payload } }];\n"
+      },
+      "id": "b1a1f001-0001-4001-8001-000000000008",
+      "name": "Build Sync Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4432, 1936]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config').item.json.app_url }}/api/clickup/sync-fields",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tasks: $('Build Sync Payload').item.json.tasks }) }}",
+        "options": {}
+      },
+      "id": "b1a1f001-0001-4001-8001-000000000009",
+      "name": "POST Sync Fields",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [4656, 1936],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LLdGuTMUswIGGv86",
+          "name": "App Nonna"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Não cria tarefa — só atualiza\n\n`/api/clickup/sync-fields` (novo endpoint, `ClickupImportController::syncFields()`) casa por `clickup_task_id`; tarefa não encontrada no App conta como `skipped`, nunca é criada (não teria `title`/`client_id`, campos obrigatórios). Também nunca toca em `project_id`/`client_id`/`sprint_id`/título/descrição/datas — só os 5 campos deste workflow. Status sem mapeamento conhecido mantém o valor atual da tarefa (não força fallback, diferente do import completo).",
+        "height": 300,
+        "width": 400
+      },
+      "id": "b1a1f001-0001-4001-8001-000000000010",
+      "name": "Sobre o endpoint",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [5376, 1152]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Trigger Manual": {
+      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+    },
+    "Schedule Trigger": {
+      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+    },
+    "Config": {
+      "main": [[{ "node": "Get All ClickUp Tasks", "type": "main", "index": 0 }]]
+    },
+    "Get All ClickUp Tasks": {
+      "main": [[{ "node": "Build Sync Payload", "type": "main", "index": 0 }]]
+    },
+    "Build Sync Payload": {
+      "main": [[{ "node": "POST Sync Fields", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b1a1f001-0001-4001-8001-0000000000ff",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c2c091491a15b298ee52dcd07320fe50f3acf6a55b2e5806d3638590d41cce32"
+  },
+  "id": "9CFwhKXBxsC3VgXD",
+  "tags": []
+}

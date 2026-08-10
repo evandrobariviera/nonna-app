@@ -186,6 +186,43 @@ Schedule Trigger (30min) / Trigger Manual (teste) → Config
 
 Contrato inalterado (ver histórico deste arquivo se precisar). Não fazem parte do workflow de **migração em lote** (`clickup-import.json`) — Macroplanos e Projetos já foram lançados manualmente no App e só precisam ser conferidos, não reimportados em massa. São, no entanto, chamados pelo workflow de **sincronização em tempo real** (`clickup-realtime-sync.json`, ver seção acima) sempre que um evento do ClickUp cai nas listas de Planejamentos/Projetos — com as mesmas cautelas do Incidente acima (nada de resolução automática de vínculo sem dupla checagem).
 
+## `POST /api/clickup/sync-fields` — resync leve (2026-08-10): status/situação/responsável/executor/data de aprovação
+
+Diferente de `POST /api/clickup/import`, que reescreve a tarefa inteira, este endpoint **só atualiza 5 campos** de tarefas **que já existem** no App (casadas por `clickup_task_id`). Pensado pra rodar contra o workspace inteiro do ClickUp (não só listas migradas) sem o risco de vínculo errado de Projeto/Cliente que já causou incidente com o import completo — porque **nunca cria tarefa** (não tem `title`/`client_id`, obrigatórios) e **nunca toca em** `project_id`/`client_id`/`sprint_id`/título/descrição/datas fora `approval_date`.
+
+Mesma autenticação do `/import` (`X-Import-Secret`).
+
+**Payload:**
+```json
+{
+  "tasks": [
+    {
+      "clickup_task_id": "86ajxp4tm",
+      "clickup_status": "concluído",
+      "situation": "Em redação",
+      "executor_email": "designer@nonna.com",
+      "responsavel_email": "gestor@nonna.com",
+      "approval_date": "2026-08-15"
+    }
+  ]
+}
+```
+
+- **`clickup_task_id`**: obrigatório. Sem match no App → conta como `skipped`, nada é criado.
+- **`clickup_status`**: mesmo `STATUS_MAP` do `/import` (ver tabela acima). Valor vazio ou sem mapeamento conhecido **mantém o status atual da tarefa** — diferente do `/import`, que cai no fallback `concluido` (esse fallback existe pra migração de tarefa nova/legada; aqui a tarefa já está classificada, então um status desconhecido não deveria fechá-la sozinho).
+- **`situation`**: texto livre, sobrescreve sempre (vazio/ausente limpa o campo, igual ao `/import`).
+- **`approval_date`** (`YYYY-MM-DD` ou vazio): sobrescreve sempre (vazio limpa).
+- **`executor_email`/`responsavel_email`**: mesma resolução/limitação do `/import` (`syncPersonnel()`, reaproveitado) — e-mail sem usuário correspondente no App é ignorado; só sincroniza 1 executor + 1 responsável por vez.
+
+**Mapeamento Responsável/Executor no ClickUp (confirmado 2026-08-10):** o ClickUp não tem um custom field "Responsável" — só o campo **nativo** `assignees` (Assignee do ClickUp) e o custom field **"Executores"** (tipo `users`). `assignees[0]` → `responsavel_email`; primeiro valor de "Executores" → `executor_email`. Isso corrige o mapeamento errado usado no `Build Tasks Payload` dos outros 3 workflows (`assignees[0]`/`assignees[1]` como executor/responsável — quase nunca batia, e ignorava "Executores" por completo).
+
+**Resposta 200:**
+```json
+{ "updated": 1, "skipped": 0, "errors": [] }
+```
+
+**Workflow n8n de referência:** [`.claude/docs/n8n-workflows/clickup-sync-fields.json`](n8n-workflows/clickup-sync-fields.json) — usa a **Get Filtered Team Tasks** da API do ClickUp (`GET /team/{team_id}/task`, node HTTP Request com credencial `Predefined Credential Type → ClickUp API`, reaproveitando a mesma credencial OAuth2 dos outros workflows) pra trazer tarefas de **todas** as Listas do Team numa passada só, em vez de lista por lista. **Paginação não validada contra uma instância real ainda** — confira o node antes de deixar rodando sozinho (ver Sticky Notes no próprio workflow).
+
 ## Erros
 
 - Falha ao montar os lookups iniciais (conexão, etc.): `500` com `error` e `file` (arquivo:linha).

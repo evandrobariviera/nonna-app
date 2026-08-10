@@ -308,4 +308,80 @@ class ClickupImportController extends Controller
             $task->executors()->attach($responsavelId, ['role' => 'responsavel']);
         }
     }
+
+    // Resync "leve": diferente de import(), que reescreve a tarefa inteira (título,
+    // descrição, cliente, projeto, tipo, origem/destino, datas...), este endpoint só toca em
+    // status/situação/responsável/executor/data de aprovação de tarefas QUE JÁ EXISTEM no App
+    // (casadas por clickup_task_id). Nunca cria tarefa nova (não tem os campos obrigatórios pra
+    // isso, ex: title/client_id) e nunca mexe em project_id/client_id/sprint_id — pensado
+    // exatamente pra rodar contra o workspace inteiro do ClickUp sem o risco de vínculo errado
+    // que já causou incidente com o endpoint de import completo (ver clickup-import-api.md).
+    public function syncFields(Request $request): JsonResponse
+    {
+        $secret = config('app.import_secret');
+        if ($secret && !hash_equals($secret, (string) $request->header('X-Import-Secret'))) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $rows   = $request->input('tasks', []);
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => []];
+
+        try {
+            $usersByEmail = DB::connection('pgsql')->table('users')->pluck('id', 'email')->all();
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => 'Falha ao inicializar lookups: ' . $e->getMessage(),
+                'file'  => basename($e->getFile()) . ':' . $e->getLine(),
+            ], 500);
+        }
+
+        foreach ($rows as $index => $row) {
+            try {
+                $this->syncTaskFields($row, $usersByEmail, $result);
+            } catch (\Throwable $e) {
+                $result['errors'][] = [
+                    'index'           => $index,
+                    'clickup_task_id' => $row['clickup_task_id'] ?? null,
+                    'error'           => $e->getMessage(),
+                ];
+            }
+        }
+
+        return response()->json($result);
+    }
+
+    private function syncTaskFields(array $row, array $usersByEmail, array &$result): void
+    {
+        $clickupTaskId = $row['clickup_task_id'] ?? null;
+        if (!$clickupTaskId) {
+            $result['skipped']++;
+            return;
+        }
+
+        // withoutGlobalScopes: mesma razão do import() — evita OrganizationScope filtrando
+        // tasks com organization_id null.
+        $task = Task::on('pgsql')->withoutGlobalScopes()
+            ->where('clickup_task_id', $clickupTaskId)->first();
+
+        if (!$task) {
+            $result['skipped']++;
+            return;
+        }
+
+        // Status sem mapeamento conhecido mantém o valor atual — diferente do fallback
+        // 'concluido' do import() (pensado pra migração de tarefa nova/legada), aqui a tarefa
+        // já existe e está classificada; um status vazio/desconhecido não deveria fechá-la.
+        $rawStatus = mb_strtolower(trim($row['clickup_status'] ?? ''));
+        $status    = self::STATUS_MAP[$rawStatus] ?? $task->status;
+
+        $task->update([
+            'status'        => $status,
+            'situation'     => $row['situation'] ?? null,
+            'approval_date' => !empty($row['approval_date']) ? $row['approval_date'] : null,
+        ]);
+
+        $this->syncPersonnel($task, $row, $usersByEmail);
+
+        $result['updated']++;
+    }
 }
