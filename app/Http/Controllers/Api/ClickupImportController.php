@@ -74,6 +74,14 @@ class ClickupImportController extends Controller
         'cancelled'               => 'cancelado',
     ];
 
+    // E-mail do ClickUp → e-mail de login no App, só pros casos em que a pessoa foi
+    // cadastrada nos dois sistemas com endereços diferentes (aqui: Alisson tem o e-mail do
+    // ClickUp sem o ponto do sobrenome). Mapeamento manual pontual da migração, não um
+    // sistema de alias genérico — adicionar entrada aqui só quando um caso real aparecer.
+    private const CLICKUP_EMAIL_ALIASES = [
+        'alissonbariviers@gmail.com' => 'alisson.bariviers@gmail.com',
+    ];
+
     // ClickUp priority → app priority
     private const PRIORITY_MAP = [
         'urgent' => 'urgente',
@@ -221,8 +229,8 @@ class ClickupImportController extends Controller
         }
 
         // Resolver created_by: criador do ClickUp → executor → fallback sistema
-        $createdBy = $usersByEmail[$row['creator_email'] ?? '']
-                  ?? $usersByEmail[$row['executor_email'] ?? '']
+        $createdBy = $this->resolveUserId($usersByEmail, $row['creator_email'] ?? null)
+                  ?? $this->resolveUserId($usersByEmail, $row['executor_email'] ?? null)
                   ?? $fallbackUserId;
 
         // is_ticket reflete a Lista ATUAL no ClickUp, não a origem histórica (campo 'origin',
@@ -285,8 +293,8 @@ class ClickupImportController extends Controller
 
     private function syncPersonnel(Task $task, array $row, array $usersByEmail): void
     {
-        $executorId    = isset($row['executor_email'])    ? ($usersByEmail[$row['executor_email']] ?? null)    : null;
-        $responsavelId = isset($row['responsavel_email']) ? ($usersByEmail[$row['responsavel_email']] ?? null) : null;
+        $executorId    = $this->resolveUserId($usersByEmail, $row['executor_email'] ?? null);
+        $responsavelId = $this->resolveUserId($usersByEmail, $row['responsavel_email'] ?? null);
 
         if (!$executorId && !$responsavelId) {
             return;
@@ -307,6 +315,17 @@ class ClickupImportController extends Controller
         if ($responsavelId && !in_array($responsavelId, $synced)) {
             $task->executors()->attach($responsavelId, ['role' => 'responsavel']);
         }
+    }
+
+    private function resolveUserId(array $usersByEmail, ?string $email): ?string
+    {
+        if (!$email) {
+            return null;
+        }
+
+        $email = self::CLICKUP_EMAIL_ALIASES[$email] ?? $email;
+
+        return $usersByEmail[$email] ?? null;
     }
 
     // Resync "leve": diferente de import(), que reescreve a tarefa inteira (título,
