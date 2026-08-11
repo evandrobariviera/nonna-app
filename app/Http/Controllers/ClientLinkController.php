@@ -28,6 +28,24 @@ class ClientLinkController extends Controller
             ->with('success', 'Link adicionado.');
     }
 
+    public function update(Request $request, Client $client, ClientLink $link)
+    {
+        abort_unless($link->client_id === $client->id, 403);
+
+        $data = $request->validate([
+            'label'       => 'required|string|max:150',
+            'type'        => 'required|string|max:50',
+            'type_custom' => 'required_if:type,outros|nullable|string|max:100',
+            'url'         => 'required|url|max:500',
+            'notes'       => 'nullable|string',
+        ]);
+
+        $link->update($data);
+
+        return redirect()->route('clients.show', [$client, 'tab' => 'links'])
+            ->with('success', 'Link atualizado.');
+    }
+
     public function destroy(Client $client, ClientLink $link)
     {
         abort_unless($link->client_id === $client->id, 403);

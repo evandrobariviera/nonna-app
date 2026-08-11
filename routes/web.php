@@ -139,6 +139,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Links do cliente (Drive, contrato, briefing, etc.) ──
     Route::post('/clientes/{client}/links', [ClientLinkController::class, 'store'])
         ->name('clients.links.store');
+    Route::patch('/clientes/{client}/links/{link}', [ClientLinkController::class, 'update'])
+        ->name('clients.links.update');
     Route::delete('/clientes/{client}/links/{link}', [ClientLinkController::class, 'destroy'])
         ->name('clients.links.destroy');
 

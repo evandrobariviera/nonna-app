@@ -679,9 +679,9 @@
                                 <th></th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @foreach($client->links as $link)
-                                <tr>
+                        @foreach($client->links as $link)
+                            <tbody x-data="{ editing: false }">
+                                <tr x-show="!editing">
                                     <td>
                                         <div class="font-semibold text-[var(--text)]">{{ $link->displayLabel() }}</div>
                                         <div class="badge mt-1">{{ $link->typeLabel() }}</div>
@@ -696,19 +696,78 @@
                                         {{ $link->notes ?: '—' }}
                                     </td>
                                     <td class="text-right">
-                                        <form method="POST"
-                                              action="{{ route('clients.links.destroy', [$client, $link]) }}"
-                                              @submit.prevent="if (await $store.confirmDialog.ask('Remover este link?')) $el.submit()">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-xs">
-                                                Remover
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button type="button" @click="editing = true" class="btn btn-ghost btn-xs">
+                                                Editar
                                             </button>
+                                            <form method="POST"
+                                                  action="{{ route('clients.links.destroy', [$client, $link]) }}"
+                                                  @submit.prevent="if (await $store.confirmDialog.ask('Remover este link?')) $el.submit()">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-xs">
+                                                    Remover
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr x-show="editing" x-cloak>
+                                    <td colspan="4">
+                                        <form method="POST" action="{{ route('clients.links.update', [$client, $link]) }}"
+                                              x-data="{ type: '{{ $link->type }}' }" class="py-2 space-y-3">
+                                            @csrf
+                                            @method('PATCH')
+                                            <div class="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-1.5">
+                                                        Rótulo <span class="text-[var(--orange)]">*</span>
+                                                    </label>
+                                                    <input type="text" name="label" value="{{ $link->label }}" required
+                                                           class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2 focus:outline-none focus:border-[var(--purple)]">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-1.5">
+                                                        Tipo <span class="text-[var(--orange)]">*</span>
+                                                    </label>
+                                                    <select name="type" x-model="type" required
+                                                            class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2 focus:outline-none focus:border-[var(--purple)]">
+                                                        @foreach(\App\Models\ClientLink::$types as $key => $typeLabel)
+                                                            <option value="{{ $key }}" {{ $link->type === $key ? 'selected' : '' }}>{{ $typeLabel }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    <div x-show="type === 'outros'" class="mt-2">
+                                                        <input type="text" name="type_custom" value="{{ $link->type_custom }}"
+                                                               placeholder="Qual tipo de link?"
+                                                               class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2 focus:outline-none focus:border-[var(--purple)]">
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-1.5">
+                                                        URL <span class="text-[var(--orange)]">*</span>
+                                                    </label>
+                                                    <input type="url" name="url" value="{{ $link->url }}" required
+                                                           class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2 focus:outline-none focus:border-[var(--purple)]">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-1.5">Observações</label>
+                                                    <input type="text" name="notes" value="{{ $link->notes }}"
+                                                           class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2 focus:outline-none focus:border-[var(--purple)]">
+                                                </div>
+                                            </div>
+                                            <div class="flex gap-3">
+                                                <button type="submit" class="px-4 py-1.5 text-xs font-bold font-mono uppercase tracking-widest text-white" style="background: var(--purple);">
+                                                    Salvar
+                                                </button>
+                                                <button type="button" @click="editing = false" class="btn btn-ghost btn-sm">
+                                                    Cancelar
+                                                </button>
+                                            </div>
                                         </form>
                                     </td>
                                 </tr>
-                            @endforeach
-                        </tbody>
+                            </tbody>
+                        @endforeach
                     </table>
                 </div>
             @endif
