@@ -42,6 +42,35 @@ class TaskController extends Controller
         return view('tasks._results', compact('tasks', 'users', 'sprints', 'projects'));
     }
 
+    // Busca global (topbar) — cobre tarefas E tickets, sem filtro de status/sprint,
+    // exatamente pra achar itens antigos/concluídos ou de sprints já fechadas que
+    // as listagens operacionais escondem por padrão.
+    public function searchGlobal(Request $request)
+    {
+        $term = trim((string) $request->get('q', ''));
+        if (mb_strlen($term) < 2) {
+            return response()->json([]);
+        }
+
+        $tasks = Task::with(['client:id,company_name,nickname', 'sprint:id,title'])
+            ->where(fn ($q) => $q->where('title', 'ilike', "%{$term}%")
+                ->orWhere('clickup_task_id', 'ilike', "%{$term}%"))
+            ->orderByDesc('updated_at')
+            ->limit(20)
+            ->get();
+
+        return response()->json($tasks->map(fn (Task $t) => [
+            'id'           => $t->id,
+            'title'        => $t->title,
+            'is_ticket'    => $t->is_ticket,
+            'client'       => $t->client?->displayName(),
+            'status_label' => $t->statusLabel(),
+            'status_color' => $t->statusColor(),
+            'sprint_label' => $t->sprint?->title,
+            'url'          => route('tasks.show', $t),
+        ]));
+    }
+
     // Projetos pro dropdown "Vincular a projeto" da barra de ações em massa —
     // só ativos, só de cliente ativo, e restrito ao cliente filtrado no momento
     // (evita listar dezenas de projetos de outros clientes misturados, e some

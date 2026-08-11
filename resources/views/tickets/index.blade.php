@@ -2,7 +2,6 @@
     <x-slot name="header">
         <div class="flex items-center justify-between w-full">
             <span class="text-base font-bold" style="color:var(--text)">Tickets / Suporte</span>
-            <a href="{{ route('tickets.create') }}" class="btn btn-primary btn-sm">+ Novo Ticket</a>
         </div>
     </x-slot>
 

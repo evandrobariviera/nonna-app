@@ -407,6 +407,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // Precisa vir ANTES de /tarefas/{task} — senão "resultados" colide com o wildcard.
     Route::get('/tarefas/resultados', [TaskController::class, 'results'])
         ->name('tasks.results');
+    Route::get('/tarefas/busca-global', [TaskController::class, 'searchGlobal'])
+        ->name('tasks.search-global');
     Route::post('/tarefas/lote', [TaskController::class, 'bulkUpdate'])
         ->name('tasks.bulkUpdate');
 

@@ -5,11 +5,6 @@
                 <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Atendimento</p>
                 <h1 class="text-xl font-black" style="color:var(--text)">Agenda</h1>
             </div>
-            <a href="{{ route('meetings.create') }}"
-               class="flex items-center gap-2 px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white"
-               style="background:var(--purple)">
-                + Nova Reunião
-            </a>
         </div>
     </x-slot>
 

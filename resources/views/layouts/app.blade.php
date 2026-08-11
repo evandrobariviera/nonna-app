@@ -177,6 +177,73 @@
                     </a>
                 @endauth
 
+                {{-- Busca global de tarefas/tickets — acha item antigo mesmo em sprint
+                     fechada ou já concluído/cancelado (não usa os filtros operacionais
+                     de /tarefas). Atalho "/" abre quando nada mais está focado. --}}
+                @auth
+                    <div class="relative" x-data="{ open:false, q:'', results:[], loading:false, timer:null }"
+                         @keydown.slash.window.prevent="if (!open && document.activeElement === document.body) { open = true; $nextTick(() => $refs.globalSearchInput.focus()) }">
+                        <button @click="open = !open; if (open) $nextTick(() => $refs.globalSearchInput.focus())"
+                            class="flex items-center justify-center w-8 h-8 rounded-lg transition-colors flex-shrink-0"
+                            style="color:var(--muted)"
+                            onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
+                            onmouseout="this.style.background=''; this.style.color='var(--muted)'"
+                            title="Buscar tarefa/ticket">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="7"/>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            </svg>
+                        </button>
+                        <div x-show="open" @click.outside="open = false" x-cloak
+                             class="absolute right-0 mt-1 z-30"
+                             style="width:360px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.15)">
+                            <div class="p-2" style="border-bottom:1px solid var(--border2)">
+                                <input type="text" x-ref="globalSearchInput" x-model="q"
+                                    @input="
+                                        clearTimeout(timer);
+                                        const term = q.trim();
+                                        if (term.length < 2) { results = []; loading = false; return; }
+                                        loading = true;
+                                        timer = setTimeout(() => {
+                                            fetch('{{ route('tasks.search-global') }}?q=' + encodeURIComponent(term), {
+                                                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                                            })
+                                                .then(r => r.json())
+                                                .then(data => { results = data; loading = false; });
+                                        }, 300)
+                                    "
+                                    placeholder="Buscar por título ou ID ClickUp..."
+                                    class="w-full px-3 py-2 text-sm focus:outline-none"
+                                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                            </div>
+                            <div style="max-height:360px; overflow-y:auto">
+                                <template x-if="loading">
+                                    <div class="px-4 py-6 text-center">
+                                        <p class="text-xs" style="color:var(--muted)">Buscando...</p>
+                                    </div>
+                                </template>
+                                <template x-if="!loading && q.trim().length >= 2 && results.length === 0">
+                                    <div class="px-4 py-6 text-center">
+                                        <p class="text-xs" style="color:var(--muted)">Nenhuma tarefa encontrada.</p>
+                                    </div>
+                                </template>
+                                <template x-for="r in results" :key="r.id">
+                                    <a :href="r.url" class="block px-4 py-2.5 transition-colors"
+                                       style="border-bottom:1px solid var(--border2)"
+                                       onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="text-sm font-semibold truncate" style="color:var(--text)" x-text="r.title"></span>
+                                            <span class="badge flex-shrink-0" :class="'badge-' + r.status_color" x-text="r.status_label"></span>
+                                        </div>
+                                        <p class="text-xs mt-0.5" style="color:var(--muted)"
+                                           x-text="[r.is_ticket ? 'Ticket' : 'Tarefa', r.client, r.sprint_label].filter(Boolean).join(' · ')"></p>
+                                    </a>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                @endauth
+
                 {{-- Toggle tema --}}
                 <button @click="toggleTheme()"
                     class="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
