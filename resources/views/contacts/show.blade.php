@@ -129,7 +129,7 @@
                                             </a>
                                         </td>
                                         <td class="text-xs" style="color:var(--muted2)">
-                                            {{ $opp->client->displayName() ?? '—' }}
+                                            {{ $opp->client?->displayName() ?? '—' }}
                                         </td>
                                         <td>
                                             <span class="badge badge-{{ $opp->stageColor() }}">{{ $opp->stageLabel() }}</span>
