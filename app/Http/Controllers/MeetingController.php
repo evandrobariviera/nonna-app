@@ -9,6 +9,8 @@ use App\Models\NotificationTemplate;
 use App\Models\Opportunity;
 use App\Models\User;
 use App\Services\NotificationDispatchService;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,10 +18,18 @@ class MeetingController extends Controller
 {
     public function index(Request $request)
     {
-        $meetings = $this->filteredMeetings($request);
-        $clients  = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
+        $view    = $request->get('view', 'lista');
+        $clients = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
 
-        return view('meetings.index', compact('meetings', 'clients'));
+        if ($view === 'calendario') {
+            [$weeks, $eventsByDay, $refMonth] = $this->buildCalendar($request);
+
+            return view('meetings.index', compact('view', 'clients', 'weeks', 'eventsByDay', 'refMonth'));
+        }
+
+        $meetings = $this->filteredMeetings($request);
+
+        return view('meetings.index', compact('view', 'meetings', 'clients'));
     }
 
     // Fragmento da listagem — chamado via fetch por live-filter.js conforme o
@@ -36,6 +46,13 @@ class MeetingController extends Controller
         $query = Meeting::with(['client', 'organizer', 'participants'])
             ->orderBy('scheduled_at', 'desc');
 
+        $this->applyFilters($query, $request);
+
+        return $query->paginate(20)->withQueryString();
+    }
+
+    private function applyFilters(Builder $query, Request $request): void
+    {
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -45,8 +62,39 @@ class MeetingController extends Controller
         if ($request->filled('client_id')) {
             $query->where('client_id', $request->client_id);
         }
+    }
 
-        return $query->paginate(20)->withQueryString();
+    // Grade mensal (visão calendário) — semanas completas Dom-Sáb cobrindo o mês
+    // de referência, com as reuniões agrupadas por dia.
+    private function buildCalendar(Request $request): array
+    {
+        $refMonth = $request->filled('month') && preg_match('/^\d{4}-\d{2}$/', $request->month)
+            ? Carbon::createFromFormat('Y-m', $request->month)->startOfMonth()
+            : now()->startOfMonth();
+
+        $gridStart = $refMonth->copy()->startOfWeek(Carbon::SUNDAY);
+        $gridEnd   = $refMonth->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
+
+        $query = Meeting::with('client')
+            ->whereBetween('scheduled_at', [$gridStart->copy()->startOfDay(), $gridEnd->copy()->endOfDay()])
+            ->orderBy('scheduled_at');
+
+        $this->applyFilters($query, $request);
+
+        $eventsByDay = $query->get()->groupBy(fn (Meeting $m) => $m->scheduled_at->format('Y-m-d'));
+
+        $weeks  = [];
+        $cursor = $gridStart->copy();
+        while ($cursor <= $gridEnd) {
+            $week = [];
+            for ($i = 0; $i < 7; $i++) {
+                $week[] = $cursor->copy();
+                $cursor->addDay();
+            }
+            $weeks[] = $week;
+        }
+
+        return [$weeks, $eventsByDay, $refMonth];
     }
 
     public function create()

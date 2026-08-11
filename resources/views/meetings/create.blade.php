@@ -73,7 +73,7 @@
                             Data e Hora <span style="color:var(--orange)">*</span>
                         </label>
                         <input type="datetime-local" name="scheduled_at" required
-                            value="{{ old('scheduled_at', now()->format('Y-m-d\TH:i')) }}"
+                            value="{{ old('scheduled_at', request('scheduled_at') ? request('scheduled_at').'T09:00' : now()->format('Y-m-d\TH:i')) }}"
                             class="w-full px-4 py-2.5 text-sm focus:outline-none"
                             style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
                     </div>
