@@ -331,6 +331,19 @@
     .badge-cyan   { background: #0891b2; color: #fff; border-color: transparent; }
     .badge-yellow { background: #d97706; color: #fff; border-color: transparent; }
 
+    /* ── ÍCONE DE CABEÇALHO DE CARD (tasks/show e afins) ── */
+    .icon-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+        border-radius: 7px;
+        background: rgba(106, 90, 205, .1);
+        color: var(--purple);
+    }
+
     /* ── GRADIENT TEXT ── */
     .grad-text {
         background: var(--grad);
