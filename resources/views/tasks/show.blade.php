@@ -59,6 +59,22 @@
         document.addEventListener('alpine:init', () => {
             Alpine.store('ui', { chatOpen: false });
 
+            Alpine.store('attachmentLightbox', {
+                visible: false,
+                src: null,
+                filename: null,
+                open(src, filename) {
+                    this.src = src;
+                    this.filename = filename;
+                    this.visible = true;
+                },
+                close() {
+                    this.visible = false;
+                    this.src = null;
+                    this.filename = null;
+                },
+            });
+
             Alpine.data('observerPicker', (initial = []) => ({
                 selected: initial,
                 add(event) {
@@ -669,29 +685,7 @@
                             </thead>
                             <tbody>
                                 @foreach($insumos as $attachment)
-                                    <tr>
-                                        <td>
-                                            <a href="{{ $attachment->url() }}" target="_blank"
-                                               class="flex items-center gap-2 font-medium hover:underline"
-                                               style="color:var(--text)">
-                                                <span class="flex-shrink-0">{{ $attachment->icon() }}</span>
-                                                {{ $attachment->filename }}
-                                            </a>
-                                        </td>
-                                        <td style="color:var(--muted2)">{{ $attachment->sizeForHumans() }}</td>
-                                        <td style="color:var(--muted2)">{{ $attachment->uploadedBy?->name ?? '—' }}</td>
-                                        <td style="color:var(--muted2)">{{ $attachment->created_at->format('d/m/Y H:i') }}</td>
-                                        <td class="text-right">
-                                            <div class="flex items-center justify-end gap-3">
-                                                <a href="{{ $attachment->url() }}" target="_blank" class="btn btn-ghost btn-xs">↓</a>
-                                                <form method="POST" action="{{ route('task-attachments.destroy', [$task, $attachment]) }}"
-                                                      @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-xs">✕</button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    @include('partials._task-attachment-row', ['task' => $task, 'attachment' => $attachment])
                                 @endforeach
                             </tbody>
                         </table>
@@ -745,6 +739,11 @@
                     @if($entregaveis->count() > 0)
                         <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $entregaveis->count() }}</span>
                     @endif
+                    @if($entregaveis->count() > 0)
+                        <a href="{{ route('task-attachments.zip', $task) }}" class="ml-auto btn btn-ghost btn-xs" style="text-transform:none; letter-spacing:normal; font-weight:600">
+                            ⬇ Baixar tudo (.zip)
+                        </a>
+                    @endif
                 </p>
                 <p class="text-xs mb-4" style="color:var(--muted2)">Material produzido pela equipe — é isso que vai para a aprovação do cliente.</p>
 
@@ -784,37 +783,7 @@
                             </thead>
                             <tbody>
                                 @foreach($entregaveis as $attachment)
-                                    <tr>
-                                        <td>
-                                            <div class="flex items-center gap-2 flex-wrap">
-                                                <a href="{{ $attachment->url() }}" target="_blank"
-                                                   class="flex items-center gap-2 font-medium hover:underline"
-                                                   style="color:var(--text)">
-                                                    <span class="flex-shrink-0">{{ $attachment->icon() }}</span>
-                                                    {{ $attachment->filename }}
-                                                </a>
-                                                @if($attachment->is_deliverable)
-                                                    <span class="px-1.5 py-0.5 text-xs font-semibold flex-shrink-0"
-                                                          style="background:rgba(106,90,205,.12); color:var(--purple)">
-                                                        Enviado · Rodada #{{ $attachment->round_number }}
-                                                    </span>
-                                                @endif
-                                            </div>
-                                        </td>
-                                        <td style="color:var(--muted2)">{{ $attachment->sizeForHumans() }}</td>
-                                        <td style="color:var(--muted2)">{{ $attachment->uploadedBy?->name ?? '—' }}</td>
-                                        <td style="color:var(--muted2)">{{ $attachment->created_at->format('d/m/Y H:i') }}</td>
-                                        <td class="text-right">
-                                            <div class="flex items-center justify-end gap-3">
-                                                <a href="{{ $attachment->url() }}" target="_blank" class="btn btn-ghost btn-xs">↓</a>
-                                                <form method="POST" action="{{ route('task-attachments.destroy', [$task, $attachment]) }}"
-                                                      @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-xs">✕</button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    @include('partials._task-attachment-row', ['task' => $task, 'attachment' => $attachment])
                                 @endforeach
                             </tbody>
                         </table>
@@ -1407,6 +1376,28 @@
             </div>
 
         </div>{{-- /sidebar --}}
+    </div>
+
+    {{-- ══════════════════════════════════════════════════════════
+         LIGHTBOX DE IMAGEM — abre ao clicar na miniatura/Visualizar de um anexo
+         que é imagem (mesmo padrão visual do confirm-dialog-modal)
+    ══════════════════════════════════════════════════════════ --}}
+    <div x-show="$store.attachmentLightbox.visible" x-cloak
+         @keydown.escape.window="$store.attachmentLightbox.close()"
+         class="fixed inset-0 z-[60] flex items-center justify-center p-6"
+         style="background:rgba(0,0,0,.75)">
+        <div @click.outside="$store.attachmentLightbox.close()" class="flex flex-col items-center gap-3" style="max-width:90vw; max-height:90vh">
+            <img :src="$store.attachmentLightbox.src" :alt="$store.attachmentLightbox.filename"
+                 style="max-width:90vw; max-height:80vh; object-fit:contain; border-radius:8px">
+            <div class="flex items-center gap-4">
+                <span class="text-sm" style="color:#fff" x-text="$store.attachmentLightbox.filename"></span>
+                <button type="button" @click="$store.attachmentLightbox.close()"
+                        class="text-xs font-bold uppercase tracking-widest px-3 py-1.5"
+                        style="background:rgba(255,255,255,.15); color:#fff">
+                    ✕ Fechar
+                </button>
+            </div>
+        </div>
     </div>
 
     {{-- ══════════════════════════════════════════════════════════

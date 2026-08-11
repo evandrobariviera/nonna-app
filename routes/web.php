@@ -423,6 +423,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Anexos da tarefa ──
     Route::post('/tarefas/{task}/anexos', [TaskAttachmentController::class, 'store'])
         ->name('task-attachments.store');
+    Route::get('/tarefas/{task}/entregaveis/zip', [TaskAttachmentController::class, 'downloadDeliverablesZip'])
+        ->name('task-attachments.zip');
     Route::delete('/tarefas/{task}/anexos/{attachment}', [TaskAttachmentController::class, 'destroy'])
         ->name('task-attachments.destroy');
 

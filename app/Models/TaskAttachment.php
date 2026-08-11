@@ -53,6 +53,19 @@ class TaskAttachment extends Model
         return Storage::disk($this->disk)->url($this->disk_path);
     }
 
+    // URL de download forçado — diferente de url() (que só exibe), essa manda o R2
+    // devolver Content-Disposition: attachment, pro navegador baixar em vez de abrir
+    // numa aba (imagem/PDF antes só "abriam" e confundiam quem queria só baixar).
+    public function downloadUrl(): string
+    {
+        if ($this->disk === 'r2') {
+            return Storage::disk('r2')->temporaryUrl($this->disk_path, now()->addHours(24), [
+                'ResponseContentDisposition' => 'attachment; filename="' . addslashes($this->filename) . '"',
+            ]);
+        }
+        return $this->url();
+    }
+
     public function sizeForHumans(): string
     {
         $bytes = $this->size;

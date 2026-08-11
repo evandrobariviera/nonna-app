@@ -9,6 +9,8 @@ use App\Services\TaskApprovalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use ZipStream\ZipStream;
 
 class TaskAttachmentController extends Controller
 {
@@ -46,6 +48,46 @@ class TaskAttachmentController extends Controller
         $label = $request->file('files') && count($request->file('files')) > 1 ? 'Arquivos anexados.' : 'Arquivo anexado.';
 
         return $roundCreated ? $redirect : $redirect->with('success', $label);
+    }
+
+    // Zip de todos os Entregáveis da tarefa — streamado direto (sem escrever zip
+    // temporário em disco), lendo cada arquivo do R2 sob demanda. maennchen/zipstream-php
+    // em vez de ZipArchive porque a imagem Docker não tem a extensão nativa `zip` instalada.
+    public function downloadDeliverablesZip(Task $task)
+    {
+        $attachments = $task->attachments()->where('kind', 'entregavel')->get();
+
+        abort_if($attachments->isEmpty(), 404);
+
+        $zipFilename = Str::slug($task->title) . '-entregaveis.zip';
+
+        return response()->streamDownload(function () use ($attachments) {
+            $zip = new ZipStream(
+                outputName: 'entregaveis.zip',
+                sendHttpHeaders: false, // headers já vão pelo response()->streamDownload()
+            );
+
+            $usedNames = [];
+            foreach ($attachments as $attachment) {
+                $name = $attachment->filename;
+                if (isset($usedNames[$name])) {
+                    $usedNames[$name]++;
+                    $pathinfo = pathinfo($name);
+                    $suffix   = isset($pathinfo['extension']) ? '.' . $pathinfo['extension'] : '';
+                    $base     = $pathinfo['filename'] ?? $name;
+                    $name     = "{$base} ({$usedNames[$name]}){$suffix}";
+                } else {
+                    $usedNames[$name] = 1;
+                }
+
+                $stream = Storage::disk($attachment->disk)->readStream($attachment->disk_path);
+                if ($stream) {
+                    $zip->addFileFromStream(fileName: $name, stream: $stream);
+                }
+            }
+
+            $zip->finish();
+        }, $zipFilename, ['Content-Type' => 'application/zip']);
     }
 
     public function destroy(Task $task, TaskAttachment $attachment)
