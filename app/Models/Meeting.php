@@ -16,6 +16,7 @@ class Meeting extends Model
     protected $connection = 'pgsql';
 
     protected $fillable = [
+        'organization_id',
         'title',
         'type',
         'modality',

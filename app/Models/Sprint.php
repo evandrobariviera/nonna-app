@@ -15,6 +15,7 @@ class Sprint extends Model
     protected $connection = 'pgsql';
 
     protected $fillable = [
+        'organization_id',
         'title', 'starts_at', 'ends_at', 'status',
         'locked_at', 'locked_by', 'created_by',
     ];

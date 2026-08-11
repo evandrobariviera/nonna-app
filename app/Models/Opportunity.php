@@ -14,6 +14,7 @@ class Opportunity extends Model
     protected $connection = 'pgsql';
 
     protected $fillable = [
+        'organization_id',
         'contact_id',
         'client_id',
         'title',

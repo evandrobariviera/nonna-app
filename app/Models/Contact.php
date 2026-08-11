@@ -19,6 +19,7 @@ class Contact extends Authenticatable
     protected $hidden = ['password', 'remember_token'];
 
     protected $fillable = [
+        'organization_id',
         'name',
         'email',
         'phone',

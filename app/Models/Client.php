@@ -19,6 +19,7 @@ class Client extends Model
     protected $connection = 'pgsql';
 
     protected $fillable = [
+        'organization_id',
         'clickup_task_id',
         'company_name',
         'nickname',

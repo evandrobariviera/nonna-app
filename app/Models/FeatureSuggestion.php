@@ -14,6 +14,7 @@ class FeatureSuggestion extends Model
     protected $connection = 'pgsql';
 
     protected $fillable = [
+        'organization_id',
         'title',
         'description',
         'created_by',
