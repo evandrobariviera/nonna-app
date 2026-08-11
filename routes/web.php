@@ -558,6 +558,16 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::get('/produtividade', [\App\Http\Controllers\ProductivityDashboardController::class, 'index'])
         ->name('productivity.index');
 
+    // ── Sugestões de melhoria do App (checklist da equipe) ──
+    Route::get('/sugestoes', [\App\Http\Controllers\FeatureSuggestionController::class, 'index'])
+        ->name('feature-suggestions.index');
+    Route::post('/sugestoes', [\App\Http\Controllers\FeatureSuggestionController::class, 'store'])
+        ->name('feature-suggestions.store');
+    Route::patch('/sugestoes/{suggestion}/status', [\App\Http\Controllers\FeatureSuggestionController::class, 'updateStatus'])
+        ->name('feature-suggestions.update-status');
+    Route::delete('/sugestoes/{suggestion}', [\App\Http\Controllers\FeatureSuggestionController::class, 'destroy'])
+        ->name('feature-suggestions.destroy');
+
     // ── Ecossistema de IA ──
     Route::prefix('ia')->name('ai.')->group(function () {
         // Providers & Chaves
