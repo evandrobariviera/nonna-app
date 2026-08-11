@@ -10,6 +10,7 @@ use App\Models\AdCampaign;
 use App\Models\AiAgent;
 use App\Models\MacroPlan;
 use App\Models\Meeting;
+use App\Models\MeetingAttachment;
 use App\Models\Opportunity;
 use App\Models\FunctionalRole;
 use App\Models\Sector;
@@ -238,6 +239,22 @@ class AutomationJob implements ShouldQueue
             'duration_minutes' => $entity->duration_minutes,
         ]);
 
+        // Copia os anexos da reunião de planejamento pra revisão interna (mesmo arquivo no
+        // R2, só uma referência nova) — não move nem duplica o arquivo, só o link, pra quem
+        // for revisar já ter o material da reunião original à mão sem precisar ir atrás dela.
+        $entity->loadMissing('attachments');
+        foreach ($entity->attachments as $attachment) {
+            MeetingAttachment::create([
+                'meeting_id'  => $reviewMeeting->id,
+                'filename'    => $attachment->filename,
+                'disk_path'   => $attachment->disk_path,
+                'disk'        => $attachment->disk,
+                'mime_type'   => $attachment->mime_type,
+                'size'        => $attachment->size,
+                'uploaded_by' => $attachment->uploaded_by,
+            ]);
+        }
+
         $role = !empty($config['role']) ? FunctionalRole::where('key', $config['role'])->first() : null;
         $recipients = $role ? $role->users : collect();
 
@@ -255,7 +272,11 @@ class AutomationJob implements ShouldQueue
             );
         }
 
-        return "Macroplanejamento {$macroPlan->id} criado; Reunião de Revisão Interna agendada para {$reviewMeeting->scheduled_at->format('d/m/Y H:i')}.";
+        $attachmentsNote = $entity->attachments->isNotEmpty()
+            ? " ({$entity->attachments->count()} anexo(s) copiado(s) da reunião original)"
+            : '';
+
+        return "Macroplanejamento {$macroPlan->id} criado; Reunião de Revisão Interna agendada para {$reviewMeeting->scheduled_at->format('d/m/Y H:i')}{$attachmentsNote}.";
     }
 
     private function sendNotification(array $config, mixed $entity, array $context): string
