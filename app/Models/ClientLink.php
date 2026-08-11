@@ -14,6 +14,7 @@ class ClientLink extends Model
 
     protected $fillable = [
         'client_id',
+        'label',
         'type',
         'type_custom',
         'url',
@@ -37,6 +38,13 @@ class ClientLink extends Model
             return $this->type_custom;
         }
         return self::$types[$this->type] ?? $this->type;
+    }
+
+    // Rótulo é obrigatório em todo link novo (validação no controller) — o fallback aqui
+    // é só rede de segurança pra qualquer link antigo que escape do backfill da migration.
+    public function displayLabel(): string
+    {
+        return $this->label ?: $this->typeLabel();
     }
 
     public function client(): BelongsTo

@@ -1249,7 +1249,7 @@
                             <a href="{{ $link->url }}" target="_blank" rel="noopener"
                                class="flex items-center justify-between gap-2 text-sm font-medium transition-colors" style="color:var(--text)"
                                onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'">
-                                <span>{{ $link->typeLabel() }}</span>
+                                <span>{{ $link->displayLabel() }}</span>
                                 <span style="color:var(--muted); font-size:11px">↗</span>
                             </a>
                         @endforeach

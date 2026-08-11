@@ -221,7 +221,7 @@
                            class="card card-body flex items-center justify-between gap-3 transition-colors"
                            onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'">
                             <div class="min-w-0">
-                                <p class="text-sm font-semibold" style="color:var(--text)">{{ $link->typeLabel() }}</p>
+                                <p class="text-sm font-semibold" style="color:var(--text)">{{ $link->displayLabel() }}</p>
                                 <p class="text-xs font-mono truncate" style="color:var(--purple)">{{ $link->url }}</p>
                                 @if($link->notes)
                                     <p class="text-xs mt-0.5 truncate" style="color:var(--muted)">{{ $link->notes }}</p>

@@ -609,6 +609,13 @@
                 <h4 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-4">Novo Link</h4>
                 <form method="POST" action="{{ route('clients.links.store', $client) }}" class="space-y-4">
                     @csrf
+                    <div>
+                        <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                            Rótulo <span class="text-[var(--orange)]">*</span>
+                        </label>
+                        <input type="text" name="label" placeholder="Ex: Drive - Aprovações Q3" required
+                               class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                    </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div x-data="{ type: '' }">
                             <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
@@ -666,7 +673,7 @@
                     <table class="nonna-table">
                         <thead>
                             <tr>
-                                <th>Tipo</th>
+                                <th>Rótulo</th>
                                 <th>Link</th>
                                 <th>Obs</th>
                                 <th></th>
@@ -675,8 +682,9 @@
                         <tbody>
                             @foreach($client->links as $link)
                                 <tr>
-                                    <td class="font-semibold text-[var(--text)]">
-                                        {{ $link->typeLabel() }}
+                                    <td>
+                                        <div class="font-semibold text-[var(--text)]">{{ $link->displayLabel() }}</div>
+                                        <div class="badge mt-1">{{ $link->typeLabel() }}</div>
                                     </td>
                                     <td class="text-sm">
                                         <a href="{{ $link->url }}" target="_blank" rel="noopener"

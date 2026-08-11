@@ -12,6 +12,7 @@ class ClientLinkController extends Controller
     public function store(Request $request, Client $client)
     {
         $data = $request->validate([
+            'label'       => 'required|string|max:150',
             'type'        => 'required|string|max:50',
             'type_custom' => 'required_if:type,outros|nullable|string|max:100',
             'url'         => 'required|url|max:500',
