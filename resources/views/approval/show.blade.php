@@ -19,7 +19,15 @@
         .piece-card { background: var(--s1); border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
 
         .preview-img { width: 100%; max-height: 460px; object-fit: contain; background: #000; display: block; }
-        .preview-img + .preview-img { border-top: 1px solid var(--border); }
+
+        {{-- Material + Legenda: empilhado (material primeiro) em telas pequenas;
+             lado a lado a partir de tablet/desktop. --}}
+        .approval-media-row .media-col { min-width: 0; }
+        @media (min-width: 768px) {
+            .approval-media-row { display: flex; gap: 20px; align-items: flex-start; }
+            .approval-media-row .media-col { flex: 1 1 60%; }
+            .approval-media-row .caption-col { flex: 1 1 40%; }
+        }
 
         .btn-decision { flex: 1; padding: 12px 10px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; border: 2px solid var(--border2); cursor: pointer; transition: all .15s; background: transparent; color: var(--muted2); }
         .btn-decision.sel-approve  { border-color: #22c55e; background: rgba(34,197,94,.12); color: #22c55e; }
@@ -157,28 +165,36 @@
         </div>
         @endif
 
-        {{-- MATERIAL --}}
-        @if($deliverables->isNotEmpty())
-        <div class="piece-card">
-            @foreach($deliverables as $file)
-                @if($file->isImage())
-                    <img src="{{ $file->url() }}" alt="{{ $file->filename }}" class="preview-img">
-                @else
-                    <a href="{{ $file->url() }}" target="_blank" class="file-link">
-                        <span style="font-size:22px">{{ $file->icon() }}</span>
-                        <span>{{ $file->filename }}</span>
-                        <span style="margin-left:auto; font-size:10px; color:var(--muted); font-family:'IBM Plex Mono',monospace">↗ abrir</span>
-                    </a>
-                @endif
-            @endforeach
-        </div>
-        @endif
+        {{-- MATERIAL + LEGENDA — lado a lado a partir de tablet/desktop; em celular fica
+             empilhado na ordem do DOM (material primeiro, legenda depois). --}}
+        @if($deliverables->isNotEmpty() || $approvalToken->round->caption)
+        <div class="approval-media-row">
+            @if($deliverables->isNotEmpty())
+            <div class="media-col">
+                @foreach($deliverables as $file)
+                    <div class="piece-card">
+                        @if($file->isImage())
+                            <img src="{{ $file->url() }}" alt="{{ $file->filename }}" class="preview-img">
+                        @else
+                            <a href="{{ $file->url() }}" target="_blank" class="file-link">
+                                <span style="font-size:22px">{{ $file->icon() }}</span>
+                                <span>{{ $file->filename }}</span>
+                                <span style="margin-left:auto; font-size:10px; color:var(--muted); font-family:'IBM Plex Mono',monospace">↗ abrir</span>
+                            </a>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+            @endif
 
-        {{-- LEGENDA --}}
-        @if($approvalToken->round->caption)
-        <div class="piece-card" style="padding:18px">
-            <span class="label-sm">Legenda</span>
-            <p style="font-size:14px; white-space:pre-wrap; margin:0; color:var(--text); line-height:1.6">{{ $approvalToken->round->caption }}</p>
+            @if($approvalToken->round->caption)
+            <div class="caption-col">
+                <div class="piece-card" style="padding:18px">
+                    <span class="label-sm">Legenda</span>
+                    <p style="font-size:14px; white-space:pre-wrap; margin:0; color:var(--text); line-height:1.6">{{ $approvalToken->round->caption }}</p>
+                </div>
+            </div>
+            @endif
         </div>
         @endif
 

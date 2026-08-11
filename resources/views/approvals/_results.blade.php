@@ -179,6 +179,26 @@
                                          border:1px solid {{ $isCancelled ? 'var(--border2)' : ($notSent ? 'var(--border2)' : ($isApproved ? 'rgba(34,197,94,.25)' : ($isChanges ? 'rgba(255,140,0,.25)' : 'rgba(106,90,205,.25)'))) }}">
                                 {{ $round->displayStatusLabel() }}
                             </span>
+                            @if($total > 0)
+                                <div class="relative" x-data="{ open: false }">
+                                    <button type="button" @click="open = !open" class="btn btn-ghost btn-xs" title="Link de aprovação enviado ao cliente">
+                                        🔗 Link
+                                    </button>
+                                    <div x-show="open" @click.outside="open = false" x-cloak
+                                         class="absolute right-0 mt-1 z-20 py-1"
+                                         style="min-width:220px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
+                                        @foreach($round->tokens as $token)
+                                            <button type="button"
+                                                    onclick="navigator.clipboard.writeText('{{ route('approval.show', $token->token) }}')"
+                                                    class="w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors"
+                                                    style="color:var(--muted2)"
+                                                    onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                                Copiar link — {{ $token->contact->name }}
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                             <a href="{{ route('tasks.show', $round->task_id) }}" class="btn btn-ghost btn-xs">
                                 Ver Tarefa →
                             </a>
