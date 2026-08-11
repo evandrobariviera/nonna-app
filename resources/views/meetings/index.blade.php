@@ -21,7 +21,7 @@
         </div>
     @endif
 
-    {{-- Toggle Lista / Calendário --}}
+    {{-- Toggle Lista / Calendário / Quadros --}}
     <div class="flex items-center gap-2 mb-5">
         @php($viewParams = fn ($v) => array_merge(request()->except(['view', 'month']), ['view' => $v]))
         <a href="{{ route('meetings.index', $viewParams('lista')) }}"
@@ -33,6 +33,11 @@
            class="btn btn-sm {{ $view === 'calendario' ? '' : 'btn-ghost' }}"
            @if($view === 'calendario') style="background:var(--purple); color:#fff" @endif>
             Calendário
+        </a>
+        <a href="{{ route('meetings.index', $viewParams('quadros')) }}"
+           class="btn btn-sm {{ $view === 'quadros' ? '' : 'btn-ghost' }}"
+           @if($view === 'quadros') style="background:var(--purple); color:#fff" @endif>
+            Quadros
         </a>
     </div>
 
@@ -46,15 +51,17 @@
             <input type="hidden" name="month" value="{{ request('month') }}">
         @endif
 
-        <select name="status" @if($view === 'calendario') onchange="this.form.submit()" @endif
-            style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
-            <option value="">Todos os status</option>
-            @foreach(\App\Models\Meeting::$statuses as $key => $s)
-                <option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
-            @endforeach
-        </select>
+        @unless($view === 'quadros')
+            <select name="status" @if($view !== 'lista') onchange="this.form.submit()" @endif
+                style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
+                <option value="">Todos os status</option>
+                @foreach(\App\Models\Meeting::$statuses as $key => $s)
+                    <option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
+                @endforeach
+            </select>
+        @endunless
 
-        <select name="type" @if($view === 'calendario') onchange="this.form.submit()" @endif
+        <select name="type" @if($view !== 'lista') onchange="this.form.submit()" @endif
             style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
             <option value="">Todos os tipos</option>
             @foreach(\App\Models\Meeting::$types as $key => $label)
@@ -62,7 +69,7 @@
             @endforeach
         </select>
 
-        <select name="client_id" @if($view === 'calendario') onchange="this.form.submit()" @endif
+        <select name="client_id" @if($view !== 'lista') onchange="this.form.submit()" @endif
             style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
             <option value="">Todos os clientes</option>
             @foreach($clients as $c)
@@ -82,8 +89,10 @@
         <div id="meetings-results">
             @include('meetings._results')
         </div>
-    @else
+    @elseif($view === 'calendario')
         @include('meetings._calendar')
+    @else
+        @include('meetings._board')
     @endif
 
 </x-app-layout>

@@ -18,13 +18,19 @@ class MeetingController extends Controller
 {
     public function index(Request $request)
     {
-        $view    = $request->get('view', 'lista');
+        $view    = $request->get('view', 'calendario');
         $clients = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
 
         if ($view === 'calendario') {
             [$weeks, $eventsByDay, $refMonth] = $this->buildCalendar($request);
 
             return view('meetings.index', compact('view', 'clients', 'weeks', 'eventsByDay', 'refMonth'));
+        }
+
+        if ($view === 'quadros') {
+            $board = $this->buildBoard($request);
+
+            return view('meetings.index', compact('view', 'clients', 'board'));
         }
 
         $meetings = $this->filteredMeetings($request);
@@ -95,6 +101,23 @@ class MeetingController extends Controller
         }
 
         return [$weeks, $eventsByDay, $refMonth];
+    }
+
+    // Board Kanban por status — não filtra por status (a própria coluna já é a
+    // segmentação), só type/client_id.
+    private function buildBoard(Request $request)
+    {
+        $query = Meeting::with(['client', 'organizer'])
+            ->orderBy('scheduled_at');
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+        if ($request->filled('client_id')) {
+            $query->where('client_id', $request->client_id);
+        }
+
+        return $query->get()->groupBy('status');
     }
 
     public function create()
@@ -219,6 +242,10 @@ class MeetingController extends Controller
         ]);
 
         $meeting->update(['status' => $data['status']]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->back()->with('success', 'Status atualizado.');
     }
