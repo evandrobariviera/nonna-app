@@ -181,18 +181,20 @@
                     @forelse($q['tasks'] as $task)
                         @php
                             $statusUrl = $task->is_ticket ? route('tickets.update-status', $task) : route('tasks.update-status-direct', $task);
+                            // Data de aprovação, não vencimento — é o prazo relevante nesta etapa.
+                            $isApprovalOverdue = $task->approval_date && $task->approval_date->isPast() && $task->status !== 'concluido';
                         @endphp
                         <div data-kanban-card data-id="{{ $task->id }}" data-update-url="{{ $statusUrl }}"
                              class="px-3 py-2 transition-colors" style="cursor:pointer;
-                                    background:var(--s2); border-left:2px solid {{ $task->isOverdue() ? 'var(--red)' : 'var(--purple)' }}"
+                                    background:var(--s2); border-left:2px solid {{ $isApprovalOverdue ? 'var(--red)' : 'var(--purple)' }}"
                              onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'"
                              onclick="window.location='{{ route('tasks.show', $task) }}'">
                             <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $task->title }}</p>
                             <div class="flex items-center gap-2 mt-1">
                                 <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->displayName() ?? '—' }}</span>
-                                @if($task->due_date)
-                                    <span class="text-xs font-mono" style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">
-                                        {{ $task->due_date->format('d/m') }}
+                                @if($task->approval_date)
+                                    <span class="text-xs font-mono" style="color:{{ $isApprovalOverdue ? 'var(--red)' : 'var(--muted)' }}">
+                                        {{ $task->approval_date->format('d/m') }}
                                     </span>
                                 @endif
                             </div>

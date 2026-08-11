@@ -31,19 +31,21 @@ class DashboardController extends Controller
             $sprintTotal = $sprintDone = $sprintProgress = 0;
         }
 
-        // Camada operacional: minhas tarefas por etapa (sempre como executor)
+        // Camada operacional: minhas tarefas por etapa (sempre como executor).
+        // Ordenado/exibido por data de aprovação, não vencimento — é o prazo que
+        // importa pra essas etapas (ver dashboard.blade.php, quadro "Operação").
         $myAdjustmentTasks = $this->executorTasksQuery($userId)
             ->where('status', 'ajuste_alteracao')
-            ->with('client')->orderBy('due_date')->limit(8)->get();
+            ->with('client')->orderBy('approval_date')->limit(8)->get();
 
         $myProductionTasks = $this->executorTasksQuery($userId)
             ->where('status', 'em_producao')
-            ->with('client')->orderBy('due_date')->limit(8)->get();
+            ->with('client')->orderBy('approval_date')->limit(8)->get();
 
         $myReadyForProductionTasks = $this->executorTasksQuery($userId)
             ->where('status', 'backlog')
             ->where('situation', 'Pronto para produção')
-            ->with('client')->orderBy('due_date')->limit(8)->get();
+            ->with('client')->orderBy('approval_date')->limit(8)->get();
 
         // Agenda: todos os compromissos pendentes (não só hoje — "Para Agendar"
         // também conta, é o status padrão de uma reunião recém-criada), agrupados
