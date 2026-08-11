@@ -962,7 +962,18 @@
                                                 <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full" style="background:var(--s3); color:var(--muted)">Interno</span>
                                             @endif
                                         </div>
-                                        <p class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.65">{{ $comment->body }}</p>
+                                        @php
+                                            // Comentário antigo (anterior ao editor rico) é texto puro, sem
+                                            // tag nenhuma — converte pra <p>/<br> só na exibição, sem precisar
+                                            // de migration/backfill (mesma lógica de tiptap-editor.js:normalizeContent).
+                                            $commentHtml = $comment->body;
+                                            if (!preg_match('/<[a-z][\s\S]*>/i', $commentHtml)) {
+                                                $commentHtml = collect(preg_split('/\n\n+/', $commentHtml))
+                                                    ->map(fn ($p) => '<p>' . nl2br(e($p)) . '</p>')
+                                                    ->implode('');
+                                            }
+                                        @endphp
+                                        <div class="ProseMirror" style="color:var(--text); line-height:1.65">{!! $commentHtml !!}</div>
                                     </div>
 
                                     {{-- Edição --}}
@@ -970,9 +981,7 @@
                                         <div x-show="editId === '{{ $comment->id }}'" x-cloak>
                                             <form method="POST" action="{{ route('task-comments.update', [$task, $comment]) }}">
                                                 @csrf @method('PATCH')
-                                                <textarea name="body" rows="3" required
-                                                    class="w-full px-3 py-2 text-sm focus:outline-none resize-none"
-                                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text); line-height:1.65">{{ $comment->body }}</textarea>
+                                                <x-rich-editor name="body" :value="$comment->body" min-height="100px" />
                                                 <div class="flex items-center gap-3 mt-2">
                                                     <button type="submit" class="text-xs font-mono text-[var(--purple)] hover:underline">Salvar</button>
                                                     <button type="button" @click="editId = null" class="text-xs font-mono" style="color:var(--muted)">Cancelar</button>
@@ -1002,24 +1011,13 @@
                 @endif
 
                 {{-- Novo comentário --}}
-                <form method="POST" action="{{ route('task-comments.store', $task) }}"
-                      x-data="{ body: '', rows: 2 }"
-                      @submit="if (!body.trim()) { $event.preventDefault(); }">
+                <form method="POST" action="{{ route('task-comments.store', $task) }}">
                     @csrf
                     <div class="flex gap-3">
                         <x-user-avatar :user="auth()->user()" size="8" class="mt-0.5" />
                         <div class="flex-1">
-                            <textarea
-                                name="body"
-                                x-model="body"
-                                :rows="rows"
-                                @focus="rows = 4"
-                                placeholder="Adicionar um comentário..."
-                                class="w-full px-4 py-3 text-sm focus:outline-none resize-none transition-all"
-                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text); line-height:1.65"
-                                onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'"
-                            ></textarea>
-                            <div class="flex items-center justify-between mt-2" x-show="body.trim().length > 0" x-cloak>
+                            <x-rich-editor name="body" min-height="80px" />
+                            <div class="flex items-center justify-between mt-2">
                                 <label class="flex items-center gap-2 text-xs" style="color:var(--muted)">
                                     <input type="checkbox" name="visible_to_client" value="1">
                                     Visível para o cliente

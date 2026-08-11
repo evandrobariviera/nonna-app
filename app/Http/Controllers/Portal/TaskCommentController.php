@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Task;
+use App\Support\RichTextSanitizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +23,7 @@ class TaskCommentController extends Controller
 
         $task->comments()->create([
             'contact_id'        => Auth::guard('portal')->id(),
-            'body'              => $data['body'],
+            'body'              => RichTextSanitizer::clean($data['body']),
             'visible_to_client' => true,
         ]);
 
