@@ -175,6 +175,9 @@ class SprintController extends Controller
         if ($request->filled('list_status')) {
             $tasks = $tasks->where('status', $request->get('list_status'));
         }
+        if ($request->filled('list_situacao')) {
+            $tasks = $tasks->where('situation', $request->get('list_situacao'));
+        }
         if ($request->filled('list_executor_id')) {
             $id = $request->get('list_executor_id');
             $tasks = $tasks->filter(function ($t) use ($id) {

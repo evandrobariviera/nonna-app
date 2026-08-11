@@ -17,6 +17,12 @@
         $groupColor = \App\Models\Task::colorHex($statusInfo['color'] ?? '');
         $groupTextColor = '#fff';
         $groupSubLabel = null;
+    } elseif ($groupBy === 'situacao') {
+        $groupLabel = \App\Models\Task::$situations[$groupKey] ?? ($groupKey ?: '—');
+        $groupInitials = strtoupper(substr($groupLabel, 0, 2));
+        $groupColor = \App\Models\Task::$situationColors[$groupKey] ?? '#94a3b8';
+        $groupTextColor = '#fff';
+        $groupSubLabel = null;
     } else {
         // executor ou responsavel: key = "id|nome" ou "__xxx__|Sem ..."
         $parts = explode('|', $groupKey, 2);

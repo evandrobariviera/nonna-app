@@ -382,6 +382,7 @@ class Task extends Model
             'executor'    => $tasks->groupBy(fn ($t) => self::executorGroupKey($t)),
             'responsavel' => $tasks->groupBy(fn ($t) => self::responsavelGroupKey($t)),
             'status'      => $tasks->groupBy(fn ($t) => $t->status),
+            'situacao'    => $tasks->groupBy(fn ($t) => $t->situation ?? ''),
             default       => $tasks->groupBy(fn ($t) => $t->client_id ?? '__sem_cliente__'),
         };
     }

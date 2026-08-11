@@ -64,6 +64,9 @@ class FilaController extends Controller
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
+        if ($request->filled('situacao')) {
+            $query->where('situation', $request->situacao);
+        }
         if ($request->filled('executor_id')) {
             $id = $request->executor_id;
             $query->where(function ($q) use ($id) {

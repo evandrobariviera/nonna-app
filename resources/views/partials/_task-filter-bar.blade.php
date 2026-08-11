@@ -10,7 +10,7 @@
      dá pra agrupar por Cliente e ainda assim filtrar só as tarefas de um Executor específico. --}}
 @php
     $extraHidden = $extraHidden ?? [];
-    $filterKeys = array_map(fn ($k) => $prefix . $k, ['search', 'client_id', 'project_id', 'origin', 'task_type', 'status', 'executor_id', 'responsavel_id', 'atrasadas', 'pendencia', 'mostrar_fechados', 'mostrar_inativos']);
+    $filterKeys = array_map(fn ($k) => $prefix . $k, ['search', 'client_id', 'project_id', 'origin', 'task_type', 'status', 'situacao', 'executor_id', 'responsavel_id', 'atrasadas', 'pendencia', 'mostrar_fechados', 'mostrar_inativos']);
 @endphp
 
 @php
@@ -43,6 +43,7 @@
             <option value="executor"   {{ $groupBy === 'executor'   ? 'selected' : '' }}>Executor</option>
             <option value="responsavel"{{ $groupBy === 'responsavel'? 'selected' : '' }}>Responsável</option>
             <option value="status"     {{ $groupBy === 'status'     ? 'selected' : '' }}>Status</option>
+            <option value="situacao"   {{ $groupBy === 'situacao'   ? 'selected' : '' }}>Situação</option>
         </select>
     </div>
 
@@ -102,6 +103,18 @@
             <option value="">Todos os status</option>
             @foreach(\App\Models\Task::$statuses as $key => $s)
                 <option value="{{ $key }}" {{ request($prefix . 'status') === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
+            @endforeach
+        </select>
+    </div>
+
+    <div class="min-w-44">
+        <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Situação</label>
+        <select name="{{ $prefix }}situacao" class="filter-select w-full">
+            <option value="">Todas as situações</option>
+            @foreach(\App\Models\Task::$situations as $key => $label)
+                @if($key !== '')
+                    <option value="{{ $key }}" {{ request($prefix . 'situacao') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                @endif
             @endforeach
         </select>
     </div>
