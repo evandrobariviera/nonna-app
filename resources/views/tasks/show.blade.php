@@ -56,24 +56,24 @@
             endpoint: '{{ route('tasks.chat', $task) }}',
         };
 
+        // Lightbox de anexo — JS puro (sem Alpine store), pra ficar simples e
+        // independente de timing de inicialização do Alpine.
+        function openAttachmentLightbox(src, filename) {
+            document.getElementById('attachment-lightbox-img').src = src;
+            document.getElementById('attachment-lightbox-img').alt = filename;
+            document.getElementById('attachment-lightbox-filename').textContent = filename;
+            document.getElementById('attachment-lightbox').style.display = 'flex';
+        }
+        function closeAttachmentLightbox() {
+            document.getElementById('attachment-lightbox').style.display = 'none';
+            document.getElementById('attachment-lightbox-img').src = '';
+        }
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeAttachmentLightbox();
+        });
+
         document.addEventListener('alpine:init', () => {
             Alpine.store('ui', { chatOpen: false });
-
-            Alpine.store('attachmentLightbox', {
-                visible: false,
-                src: null,
-                filename: null,
-                open(src, filename) {
-                    this.src = src;
-                    this.filename = filename;
-                    this.visible = true;
-                },
-                close() {
-                    this.visible = false;
-                    this.src = null;
-                    this.filename = null;
-                },
-            });
 
             Alpine.data('observerPicker', (initial = []) => ({
                 selected: initial,
@@ -1380,18 +1380,19 @@
 
     {{-- ══════════════════════════════════════════════════════════
          LIGHTBOX DE IMAGEM — abre ao clicar na miniatura/Visualizar de um anexo
-         que é imagem (mesmo padrão visual do confirm-dialog-modal)
+         que é imagem. JS puro (funções openAttachmentLightbox/closeAttachmentLightbox
+         no <script> do topo), mesmo visual do confirm-dialog-modal.
     ══════════════════════════════════════════════════════════ --}}
-    <div x-show="$store.attachmentLightbox.visible" x-cloak
-         @keydown.escape.window="$store.attachmentLightbox.close()"
-         class="fixed inset-0 z-[60] flex items-center justify-center p-6"
-         style="background:rgba(0,0,0,.75)">
-        <div @click.outside="$store.attachmentLightbox.close()" class="flex flex-col items-center gap-3" style="max-width:90vw; max-height:90vh">
-            <img :src="$store.attachmentLightbox.src" :alt="$store.attachmentLightbox.filename"
+    <div id="attachment-lightbox"
+         onclick="if (event.target === this) closeAttachmentLightbox()"
+         class="fixed inset-0 z-[60] items-center justify-center p-6"
+         style="display:none; background:rgba(0,0,0,.75)">
+        <div class="flex flex-col items-center gap-3" style="max-width:90vw; max-height:90vh">
+            <img id="attachment-lightbox-img" src="" alt=""
                  style="max-width:90vw; max-height:80vh; object-fit:contain; border-radius:8px">
             <div class="flex items-center gap-4">
-                <span class="text-sm" style="color:#fff" x-text="$store.attachmentLightbox.filename"></span>
-                <button type="button" @click="$store.attachmentLightbox.close()"
+                <span id="attachment-lightbox-filename" class="text-sm" style="color:#fff"></span>
+                <button type="button" onclick="closeAttachmentLightbox()"
                         class="text-xs font-bold uppercase tracking-widest px-3 py-1.5"
                         style="background:rgba(255,255,255,.15); color:#fff">
                     ✕ Fechar

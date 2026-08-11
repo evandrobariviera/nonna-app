@@ -8,7 +8,7 @@
         <div class="flex items-center gap-3">
             @if($attachment->isImage())
                 <button type="button"
-                        @click="$store.attachmentLightbox.open('{{ $attachment->url() }}', @js($attachment->filename))"
+                        onclick="openAttachmentLightbox('{{ $attachment->url() }}', @js($attachment->filename))"
                         class="flex-shrink-0" style="width:40px; height:40px; border-radius:6px; overflow:hidden; border:1px solid var(--border2); padding:0; cursor:zoom-in">
                     <img src="{{ $attachment->url() }}" alt="{{ $attachment->filename }}"
                          style="width:100%; height:100%; object-fit:cover; display:block">
@@ -37,7 +37,7 @@
         <div class="flex items-center justify-end gap-3">
             @if($attachment->isImage())
                 <button type="button" title="Visualizar" class="btn btn-ghost btn-xs"
-                        @click="$store.attachmentLightbox.open('{{ $attachment->url() }}', @js($attachment->filename))">
+                        onclick="openAttachmentLightbox('{{ $attachment->url() }}', @js($attachment->filename))">
                     👁
                 </button>
             @else
