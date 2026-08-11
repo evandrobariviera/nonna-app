@@ -1,5 +1,39 @@
 <x-app-layout>
-    <x-slot name="header">Tarefa</x-slot>
+    <x-slot name="header">
+        <div class="flex items-center gap-2 text-xs flex-wrap">
+            <a href="{{ route('dashboard') }}" class="flex-shrink-0" style="color:var(--muted)"
+               onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9.5 12 3l9 6.5" />
+                    <path d="M5 8.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V8.5" />
+                </svg>
+            </a>
+            @if($task->project)
+                <span style="color:var(--border2)">/</span>
+                <a href="{{ route('projects.dashboard') }}" class="font-semibold transition-colors" style="color:var(--muted)"
+                   onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Projetos</a>
+                @if($task->project->macro_plan_id)
+                    <span style="color:var(--border2)">/</span>
+                    <a href="{{ route('macroplans.edit', $task->project->macro_plan_id) }}" class="font-semibold transition-colors" style="color:var(--muted)"
+                       onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                        {{ $task->project->macroPlan?->title }}
+                    </a>
+                @endif
+                <span style="color:var(--border2)">/</span>
+                <a href="{{ $task->project->macro_plan_id ? route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) : route('projects.showDirect', $task->project) }}"
+                   class="font-semibold transition-colors" style="color:var(--muted)"
+                   onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                    {{ $task->project->title }}
+                </a>
+            @elseif($task->is_ticket)
+                <span style="color:var(--border2)">/</span>
+                <a href="{{ route('tickets.index') }}" class="font-semibold transition-colors" style="color:var(--muted)"
+                   onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Tickets</a>
+            @endif
+            <span style="color:var(--border2)">/</span>
+            <span class="font-semibold" style="color:var(--text)">{{ $task->title }}</span>
+        </div>
+    </x-slot>
 
     @if(session('success'))
         <div class="mb-5 px-4 py-3 text-sm font-semibold"
@@ -195,6 +229,180 @@
                 @endif
             </div>
 
+            {{-- BARRA DE CAMPOS RÁPIDOS: Status / Prioridade / Situação / Responsável / Executor / Vencimento —
+                 mesma mecânica de edição de sempre (mesmos endpoints), só reposicionada numa barra
+                 horizontal com ícone em vez de cards separados na sidebar. --}}
+            <div class="card card-body">
+                <div class="grid grid-cols-3 gap-x-4 gap-y-4 md:grid-cols-6">
+
+                    {{-- Status --}}
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Status</p>
+                        <div class="relative" x-data="{ open: false }">
+                            <button type="button" @click="open = !open" class="flex items-center gap-1.5 text-sm font-semibold" style="color:var(--text)">
+                                <span class="h-2 w-2 rounded-full flex-shrink-0" style="background:var(--{{ $task->statusColor() }})"></span>
+                                <span class="truncate">{{ $task->statusLabel() }}</span>
+                                <svg class="h-3 w-3 flex-shrink-0" style="color:var(--muted)" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                </svg>
+                            </button>
+                            <div x-show="open" @click.outside="open = false" x-cloak
+                                 class="absolute left-0 mt-1 z-20 py-1" style="min-width:220px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
+                                @foreach(\App\Models\Task::$statuses as $key => $s)
+                                    <form method="POST" action="{{ route('tasks.update-inline', $task) }}">
+                                        @csrf @method('PATCH')
+                                        @foreach(['title','task_type','origin'] as $f)
+                                            <input type="hidden" name="{{ $f }}" value="{{ $task->$f }}">
+                                        @endforeach
+                                        <input type="hidden" name="status" value="{{ $key }}">
+                                        <button type="submit" @click="open = false"
+                                            class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
+                                            style="color:{{ $task->status === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ $task->status === $key ? '600' : '400' }}"
+                                            onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                            <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:var(--{{ $s['color'] }})"></span>
+                                            {{ $s['label'] }}
+                                        </button>
+                                    </form>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Prioridade --}}
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Prioridade</p>
+                        <div class="relative" x-data="{ open: false }">
+                            <button type="button" @click="open = !open" class="flex items-center gap-1.5 text-sm font-semibold" style="color:var(--text)">
+                                <svg class="h-3.5 w-3.5 flex-shrink-0" style="color:{{ \App\Models\Task::colorHex((\App\Models\Task::$priorities[$task->priority ?? 'normal']['color'])) }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5" />
+                                </svg>
+                                <span class="truncate">{{ $task->priorityLabel() }}</span>
+                                <svg class="h-3 w-3 flex-shrink-0" style="color:var(--muted)" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                </svg>
+                            </button>
+                            <div x-show="open" @click.outside="open = false" x-cloak
+                                 class="absolute left-0 mt-1 z-20 py-1" style="min-width:180px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
+                                @foreach(\App\Models\Task::$priorities as $key => $p)
+                                    <form method="POST" action="{{ route('tasks.update-priority', $task) }}">
+                                        @csrf @method('PATCH')
+                                        <input type="hidden" name="priority" value="{{ $key }}">
+                                        <button type="submit" @click="open = false"
+                                            class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
+                                            style="color:{{ ($task->priority ?? 'normal') === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ ($task->priority ?? 'normal') === $key ? '600' : '400' }}"
+                                            onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                            <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:{{ \App\Models\Task::colorHex($p['color']) }}"></span>
+                                            {{ $p['label'] }}
+                                        </button>
+                                    </form>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Situação --}}
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Situação</p>
+                        <div class="relative" x-data="{ open: false }">
+                            <button type="button" @click="open = !open" class="flex items-center gap-1.5 text-sm font-semibold" style="color:var(--text)">
+                                <svg class="h-3.5 w-3.5 flex-shrink-0" style="color:{{ $task->situationColor() }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                                </svg>
+                                <span class="truncate">{{ $task->situationLabel() !== '—' ? $task->situationLabel() : 'Sem situação' }}</span>
+                                <svg class="h-3 w-3 flex-shrink-0" style="color:var(--muted)" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                </svg>
+                            </button>
+                            <div x-show="open" @click.outside="open = false" x-cloak
+                                 class="absolute left-0 mt-1 z-20 py-1" style="min-width:220px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
+                                @foreach(\App\Models\Task::$situations as $key => $label)
+                                    <form method="POST" action="{{ route('tasks.update-situation', $task) }}">
+                                        @csrf @method('PATCH')
+                                        <input type="hidden" name="situation" value="{{ $key }}">
+                                        <button type="submit" @click="open = false"
+                                            class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
+                                            style="color:{{ ($task->situation ?? '') === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ ($task->situation ?? '') === $key ? '600' : '400' }}"
+                                            onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                            @if($key)
+                                                <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:{{ \App\Models\Task::$situationColors[$key] ?? '#94a3b8' }}"></span>
+                                            @endif
+                                            {{ $label }}
+                                        </button>
+                                    </form>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Responsável --}}
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Responsável</p>
+                        <div class="relative flex items-center gap-2">
+                            @if($responsavelTopo)
+                                <x-user-avatar :user="$responsavelTopo" size="5" color="var(--orange)" />
+                            @else
+                                <svg class="h-4 w-4 flex-shrink-0" style="color:var(--muted)" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                </svg>
+                            @endif
+                            <form method="POST" action="{{ route('tasks.update-responsavel', $task) }}" class="min-w-0 flex-1">
+                                @csrf @method('PATCH')
+                                <select name="responsavel_id" onchange="this.form.submit()"
+                                    class="w-full text-sm font-semibold truncate focus:outline-none cursor-pointer"
+                                    style="background:transparent; border:none; color:var(--text); padding:0; -webkit-appearance:none; appearance:none">
+                                    <option value="">— nenhum —</option>
+                                    @foreach($users as $u)
+                                        <option value="{{ $u->id }}" {{ $responsavelTopo?->id === $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
+                                    @endforeach
+                                </select>
+                            </form>
+                        </div>
+                    </div>
+
+                    {{-- Executor --}}
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Executor</p>
+                        <div class="relative flex items-center gap-2">
+                            @if($task->executor)
+                                <x-user-avatar :user="$task->executor" size="5" color="var(--purple)" />
+                            @else
+                                <svg class="h-4 w-4 flex-shrink-0" style="color:var(--muted)" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                </svg>
+                            @endif
+                            <form method="POST" action="{{ route('tasks.update-executor', $task) }}" class="min-w-0 flex-1">
+                                @csrf @method('PATCH')
+                                <select name="executor_id" onchange="this.form.submit()"
+                                    class="w-full text-sm font-semibold truncate focus:outline-none cursor-pointer"
+                                    style="background:transparent; border:none; color:var(--text); padding:0; -webkit-appearance:none; appearance:none">
+                                    <option value="">— nenhum —</option>
+                                    @foreach($users as $u)
+                                        <option value="{{ $u->id }}" {{ $task->executor?->id === $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
+                                    @endforeach
+                                </select>
+                            </form>
+                        </div>
+                    </div>
+
+                    {{-- Vencimento --}}
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Vencimento</p>
+                        <div class="flex items-center gap-1.5">
+                            <svg class="h-3.5 w-3.5 flex-shrink-0" style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted)' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                            </svg>
+                            <span class="text-sm font-semibold" style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--text)' }}">
+                                {{ $task->due_date?->format('d/m/Y') ?? '—' }}
+                            </span>
+                        </div>
+                        @if($task->due_date)
+                            <p class="text-xs mt-0.5" style="color:var(--muted)">{{ $task->due_date->diffForHumans() }}</p>
+                        @endif
+                    </div>
+
+                </div>
+            </div>
+
             {{-- FORMULÁRIO DE EDIÇÃO --}}
             <form method="POST" action="{{ route('tasks.update-inline', $task) }}" x-show="editing" x-cloak>
                 @csrf @method('PATCH')
@@ -330,7 +538,12 @@
             {{-- DESCRIÇÃO --}}
             @if($task->description)
                 <div x-show="!editing" class="card card-body-lg">
-                    <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Briefing / Descrição</p>
+                    <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                        <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                        </svg>
+                        Briefing / Descrição
+                    </p>
                     <div class="rich-editor" style="padding:0; margin:0; min-height:0; cursor:default; resize:none; overflow:visible">
                         <div class="ProseMirror">{!! $task->description !!}</div>
                     </div>
@@ -340,7 +553,13 @@
             {{-- LEGENDA (sempre visível, com edição própria — é o que o cliente avalia) --}}
             <div class="card card-body-lg" x-data="{ editingCaption: false }">
                 <div class="flex items-center justify-between mb-1">
-                    <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Legenda</p>
+                    <p class="text-xs font-semibold uppercase tracking-widest flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                        <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" />
+                        </svg>
+                        Legenda
+                    </p>
                     <button type="button" @click="editingCaption = !editingCaption" class="text-xs font-semibold" style="color:var(--purple)">
                         <span x-text="editingCaption ? 'Cancelar' : (@js((bool) $task->caption) ? 'Editar' : '+ Adicionar')"></span>
                     </button>
@@ -370,7 +589,13 @@
             {{-- CAMPOS (visualização) — só o que não aparece na lateral (Situação/Origem/Destino/
                  Método de Aprovação já estão nos cards Contexto/Aprovação da sidebar) --}}
             <div x-show="!editing" class="card card-body-lg">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-5" style="color:var(--muted); letter-spacing:.1em">Campos</p>
+                <p class="text-xs font-semibold uppercase tracking-widest mb-5 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                    <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    </svg>
+                    Campos
+                </p>
                 <div class="grid grid-cols-2 gap-x-10 gap-y-5 md:grid-cols-3">
                     @php
                         $campos = [
@@ -389,7 +614,10 @@
             {{-- INSUMOS --}}
             @php $insumos = $task->attachments->where('kind', 'insumo'); @endphp
             <div class="card card-body-lg">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.1em">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-1 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                    <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                    </svg>
                     Insumos
                     @if($insumos->count() > 0)
                         <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $insumos->count() }}</span>
@@ -420,37 +648,45 @@
                 </form>
 
                 @if($insumos->count() > 0)
-                    <div class="mt-3 flex flex-col gap-1.5">
-                        @foreach($insumos as $attachment)
-                            <div class="flex items-center justify-between gap-3 px-4 py-3"
-                                 style="background:var(--s2); border:1px solid var(--border2)">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <span class="text-xl flex-shrink-0">{{ $attachment->icon() }}</span>
-                                    <div class="min-w-0">
-                                        <a href="{{ $attachment->url() }}" target="_blank"
-                                           class="text-sm font-medium truncate block hover:underline"
-                                           style="color:var(--text)">
-                                            {{ $attachment->filename }}
-                                        </a>
-                                        <p class="text-xs mt-0.5" style="color:var(--muted)">
-                                            {{ $attachment->sizeForHumans() }}
-                                            · {{ $attachment->uploadedBy?->name }}
-                                            · {{ $attachment->created_at->format('d/m/Y H:i') }}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-3 flex-shrink-0">
-                                    <a href="{{ $attachment->url() }}" target="_blank" class="btn btn-ghost btn-xs">
-                                        ↓ Baixar
-                                    </a>
-                                    <form method="POST" action="{{ route('task-attachments.destroy', [$task, $attachment]) }}"
-                                          @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-xs">✕</button>
-                                    </form>
-                                </div>
-                            </div>
-                        @endforeach
+                    <div class="mt-3 overflow-x-auto">
+                        <table class="nonna-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome do Arquivo</th>
+                                    <th>Tamanho</th>
+                                    <th>Enviado por</th>
+                                    <th>Data</th>
+                                    <th class="text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($insumos as $attachment)
+                                    <tr>
+                                        <td>
+                                            <a href="{{ $attachment->url() }}" target="_blank"
+                                               class="flex items-center gap-2 font-medium hover:underline"
+                                               style="color:var(--text)">
+                                                <span class="flex-shrink-0">{{ $attachment->icon() }}</span>
+                                                {{ $attachment->filename }}
+                                            </a>
+                                        </td>
+                                        <td style="color:var(--muted2)">{{ $attachment->sizeForHumans() }}</td>
+                                        <td style="color:var(--muted2)">{{ $attachment->uploadedBy?->name ?? '—' }}</td>
+                                        <td style="color:var(--muted2)">{{ $attachment->created_at->format('d/m/Y H:i') }}</td>
+                                        <td class="text-right">
+                                            <div class="flex items-center justify-end gap-3">
+                                                <a href="{{ $attachment->url() }}" target="_blank" class="btn btn-ghost btn-xs">↓</a>
+                                                <form method="POST" action="{{ route('task-attachments.destroy', [$task, $attachment]) }}"
+                                                      @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger btn-xs">✕</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 @endif
 
@@ -491,7 +727,10 @@
             {{-- ENTREGÁVEIS --}}
             @php $entregaveis = $task->attachments->where('kind', 'entregavel'); @endphp
             <div class="card card-body-lg">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.1em">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-1 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                    <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375C2.754 3.75 2.25 4.254 2.25 4.875v1.5c0 .621.504 1.125 1.125 1.125Z" />
+                    </svg>
                     Entregáveis
                     @if($entregaveis->count() > 0)
                         <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $entregaveis->count() }}</span>
@@ -522,45 +761,53 @@
                 </form>
 
                 @if($entregaveis->count() > 0)
-                    <div class="mt-3 flex flex-col gap-1.5">
-                        @foreach($entregaveis as $attachment)
-                            <div class="flex items-center justify-between gap-3 px-4 py-3"
-                                 style="background:var(--s2); border:1px solid var(--border2)">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <span class="text-xl flex-shrink-0">{{ $attachment->icon() }}</span>
-                                    <div class="min-w-0">
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            <a href="{{ $attachment->url() }}" target="_blank"
-                                               class="text-sm font-medium truncate block hover:underline"
-                                               style="color:var(--text)">
-                                                {{ $attachment->filename }}
-                                            </a>
-                                            @if($attachment->is_deliverable)
-                                                <span class="px-1.5 py-0.5 text-xs font-semibold flex-shrink-0"
-                                                      style="background:rgba(106,90,205,.12); color:var(--purple)">
-                                                    Enviado · Rodada #{{ $attachment->round_number }}
-                                                </span>
-                                            @endif
-                                        </div>
-                                        <p class="text-xs mt-0.5" style="color:var(--muted)">
-                                            {{ $attachment->sizeForHumans() }}
-                                            · {{ $attachment->uploadedBy?->name }}
-                                            · {{ $attachment->created_at->format('d/m/Y H:i') }}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-3 flex-shrink-0">
-                                    <a href="{{ $attachment->url() }}" target="_blank" class="btn btn-ghost btn-xs">
-                                        ↓ Baixar
-                                    </a>
-                                    <form method="POST" action="{{ route('task-attachments.destroy', [$task, $attachment]) }}"
-                                          @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-xs">✕</button>
-                                    </form>
-                                </div>
-                            </div>
-                        @endforeach
+                    <div class="mt-3 overflow-x-auto">
+                        <table class="nonna-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome do Arquivo</th>
+                                    <th>Tamanho</th>
+                                    <th>Enviado por</th>
+                                    <th>Data</th>
+                                    <th class="text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($entregaveis as $attachment)
+                                    <tr>
+                                        <td>
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <a href="{{ $attachment->url() }}" target="_blank"
+                                                   class="flex items-center gap-2 font-medium hover:underline"
+                                                   style="color:var(--text)">
+                                                    <span class="flex-shrink-0">{{ $attachment->icon() }}</span>
+                                                    {{ $attachment->filename }}
+                                                </a>
+                                                @if($attachment->is_deliverable)
+                                                    <span class="px-1.5 py-0.5 text-xs font-semibold flex-shrink-0"
+                                                          style="background:rgba(106,90,205,.12); color:var(--purple)">
+                                                        Enviado · Rodada #{{ $attachment->round_number }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td style="color:var(--muted2)">{{ $attachment->sizeForHumans() }}</td>
+                                        <td style="color:var(--muted2)">{{ $attachment->uploadedBy?->name ?? '—' }}</td>
+                                        <td style="color:var(--muted2)">{{ $attachment->created_at->format('d/m/Y H:i') }}</td>
+                                        <td class="text-right">
+                                            <div class="flex items-center justify-end gap-3">
+                                                <a href="{{ $attachment->url() }}" target="_blank" class="btn btn-ghost btn-xs">↓</a>
+                                                <form method="POST" action="{{ route('task-attachments.destroy', [$task, $attachment]) }}"
+                                                      @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger btn-xs">✕</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 @endif
             </div>
@@ -584,7 +831,10 @@
 
                 <div class="card card-body-lg">
                     <div class="flex items-center justify-between mb-5">
-                        <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
+                        <p class="text-xs font-semibold uppercase tracking-widest flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                            <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
                             Retorno do Cliente
                         </p>
                         <span class="px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">
@@ -697,7 +947,10 @@
 
             {{-- ══ COMENTÁRIOS ══ --}}
             <div class="card card-body-lg" id="comentarios" x-data="{ editId: null }">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-5" style="color:var(--muted); letter-spacing:.1em">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-5 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                    <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                    </svg>
                     Comentários
                     @if($task->comments->count() > 0)
                         <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $task->comments->count() }}</span>
@@ -809,17 +1062,13 @@
 
             {{-- DATAS --}}
             <div class="card card-body">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Datas</p>
+                <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                    <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                    </svg>
+                    Datas
+                </p>
                 <div class="flex flex-col gap-3">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Vencimento</p>
-                        <p class="text-sm" style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--text)' }}; font-weight:600">
-                            {{ $task->due_date?->format('d/m/Y') ?? '—' }}
-                        </p>
-                        @if($task->due_date)
-                            <p class="text-xs mt-0.5" style="color:var(--muted)">{{ $task->due_date->diffForHumans() }}</p>
-                        @endif
-                    </div>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Dt. Aprovação</p>
                         <p class="text-sm" style="color:var(--text); font-weight:600">
@@ -837,7 +1086,12 @@
 
             {{-- CONTEXTO --}}
             <div class="card card-body">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Contexto</p>
+                <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                    <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-19.5 0v6a2.25 2.25 0 0 0 2.25 2.25h15a2.25 2.25 0 0 0 2.25-2.25v-6m-19.5 0v-.75A2.25 2.25 0 0 1 4.5 9h2.379a1.5 1.5 0 0 0 1.06-.44l2.122-2.12a1.5 1.5 0 0 1 1.06-.44h3.758a1.5 1.5 0 0 1 1.06.44l2.122 2.12a1.5 1.5 0 0 0 1.06.44H19.5a2.25 2.25 0 0 1 2.25 2.25v.75" />
+                    </svg>
+                    Contexto
+                </p>
                 <div class="flex flex-col gap-4">
                     <div>
                         <div class="flex items-center justify-between mb-1">
@@ -941,162 +1195,16 @@
                 </div>
             </div>
 
-            {{-- STATUS --}}
-            <div class="card card-body" x-data="{ open: false }">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Status</p>
-                <div class="relative">
-                    <button @click="open = !open"
-                        class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                        <span class="flex items-center gap-2">
-                            <span class="h-2 w-2 rounded-full flex-shrink-0"
-                                  style="background:var(--{{ $task->statusColor() }})"></span>
-                            {{ $task->statusLabel() }}
-                        </span>
-                        <span style="color:var(--muted); font-size:10px">▾</span>
-                    </button>
-                    <div x-show="open" @click.outside="open = false" x-cloak
-                         class="absolute left-0 right-0 mt-1 z-20 py-1"
-                         style="background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
-                        @foreach(\App\Models\Task::$statuses as $key => $s)
-                            <form method="POST" action="{{ route('tasks.update-inline', $task) }}">
-                                @csrf @method('PATCH')
-                                @foreach(['title','task_type','origin'] as $f)
-                                    <input type="hidden" name="{{ $f }}" value="{{ $task->$f }}">
-                                @endforeach
-                                <input type="hidden" name="status" value="{{ $key }}">
-                                <button type="submit" @click="open = false"
-                                    class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
-                                    style="color:{{ $task->status === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ $task->status === $key ? '600' : '400' }}"
-                                    onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
-                                    <span class="h-1.5 w-1.5 rounded-full flex-shrink-0"
-                                          style="background:var(--{{ $s['color'] }})"></span>
-                                    {{ $s['label'] }}
-                                </button>
-                            </form>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            {{-- PRIORIDADE --}}
-            <div class="card card-body" x-data="{ open: false }">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Prioridade</p>
-                <div class="relative">
-                    <button @click="open = !open"
-                        class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-bold transition-opacity"
-                        style="background:{{ $task->priorityHex() }}; border:none; color:#fff"
-                        onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">
-                        {{ $task->priorityLabel() }}
-                        <span style="color:rgba(255,255,255,.8); font-size:10px">▾</span>
-                    </button>
-                    <div x-show="open" @click.outside="open = false" x-cloak
-                         class="absolute left-0 right-0 mt-1 z-20 py-1"
-                         style="background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
-                        @foreach(\App\Models\Task::$priorities as $key => $p)
-                            <form method="POST" action="{{ route('tasks.update-priority', $task) }}">
-                                @csrf @method('PATCH')
-                                <input type="hidden" name="priority" value="{{ $key }}">
-                                <button type="submit" @click="open = false"
-                                    class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
-                                    style="color:{{ ($task->priority ?? 'normal') === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ ($task->priority ?? 'normal') === $key ? '600' : '400' }}"
-                                    onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
-                                    <span class="h-1.5 w-1.5 rounded-full flex-shrink-0"
-                                          style="background:{{ \App\Models\Task::colorHex($p['color']) }}"></span>
-                                    {{ $p['label'] }}
-                                </button>
-                            </form>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            {{-- SITUAÇÃO --}}
-            <div class="card card-body" x-data="{ open: false }">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Situação</p>
-                <div class="relative">
-                    <button @click="open = !open"
-                        class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-bold transition-opacity"
-                        style="background:{{ $task->situationColor() }}; border:none; color:#fff"
-                        onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">
-                        {{ $task->situationLabel() !== '—' ? $task->situationLabel() : 'Sem situação' }}
-                        <span style="color:rgba(255,255,255,.8); font-size:10px">▾</span>
-                    </button>
-                    <div x-show="open" @click.outside="open = false" x-cloak
-                         class="absolute left-0 right-0 mt-1 z-20 py-1"
-                         style="background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
-                        @foreach(\App\Models\Task::$situations as $key => $label)
-                            <form method="POST" action="{{ route('tasks.update-situation', $task) }}">
-                                @csrf @method('PATCH')
-                                <input type="hidden" name="situation" value="{{ $key }}">
-                                <button type="submit" @click="open = false"
-                                    class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
-                                    style="color:{{ ($task->situation ?? '') === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ ($task->situation ?? '') === $key ? '600' : '400' }}"
-                                    onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
-                                    @if($key)
-                                        <span class="h-1.5 w-1.5 rounded-full flex-shrink-0"
-                                              style="background:{{ \App\Models\Task::$situationColors[$key] ?? '#94a3b8' }}"></span>
-                                    @endif
-                                    {{ $label }}
-                                </button>
-                            </form>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            {{-- RESPONSÁVEL --}}
-            <div class="card card-body">
-                <div class="flex items-center justify-between mb-3">
-                    <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Responsável</p>
-                    @php $responsavel = $task->responsibles->first(); @endphp
-                    @if($responsavel)
-                        <x-user-avatar :user="$responsavel" size="7" color="var(--orange)" title="{{ $responsavel->name }}" />
-                    @endif
-                </div>
-                <form method="POST" action="{{ route('tasks.update-responsavel', $task) }}">
-                    @csrf @method('PATCH')
-                    <select name="responsavel_id" onchange="this.form.submit()"
-                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                        <option value="">— nenhum —</option>
-                        @foreach($users as $u)
-                            <option value="{{ $u->id }}" {{ $responsavel?->id === $u->id ? 'selected' : '' }}>
-                                {{ $u->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </form>
-            </div>
-
-            {{-- EXECUTOR --}}
-            <div class="card card-body">
-                <div class="flex items-center justify-between mb-3">
-                    <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Executor</p>
-                    @if($task->executor)
-                        <x-user-avatar :user="$task->executor" size="7" color="var(--purple)" title="{{ $task->executor->name }}" />
-                    @endif
-                </div>
-                <form method="POST" action="{{ route('tasks.update-executor', $task) }}">
-                    @csrf @method('PATCH')
-                    <select name="executor_id" onchange="this.form.submit()"
-                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                        <option value="">— nenhum —</option>
-                        @foreach($users as $u)
-                            <option value="{{ $u->id }}" {{ $task->executor?->id === $u->id ? 'selected' : '' }}>
-                                {{ $u->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </form>
-            </div>
-
             {{-- OBSERVADORES (só avatares — nomes completos ficavam na antiga sessão Pessoas
                  da coluna principal, removida por ocupar espaço demais) --}}
             @if($task->observers->count() > 0)
                 <div class="card card-body">
-                    <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Observadores</p>
+                    <p class="text-xs font-semibold uppercase tracking-widest mb-3 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                        <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                        </svg>
+                        Observadores
+                    </p>
                     <div class="flex items-center gap-1.5 flex-wrap">
                         @foreach($task->observers as $obs)
                             <x-user-avatar :user="$obs" size="7" color="var(--slate, #64748b)" title="{{ $obs->name }}" />
@@ -1108,7 +1216,12 @@
             {{-- LINKS DO CLIENTE --}}
             @if($task->client?->links->count())
                 <div class="card card-body">
-                    <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Links do Cliente</p>
+                    <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                        <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                        </svg>
+                        Links do Cliente
+                    </p>
                     <div class="flex flex-col gap-2.5">
                         @foreach($task->client->links as $link)
                             <a href="{{ $link->url }}" target="_blank" rel="noopener"
@@ -1124,7 +1237,12 @@
 
             {{-- APROVAÇÃO DO CLIENTE --}}
             <div class="card card-body">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Aprovação</p>
+                <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                    <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+                    </svg>
+                    Aprovação
+                </p>
 
                 @php
                     $latestRound = $task->latestApprovalRound;
@@ -1194,7 +1312,12 @@
             {{-- SOLICITANTE --}}
             @if($task->is_ticket && $task->requester_name)
                 <div class="card card-body">
-                    <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Solicitante</p>
+                    <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                        <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+                        </svg>
+                        Solicitante
+                    </p>
                     <div class="flex flex-col gap-3">
                         <div>
                             <p class="text-xs" style="color:var(--muted)">Nome</p>
@@ -1225,7 +1348,12 @@
 
             {{-- META --}}
             <div class="card card-body">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Informações</p>
+                <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                    <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                    </svg>
+                    Informações
+                </p>
                 <div class="flex flex-col gap-3">
                     <div class="flex items-center justify-between">
                         <span class="text-xs" style="color:var(--muted)">Criada por</span>
