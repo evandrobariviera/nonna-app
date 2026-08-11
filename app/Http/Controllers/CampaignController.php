@@ -252,7 +252,13 @@ class CampaignController extends Controller
         // Agrupamento opcional (mesmo padrão de Filas/Sprint) — mantém a ordenação
         // por otimização (mais atrasada primeiro) dentro de cada grupo, já que
         // group By não reordena, só particiona a coleção já ordenada.
-        $groupBy = $request->get('group_by', '');
+        // "nenhum" é o sentinela do select "Sem agrupamento" — value="" some da querystring
+        // no fetch do live-filter.js (só manda campos preenchidos), o que faria cair de volta
+        // no default 'cliente' mesmo quando o usuário escolheu explicitamente não agrupar.
+        $groupBy = $request->get('group_by', 'cliente');
+        if ($groupBy === 'nenhum') {
+            $groupBy = '';
+        }
         $campaignsGrouped = $groupBy
             ? AdCampaign::groupCollection($campaigns, $groupBy)->sortByDesc(fn ($g) => $g->filter->isOptimizationOverdue()->count())
             : null;

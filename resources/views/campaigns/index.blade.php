@@ -60,7 +60,7 @@
 
         <select name="group_by"
             style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
-            <option value="" {{ $groupBy === '' ? 'selected' : '' }}>Sem agrupamento</option>
+            <option value="nenhum" {{ $groupBy === '' ? 'selected' : '' }}>Sem agrupamento</option>
             <option value="cliente" {{ $groupBy === 'cliente' ? 'selected' : '' }}>Agrupar por Cliente</option>
             <option value="situacao" {{ $groupBy === 'situacao' ? 'selected' : '' }}>Agrupar por Situação</option>
         </select>
