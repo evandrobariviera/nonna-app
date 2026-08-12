@@ -62,11 +62,9 @@
                                     {{ $log->ran_at?->format('d/m/Y H:i:s') ?? $log->created_at->format('d/m/Y H:i:s') }}
                                 </div>
                             </div>
-                            <svg class="h-3.5 w-3.5 flex-shrink-0 transition-transform duration-200"
+                            <x-icon name="chevron-right" size="14" class="flex-shrink-0 transition-transform duration-200"
                                  :style="open ? 'transform:rotate(90deg)' : ''"
-                                 style="color:var(--muted)" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                            </svg>
+                                 style="color:var(--muted)" />
                         </div>
 
                         <div x-show="open" x-cloak style="padding:0 1rem 1rem">

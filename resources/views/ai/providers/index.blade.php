@@ -96,9 +96,7 @@
                         <button type="button" @click="open = !open"
                                 class="text-xs font-semibold flex items-center gap-1 transition-colors"
                                 style="color:var(--purple); background:none; border:none; cursor:pointer; padding:0">
-                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                            </svg>
+                            <x-icon name="plus" size="14" />
                             Adicionar chave
                         </button>
 

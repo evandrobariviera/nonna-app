@@ -63,9 +63,7 @@
                                      style="background: {{ $isDone ? 'rgba(5,150,105,.15)' : 'var(--s3)' }};
                                             border: 1.5px solid {{ $isDone ? 'var(--green)' : 'var(--border2)' }}">
                                     @if($isDone)
-                                        <svg class="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" style="color: var(--green)">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
-                                        </svg>
+                                        <x-icon name="check" size="10" stroke="3" style="color: var(--green)" />
                                     @endif
                                 </div>
                                 <span class="text-sm {{ $isDone ? 'line-through' : '' }}"

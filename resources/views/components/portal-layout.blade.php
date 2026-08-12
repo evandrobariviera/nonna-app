@@ -37,9 +37,7 @@
             <div class="flex h-16 items-center justify-between px-5 border-b" style="border-color:var(--border)">
                 <span class="text-sm font-bold grad-text">Portal do Cliente</span>
                 <button @click="sidebarOpen = false" style="color:var(--muted)">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
+                    <x-icon name="x" size="20" />
                 </button>
             </div>
             <nav class="flex-1 overflow-y-auto py-4">
@@ -67,9 +65,7 @@
                     <div x-data="{ open: false }" class="relative">
                         <button @click="open = !open" class="flex items-center justify-between w-full text-left" style="min-width:0">
                             <p class="text-xs font-bold truncate" style="color:var(--text)">{{ $currentClient->company_name }}</p>
-                            <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="color:var(--muted)">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" :class="open ? '-rotate-90' : 'rotate-90'" style="transition:transform .15s"/>
-                            </svg>
+                            <x-icon name="chevron-right" size="14" class="flex-shrink-0" style="color:var(--muted); transition:transform .15s" :class="open ? '-rotate-90' : 'rotate-90'" />
                         </button>
                         <div x-show="open" @click.outside="open = false" x-transition x-cloak
                              class="absolute left-0 right-0 mt-2 rounded-lg z-10 py-1"
@@ -121,9 +117,7 @@
             <header class="topbar flex h-16 flex-shrink-0 items-center gap-4 px-6">
                 {{-- Botão mobile --}}
                 <button type="button" class="md:hidden -ml-1 p-1.5" style="color:var(--muted)" @click="sidebarOpen = true">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
-                    </svg>
+                    <x-icon name="menu" size="20" />
                 </button>
 
                 {{-- Início --}}
@@ -133,10 +127,7 @@
                     onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
                     onmouseout="this.style.background=''; this.style.color='{{ request()->routeIs('portal.dashboard') ? 'var(--purple)' : 'var(--muted)' }}'"
                     title="Início">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 9.5 12 3l9 6.5" />
-                        <path d="M5 8.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V8.5" />
-                    </svg>
+                    <x-icon name="house" size="16" />
                 </a>
 
                 {{-- Título dinâmico --}}
@@ -145,9 +136,7 @@
                 </div>
 
                 <a href="{{ route('portal.tickets.create') }}" class="btn btn-primary btn-sm flex items-center gap-1.5 flex-shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 12a2 2 0 0 0-2-2V8a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v2a2 2 0 0 1 0 4v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2a2 2 0 0 1 0-4z"/>
-                    </svg>
+                    <x-icon name="ticket" size="14" />
                     <span class="hidden sm:inline">Novo Ticket</span>
                 </a>
 

@@ -68,9 +68,7 @@
             <div class="flex h-16 items-center justify-between px-5 border-b" style="border-color:var(--border)">
                 <a href="{{ route('dashboard') }}" class="text-sm font-bold grad-text">nonna OS</a>
                 <button @click="sidebarOpen = false" style="color:var(--muted)">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
+                    <x-icon name="x" size="20" />
                 </button>
             </div>
             <nav class="flex-1 overflow-y-auto py-4">
@@ -133,9 +131,7 @@
             <header class="topbar flex h-16 flex-shrink-0 items-center gap-4 px-6">
                 {{-- Botão mobile --}}
                 <button type="button" class="md:hidden -ml-1 p-1.5" style="color:var(--muted)" @click="sidebarOpen = true">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
-                    </svg>
+                    <x-icon name="menu" size="20" />
                 </button>
 
                 {{-- Início --}}
@@ -145,10 +141,7 @@
                     onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
                     onmouseout="this.style.background=''; this.style.color='var(--muted)'"
                     title="Início">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 9.5 12 3l9 6.5" />
-                        <path d="M5 8.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V8.5" />
-                    </svg>
+                    <x-icon name="house" size="16" />
                 </a>
 
                 {{-- Título dinâmico --}}
@@ -162,17 +155,12 @@
                 @auth
                     <a href="{{ route('meetings.create') }}"
                         class="btn btn-ghost btn-sm flex items-center gap-1.5 flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="4" width="18" height="18" rx="2"/>
-                            <path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4"/>
-                        </svg>
+                        <x-icon name="calendar-plus" size="14" />
                         <span class="hidden sm:inline">Nova Reunião</span>
                     </a>
                     <a href="{{ route('tickets.create') }}"
                         class="btn btn-primary btn-sm flex items-center gap-1.5 flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 12a2 2 0 0 0-2-2V8a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v2a2 2 0 0 1 0 4v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2a2 2 0 0 1 0-4z"/>
-                        </svg>
+                        <x-icon name="ticket" size="14" />
                         <span class="hidden sm:inline">Novo Ticket</span>
                     </a>
                 @endauth
@@ -189,10 +177,7 @@
                             onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
                             onmouseout="this.style.background=''; this.style.color='var(--muted)'"
                             title="Buscar tarefa/ticket">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="11" cy="11" r="7"/>
-                                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                            </svg>
+                            <x-icon name="search" size="16" />
                         </button>
                         <div x-show="open" @click.outside="open = false" x-cloak
                              class="absolute right-0 mt-1 z-30"
@@ -252,17 +237,9 @@
                     onmouseout="this.style.background=''; this.style.color='var(--muted)'"
                     :title="darkMode ? 'Modo claro' : 'Modo escuro'">
                     {{-- Lua (modo claro → clicar para escurecer) --}}
-                    <svg x-show="!darkMode" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                    </svg>
+                    <x-icon name="moon" size="16" x-show="!darkMode" />
                     {{-- Sol (modo escuro → clicar para clarear) --}}
-                    <svg x-show="darkMode" x-cloak xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"/>
-                        <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                        <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-                    </svg>
+                    <x-icon name="sun" size="16" x-show="darkMode" x-cloak />
                 </button>
 
                 {{-- Notificações --}}
@@ -281,10 +258,7 @@
                             onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
                             onmouseout="this.style.background=''; this.style.color='var(--muted)'"
                             title="Notificações">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
-                                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                            </svg>
+                            <x-icon name="bell" size="16" />
                             @if($unreadNotifications->count() > 0)
                                 <span class="absolute -top-0.5 -right-0.5 flex items-center justify-center rounded-full text-white"
                                       style="background:var(--orange); font-size:9px; min-width:15px; height:15px; padding:0 3px; line-height:15px">
@@ -372,10 +346,7 @@
                    onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
                    onmouseout="this.style.background=''; this.style.color='var(--muted)'"
                    title="Abrir página completa em nova aba">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                        <path d="M15 3h6v6"/><path d="M10 14 21 3"/>
-                    </svg>
+                    <x-icon name="external-link" size="15" />
                 </a>
                 <button @click="$store.sidePanel.close()"
                     class="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
@@ -383,19 +354,14 @@
                     onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
                     onmouseout="this.style.background=''; this.style.color='var(--muted)'"
                     title="Fechar (Esc)">
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
+                    <x-icon name="x" size="16" />
                 </button>
             </div>
         </div>
 
         <div class="flex-1 overflow-y-auto">
             <div x-show="$store.sidePanel.loading" class="flex items-center justify-center h-full" style="color:var(--muted)">
-                <svg class="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z"></path>
-                </svg>
+                <x-icon name="loader-circle" size="20" class="animate-spin" />
             </div>
             <div x-show="$store.sidePanel.error" x-cloak class="p-6 text-sm" style="color:var(--red)">
                 Não foi possível carregar os detalhes.

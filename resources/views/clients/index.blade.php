@@ -33,9 +33,7 @@
         </form>
 
         <a href="{{ route('clients.create') }}" class="btn btn-primary flex items-center gap-2">
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-            </svg>
+            <x-icon name="plus" size="16" />
             Novo Cliente
         </a>
     </div>

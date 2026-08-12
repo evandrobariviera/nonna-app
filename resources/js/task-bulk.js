@@ -9,8 +9,14 @@ export function registerTaskBulk() {
         bulkSprint: '',
         applying: false,
 
-        toggleAll(checked, scopeSelector) {
-            const boxes = document.querySelectorAll((scopeSelector || '') + ' input[type=checkbox][data-task-id]');
+        // originEl = o próprio checkbox "selecionar todos" que disparou o clique — escopar
+        // pela <table> mais próxima evita varrer a página inteira (Sprint show.blade.php tem
+        // Board/Lista/Planejamento montados ao mesmo tempo no DOM via x-show, todos com
+        // checkboxes data-task-id; sem escopo, "selecionar todos" da Lista pegava também os
+        // cards do Board — inclusive concluído/cancelado escondidos — e o pool de Backlog).
+        toggleAll(checked, originEl) {
+            const scope = (originEl && originEl.closest('table')) || document;
+            const boxes = scope.querySelectorAll('input[type=checkbox][data-task-id]');
             this.selected = checked ? Array.from(boxes).map(el => el.value) : [];
         },
 

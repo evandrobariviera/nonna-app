@@ -50,12 +50,9 @@
                     type="button"
                     class="flex items-center gap-3 w-full text-left">
 
-                <svg class="h-3 w-3 flex-shrink-0 transition-transform duration-200"
+                <x-icon name="chevron-right" size="12" stroke="2.5" class="flex-shrink-0 transition-transform duration-200"
                      :class="groupOpen ? 'rotate-90' : ''"
-                     fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"
-                     style="color:var(--muted)">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
-                </svg>
+                     style="color:var(--muted)" />
 
                 <div class="flex h-6 w-6 items-center justify-center rounded-full text-white flex-shrink-0"
                      style="background:{{ $groupColor }}; color:{{ $groupTextColor }}; font-size:9px; font-weight:700">

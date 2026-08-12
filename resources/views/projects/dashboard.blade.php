@@ -176,9 +176,7 @@
                     class="w-full pl-8 pr-3 py-2 text-xs focus:outline-none"
                     style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
                     onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
-                <svg class="absolute left-2.5 top-2.5 h-3.5 w-3.5" style="color:var(--muted)" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                </svg>
+                <x-icon name="search" size="14" class="absolute left-2.5 top-2.5" style="color:var(--muted)" />
             </div>
 
             <select x-model="filterClient" @change="applyFilters()"
@@ -357,9 +355,7 @@
                                     <td class="row-actions">
                                         <div class="flex items-center gap-2 justify-end">
                                             <button @click="openEdit(p)" class="btn btn-ghost btn-xs" title="Editar">
-                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                                                </svg>
+                                                <x-icon name="pencil" size="14" />
                                             </button>
                                             <a :href="p.url" class="btn btn-ghost btn-xs">Abrir →</a>
                                         </div>
@@ -388,9 +384,7 @@
                     <button @click="openEdit(p)"
                         class="btn btn-ghost btn-xs absolute top-2 right-2 z-10"
                         title="Editar">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                        </svg>
+                        <x-icon name="pencil" size="14" />
                     </button>
 
                     <div class="px-4 pt-4 pb-3 flex-1">

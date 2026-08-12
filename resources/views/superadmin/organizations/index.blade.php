@@ -7,9 +7,7 @@
         </div>
         <a href="{{ route('superadmin.organizations.create') }}"
            class="btn-primary px-4 py-2 text-sm rounded-lg font-semibold flex items-center gap-2">
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-            </svg>
+            <x-icon name="plus" size="16" />
             Nova Organização
         </a>
     </div>

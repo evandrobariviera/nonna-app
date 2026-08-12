@@ -221,9 +221,7 @@
                     :style="dragging ? 'border-color:var(--purple); background:rgba(100, 59, 142,.04)' : ''"
                     class="flex flex-col items-center justify-center w-full py-7 cursor-pointer transition-colors"
                     style="border:2px dashed var(--border2); color:var(--muted)">
-                    <svg class="h-6 w-6 mb-2.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                    </svg>
+                    <x-icon name="upload" size="24" class="mb-2.5" />
                     <span class="text-sm font-medium">Clique para anexar ou arraste arquivos</span>
                     <span class="text-xs mt-1" style="color:var(--muted2)">Máx. 100 MB por arquivo</span>
                     <input type="file" name="file" x-ref="fileInput" class="hidden"
