@@ -1,15 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center gap-2 text-xs flex-wrap">
-            <a href="{{ route('dashboard') }}" class="flex-shrink-0" style="color:var(--muted)"
-               onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
-                <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 9.5 12 3l9 6.5" />
-                    <path d="M5 8.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V8.5" />
-                </svg>
-            </a>
             @if($task->project)
-                <span style="color:var(--border2)">/</span>
                 <a href="{{ route('projects.dashboard') }}" class="font-semibold transition-colors" style="color:var(--muted)"
                    onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Projetos</a>
                 @if($task->project->macro_plan_id)
@@ -26,11 +18,12 @@
                     {{ $task->project->title }}
                 </a>
             @elseif($task->is_ticket)
-                <span style="color:var(--border2)">/</span>
                 <a href="{{ route('tickets.index') }}" class="font-semibold transition-colors" style="color:var(--muted)"
                    onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Tickets</a>
             @endif
-            <span style="color:var(--border2)">/</span>
+            @if($task->project || $task->is_ticket)
+                <span style="color:var(--border2)">/</span>
+            @endif
             <span class="font-semibold" style="color:var(--text)">{{ $task->title }}</span>
         </div>
     </x-slot>
