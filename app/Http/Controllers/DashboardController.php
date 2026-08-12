@@ -6,6 +6,7 @@ use App\Models\AdCampaign;
 use App\Models\Client;
 use App\Models\ClientAdAccount;
 use App\Models\InternalNotification;
+use App\Models\LiteraryQuote;
 use App\Models\MacroPlan;
 use App\Models\Meeting;
 use App\Models\Sprint;
@@ -20,6 +21,18 @@ class DashboardController extends Controller
     public function index()
     {
         $userId = Auth::id();
+
+        // Citação literária do dia — fixa (a mesma pra toda a Organização, o
+        // dia inteiro), não sorteada a cada carregamento de página. Rotaciona
+        // deterministicamente pelo acervo (dias corridos desde uma data fixa,
+        // módulo a quantidade de citações ativas) — sem precisar de job
+        // agendado nem de coluna pra marcar "já mostrada".
+        $literaryQuote = null;
+        $quotes = LiteraryQuote::where('is_active', true)->orderBy('created_at')->get();
+        if ($quotes->isNotEmpty()) {
+            $daysSinceEpoch = \Carbon\Carbon::parse('2026-01-01')->diffInDays(today());
+            $literaryQuote = $quotes[$daysSinceEpoch % $quotes->count()];
+        }
 
         $activeSprint = Sprint::where('status', 'active')->first();
         if ($activeSprint) {
@@ -228,6 +241,7 @@ class DashboardController extends Controller
             ->values();
 
         return view('dashboard', compact(
+            'literaryQuote',
             'activeSprint', 'sprintTotal', 'sprintDone', 'sprintProgress',
             'myAdjustmentTasks', 'myProductionTasks', 'myReadyForProductionTasks',
             'myExecutorSprintByStatus', 'myExecutorSprintTotal',

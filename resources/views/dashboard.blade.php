@@ -32,6 +32,27 @@
         <p class="text-sm mt-1" style="color:var(--muted)">Aqui está o resumo do que precisa da sua atenção hoje.</p>
     </div>
 
+    {{-- ── CITAÇÃO LITERÁRIA DO DIA — fixa pra Organização inteira o dia todo
+         (ver DashboardController::index(), rotação determinística pelo acervo
+         literary_quotes). Ideia: estimular cultura/leitura na agência, com o
+         trecho sempre justificado (autor, obra, por que faz sentido). ── --}}
+    @if($literaryQuote)
+        <div class="card px-6 py-5 mb-4" style="background:linear-gradient(135deg, rgba(106,90,205,.05), rgba(255,140,0,.03)); border:1px solid rgba(106,90,205,.18)">
+            <div class="flex items-start gap-4">
+                <span class="text-3xl flex-shrink-0 leading-none select-none" style="color:var(--purple); opacity:.35">❝</span>
+                <div class="min-w-0">
+                    <p class="text-sm italic" style="color:var(--text); line-height:1.7">{{ $literaryQuote->excerpt }}</p>
+                    <p class="text-xs font-semibold mt-2.5" style="color:var(--purple)">
+                        — {{ $literaryQuote->author }}, <span style="font-style:italic">{{ $literaryQuote->book }}</span>
+                    </p>
+                    <p class="text-xs mt-2" style="color:var(--muted2); line-height:1.6">
+                        📖 {{ $literaryQuote->justification }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="grid gap-4 mb-6" style="grid-template-columns: 7fr 3fr; align-items: stretch">
 
         {{-- Coluna 1: Sprint --}}
