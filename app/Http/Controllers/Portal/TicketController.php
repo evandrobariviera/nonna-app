@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Task;
+use App\Models\TaskAttachment;
 use App\Services\NotificationDispatchService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -57,10 +58,13 @@ class TicketController extends Controller
             'title'       => 'required|string|max:300',
             'description' => 'nullable|string|max:5000',
             'task_type'   => 'required|in:' . implode(',', array_keys(Task::$types)),
+            'priority'    => 'nullable|in:' . implode(',', array_keys(Task::$priorities)),
+            'files'       => 'nullable|array',
+            'files.*'     => 'file|max:102400', // 100 MB, mesmo limite do chamado interno
         ]);
 
         $task = Task::create([
-            ...$data,
+            ...collect($data)->except('files')->all(),
             'organization_id' => $client->organization_id,
             'client_id'       => $client->id,
             'is_ticket'       => true,
@@ -69,6 +73,26 @@ class TicketController extends Controller
             'requester_name'  => $contact->name,
             'contact_id'      => $contact->id,
         ]);
+
+        // Anexos enviados junto na abertura — mesma lógica de TicketController::store()
+        // (interno), sempre como "insumo"; só que aqui quem enviou é um Contact, não um
+        // User (uploaded_by_contact_id, ver migration 2026_08_12_134434).
+        if ($request->hasFile('files')) {
+            $disk = config('filesystems.default', 'r2');
+            foreach ($request->file('files') as $file) {
+                $path = $file->store("tasks/{$task->id}", $disk);
+                TaskAttachment::create([
+                    'task_id'                => $task->id,
+                    'filename'                => $file->getClientOriginalName(),
+                    'disk_path'               => $path,
+                    'disk'                    => $disk,
+                    'mime_type'               => $file->getMimeType(),
+                    'size'                    => $file->getSize(),
+                    'uploaded_by_contact_id'  => $contact->id,
+                    'kind'                    => 'insumo',
+                ]);
+            }
+        }
 
         app(NotificationDispatchService::class)->send('chamado_aberto', $client, [
             'chamado_titulo' => $task->title,

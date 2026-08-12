@@ -147,6 +147,7 @@ class TaskController extends Controller
             'responsibles',
             'observers',
             'attachments.uploadedBy',
+            'attachments.uploadedByContact',
             'comments.user',
             'createdBy',
             'latestApprovalRound.tokens.contact',

@@ -144,6 +144,13 @@
                     <h1 class="text-sm font-bold" style="color:var(--text)">{{ $title ?? '' }}</h1>
                 </div>
 
+                <a href="{{ route('portal.tickets.create') }}" class="btn btn-primary btn-sm flex items-center gap-1.5 flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12a2 2 0 0 0-2-2V8a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v2a2 2 0 0 1 0 4v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2a2 2 0 0 1 0-4z"/>
+                    </svg>
+                    <span class="hidden sm:inline">Novo Ticket</span>
+                </a>
+
                 <span class="badge badge-purple">Portal do Cliente</span>
             </header>
 

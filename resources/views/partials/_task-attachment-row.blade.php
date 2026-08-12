@@ -31,7 +31,7 @@
         </div>
     </td>
     <td style="color:var(--muted2)">{{ $attachment->sizeForHumans() }}</td>
-    <td style="color:var(--muted2)">{{ $attachment->uploadedBy?->name ?? '—' }}</td>
+    <td style="color:var(--muted2)">{{ $attachment->uploaderName() ?? '—' }}</td>
     <td style="color:var(--muted2)">{{ $attachment->created_at->format('d/m/Y H:i') }}</td>
     <td class="text-right">
         <div class="flex items-center justify-end gap-3">

@@ -15,7 +15,7 @@ class TaskAttachment extends Model
 
     protected $fillable = [
         'task_id', 'filename', 'disk_path', 'disk', 'mime_type', 'size', 'uploaded_by',
-        'is_deliverable', 'round_number', 'kind',
+        'uploaded_by_contact_id', 'is_deliverable', 'round_number', 'kind',
     ];
 
     protected $casts = [
@@ -43,6 +43,18 @@ class TaskAttachment extends Model
     public function uploadedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    public function uploadedByContact(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'uploaded_by_contact_id');
+    }
+
+    // Nome de quem enviou, seja funcionário (uploaded_by) ou contato do Portal
+    // (uploaded_by_contact_id) — sempre um dos dois, nunca os dois (constraint XOR).
+    public function uploaderName(): ?string
+    {
+        return $this->uploadedBy?->name ?? $this->uploadedByContact?->name;
     }
 
     public function url(): string
