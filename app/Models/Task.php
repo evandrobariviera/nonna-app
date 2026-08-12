@@ -185,6 +185,27 @@ class Task extends Model
         return self::$priorities[$this->priority ?? 'normal']['color'] ?? 'muted';
     }
 
+    // Resolve uma chave crua (ex: status="em_producao") pro rótulo humano, dado o
+    // nome do campo — usado pelo TaskObserver pra logar TaskActivity sem duplicar
+    // os mesmos mapas de $statuses/$situations/etc. em outro lugar. Campo sem
+    // mapa conhecido (ex: title) não deve chamar isto — não é o caso de uso.
+    public static function labelForField(string $field, ?string $key): ?string
+    {
+        if ($key === null || $key === '') {
+            return null;
+        }
+
+        return match ($field) {
+            'status'          => self::$statuses[$key]['label'] ?? $key,
+            'situation'       => self::$situations[$key] ?? $key,
+            'priority'        => self::$priorities[$key]['label'] ?? $key,
+            'destination'     => self::$destinations[$key] ?? $key,
+            'task_type'       => self::$types[$key] ?? $key,
+            'approval_method' => self::$approvalMethods[$key] ?? $key,
+            default           => $key,
+        };
+    }
+
     public static function colorHex(string $color): string
     {
         return match($color) {
@@ -330,6 +351,11 @@ class Task extends Model
     public function statusTransitions(): HasMany
     {
         return $this->hasMany(TaskStatusTransition::class)->orderBy('changed_at');
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(TaskActivity::class)->orderByDesc('created_at');
     }
 
     /**

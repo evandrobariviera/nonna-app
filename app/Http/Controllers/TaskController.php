@@ -9,6 +9,7 @@ use App\Models\MacroPlan;
 use App\Models\Project;
 use App\Models\Sprint;
 use App\Models\Task;
+use App\Models\TaskActivity;
 use App\Models\TaskAttachment;
 use App\Models\TaskExecutor;
 use App\Models\TaskStatusTransition;
@@ -150,6 +151,7 @@ class TaskController extends Controller
             'attachments.uploadedByContact',
             'comments.user',
             'createdBy',
+            'activities.user',
             'latestApprovalRound.tokens.contact',
             'approvalRounds.tokens.contact',
         ]);
@@ -352,9 +354,11 @@ class TaskController extends Controller
 
         // Guarda quem já era responsável antes de mexer, pra só disparar a automação de
         // "Responsável/Executor adicionado" quando for alguém genuinely novo — sem isso,
-        // re-salvar o mesmo responsável pareceria uma adição nova toda vez.
-        $wasAlready = $data['responsavel_id']
-            && TaskExecutor::where('task_id', $task->id)->where('role', 'responsavel')->where('user_id', $data['responsavel_id'])->exists();
+        // re-salvar o mesmo responsável pareceria uma adição nova toda vez. Mesmo registro
+        // já serve pro rótulo "de" do TaskActivity (não passa pelo TaskObserver — isso é
+        // pivot de task_executors, não coluna de tasks).
+        $oldUser = TaskExecutor::where('task_id', $task->id)->where('role', 'responsavel')->first()?->user;
+        $wasAlready = $data['responsavel_id'] && $oldUser?->id === $data['responsavel_id'];
 
         TaskExecutor::where('task_id', $task->id)->where('role', 'responsavel')->delete();
 
@@ -369,6 +373,11 @@ class TaskController extends Controller
             }
         }
 
+        if (($oldUser?->id) !== ($data['responsavel_id'] ?? null)) {
+            $newUser = $data['responsavel_id'] ? User::find($data['responsavel_id']) : null;
+            TaskActivity::log($task, 'responsavel_changed', $oldUser?->name, $newUser?->name);
+        }
+
         if ($request->wantsJson()) {
             return response()->json(['success' => true]);
         }
@@ -380,8 +389,8 @@ class TaskController extends Controller
     {
         $data = $request->validate(['executor_id' => 'nullable|exists:users,id']);
 
-        $wasAlready = $data['executor_id']
-            && TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->where('user_id', $data['executor_id'])->exists();
+        $oldUser = TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->first()?->user;
+        $wasAlready = $data['executor_id'] && $oldUser?->id === $data['executor_id'];
 
         TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->delete();
 
@@ -395,6 +404,11 @@ class TaskController extends Controller
             }
         } else {
             $task->updateQuietly(['executor_id' => null]);
+        }
+
+        if (($oldUser?->id) !== ($data['executor_id'] ?? null)) {
+            $newUser = $data['executor_id'] ? User::find($data['executor_id']) : null;
+            TaskActivity::log($task, 'executor_changed', $oldUser?->name, $newUser?->name);
         }
 
         if ($request->wantsJson()) {
@@ -531,32 +545,48 @@ class TaskController extends Controller
                             'changed_by'  => $changedBy,
                             'changed_at'  => $now,
                         ]);
+                        TaskActivity::log($task, 'status_changed', Task::labelForField('status', $task->status), Task::labelForField('status', $data['status']), $changedBy);
                     }
                 }
                 Task::whereIn('id', $data['task_ids'])->update(['status' => $data['status']]);
                 break;
 
             case 'situation':
+                foreach ($tasks as $task) {
+                    if ($task->situation !== ($data['situation'] ?? null)) {
+                        TaskActivity::log($task, 'situation_changed', Task::labelForField('situation', $task->situation), Task::labelForField('situation', $data['situation'] ?? null));
+                    }
+                }
                 Task::whereIn('id', $data['task_ids'])->update(['situation' => $data['situation'] ?? null]);
                 break;
 
             case 'executor':
+                $newUser = !empty($data['executor_id']) ? User::find($data['executor_id']) : null;
                 foreach ($tasks as $task) {
+                    $oldUser = TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->first()?->user;
                     TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->delete();
                     if (!empty($data['executor_id'])) {
                         // Mesma pessoa pode já ser responsável — não mexe na linha dela.
                         $task->executors()->attach($data['executor_id'], ['role' => 'executor']);
                     }
                     $task->updateQuietly(['executor_id' => $data['executor_id'] ?? null]);
+                    if ($oldUser?->id !== ($data['executor_id'] ?? null)) {
+                        TaskActivity::log($task, 'executor_changed', $oldUser?->name, $newUser?->name);
+                    }
                 }
                 break;
 
             case 'responsavel':
+                $newUser = !empty($data['responsavel_id']) ? User::find($data['responsavel_id']) : null;
                 foreach ($tasks as $task) {
+                    $oldUser = TaskExecutor::where('task_id', $task->id)->where('role', 'responsavel')->first()?->user;
                     TaskExecutor::where('task_id', $task->id)->where('role', 'responsavel')->delete();
                     if (!empty($data['responsavel_id'])) {
                         // Mesma pessoa pode já ser executor — não mexe na linha dela.
                         $task->executors()->attach($data['responsavel_id'], ['role' => 'responsavel']);
+                    }
+                    if ($oldUser?->id !== ($data['responsavel_id'] ?? null)) {
+                        TaskActivity::log($task, 'responsavel_changed', $oldUser?->name, $newUser?->name);
                     }
                 }
                 break;

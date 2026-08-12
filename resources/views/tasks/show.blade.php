@@ -1243,6 +1243,40 @@
                 </form>
             </div>
 
+            {{-- ══ HISTÓRICO — só ações (criação, mudança de status/situação/prioridade/
+                 destino/tipo/cliente/projeto/sprint, atribuição de responsável/executor),
+                 nunca conteúdo de texto (ver TaskActivity, TaskObserver). ══ --}}
+            @if($task->activities->isNotEmpty())
+                <div class="card card-body">
+                    <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                        <span class="icon-badge">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                        </span>
+                        Histórico
+                    </p>
+                    <div class="flex flex-col gap-3" style="max-height:360px; overflow-y:auto">
+                        @foreach($task->activities as $activity)
+                            <div class="text-xs" style="border-left:2px solid var(--border2); padding-left:10px">
+                                <p style="color:var(--text); font-weight:500; line-height:1.4">
+                                    {{ $activity->actionLabel() }}
+                                    @if($activity->from_label && $activity->to_label)
+                                        <span style="color:var(--muted2)">— {{ $activity->from_label }} → {{ $activity->to_label }}</span>
+                                    @elseif($activity->to_label)
+                                        <span style="color:var(--muted2)">— {{ $activity->to_label }}</span>
+                                    @endif
+                                </p>
+                                <p class="mt-0.5" style="color:var(--muted)">
+                                    {{ $activity->user?->name ? explode(' ', $activity->user->name)[0] : 'Sistema' }}
+                                    · {{ $activity->created_at->format('d/m/Y H:i') }}
+                                </p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
         </div>{{-- /sidebar --}}
     </div>
 
