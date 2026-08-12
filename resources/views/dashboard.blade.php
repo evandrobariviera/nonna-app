@@ -157,6 +157,49 @@
          "Pronto para Produção" não é um status próprio no modelo — é status=backlog com
          situation="Pronto para produção" — por isso carrega data-extra além de data-status. --}}
     <h2 class="text-base font-bold mb-3" style="color:var(--text)">Operação</h2>
+
+    {{-- MEUS NÚMEROS NA SPRINT — recorte pessoal (executor) dentro da sprint ativa,
+         antes dos 3 quadros abaixo. Cores reaproveitam a paleta de status já usada
+         em badges/dropdowns em todo o App (Task::colorHex), sem inventar cor nova. --}}
+    @if($activeSprint)
+        <div class="card px-5 py-4 mb-4">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <span class="text-sm font-bold flex items-center gap-2" style="color:var(--text)">
+                    📊 Meus Números na Sprint
+                    <span class="text-xs font-mono font-normal" style="color:var(--muted)">— como Executor</span>
+                </span>
+                <span class="text-xs font-mono" style="color:var(--muted)">{{ $activeSprint->title }}</span>
+            </div>
+
+            @if($myExecutorSprintTotal > 0)
+                <div class="grid gap-3 mb-4" style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr))">
+                    {{-- Tile "hero": total --}}
+                    <div class="px-3 py-3 text-center" style="background:var(--s2); border-top:3px solid var(--purple)">
+                        <p class="text-2xl font-black" style="color:var(--text)">{{ $myExecutorSprintTotal }}</p>
+                        <p class="text-xs font-mono mt-0.5" style="color:var(--muted)">Total na Sprint</p>
+                    </div>
+                    @foreach($myExecutorSprintByStatus as $row)
+                        <div class="px-3 py-3 text-center" style="background:var(--s2); border-top:3px solid {{ $row['hex'] }}">
+                            <p class="text-2xl font-black" style="color:var(--text)">{{ $row['count'] }}</p>
+                            <p class="text-xs font-mono mt-0.5" style="color:var(--muted)">{{ $row['label'] }}</p>
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- Barra segmentada — distribuição visual das mesmas tarefas por status,
+                     com gap de 2px entre segmentos (mesma cor de cada tile acima). --}}
+                <div class="flex h-2.5 rounded-full overflow-hidden gap-0.5" style="background:var(--border2)">
+                    @foreach($myExecutorSprintByStatus as $row)
+                        <div style="width:{{ round($row['count'] / $myExecutorSprintTotal * 100, 2) }}%; background:{{ $row['hex'] }}"
+                             title="{{ $row['label'] }}: {{ $row['count'] }} ({{ round($row['count'] / $myExecutorSprintTotal * 100) }}%)"></div>
+                    @endforeach
+                </div>
+            @else
+                <p class="text-sm" style="color:var(--muted)">Nenhuma tarefa sua como executor nessa sprint. 🎉</p>
+            @endif
+        </div>
+    @endif
+
     @php
         $quadros = [
             ['emoji' => '🔧', 'label' => 'Ajuste / Alteração',   'tasks' => $myAdjustmentTasks,         'status' => 'ajuste_alteracao', 'extra' => null],

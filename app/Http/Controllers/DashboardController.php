@@ -47,6 +47,35 @@ class DashboardController extends Controller
             ->where('situation', 'Pronto para produção')
             ->with('client')->orderBy('approval_date')->limit(8)->get();
 
+        // "Meus Números na Sprint" — recorte pessoal acima dos 3 quadros de Operação:
+        // quantas tarefas eu executo na sprint atual e como estão distribuídas por
+        // status. Cancelada fica de fora (não é "trabalho" pra contar). Ordem fixa
+        // (a mesma de Task::$statuses) e só entra tile de status que a pessoa
+        // realmente tem — sem card zerado poluindo a tela.
+        $myExecutorSprintByStatus = collect();
+        $myExecutorSprintTotal = 0;
+
+        if ($activeSprint) {
+            $counts = $this->executorTasksQuery($userId)
+                ->where('sprint_id', $activeSprint->id)
+                ->where('status', '!=', 'cancelado')
+                ->select('status', DB::raw('count(*) as total'))
+                ->groupBy('status')
+                ->pluck('total', 'status');
+
+            $myExecutorSprintTotal = (int) $counts->sum();
+
+            $myExecutorSprintByStatus = collect(Task::$statuses)
+                ->except(['cancelado'])
+                ->map(fn ($meta, $key) => [
+                    'label' => $meta['label'],
+                    'count' => (int) ($counts[$key] ?? 0),
+                    'hex'   => Task::colorHex($meta['color']),
+                ])
+                ->filter(fn ($row) => $row['count'] > 0)
+                ->values();
+        }
+
         // Agenda: todos os compromissos pendentes (não só hoje — "Para Agendar"
         // também conta, é o status padrão de uma reunião recém-criada), agrupados
         // por status pro quadro "Agenda" do dashboard. Sem limite: é um recorte
@@ -201,6 +230,7 @@ class DashboardController extends Controller
         return view('dashboard', compact(
             'activeSprint', 'sprintTotal', 'sprintDone', 'sprintProgress',
             'myAdjustmentTasks', 'myProductionTasks', 'myReadyForProductionTasks',
+            'myExecutorSprintByStatus', 'myExecutorSprintTotal',
             'myMeetingsByStatus',
             'meetingsPosReuniao', 'meetingsRealizadas',
             'clientsWithoutActivePlan', 'plansExpiringSoon', 'activePlans',
