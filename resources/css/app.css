@@ -12,20 +12,20 @@
         --s1:      #ffffff;
         --s2:      #f6f6fb;
         --s3:      #ececf4;
-        --border:  rgba(100, 90, 180, 0.10);
+        --border:  rgba(100, 59, 142, 0.10);
         --border2: rgba(0, 0, 0, 0.09);
         --text:    #1c1c2e;
         --muted:   rgba(28, 28, 46, 0.38);
         --muted2:  rgba(28, 28, 46, 0.58);
-        --purple:  #6A5ACD;
-        --orange:  #FF8C00;
-        --grad:    linear-gradient(135deg, #6A5ACD, #FF8C00);
-        --green:   #059669;
-        --red:     #dc2626;
-        --yellow:  #d97706;
+        --purple:  #643B8E;
+        --orange:  #EE7919;
+        --grad:    linear-gradient(135deg, #643B8E, #EE7919);
+        --green:   #10B981;
+        --red:     #DC2626;
+        --yellow:  #F59E0B;
         --cyan:    #0891b2;
-        --blue:    #2563eb;
-        --slate:   #64748b;
+        --blue:    #2E90FA;
+        --slate:   #697386;
         --shadow:  0 1px 4px rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0,0,0,0.04);
     }
 
@@ -34,7 +34,7 @@
         --s1:      #1c1d2e;
         --s2:      #22233a;
         --s3:      #2c2d45;
-        --border:  rgba(106, 90, 205, 0.18);
+        --border:  rgba(100, 59, 142, 0.18);
         --border2: rgba(255, 255, 255, 0.07);
         --text:    #e2e2f0;
         --muted:   rgba(226, 226, 240, 0.36);
@@ -51,7 +51,7 @@
     html, body {
         background-color: var(--bg);
         color: var(--text);
-        font-family: 'Figtree', -apple-system, "BlinkMacSystemFont", "Segoe UI", sans-serif;
+        font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "BlinkMacSystemFont", "Segoe UI", sans-serif;
         font-size: 14px;
         font-weight: 400;
         line-height: 1.5;
@@ -72,12 +72,40 @@
     .dark ::-webkit-scrollbar-thumb { background: #3a3b56; }
 
     h1, h2, h3, h4 {
-        font-family: 'Poppins', 'Figtree', -apple-system, sans-serif;
-        font-weight: 600;
+        font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+        font-weight: 700;
         line-height: 1.25;
     }
 
-    .grad-text { font-family: 'Syne', sans-serif; }
+    .grad-text { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif; font-weight: 700; }
+}
+
+@layer components {
+
+    /* ── ESCALA TIPOGRÁFICA — nonna_sistema_tipografico.html ──
+       9 níveis fixos (display → overline), 4 pesos permitidos (400/500/600/700).
+       Base pronta pra adoção gradual tela a tela — não foi reaplicada nas 181
+       views nesta rodada, só documentada e disponível via classe utilitária. */
+    .text-display { font-size: 32px; line-height: 1.20; font-weight: 700; letter-spacing: -.025em; }
+    .text-h1      { font-size: 28px; line-height: 1.25; font-weight: 700; letter-spacing: -.02em; }
+    .text-h2      { font-size: 22px; line-height: 1.30; font-weight: 700; letter-spacing: -.015em; }
+    .text-h3      { font-size: 18px; line-height: 1.35; font-weight: 600; }
+    .text-body-lg { font-size: 16px; line-height: 1.60; font-weight: 400; }
+    .text-body    { font-size: 14px; line-height: 1.55; font-weight: 400; }
+    .text-body-sm { font-size: 13px; line-height: 1.50; font-weight: 400; }
+    .text-caption { font-size: 12px; line-height: 1.45; font-weight: 400; color: var(--muted2); }
+    .text-overline {
+        font-size: 11px; line-height: 1.40; font-weight: 600;
+        text-transform: uppercase; letter-spacing: .08em; color: var(--muted2);
+    }
+
+    /* ── FONTE NUMÉRICA — KPIs, datas, horários, percentuais, colunas numéricas.
+       Troca o IBM Plex Mono antigo (ver nonna_sistema_tipografico.html §2). ── */
+    .numeric {
+        font-family: Arial, "Segoe UI", Tahoma, sans-serif;
+        font-variant-numeric: tabular-nums lining-nums;
+        font-feature-settings: "tnum" 1, "lnum" 1;
+    }
 }
 
 @layer components {
@@ -119,7 +147,7 @@
     }
 
     .nav-item.active {
-        background: rgba(106, 90, 205, 0.08);
+        background: rgba(100, 59, 142, 0.08);
         color: var(--purple);
         border-left-color: var(--purple);
     }
@@ -170,7 +198,7 @@
     .nav-sub-item.active {
         color: var(--purple);
         border-left-color: var(--purple);
-        background: rgba(106, 90, 205, 0.07);
+        background: rgba(100, 59, 142, 0.07);
     }
 
     /* Sprint sub-items — nível extra de indentação sob Sprints */
@@ -192,7 +220,7 @@
     .nav-sprint-item.active {
         color: var(--purple);
         border-left-color: var(--purple);
-        background: rgba(106, 90, 205, 0.07);
+        background: rgba(100, 59, 142, 0.07);
     }
 
     /* ── TOPBAR ── */
@@ -238,11 +266,11 @@
         font-family: inherit;
     }
     .btn-primary { background: var(--purple); color: #fff; border-color: var(--purple); }
-    .btn-primary:hover { background: #5848b0; border-color: #5848b0; }
-    .btn-success { background: #059669; color: #fff; border-color: #059669; }
+    .btn-primary:hover { background: #533174; border-color: #533174; }
+    .btn-success { background: #10B981; color: #fff; border-color: #10B981; }
     .btn-ghost { background: transparent; color: var(--muted2); border-color: var(--border2); }
     .btn-ghost:hover { background: var(--s3); color: var(--text); }
-    .btn-danger { background: #dc2626; color: #fff; border-color: #dc2626; }
+    .btn-danger { background: #DC2626; color: #fff; border-color: #DC2626; }
     .btn-danger:hover { background: #b91c1c; border-color: #b91c1c; }
     .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 5px; }
     .btn-xs { padding: 3px 10px; font-size: 11px; border-radius: 4px; }
@@ -276,7 +304,7 @@
         color: var(--muted);
         text-align: left;
         white-space: nowrap;
-        font-family: 'Figtree', sans-serif;
+        font-family: 'Inter', sans-serif;
     }
     .nonna-table td {
         padding: 0 14px;
@@ -285,7 +313,7 @@
         border-bottom: 1px solid var(--border2);
         color: var(--text);
         vertical-align: middle;
-        font-family: 'Figtree', sans-serif;
+        font-family: 'Inter', sans-serif;
     }
     .nonna-table tbody tr { transition: background 0.08s; }
     .nonna-table tbody tr:hover { background: var(--s2); }
@@ -296,12 +324,12 @@
     .row-overdue td:first-child { border-left: 3px solid var(--red); }
     .priority-urgente { background: rgba(220,38,38,.05); }
     .priority-urgente td:first-child { border-left: 3px solid #dc2626; }
-    .priority-medio { background: rgba(255,140,0,.05); }
-    .priority-medio td:first-child { border-left: 3px solid #FF8C00; }
+    .priority-medio { background: rgba(238,121,25,.05); }
+    .priority-medio td:first-child { border-left: 3px solid #EE7919; }
     .campaign-overdue { background: rgba(220,38,38,.05); }
     .campaign-overdue td:first-child { border-left: 3px solid #dc2626; }
-    .campaign-optimized-today { background: rgba(255,140,0,.05); }
-    .campaign-optimized-today td:first-child { border-left: 3px solid #FF8C00; }
+    .campaign-optimized-today { background: rgba(238,121,25,.05); }
+    .campaign-optimized-today td:first-child { border-left: 3px solid #EE7919; }
     .monday-fill-td { padding: 0 !important; }
     .group-header-row td { height: 40px; border-bottom: 2px solid var(--border2); }
     .group-header-row:hover { background: var(--s3) !important; }
@@ -322,14 +350,14 @@
     }
 
     /* ── STATUS PILL — sólido estilo Monday ── */
-    .badge-green  { background: #059669; color: #fff; border-color: transparent; }
-    .badge-purple { background: #6A5ACD; color: #fff; border-color: transparent; }
-    .badge-orange { background: #FF8C00; color: #fff; border-color: transparent; }
-    .badge-red    { background: #dc2626; color: #fff; border-color: transparent; }
-    .badge-muted  { background: #94a3b8; color: #fff; border-color: transparent; }
-    .badge-blue   { background: #2563eb; color: #fff; border-color: transparent; }
+    .badge-green  { background: #10B981; color: #fff; border-color: transparent; }
+    .badge-purple { background: #643B8E; color: #fff; border-color: transparent; }
+    .badge-orange { background: #EE7919; color: #fff; border-color: transparent; }
+    .badge-red    { background: #DC2626; color: #fff; border-color: transparent; }
+    .badge-muted  { background: #98A1B2; color: #fff; border-color: transparent; }
+    .badge-blue   { background: #2E90FA; color: #fff; border-color: transparent; }
     .badge-cyan   { background: #0891b2; color: #fff; border-color: transparent; }
-    .badge-yellow { background: #d97706; color: #fff; border-color: transparent; }
+    .badge-yellow { background: #F59E0B; color: #fff; border-color: transparent; }
 
     /* ── ÍCONE DE CABEÇALHO DE CARD (tasks/show e afins) ── */
     .icon-badge {
@@ -340,7 +368,7 @@
         width: 24px;
         height: 24px;
         border-radius: 7px;
-        background: rgba(106, 90, 205, .1);
+        background: rgba(100, 59, 142, .1);
         color: var(--purple);
     }
 
@@ -426,8 +454,8 @@
         border-radius: 100px;
     }
     .tab-btn.active .tab-count {
-        background: rgba(106,90,205,.10);
-        border-color: rgba(106,90,205,.25);
+        background: rgba(100,59,142,.10);
+        border-color: rgba(100,59,142,.25);
         color: var(--purple);
     }
 
@@ -545,7 +573,7 @@
     justify-content: center;
     padding: 4px 6px;
     font-size: 12px;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'Inter', sans-serif;
     color: var(--muted2);
     background: none;
     border: none;
@@ -556,7 +584,7 @@
     min-width: 26px;
 }
 .rtb-btn:hover { color: var(--text); background: var(--s3); }
-.rtb-on { color: var(--purple) !important; background: rgba(106,90,205,.1) !important; }
+.rtb-on { color: var(--purple) !important; background: rgba(100,59,142,.1) !important; }
 .rtb-sep {
     width: 1px;
     height: 14px;
@@ -582,7 +610,7 @@
 .rich-editor .ProseMirror p { margin: 0; }
 .rich-editor .ProseMirror p + p { margin-top: .6em; }
 .rich-editor .ProseMirror h2 {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: .9375rem;
     font-weight: 800;
     color: var(--text);

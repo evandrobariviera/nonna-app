@@ -12,7 +12,7 @@
     <title>{{ config('app.name', 'Nonna Agência Digital — Do posicionamento à conversão!') }}</title>
 
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=syne:700,800,900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -42,7 +42,7 @@
                 flex-shrink: 0;
                 position: relative;
                 overflow: hidden;
-                background: #6A5ACD;
+                background: #643B8E;
             }
             .login-mobile-logo {
                 display: none;
@@ -61,12 +61,12 @@
             <div style="position:absolute; inset:0; pointer-events:none; overflow:hidden">
                 <div style="position:absolute; bottom:-160px; right:-160px; width:500px; height:500px;
                             border-radius:50%; opacity:.18;
-                            background: radial-gradient(circle, #FF8C00, transparent 65%)"></div>
+                            background: radial-gradient(circle, #EE7919, transparent 65%)"></div>
                 <div style="position:absolute; top:-120px; left:-120px; width:380px; height:380px;
                             border-radius:50%; opacity:.10;
                             background: radial-gradient(circle, #ffffff, transparent 65%)"></div>
                 <div style="position:absolute; right:-40px; top:50%; transform:translateY(-50%);
-                            font-family:'Syne',sans-serif; font-size:520px; font-weight:900;
+                            font-family:'Inter',sans-serif; font-size:520px; font-weight:700;
                             color:rgba(255,255,255,.05); line-height:1; letter-spacing:-.05em;
                             user-select:none; pointer-events:none">N</div>
             </div>
@@ -81,7 +81,7 @@
                         <img src="{{ $brandLogoUrl }}" alt="{{ $brandName ?? 'Nonna' }}"
                              style="height:40px; width:auto; object-fit:contain; filter:brightness(0) invert(1)">
                     @else
-                        <div style="font-family:'Syne',sans-serif; font-size:28px; font-weight:900;
+                        <div style="font-family:'Inter',sans-serif; font-size:28px; font-weight:700;
                                     color:#fff; letter-spacing:-.02em; line-height:1">
                             {{ $brandName ?? 'NONNA' }}
                         </div>
@@ -95,11 +95,11 @@
                 {{-- Hero --}}
                 <div style="flex:1; display:flex; flex-direction:column; justify-content:center">
                     <div style="font-size:11px; font-weight:700; text-transform:uppercase;
-                                letter-spacing:.14em; color:#FF8C00; margin-bottom:20px">
+                                letter-spacing:.14em; color:#EE7919; margin-bottom:20px">
                         Do posicionamento à conversão
                     </div>
-                    <h1 style="font-family:'Syne',sans-serif; font-size:clamp(2rem,2.6vw,3rem);
-                               font-weight:900; color:#fff; letter-spacing:-.02em;
+                    <h1 style="font-family:'Inter',sans-serif; font-size:clamp(2rem,2.6vw,3rem);
+                               font-weight:700; color:#fff; letter-spacing:-.02em;
                                line-height:1.15; margin:0 0 20px">
                         Planejamento<br>que vira<br>
                         <span style="color:rgba(255,255,255,.4)">execução.</span>
@@ -126,7 +126,7 @@
 
             {{-- Logo mobile --}}
             <div class="login-mobile-logo" style="margin-bottom:32px; text-align:center">
-                <div style="font-family:'Syne',sans-serif; font-size:24px; font-weight:900;
+                <div style="font-family:'Inter',sans-serif; font-size:24px; font-weight:700;
                             color:var(--purple); letter-spacing:-.02em">
                     NONNA
                 </div>

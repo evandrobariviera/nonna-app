@@ -8,13 +8,13 @@
     <link rel="icon" href="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/FAVICON-300x300.png" sizes="192x192">
     <link rel="apple-touch-icon" href="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/FAVICON-300x300.png">
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=syne:400,600,700,800|ibm-plex-mono:400,500&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet"/>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     @vite(['resources/css/app.css'])
     <style>
-        body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; }
-        .mono { font-family: 'IBM Plex Mono', monospace; }
-        .label-sm { font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
+        .mono { font-family:Arial,"Segoe UI",Tahoma,sans-serif; }
+        .label-sm { font-family:Arial,"Segoe UI",Tahoma,sans-serif; font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
 
         .piece-card { background: var(--s1); border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
 
@@ -29,11 +29,11 @@
             .approval-media-row .caption-col { flex: 1 1 40%; }
         }
 
-        .btn-decision { flex: 1; padding: 12px 10px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; border: 2px solid var(--border2); cursor: pointer; transition: all .15s; background: transparent; color: var(--muted2); }
+        .btn-decision { flex: 1; padding: 12px 10px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; border: 2px solid var(--border2); cursor: pointer; transition: all .15s; background: transparent; color: var(--muted2); }
         .btn-decision.sel-approve  { border-color: #22c55e; background: rgba(34,197,94,.12); color: #22c55e; }
-        .btn-decision.sel-changes  { border-color: var(--orange); background: rgba(255,140,0,.12); color: var(--orange); }
+        .btn-decision.sel-changes  { border-color: var(--orange); background: rgba(238, 121, 25,.12); color: var(--orange); }
 
-        .textarea-pub { width: 100%; padding: 10px 14px; font-size: 13px; font-family: 'Syne', sans-serif; background: var(--s2); border: 1px solid var(--border2); color: var(--text); resize: vertical; outline: none; min-height: 80px; box-sizing: border-box; }
+        .textarea-pub { width: 100%; padding: 10px 14px; font-size: 13px; font-family: 'Inter', sans-serif; background: var(--s2); border: 1px solid var(--border2); color: var(--text); resize: vertical; outline: none; min-height: 80px; box-sizing: border-box; }
         .textarea-pub:focus { border-color: var(--purple); }
         .textarea-pub::placeholder { color: var(--muted); }
 
@@ -41,10 +41,10 @@
         .file-link:hover { border-color: var(--purple); }
         .file-link + .file-link { border-top: 1px solid var(--border); }
 
-        .badge { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .1em; padding: 3px 8px; }
+        .badge { font-family:Arial,"Segoe UI",Tahoma,sans-serif; font-size: 9px; letter-spacing: .1em; padding: 3px 8px; }
         .badge-pending  { background: rgba(100,100,130,.2); color: var(--muted); }
         .badge-approved { background: rgba(34,197,94,.15); color: #22c55e; }
-        .badge-changes  { background: rgba(255,140,0,.15); color: var(--orange); }
+        .badge-changes  { background: rgba(238, 121, 25,.15); color: var(--orange); }
 
         .approvers-box { background: var(--s1); border: 1px solid var(--border); padding: 16px 18px; margin-bottom: 24px; }
         .approver-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 13px; }
@@ -54,7 +54,7 @@
         .history-item { padding: 12px 0; }
         .history-item + .history-item { border-top: 1px solid var(--border); }
 
-        .submit-btn { width: 100%; padding: 16px; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; background: var(--purple); color: #fff; border: none; cursor: pointer; transition: opacity .15s; letter-spacing: .04em; }
+        .submit-btn { width: 100%; padding: 16px; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 800; background: var(--purple); color: #fff; border: none; cursor: pointer; transition: opacity .15s; letter-spacing: .04em; }
         .submit-btn:disabled { opacity: .3; cursor: not-allowed; }
         .submit-btn:not(:disabled):hover { opacity: .88; }
 
@@ -179,7 +179,7 @@
                             <a href="{{ $file->url() }}" target="_blank" class="file-link">
                                 <span style="font-size:22px">{{ $file->icon() }}</span>
                                 <span>{{ $file->filename }}</span>
-                                <span style="margin-left:auto; font-size:10px; color:var(--muted); font-family:'IBM Plex Mono',monospace">↗ abrir</span>
+                                <span style="margin-left:auto; font-size:10px; color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif">↗ abrir</span>
                             </a>
                         @endif
                     </div>

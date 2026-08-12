@@ -33,7 +33,7 @@
 
     @if(session('import_warnings') && count(session('import_warnings')) > 0)
         <div class="mb-5 px-4 py-3 text-xs"
-             style="background:rgba(255,140,0,.06); border:1px solid rgba(255,140,0,.25); color:var(--orange)">
+             style="background:rgba(238, 121, 25,.06); border:1px solid rgba(238, 121, 25,.25); color:var(--orange)">
             <p class="font-semibold mb-2">Itens do HTML que não foram importados automaticamente — revise e adicione manualmente onde fizer sentido:</p>
             <ul class="space-y-1 list-disc pl-4">
                 @foreach(session('import_warnings') as $warning)
@@ -60,7 +60,7 @@
                             class="w-full flex items-center gap-3 px-4 py-3 text-left transition-all"
                             style="border:none; border-bottom:1px solid var(--border2); background:none; cursor:pointer"
                             :style="block === '{{ $key }}'
-                                ? 'background:rgba(106,90,205,.12); color:var(--purple)'
+                                ? 'background:rgba(100, 59, 142,.12); color:var(--purple)'
                                 : 'color:var(--muted2)'">
                         <span class="text-xs font-mono font-bold opacity-40">{{ $meta['num'] }}</span>
                         <span class="text-xs font-semibold leading-tight">{{ $meta['label'] }}</span>
@@ -81,7 +81,7 @@
                         class="w-full flex items-center gap-3 px-4 py-3 text-left transition-all"
                         style="border:none; background:none; cursor:pointer"
                         :style="block === 'meta'
-                            ? 'background:rgba(106,90,205,.12); color:var(--purple)'
+                            ? 'background:rgba(100, 59, 142,.12); color:var(--purple)'
                             : 'color:var(--muted2)'">
                     <span class="text-xs font-mono font-bold opacity-40">⚙</span>
                     <span class="text-xs font-semibold">Configurações</span>
@@ -345,7 +345,7 @@
 
                         {{-- Migração do campo legado (se existir) --}}
                         @if(!empty($b2['pilares_comunicacao']) && empty($b2['pilares']))
-                            <div class="px-4 py-3 text-xs rounded" style="background:rgba(255,140,0,.06); border:1px solid rgba(255,140,0,.2); color:var(--orange)">
+                            <div class="px-4 py-3 text-xs rounded" style="background:rgba(238, 121, 25,.06); border:1px solid rgba(238, 121, 25,.2); color:var(--orange)">
                                 Campo antigo "Pilares de Comunicação" ainda em texto livre. Substitua pelos pilares estruturados abaixo e salve para migrar.
                                 <p class="mt-1 font-mono" style="color:var(--muted)">{{ $b2['pilares_comunicacao'] }}</p>
                             </div>

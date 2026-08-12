@@ -23,7 +23,7 @@
                 <span class="font-medium truncate" style="color:var(--text)">{{ $attachment->filename }}</span>
                 @if($attachment->is_deliverable)
                     <span class="px-1.5 py-0.5 text-xs font-semibold flex-shrink-0"
-                          style="background:rgba(106,90,205,.12); color:var(--purple)">
+                          style="background:rgba(100, 59, 142,.12); color:var(--purple)">
                         Enviado · Rodada #{{ $attachment->round_number }}
                     </span>
                 @endif

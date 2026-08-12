@@ -41,9 +41,9 @@
             <span>Chamados</span>
             @if($_portalTicketsCount > 0)
                 <span class="text-xs px-1.5 py-px rounded-full font-semibold"
-                      style="background:{{ request()->routeIs('portal.tickets.*') ? 'rgba(106,90,205,.15)' : 'var(--s3)' }};
+                      style="background:{{ request()->routeIs('portal.tickets.*') ? 'rgba(100, 59, 142,.15)' : 'var(--s3)' }};
                              color:{{ request()->routeIs('portal.tickets.*') ? 'var(--purple)' : 'var(--muted)' }};
-                             border:1px solid {{ request()->routeIs('portal.tickets.*') ? 'rgba(106,90,205,.25)' : 'var(--border2)' }}">
+                             border:1px solid {{ request()->routeIs('portal.tickets.*') ? 'rgba(100, 59, 142,.25)' : 'var(--border2)' }}">
                     {{ $_portalTicketsCount }}
                 </span>
             @endif
@@ -135,7 +135,7 @@
             <span>Aprovações</span>
             @if($_portalApprovalsCount > 0)
                 <span class="text-xs px-1.5 py-px rounded-full font-semibold"
-                      style="background:rgba(255,140,0,.15); color:var(--orange); border:1px solid rgba(255,140,0,.3)">
+                      style="background:rgba(238, 121, 25,.15); color:var(--orange); border:1px solid rgba(238, 121, 25,.3)">
                     {{ $_portalApprovalsCount }}
                 </span>
             @endif

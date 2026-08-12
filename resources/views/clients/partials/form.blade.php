@@ -3,9 +3,9 @@
 @php $isEdit = isset($client) && $client->exists; @endphp
 
 @php
-$inputStyle = "background:var(--s1); border:1px solid var(--border2); color:var(--text); outline:none; font-family:'Syne',sans-serif";
-$inputMono  = "background:var(--s1); border:1px solid var(--border2); color:var(--text); outline:none; font-family:'IBM Plex Mono',monospace";
-$selectStyle = "background:var(--s1); border:1px solid var(--border2); color:var(--muted2); outline:none; cursor:pointer; font-family:'Syne',sans-serif";
+$inputStyle = "background:var(--s1); border:1px solid var(--border2); color:var(--text); outline:none; font-family:'Inter',sans-serif";
+$inputMono  = "background:var(--s1); border:1px solid var(--border2); color:var(--text); outline:none; font-family:Arial,"Segoe UI",Tahoma,sans-serif";
+$selectStyle = "background:var(--s1); border:1px solid var(--border2); color:var(--muted2); outline:none; cursor:pointer; font-family:'Inter',sans-serif";
 @endphp
 
 {{-- BLOCO 01: EMPRESA --}}
@@ -220,7 +220,7 @@ $selectStyle = "background:var(--s1); border:1px solid var(--border2); color:var
                 @foreach(App\Models\Client::$services as $key => $label)
                     @php $checked = in_array($key, old('contracted_services', $client->contracted_services ?? [])) @endphp
                     <label class="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer transition-colors"
-                           style="background:var(--s1); border:1px solid {{ $checked ? 'rgba(106,90,205,.4)' : 'var(--border)' }}">
+                           style="background:var(--s1); border:1px solid {{ $checked ? 'rgba(100, 59, 142,.4)' : 'var(--border)' }}">
                         <input type="checkbox" name="contracted_services[]" value="{{ $key }}"
                             {{ $checked ? 'checked' : '' }}
                             class="flex-shrink-0"

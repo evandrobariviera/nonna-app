@@ -1,5 +1,5 @@
 @php
-    $inputStyle = "background:var(--s1); border:1px solid var(--border2); color:var(--text); outline:none; font-family:'Syne',sans-serif";
+    $inputStyle = "background:var(--s1); border:1px solid var(--border2); color:var(--text); outline:none; font-family:'Inter',sans-serif";
 @endphp
 
 <div class="card">

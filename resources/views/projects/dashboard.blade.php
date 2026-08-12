@@ -404,7 +404,7 @@
                         </div>
                         <div x-show="p.not_started && !p.has_overdue"
                              class="flex items-center gap-1.5 text-xs font-bold font-mono mb-2 px-2 py-1"
-                             style="background:rgba(255,140,0,.08); color:var(--orange); border:1px solid rgba(255,140,0,.2)">
+                             style="background:rgba(238, 121, 25,.08); color:var(--orange); border:1px solid rgba(238, 121, 25,.2)">
                             <span>◉</span><span>Sem tarefas</span>
                         </div>
 
@@ -629,11 +629,11 @@
             // não tem loop do servidor pra rodar o helper PHP.
             colorHex(color) {
                 const map = {
-                    green: '#059669', blue: '#2563eb', purple: '#6A5ACD',
-                    orange: '#FF8C00', red: '#dc2626', yellow: '#d97706',
-                    teal: '#0d9488', cyan: '#0891b2', muted: '#94a3b8',
+                    green: '#10B981', blue: '#2E90FA', purple: '#643B8E',
+                    orange: '#EE7919', red: '#DC2626', yellow: '#F59E0B',
+                    teal: '#0d9488', cyan: '#0891b2', muted: '#98A1B2',
                 };
-                return map[color] || '#94a3b8';
+                return map[color] || '#98A1B2';
             },
 
             // Agrupa this.filtered em { key, label, items }[]. Sem agrupamento

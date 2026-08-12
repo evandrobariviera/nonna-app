@@ -5,9 +5,9 @@
         $statusColors = [
             'backlog'              => ['bg' => 'var(--s3)',              'text' => 'var(--muted)',  'label' => 'Backlog / A Fazer'],
             'em_producao'          => ['bg' => 'rgba(37,99,235,.1)',     'text' => '#2563eb',       'label' => 'Em Produção'],
-            'revisao_interna'      => ['bg' => 'rgba(106,90,205,.08)',   'text' => 'var(--purple)', 'label' => 'Revisão Interna'],
+            'revisao_interna'      => ['bg' => 'rgba(100, 59, 142,.08)',   'text' => 'var(--purple)', 'label' => 'Revisão Interna'],
             'ajuste_alteracao'     => ['bg' => 'rgba(37,99,235,.1)',     'text' => '#2563eb',       'label' => 'Ajuste / Alteração'],
-            'aprovacao'            => ['bg' => 'rgba(255,140,0,.08)',    'text' => 'var(--orange)', 'label' => 'Aprovação'],
+            'aprovacao'            => ['bg' => 'rgba(238, 121, 25,.08)',    'text' => 'var(--orange)', 'label' => 'Aprovação'],
             'despacho_agendamento' => ['bg' => 'rgba(37,99,235,.1)',     'text' => '#2563eb',       'label' => 'Despacho / Agendamento'],
             'concluido'            => ['bg' => 'rgba(5,150,105,.1)',     'text' => 'var(--green)',  'label' => 'Concluído'],
             'cancelado'            => ['bg' => 'rgba(220,38,38,.08)',    'text' => 'var(--red)',    'label' => 'Cancelado'],

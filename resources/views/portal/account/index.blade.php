@@ -39,7 +39,7 @@
                     <div class="flex flex-wrap gap-2">
                         @foreach($client->contracted_services as $svc)
                             <span class="text-xs font-semibold px-3 py-1 rounded-full"
-                                  style="background: rgba(106,90,205,.1); color: var(--purple)">
+                                  style="background: rgba(100, 59, 142,.1); color: var(--purple)">
                                 {{ \App\Models\Client::$services[$svc] ?? $svc }}
                             </span>
                         @endforeach
@@ -140,7 +140,7 @@
                     @php
                         $statusColors = [
                             'ativo'    => ['bg' => 'rgba(5,150,105,.1)',   'text' => 'var(--green)'],
-                            'pausado'  => ['bg' => 'rgba(255,140,0,.1)',   'text' => 'var(--orange)'],
+                            'pausado'  => ['bg' => 'rgba(238, 121, 25,.1)',   'text' => 'var(--orange)'],
                             'suspenso' => ['bg' => 'rgba(220,38,38,.1)',   'text' => 'var(--red)'],
                         ];
                         $sc = $statusColors[$acc->status] ?? $statusColors['pausado'];

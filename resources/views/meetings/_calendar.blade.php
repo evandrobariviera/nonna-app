@@ -41,7 +41,7 @@
                     $inMonth = $day->month === $refMonth->month;
                     $isToday = $day->isToday();
                 @endphp
-                <div class="group p-2 flex flex-col gap-1" style="min-height:110px; border-right:1px solid var(--border); border-bottom:1px solid var(--border); {{ $isToday ? 'background:rgba(106,90,205,.06)' : '' }}">
+                <div class="group p-2 flex flex-col gap-1" style="min-height:110px; border-right:1px solid var(--border); border-bottom:1px solid var(--border); {{ $isToday ? 'background:rgba(100, 59, 142,.06)' : '' }}">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-mono {{ $isToday ? 'font-bold' : '' }}"
                               style="color:{{ $isToday ? 'var(--purple)' : ($inMonth ? 'var(--muted2)' : 'var(--muted)') }}; {{ $inMonth ? '' : 'opacity:.5' }}">

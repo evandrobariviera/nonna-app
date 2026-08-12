@@ -58,7 +58,7 @@
                                 @endif
                                 <div class="flex items-center gap-3 mt-2 flex-wrap">
                                     <span class="text-xs font-mono px-2 py-px rounded"
-                                          style="background:var(--s2); color:var(--purple); border:1px solid rgba(106,90,205,.2)">
+                                          style="background:var(--s2); color:var(--purple); border:1px solid rgba(100, 59, 142,.2)">
                                         {{ $agent->model }}
                                     </span>
                                     <span class="text-xs" style="color:var(--muted)">
@@ -81,7 +81,7 @@
                         <div class="flex items-center gap-2 flex-shrink-0 ml-4">
                             <a href="{{ route('ai.agents.show', $agent) }}"
                                class="text-xs px-3 py-1.5 rounded font-semibold"
-                               style="color:var(--purple); border:1px solid rgba(106,90,205,.3); background:rgba(106,90,205,.07)">
+                               style="color:var(--purple); border:1px solid rgba(100, 59, 142,.3); background:rgba(100, 59, 142,.07)">
                                 Testar
                             </a>
                             <form method="POST" action="{{ route('ai.agents.toggle', $agent) }}">

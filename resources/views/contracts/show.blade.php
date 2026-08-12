@@ -218,7 +218,7 @@
                     @endforeach
                 </select>
                 <label
-                    :style="dragging ? 'border-color:var(--purple); background:rgba(106,90,205,.04)' : ''"
+                    :style="dragging ? 'border-color:var(--purple); background:rgba(100, 59, 142,.04)' : ''"
                     class="flex flex-col items-center justify-center w-full py-7 cursor-pointer transition-colors"
                     style="border:2px dashed var(--border2); color:var(--muted)">
                     <svg class="h-6 w-6 mb-2.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">

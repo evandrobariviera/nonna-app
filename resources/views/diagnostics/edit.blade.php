@@ -71,7 +71,7 @@
                             :class="section === '{{ $key }}' ? 'active' : ''"
                             class="w-full flex items-center gap-3 px-4 py-3 text-left transition-all"
                             style="border-bottom:1px solid var(--border)"
-                            :style="section === '{{ $key }}' ? 'background:rgba(106,90,205,.08); border-left:2px solid var(--purple)' : 'border-left:2px solid transparent'">
+                            :style="section === '{{ $key }}' ? 'background:rgba(100, 59, 142,.08); border-left:2px solid var(--purple)' : 'border-left:2px solid transparent'">
                         <span class="text-base" style="line-height:1">{{ $meta['icon'] }}</span>
                         <div>
                             <p class="text-xs font-mono" style="color:var(--muted)">{{ $meta['num'] }}</p>

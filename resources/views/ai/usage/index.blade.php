@@ -30,7 +30,7 @@
             @endphp
             @foreach($cards as $card)
             <div class="px-4 py-4 rounded" style="background:var(--s2); border:1px solid var(--border2)">
-                <div class="text-xs font-semibold mb-1" style="color:var(--muted); font-family:'IBM Plex Mono',monospace; letter-spacing:.05em">{{ $card['label'] }}</div>
+                <div class="text-xs font-semibold mb-1" style="color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif; letter-spacing:.05em">{{ $card['label'] }}</div>
                 <div class="text-xl font-black" style="color:{{ $card['color'] }}">{{ $card['value'] }}</div>
             </div>
             @endforeach
@@ -41,7 +41,7 @@
             {{-- Por agente --}}
             <div style="border:1px solid var(--border2); border-radius:8px; overflow:hidden">
                 <div class="px-4 py-3 text-xs font-semibold"
-                     style="background:var(--s2); border-bottom:1px solid var(--border2); color:var(--muted); font-family:'IBM Plex Mono',monospace; letter-spacing:.05em">
+                     style="background:var(--s2); border-bottom:1px solid var(--border2); color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif; letter-spacing:.05em">
                     POR AGENTE
                 </div>
                 <div class="divide-y" style="border-color:var(--border2)">
@@ -64,7 +64,7 @@
             {{-- Por modelo --}}
             <div style="border:1px solid var(--border2); border-radius:8px; overflow:hidden">
                 <div class="px-4 py-3 text-xs font-semibold"
-                     style="background:var(--s2); border-bottom:1px solid var(--border2); color:var(--muted); font-family:'IBM Plex Mono',monospace; letter-spacing:.05em">
+                     style="background:var(--s2); border-bottom:1px solid var(--border2); color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif; letter-spacing:.05em">
                     POR MODELO
                 </div>
                 <div class="divide-y" style="border-color:var(--border2)">
@@ -89,7 +89,7 @@
         {{-- Histórico recente --}}
         <div style="border:1px solid var(--border2); border-radius:8px; overflow:hidden">
             <div class="px-4 py-3 text-xs font-semibold"
-                 style="background:var(--s2); border-bottom:1px solid var(--border2); color:var(--muted); font-family:'IBM Plex Mono',monospace; letter-spacing:.05em">
+                 style="background:var(--s2); border-bottom:1px solid var(--border2); color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif; letter-spacing:.05em">
                 HISTÓRICO RECENTE (últimas 50 chamadas)
             </div>
             @if($recent->isEmpty())

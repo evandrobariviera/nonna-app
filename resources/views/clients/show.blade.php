@@ -30,11 +30,11 @@
     @endif
 
     @if(session('token_generated'))
-        <div class="mb-5 p-4" style="background:rgba(106,90,205,.08); border:1px solid rgba(106,90,205,.3)">
+        <div class="mb-5 p-4" style="background:rgba(100, 59, 142,.08); border:1px solid rgba(100, 59, 142,.3)">
             <p class="stat-label mb-2">Link de cadastro gerado</p>
             <div class="flex items-center gap-3">
                 <code class="flex-1 text-xs px-3 py-2 truncate"
-                      style="background:var(--s1); border:1px solid var(--border2); color:var(--purple); font-family:'IBM Plex Mono',monospace">
+                      style="background:var(--s1); border:1px solid var(--border2); color:var(--purple); font-family:Arial,"Segoe UI",Tahoma,sans-serif">
                     {{ session('token_generated') }}
                 </code>
                 <button onclick="navigator.clipboard.writeText('{{ session('token_generated') }}')"
@@ -324,7 +324,7 @@
                             @elseif($client->registration_token)
                                 <span class="badge badge-orange mb-3 block w-fit">Aguardando cliente</span>
                                 <code class="block text-xs px-2 py-1.5 mb-3 truncate"
-                                      style="background:var(--s1); border:1px solid var(--border); color:var(--muted2); font-family:'IBM Plex Mono',monospace">
+                                      style="background:var(--s1); border:1px solid var(--border); color:var(--muted2); font-family:Arial,"Segoe UI",Tahoma,sans-serif">
                                     /cadastro/{{ Str::limit($client->registration_token, 16) }}...
                                 </code>
                                 <button onclick="navigator.clipboard.writeText('{{ route('clients.register', $client->registration_token) }}')"
@@ -356,12 +356,12 @@
                         <div class="p-5 flex flex-col gap-3">
                             <div>
                                 <p class="stat-label mb-1">ID interno</p>
-                                <p class="text-xs truncate" style="color:var(--muted); font-family:'IBM Plex Mono',monospace">{{ $client->id }}</p>
+                                <p class="text-xs truncate" style="color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif">{{ $client->id }}</p>
                             </div>
                             @if($client->clickup_task_id)
                             <div>
                                 <p class="stat-label mb-1">ClickUp Task ID</p>
-                                <p class="text-xs" style="color:var(--muted); font-family:'IBM Plex Mono',monospace">{{ $client->clickup_task_id }}</p>
+                                <p class="text-xs" style="color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif">{{ $client->clickup_task_id }}</p>
                             </div>
                             @endif
                             <div>
@@ -970,7 +970,7 @@
                                             <div class="flex items-center gap-2">
                                                 @if($contact->pivot->is_primary)
                                                     <span class="text-xs font-bold px-1.5 py-0.5"
-                                                          style="background:rgba(106,90,205,.15); color:var(--purple); border:1px solid rgba(106,90,205,.3)">
+                                                          style="background:rgba(100, 59, 142,.15); color:var(--purple); border:1px solid rgba(100, 59, 142,.3)">
                                                         Principal
                                                     </span>
                                                 @endif
@@ -1050,7 +1050,7 @@
                                                     class="flex flex-wrap gap-1">
                                                 @foreach($activeSubs as $type => $channels)
                                                     <span class="text-xs font-semibold px-1.5 py-0.5"
-                                                          style="background:rgba(106,90,205,.1); color:var(--purple); border:1px solid rgba(106,90,205,.25)">
+                                                          style="background:rgba(100, 59, 142,.1); color:var(--purple); border:1px solid rgba(100, 59, 142,.25)">
                                                         {{ \App\Models\ClientContactSubscription::$types[$type] }}
                                                         <span style="color:var(--muted2)">{{ implode('+', array_map(fn($c) => $c === 'whatsapp' ? '📱' : '✉', $channels)) }}</span>
                                                     </span>
@@ -2217,7 +2217,7 @@
                                     <div class="flex items-center gap-3">
                                         <a href="{{ route('portal.login') }}" target="_blank"
                                            class="text-xs font-semibold px-3 py-2 rounded-lg"
-                                           style="background: rgba(106,90,205,.1); color: var(--purple)">
+                                           style="background: rgba(100, 59, 142,.1); color: var(--purple)">
                                             Ver portal →
                                         </a>
                                         <form method="POST" action="{{ route('clients.portal-access.destroy', [$client, $portalContact]) }}"

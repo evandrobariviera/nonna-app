@@ -36,7 +36,7 @@
     @endif
     @if(session('warning'))
         <div class="mb-5 px-4 py-3 text-sm font-semibold"
-             style="background:rgba(255,140,0,.08); border:1px solid rgba(255,140,0,.25); color:var(--orange)">
+             style="background:rgba(238, 121, 25,.08); border:1px solid rgba(238, 121, 25,.25); color:var(--orange)">
             ⚠ {{ session('warning') }}
         </div>
     @endif
@@ -185,8 +185,8 @@
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <button @click="$store.ui.chatOpen = true"
                                 class="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-all"
-                                style="border:1px solid rgba(106,90,205,.35); color:var(--purple); background:rgba(106,90,205,.06)"
-                                onmouseover="this.style.background='rgba(106,90,205,.12)'" onmouseout="this.style.background='rgba(106,90,205,.06)'">
+                                style="border:1px solid rgba(100, 59, 142,.35); color:var(--purple); background:rgba(100, 59, 142,.06)"
+                                onmouseover="this.style.background='rgba(100, 59, 142,.12)'" onmouseout="this.style.background='rgba(100, 59, 142,.06)'">
                             <svg class="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
                             </svg>
@@ -680,7 +680,7 @@
                     @csrf
                     <input type="hidden" name="kind" value="insumo">
                     <label
-                        :style="dragging ? 'border-color:var(--purple); background:rgba(106,90,205,.04)' : ''"
+                        :style="dragging ? 'border-color:var(--purple); background:rgba(100, 59, 142,.04)' : ''"
                         class="flex flex-col items-center justify-center w-full py-7 cursor-pointer transition-colors"
                         style="border:2px dashed var(--border2); color:var(--muted)">
                         <svg class="h-6 w-6 mb-2.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -778,7 +778,7 @@
                     @csrf
                     <input type="hidden" name="kind" value="entregavel">
                     <label
-                        :style="dragging ? 'border-color:var(--purple); background:rgba(106,90,205,.04)' : ''"
+                        :style="dragging ? 'border-color:var(--purple); background:rgba(100, 59, 142,.04)' : ''"
                         class="flex flex-col items-center justify-center w-full py-7 cursor-pointer transition-colors"
                         style="border:2px dashed var(--border2); color:var(--muted)">
                         <svg class="h-6 w-6 mb-2.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -824,7 +824,7 @@
                 {{-- Banner de alerta quando há ajustes pendentes --}}
                 @if($hasOpenChange)
                     <div class="px-4 py-3 flex items-start gap-3 text-sm font-semibold"
-                         style="background:rgba(255,140,0,.07); border:1px solid rgba(255,140,0,.3); color:var(--orange)">
+                         style="background:rgba(238, 121, 25,.07); border:1px solid rgba(238, 121, 25,.3); color:var(--orange)">
                         <span class="flex-shrink-0 text-base">✎</span>
                         <span>O cliente solicitou ajustes na Rodada #{{ $latestReview->round_number }}. Revise os feedbacks abaixo antes de reenviar.</span>
                     </div>
@@ -851,8 +851,8 @@
                                 $rHasChanges = $round->status === 'changes_requested';
                                 $rApproved   = $round->status === 'approved';
                                 $rPending    = $round->status === 'pending';
-                                $borderColor = $rHasChanges ? 'rgba(255,140,0,.3)' : ($rApproved ? 'rgba(34,197,94,.3)' : 'var(--border2)');
-                                $bgHeader    = $rHasChanges ? 'rgba(255,140,0,.04)' : ($rApproved ? 'rgba(34,197,94,.04)' : 'var(--s2)');
+                                $borderColor = $rHasChanges ? 'rgba(238, 121, 25,.3)' : ($rApproved ? 'rgba(34,197,94,.3)' : 'var(--border2)');
+                                $bgHeader    = $rHasChanges ? 'rgba(238, 121, 25,.04)' : ($rApproved ? 'rgba(34,197,94,.04)' : 'var(--s2)');
                             @endphp
 
                             <div x-data="{ open: {{ $loop->first ? 'true' : 'false' }} }"
@@ -869,7 +869,7 @@
                                     @php $rNotSent = $rPending && !$round->sent_at; @endphp
                                     <div class="flex items-center gap-3">
                                         <span class="text-xs font-semibold px-2 py-0.5"
-                                              style="background:{{ $rNotSent ? 'var(--s3)' : ($rApproved ? 'rgba(34,197,94,.12)' : ($rHasChanges ? 'rgba(255,140,0,.12)' : 'rgba(106,90,205,.12)')) }};
+                                              style="background:{{ $rNotSent ? 'var(--s3)' : ($rApproved ? 'rgba(34,197,94,.12)' : ($rHasChanges ? 'rgba(238, 121, 25,.12)' : 'rgba(100, 59, 142,.12)')) }};
                                                      color:{{ $rNotSent ? 'var(--muted)' : ($rApproved ? '#22c55e' : ($rHasChanges ? 'var(--orange)' : 'var(--purple)')) }}">
                                             {{ $round->displayStatusLabel() }}
                                         </span>
@@ -892,7 +892,7 @@
                                                         </div>
                                                         <span class="text-sm font-semibold" style="color:var(--text)">{{ $token->contact->name }}</span>
                                                         <span class="text-xs font-semibold px-1.5 py-0.5"
-                                                              style="background:{{ $token->status === 'approved' ? 'rgba(34,197,94,.12)' : 'rgba(255,140,0,.12)' }};
+                                                              style="background:{{ $token->status === 'approved' ? 'rgba(34,197,94,.12)' : 'rgba(238, 121, 25,.12)' }};
                                                                      color:{{ $token->status === 'approved' ? '#22c55e' : 'var(--orange)' }}">
                                                             {{ $token->status === 'approved' ? '✓ Aprovado' : '✎ Ajustes' }}
                                                         </span>
@@ -906,7 +906,7 @@
                                                     {{-- Comentário geral do aprovador --}}
                                                     @if($token->overall_comment)
                                                         <div class="px-3 py-2.5 mb-1"
-                                                             style="background:rgba(106,90,205,.04); border-left:3px solid var(--purple)">
+                                                             style="background:rgba(100, 59, 142,.04); border-left:3px solid var(--purple)">
                                                             <p class="text-xs font-semibold uppercase tracking-widest mb-1.5"
                                                                style="color:var(--muted); letter-spacing:.07em">Comentário Geral</p>
                                                             <p class="text-sm whitespace-pre-wrap"
@@ -1026,7 +1026,7 @@
                         <div class="flex items-center justify-between">
                             <span class="text-xs" style="color:var(--muted)">Status</span>
                             <span class="text-xs font-semibold px-2 py-0.5"
-                                  style="background:{{ $latestNotSent ? 'var(--s3)' : ($latestRound->status === 'approved' ? 'rgba(34,197,94,.12)' : ($latestRound->status === 'changes_requested' ? 'rgba(255,140,0,.12)' : 'rgba(106,90,205,.12)')) }};
+                                  style="background:{{ $latestNotSent ? 'var(--s3)' : ($latestRound->status === 'approved' ? 'rgba(34,197,94,.12)' : ($latestRound->status === 'changes_requested' ? 'rgba(238, 121, 25,.12)' : 'rgba(100, 59, 142,.12)')) }};
                                          color:{{ $latestNotSent ? 'var(--muted)' : ($latestRound->status === 'approved' ? '#22c55e' : ($latestRound->status === 'changes_requested' ? 'var(--orange)' : 'var(--purple)')) }}">
                                 {{ $latestRound->displayStatusLabel() }}
                             </span>
@@ -1337,7 +1337,7 @@
                     <span class="text-sm font-semibold" style="color:var(--text)">Chat IA</span>
                     <span x-show="messages.length > 0" x-cloak x-text="messages.length"
                           class="text-xs px-1.5 py-0.5 font-semibold"
-                          style="background:rgba(106,90,205,.1); color:var(--purple); border:1px solid rgba(106,90,205,.2)"></span>
+                          style="background:rgba(100, 59, 142,.1); color:var(--purple); border:1px solid rgba(100, 59, 142,.2)"></span>
                 </div>
                 <button @click="$store.ui.chatOpen = false"
                         class="flex items-center justify-center h-7 w-7 text-sm transition-colors"

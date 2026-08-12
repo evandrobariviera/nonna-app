@@ -34,7 +34,7 @@
 
                 <span class="text-sm font-semibold" style="color:var(--text)">{{ $groupLabel }}</span>
 
-                <span class="badge" style="background:rgba(106,90,205,.08); border-color:rgba(106,90,205,.2); color:var(--purple); font-size:11px">
+                <span class="badge" style="background:rgba(100, 59, 142,.08); border-color:rgba(100, 59, 142,.2); color:var(--purple); font-size:11px">
                     {{ $groupCampaigns->count() }} campanha{{ $groupCampaigns->count() !== 1 ? 's' : '' }}
                 </span>
 

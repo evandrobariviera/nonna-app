@@ -25,7 +25,7 @@
 
     <div style="padding: 32px 32px 0">
         <div class="tab-placeholder" style="margin-top: 0; min-height: 420px">
-            <div style="width:56px; height:56px; border-radius:14px; background:rgba(106,90,205,.08); border:1px solid rgba(106,90,205,.15); display:flex; align-items:center; justify-content:center; margin-bottom:20px">
+            <div style="width:56px; height:56px; border-radius:14px; background:rgba(100, 59, 142,.08); border:1px solid rgba(100, 59, 142,.15); display:flex; align-items:center; justify-content:center; margin-bottom:20px">
                 <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="color:var(--purple); opacity:.6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="{{ $info['icon'] }}" />
                 </svg>

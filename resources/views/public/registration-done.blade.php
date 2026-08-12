@@ -8,9 +8,9 @@
     <link rel="icon" href="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/FAVICON-300x300.png" sizes="192x192">
     <link rel="apple-touch-icon" href="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/FAVICON-300x300.png">
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=syne:400,600,700,800|ibm-plex-mono:400,500&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet"/>
     @vite(['resources/css/app.css'])
-    <style>body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; }</style>
+    <style>body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; }</style>
 </head>
 <body>
     <div style="text-align:center; max-width:480px; padding:40px 24px">
@@ -23,7 +23,7 @@
         <p style="font-size:14px; color:var(--muted2); line-height:1.7; margin-bottom:32px">
             Recebemos as suas informações. Nossa equipe vai entrar em contato em breve para dar início à sua estratégia.
         </p>
-        <p style="font-size:12px; color:var(--muted); font-family:'IBM Plex Mono',monospace">
+        <p style="font-size:12px; color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif">
             Nonna Agência Digital
         </p>
     </div>

@@ -43,7 +43,7 @@ class Task extends Model
     // ── Status: espelha 1:1 os status reais da lista de Produção/Sprint no ClickUp ──
     public static array $statuses = [
         'backlog'               => ['label' => 'Backlog / A Fazer',    'color' => 'muted'],
-        'em_producao'           => ['label' => 'Em Produção',          'color' => 'blue'],
+        'em_producao'           => ['label' => 'Em Produção',          'color' => 'purple'],
         'revisao_interna'       => ['label' => 'Revisão Interna',      'color' => 'purple'],
         'ajuste_alteracao'      => ['label' => 'Ajuste / Alteração',   'color' => 'blue'],
         'aprovacao'             => ['label' => 'Aprovação',            'color' => 'orange'],
@@ -108,19 +108,19 @@ class Task extends Model
     ];
 
     public static array $situationColors = [
-        'Aguardando Copy / Redação'   => '#94a3b8',
-        'Em design'                  => '#2563eb',
-        'Em Setup / Dev'             => '#2563eb',
-        'Pronto para produção'       => '#94a3b8',
-        'Revisão Interna'            => '#6A5ACD',
-        'Pronta para publicação'     => '#2563eb',
-        'Agendado Plataforma'        => '#2563eb',
-        'Enviar para o cliente'      => '#6A5ACD',
-        'Em Aprovação Cliente'       => '#FF8C00',
-        'Pendente de Informações'    => '#FF8C00',
-        'Alteração Solicitada'       => '#FF8C00',
-        'Aprovado'                   => '#059669',
-        'Publicado / No Ar'          => '#059669',
+        'Aguardando Copy / Redação'   => '#98A1B2',
+        'Em design'                  => '#2E90FA',
+        'Em Setup / Dev'             => '#2E90FA',
+        'Pronto para produção'       => '#98A1B2',
+        'Revisão Interna'            => '#643B8E',
+        'Pronta para publicação'     => '#2E90FA',
+        'Agendado Plataforma'        => '#2E90FA',
+        'Enviar para o cliente'      => '#643B8E',
+        'Em Aprovação Cliente'       => '#EE7919',
+        'Pendente de Informações'    => '#EE7919',
+        'Alteração Solicitada'       => '#EE7919',
+        'Aprovado'                   => '#10B981',
+        'Publicado / No Ar'          => '#10B981',
     ];
 
     public static array $requesterChannels = [
@@ -209,14 +209,14 @@ class Task extends Model
     public static function colorHex(string $color): string
     {
         return match($color) {
-            'green'  => '#059669',
-            'blue'   => '#2563eb',
-            'purple' => '#6A5ACD',
-            'orange' => '#FF8C00',
-            'red'    => '#dc2626',
-            'yellow' => '#d97706',
+            'green'  => '#10B981',
+            'blue'   => '#2E90FA',
+            'purple' => '#643B8E',
+            'orange' => '#EE7919',
+            'red'    => '#DC2626',
+            'yellow' => '#F59E0B',
             'teal'   => '#0d9488',
-            default  => '#94a3b8',
+            default  => '#98A1B2',
         };
     }
 

@@ -316,7 +316,7 @@
                             @if($integration->provider === 'google')
                                 <a href="{{ route('settings.integrations.google.connect', $integration) }}"
                                    class="block text-center text-xs font-semibold py-1.5 rounded-lg"
-                                   style="background:rgba(106,90,205,.1); color:var(--purple)">
+                                   style="background:rgba(100, 59, 142,.1); color:var(--purple)">
                                     Conectar com Google Ads
                                 </a>
                             @endif
@@ -598,9 +598,9 @@
                                 <td class="px-5 py-3.5 text-xs" style="color:var(--muted)">{{ $member->email }}</td>
                                 <td class="px-5 py-3.5">
                                     <span class="text-xs font-semibold px-2 py-1 rounded-full"
-                                          style="background:{{ $isOwner ? 'rgba(106,90,205,.15)' : ($isAdmin ? 'rgba(255,140,0,.1)' : 'var(--s3)') }};
+                                          style="background:{{ $isOwner ? 'rgba(100, 59, 142,.15)' : ($isAdmin ? 'rgba(238, 121, 25,.1)' : 'var(--s3)') }};
                                                  color:{{ $isOwner ? 'var(--purple)' : ($isAdmin ? 'var(--orange)' : 'var(--muted)') }};
-                                                 border:1px solid {{ $isOwner ? 'rgba(106,90,205,.2)' : ($isAdmin ? 'rgba(255,140,0,.2)' : 'var(--border2)') }}">
+                                                 border:1px solid {{ $isOwner ? 'rgba(100, 59, 142,.2)' : ($isAdmin ? 'rgba(238, 121, 25,.2)' : 'var(--border2)') }}">
                                         {{ $roleLabel }}
                                     </span>
                                 </td>
@@ -778,7 +778,7 @@
                                                x-model="form.function_roles"
                                                style="position:absolute; opacity:0; width:0; height:0; pointer-events:none">
                                         <span :style="form.function_roles.includes('{{ $fr->key }}')
-                                                ? 'background:rgba(106,90,205,.12); border-color:rgba(106,90,205,.4); color:var(--purple);'
+                                                ? 'background:rgba(100, 59, 142,.12); border-color:rgba(100, 59, 142,.4); color:var(--purple);'
                                                 : 'background:var(--s3); border-color:var(--border2); color:var(--muted);'"
                                               style="display:inline-block; padding:4px 12px; border-radius:100px; font-size:11px; font-weight:600; border:1px solid; transition:all .12s; user-select:none">
                                             {{ $fr->name }}
@@ -928,7 +928,7 @@
                                                x-model="form.user_ids"
                                                style="position:absolute; opacity:0; width:0; height:0; pointer-events:none">
                                         <span :style="form.user_ids.includes('{{ $member->id }}')
-                                                ? 'background:rgba(106,90,205,.12); border-color:rgba(106,90,205,.4); color:var(--purple);'
+                                                ? 'background:rgba(100, 59, 142,.12); border-color:rgba(100, 59, 142,.4); color:var(--purple);'
                                                 : 'background:var(--s3); border-color:var(--border2); color:var(--muted);'"
                                               style="display:inline-block; padding:4px 12px; border-radius:100px; font-size:11px; font-weight:600; border:1px solid; transition:all .12s; user-select:none">
                                             {{ $member->name }}

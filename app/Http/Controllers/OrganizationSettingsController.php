@@ -75,8 +75,8 @@ class OrganizationSettingsController extends Controller
         ]);
 
         $settings = $org->settings ?? [];
-        $settings['branding']['primary_color']   = $data['primary_color']   ?? '#6A5ACD';
-        $settings['branding']['secondary_color'] = $data['secondary_color'] ?? '#FF8C00';
+        $settings['branding']['primary_color']   = $data['primary_color']   ?? '#643B8E';
+        $settings['branding']['secondary_color'] = $data['secondary_color'] ?? '#EE7919';
         $settings['branding']['logo_url']        = $data['logo_url'] ?? null;
         $settings['campaign_insights']['agent_id'] = $data['campaign_insights_agent_id'] ?? null;
 

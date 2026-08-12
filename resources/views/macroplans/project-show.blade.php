@@ -794,7 +794,7 @@
                         @if(!empty($project->tom_comunicacao))
                             <div class="flex flex-wrap gap-1.5 mb-2">
                                 @foreach($project->tom_comunicacao as $tom)
-                                    <span class="px-2.5 py-1 text-xs font-mono rounded-full" style="background:rgba(106,90,205,.12); color:var(--purple)">{{ $tom }}</span>
+                                    <span class="px-2.5 py-1 text-xs font-mono rounded-full" style="background:rgba(100, 59, 142,.12); color:var(--purple)">{{ $tom }}</span>
                                 @endforeach
                             </div>
                         @endif
@@ -839,7 +839,7 @@
                 @endif
 
                 @if($project->ponto_atencao)
-                    <div class="px-4 py-3 text-xs rounded" style="background:rgba(255,140,0,.06); border:1px solid rgba(255,140,0,.2); color:var(--orange)">
+                    <div class="px-4 py-3 text-xs rounded" style="background:rgba(238, 121, 25,.06); border:1px solid rgba(238, 121, 25,.2); color:var(--orange)">
                         {{ $project->ponto_atencao }}
                     </div>
                 @endif

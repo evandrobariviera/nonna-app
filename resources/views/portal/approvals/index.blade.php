@@ -8,9 +8,9 @@
 
     @php
         $statusColors = [
-            'pending'            => ['bg' => 'rgba(106,90,205,.08)', 'text' => 'var(--purple)', 'label' => 'Aguardando Decisão'],
+            'pending'            => ['bg' => 'rgba(100, 59, 142,.08)', 'text' => 'var(--purple)', 'label' => 'Aguardando Decisão'],
             'approved'           => ['bg' => 'rgba(5,150,105,.1)',   'text' => 'var(--green)',  'label' => 'Aprovado'],
-            'changes_requested'  => ['bg' => 'rgba(255,140,0,.08)',  'text' => 'var(--orange)', 'label' => 'Ajustes Solicitados'],
+            'changes_requested'  => ['bg' => 'rgba(238, 121, 25,.08)',  'text' => 'var(--orange)', 'label' => 'Ajustes Solicitados'],
             'cancelled'          => ['bg' => 'var(--s3)',            'text' => 'var(--muted)',  'label' => 'Cancelado'],
         ];
     @endphp

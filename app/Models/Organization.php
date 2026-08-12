@@ -46,7 +46,7 @@ class Organization extends Model
 
     // ── Branding helpers ──
 
-    public function brandColor(string $key = 'primary_color', string $default = '#6A5ACD'): string
+    public function brandColor(string $key = 'primary_color', string $default = '#643B8E'): string
     {
         return data_get($this->settings, "branding.{$key}", $default);
     }

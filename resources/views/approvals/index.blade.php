@@ -9,7 +9,7 @@
     @endif
     @if(session('warning'))
         <div class="mb-5 px-4 py-3 text-sm font-semibold"
-             style="background:rgba(255,140,0,.08); border:1px solid rgba(255,140,0,.25); color:var(--orange)">
+             style="background:rgba(238, 121, 25,.08); border:1px solid rgba(238, 121, 25,.25); color:var(--orange)">
             ⚠ {{ session('warning') }}
         </div>
     @endif
@@ -30,16 +30,16 @@
                     'label' => 'Aguardando Resposta',
                     'value' => $stats['pending'],
                     'color' => 'var(--purple)',
-                    'bg'    => 'rgba(106,90,205,.08)',
-                    'border'=> 'rgba(106,90,205,.2)',
+                    'bg'    => 'rgba(100, 59, 142,.08)',
+                    'border'=> 'rgba(100, 59, 142,.2)',
                     'filter'=> 'pending',
                 ],
                 [
                     'label' => 'Ajustes Solicitados',
                     'value' => $stats['changes'],
                     'color' => 'var(--orange)',
-                    'bg'    => 'rgba(255,140,0,.08)',
-                    'border'=> 'rgba(255,140,0,.2)',
+                    'bg'    => 'rgba(238, 121, 25,.08)',
+                    'border'=> 'rgba(238, 121, 25,.2)',
                     'filter'=> 'changes_requested',
                 ],
                 [

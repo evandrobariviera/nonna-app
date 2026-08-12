@@ -68,7 +68,7 @@
                     <span class="text-xs" style="color:var(--muted)">· {{ $groupSubLabel }}</span>
                 @endif
 
-                <span class="badge" style="background:rgba(106,90,205,.08); border-color:rgba(106,90,205,.2); color:var(--purple); font-size:11px">
+                <span class="badge" style="background:rgba(100, 59, 142,.08); border-color:rgba(100, 59, 142,.2); color:var(--purple); font-size:11px">
                     {{ $groupTasks->count() }} tarefa{{ $groupTasks->count() !== 1 ? 's' : '' }}
                 </span>
 

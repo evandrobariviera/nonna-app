@@ -38,7 +38,7 @@
 
             <div class="rounded-lg p-4" style="background:var(--s1); border:1px solid var(--border1)">
                 <div class="text-xs font-semibold mb-3"
-                     style="color:var(--muted); font-family:'IBM Plex Mono',monospace; letter-spacing:.05em">
+                     style="color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif; letter-spacing:.05em">
                     CONFIGURAÇÃO
                 </div>
                 <div class="grid gap-2 text-sm">
@@ -74,10 +74,10 @@
             {{-- System Prompt --}}
             <div class="rounded-lg p-4" style="background:var(--s1); border:1px solid var(--border1)">
                 <div class="text-xs font-semibold mb-2"
-                     style="color:var(--muted); font-family:'IBM Plex Mono',monospace; letter-spacing:.05em">
+                     style="color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif; letter-spacing:.05em">
                     SYSTEM PROMPT
                 </div>
-                <pre class="text-xs whitespace-pre-wrap" style="color:var(--text2); font-family:'IBM Plex Mono',monospace; line-height:1.6">{{ $agent->system_prompt }}</pre>
+                <pre class="text-xs whitespace-pre-wrap" style="color:var(--text2); font-family:Arial,"Segoe UI",Tahoma,sans-serif; line-height:1.6">{{ $agent->system_prompt }}</pre>
             </div>
 
         </div>
@@ -87,14 +87,14 @@
 
             <div class="rounded-lg p-5" style="background:var(--s1); border:1px solid var(--border1)">
                 <div class="text-xs font-semibold mb-4"
-                     style="color:var(--muted); font-family:'IBM Plex Mono',monospace; letter-spacing:.05em">
+                     style="color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif; letter-spacing:.05em">
                     PAINEL DE TESTE
                 </div>
 
                 {{-- Mensagem --}}
                 <div class="mb-4">
                     <label class="block text-xs font-semibold mb-1"
-                           style="color:var(--muted); font-family:'IBM Plex Mono',monospace; letter-spacing:.05em">
+                           style="color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif; letter-spacing:.05em">
                         MENSAGEM / ENTRADA
                     </label>
                     <textarea x-model="message"
@@ -110,7 +110,7 @@
                 {{-- Contexto (opcional) --}}
                 <div class="mb-4">
                     <label class="block text-xs font-semibold mb-1"
-                           style="color:var(--muted); font-family:'IBM Plex Mono',monospace; letter-spacing:.05em">
+                           style="color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif; letter-spacing:.05em">
                         CONTEXTO <span style="font-weight:400">(JSON opcional — substitui variáveis no system prompt)</span>
                     </label>
                     <input type="text"
@@ -146,7 +146,7 @@
                 <div x-show="response" x-cloak>
                     <div class="flex items-center justify-between mb-2">
                         <div class="text-xs font-semibold"
-                             style="color:var(--muted); font-family:'IBM Plex Mono',monospace; letter-spacing:.05em">
+                             style="color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif; letter-spacing:.05em">
                             RESPOSTA
                         </div>
                         <button @click="copy()"
@@ -156,7 +156,7 @@
                         </button>
                     </div>
                     <div class="rounded p-4 text-sm whitespace-pre-wrap"
-                         style="background:var(--s2); border:1px solid var(--border2); color:var(--text); line-height:1.7; min-height:80px; font-family:'IBM Plex Mono',monospace"
+                         style="background:var(--s2); border:1px solid var(--border2); color:var(--text); line-height:1.7; min-height:80px; font-family:Arial,"Segoe UI",Tahoma,sans-serif"
                          x-text="response"></div>
 
                     <div x-show="elapsed > 0" class="text-xs mt-2" style="color:var(--muted2)">

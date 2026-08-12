@@ -37,7 +37,7 @@
          literary_quotes). Ideia: estimular cultura/leitura na agência, com o
          trecho sempre justificado (autor, obra, por que faz sentido). ── --}}
     @if($literaryQuote)
-        <div class="card px-6 py-5 mb-4" style="background:linear-gradient(135deg, rgba(106,90,205,.05), rgba(255,140,0,.03)); border:1px solid rgba(106,90,205,.18)">
+        <div class="card px-6 py-5 mb-4" style="background:linear-gradient(135deg, rgba(100, 59, 142,.05), rgba(238, 121, 25,.03)); border:1px solid rgba(100, 59, 142,.18)">
             <div class="flex items-start gap-4">
                 <span class="text-3xl flex-shrink-0 leading-none select-none" style="color:var(--purple); opacity:.35">❝</span>
                 <div class="min-w-0">

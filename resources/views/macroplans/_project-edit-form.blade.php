@@ -37,7 +37,7 @@
     pecas: {{ json_encode($project->pecas ?? []) }},
     addPeca() { this.pecas.push({ nome: '', direcionamento: '' }); },
     removePeca(i) { this.pecas.splice(i, 1); },
-}" style="background:rgba(106,90,205,.04); border-left:3px solid var(--purple)">
+}" style="background:rgba(100, 59, 142,.04); border-left:3px solid var(--purple)">
 
 <form method="POST" action="{{ $formAction }}"
       class="px-5 py-5 space-y-5">
@@ -116,7 +116,7 @@
         <div class="flex flex-wrap gap-1.5 mb-2">
             <template x-for="(tag, i) in tags" :key="i">
                 <span class="flex items-center gap-1 px-2.5 py-1 text-xs font-mono rounded-full"
-                      style="background:rgba(106,90,205,.12); color:var(--purple)">
+                      style="background:rgba(100, 59, 142,.12); color:var(--purple)">
                     <input type="hidden" :name="'tags[]'" :value="tag">
                     <span x-text="tag"></span>
                     <button type="button" @click="removeTag(i)"
@@ -342,7 +342,7 @@
                         <div class="flex flex-wrap gap-1.5 mb-2">
                             <template x-for="(tom, i) in tomChips" :key="i">
                                 <span class="flex items-center gap-1 px-2.5 py-1 text-xs font-mono rounded-full"
-                                      style="background:rgba(106,90,205,.12); color:var(--purple)">
+                                      style="background:rgba(100, 59, 142,.12); color:var(--purple)">
                                     <input type="hidden" :name="'tom_comunicacao[]'" :value="tom">
                                     <span x-text="tom"></span>
                                     <button type="button" @click="removeTom(i)" class="ml-0.5 font-bold" style="line-height:1">×</button>

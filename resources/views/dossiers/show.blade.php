@@ -38,7 +38,7 @@
             <div class="flex items-center gap-3 flex-wrap">
                 {{-- Fase atual --}}
                 <span class="px-2 py-1 text-xs font-mono font-semibold"
-                      style="background:rgba(106,90,205,.12); color:var(--purple); border:1px solid rgba(106,90,205,.3)">
+                      style="background:rgba(100, 59, 142,.12); color:var(--purple); border:1px solid rgba(100, 59, 142,.3)">
                     {{ $dossier->faseLabel() }}
                 </span>
 
@@ -888,7 +888,7 @@
     <div class="insight-box mb-4" style="border-left-color:#d63eaa">
         <div class="text-xs font-mono uppercase tracking-widest mb-3" style="color:#d63eaa">Essência</div>
         <input type="text" name="bloco03_essencia" class="w-full bg-transparent border-0 outline-none text-2xl font-black"
-               style="color:var(--text); font-family:'Syne',sans-serif"
+               style="color:var(--text); font-family:'Inter',sans-serif"
                placeholder="A essência em uma palavra ou frase curta"
                value="{{ old('bloco03_essencia', $dossier->bloco03_essencia) }}">
     </div>
@@ -1045,7 +1045,7 @@ window._dossierUrls = {
 @push('styles')
 <style>
 .section-hd {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 1.125rem;
     font-weight: 800;
     letter-spacing: -.02em;
@@ -1056,7 +1056,7 @@ window._dossierUrls = {
     margin-bottom: 20px;
 }
 .section-tag {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family:Arial,"Segoe UI",Tahoma,sans-serif;
     font-size: 9px;
     font-weight: 500;
     letter-spacing: .16em;
@@ -1075,7 +1075,7 @@ window._dossierUrls = {
 .form-group:last-child { margin-bottom: 0; }
 .form-label {
     display: block;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family:Arial,"Segoe UI",Tahoma,sans-serif;
     font-size: 9px;
     font-weight: 500;
     letter-spacing: .16em;

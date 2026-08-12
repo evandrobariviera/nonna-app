@@ -68,11 +68,11 @@
                                     </div>
 
                                     <div class="flex items-center gap-2 flex-wrap" style="font-size:.82rem">
-                                        <span style="background:rgba(106,90,205,.1); color:var(--purple); padding:.2rem .6rem; border-radius:6px; border:1px solid rgba(106,90,205,.2)">
+                                        <span style="background:rgba(100, 59, 142,.1); color:var(--purple); padding:.2rem .6rem; border-radius:6px; border:1px solid rgba(100, 59, 142,.2)">
                                             Se: {{ $automation->triggerSummary() }}
                                         </span>
                                         <span style="color:var(--muted)">→</span>
-                                        <span style="background:rgba(255,140,0,.1); color:var(--orange); padding:.2rem .6rem; border-radius:6px; border:1px solid rgba(255,140,0,.2)">
+                                        <span style="background:rgba(238, 121, 25,.1); color:var(--orange); padding:.2rem .6rem; border-radius:6px; border:1px solid rgba(238, 121, 25,.2)">
                                             Então: {{ $automation->actionSummary() }}
                                         </span>
                                     </div>

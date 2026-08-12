@@ -50,7 +50,7 @@
                             <td>
                                 @if($client->responsible_name)
                                     <p class="text-xs font-semibold" style="color:var(--text)">{{ $client->responsible_name }}</p>
-                                    <p class="text-xs" style="color:var(--muted); font-family:'IBM Plex Mono',monospace">{{ $client->contact_email }}</p>
+                                    <p class="text-xs" style="color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif">{{ $client->contact_email }}</p>
                                 @else
                                     <span style="color:var(--muted)">—</span>
                                 @endif
@@ -93,7 +93,7 @@
 
         @if($clients->hasPages())
             <div class="px-6 py-4 border-t flex items-center justify-between" style="border-color:var(--border)">
-                <span class="text-xs" style="color:var(--muted); font-family:'IBM Plex Mono',monospace">
+                <span class="text-xs" style="color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif">
                     {{ $clients->firstItem() }}–{{ $clients->lastItem() }} de {{ $clients->total() }}
                 </span>
                 <div class="flex gap-2">

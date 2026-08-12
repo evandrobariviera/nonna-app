@@ -14,7 +14,7 @@
         <table class="nonna-table">
             <thead>
                 <tr>
-                    <th style="width:36px"><input type="checkbox" @click="toggleAll($event.target.checked)" title="Selecionar todos"></th>
+                    <th style="width:36px"><input type="checkbox" @click="toggleAll($event.target.checked, $event.target)" title="Selecionar todos"></th>
                     <th style="width:130px">Status</th>
                     <th>Tarefa</th>
                     <th style="width:200px">Cliente</th>

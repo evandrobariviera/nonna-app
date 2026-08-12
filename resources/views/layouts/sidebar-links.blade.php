@@ -83,9 +83,9 @@
                 <span>Lançamentos</span>
                 @if($_financialOverdueCount > 0)
                     <span class="text-xs px-1.5 py-px rounded-full font-semibold"
-                          style="background:{{ request()->routeIs('financial-transactions.*') ? 'rgba(106,90,205,.15)' : 'var(--s3)' }};
+                          style="background:{{ request()->routeIs('financial-transactions.*') ? 'rgba(100, 59, 142,.15)' : 'var(--s3)' }};
                                  color:{{ request()->routeIs('financial-transactions.*') ? 'var(--purple)' : 'var(--muted)' }};
-                                 border:1px solid {{ request()->routeIs('financial-transactions.*') ? 'rgba(106,90,205,.25)' : 'var(--border2)' }}">
+                                 border:1px solid {{ request()->routeIs('financial-transactions.*') ? 'rgba(100, 59, 142,.25)' : 'var(--border2)' }}">
                         {{ $_financialOverdueCount }}
                     </span>
                 @endif
@@ -119,9 +119,9 @@
                 <span>Chamados (Tickets)</span>
                 @if($_ticketsCount > 0)
                     <span class="text-xs px-1.5 py-px rounded-full font-semibold"
-                          style="background:{{ request()->routeIs('tickets.*') ? 'rgba(106,90,205,.15)' : 'var(--s3)' }};
+                          style="background:{{ request()->routeIs('tickets.*') ? 'rgba(100, 59, 142,.15)' : 'var(--s3)' }};
                                  color:{{ request()->routeIs('tickets.*') ? 'var(--purple)' : 'var(--muted)' }};
-                                 border:1px solid {{ request()->routeIs('tickets.*') ? 'rgba(106,90,205,.25)' : 'var(--border2)' }}">
+                                 border:1px solid {{ request()->routeIs('tickets.*') ? 'rgba(100, 59, 142,.25)' : 'var(--border2)' }}">
                         {{ $_ticketsCount }}
                     </span>
                 @endif
@@ -178,9 +178,9 @@
                 <span>Filas (Backlog)</span>
                 @if($_filaCount > 0)
                     <span class="text-xs px-1.5 py-px rounded-full font-semibold"
-                          style="background:{{ request()->routeIs('fila.*') ? 'rgba(106,90,205,.15)' : 'var(--s3)' }};
+                          style="background:{{ request()->routeIs('fila.*') ? 'rgba(100, 59, 142,.15)' : 'var(--s3)' }};
                                  color:{{ request()->routeIs('fila.*') ? 'var(--purple)' : 'var(--muted)' }};
-                                 border:1px solid {{ request()->routeIs('fila.*') ? 'rgba(106,90,205,.25)' : 'var(--border2)' }}">
+                                 border:1px solid {{ request()->routeIs('fila.*') ? 'rgba(100, 59, 142,.25)' : 'var(--border2)' }}">
                         {{ $_filaCount }}
                     </span>
                 @endif
@@ -238,7 +238,7 @@
     </span>
     @if($_approvalPending > 0)
         <span class="text-xs px-1.5 py-px rounded-full font-semibold"
-              style="background:rgba(255,140,0,.15); color:var(--orange); border:1px solid rgba(255,140,0,.3)">
+              style="background:rgba(238, 121, 25,.15); color:var(--orange); border:1px solid rgba(238, 121, 25,.3)">
             {{ $_approvalPending }}
         </span>
     @endif
@@ -263,9 +263,9 @@
                 <span>Campanhas</span>
                 @if($_campaignInsightsCount > 0)
                     <span class="text-xs px-1.5 py-px rounded-full font-semibold"
-                          style="background:{{ request()->routeIs('campaigns.*') ? 'rgba(106,90,205,.15)' : 'var(--s3)' }};
+                          style="background:{{ request()->routeIs('campaigns.*') ? 'rgba(100, 59, 142,.15)' : 'var(--s3)' }};
                                  color:{{ request()->routeIs('campaigns.*') ? 'var(--purple)' : 'var(--muted)' }};
-                                 border:1px solid {{ request()->routeIs('campaigns.*') ? 'rgba(106,90,205,.25)' : 'var(--border2)' }}">
+                                 border:1px solid {{ request()->routeIs('campaigns.*') ? 'rgba(100, 59, 142,.25)' : 'var(--border2)' }}">
                         {{ $_campaignInsightsCount }}
                     </span>
                 @endif
@@ -276,9 +276,9 @@
                 <span>Orçamentos</span>
                 @if($_orcamentosAlertCount > 0)
                     <span class="text-xs px-1.5 py-px rounded-full font-semibold"
-                          style="background:{{ request()->routeIs('orcamentos.*') ? 'rgba(106,90,205,.15)' : 'var(--s3)' }};
+                          style="background:{{ request()->routeIs('orcamentos.*') ? 'rgba(100, 59, 142,.15)' : 'var(--s3)' }};
                                  color:{{ request()->routeIs('orcamentos.*') ? 'var(--purple)' : 'var(--muted)' }};
-                                 border:1px solid {{ request()->routeIs('orcamentos.*') ? 'rgba(106,90,205,.25)' : 'var(--border2)' }}">
+                                 border:1px solid {{ request()->routeIs('orcamentos.*') ? 'rgba(100, 59, 142,.25)' : 'var(--border2)' }}">
                         {{ $_orcamentosAlertCount }}
                     </span>
                 @endif

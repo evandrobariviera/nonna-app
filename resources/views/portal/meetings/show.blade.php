@@ -4,8 +4,8 @@
     @php
         $statusColors = [
             'para_agendar' => ['bg' => 'var(--s3)',              'text' => 'var(--muted)',  'label' => 'Para Agendar'],
-            'agendada'     => ['bg' => 'rgba(106,90,205,.08)',   'text' => 'var(--purple)', 'label' => 'Agendada'],
-            'pos_reuniao'  => ['bg' => 'rgba(255,140,0,.08)',    'text' => 'var(--orange)', 'label' => 'Pós-Reunião'],
+            'agendada'     => ['bg' => 'rgba(100, 59, 142,.08)',   'text' => 'var(--purple)', 'label' => 'Agendada'],
+            'pos_reuniao'  => ['bg' => 'rgba(238, 121, 25,.08)',    'text' => 'var(--orange)', 'label' => 'Pós-Reunião'],
             'realizada'    => ['bg' => 'rgba(5,150,105,.1)',     'text' => 'var(--green)',  'label' => 'Realizada'],
             'cancelada'    => ['bg' => 'rgba(220,38,38,.08)',    'text' => 'var(--red)',    'label' => 'Cancelada'],
         ];

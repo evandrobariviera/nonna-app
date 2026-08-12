@@ -32,7 +32,7 @@
                     @php
                         $statusColors = [
                             'active'    => ['bg' => 'rgba(5,150,105,.1)',  'text' => 'var(--green)'],
-                            'trial'     => ['bg' => 'rgba(255,140,0,.1)',  'text' => 'var(--orange)'],
+                            'trial'     => ['bg' => 'rgba(238, 121, 25,.1)',  'text' => 'var(--orange)'],
                             'suspended' => ['bg' => 'rgba(220,38,38,.1)', 'text' => 'var(--red)'],
                             'cancelled' => ['bg' => 'var(--s3)',           'text' => 'var(--muted)'],
                         ];
@@ -49,7 +49,7 @@
                         </td>
                         <td class="px-5 py-3.5">
                             <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
-                                  style="background: rgba(106,90,205,.1); color: var(--purple)">
+                                  style="background: rgba(100, 59, 142,.1); color: var(--purple)">
                                 {{ \App\Models\Organization::$plans[$org->plan] ?? $org->plan }}
                             </span>
                         </td>

@@ -143,7 +143,7 @@
                     $s = $campaign->period_stats;
                     $statusMap = [
                         'active'   => ['label' => 'Ativa',    'bg' => 'rgba(5,150,105,.1)',   'text' => 'var(--green)'],
-                        'paused'   => ['label' => 'Pausada',  'bg' => 'rgba(255,140,0,.1)',   'text' => 'var(--orange)'],
+                        'paused'   => ['label' => 'Pausada',  'bg' => 'rgba(238, 121, 25,.1)',   'text' => 'var(--orange)'],
                         'deleted'  => ['label' => 'Removida', 'bg' => 'rgba(220,38,38,.1)',   'text' => 'var(--red)'],
                         'archived' => ['label' => 'Arquivada','bg' => 'var(--s3)',             'text' => 'var(--muted)'],
                     ];

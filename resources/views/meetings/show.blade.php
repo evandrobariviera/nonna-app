@@ -28,7 +28,7 @@
 
     @if(session('warning'))
         <div class="mb-5 px-4 py-3 text-sm font-semibold"
-             style="background:rgba(255,140,0,.08); border:1px solid rgba(255,140,0,.25); color:var(--orange)">
+             style="background:rgba(238, 121, 25,.08); border:1px solid rgba(238, 121, 25,.25); color:var(--orange)">
             ⚠ {{ session('warning') }}
         </div>
     @endif
@@ -256,7 +256,7 @@
                           @drop.prevent="dragging = false; $refs.meetingFileInput.files = $event.dataTransfer.files; $el.submit()">
                         @csrf
                         <label
-                            :style="dragging ? 'border-color:var(--purple); background:rgba(106,90,205,.04)' : ''"
+                            :style="dragging ? 'border-color:var(--purple); background:rgba(100, 59, 142,.04)' : ''"
                             class="flex flex-col items-center justify-center w-full py-5 cursor-pointer transition-colors"
                             style="border:2px dashed var(--border2); color:var(--muted)">
                             <span class="text-xs font-medium">Clique para anexar ou arraste</span>

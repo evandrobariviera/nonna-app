@@ -5,9 +5,9 @@
         $statusMap = [
             'backlog'               => ['label' => 'Backlog',              'bg' => 'var(--s3)',             'text' => 'var(--muted)'],
             'em_producao'           => ['label' => 'Em Produção',          'bg' => 'rgba(37,99,235,.1)',    'text' => '#2563eb'],
-            'revisao_interna'       => ['label' => 'Em Revisão',           'bg' => 'rgba(106,90,205,.08)',  'text' => 'var(--purple)'],
+            'revisao_interna'       => ['label' => 'Em Revisão',           'bg' => 'rgba(100, 59, 142,.08)',  'text' => 'var(--purple)'],
             'ajuste_alteracao'      => ['label' => 'Em Ajuste',            'bg' => 'rgba(37,99,235,.1)',    'text' => '#2563eb'],
-            'aprovacao'             => ['label' => 'Ag. Aprovação',        'bg' => 'rgba(255,140,0,.08)',   'text' => 'var(--orange)'],
+            'aprovacao'             => ['label' => 'Ag. Aprovação',        'bg' => 'rgba(238, 121, 25,.08)',   'text' => 'var(--orange)'],
             'despacho_agendamento'  => ['label' => 'Aprovada — Agendando', 'bg' => 'rgba(5,150,105,.1)',    'text' => 'var(--green)'],
             'concluido'             => ['label' => 'Concluída',            'bg' => 'rgba(5,150,105,.1)',    'text' => 'var(--green)'],
             'cancelado'             => ['label' => 'Cancelada',            'bg' => 'rgba(220,38,38,.08)',   'text' => 'var(--red)'],

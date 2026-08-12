@@ -54,7 +54,7 @@
                     @foreach($group['tasks'] as $task)
                         @php
                             $showRoute = $task->is_ticket ? route('portal.tickets.show', $task) : route('portal.tasks.show', $task);
-                            $statusColorMap = ['muted'=>'#94a3b8','blue'=>'#2563eb','purple'=>'#6A5ACD','orange'=>'#FF8C00','green'=>'#059669','red'=>'#dc2626'];
+                            $statusColorMap = ['muted'=>'#98A1B2','blue'=>'#2E90FA','purple'=>'#643B8E','orange'=>'#EE7919','green'=>'#10B981','red'=>'#DC2626'];
                             $sColor = $statusColorMap[$task->statusColor()] ?? 'var(--muted)';
                         @endphp
                         <a href="{{ $showRoute }}" class="card p-4 flex items-center justify-between gap-4 transition-colors" style="text-decoration:none">

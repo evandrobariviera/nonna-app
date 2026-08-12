@@ -8,29 +8,29 @@
     <link rel="icon" href="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/FAVICON-300x300.png" sizes="192x192">
     <link rel="apple-touch-icon" href="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/FAVICON-300x300.png">
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=syne:400,600,700,800|ibm-plex-mono:400,500&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet"/>
     @vite(['resources/css/app.css'])
     <style>
-        body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
         .pub-input {
-            width: 100%; padding: 10px 14px; font-size: 13px; font-family: 'Syne', sans-serif;
+            width: 100%; padding: 10px 14px; font-size: 13px; font-family: 'Inter', sans-serif;
             background: var(--s2); border: 1px solid var(--border2); color: var(--text); outline: none;
             transition: border-color .15s;
         }
         .pub-input:focus { border-color: var(--purple); }
         .pub-input::placeholder { color: var(--muted); }
-        .pub-mono { font-family: 'IBM Plex Mono', monospace; }
+        .pub-mono { font-family:Arial,"Segoe UI",Tahoma,sans-serif; }
         .pub-select {
-            width: 100%; padding: 10px 14px; font-size: 13px; font-family: 'Syne', sans-serif;
+            width: 100%; padding: 10px 14px; font-size: 13px; font-family: 'Inter', sans-serif;
             background: var(--s2); border: 1px solid var(--border2); color: var(--muted2); outline: none; cursor: pointer;
             transition: border-color .15s;
         }
         .pub-select:focus { border-color: var(--purple); }
-        .pub-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 7px; }
+        .pub-label { font-family:Arial,"Segoe UI",Tahoma,sans-serif; font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 7px; }
         .req { color: var(--orange); }
         .field-error { font-size: 11px; color: var(--red); margin-top: 4px; }
         .block-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; gap: 12px; }
-        .block-num { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .18em; color: var(--muted); }
+        .block-num { font-family:Arial,"Segoe UI",Tahoma,sans-serif; font-size: 9px; letter-spacing: .18em; color: var(--muted); }
         .block-title { font-size: 14px; font-weight: 700; color: var(--text); }
         .block-body { padding: 24px; display: grid; gap: 18px; }
         .col-2 { grid-template-columns: 1fr 1fr; }
@@ -52,7 +52,7 @@
 
         {{-- HERO --}}
         <div style="margin-bottom:36px">
-            <p style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.22em; text-transform:uppercase; color:var(--muted2); margin-bottom:10px">
+            <p style="font-family:Arial,"Segoe UI",Tahoma,sans-serif; font-size:9px; letter-spacing:.22em; text-transform:uppercase; color:var(--muted2); margin-bottom:10px">
                 Onboarding · Cadastro de Cliente
             </p>
             <h1 style="font-size:clamp(22px,4vw,34px); font-weight:800; line-height:1.15; letter-spacing:-.02em; margin-bottom:12px">
@@ -253,7 +253,7 @@
 
             {{-- SUBMIT --}}
             <button type="submit"
-                style="width:100%; padding:16px; font-family:'Syne',sans-serif; font-size:14px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#fff; background:var(--grad); border:none; cursor:pointer; transition:opacity .2s"
+                style="width:100%; padding:16px; font-family:'Inter',sans-serif; font-size:14px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#fff; background:var(--grad); border:none; cursor:pointer; transition:opacity .2s"
                 onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
                 Enviar Cadastro →
             </button>

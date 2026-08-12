@@ -63,8 +63,8 @@ class Meeting extends Model
 
     public static array $statuses = [
         'para_agendar' => ['label' => 'Para Agendar', 'color' => 'muted'],
-        'agendada'     => ['label' => 'Agendada',     'color' => 'purple'],
-        'pos_reuniao'  => ['label' => 'Pós-Reunião',  'color' => 'orange'],
+        'agendada'     => ['label' => 'Agendada',     'color' => 'green'],
+        'pos_reuniao'  => ['label' => 'Pós-Reunião',  'color' => 'red'],
         'realizada'    => ['label' => 'Realizada',    'color' => 'green'],
         'cancelada'    => ['label' => 'Cancelada',    'color' => 'red'],
     ];

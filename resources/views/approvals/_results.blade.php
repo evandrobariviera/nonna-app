@@ -230,9 +230,9 @@
                                 </form>
                             @endif
                             <span class="text-xs font-semibold px-2.5 py-1"
-                                  style="background:{{ $isCancelled ? 'var(--s2)' : ($notSent ? 'var(--s2)' : ($isApproved ? 'rgba(34,197,94,.12)' : ($isChanges ? 'rgba(255,140,0,.12)' : 'rgba(106,90,205,.12)'))) }};
+                                  style="background:{{ $isCancelled ? 'var(--s2)' : ($notSent ? 'var(--s2)' : ($isApproved ? 'rgba(34,197,94,.12)' : ($isChanges ? 'rgba(238, 121, 25,.12)' : 'rgba(100, 59, 142,.12)'))) }};
                                          color:{{ $isCancelled ? 'var(--muted)' : ($notSent ? 'var(--muted2)' : ($isApproved ? '#22c55e' : ($isChanges ? 'var(--orange)' : 'var(--purple)'))) }};
-                                         border:1px solid {{ $isCancelled ? 'var(--border2)' : ($notSent ? 'var(--border2)' : ($isApproved ? 'rgba(34,197,94,.25)' : ($isChanges ? 'rgba(255,140,0,.25)' : 'rgba(106,90,205,.25)'))) }}">
+                                         border:1px solid {{ $isCancelled ? 'var(--border2)' : ($notSent ? 'var(--border2)' : ($isApproved ? 'rgba(34,197,94,.25)' : ($isChanges ? 'rgba(238, 121, 25,.25)' : 'rgba(100, 59, 142,.25)'))) }}">
                                 {{ $round->displayStatusLabel() }}
                             </span>
                             @if($total > 0)
@@ -306,7 +306,7 @@
                                     <div x-show="open" x-cloak class="mt-3 flex flex-col gap-2">
                                         @if($token->overall_comment)
                                             <div class="px-3 py-2.5"
-                                                 style="background:rgba(255,140,0,.04); border-left:3px solid var(--orange)">
+                                                 style="background:rgba(238, 121, 25,.04); border-left:3px solid var(--orange)">
                                                 <p class="text-xs font-semibold uppercase tracking-widest mb-1"
                                                    style="color:var(--muted); letter-spacing:.07em">Comentário Geral</p>
                                                 <p class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.6">{{ $token->overall_comment }}</p>
@@ -315,7 +315,7 @@
 
                                         @foreach($token->feedbacks->where('status','changes_requested') as $fb)
                                             <div class="flex gap-2.5 px-3 py-2"
-                                                 style="background:rgba(255,140,0,.03); border:1px solid rgba(255,140,0,.15)">
+                                                 style="background:rgba(238, 121, 25,.03); border:1px solid rgba(238, 121, 25,.15)">
                                                 <span class="flex-shrink-0 mt-0.5">{{ $fb->attachment?->icon() ?? '📎' }}</span>
                                                 <div class="min-w-0">
                                                     <p class="text-xs font-semibold mb-0.5" style="color:var(--text)">
