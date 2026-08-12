@@ -126,12 +126,14 @@
         @endif
     </td>
 
-    {{-- Origem --}}
-    <td style="width:80px">
-        @if($task->origin)
-            <span class="badge badge-muted" style="font-size:10px">{{ $task->originLabel() }}</span>
+    {{-- Data de Publicação --}}
+    <td style="width:100px">
+        @if($task->publish_date)
+            <span class="text-xs" style="color:var(--muted2); font-family:'IBM Plex Mono', monospace">
+                {{ $task->publish_date->format('d/m/Y') }}
+            </span>
         @else
-            <span style="color:var(--muted)">—</span>
+            <span class="text-xs" style="color:var(--muted)">—</span>
         @endif
     </td>
 
