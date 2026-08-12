@@ -164,6 +164,10 @@ class TaskController extends Controller
 
         $clients = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
 
+        // Pro botão Fila ↔ Sprint do cabeçalho: se a tarefa não estiver em
+        // nenhuma sprint, "→ Sprint" manda pra essa (só existe uma ativa por vez).
+        $activeSprint = Sprint::where('status', 'active')->first();
+
         $chat = AiChat::where('entity_type', 'task')
             ->where('entity_id', $task->id)
             ->first();
@@ -184,7 +188,7 @@ class TaskController extends Controller
                 ->values()
             : collect();
 
-        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages', 'clientProjects', 'clients'));
+        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages', 'clientProjects', 'clients', 'activeSprint'));
     }
 
     public function updateInline(Request $request, Task $task)

@@ -199,6 +199,29 @@
                             </svg>
                             Chat IA
                         </button>
+                        @if($task->sprint_id)
+                            @php $sprintLocked = $task->sprint?->isLocked(); @endphp
+                            <form method="POST" action="{{ route('sprints.remove-task', [$task->sprint_id, $task]) }}"
+                                  @submit.prevent="if (await $store.confirmDialog.ask('Devolver esta tarefa pra Fila?')) $el.submit()">
+                                @csrf @method('DELETE')
+                                <button type="submit" {{ $sprintLocked ? 'disabled' : '' }}
+                                    class="px-4 py-2 text-xs font-semibold transition-colors"
+                                    style="border:1px solid var(--orange); color:var(--orange); {{ $sprintLocked ? 'opacity:.4; cursor:not-allowed' : '' }}"
+                                    title="{{ $sprintLocked ? 'Sprint travada' : 'Devolver pra Fila' }}">
+                                    ← Fila
+                                </button>
+                            </form>
+                        @elseif($activeSprint)
+                            <form method="POST" action="{{ route('sprints.add-task', [$activeSprint, $task]) }}">
+                                @csrf
+                                <button type="submit"
+                                    class="px-4 py-2 text-xs font-semibold text-white transition-colors"
+                                    style="background:var(--green); border:1px solid var(--green)"
+                                    title="Enviar para: {{ $activeSprint->title }}">
+                                    → Sprint
+                                </button>
+                            </form>
+                        @endif
                         <button @click="editing = !editing"
                             :style="editing ? 'background:var(--purple); color:#fff; border-color:var(--purple)' : ''"
                             class="px-4 py-2 text-xs font-semibold transition-colors"
@@ -225,13 +248,15 @@
 
                 {{-- Breadcrumb + Meta (Criada por / Lançada — antes na seção Informações da lateral) --}}
                 <div class="flex items-center gap-2 text-xs flex-wrap mt-3 pt-3" style="border-top:1px solid var(--border2); color:var(--muted)">
-                    @if($task->project)
+                    @if($task->client)
                         <a href="{{ route('clients.show', $task->client) }}"
                            @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('clients.preview', $task->client) }}') }"
                            style="color:var(--purple); font-weight:500"
                            onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
-                            {{ $task->client?->displayName() }}
+                            {{ $task->client->displayName() }}
                         </a>
+                    @endif
+                    @if($task->project)
                         @if($task->project->macro_plan_id)
                             <span style="color:var(--border2)">›</span>
                             <a href="{{ route('macroplans.edit', $task->project->macro_plan_id) }}"
@@ -248,6 +273,8 @@
                            onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted2)'">
                             {{ $task->project->title }}
                         </a>
+                    @endif
+                    @if($task->client || $task->project)
                         <span style="color:var(--border2)">•</span>
                     @endif
                     <span>Criada por <strong style="color:var(--muted2); font-weight:600">{{ explode(' ', $task->createdBy?->name ?? '—')[0] }}</strong> em {{ $task->created_at->format('d/m/Y') }} ({{ $task->created_at->diffForHumans() }})</span>
@@ -258,12 +285,13 @@
                 </div>
             </div>
 
-            {{-- BARRA DE CAMPOS RÁPIDOS: Status / Prioridade / Situação / Responsável / Executor —
+            {{-- BARRA DE CAMPOS RÁPIDOS: Status / Prioridade / Situação —
                  mesma mecânica de edição de sempre (mesmos endpoints), só reposicionada numa barra
                  horizontal com ícone em vez de cards separados na sidebar. Vencimento saiu daqui
-                 e foi pro card Datas da lateral, junto com Aprovação/Publicação. --}}
+                 e foi pro card Datas da lateral, junto com Aprovação/Publicação; Responsável e
+                 Executor saíram porque já aparecem como avatar no cabeçalho, logo acima. --}}
             <div class="card card-body">
-                <div class="grid grid-cols-3 gap-x-4 gap-y-4 md:grid-cols-5">
+                <div class="grid grid-cols-3 gap-x-4 gap-y-4">
 
                     {{-- Status --}}
                     <div>
@@ -364,72 +392,13 @@
                         </div>
                     </div>
 
-                    {{-- Responsável --}}
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Responsável</p>
-                        <div class="relative flex items-center gap-2">
-                            @if($responsavelTopo)
-                                <x-user-avatar :user="$responsavelTopo" size="5" color="var(--orange)" />
-                            @else
-                                <svg class="h-4 w-4 flex-shrink-0" style="color:var(--muted)" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                </svg>
-                            @endif
-                            <form method="POST" action="{{ route('tasks.update-responsavel', $task) }}" class="min-w-0 flex-1">
-                                @csrf @method('PATCH')
-                                <select name="responsavel_id" onchange="this.form.submit()"
-                                    class="w-full text-sm font-semibold truncate focus:outline-none cursor-pointer"
-                                    style="background:transparent; border:none; color:var(--text); padding:0; -webkit-appearance:none; appearance:none">
-                                    <option value="">— nenhum —</option>
-                                    @foreach($users as $u)
-                                        <option value="{{ $u->id }}" {{ $responsavelTopo?->id === $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
-                                    @endforeach
-                                </select>
-                            </form>
-                        </div>
-                    </div>
-
-                    {{-- Executor --}}
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Executor</p>
-                        <div class="relative flex items-center gap-2">
-                            @if($task->executor)
-                                <x-user-avatar :user="$task->executor" size="5" color="var(--purple)" />
-                            @else
-                                <svg class="h-4 w-4 flex-shrink-0" style="color:var(--muted)" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                </svg>
-                            @endif
-                            <form method="POST" action="{{ route('tasks.update-executor', $task) }}" class="min-w-0 flex-1">
-                                @csrf @method('PATCH')
-                                <select name="executor_id" onchange="this.form.submit()"
-                                    class="w-full text-sm font-semibold truncate focus:outline-none cursor-pointer"
-                                    style="background:transparent; border:none; color:var(--text); padding:0; -webkit-appearance:none; appearance:none">
-                                    <option value="">— nenhum —</option>
-                                    @foreach($users as $u)
-                                        <option value="{{ $u->id }}" {{ $task->executor?->id === $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
-                                    @endforeach
-                                </select>
-                            </form>
-                        </div>
-                    </div>
-
                 </div>
             </div>
 
-            {{-- CAMPOS: Sprint / Origem / Destino / Tipo — antes espalhados entre Contexto (lateral)
-                 e Campos (só Tipo); consolidados aqui, logo acima do Briefing. --}}
+            {{-- CAMPOS (sem título — some espaço): Sprint/Tipo em cima, Origem/Destino
+                 embaixo, Solicitante por último (só ticket com nome preenchido). --}}
             <div x-show="!editing" class="card card-body-lg">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-5 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
-                    <span class="icon-badge">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                        </svg>
-                    </span>
-                    Campos
-                </p>
-                <div class="grid grid-cols-2 gap-x-10 gap-y-5 md:grid-cols-4">
+                <div class="grid grid-cols-2 gap-x-10 gap-y-5">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Sprint</p>
                         @if($task->sprint)
@@ -443,6 +412,10 @@
                         @endif
                     </div>
                     <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Tipo</p>
+                        <p class="text-sm" style="color:var(--text); font-weight:500; line-height:1.4">{{ $task->typeLabel() }}</p>
+                    </div>
+                    <div>
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Origem</p>
                         <span class="badge mt-0.5">{{ $task->originLabel() }}</span>
                     </div>
@@ -450,10 +423,12 @@
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Destino</p>
                         <p class="text-sm" style="color:var(--text); font-weight:500; line-height:1.4">{{ $task->destination ? $task->destinationLabel() : '—' }}</p>
                     </div>
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Tipo</p>
-                        <p class="text-sm" style="color:var(--text); font-weight:500; line-height:1.4">{{ $task->typeLabel() }}</p>
-                    </div>
+                    @if($task->is_ticket && $task->requester_name)
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Solicitante</p>
+                            <p class="text-sm" style="color:var(--text); font-weight:500; line-height:1.4">{{ $task->requester_name }}</p>
+                        </div>
+                    @endif
                 </div>
             </div>
 
