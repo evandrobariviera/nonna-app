@@ -21,6 +21,17 @@ class LiteraryQuoteSeeder extends Seeder
      * Lote inicial pequeno (12) por decisão do usuário: crescer aos poucos
      * com conferência, em vez de gerar uma lista grande de uma vez sem
      * checar cada trecho contra a fonte.
+     *
+     * 2026-08-12: usuário pediu que os trechos sejam em português e que o
+     * acervo inclua também filosofia clássica, não só literatura nacional.
+     * Fonte de tradução PT verificável pra filosofia clássica é escassa
+     * (Project Gutenberg praticamente não tem; Domínio Público bloqueia
+     * scraping — 403); usado pt.wikisource.org via API/action=raw como
+     * segunda fonte (mesma regra: nunca WebFetch pra texto verbatim, nunca
+     * de memória). Achado só 1 tradução PT de filósofo clássico (Sêneca,
+     * Cartas a Lucílio) + o soneto "Nirvana" de Antero de Quental, que foi
+     * poeta E filósofo (Geração de 70) escrevendo originalmente em
+     * português — sem risco de tradução nenhum.
      */
     public function run(): void
     {
@@ -108,6 +119,20 @@ class LiteraryQuoteSeeder extends Seeder
                 'excerpt' => "No fundo da China existe um Mandarim mais rico que todos os reis de que a Fábula ou a História contam. Dele nada conheces, nem o nome, nem o semblante, nem a seda de que se veste. Para que tu herdes os seus cabedais infindáveis, basta que toques essa campainha, posta a teu lado, sobre um livro. Ele soltará apenas um suspiro, nesses confins da Mongólia. Será então um cadáver: e tu verás a teus pés mais ouro do que pode sonhar a ambição de um avaro. Tu, que me lês e és um homem mortal, tocarás tu a campainha?",
                 'justification' => "O dilema que move a novela inteira: matar, à distância e sem risco algum, um estranho que você nunca vai ver, em troca de riqueza incalculável. Escrito em 1880, mas é basicamente a pergunta por trás de qualquer decisão cujo custo humano acontece longe demais pra ser sentido.",
                 'source_url' => 'https://www.gutenberg.org/ebooks/16384',
+            ],
+            [
+                'book' => 'Cartas a Lucílio (Carta 1 — Sobre Economizar Tempo)',
+                'author' => 'Sêneca',
+                'excerpt' => "Continue a agir assim, meu caro Lucílio — liberte-se para o seu próprio bem; reúna e economize o seu tempo, que até ultimamente foi retirado à força de você, ou despojado, ou simplesmente escapou de suas mãos. O tipo mais vergonhoso de perda, entretanto, é aquele que ocorre por descuido. Além disso, se você prestar muita atenção no problema, você descobrirá que a maior porção da sua vida passa enquanto nós estamos passando mal, uma boa parte enquanto nós não fazemos nada, e todo o tempo que nós fazemos aquilo que não é o propósito.",
+                'justification' => "Uma das cartas mais citadas do estoicismo: pra Sêneca, o tempo perdido por descuido — sem nem perceber — é a forma mais vergonhosa de desperdício, porque, ao contrário do dinheiro, não tem como recuperar depois. Tradução de domínio público (Wikisource, comunitária) — a fluência não é de edição literária polida, mas o pensamento de Sêneca chega inteiro.",
+                'source_url' => 'https://pt.wikisource.org/wiki/Cartas_a_Lucilio_-_Carta_1',
+            ],
+            [
+                'book' => 'Sonetos — "Nirvana"',
+                'author' => 'Antero de Quental',
+                'excerpt' => "Para além do Universo luminoso,\nCheio de formas, de rumor, de lida,\nDe forças, de desejos e de vida,\nAbre-se como um vácuo tenebroso.\n\nA onda desse mar tumultuoso\nVem ali expirar, esmaecida...\nNuma imobilidade indefinida\nTermina ali o ser, inerte, ocioso...\n\nE quando o pensamento, assim absorto,\nEmerge a custo desse mundo morto\nE torna a olhar as coisas naturais,\n\nÀ bela luz da vida, ampla, infinita,\nSó vê com tédio, em tudo quanto fita,\nA ilusão e o vazio universais.",
+                'justification' => "Antero de Quental não foi só poeta — foi filósofo, liderou a chamada \"Geração de 70\" e escreveu diretamente sobre filosofia. Neste soneto, escrito originalmente em português (sem risco nenhum de tradução), ele imagina o que existe além do universo visível: um vazio que absorve tudo. Denso, mas é exatamente o tipo de pergunta grande que a filosofia sempre fez.",
+                'source_url' => 'https://pt.wikisource.org/wiki/Page:Sonetos_by_Antero_de_Quental.djvu/37',
             ],
         ];
 
