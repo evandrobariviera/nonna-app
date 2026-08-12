@@ -455,6 +455,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('approvals.resend');
     Route::post('/aprovacoes/tokens/{token}/reenviar', [\App\Http\Controllers\ApprovalDashboardController::class, 'resendToken'])
         ->name('approvals.resend-token');
+    Route::patch('/aprovacoes/tokens/{token}/notificar', [\App\Http\Controllers\ApprovalDashboardController::class, 'toggleNotify'])
+        ->name('approvals.toggle-notify');
     Route::patch('/aprovacoes/{round}/tarefa-status', [\App\Http\Controllers\ApprovalDashboardController::class, 'updateTaskStatus'])
         ->name('approvals.update-task-status');
     Route::post('/aprovacoes/{round}/cancelar', [\App\Http\Controllers\ApprovalDashboardController::class, 'cancel'])

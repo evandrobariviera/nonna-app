@@ -120,11 +120,30 @@ class TaskApprovalService
 
         $round->loadMissing('tokens.contact');
 
-        foreach ($round->tokens as $token) {
+        // Só notifica quem ficou "ligado" — contato desligado antes do envio
+        // mantém o token (histórico/link continuam existindo), só não recebe
+        // a notificação nem entra na exigência de unanimidade (tryResolveRound).
+        foreach ($round->tokens->where('will_notify', true) as $token) {
             $this->dispatchWebhook($round, $token, $token->contact);
         }
 
         $round->update(['sent_at' => now()]);
+    }
+
+    /**
+     * Liga/desliga um contato específico pra uma rodada específica — decidido
+     * caso a caso porque tem material que só precisa da aprovação de um dos
+     * contatos do cliente, não de todos os assinantes de "aprovacao". Só pode
+     * mexer antes do envio (rodada ainda "Aguardando Envio") — depois disso a
+     * notificação (ou a ausência dela) já é fato consumado.
+     */
+    public function toggleNotify(TaskApprovalToken $token, bool $willNotify): void
+    {
+        if ($token->round->sent_at) {
+            throw new \RuntimeException('Essa rodada já foi enviada — não dá mais pra mexer em quem recebe.');
+        }
+
+        $token->update(['will_notify' => $willNotify]);
     }
 
     /**
@@ -140,7 +159,7 @@ class TaskApprovalService
     {
         $round->loadMissing('tokens.contact');
 
-        $pending = $round->tokens->where('status', 'pending');
+        $pending = $round->tokens->where('status', 'pending')->where('will_notify', true);
 
         foreach ($pending as $token) {
             $this->dispatchWebhook($round, $token, $token->contact);
@@ -252,9 +271,12 @@ class TaskApprovalService
 
     private function tryResolveRound(TaskApprovalRound $round): void
     {
-        $tokens = $round->tokens;
+        // Contato desligado antes do envio não entra na exigência de unanimidade
+        // — senão o token dele, que nunca vai ser notificado nem respondido,
+        // travaria a rodada em "pending" pra sempre.
+        $tokens = $round->tokens->where('will_notify', true);
 
-        if ($tokens->contains('status', 'pending')) {
+        if ($tokens->isEmpty() || $tokens->contains('status', 'pending')) {
             return;
         }
 

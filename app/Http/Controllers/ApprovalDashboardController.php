@@ -118,9 +118,28 @@ class ApprovalDashboardController extends Controller
             return back()->with('warning', 'Nenhum contato do cliente está marcado para receber aprovações — configure isso na ficha do cliente antes de enviar.');
         }
 
+        if ($round->tokens()->where('will_notify', true)->count() === 0) {
+            return back()->with('warning', 'Todos os contatos estão desligados nessa rodada — ligue pelo menos um antes de enviar.');
+        }
+
         $service->sendToClient($round);
 
-        return back()->with('success', 'Enviado! Os contatos foram notificados.');
+        return back()->with('success', 'Enviado! Os contatos ligados foram notificados.');
+    }
+
+    // Liga/desliga um contato específico pra essa rodada — AJAX (inlinePatch),
+    // só permitido antes do envio. Ver TaskApprovalService::toggleNotify().
+    public function toggleNotify(Request $request, TaskApprovalToken $token, TaskApprovalService $service)
+    {
+        $data = $request->validate(['will_notify' => ['required', 'boolean']]);
+
+        try {
+            $service->toggleNotify($token, $data['will_notify']);
+        } catch (\RuntimeException $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['ok' => true]);
     }
 
     // Reenvia só pra quem ainda não respondeu (ex: e-mail estava errado, foi

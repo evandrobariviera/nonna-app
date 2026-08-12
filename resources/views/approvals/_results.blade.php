@@ -77,12 +77,18 @@
                     $isCancelled = $round->status === 'cancelled';
                     $notSent     = $isPending && !$round->sent_at;
                     $total      = $round->tokens->count();
-                    $responded  = $round->tokens->whereNotNull('reviewed_at')->count();
+                    // Barra de progresso pós-envio só conta quem estava ligado — contato
+                    // desligado nunca vai responder de propósito, não deve inflar o
+                    // denominador (ver TaskApprovalService::tryResolveRound, mesmo filtro).
+                    $notifiedTokens   = $round->tokens->where('will_notify', true);
+                    $notifiedTotal    = $notifiedTokens->count();
+                    $responded  = $notifiedTokens->whereNotNull('reviewed_at')->count();
                     $hasChange  = $round->tokens->contains('status', 'changes_requested');
                 @endphp
 
                 <div class="card transition-all"
-                     style="border-left:3px solid {{ $isCancelled ? 'var(--muted)' : ($notSent ? 'var(--border2)' : ($isChanges ? 'var(--orange)' : ($isApproved ? 'var(--green)' : 'var(--purple)'))) }}">
+                     style="border-left:3px solid {{ $isCancelled ? 'var(--muted)' : ($notSent ? 'var(--border2)' : ($isChanges ? 'var(--orange)' : ($isApproved ? 'var(--green)' : 'var(--purple)'))) }}"
+                     x-data="{ notify: @js($round->tokens->pluck('will_notify', 'id')) }">
                     <div class="flex items-start justify-between gap-4 px-5 py-4 flex-wrap">
 
                         {{-- Lado esquerdo: cliente + tarefa + meta --}}
@@ -115,39 +121,86 @@
                             @if($total > 0)
                                 <div class="flex items-center gap-3 mt-2.5 flex-wrap">
                                     @foreach($round->tokens as $token)
-                                        <div class="flex items-center gap-1.5">
-                                            <div class="flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0"
-                                                 style="background:var(--grad); {{ !$token->reviewed_at ? 'opacity:.4' : '' }}">
-                                                {{ strtoupper(substr($token->contact->name, 0, 1)) }}
+                                        @if($notSent)
+                                            {{-- Antes de enviar: cada contato é um botão liga/desliga — nem todo
+                                                 material precisa da aprovação de todos os assinantes do cliente,
+                                                 às vezes um só já é suficiente. Não afeta contatos já notificados
+                                                 (essa rodada ainda não foi enviada pra ninguém). --}}
+                                            <button type="button"
+                                                    class="flex items-center gap-1.5 transition-opacity"
+                                                    style="background:none; border:none; padding:0; cursor:pointer"
+                                                    :style="notify['{{ $token->id }}'] ? 'opacity:1' : 'opacity:.35'"
+                                                    :title="notify['{{ $token->id }}'] ? 'Ligado — clique pra tirar {{ addslashes(explode(' ', $token->contact->name)[0]) }} dessa rodada' : 'Desligado — clique pra incluir {{ addslashes(explode(' ', $token->contact->name)[0]) }} nessa rodada'"
+                                                    @click="
+                                                        const next = !notify['{{ $token->id }}'];
+                                                        notify['{{ $token->id }}'] = next;
+                                                        window.inlinePatch('{{ route('approvals.toggle-notify', $token) }}', { will_notify: next }).then(ok => {
+                                                            if (!ok) { notify['{{ $token->id }}'] = !next; alert('Falha ao salvar. Tente de novo.'); }
+                                                        })
+                                                    ">
+                                                <div class="flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0"
+                                                     style="background:var(--grad)">
+                                                    {{ strtoupper(substr($token->contact->name, 0, 1)) }}
+                                                </div>
+                                                <span class="text-xs" style="color:var(--muted)">{{ explode(' ', $token->contact->name)[0] }}</span>
+                                                <span class="text-xs font-semibold"
+                                                      :style="notify['{{ $token->id }}'] ? 'color:var(--green)' : 'color:var(--muted)'"
+                                                      x-text="notify['{{ $token->id }}'] ? '● ligado' : '○ desligado'"></span>
+                                            </button>
+                                        @elseif(!$token->will_notify)
+                                            {{-- Ficou desligado antes do envio — não foi notificado de propósito,
+                                                 não conta pra unanimidade (tryResolveRound). Sem botão de reenvio
+                                                 aqui: reenviar contrariaria a escolha feita antes de enviar. --}}
+                                            <div class="flex items-center gap-1.5" style="opacity:.4" title="Não foi notificado — estava desligado quando essa rodada foi enviada">
+                                                <div class="flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0"
+                                                     style="background:var(--grad)">
+                                                    {{ strtoupper(substr($token->contact->name, 0, 1)) }}
+                                                </div>
+                                                <span class="text-xs" style="color:var(--muted)">{{ explode(' ', $token->contact->name)[0] }}</span>
+                                                <span class="text-xs" style="color:var(--muted)">○ não notificado</span>
                                             </div>
-                                            <span class="text-xs" style="color:var(--muted)">{{ explode(' ', $token->contact->name)[0] }}</span>
-                                            <span class="text-xs font-semibold"
-                                                  style="color:{{ $token->status === 'approved' ? 'var(--green)' : ($token->status === 'changes_requested' ? 'var(--orange)' : 'var(--muted)') }}">
-                                                {{ $token->status === 'approved' ? '✓' : ($token->status === 'changes_requested' ? '✎' : '·') }}
-                                            </span>
-                                            @if($round->sent_at && $token->isPending())
-                                                <form method="POST" action="{{ route('approvals.resend-token', $token) }}">
-                                                    @csrf
-                                                    <button type="submit" class="text-xs" style="color:var(--muted)"
-                                                            title="Reenviar só pra {{ $token->contact->name }}"
-                                                            onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
-                                                        ↻
-                                                    </button>
-                                                </form>
-                                            @endif
-                                        </div>
+                                        @else
+                                            <div class="flex items-center gap-1.5">
+                                                <div class="flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0"
+                                                     style="background:var(--grad); {{ !$token->reviewed_at ? 'opacity:.4' : '' }}">
+                                                    {{ strtoupper(substr($token->contact->name, 0, 1)) }}
+                                                </div>
+                                                <span class="text-xs" style="color:var(--muted)">{{ explode(' ', $token->contact->name)[0] }}</span>
+                                                <span class="text-xs font-semibold"
+                                                      style="color:{{ $token->status === 'approved' ? 'var(--green)' : ($token->status === 'changes_requested' ? 'var(--orange)' : 'var(--muted)') }}">
+                                                    {{ $token->status === 'approved' ? '✓' : ($token->status === 'changes_requested' ? '✎' : '·') }}
+                                                </span>
+                                                @if($round->sent_at && $token->isPending())
+                                                    <form method="POST" action="{{ route('approvals.resend-token', $token) }}">
+                                                        @csrf
+                                                        <button type="submit" class="text-xs" style="color:var(--muted)"
+                                                                title="Reenviar só pra {{ $token->contact->name }}"
+                                                                onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                                                            ↻
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        @endif
                                     @endforeach
 
-                                    {{-- Barra de progresso --}}
-                                    <div class="flex items-center gap-1.5 ml-1">
-                                        <div class="h-1.5 rounded-full overflow-hidden" style="width:60px; background:var(--s3)">
-                                            <div class="h-full rounded-full transition-all"
-                                                 style="width:{{ $total > 0 ? round($responded/$total*100) : 0 }}%;
-                                                        background:{{ $isApproved ? 'var(--green)' : ($isChanges ? 'var(--orange)' : 'var(--purple)') }}">
+                                    @if($notSent)
+                                        {{-- Antes do envio, "responded/total" não diz nada (ninguém foi
+                                             notificado ainda) — mostra quantos ficaram ligados em vez disso. --}}
+                                        <span class="text-xs ml-1" style="color:var(--muted)"
+                                              x-text="Object.values(notify).filter(Boolean).length + '/{{ $total }} ligados'"></span>
+                                    @else
+                                        {{-- Barra de progresso — só conta quem foi de fato notificado --}}
+                                        <div class="flex items-center gap-1.5 ml-1">
+                                            <div class="h-1.5 rounded-full overflow-hidden" style="width:60px; background:var(--s3)">
+                                                <div class="h-full rounded-full transition-all"
+                                                     style="width:{{ $notifiedTotal > 0 ? round($responded/$notifiedTotal*100) : 0 }}%;
+                                                            background:{{ $isApproved ? 'var(--green)' : ($isChanges ? 'var(--orange)' : 'var(--purple)') }}">
+                                                </div>
                                             </div>
+                                            <span class="text-xs" style="color:var(--muted)">{{ $responded }}/{{ $notifiedTotal }}</span>
                                         </div>
-                                        <span class="text-xs" style="color:var(--muted)">{{ $responded }}/{{ $total }}</span>
-                                    </div>
+                                    @endif
                                 </div>
                             @endif
                         </div>
@@ -156,7 +209,10 @@
                         <div class="flex items-start gap-3 flex-shrink-0">
                             @if($notSent)
                                 <form method="POST" action="{{ route('approvals.send', $round) }}"
-                                      @submit.prevent="if (await $store.confirmDialog.ask('Enviar essa rodada para o cliente agora?')) $el.submit()">
+                                      @submit.prevent="
+                                          if (!Object.values(notify).some(Boolean)) { alert('Ligue pelo menos um contato antes de enviar.'); return; }
+                                          if (await $store.confirmDialog.ask('Enviar essa rodada para o cliente agora?')) $el.submit()
+                                      ">
                                     @csrf
                                     <button type="submit" class="text-xs font-semibold px-3 py-1 text-white"
                                             style="background:var(--purple)">
