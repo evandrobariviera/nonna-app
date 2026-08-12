@@ -59,10 +59,17 @@
         // Lightbox de anexo — JS puro (sem Alpine store), pra ficar simples e
         // independente de timing de inicialização do Alpine.
         function openAttachmentLightbox(src, filename) {
+            // Reancora o modal como filho direto do <body>: como ele nasce dentro
+            // do <main> (o container que realmente rola, já que o <body> é
+            // overflow-hidden), "position:fixed" ficava relativo ao topo do
+            // documento em vez do viewport visível — abrindo sempre lá em cima.
+            const lightbox = document.getElementById('attachment-lightbox');
+            if (lightbox.parentElement !== document.body) document.body.appendChild(lightbox);
+
             document.getElementById('attachment-lightbox-img').src = src;
             document.getElementById('attachment-lightbox-img').alt = filename;
             document.getElementById('attachment-lightbox-filename').textContent = filename;
-            document.getElementById('attachment-lightbox').style.display = 'flex';
+            lightbox.style.display = 'flex';
         }
         function closeAttachmentLightbox() {
             document.getElementById('attachment-lightbox').style.display = 'none';
@@ -216,9 +223,9 @@
                     </div>
                 @endif
 
-                {{-- Breadcrumb --}}
-                @if($task->project)
-                    <div class="flex items-center gap-2 text-xs flex-wrap mt-3 pt-3" style="border-top:1px solid var(--border2); color:var(--muted)">
+                {{-- Breadcrumb + Meta (Criada por / Lançada — antes na seção Informações da lateral) --}}
+                <div class="flex items-center gap-2 text-xs flex-wrap mt-3 pt-3" style="border-top:1px solid var(--border2); color:var(--muted)">
+                    @if($task->project)
                         <a href="{{ route('clients.show', $task->client) }}"
                            @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('clients.preview', $task->client) }}') }"
                            style="color:var(--purple); font-weight:500"
@@ -241,15 +248,22 @@
                            onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted2)'">
                             {{ $task->project->title }}
                         </a>
-                    </div>
-                @endif
+                        <span style="color:var(--border2)">•</span>
+                    @endif
+                    <span>Criada por <strong style="color:var(--muted2); font-weight:600">{{ explode(' ', $task->createdBy?->name ?? '—')[0] }}</strong> em {{ $task->created_at->format('d/m/Y') }} ({{ $task->created_at->diffForHumans() }})</span>
+                    @if($task->launched_at)
+                        <span style="color:var(--border2)">•</span>
+                        <span style="color:var(--green); font-weight:600">Lançada {{ $task->launched_at->format('d/m/Y') }}</span>
+                    @endif
+                </div>
             </div>
 
-            {{-- BARRA DE CAMPOS RÁPIDOS: Status / Prioridade / Situação / Responsável / Executor / Vencimento —
+            {{-- BARRA DE CAMPOS RÁPIDOS: Status / Prioridade / Situação / Responsável / Executor —
                  mesma mecânica de edição de sempre (mesmos endpoints), só reposicionada numa barra
-                 horizontal com ícone em vez de cards separados na sidebar. --}}
+                 horizontal com ícone em vez de cards separados na sidebar. Vencimento saiu daqui
+                 e foi pro card Datas da lateral, junto com Aprovação/Publicação. --}}
             <div class="card card-body">
-                <div class="grid grid-cols-3 gap-x-4 gap-y-4 md:grid-cols-6">
+                <div class="grid grid-cols-3 gap-x-4 gap-y-4 md:grid-cols-5">
 
                     {{-- Status --}}
                     <div>
@@ -400,23 +414,90 @@
                         </div>
                     </div>
 
-                    {{-- Vencimento --}}
+                </div>
+            </div>
+
+            {{-- CAMPOS: Sprint / Origem / Destino / Tipo — antes espalhados entre Contexto (lateral)
+                 e Campos (só Tipo); consolidados aqui, logo acima do Briefing. --}}
+            <div x-show="!editing" class="card card-body-lg">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-5 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                    <span class="icon-badge">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        </svg>
+                    </span>
+                    Campos
+                </p>
+                <div class="grid grid-cols-2 gap-x-10 gap-y-5 md:grid-cols-4">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Vencimento</p>
-                        <div class="flex items-center gap-1.5">
-                            <svg class="h-3.5 w-3.5 flex-shrink-0" style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted)' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
-                            </svg>
-                            <span class="text-sm font-semibold" style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--text)' }}">
-                                {{ $task->due_date?->format('d/m/Y') ?? '—' }}
-                            </span>
-                        </div>
-                        @if($task->due_date)
-                            <p class="text-xs mt-0.5" style="color:var(--muted)">{{ $task->due_date->diffForHumans() }}</p>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Sprint</p>
+                        @if($task->sprint)
+                            <a href="{{ route('sprints.show', $task->sprint) }}"
+                               class="text-sm font-semibold transition-colors" style="color:var(--orange)"
+                               onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
+                                {{ $task->sprint->title }}
+                            </a>
+                        @else
+                            <p class="text-sm" style="color:var(--muted)">Backlog</p>
                         @endif
                     </div>
-
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Origem</p>
+                        <span class="badge mt-0.5">{{ $task->originLabel() }}</span>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Destino</p>
+                        <p class="text-sm" style="color:var(--text); font-weight:500; line-height:1.4">{{ $task->destination ? $task->destinationLabel() : '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Tipo</p>
+                        <p class="text-sm" style="color:var(--text); font-weight:500; line-height:1.4">{{ $task->typeLabel() }}</p>
+                    </div>
                 </div>
+            </div>
+
+            {{-- REATRIBUIR CLIENTE / PROJETO — só aparece em modo de edição (antes vivia na
+                 seção Contexto da lateral, removida por duplicar os links do cabeçalho).
+                 Continuam como forms próprios (auto-submit, mesmos endpoints/validações de
+                 sempre) porque não dá pra aninhar <form> dentro do form de edição abaixo. --}}
+            <div x-show="editing" x-cloak class="card card-body-lg flex flex-col gap-5">
+                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Reatribuir Cliente / Projeto</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Cliente</label>
+                        <form method="POST" action="{{ route('tasks.update-client', $task) }}">
+                            @csrf @method('PATCH')
+                            <select name="client_id"
+                                @change="if ({{ $task->project_id ? 'true' : 'false' }} && !(await $store.confirmDialog.ask('Trocar o cliente vai desvincular a tarefa do projeto atual ({{ addslashes($task->project?->title) }}). Continuar?'))) { $el.value = '{{ $task->client_id }}'; return; } $el.form.submit()"
+                                class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                @foreach($clients as $c)
+                                    <option value="{{ $c->id }}" {{ $task->client_id === $c->id ? 'selected' : '' }}>
+                                        {{ $c->displayName() }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </form>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Projeto</label>
+                        <form method="POST" action="{{ route('tasks.update-project', $task) }}">
+                            @csrf @method('PATCH')
+                            <select name="project_id" onchange="this.form.submit()"
+                                class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                <option value="">— nenhum —</option>
+                                @foreach($clientProjects as $p)
+                                    <option value="{{ $p->id }}" {{ $task->project_id === $p->id ? 'selected' : '' }}>
+                                        {{ $p->title }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </form>
+                    </div>
+                </div>
+                <p class="text-xs" style="color:var(--muted2); line-height:1.5">A lista de Projetos reflete o Cliente atual — troque o Cliente e salve/recarregue pra ver os projetos do novo cliente.</p>
             </div>
 
             {{-- FORMULÁRIO DE EDIÇÃO --}}
@@ -604,33 +685,6 @@
                         Salvar Legenda
                     </button>
                 </form>
-            </div>
-
-            {{-- CAMPOS (visualização) — só o que não aparece na lateral (Situação/Origem/Destino/
-                 Método de Aprovação já estão nos cards Contexto/Aprovação da sidebar) --}}
-            <div x-show="!editing" class="card card-body-lg">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-5 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
-                    <span class="icon-badge">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                        </svg>
-                    </span>
-                    Campos
-                </p>
-                <div class="grid grid-cols-2 gap-x-10 gap-y-5 md:grid-cols-3">
-                    @php
-                        $campos = [
-                            ['Tipo', $task->typeLabel()],
-                        ];
-                    @endphp
-                    @foreach($campos as [$label, $value])
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">{{ $label }}</p>
-                            <p class="text-sm" style="color:var(--text); font-weight:500; line-height:1.4">{{ $value }}</p>
-                        </div>
-                    @endforeach
-                </div>
             </div>
 
             {{-- INSUMOS --}}
@@ -926,122 +980,16 @@
                 </div>
             @endif
 
-            {{-- ══ COMENTÁRIOS ══ --}}
-            <div class="card card-body-lg" id="comentarios" x-data="{ editId: null }">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-5 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
-                    <span class="icon-badge">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
-                        </svg>
-                    </span>
-                    Comentários
-                    @if($task->comments->count() > 0)
-                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $task->comments->count() }}</span>
-                    @endif
-                </p>
-
-                {{-- Lista --}}
-                @if($task->comments->count() > 0)
-                    <div class="flex flex-col mb-6">
-                        @foreach($task->comments as $comment)
-                            <div class="flex gap-4 py-4" style="{{ !$loop->last ? 'border-bottom:1px solid var(--border2)' : '' }}">
-                                <x-user-avatar :user="$comment->user" size="8" class="mt-0.5" />
-                                <div class="flex-1 min-w-0">
-                                    {{-- Exibição --}}
-                                    <div x-show="editId !== '{{ $comment->id }}'">
-                                        <div class="flex items-baseline gap-3 mb-1.5 flex-wrap">
-                                            <span class="text-sm font-semibold" style="color:var(--text)">{{ $comment->user->name }}</span>
-                                            <span class="text-xs" style="color:var(--muted)">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
-                                            <span class="text-xs" style="color:var(--muted2)">{{ $comment->created_at->diffForHumans() }}</span>
-                                            @if($comment->updated_at->ne($comment->created_at))
-                                                <span class="text-xs" style="color:var(--muted2)">(editado)</span>
-                                            @endif
-                                            @if($comment->visible_to_client)
-                                                <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full" style="background:rgba(5,150,105,.1); color:var(--green)">Visível pro cliente</span>
-                                            @else
-                                                <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full" style="background:var(--s3); color:var(--muted)">Interno</span>
-                                            @endif
-                                        </div>
-                                        @php
-                                            // Comentário antigo (anterior ao editor rico) é texto puro, sem
-                                            // tag nenhuma — converte pra <p>/<br> só na exibição, sem precisar
-                                            // de migration/backfill (mesma lógica de tiptap-editor.js:normalizeContent).
-                                            $commentHtml = $comment->body;
-                                            if (!preg_match('/<[a-z][\s\S]*>/i', $commentHtml)) {
-                                                $commentHtml = collect(preg_split('/\n\n+/', $commentHtml))
-                                                    ->map(fn ($p) => '<p>' . nl2br(e($p)) . '</p>')
-                                                    ->implode('');
-                                            }
-                                        @endphp
-                                        <div class="ProseMirror" style="color:var(--text); line-height:1.65">{!! $commentHtml !!}</div>
-                                    </div>
-
-                                    {{-- Edição --}}
-                                    @if($comment->user_id === auth()->id())
-                                        <div x-show="editId === '{{ $comment->id }}'" x-cloak>
-                                            <form method="POST" action="{{ route('task-comments.update', [$task, $comment]) }}">
-                                                @csrf @method('PATCH')
-                                                <x-rich-editor name="body" :value="$comment->body" min-height="100px" />
-                                                <div class="flex items-center gap-3 mt-2">
-                                                    <button type="submit" class="text-xs font-mono text-[var(--purple)] hover:underline">Salvar</button>
-                                                    <button type="button" @click="editId = null" class="text-xs font-mono" style="color:var(--muted)">Cancelar</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    @endif
-                                </div>
-                                @if($comment->user_id === auth()->id())
-                                    <div class="flex items-start gap-2 flex-shrink-0" x-show="editId !== '{{ $comment->id }}'">
-                                        <button type="button" @click="editId = '{{ $comment->id }}'" class="btn btn-ghost btn-xs">Editar</button>
-                                        <form method="POST"
-                                              action="{{ route('task-comments.destroy', [$task, $comment]) }}"
-                                              @submit.prevent="if (await $store.confirmDialog.ask('Remover comentário?')) $el.submit()">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-xs">✕</button>
-                                        </form>
-                                    </div>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="mb-5 py-7 text-center" style="border:1px dashed var(--border2)">
-                        <p class="text-sm" style="color:var(--muted)">Nenhum comentário ainda.</p>
-                    </div>
-                @endif
-
-                {{-- Novo comentário --}}
-                <form method="POST" action="{{ route('task-comments.store', $task) }}">
-                    @csrf
-                    <div class="flex gap-3">
-                        <x-user-avatar :user="auth()->user()" size="8" class="mt-0.5" />
-                        <div class="flex-1">
-                            <x-rich-editor name="body" min-height="80px" />
-                            <div class="flex items-center justify-between mt-2">
-                                <label class="flex items-center gap-2 text-xs" style="color:var(--muted)">
-                                    <input type="checkbox" name="visible_to_client" value="1">
-                                    Visível para o cliente
-                                </label>
-                                <button type="submit"
-                                    class="px-4 py-2 text-sm font-semibold text-white"
-                                    style="background:var(--purple)"
-                                    onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-                                    Comentar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
         </div>{{-- /coluna principal --}}
 
         {{-- ══════════════════════════════════════════════════════════
              SIDEBAR DIREITA
         ══════════════════════════════════════════════════════════ --}}
-        <div class="flex flex-col gap-4" style="width:270px; flex-shrink:0">
+        <div class="flex flex-col gap-4" style="width:320px; flex-shrink:0">
 
-            {{-- DATAS --}}
+            {{-- DATAS: Aprovação / Publicação / Vencimento (Vencimento antes ficava na barra de
+                 campos rápidos) — Aprovação um pouco mais destacada porque é a data que
+                 coordena a entrega da operação. --}}
             <div class="card card-body">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
                     <span class="icon-badge">
@@ -1051,178 +999,39 @@
                     </span>
                     Datas
                 </p>
-                <div class="flex flex-col gap-3">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Dt. Aprovação</p>
-                        <p class="text-sm" style="color:var(--text); font-weight:600">
+                <div class="flex flex-col gap-4">
+                    <div class="pb-3" style="border-bottom:1px solid var(--border2)">
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <span class="h-2 w-2 rounded-full flex-shrink-0" style="background:var(--orange)"></span>
+                            <p class="text-xs font-bold uppercase tracking-widest" style="color:var(--orange); letter-spacing:.08em">Aprovação</p>
+                        </div>
+                        <p class="text-base" style="color:var(--orange); font-weight:800">
                             {{ $task->approval_date?->format('d/m/Y') ?? '—' }}
                         </p>
                     </div>
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Dt. Publicação</p>
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:var(--green)"></span>
+                            <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Publicação</p>
+                        </div>
                         <p class="text-sm" style="color:var(--text); font-weight:600">
                             {{ $task->publish_date?->format('d/m/Y') ?? '—' }}
                         </p>
                     </div>
-                </div>
-            </div>
-
-            {{-- CONTEXTO --}}
-            <div class="card card-body">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
-                    <span class="icon-badge">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-19.5 0v6a2.25 2.25 0 0 0 2.25 2.25h15a2.25 2.25 0 0 0 2.25-2.25v-6m-19.5 0v-.75A2.25 2.25 0 0 1 4.5 9h2.379a1.5 1.5 0 0 0 1.06-.44l2.122-2.12a1.5 1.5 0 0 1 1.06-.44h3.758a1.5 1.5 0 0 1 1.06.44l2.122 2.12a1.5 1.5 0 0 0 1.06.44H19.5a2.25 2.25 0 0 1 2.25 2.25v.75" />
-                        </svg>
-                    </span>
-                    Contexto
-                </p>
-                <div class="flex flex-col gap-4">
                     <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Cliente</p>
-                            @if($task->client)
-                                <a href="{{ route('clients.show', $task->client) }}"
-                                   @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('clients.preview', $task->client) }}') }"
-                                   class="text-xs font-semibold transition-colors" style="color:var(--purple)"
-                                   onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
-                                    Abrir →
-                                </a>
-                            @endif
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:var(--red)"></span>
+                            <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Vencimento</p>
                         </div>
-                        <form method="POST" action="{{ route('tasks.update-client', $task) }}">
-                            @csrf @method('PATCH')
-                            <select name="client_id"
-                                @change="if ({{ $task->project_id ? 'true' : 'false' }} && !(await $store.confirmDialog.ask('Trocar o cliente vai desvincular a tarefa do projeto atual ({{ addslashes($task->project?->title) }}). Continuar?'))) { $el.value = '{{ $task->client_id }}'; return; } $el.form.submit()"
-                                class="w-full px-3 py-2 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                                @foreach($clients as $c)
-                                    <option value="{{ $c->id }}" {{ $task->client_id === $c->id ? 'selected' : '' }}>
-                                        {{ $c->displayName() }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </form>
-                    </div>
-
-                    @if($task->project?->macro_plan_id)
-                        <div>
-                            <div class="flex items-center justify-between mb-1">
-                                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Planejamento</p>
-                                @if($htmlAttachment = $task->project->macroPlan->htmlAttachment())
-                                    <a href="{{ $htmlAttachment->url() }}" target="_blank" rel="noopener"
-                                       class="text-xs font-semibold transition-colors" style="color:var(--purple)"
-                                       onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
-                                        Ver HTML ↗
-                                    </a>
-                                @endif
-                            </div>
-                            <a href="{{ route('macroplans.edit', $task->project->macro_plan_id) }}"
-                               @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('macroplans.preview', $task->project->macro_plan_id) }}') }"
-                               class="text-sm font-medium leading-snug block transition-colors" style="color:var(--text)"
-                               onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'">
-                                {{ $task->project->macroPlan?->title }}
-                            </a>
-                        </div>
-                    @endif
-
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Projeto</p>
-                            @if($task->project)
-                                <a href="{{ $task->project->macro_plan_id ? route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) : route('projects.showDirect', $task->project) }}"
-                                   @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('projects.preview', $task->project) }}') }"
-                                   class="text-xs font-semibold transition-colors" style="color:var(--purple)"
-                                   onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
-                                    Abrir →
-                                </a>
-                            @endif
-                        </div>
-                        <form method="POST" action="{{ route('tasks.update-project', $task) }}">
-                            @csrf @method('PATCH')
-                            <select name="project_id" onchange="this.form.submit()"
-                                class="w-full px-3 py-2 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                                <option value="">— nenhum —</option>
-                                @foreach($clientProjects as $p)
-                                    <option value="{{ $p->id }}" {{ $task->project_id === $p->id ? 'selected' : '' }}>
-                                        {{ $p->title }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </form>
-                    </div>
-
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Sprint</p>
-                        @if($task->sprint)
-                            <a href="{{ route('sprints.show', $task->sprint) }}"
-                               class="text-sm font-semibold transition-colors" style="color:var(--orange)"
-                               onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
-                                {{ $task->sprint->title }}
-                            </a>
-                        @else
-                            <p class="text-sm" style="color:var(--muted)">Backlog</p>
+                        <p class="text-sm" style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--text)' }}; font-weight:600">
+                            {{ $task->due_date?->format('d/m/Y') ?? '—' }}
+                        </p>
+                        @if($task->due_date)
+                            <p class="text-xs mt-0.5" style="color:var(--muted)">{{ $task->due_date->diffForHumans() }}</p>
                         @endif
                     </div>
-
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Origem</p>
-                        <span class="badge mt-0.5">{{ $task->originLabel() }}</span>
-                    </div>
-
-                    @if($task->destination)
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Destino</p>
-                            <p class="text-sm font-medium" style="color:var(--text)">{{ $task->destinationLabel() }}</p>
-                        </div>
-                    @endif
                 </div>
             </div>
-
-            {{-- OBSERVADORES (só avatares — nomes completos ficavam na antiga sessão Pessoas
-                 da coluna principal, removida por ocupar espaço demais) --}}
-            @if($task->observers->count() > 0)
-                <div class="card card-body">
-                    <p class="text-xs font-semibold uppercase tracking-widest mb-3 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
-                        <span class="icon-badge">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-                            </svg>
-                        </span>
-                        Observadores
-                    </p>
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                        @foreach($task->observers as $obs)
-                            <x-user-avatar :user="$obs" size="7" color="var(--slate, #64748b)" title="{{ $obs->name }}" />
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-
-            {{-- LINKS DO CLIENTE --}}
-            @if($task->client?->links->count())
-                <div class="card card-body">
-                    <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
-                        <span class="icon-badge">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
-                            </svg>
-                        </span>
-                        Links do Cliente
-                    </p>
-                    <div class="flex flex-col gap-2.5">
-                        @foreach($task->client->links as $link)
-                            <a href="{{ $link->url }}" target="_blank" rel="noopener"
-                               class="flex items-center justify-between gap-2 text-sm font-medium transition-colors" style="color:var(--text)"
-                               onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'">
-                                <span>{{ $link->displayLabel() }}</span>
-                                <span style="color:var(--muted); font-size:11px">↗</span>
-                            </a>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
 
             {{-- APROVAÇÃO DO CLIENTE --}}
             <div class="card card-body">
@@ -1287,18 +1096,32 @@
                                 {{ $task->internal_approval ? 'Sim' : 'Não' }}
                             </span>
                         </div>
-                        @if($task->approval_date)
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs" style="color:var(--muted)">Data</span>
-                                <span class="text-sm font-medium" style="color:var(--text)">{{ $task->approval_date->format('d/m/Y') }}</span>
-                            </div>
-                        @endif
                         <p class="text-xs mt-1" style="color:var(--muted2); line-height:1.5">
                             Para enviar ao cliente, altere a <strong>Situação</strong> para <em>Enviar para o Cliente</em>.
                         </p>
                     </div>
                 @endif
             </div>
+
+            {{-- OBSERVADORES (só avatares — nomes completos ficavam na antiga sessão Pessoas
+                 da coluna principal, removida por ocupar espaço demais) --}}
+            @if($task->observers->count() > 0)
+                <div class="card card-body">
+                    <p class="text-xs font-semibold uppercase tracking-widest mb-3 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                        <span class="icon-badge">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                            </svg>
+                        </span>
+                        Observadores
+                    </p>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        @foreach($task->observers as $obs)
+                            <x-user-avatar :user="$obs" size="7" color="var(--slate, #64748b)" title="{{ $obs->name }}" />
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             {{-- SOLICITANTE --}}
             @if($task->is_ticket && $task->requester_name)
@@ -1339,38 +1162,110 @@
                 </div>
             @endif
 
-            {{-- META --}}
-            <div class="card card-body">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+            {{-- ══ COMENTÁRIOS (antes na coluna principal, movido pra lateral) ══ --}}
+            <div class="card card-body-lg" id="comentarios" x-data="{ editId: null }">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-5 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
                     <span class="icon-badge">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
                         </svg>
                     </span>
-                    Informações
-                </p>
-                <div class="flex flex-col gap-3">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs" style="color:var(--muted)">Criada por</span>
-                        <span class="text-sm font-medium" style="color:var(--text)">
-                            {{ explode(' ', $task->createdBy?->name ?? '—')[0] }}
-                        </span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs" style="color:var(--muted)">Criada em</span>
-                        <span class="text-sm font-medium" style="color:var(--text)">{{ $task->created_at->format('d/m/Y') }}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs" style="color:var(--muted)">Há</span>
-                        <span class="text-sm" style="color:var(--muted2)">{{ $task->created_at->diffForHumans() }}</span>
-                    </div>
-                    @if($task->launched_at)
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs" style="color:var(--muted)">Lançada</span>
-                            <span class="text-sm font-semibold" style="color:var(--green)">{{ $task->launched_at->format('d/m/Y') }}</span>
-                        </div>
+                    Comentários
+                    @if($task->comments->count() > 0)
+                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $task->comments->count() }}</span>
                     @endif
-                </div>
+                </p>
+
+                {{-- Lista --}}
+                @if($task->comments->count() > 0)
+                    <div class="flex flex-col mb-6">
+                        @foreach($task->comments as $comment)
+                            <div class="flex gap-3 py-4" style="{{ !$loop->last ? 'border-bottom:1px solid var(--border2)' : '' }}">
+                                <x-user-avatar :user="$comment->user" size="7" class="mt-0.5" />
+                                <div class="flex-1 min-w-0">
+                                    {{-- Exibição --}}
+                                    <div x-show="editId !== '{{ $comment->id }}'">
+                                        <div class="flex items-baseline gap-2 mb-1.5 flex-wrap">
+                                            <span class="text-sm font-semibold" style="color:var(--text)">{{ $comment->user->name }}</span>
+                                            <span class="text-xs" style="color:var(--muted2)">{{ $comment->created_at->diffForHumans() }}</span>
+                                            @if($comment->updated_at->ne($comment->created_at))
+                                                <span class="text-xs" style="color:var(--muted2)">(editado)</span>
+                                            @endif
+                                        </div>
+                                        <div class="flex items-center gap-1.5 mb-1.5">
+                                            @if($comment->visible_to_client)
+                                                <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full" style="background:rgba(5,150,105,.1); color:var(--green)">Visível pro cliente</span>
+                                            @else
+                                                <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full" style="background:var(--s3); color:var(--muted)">Interno</span>
+                                            @endif
+                                        </div>
+                                        @php
+                                            // Comentário antigo (anterior ao editor rico) é texto puro, sem
+                                            // tag nenhuma — converte pra <p>/<br> só na exibição, sem precisar
+                                            // de migration/backfill (mesma lógica de tiptap-editor.js:normalizeContent).
+                                            $commentHtml = $comment->body;
+                                            if (!preg_match('/<[a-z][\s\S]*>/i', $commentHtml)) {
+                                                $commentHtml = collect(preg_split('/\n\n+/', $commentHtml))
+                                                    ->map(fn ($p) => '<p>' . nl2br(e($p)) . '</p>')
+                                                    ->implode('');
+                                            }
+                                        @endphp
+                                        <div class="ProseMirror" style="color:var(--text); line-height:1.65">{!! $commentHtml !!}</div>
+                                        @if($comment->user_id === auth()->id())
+                                            <div class="flex items-center gap-3 mt-1.5">
+                                                <button type="button" @click="editId = '{{ $comment->id }}'" class="text-xs font-mono" style="color:var(--muted)">Editar</button>
+                                                <form method="POST"
+                                                      action="{{ route('task-comments.destroy', [$task, $comment]) }}"
+                                                      @submit.prevent="if (await $store.confirmDialog.ask('Remover comentário?')) $el.submit()">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="text-xs font-mono" style="color:var(--red)">Remover</button>
+                                                </form>
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    {{-- Edição --}}
+                                    @if($comment->user_id === auth()->id())
+                                        <div x-show="editId === '{{ $comment->id }}'" x-cloak>
+                                            <form method="POST" action="{{ route('task-comments.update', [$task, $comment]) }}">
+                                                @csrf @method('PATCH')
+                                                <x-rich-editor name="body" :value="$comment->body" min-height="100px" />
+                                                <div class="flex items-center gap-3 mt-2">
+                                                    <button type="submit" class="text-xs font-mono text-[var(--purple)] hover:underline">Salvar</button>
+                                                    <button type="button" @click="editId = null" class="text-xs font-mono" style="color:var(--muted)">Cancelar</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="mb-5 py-7 text-center" style="border:1px dashed var(--border2)">
+                        <p class="text-sm" style="color:var(--muted)">Nenhum comentário ainda.</p>
+                    </div>
+                @endif
+
+                {{-- Novo comentário --}}
+                <form method="POST" action="{{ route('task-comments.store', $task) }}">
+                    @csrf
+                    <div class="flex flex-col gap-2">
+                        <x-rich-editor name="body" min-height="80px" />
+                        <div class="flex items-center justify-between">
+                            <label class="flex items-center gap-2 text-xs" style="color:var(--muted)">
+                                <input type="checkbox" name="visible_to_client" value="1">
+                                Visível pro cliente
+                            </label>
+                            <button type="submit"
+                                class="px-4 py-2 text-sm font-semibold text-white"
+                                style="background:var(--purple)"
+                                onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                                Comentar
+                            </button>
+                        </div>
+                    </div>
+                </form>
             </div>
 
         </div>{{-- /sidebar --}}
