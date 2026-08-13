@@ -10,6 +10,7 @@ import { registerConfirmDialog } from './confirm-dialog.js';
 import { registerInlinePatch } from './inline-patch.js';
 import { registerMondayFill } from './monday-fill.js';
 import { registerGroupCollapse } from './group-collapse.js';
+import { registerBrowserNotify } from './browser-notify.js';
 
 window.Alpine = Alpine;
 
@@ -25,5 +26,6 @@ registerConfirmDialog(Alpine);
 registerInlinePatch();
 registerMondayFill(Alpine);
 registerGroupCollapse(Alpine);
+registerBrowserNotify(Alpine);
 
 Alpine.start();

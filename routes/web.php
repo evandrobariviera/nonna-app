@@ -275,6 +275,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('notifications.index');
     Route::patch('/notificacoes/{notification}/status', [\App\Http\Controllers\NotificationController::class, 'updateStatus'])
         ->name('notifications.update-status');
+    Route::get('/notificacoes/novas', [\App\Http\Controllers\NotificationController::class, 'poll'])
+        ->name('notifications.poll');
 
     // ── Contratos do cliente ──
     Route::post('/clientes/{client}/contratos', [ContractController::class, 'store'])

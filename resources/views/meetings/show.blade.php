@@ -297,15 +297,15 @@
                     <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Ações</p>
                 </div>
                 <div class="px-5 py-4">
-                    @if($meeting->client)
+                    @if($meeting->contacts->isNotEmpty() || $meeting->participants->isNotEmpty())
                         <form method="POST" action="{{ route('meetings.notify', $meeting) }}" class="mb-2">
                             @csrf
                             <button type="submit" class="btn btn-ghost btn-sm w-full">
-                                📣 Notificar Contatos
+                                📣 Notificar Participantes
                             </button>
                         </form>
                     @else
-                        <p class="text-xs mb-2" style="color:var(--muted)">Vincule um cliente para poder notificar contatos.</p>
+                        <p class="text-xs mb-2" style="color:var(--muted)">Vincule contatos ou participantes internos para poder notificar.</p>
                     @endif
                     <form method="POST" action="{{ route('meetings.destroy', $meeting) }}"
                           @submit.prevent="if (await $store.confirmDialog.ask('Remover esta reunião permanentemente?')) $el.submit()">

@@ -9,6 +9,7 @@ use App\Models\NotificationTemplate;
 use App\Models\Opportunity;
 use App\Models\User;
 use App\Services\NotificationDispatchService;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -250,27 +251,44 @@ class MeetingController extends Controller
         return redirect()->back()->with('success', 'Status atualizado.');
     }
 
-    public function notify(Meeting $meeting, NotificationDispatchService $service)
+    // Notifica todo mundo vinculado à reunião: contatos do cliente (WhatsApp/e-mail,
+    // via webhook n8n) e participantes internos (sino de notificação do próprio App,
+    // ver NotificationService — não há canal e-mail/WhatsApp genérico pra User).
+    public function notify(Meeting $meeting, NotificationDispatchService $service, NotificationService $notificationService)
     {
-        if (!$meeting->client) {
-            return back()->with('warning', 'Vincule um cliente à reunião para notificar contatos.');
-        }
+        $meeting->loadMissing('contacts', 'participants');
 
-        $meeting->loadMissing('contacts');
-        if ($meeting->contacts->isEmpty()) {
-            return back()->with('warning', 'Nenhum contato vinculado a esta reunião.');
-        }
-
-        foreach ($meeting->contacts as $contact) {
-            foreach (array_keys(NotificationTemplate::$channels) as $channel) {
-                $service->dispatch('reuniao_lembrete', $channel, $meeting->client, $contact, [
-                    'data_reuniao' => $meeting->scheduled_at->format('d/m/Y H:i'),
-                    'link_reuniao' => $meeting->online_link ?? '',
-                ]);
+        $notifiedContacts = 0;
+        if ($meeting->client && $meeting->contacts->isNotEmpty()) {
+            foreach ($meeting->contacts as $contact) {
+                foreach (array_keys(NotificationTemplate::$channels) as $channel) {
+                    $service->dispatch('reuniao_lembrete', $channel, $meeting->client, $contact, [
+                        'data_reuniao' => $meeting->scheduled_at->format('d/m/Y H:i'),
+                        'link_reuniao' => $meeting->online_link ?? '',
+                    ]);
+                }
             }
+            $notifiedContacts = $meeting->contacts->count();
         }
 
-        return back()->with('success', 'Notificação enviada aos contatos.');
+        $notifiedParticipants = 0;
+        if ($meeting->participants->isNotEmpty()) {
+            $notificationService->notifyUsers(
+                $meeting->participants,
+                'reuniao_lembrete',
+                'Lembrete: ' . $meeting->title,
+                'Reunião em ' . $meeting->scheduled_at->format('d/m/Y H:i') . ($meeting->online_link ? ' — ' . $meeting->online_link : ''),
+                route('meetings.show', $meeting),
+                $meeting
+            );
+            $notifiedParticipants = $meeting->participants->count();
+        }
+
+        if ($notifiedContacts === 0 && $notifiedParticipants === 0) {
+            return back()->with('warning', 'Nenhum contato ou participante interno vinculado a esta reunião.');
+        }
+
+        return back()->with('success', "Lembrete enviado — {$notifiedContacts} contato(s) e {$notifiedParticipants} participante(s) da equipe.");
     }
 
     public function destroy(Meeting $meeting)

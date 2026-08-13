@@ -242,6 +242,20 @@
                     <x-icon name="sun" size="16" x-show="darkMode" x-cloak />
                 </button>
 
+                {{-- Aviso de navegador (Notification API + som) — só liga se o usuário pedir,
+                     Chrome exige gesto explícito pra conceder a permissão. --}}
+                @auth
+                    <button type="button"
+                        @click="$store.browserNotify.enabled ? $store.browserNotify.disable() : $store.browserNotify.enable()"
+                        class="relative flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
+                        :style="$store.browserNotify.enabled ? 'color:var(--purple)' : 'color:var(--muted)'"
+                        onmouseover="this.style.background='var(--s3)'"
+                        onmouseout="this.style.background=''"
+                        :title="$store.browserNotify.enabled ? 'Avisos do navegador ativados — clique pra desligar' : 'Ativar avisos do navegador (popup + som)'">
+                        <span x-text="$store.browserNotify.enabled ? '🔔' : '🔕'"></span>
+                    </button>
+                @endauth
+
                 {{-- Notificações --}}
                 @auth
                     @php
