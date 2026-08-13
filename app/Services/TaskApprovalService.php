@@ -203,6 +203,12 @@ class TaskApprovalService
      * ativa (pending) — se já tinha sido resolvida antes (approved/changes_
      * requested), o status da tarefa já seguiu outro caminho depois disso e não
      * deve ser mexido aqui.
+     *
+     * Reseta status E situação juntos — se a situação ficasse "Enviar para o
+     * cliente" armada, qualquer toque de volta no status "Aprovação" recria
+     * uma rodada sozinho (maybeAutoSubmitOnApprovalTransition, disparado pelo
+     * TaskObserver a cada mudança de status/situação), mesmo sem ninguém pedir
+     * isso de propósito — reenviar precisa ser uma escolha consciente de novo.
      */
     public function cancelRound(TaskApprovalRound $round): void
     {
@@ -213,7 +219,7 @@ class TaskApprovalService
         $round->update(['status' => 'cancelled', 'resolved_at' => now()]);
 
         if ($wasPending) {
-            $round->task->update(['status' => 'revisao_interna']);
+            $round->task->update(['status' => 'revisao_interna', 'situation' => 'Revisão Interna']);
         }
     }
 
