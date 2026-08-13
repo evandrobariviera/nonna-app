@@ -96,7 +96,7 @@
 
         {{-- CONTEXTO --}}
         <div style="margin-bottom:24px">
-            <span class="label-sm">Aprovação de Material</span>
+            <span class="label-sm">{{ $approvalToken->round->isAviso() ? 'Aviso' : 'Aprovação de Material' }}</span>
             <h1 style="font-size:20px; font-weight:800; margin:0 0 4px">{{ $approvalToken->round->task->title }}</h1>
             <p style="font-size:13px; color:var(--muted); margin:0">
                 {{ $approvalToken->round->task->client->company_name }}
@@ -107,13 +107,14 @@
 
         @if($approvalToken->round->notes)
         <div style="background:var(--s1); border-left:3px solid var(--purple); border-top:1px solid var(--border); border-right:1px solid var(--border); border-bottom:1px solid var(--border); padding:14px 18px; margin-bottom:24px">
-            <span class="label-sm" style="margin-bottom:4px">Observações do time</span>
+            <span class="label-sm" style="margin-bottom:4px">{{ $approvalToken->round->isAviso() ? 'Mensagem' : 'Observações do time' }}</span>
             <p style="font-size:13px; color:var(--muted2); margin:0; line-height:1.6">{{ $approvalToken->round->notes }}</p>
         </div>
         @endif
 
-        {{-- QUEM FALTA APROVAR / QUEM JÁ APROVOU (rodada atual) --}}
-        @if($approvalToken->round->tokens->count() > 1)
+        {{-- QUEM FALTA APROVAR / QUEM JÁ APROVOU (rodada atual) — não se aplica a
+             aviso, que não tem decisão nenhuma a coletar. --}}
+        @if($approvalToken->round->tokens->count() > 1 && !$approvalToken->round->isAviso())
         <div class="approvers-box">
             <span class="label-sm" style="margin-bottom:8px">Aprovadores desta rodada</span>
             @foreach($approvalToken->round->tokens as $t)
@@ -206,7 +207,13 @@
         </div>
         @endif
 
-        {{-- DECISÃO ÚNICA PRA TUDO (material + legenda juntos) --}}
+        {{-- DECISÃO ÚNICA PRA TUDO (material + legenda juntos) — aviso é só
+             informativo, não pede decisão nenhuma do cliente. --}}
+        @if($approvalToken->round->isAviso())
+        <div style="background:var(--s1); border:1px solid var(--border); padding:16px 18px; text-align:center">
+            <p style="font-size:13px; color:var(--muted2); margin:0">Isso é só um aviso — nenhuma ação é necessária da sua parte.</p>
+        </div>
+        @else
         <div x-data="{ decision: null }">
             <form method="POST" action="{{ route('approval.submit', $approvalToken->token) }}">
                 @csrf
@@ -243,6 +250,7 @@
                 </button>
             </form>
         </div>
+        @endif
 
     </main>
 

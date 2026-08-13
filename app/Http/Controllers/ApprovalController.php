@@ -25,7 +25,16 @@ class ApprovalController extends Controller
             ])
             ->firstOrFail();
 
-        if (! $approvalToken->isValid()) {
+        // Aviso não pede decisão — o token já nasce "approved" (ver
+        // TaskApprovalService::sendAviso()), então isValid()/isPending() não
+        // se aplicam; só a expiração importa pro link continuar acessível.
+        $isAviso = $approvalToken->round->isAviso();
+
+        if (! $isAviso && ! $approvalToken->isValid()) {
+            return view('approval.expired', compact('approvalToken'));
+        }
+
+        if ($isAviso && $approvalToken->isExpired()) {
             return view('approval.expired', compact('approvalToken'));
         }
 
@@ -63,9 +72,11 @@ class ApprovalController extends Controller
 
     public function submit(Request $request, string $token)
     {
-        $approvalToken = TaskApprovalToken::where('token', $token)->firstOrFail();
+        $approvalToken = TaskApprovalToken::where('token', $token)->with('round')->firstOrFail();
 
-        if (! $approvalToken->isValid()) {
+        // Aviso não tem decisão a submeter — a página pública nem mostra o
+        // formulário, isso é só defesa contra um POST manual.
+        if ($approvalToken->round->isAviso() || ! $approvalToken->isValid()) {
             return redirect()->route('approval.show', $token);
         }
 

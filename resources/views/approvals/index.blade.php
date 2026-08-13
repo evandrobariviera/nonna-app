@@ -99,6 +99,8 @@
         {{-- ══ FILTROS (afetam Quadros e Lista — client_id filtra os dois; status só filtra a Lista) ══ --}}
         <form method="GET" action="{{ route('approvals.index') }}" class="flex gap-3 mb-5 flex-wrap items-end"
               data-live-filter data-results-url="{{ route('approvals.results') }}" data-target="#approvals-results">
+            <input type="hidden" name="mostrar_aprovados" value="{{ request('mostrar_aprovados') }}">
+
             <div>
                 <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Status</label>
                 <select name="status" class="px-3 py-2 text-sm focus:outline-none"
@@ -107,6 +109,16 @@
                     <option value="pending"            {{ request('status') === 'pending'            ? 'selected' : '' }}>Aguardando Resposta</option>
                     <option value="changes_requested"  {{ request('status') === 'changes_requested'  ? 'selected' : '' }}>Ajustes Solicitados</option>
                     <option value="approved"           {{ request('status') === 'approved'           ? 'selected' : '' }}>Aprovado</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Tipo</label>
+                <select name="type" class="px-3 py-2 text-sm focus:outline-none"
+                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text); min-width:160px">
+                    <option value="">Todos os tipos</option>
+                    <option value="aprovacao" {{ request('type') === 'aprovacao' ? 'selected' : '' }}>Aprovação</option>
+                    <option value="aviso"     {{ request('type') === 'aviso'     ? 'selected' : '' }}>Aviso</option>
                 </select>
             </div>
 
@@ -125,10 +137,20 @@
                 </div>
             @endif
 
-            @if(request()->hasAny(['status','client_id']))
+            @if(request()->hasAny(['status','client_id','type','mostrar_aprovados']))
                 <a href="{{ route('approvals.index') }}" class="px-4 py-2 text-sm"
                    style="color:var(--muted); border:1px solid var(--border2)">Limpar</a>
             @endif
+
+            @php
+                $toggleAprovadosParams = request()->except('mostrar_aprovados', 'page');
+                if (!request()->boolean('mostrar_aprovados')) $toggleAprovadosParams['mostrar_aprovados'] = '1';
+            @endphp
+            <a href="{{ route('approvals.index', $toggleAprovadosParams) }}"
+               class="flex items-center gap-1.5 text-xs font-mono px-3 py-2 transition-all"
+               style="border:1px solid var(--border2); color:{{ request()->boolean('mostrar_aprovados') ? 'var(--purple)' : 'var(--muted)' }}">
+                {{ request()->boolean('mostrar_aprovados') ? '⊙ Ocultar aprovados' : '○ Mostrar aprovados' }}
+            </a>
         </form>
 
         <div id="approvals-results">

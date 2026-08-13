@@ -17,7 +17,7 @@ class TaskApprovalRound extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'task_id', 'round_number', 'submitted_by', 'submitted_at', 'sent_at',
+        'task_id', 'round_number', 'type', 'submitted_by', 'submitted_at', 'sent_at',
         'status', 'notes', 'caption', 'resolved_at', 'handled_at',
         'portal_decided_by', 'portal_decided_by_contact_id', 'portal_decision', 'portal_comment', 'portal_decided_at',
     ];
@@ -69,6 +69,13 @@ class TaskApprovalRound extends Model
         return $this->status === 'pending';
     }
 
+    // Aviso é retorno informativo (tarefa sem entregável) — não pede decisão
+    // do cliente, só escrever/enviar uma mensagem ou resolver sem notificar.
+    public function isAviso(): bool
+    {
+        return $this->type === 'aviso';
+    }
+
     public function isResolved(): bool
     {
         return in_array($this->status, ['approved', 'changes_requested', 'cancelled']);
@@ -84,6 +91,13 @@ class TaskApprovalRound extends Model
 
     public function statusLabel(): string
     {
+        // Aviso não é "aprovado" por ninguém — resolvido é ou "mandei a mensagem"
+        // ou "resolvi sem notificar" (ver TaskApprovalService::sendAviso() /
+        // resolveAvisoWithoutNotifying()).
+        if ($this->isAviso() && $this->status === 'approved') {
+            return $this->sent_at ? 'Aviso Enviado' : 'Resolvido (sem aviso)';
+        }
+
         return match ($this->status) {
             'pending'           => 'Aguardando',
             'approved'          => 'Aprovado',

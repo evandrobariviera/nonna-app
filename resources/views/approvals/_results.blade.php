@@ -36,7 +36,13 @@
                                     <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->task?->client?->displayName() ?? '—' }}</span>
                                     <span class="text-xs font-mono" style="color:var(--muted)">rodada {{ $round->round_number }}</span>
                                 </div>
-                                @if($col['key'] === 'awaiting_send')
+                                @if($col['key'] === 'awaiting_send' && $round->isAviso())
+                                    <a href="{{ route('approvals.index', ['view' => 'list']) }}"
+                                       class="inline-block mt-2 text-xs font-semibold px-2.5 py-1"
+                                       style="color:var(--orange); border:1px solid var(--orange)">
+                                        ⚠ Aviso — decidir na Lista
+                                    </a>
+                                @elseif($col['key'] === 'awaiting_send')
                                     <form method="POST" action="{{ route('approvals.send', $round) }}"
                                           @submit.prevent="if (await $store.confirmDialog.ask('Enviar essa rodada para o cliente agora?')) $el.submit()" class="mt-2">
                                         @csrf
@@ -98,6 +104,9 @@
                                       style="color:var(--purple)">
                                     {{ $round->task?->client?->displayName() ?? '—' }}
                                 </span>
+                                @if($round->isAviso())
+                                    <span class="text-xs font-semibold px-1.5 py-0.5" style="color:var(--orange); border:1px solid var(--orange)">AVISO</span>
+                                @endif
                                 <span style="color:var(--border2)">·</span>
                                 <span class="text-xs" style="color:var(--muted)">Rodada #{{ $round->round_number }}</span>
                                 <span style="color:var(--border2)">·</span>
@@ -207,7 +216,7 @@
 
                         {{-- Lado direito: status + ação --}}
                         <div class="flex items-start gap-3 flex-shrink-0">
-                            @if($notSent)
+                            @if($notSent && !$round->isAviso())
                                 <form method="POST" action="{{ route('approvals.send', $round) }}"
                                       @submit.prevent="
                                           if (!Object.values(notify).some(Boolean)) { alert('Ligue pelo menos um contato antes de enviar.'); return; }
@@ -269,6 +278,39 @@
                             @endif
                         </div>
                     </div>
+
+                    {{-- Aviso pendente (tarefa sem entregável): escrever e enviar um retorno,
+                         ou resolver sem notificar — sem "Enviar pro Cliente" porque não há
+                         material nenhum pra aprovar, ver TaskApprovalService::sendAviso(). --}}
+                    @if($round->isAviso() && $notSent)
+                        <div class="px-5 pb-4 pt-0" x-data="{ message: '' }">
+                            <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Mensagem pro cliente</label>
+                            <textarea x-model="message" rows="2" placeholder="Escreva o retorno que o cliente vai receber..."
+                                      class="w-full px-3 py-2 text-sm focus:outline-none"
+                                      style="background:var(--s2); border:1px solid var(--border2); color:var(--text); resize:vertical"></textarea>
+                            <div class="flex items-center gap-2 mt-2">
+                                <form method="POST" action="{{ route('approvals.send-aviso', $round) }}"
+                                      @submit.prevent="
+                                          if (!message.trim()) { alert('Escreva a mensagem antes de enviar.'); return; }
+                                          $refs.avisoMessage.value = message;
+                                          if (await $store.confirmDialog.ask('Enviar esse aviso para o cliente agora?')) $el.submit()
+                                      ">
+                                    @csrf
+                                    <input type="hidden" name="message" x-ref="avisoMessage">
+                                    <button type="submit" class="text-xs font-semibold px-3 py-1 text-white" style="background:var(--orange)">
+                                        Enviar Aviso
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('approvals.resolve-aviso', $round) }}"
+                                      @submit.prevent="if (await $store.confirmDialog.ask('Marcar esse aviso como resolvido sem notificar o cliente?')) $el.submit()">
+                                    @csrf
+                                    <button type="submit" class="text-xs font-semibold px-3 py-1" style="color:var(--muted); border:1px solid var(--border2)">
+                                        Resolver sem notificar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    @endif
 
                     {{-- Status/Situação da tarefa — mesmo padrão (fill colorido + dropdown) das
                          tabelas de tarefas — pra rotear pra Sprint (Ajuste/Revisão) sem abrir a tarefa --}}

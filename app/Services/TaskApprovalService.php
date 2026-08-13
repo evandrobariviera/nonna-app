@@ -17,14 +17,17 @@ class TaskApprovalService
 {
     /**
      * Reavalia se a tarefa já reúne as condições pra entrar em aprovação
-     * sozinha — status "Aprovação" + situação "Enviar para o cliente" + pelo
-     * menos um anexo do tipo "entregavel" (insumos/referências nunca entram
-     * na rodada). Chamado de todo lugar que possa completar essa condição,
-     * não importa a ordem em que as coisas aconteçam: TaskObserver (mudança de
-     * status/situação) e TaskAttachmentController (upload de anexo) — porque
-     * dá pra marcar a situação antes ou depois de subir o arquivo, e os dois
-     * caminhos precisam terminar no mesmo lugar. Só cria a rodada — o envio de
-     * fato pro cliente continua sendo manual, pelo botão na Central de Aprovações.
+     * sozinha — status "Aprovação" + situação "Enviar para o cliente". Com
+     * pelo menos um anexo "entregavel" (insumos/referências nunca entram na
+     * rodada), cria uma rodada normal; sem entregável nenhum (ex: correções
+     * de Dev/Web que não geram arquivo), cria uma rodada tipo "aviso" — retorno
+     * informativo pro cliente, sem pedir decisão. Chamado de todo lugar que
+     * possa completar essa condição, não importa a ordem em que as coisas
+     * acontecem: TaskObserver (mudança de status/situação) e
+     * TaskAttachmentController (upload de anexo) — porque dá pra marcar a
+     * situação antes ou depois de subir o arquivo, e os dois caminhos precisam
+     * terminar no mesmo lugar. Só cria a rodada — o envio de fato pro cliente
+     * continua sendo manual, pelo botão na Central de Aprovações.
      *
      * @return bool  true se uma rodada foi criada nesta chamada
      */
@@ -50,8 +53,20 @@ class TaskApprovalService
             ->toArray();
 
         if (empty($attachmentIds)) {
-            session()->flash('warning', 'A tarefa "' . $task->title . '" está em Aprovação com situação "Enviar para o cliente", mas não há nenhum entregável pra enviar — assim que você subir o arquivo em "Entregáveis", a rodada é criada automaticamente.');
-            return false;
+            TaskApprovalRound::create([
+                'task_id'      => $task->id,
+                'round_number' => $task->approvalRounds()->count() + 1,
+                'type'         => 'aviso',
+                'submitted_by' => $submitter->id,
+                'submitted_at' => now(),
+                'status'       => 'pending',
+            ]);
+
+            $task->update(['status' => 'aprovacao']);
+
+            session()->flash('success', 'Tarefa "' . $task->title . '" está sem entregável — um Aviso foi criado na Central de Aprovações. Lá você escreve o retorno pro cliente (ou resolve sem notificar).');
+
+            return true;
         }
 
         $this->submitForApproval($task, $submitter, $attachmentIds);
@@ -203,6 +218,44 @@ class TaskApprovalService
     }
 
     /**
+     * Envia o Aviso ao cliente — mensagem escrita na hora, não uma legenda/
+     * anexo. Reaproveita os mesmos contatos assinados em "aprovacao" e o
+     * mecanismo de token, mas o token já nasce "approved": um aviso não pede
+     * decisão de ninguém, então a rodada resolve na hora, sem esperar resposta
+     * (diferente de sendToClient(), que fica pending até o cliente decidir).
+     */
+    public function sendAviso(TaskApprovalRound $round, string $message): void
+    {
+        $round->update(['notes' => $message]);
+
+        foreach ($this->getApprovalRecipients($round->task) as $clientContact) {
+            $token = TaskApprovalToken::create([
+                'round_id'    => $round->id,
+                'contact_id'  => $clientContact->contact_id,
+                'channels'    => $clientContact->subscriptions->first()->channels ?? [],
+                'token'       => Str::uuid()->toString(),
+                'status'      => 'approved',
+                'reviewed_at' => now(),
+                'expires_at'  => now()->addDays(7),
+            ]);
+
+            $this->dispatchWebhook($round, $token, $clientContact->contact, 'aviso_tarefa', ['mensagem' => $message]);
+        }
+
+        $round->update(['sent_at' => now(), 'status' => 'approved', 'resolved_at' => now()]);
+    }
+
+    /**
+     * Resolve o Aviso sem notificar ninguém — tira da fila da Central sem
+     * gerar token nem disparar nada, pra quando o retorno já foi combinado
+     * por outro canal (ou simplesmente não precisa avisar o cliente).
+     */
+    public function resolveAvisoWithoutNotifying(TaskApprovalRound $round): void
+    {
+        $round->update(['status' => 'approved', 'resolved_at' => now()]);
+    }
+
+    /**
      * Registra a decisão de um contato sobre a rodada inteira (todos os
      * arquivos + legenda juntos, não peça por peça — decidido com o Evandro:
      * pra granularidade por peça, a orientação é separar em tarefas distintas).
@@ -293,7 +346,7 @@ class TaskApprovalService
             : ['status' => 'despacho_agendamento']);
     }
 
-    private function dispatchWebhook(TaskApprovalRound $round, TaskApprovalToken $approvalToken, Contact $contact): void
+    private function dispatchWebhook(TaskApprovalRound $round, TaskApprovalToken $approvalToken, Contact $contact, string $trigger = 'aprovacao', array $extraVariables = []): void
     {
         $channels = $approvalToken->channels ?? [];
 
@@ -303,13 +356,13 @@ class TaskApprovalService
 
         $client = $round->task->client;
 
-        $variables = [
+        $variables = array_merge([
             'tarefa'         => $round->task->title,
             'link_aprovacao' => route('approval.show', $approvalToken->token),
-        ];
+        ], $extraVariables);
 
         foreach ($channels as $channel) {
-            app(NotificationDispatchService::class)->dispatch('aprovacao', $channel, $client, $contact, $variables);
+            app(NotificationDispatchService::class)->dispatch($trigger, $channel, $client, $contact, $variables);
         }
 
         $approvalToken->update(['notified_at' => now()]);

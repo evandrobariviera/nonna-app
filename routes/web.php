@@ -451,6 +451,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('approvals.results');
     Route::post('/aprovacoes/{round}/enviar', [\App\Http\Controllers\ApprovalDashboardController::class, 'send'])
         ->name('approvals.send');
+    Route::post('/aprovacoes/{round}/enviar-aviso', [\App\Http\Controllers\ApprovalDashboardController::class, 'sendAviso'])
+        ->name('approvals.send-aviso');
+    Route::post('/aprovacoes/{round}/resolver-aviso', [\App\Http\Controllers\ApprovalDashboardController::class, 'resolveAviso'])
+        ->name('approvals.resolve-aviso');
     Route::post('/aprovacoes/{round}/reenviar', [\App\Http\Controllers\ApprovalDashboardController::class, 'resend'])
         ->name('approvals.resend');
     Route::post('/aprovacoes/tokens/{token}/reenviar', [\App\Http\Controllers\ApprovalDashboardController::class, 'resendToken'])

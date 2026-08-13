@@ -70,6 +70,17 @@ class ApprovalDashboardController extends Controller
             $query->whereHas('task', fn ($q) => $q->where('client_id', $request->client_id));
         }
 
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        // Aprovado some da Lista por padrão — igual "mostrar_concluidos" em Tarefas
+        // (TaskController::filteredTasks()) — a menos que o usuário já tenha filtrado
+        // por um status específico, aí o filtro manda.
+        if (!$request->boolean('mostrar_aprovados') && !$request->filled('status')) {
+            $query->where('status', '!=', 'approved');
+        }
+
         $rounds = $query->paginate(30)->withQueryString();
 
         $board = $this->buildBoard($request->input('client_id'));
@@ -125,6 +136,35 @@ class ApprovalDashboardController extends Controller
         $service->sendToClient($round);
 
         return back()->with('success', 'Enviado! Os contatos ligados foram notificados.');
+    }
+
+    // Envia o Aviso (rodada sem entregável) com a mensagem escrita na hora —
+    // diferente de send(), resolve a rodada na hora (não espera decisão do
+    // cliente, ver TaskApprovalService::sendAviso()).
+    public function sendAviso(Request $request, TaskApprovalRound $round, TaskApprovalService $service)
+    {
+        if (!$round->isAviso() || $round->status !== 'pending') {
+            return back()->with('warning', 'Essa rodada não é um aviso pendente.');
+        }
+
+        $data = $request->validate(['message' => ['required', 'string', 'max:2000']]);
+
+        $service->sendAviso($round, $data['message']);
+
+        return back()->with('success', 'Aviso enviado ao cliente.');
+    }
+
+    // Tira o Aviso da fila sem notificar ninguém — pra quando o retorno já foi
+    // combinado por outro canal ou simplesmente não precisa avisar o cliente.
+    public function resolveAviso(TaskApprovalRound $round, TaskApprovalService $service)
+    {
+        if (!$round->isAviso() || $round->status !== 'pending') {
+            return back()->with('warning', 'Essa rodada não é um aviso pendente.');
+        }
+
+        $service->resolveAvisoWithoutNotifying($round);
+
+        return back()->with('success', 'Marcado como resolvido, sem notificar o cliente.');
     }
 
     // Liga/desliga um contato específico pra essa rodada — AJAX (inlinePatch),
