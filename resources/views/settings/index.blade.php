@@ -1100,7 +1100,7 @@
                         <button type="button" @click="open = !open"
                                 class="w-full flex items-center justify-between text-left">
                             <span class="text-sm font-bold" style="color:var(--text)">{{ $typeLabel }}</span>
-                            <x-icon name="chevron-right" size="16" class="flex-shrink-0 transition-transform" :class="open ? 'rotate-90' : ''" style="color:var(--muted)" />
+                            <x-icon name="chevron-right" size="16" class="flex-shrink-0 transition-transform" x-bind:class="open ? 'rotate-90' : ''" style="color:var(--muted)" />
                         </button>
 
                         <div x-show="open" x-transition class="mt-4 space-y-4">

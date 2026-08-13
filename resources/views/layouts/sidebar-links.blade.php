@@ -47,7 +47,7 @@
             <x-icon name="database" size="16" class="flex-shrink-0" />
             Cadastros
         </span>
-        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" :class="open ? 'rotate-90' : ''" />
+        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" x-bind:class="open ? 'rotate-90' : ''" />
     </button>
     <div x-show="open" x-transition style="display:none">
         <a href="{{ route('contacts.index') }}" class="nav-sub-item {{ request()->routeIs('contacts.*') ? 'active' : '' }}">Contatos</a>
@@ -64,7 +64,7 @@
             <x-icon name="circle-dollar-sign" size="16" class="flex-shrink-0" />
             Financeiro
         </span>
-        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" :class="open ? 'rotate-90' : ''" />
+        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" x-bind:class="open ? 'rotate-90' : ''" />
     </button>
     <div x-show="open" x-transition style="display:none">
         <a href="{{ route('contracts.index') }}" class="nav-sub-item {{ request()->routeIs('contracts.*') || request()->routeIs('clients.contracts.*') ? 'active' : '' }}">Contratos</a>
@@ -96,7 +96,7 @@
             <x-icon name="message-circle" size="16" class="flex-shrink-0" />
             Atendimento
         </span>
-        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" :class="open ? 'rotate-90' : ''" />
+        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" x-bind:class="open ? 'rotate-90' : ''" />
     </button>
     <div x-show="open" x-transition style="display:none">
         <a href="{{ route('meetings.index') }}" class="nav-sub-item {{ request()->routeIs('meetings.*') ? 'active' : '' }}">Agenda</a>
@@ -123,7 +123,7 @@
             <x-icon name="users" size="16" class="flex-shrink-0" />
             Gestão de Clientes
         </span>
-        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" :class="open ? 'rotate-90' : ''" />
+        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" x-bind:class="open ? 'rotate-90' : ''" />
     </button>
     <div x-show="open" x-transition style="display:none">
         <a href="#" class="nav-sub-item">Entrada (Onboarding)</a>
@@ -139,7 +139,7 @@
             <x-icon name="folder-kanban" size="16" class="flex-shrink-0" />
             Fluxo
         </span>
-        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" :class="open ? 'rotate-90' : ''" />
+        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" x-bind:class="open ? 'rotate-90' : ''" />
     </button>
     <div x-show="open" x-transition style="display:none">
         <a href="{{ route('macroplans.index') }}"
@@ -174,7 +174,7 @@
             <x-icon name="zap" size="16" class="flex-shrink-0" />
             Sprints
         </span>
-        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" :class="open ? 'rotate-90' : ''" />
+        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" x-bind:class="open ? 'rotate-90' : ''" />
     </button>
     <div x-show="open" x-transition style="display:none">
         <a href="{{ route('sprints.index') }}"
@@ -223,7 +223,7 @@
             <x-icon name="refresh-cw" size="16" class="flex-shrink-0" />
             Rotina
         </span>
-        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" :class="open ? 'rotate-90' : ''" />
+        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" x-bind:class="open ? 'rotate-90' : ''" />
     </button>
     <div x-show="open" x-transition style="display:none">
         <a href="{{ route('campaigns.index') }}" class="nav-sub-item {{ request()->routeIs('campaigns.*') ? 'active' : '' }}">
@@ -275,7 +275,7 @@
             <x-icon name="sparkles" size="16" class="flex-shrink-0" />
             Agentes & IA
         </span>
-        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" :class="open ? 'rotate-90' : ''" />
+        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" x-bind:class="open ? 'rotate-90' : ''" />
     </button>
     <div x-show="open" x-transition style="display:none">
         <a href="{{ route('ai.agents.index') }}"
@@ -338,7 +338,7 @@
             <x-icon name="layout-dashboard" size="16" class="flex-shrink-0" />
             Meus Dashboards
         </span>
-        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" :class="open ? 'rotate-90' : ''" />
+        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" x-bind:class="open ? 'rotate-90' : ''" />
     </button>
     <div x-show="open" x-transition style="display:none">
         @foreach($_myRoles as $_role)

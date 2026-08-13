@@ -65,7 +65,7 @@
                     <div x-data="{ open: false }" class="relative">
                         <button @click="open = !open" class="flex items-center justify-between w-full text-left" style="min-width:0">
                             <p class="text-xs font-bold truncate" style="color:var(--text)">{{ $currentClient->company_name }}</p>
-                            <x-icon name="chevron-right" size="14" class="flex-shrink-0" style="color:var(--muted); transition:transform .15s" :class="open ? '-rotate-90' : 'rotate-90'" />
+                            <x-icon name="chevron-right" size="14" class="flex-shrink-0" style="color:var(--muted); transition:transform .15s" x-bind:class="open ? '-rotate-90' : 'rotate-90'" />
                         </button>
                         <div x-show="open" @click.outside="open = false" x-transition x-cloak
                              class="absolute left-0 right-0 mt-2 rounded-lg z-10 py-1"

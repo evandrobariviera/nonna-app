@@ -21,7 +21,7 @@
         <td colspan="10" style="padding:10px 16px">
             <button @click="groupOpen = !groupOpen" type="button" class="flex items-center gap-3 w-full text-left">
                 <x-icon name="chevron-right" size="12" stroke="2.5" class="flex-shrink-0 transition-transform duration-200"
-                     :class="groupOpen ? 'rotate-90' : ''"
+                     x-bind:class="groupOpen ? 'rotate-90' : ''"
                      style="color:var(--muted)" />
 
                 <div class="flex h-6 w-6 items-center justify-center rounded-full text-white flex-shrink-0"

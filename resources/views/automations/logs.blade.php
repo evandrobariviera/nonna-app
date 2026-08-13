@@ -63,7 +63,7 @@
                                 </div>
                             </div>
                             <x-icon name="chevron-right" size="14" class="flex-shrink-0 transition-transform duration-200"
-                                 :style="open ? 'transform:rotate(90deg)' : ''"
+                                 x-bind:style="open ? 'transform:rotate(90deg)' : ''"
                                  style="color:var(--muted)" />
                         </div>
 
