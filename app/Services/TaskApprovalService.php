@@ -143,6 +143,9 @@ class TaskApprovalService
         }
 
         $round->update(['sent_at' => now()]);
+
+        // Só a situação — o status da tarefa continua "Aprovação", intocado.
+        $round->task->update(['situation' => 'Em Aprovação Cliente']);
     }
 
     /**
@@ -249,6 +252,9 @@ class TaskApprovalService
         }
 
         $round->update(['sent_at' => now(), 'status' => 'approved', 'resolved_at' => now()]);
+
+        // Só a situação — o status da tarefa continua "Aprovação", intocado.
+        $round->task->update(['situation' => 'Em Aprovação Cliente']);
     }
 
     /**
