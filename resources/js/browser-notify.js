@@ -6,38 +6,70 @@
 const STORAGE_KEY = 'browserNotifyEnabled';
 const POLL_MS = 30000;
 
-function beep() {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.15);
-}
-
 export function registerBrowserNotify(Alpine) {
     Alpine.store('browserNotify', {
         enabled: localStorage.getItem(STORAGE_KEY) === 'true',
         _timer: null,
         _since: null,
+        _audioCtx: null,
 
         init() {
+            // AudioContext só toca de verdade se foi criado/retomado dentro de um
+            // gesto do usuário — um clique em QUALQUER lugar da página já libera
+            // isso pro resto da sessão (política do Chrome), então escuta uma vez
+            // aqui pra também destravar o som na sessão retomada automaticamente
+            // (localStorage já ligado de uma visita anterior, sem clique novo no botão).
+            document.addEventListener('click', () => this._unlockAudio(), { once: true });
+
             if (this.enabled && Notification.permission === 'granted') {
                 this.startPolling();
             }
         },
 
         async enable() {
+            if (Notification.permission === 'denied') {
+                alert('As notificações deste site estão bloqueadas no navegador. Libere em "Configurações do site" (ícone de cadeado/informações na barra de endereço → Notificações → Permitir) e tente de novo.');
+                return;
+            }
+
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') {
                 return;
             }
+
+            this._unlockAudio();
             this.enabled = true;
             localStorage.setItem(STORAGE_KEY, 'true');
             this.startPolling();
+        },
+
+        // Cria o AudioContext (ou retoma se já existe e ficou suspenso) — precisa
+        // rodar dentro de um gesto real (clique) pra não ficar mudo; reaproveitar a
+        // MESMA instância depois (inclusive de dentro do setInterval do polling,
+        // sem gesto novo) funciona, é só criar um AudioContext novo a cada beep que
+        // o Chrome bloqueia o som.
+        _unlockAudio() {
+            if (!this._audioCtx) {
+                this._audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (this._audioCtx.state === 'suspended') {
+                this._audioCtx.resume();
+            }
+        },
+
+        _beep() {
+            if (!this._audioCtx || this._audioCtx.state !== 'running') {
+                return;
+            }
+            const ctx = this._audioCtx;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.frequency.value = 880;
+            gain.gain.setValueAtTime(0.15, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
+            osc.connect(gain).connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.15);
         },
 
         disable() {
@@ -74,7 +106,7 @@ export function registerBrowserNotify(Alpine) {
                             window.location.href = n.link;
                         }
                     };
-                    beep();
+                    this._beep();
                 }
             } catch (e) {
                 // Falha de rede pontual não deve derrubar o polling — só ignora e tenta de novo no próximo ciclo.
