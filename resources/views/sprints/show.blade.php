@@ -139,20 +139,17 @@
         $total     = $sprint->tasks->whereNotIn('status', ['cancelado'])->count();
         $done      = $sprint->tasks->where('status', 'concluido')->count();
         $progress  = $total > 0 ? (int) round(($done / $total) * 100) : 0;
+        $statusCounts = collect(\App\Models\Task::$statuses)
+            ->map(fn ($meta, $key) => $kanban[$key]->count());
     @endphp
     <div class="card px-5 py-4 mb-5">
+        <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Distribuição por Status</span>
+            <span id="sprint-progress-pct" class="text-sm font-black" style="color:var(--text)">{{ $progress }}% concluído</span>
+        </div>
+        <x-status-distribution-bar id="sprint-progress-bar" :counts="$statusCounts" :total="$total" class="rounded-full mb-1" />
+        <p id="sprint-progress-text" class="text-xs mt-1 font-mono mb-3" style="color:var(--muted)">{{ $done }} / {{ $total }} concluídas</p>
         <div class="flex items-center gap-8 flex-wrap">
-            <div class="flex-1" style="min-width:180px">
-                <div class="flex items-center justify-between mb-1">
-                    <span class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Progresso</span>
-                    <span id="sprint-progress-pct" class="text-sm font-black" style="color:var(--text)">{{ $progress }}%</span>
-                </div>
-                <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--border2)">
-                    <div id="sprint-progress-bar" class="h-2 rounded-full transition-all"
-                         style="width:{{ $progress }}%; background:{{ $progress >= 100 ? 'var(--green)' : 'var(--grad)' }}"></div>
-                </div>
-                <p id="sprint-progress-text" class="text-xs mt-1 font-mono" style="color:var(--muted)">{{ $done }} / {{ $total }} concluídas</p>
-            </div>
             @foreach(\App\Models\Task::$statuses as $statusKey => $meta)
                 @php $cnt = $kanban[$statusKey]->count(); @endphp
                 <div class="text-center">
@@ -454,20 +451,22 @@
                 if (fromStat) fromStat.textContent = String(parseInt(fromStat.textContent, 10) - 1);
                 if (toStat) toStat.textContent = String(parseInt(toStat.textContent, 10) + 1);
 
-                var total = 0, done = 0;
+                var total = 0, done = 0, counts = {};
                 document.querySelectorAll('[data-stat-count]').forEach(function (el) {
                     var status = el.dataset.statCount;
                     var n = parseInt(el.textContent, 10) || 0;
+                    counts[status] = n;
                     if (status !== 'cancelado') total += n;
                     if (status === 'concluido') done = n;
                 });
                 var pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
-                document.getElementById('sprint-progress-pct').textContent = pct + '%';
+                document.getElementById('sprint-progress-pct').textContent = pct + '% concluído';
                 document.getElementById('sprint-progress-text').textContent = done + ' / ' + total + ' concluídas';
-                var bar = document.getElementById('sprint-progress-bar');
-                bar.style.width = pct + '%';
-                bar.style.background = pct >= 100 ? 'var(--green)' : 'var(--grad)';
+                document.querySelectorAll('#sprint-progress-bar [data-status-segment]').forEach(function (seg) {
+                    var n = counts[seg.dataset.statusSegment] || 0;
+                    seg.style.width = (total > 0 ? (n / total * 100) : 0) + '%';
+                });
             });
         });
     </script>

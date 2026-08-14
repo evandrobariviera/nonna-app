@@ -35,11 +35,15 @@ class DashboardController extends Controller
         }
 
         $activeSprint = Sprint::where('status', 'active')->first();
+        $sprintByStatus = collect();
         if ($activeSprint) {
             $activeSprint->load('tasks');
             $sprintTotal = $activeSprint->tasks->whereNotIn('status', ['cancelado'])->count();
             $sprintDone  = $activeSprint->tasks->where('status', 'concluido')->count();
             $sprintProgress = $sprintTotal > 0 ? (int) round(($sprintDone / $sprintTotal) * 100) : 0;
+            $sprintByStatus = $activeSprint->tasks
+                ->whereNotIn('status', ['cancelado'])
+                ->countBy('status');
         } else {
             $sprintTotal = $sprintDone = $sprintProgress = 0;
         }
@@ -242,7 +246,7 @@ class DashboardController extends Controller
 
         return view('dashboard', compact(
             'literaryQuote',
-            'activeSprint', 'sprintTotal', 'sprintDone', 'sprintProgress',
+            'activeSprint', 'sprintTotal', 'sprintDone', 'sprintProgress', 'sprintByStatus',
             'myAdjustmentTasks', 'myProductionTasks', 'myReadyForProductionTasks',
             'myExecutorSprintByStatus', 'myExecutorSprintTotal',
             'myMeetingsByStatus',
