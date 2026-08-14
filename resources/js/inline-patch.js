@@ -7,6 +7,9 @@ export function registerInlinePatch() {
     // quando a chamada é AJAX — um 302 sem isso faria o fetch() seguir o redirect
     // mantendo o verbo PATCH (só GET/HEAD/POST viram GET automaticamente), e a página de
     // destino (ex: /filas) não aceita PATCH => 405.
+    // Retorna { ok, message } em vez de só um booleano — message vem do corpo JSON da
+    // resposta quando o servidor bloqueia a mudança (ex: trava de carga do executor), pra
+    // quem chama poder mostrar o motivo real em vez de um aviso genérico.
     window.inlinePatch = async function (url, data) {
         try {
             const res = await fetch(url, {
@@ -19,9 +22,12 @@ export function registerInlinePatch() {
                 },
                 body: JSON.stringify(data),
             });
-            return res.ok;
+            if (res.ok) return { ok: true, message: null };
+            let message = null;
+            try { message = (await res.json()).message; } catch (e) { /* resposta não era JSON */ }
+            return { ok: false, message };
         } catch (e) {
-            return false;
+            return { ok: false, message: null };
         }
     };
 
@@ -34,11 +40,11 @@ export function registerInlinePatch() {
     // (e com isso fechar/piscar a tabela inteira) quando o campo alterado é justamente o
     // agrupamento atual da tela; do contrário a atualização local já basta.
     window.applyFill = function (url, data, onSuccess) {
-        window.inlinePatch(url, data).then((ok) => {
+        window.inlinePatch(url, data).then(({ ok, message }) => {
             if (ok) {
                 onSuccess();
             } else {
-                alert('Falha ao salvar. Atualize a página e tente novamente.');
+                alert(message || 'Falha ao salvar. Atualize a página e tente novamente.');
             }
         });
     };

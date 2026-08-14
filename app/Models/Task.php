@@ -445,4 +445,49 @@ class Task extends Model
         $resp = $task->executors->first(fn ($u) => $u->pivot->role === 'responsavel');
         return $resp ? $resp->id . '|' . $resp->name : '__sem_responsavel__|Sem responsável';
     }
+
+    // Trava: no máximo 1 pessoa por papel capado (executor/responsavel) por tarefa.
+    // Papéis sem limite (aprovador/observador) passam direto.
+    public static function executorRoleCapRule(): \Closure
+    {
+        return function (string $attribute, $value, \Closure $fail) {
+            $counts = array_count_values(array_filter((array) $value, fn ($r) => in_array($r, ['executor', 'responsavel'], true)));
+            if (($counts['executor'] ?? 0) > 1) {
+                $fail('Só pode haver 1 executor por tarefa.');
+            }
+            if (($counts['responsavel'] ?? 0) > 1) {
+                $fail('Só pode haver 1 responsável por tarefa.');
+            }
+        };
+    }
+
+    // Quantas tarefas o usuário tem em "Em Produção" agora — conta pelo executor_id
+    // legado OU pelo papel 'executor' na task_executors (mesmo padrão dual usado em
+    // executorGroupKey()). $excludeTaskId tira a própria tarefa sendo salva da conta.
+    public static function wipCount(string $userId, ?string $excludeTaskId = null): int
+    {
+        return static::where('status', 'em_producao')
+            ->when($excludeTaskId, fn ($q) => $q->where('id', '!=', $excludeTaskId))
+            ->where(fn ($q) => $q->where('executor_id', $userId)
+                ->orWhereHas('executors', fn ($q2) => $q2->where('users.id', $userId)->where('task_executors.role', 'executor')))
+            ->count();
+    }
+
+    // Trava de carga: máximo 2 tarefas em produção por executor. Só dispara quando a
+    // contagem JÁ está em 2+ (adicionar mais uma estouraria pra 3+) — nunca bloqueia
+    // em 2→2 (sem mudança) nem força quem já está acima do limite pra baixo.
+    public static function wipBlockReason(?string $userId, ?string $excludeTaskId = null): ?string
+    {
+        if (!$userId) {
+            return null;
+        }
+
+        $count = static::wipCount($userId, $excludeTaskId);
+        if ($count < 2) {
+            return null;
+        }
+
+        $name = User::find($userId)?->name ?? 'Esse usuário';
+        return "{$name} já tem {$count} tarefas em Em Produção (limite atingido). Conclua ou mova uma antes de iniciar outra.";
+    }
 }

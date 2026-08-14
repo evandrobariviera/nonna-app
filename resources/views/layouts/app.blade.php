@@ -333,6 +333,13 @@
 
             {{-- PÁGINA --}}
             <main class="app-page flex-1 overflow-y-auto p-6" style="background:var(--bg)">
+                @if($errors->any())
+                    <div class="mb-5 px-4 py-3 text-sm font-semibold" style="background:rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.25); color:var(--red)">
+                        @foreach($errors->all() as $error)
+                            <p>{{ $error }}</p>
+                        @endforeach
+                    </div>
+                @endif
                 {{ $slot }}
             </main>
         </div>

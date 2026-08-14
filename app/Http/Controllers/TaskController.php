@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Services\AutomationEngine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class TaskController extends Controller
 {
@@ -222,6 +223,10 @@ class TaskController extends Controller
             'sprint_id'          => 'nullable|uuid|exists:sprints,id',
         ]);
 
+        if ($reason = $this->wipBlockReasonForSave($task, $data['status'], $data['executor_id'] ?? null, $request->has('executor_id'))) {
+            throw ValidationException::withMessages(['status' => $reason]);
+        }
+
         $task->update([
             ...$data,
             'internal_approval' => $request->boolean('internal_approval'),
@@ -239,6 +244,12 @@ class TaskController extends Controller
         abort_unless($project->macro_plan_id === $macroplan->id, 403);
 
         $data = $request->validate($this->storeRules());
+
+        if (($data['status'] ?? 'backlog') === 'em_producao') {
+            if ($reason = Task::wipBlockReason($this->firstExecutorId($data))) {
+                throw ValidationException::withMessages(['status' => $reason]);
+            }
+        }
 
         $task = $project->tasks()->create([
             ...$data,
@@ -260,6 +271,12 @@ class TaskController extends Controller
     public function storeStandalone(Request $request, Project $project)
     {
         $data = $request->validate($this->storeRules());
+
+        if (($data['status'] ?? 'backlog') === 'em_producao') {
+            if ($reason = Task::wipBlockReason($this->firstExecutorId($data))) {
+                throw ValidationException::withMessages(['status' => $reason]);
+            }
+        }
 
         $task = $project->tasks()->create([
             ...$data,
@@ -284,6 +301,10 @@ class TaskController extends Controller
 
         $data = $request->validate($this->updateRules());
 
+        if ($reason = $this->wipBlockReasonForSave($task, $data['status'], $this->firstExecutorId($data))) {
+            throw ValidationException::withMessages(['status' => $reason]);
+        }
+
         $task->update([...$data, 'internal_approval' => $request->boolean('internal_approval')]);
         $this->syncExecutors($task, $data);
 
@@ -296,6 +317,10 @@ class TaskController extends Controller
         abort_unless($task->project_id === $project->id, 403);
 
         $data = $request->validate($this->updateRules());
+
+        if ($reason = $this->wipBlockReasonForSave($task, $data['status'], $this->firstExecutorId($data))) {
+            throw ValidationException::withMessages(['status' => $reason]);
+        }
 
         $task->update([...$data, 'internal_approval' => $request->boolean('internal_approval')]);
         $this->syncExecutors($task, $data);
@@ -392,6 +417,15 @@ class TaskController extends Controller
         $oldUser = TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->first()?->user;
         $wasAlready = $data['executor_id'] && $oldUser?->id === $data['executor_id'];
 
+        if ($task->status === 'em_producao' && $data['executor_id'] && !$wasAlready) {
+            if ($reason = Task::wipBlockReason($data['executor_id'], $task->id)) {
+                if ($request->wantsJson()) {
+                    return response()->json(['message' => $reason], 422);
+                }
+                throw ValidationException::withMessages(['executor_id' => $reason]);
+            }
+        }
+
         TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->delete();
 
         if ($data['executor_id']) {
@@ -462,9 +496,18 @@ class TaskController extends Controller
     {
         abort_unless($task->project_id === $project->id, 403);
 
-        $task->update(['status' => $request->validate([
+        $newStatus = $request->validate([
             'status' => 'required|in:' . implode(',', array_keys(Task::$statuses)),
-        ])['status']]);
+        ])['status'];
+
+        if ($reason = $this->wipBlockReasonForTransition($task, $newStatus)) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => $reason], 422);
+            }
+            throw ValidationException::withMessages(['status' => $reason]);
+        }
+
+        $task->update(['status' => $newStatus]);
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true]);
@@ -477,9 +520,18 @@ class TaskController extends Controller
     {
         abort_unless($task->project_id === $project->id, 403);
 
-        $task->update(['status' => $request->validate([
+        $newStatus = $request->validate([
             'status' => 'required|in:' . implode(',', array_keys(Task::$statuses)),
-        ])['status']]);
+        ])['status'];
+
+        if ($reason = $this->wipBlockReasonForTransition($task, $newStatus)) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => $reason], 422);
+            }
+            throw ValidationException::withMessages(['status' => $reason]);
+        }
+
+        $task->update(['status' => $newStatus]);
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true]);
@@ -498,6 +550,13 @@ class TaskController extends Controller
             'situation' => 'sometimes|in:' . implode(',', $situationKeys),
         ]);
 
+        if ($reason = $this->wipBlockReasonForTransition($task, $data['status'])) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => $reason], 422);
+            }
+            throw ValidationException::withMessages(['status' => $reason]);
+        }
+
         $task->update($data);
 
         if ($request->wantsJson()) {
@@ -505,6 +564,53 @@ class TaskController extends Controller
         }
 
         return redirect()->back()->with('success', 'Status atualizado.');
+    }
+
+    // Trava de carga (Task::wipBlockReason()) — só entra em jogo quando o status está
+    // MUDANDO pra em_producao (não em toda gravação onde o status já era esse).
+    private function wipBlockReasonForTransition(Task $task, string $newStatus): ?string
+    {
+        if ($newStatus !== 'em_producao' || $task->status === 'em_producao') {
+            return null;
+        }
+
+        $execId = TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->value('user_id')
+            ?? $task->executor_id;
+
+        return Task::wipBlockReason($execId, $task->id);
+    }
+
+    // Variante pra formulários que reenviam status + executor juntos (updateInline,
+    // update/updateStandalone) — dispara se o status está virando em_producao OU se
+    // o executor está mudando numa tarefa que já está em_producao.
+    private function wipBlockReasonForSave(Task $task, string $newStatus, ?string $newExecutorId, bool $executorSubmitted = true): ?string
+    {
+        $oldExecId = TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->value('user_id')
+            ?? $task->executor_id;
+
+        $statusEnteringProduction        = $newStatus === 'em_producao' && $task->status !== 'em_producao';
+        $executorChangingInProduction    = $executorSubmitted && $newStatus === 'em_producao' && $task->status === 'em_producao'
+            && $newExecutorId !== $oldExecId;
+
+        if (!$statusEnteringProduction && !$executorChangingInProduction) {
+            return null;
+        }
+
+        return Task::wipBlockReason($newExecutorId ?? $oldExecId, $task->id);
+    }
+
+    // Resolve o id de quem vai ficar como 'executor' a partir de executor_ids[]/
+    // executor_roles[] (formato usado por store/update via syncExecutors()) — o mesmo
+    // "primeira pessoa com esse papel" que o dedupe de syncExecutors() aplica.
+    private function firstExecutorId(array $data): ?string
+    {
+        foreach (($data['executor_ids'] ?? []) as $userId) {
+            if (($data['executor_roles'][$userId] ?? 'executor') === 'executor') {
+                return $userId;
+            }
+        }
+
+        return null;
     }
 
     public function bulkUpdate(Request $request)
@@ -536,7 +642,24 @@ class TaskController extends Controller
                 // produtividade.
                 $now = now();
                 $changedBy = Auth::id();
+                // Tally em memória por executor — não dá pra confiar só numa query por
+                // tarefa: mover 3 tarefas do mesmo executor no mesmo lote precisa contar
+                // as anteriores do PRÓPRIO lote, que o banco ainda não reflete.
+                $wipTally = [];
+                $applyIds = [];
                 foreach ($tasks as $task) {
+                    if ($data['status'] === 'em_producao' && $task->status !== 'em_producao') {
+                        $execId = TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->value('user_id')
+                            ?? $task->executor_id;
+                        if ($execId) {
+                            $wipTally[$execId] ??= Task::wipCount($execId);
+                            if ($wipTally[$execId] >= 2) {
+                                $skipped[] = ['id' => $task->id, 'title' => $task->title, 'reason' => 'limite de 2 tarefas em Em Produção do executor'];
+                                continue;
+                            }
+                            $wipTally[$execId]++;
+                        }
+                    }
                     if ($task->status !== $data['status']) {
                         TaskStatusTransition::create([
                             'task_id'     => $task->id,
@@ -547,8 +670,9 @@ class TaskController extends Controller
                         ]);
                         TaskActivity::log($task, 'status_changed', Task::labelForField('status', $task->status), Task::labelForField('status', $data['status']), $changedBy);
                     }
+                    $applyIds[] = $task->id;
                 }
-                Task::whereIn('id', $data['task_ids'])->update(['status' => $data['status']]);
+                Task::whereIn('id', $applyIds)->update(['status' => $data['status']]);
                 break;
 
             case 'situation':
@@ -562,8 +686,20 @@ class TaskController extends Controller
 
             case 'executor':
                 $newUser = !empty($data['executor_id']) ? User::find($data['executor_id']) : null;
+                // Igual ao case 'status': tally em memória, todas as tarefas do lote vão
+                // pro mesmo executor então a contagem inicial só precisa ser buscada 1x.
+                $wipCount = !empty($data['executor_id']) ? Task::wipCount($data['executor_id']) : 0;
                 foreach ($tasks as $task) {
                     $oldUser = TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->first()?->user;
+
+                    if ($task->status === 'em_producao' && !empty($data['executor_id']) && $oldUser?->id !== $data['executor_id']) {
+                        if ($wipCount >= 2) {
+                            $skipped[] = ['id' => $task->id, 'title' => $task->title, 'reason' => 'limite de 2 tarefas em Em Produção do executor'];
+                            continue;
+                        }
+                        $wipCount++;
+                    }
+
                     TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->delete();
                     if (!empty($data['executor_id'])) {
                         // Mesma pessoa pode já ser responsável — não mexe na linha dela.
@@ -659,7 +795,8 @@ class TaskController extends Controller
             'executor_id'        => 'nullable|exists:users,id',
             'executor_ids'       => 'nullable|array',
             'executor_ids.*'     => 'exists:users,id',
-            'executor_roles'     => 'nullable|array',
+            'executor_roles'     => ['nullable', 'array', Task::executorRoleCapRule()],
+            'executor_roles.*'   => 'in:executor,responsavel,aprovador,observador',
             'responsavel_id'     => 'nullable|exists:users,id',
             'due_date'           => 'nullable|date',
             'approval_date'      => 'nullable|date',
@@ -687,7 +824,8 @@ class TaskController extends Controller
             'executor_id'        => 'nullable|exists:users,id',
             'executor_ids'       => 'nullable|array',
             'executor_ids.*'     => 'exists:users,id',
-            'executor_roles'     => 'nullable|array',
+            'executor_roles'     => ['nullable', 'array', Task::executorRoleCapRule()],
+            'executor_roles.*'   => 'in:executor,responsavel,aprovador,observador',
             'due_date'           => 'nullable|date',
             'approval_date'      => 'nullable|date',
             'publish_date'       => 'nullable|date',
@@ -762,6 +900,22 @@ class TaskController extends Controller
         $ids           = $data['executor_ids'] ?? [];
         $roles         = $data['executor_roles'] ?? [];
         $responsavelId = $data['responsavel_id'] ?? null;
+
+        // Rede de segurança — a validação (Task::executorRoleCapRule()) já devia ter
+        // barrado 2+ pessoas no mesmo papel capado antes de chegar aqui. Mantém só a
+        // primeira de cada papel (executor/responsavel) na ordem de submissão.
+        $seenCappedRole = [];
+        foreach ($ids as $key => $userId) {
+            $role = $roles[$userId] ?? 'executor';
+            if (in_array($role, ['executor', 'responsavel'], true)) {
+                if (isset($seenCappedRole[$role])) {
+                    unset($ids[$key]);
+                    continue;
+                }
+                $seenCappedRole[$role] = true;
+            }
+        }
+        $ids = array_values($ids);
 
         if (empty($ids) && !$responsavelId) {
             return;

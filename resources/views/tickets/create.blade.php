@@ -156,17 +156,18 @@
                             <div class="flex items-center gap-1 px-2 py-1 text-xs"
                                  style="background:var(--s3); border:1px solid var(--border2)">
                                 <span x-text="item.name" style="color:var(--text)"></span>
-                                <select :name="'executor_roles[' + item.id + ']'"
+                                <select :name="'executor_roles[' + item.id + ']'" @change="setRole(item, $event.target.value, $event.target)"
                                     class="text-xs focus:outline-none ml-1"
                                     style="background:var(--s3); color:var(--muted); border:none">
-                                    <option value="executor">Executor</option>
-                                    <option value="aprovador">Aprovador</option>
+                                    <option value="executor" :selected="item.role === 'executor'">Executor</option>
+                                    <option value="aprovador" :selected="item.role === 'aprovador'">Aprovador</option>
                                 </select>
                                 <input type="hidden" :name="'executor_ids[]'" :value="item.id">
                                 <button type="button" @click="remove(idx)" class="btn btn-danger btn-xs">✕</button>
                             </div>
                         </template>
                     </div>
+                    <p x-show="roleError" x-text="roleError" x-cloak class="text-xs mb-1.5" style="color:var(--red)"></p>
                     <select @change="add($event)"
                         class="w-full px-4 py-2.5 text-sm focus:outline-none"
                         style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
@@ -253,6 +254,12 @@
 function executorPicker(initial = []) {
     return {
         selected: initial,
+        roleError: '',
+        // 'executor' e 'responsavel' são papéis capados em 1 por tarefa — 'aprovador'/
+        // 'observador' não têm limite aqui.
+        countRole(role, excludeId = null) {
+            return this.selected.filter(s => s.role === role && s.id != excludeId).length;
+        },
         add(event) {
             const id   = event.target.value;
             const name = event.target.selectedOptions[0]?.dataset?.name;
@@ -260,10 +267,25 @@ function executorPicker(initial = []) {
                 event.target.value = '';
                 return;
             }
-            this.selected.push({ id, name, role: 'executor' });
+            const role = this.countRole('executor') > 0 ? 'aprovador' : 'executor';
+            this.selected.push({ id, name, role });
             event.target.value = '';
         },
-        remove(idx) { this.selected.splice(idx, 1); }
+        setRole(item, newRole, selectEl) {
+            if ((newRole === 'executor' || newRole === 'responsavel') && this.countRole(newRole, item.id) > 0) {
+                selectEl.value = item.role;
+                this.roleError = newRole === 'executor'
+                    ? 'Já existe um Executor nesse ticket — troque o outro primeiro.'
+                    : 'Já existe um Responsável nesse ticket — troque o outro primeiro.';
+                return;
+            }
+            item.role = newRole;
+            this.roleError = '';
+        },
+        remove(idx) {
+            this.selected.splice(idx, 1);
+            this.roleError = '';
+        }
     }
 }
 </script>

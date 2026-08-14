@@ -7,10 +7,12 @@ use App\Models\Project;
 use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\TaskAttachment;
+use App\Models\TaskExecutor;
 use App\Models\User;
 use App\Services\AutomationEngine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class TicketController extends Controller
 {
@@ -106,7 +108,8 @@ class TicketController extends Controller
             'executor_id'        => 'nullable|exists:users,id',
             'executor_ids'       => 'nullable|array',
             'executor_ids.*'     => 'exists:users,id',
-            'executor_roles'     => 'nullable|array',
+            'executor_roles'     => ['nullable', 'array', Task::executorRoleCapRule()],
+            'executor_roles.*'   => 'in:executor,responsavel,aprovador,observador',
             'responsavel_id'     => 'nullable|exists:users,id',
             'sprint_id'          => 'nullable|uuid|exists:sprints,id',
             'due_date'           => 'nullable|date',
@@ -144,6 +147,21 @@ class TicketController extends Controller
         // (task_id, user_id, role)).
         $ids   = $data['executor_ids'] ?? [];
         $roles = $data['executor_roles'] ?? [];
+
+        // Rede de segurança — a validação (Task::executorRoleCapRule()) já devia ter
+        // barrado 2+ pessoas no mesmo papel capado antes de chegar aqui.
+        $seenCappedRole = [];
+        foreach ($ids as $key => $userId) {
+            $role = $roles[$userId] ?? 'executor';
+            if (in_array($role, ['executor', 'responsavel'], true)) {
+                if (isset($seenCappedRole[$role])) {
+                    unset($ids[$key]);
+                    continue;
+                }
+                $seenCappedRole[$role] = true;
+            }
+        }
+
         foreach ($ids as $userId) {
             $role = $roles[$userId] ?? 'executor';
             $task->executors()->attach($userId, ['role' => $role]);
@@ -186,6 +204,18 @@ class TicketController extends Controller
             'status'    => 'required|in:' . implode(',', array_keys(Task::$statuses)),
             'situation' => 'sometimes|in:' . implode(',', $situationKeys),
         ]);
+
+        if ($data['status'] === 'em_producao' && $task->status !== 'em_producao') {
+            $execId = TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->value('user_id')
+                ?? $task->executor_id;
+
+            if ($reason = Task::wipBlockReason($execId, $task->id)) {
+                if ($request->wantsJson()) {
+                    return response()->json(['message' => $reason], 422);
+                }
+                throw ValidationException::withMessages(['status' => $reason]);
+            }
+        }
 
         $task->update($data);
 

@@ -49,7 +49,7 @@ export function registerKanbanDnd() {
                             },
                             body: JSON.stringify({ [statusField]: newStatus, ...extra }),
                         }).then((res) => {
-                            if (!res.ok) throw new Error('update failed');
+                            if (!res.ok) throw res;
 
                             updateCount(fromColumn, -1);
                             updateCount(toColumn, 1);
@@ -57,10 +57,18 @@ export function registerKanbanDnd() {
                             board.dispatchEvent(new CustomEvent('kanban:moved', {
                                 detail: { card, fromColumn, toColumn, newStatus },
                             }));
-                        }).catch(() => {
+                        }).catch(async (err) => {
                             const ref = evt.from.children[evt.oldIndex] || null;
                             evt.from.insertBefore(card, ref);
-                            alert('Não foi possível mover o card. Tente novamente.');
+
+                            let msg = 'Não foi possível mover o card. Tente novamente.';
+                            if (err instanceof Response) {
+                                try {
+                                    const json = await err.json();
+                                    if (json.message) msg = json.message;
+                                } catch (e) { /* resposta não era JSON */ }
+                            }
+                            alert(msg);
                         });
                     },
                 });
