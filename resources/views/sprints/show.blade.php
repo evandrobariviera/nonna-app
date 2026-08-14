@@ -150,11 +150,17 @@
         <x-status-distribution-bar id="sprint-progress-bar" :counts="$statusCounts" :total="$total" class="rounded-full mb-1" />
         <p id="sprint-progress-text" class="text-xs mt-1 font-mono mb-3" style="color:var(--muted)">{{ $done }} / {{ $total }} concluídas</p>
         <div class="flex items-center gap-8 flex-wrap">
-            @foreach(\App\Models\Task::$statuses as $statusKey => $meta)
-                @php $cnt = $kanban[$statusKey]->count(); @endphp
+            @foreach(array_reverse(\App\Models\Task::$statuses, true) as $statusKey => $meta)
+                @php
+                    $cnt = $kanban[$statusKey]->count();
+                    // % sobre o total (sem cancelado) — cancelado em si não entra no total,
+                    // então seu tile mostra 0% mesmo tendo tarefas (é informativo, não faz
+                    // parte da distribuição de carga da sprint).
+                    $pct = ($total > 0 && $statusKey !== 'cancelado') ? round($cnt / $total * 100) : 0;
+                @endphp
                 <div class="text-center">
-                    <div class="text-lg font-black" data-stat-count="{{ $statusKey }}" style="color:var(--{{ $meta['color'] === 'muted' ? 'muted2' : $meta['color'] }})">{{ $cnt }}</div>
-                    <div class="text-xs font-mono" style="color:var(--muted)">{{ $meta['label'] }}</div>
+                    <div class="text-lg font-black" data-stat-count="{{ $statusKey }}" data-count="{{ $cnt }}" style="color:var(--{{ $meta['color'] === 'muted' ? 'muted2' : $meta['color'] }})">{{ $pct }}%</div>
+                    <div class="text-xs font-mono" style="color:var(--muted)">{{ $meta['label'] }} · {{ $cnt }}</div>
                 </div>
             @endforeach
         </div>
@@ -448,18 +454,27 @@
                 var toStatus = evt.detail.toColumn.dataset.status;
                 var fromStat = document.querySelector('[data-stat-count="' + fromStatus + '"]');
                 var toStat = document.querySelector('[data-stat-count="' + toStatus + '"]');
-                if (fromStat) fromStat.textContent = String(parseInt(fromStat.textContent, 10) - 1);
-                if (toStat) toStat.textContent = String(parseInt(toStat.textContent, 10) + 1);
+                if (fromStat) fromStat.dataset.count = String(parseInt(fromStat.dataset.count, 10) - 1);
+                if (toStat) toStat.dataset.count = String(parseInt(toStat.dataset.count, 10) + 1);
 
                 var total = 0, done = 0, counts = {};
                 document.querySelectorAll('[data-stat-count]').forEach(function (el) {
                     var status = el.dataset.statCount;
-                    var n = parseInt(el.textContent, 10) || 0;
+                    var n = parseInt(el.dataset.count, 10) || 0;
                     counts[status] = n;
                     if (status !== 'cancelado') total += n;
                     if (status === 'concluido') done = n;
                 });
                 var pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+                document.querySelectorAll('[data-stat-count]').forEach(function (el) {
+                    var status = el.dataset.statCount;
+                    var n = counts[status];
+                    var tilePct = (total > 0 && status !== 'cancelado') ? Math.round(n / total * 100) : 0;
+                    el.textContent = tilePct + '%';
+                    var label = el.parentElement.querySelector('.text-xs');
+                    if (label) label.textContent = label.textContent.replace(/·\s*\d+$/, '· ' + n);
+                });
 
                 document.getElementById('sprint-progress-pct').textContent = pct + '% concluído';
                 document.getElementById('sprint-progress-text').textContent = done + ' / ' + total + ' concluídas';

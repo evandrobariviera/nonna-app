@@ -76,13 +76,13 @@
                     <span class="text-xs font-mono flex-shrink-0" style="color:var(--muted)">{{ $sprintDone }} / {{ $sprintTotal }} concluídas</span>
                 </div>
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
-                    @foreach(\App\Models\Task::$statuses as $statusKey => $meta)
+                    @foreach(array_reverse(\App\Models\Task::$statuses, true) as $statusKey => $meta)
                         @continue($statusKey === 'cancelado')
                         @php $cnt = $sprintByStatus[$statusKey] ?? 0; @endphp
                         @if($cnt > 0)
                             <span class="flex items-center gap-1 text-xs font-mono" style="color:var(--muted)">
                                 <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:var(--{{ $meta['color'] === 'muted' ? 'muted' : $meta['color'] }})"></span>
-                                {{ $meta['label'] }} {{ $cnt }}
+                                {{ $meta['label'] }} {{ $sprintTotal > 0 ? round($cnt / $sprintTotal * 100) : 0 }}%
                             </span>
                         @endif
                     @endforeach
