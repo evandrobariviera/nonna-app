@@ -4,6 +4,7 @@ import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
+import { markRaw } from '@vue/reactivity';
 
 function normalizeContent(content) {
     if (!content) return '';
@@ -40,7 +41,13 @@ export function registerRichEditor() {
                 const html  = normalizeContent(initialContent);
                 input.value = html;
 
-                self.editor = new Editor({
+                // markRaw prevents Alpine (backed by @vue/reactivity) from deep-wrapping the
+                // Editor instance in a reactive Proxy. Tiptap/ProseMirror rely on strict
+                // identity checks internally (schema node types, transaction.before === the
+                // exact doc it was built from, etc.) — a reactive proxy around any of that
+                // breaks those checks and throws "Applying a mismatched transaction" on the
+                // very first dispatched command, even a plain focus().
+                self.editor = markRaw(new Editor({
                     element: el,
                     extensions: [
                         StarterKit.configure({
@@ -91,7 +98,7 @@ export function registerRichEditor() {
                     onSelectionUpdate() {
                         self.tick++;
                     },
-                });
+                }));
             }
 
             const el = this.$refs.editor;
