@@ -26,13 +26,18 @@
                     @foreach($macroplans as $plan)
                         <tr>
                             <td>
-                                <a href="{{ route('macroplans.edit', $plan) }}"
-                                   class="font-semibold text-sm hover:underline" style="color:var(--text)">
-                                    {{ $plan->title }}
-                                </a>
-                                @if($plan->isLaunched())
-                                    <span class="badge badge-green ml-1">ClickUp</span>
-                                @endif
+                                <div class="flex items-center gap-2">
+                                    <x-icon-chip icon="compass" :color="$plan->statusColor()" size="28" />
+                                    <div class="min-w-0">
+                                        <a href="{{ route('macroplans.edit', $plan) }}"
+                                           class="font-semibold text-sm hover:underline" style="color:var(--text)">
+                                            {{ $plan->title }}
+                                        </a>
+                                        @if($plan->isLaunched())
+                                            <span class="badge badge-green ml-1">ClickUp</span>
+                                        @endif
+                                    </div>
+                                </div>
                             </td>
                             <td>
                                 <a href="{{ route('clients.show', $plan->client) }}"

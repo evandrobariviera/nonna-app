@@ -27,11 +27,14 @@
                 @forelse($columnMeetings as $meeting)
                     <div class="card p-3" data-kanban-card data-id="{{ $meeting->id }}"
                          data-update-url="{{ route('meetings.update-status', $meeting) }}">
-                        <a href="{{ route('meetings.show', $meeting) }}"
-                           @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('meetings.preview', $meeting) }}') }"
-                           class="text-sm font-semibold hover:underline block mb-2" style="color:var(--text)">
-                            {{ $meeting->title }}
-                        </a>
+                        <div class="flex items-center gap-2 mb-2">
+                            <x-icon-chip :icon="$meeting->typeIcon()" :color="$meeting->statusColor()" size="28" />
+                            <a href="{{ route('meetings.show', $meeting) }}"
+                               @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('meetings.preview', $meeting) }}') }"
+                               class="text-sm font-semibold hover:underline min-w-0" style="color:var(--text)">
+                                {{ $meeting->title }}
+                            </a>
+                        </div>
 
                         <div class="text-xs font-mono mb-1" style="color:var(--muted2)">
                             {{ $meeting->scheduled_at->format('d/m/Y H:i') }}

@@ -18,15 +18,15 @@
                 @foreach($creativosProntos as $notification)
                     @php $task = $creativosProntosTasks->get($notification->source_id); @endphp
                     @continue(!$task)
-                    <div class="px-3 py-2" style="background:var(--s2); border-left:2px solid var(--purple)">
-                        <a href="{{ route('tasks.show', $task) }}" class="block">
-                            <div class="flex items-start gap-1.5">
-                                <x-icon :name="$task->typeIcon()" size="12" class="flex-shrink-0" style="color:var(--muted); margin-top:1px" />
+                    <div class="px-3 py-2" style="background:var(--s2)">
+                        <a href="{{ route('tasks.show', $task) }}" class="flex items-center gap-2.5">
+                            <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="32" />
+                            <div class="min-w-0">
                                 <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $task->title }}</p>
-                            </div>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->displayName() ?? '—' }}</span>
-                                <span class="badge" style="font-size:10px">{{ $task->statusLabel() }}</span>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->displayName() ?? '—' }}</span>
+                                    <span class="badge" style="font-size:10px">{{ $task->statusLabel() }}</span>
+                                </div>
                             </div>
                         </a>
                         <form method="POST" action="{{ route('dashboard.midia-paga.resolve-criativo', $task) }}" class="mt-1.5">
@@ -81,14 +81,17 @@
             <div class="flex flex-col gap-2">
                 @foreach($campaignsNeedingOptimization as $campaign)
                     <a href="{{ route('campaigns.show', $campaign) }}"
-                       class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--red)"
+                       class="flex items-center gap-2.5 px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--red)"
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+                        <x-icon-chip :icon="$campaign->platformIcon()" color="red" size="32" />
+                        <div class="min-w-0">
                         <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $campaign->name }}</p>
                         <div class="flex items-center gap-2 mt-1">
                             <span class="text-xs font-mono" style="color:var(--muted)">{{ $campaign->adAccount?->client?->displayName() ?? '—' }}</span>
                             <span class="text-xs font-mono" style="color:var(--red)">
                                 {{ $campaign->last_optimized_at ? 'sem otimizar há ' . $campaign->last_optimized_at->diffInDays(now()) . 'd' : 'nunca otimizada' }}
                             </span>
+                        </div>
                         </div>
                     </a>
                 @endforeach

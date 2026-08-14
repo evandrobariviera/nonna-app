@@ -308,7 +308,12 @@
                                     <td class="font-mono" x-text="p.client_name" style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap"></td>
                                     <td style="max-width:320px">
                                         <div class="flex items-center gap-2">
-                                            <span class="badge text-xs font-bold flex-shrink-0" :class="'badge-' + p.type_color" x-text="p.type_label"></span>
+                                            <span class="inline-flex items-center justify-center flex-shrink-0"
+                                                  style="width:30px; height:30px; border-radius:9px; color:#fff"
+                                                  :style="'width:30px; height:30px; border-radius:9px; color:#fff; background:' + colorHex(p.status_color)">
+                                                <span x-show="p.type_icon === 'megaphone'"><x-icon name="megaphone" size="15" /></span>
+                                                <span x-show="p.type_icon === 'folder-kanban'"><x-icon name="folder-kanban" size="15" /></span>
+                                            </span>
                                             <a :href="p.url" class="font-semibold truncate" style="color:var(--text)" x-text="p.title"
                                                onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'"></a>
                                             <span x-show="p.has_overdue" title="Tem tarefas atrasadas">⚠</span>
@@ -321,9 +326,7 @@
                                     </td>
                                     <td class="monday-fill-td relative" style="width:150px" x-data="{ open: false, style: '' }">
                                         <button type="button" @click="open = !open; style = dropdownStyle($el, 'bottom-left')"
-                                            :style="'position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-                                                   gap:4px; color:#fff; font-size:11px; font-weight:700; cursor:pointer; border:none; overflow:hidden;
-                                                   background:' + colorHex(p.status_color)">
+                                            :style="'position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:4px; color:#fff; font-size:11px; font-weight:700; cursor:pointer; border:none; overflow:hidden; background:' + colorHex(p.status_color)">
                                             <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:calc(100% - 20px)" x-text="p.status_label"></span>
                                             <span style="opacity:.8; flex-shrink:0">▾</span>
                                         </button>
@@ -402,12 +405,8 @@
                             <span>◉</span><span>Sem tarefas</span>
                         </div>
 
-                        {{-- Badges tipo + status --}}
+                        {{-- Badge status --}}
                         <div class="flex items-center gap-1.5 mb-1.5" x-data="{ open: false, style: '' }">
-                            <span class="badge text-xs font-bold"
-                                  :class="'badge-' + p.type_color"
-                                  x-text="p.type_label"></span>
-
                             <span class="relative inline-block">
                                 <button type="button" @click="open = !open; style = dropdownStyle($el, 'bottom-left')"
                                     class="badge text-xs font-bold"
@@ -436,7 +435,15 @@
                         <div class="text-xs font-mono font-semibold truncate mb-0.5 pr-6" style="color:var(--muted)" x-text="p.client_name"></div>
 
                         {{-- Título --}}
-                        <h3 class="font-bold text-sm leading-snug mb-1 pr-6" style="color:var(--text)" x-text="p.title"></h3>
+                        <div class="flex items-center gap-2 mb-1 pr-6">
+                            <span class="inline-flex items-center justify-center flex-shrink-0"
+                                  style="width:28px; height:28px; border-radius:8px; color:#fff"
+                                  :style="'width:28px; height:28px; border-radius:8px; color:#fff; background:' + colorHex(p.status_color)">
+                                <span x-show="p.type_icon === 'megaphone'"><x-icon name="megaphone" size="14" /></span>
+                                <span x-show="p.type_icon === 'folder-kanban'"><x-icon name="folder-kanban" size="14" /></span>
+                            </span>
+                            <h3 class="font-bold text-sm leading-snug min-w-0" style="color:var(--text)" x-text="p.title"></h3>
+                        </div>
 
                         {{-- Planejamento --}}
                         <p class="text-xs mb-1 truncate" style="color:var(--muted2)"

@@ -136,16 +136,19 @@
                             @php $isToday = $meeting->scheduled_at->isToday(); @endphp
                             <a href="{{ route('meetings.show', $meeting) }}"
                                x-show="!filterType || filterType === '{{ $meeting->type }}'"
-                               class="block px-3 py-2 transition-colors"
+                               class="flex items-center gap-2.5 px-3 py-2 transition-colors"
                                style="background:{{ $isToday ? 'rgba(52,211,153,.10)' : 'var(--s2)' }}; {{ $isToday ? 'border-left:2px solid var(--green)' : '' }}"
                                onmouseover="this.style.background='var(--s3)'"
                                onmouseout="this.style.background='{{ $isToday ? 'rgba(52,211,153,.10)' : 'var(--s2)' }}'">
-                                <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $meeting->title }}</p>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->displayName() ?? '—' }}</span>
-                                    <span class="text-xs font-mono" style="color:var(--purple)">
-                                        {{ $meeting->scheduled_at->format('d/m H:i') }}
-                                    </span>
+                                <x-icon-chip :icon="$meeting->typeIcon()" :color="$meeting->statusColor()" size="32" />
+                                <div class="min-w-0">
+                                    <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $meeting->title }}</p>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->displayName() ?? '—' }}</span>
+                                        <span class="text-xs font-mono" style="color:var(--purple)">
+                                            {{ $meeting->scheduled_at->format('d/m H:i') }}
+                                        </span>
+                                    </div>
                                 </div>
                             </a>
                         @empty
@@ -268,21 +271,21 @@
                             $isApprovalOverdue = $task->approval_date && $task->approval_date->isPast() && $task->status !== 'concluido';
                         @endphp
                         <div data-kanban-card data-id="{{ $task->id }}" data-update-url="{{ $statusUrl }}"
-                             class="px-3 py-2 transition-colors" style="cursor:pointer;
-                                    background:var(--s2); border-left:2px solid {{ $isApprovalOverdue ? 'var(--red)' : 'var(--purple)' }}"
+                             class="flex items-center gap-2.5 px-3 py-2 transition-colors" style="cursor:pointer;
+                                    background:var(--s2); {{ $isApprovalOverdue ? 'border-left:2px solid var(--red)' : '' }}"
                              onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'"
                              onclick="window.location='{{ route('tasks.show', $task) }}'">
-                            <div class="flex items-start gap-1.5">
-                                <x-icon :name="$task->typeIcon()" size="12" class="flex-shrink-0" style="color:var(--muted); margin-top:1px" />
+                            <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="32" />
+                            <div class="min-w-0">
                                 <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $task->title }}</p>
-                            </div>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->displayName() ?? '—' }}</span>
-                                @if($task->approval_date)
-                                    <span class="text-xs font-mono" style="color:{{ $isApprovalOverdue ? 'var(--red)' : 'var(--muted)' }}">
-                                        {{ $task->approval_date->format('d/m') }}
-                                    </span>
-                                @endif
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->displayName() ?? '—' }}</span>
+                                    @if($task->approval_date)
+                                        <span class="text-xs font-mono" style="color:{{ $isApprovalOverdue ? 'var(--red)' : 'var(--muted)' }}">
+                                            {{ $task->approval_date->format('d/m') }}
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     @empty

@@ -55,6 +55,19 @@ class Meeting extends Model
         'outros'                    => 'Outros',
     ];
 
+    public static array $typeIcons = [
+        'comercial_vendas'    => 'handshake',
+        'boas_vindas'         => 'party-popper',
+        'kickoff_estrategico' => 'rocket',
+        'macroplanejamento'   => 'compass',
+        'alinhamento_projeto' => 'target',
+        'setor_sync'          => 'refresh-cw',
+        'distribuicao_sprint' => 'zap',
+        'evento_captacao'     => 'video',
+        'revisao_interna'     => 'search',
+        'outros'              => 'ellipsis',
+    ];
+
     public static array $modalities = [
         'online'                => 'Online',
         'presencial_agencia'    => 'Presencial — Agência',
@@ -72,6 +85,11 @@ class Meeting extends Model
     public function typeLabel(): string
     {
         return self::$types[$this->type] ?? $this->type;
+    }
+
+    public function typeIcon(): string
+    {
+        return self::$typeIcons[$this->type] ?? 'calendar';
     }
 
     public function modalityLabel(): string

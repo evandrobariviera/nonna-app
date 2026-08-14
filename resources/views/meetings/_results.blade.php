@@ -31,13 +31,18 @@
                                 <div class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->scheduled_at->format('H:i') }}</div>
                             </td>
                             <td>
-                                <a href="{{ route('meetings.show', $meeting) }}"
-                                   class="font-semibold text-sm hover:underline" style="color:var(--text)">
-                                    {{ $meeting->title }}
-                                </a>
-                                @if($meeting->hasAta())
-                                    <span class="badge badge-green ml-1">ATA</span>
-                                @endif
+                                <div class="flex items-center gap-2">
+                                    <x-icon-chip :icon="$meeting->typeIcon()" :color="$meeting->statusColor()" size="28" />
+                                    <div class="min-w-0">
+                                        <a href="{{ route('meetings.show', $meeting) }}"
+                                           class="font-semibold text-sm hover:underline" style="color:var(--text)">
+                                            {{ $meeting->title }}
+                                        </a>
+                                        @if($meeting->hasAta())
+                                            <span class="badge badge-green ml-1">ATA</span>
+                                        @endif
+                                    </div>
+                                </div>
                             </td>
                             <td class="text-xs" style="color:var(--muted2)">{{ $meeting->typeLabel() }}</td>
                             <td class="text-xs" style="color:var(--muted2)">{{ $meeting->modalityLabel() }}</td>

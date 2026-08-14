@@ -156,6 +156,20 @@ class AdCampaign extends Model
         };
     }
 
+    public function platformIcon(): string
+    {
+        // AdCampaign::platform vem só 'meta'/'google' (Api\SyncController valida 'in:meta,google'),
+        // diferente de ClientAdAccount::platform que usa sufixo '_ads' — cobre os dois formatos.
+        return match (true) {
+            str_starts_with($this->platform, 'meta')      => 'trending-up',
+            str_starts_with($this->platform, 'google')    => 'search',
+            str_starts_with($this->platform, 'tiktok')     => 'music',
+            str_starts_with($this->platform, 'linkedin')   => 'briefcase',
+            str_starts_with($this->platform, 'pinterest')  => 'image',
+            default                                        => 'megaphone',
+        };
+    }
+
     public function managementStatusLabel(): string
     {
         return self::$managementStatuses[$this->management_status]['label'] ?? $this->management_status;

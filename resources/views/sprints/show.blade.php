@@ -259,9 +259,12 @@
                                         @endif
                                     </p>
 
-                                    <p class="text-xs font-semibold leading-snug mb-2" style="color:var(--text)">
-                                        {{ $task->title }}
-                                    </p>
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="30" />
+                                        <p class="text-xs font-semibold leading-snug min-w-0" style="color:var(--text)">
+                                            {{ $task->title }}
+                                        </p>
+                                    </div>
 
                                     {{-- Avatares: responsável (laranja) + executor (roxo) --}}
                                     @if($respList->isNotEmpty() || $execList->isNotEmpty())

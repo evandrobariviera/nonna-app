@@ -79,6 +79,14 @@ class Project extends Model
         return self::$types[$this->type]['color'] ?? 'muted';
     }
 
+    public function typeIcon(): string
+    {
+        return match ($this->type) {
+            'campanha' => 'megaphone',
+            default    => 'folder-kanban',
+        };
+    }
+
     public function briefStatusLabel(): string
     {
         return self::$briefStatuses[$this->brief_status]['label'] ?? $this->brief_status;

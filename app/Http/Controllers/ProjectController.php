@@ -59,6 +59,7 @@ class ProjectController extends Controller
                 'type'             => $p->type ?? 'projeto',
                 'type_label'       => $p->typeLabel(),
                 'type_color'       => $p->typeColor(),
+                'type_icon'        => $p->typeIcon(),
                 'client_id'        => $clientId,
                 'client_name'      => $client?->company_name ?? '—',
                 'macroplan_id'     => $p->macro_plan_id,

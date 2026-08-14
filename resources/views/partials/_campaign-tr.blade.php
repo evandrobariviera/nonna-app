@@ -13,6 +13,7 @@
     </td>
     <td>
         <div class="flex items-center gap-2 flex-wrap">
+            <x-icon-chip :icon="$campaign->platformIcon()" :color="$campaign->managementStatusColor()" size="28" />
             <span class="badge badge-{{ $campaign->optimizationTierColor() }}">{{ $campaign->optimizationTierLabel() }}</span>
             <a href="{{ route('campaigns.show', $campaign) }}" class="text-[var(--text)] hover:underline">{{ $campaign->name }}</a>
         </div>

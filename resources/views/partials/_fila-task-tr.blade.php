@@ -46,22 +46,25 @@
 
     {{-- Título --}}
     <td>
-        <div class="flex flex-col justify-center gap-0.5">
-            <a href="{{ route('tasks.show', $task) }}"
-               class="font-semibold leading-snug hover:underline"
-               style="color:var(--text); font-size:13.5px">
-                @if(($task->priority ?? 'normal') === 'urgente')
-                    <span style="color:#dc2626; margin-right:3px; display:inline-flex; vertical-align:-2px"><x-icon name="flag" size="12" /></span>
+        <div class="flex items-center gap-2">
+            <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="30" />
+            <div class="flex flex-col justify-center gap-0.5 min-w-0">
+                <a href="{{ route('tasks.show', $task) }}"
+                   class="font-semibold leading-snug hover:underline"
+                   style="color:var(--text); font-size:13.5px">
+                    @if(($task->priority ?? 'normal') === 'urgente')
+                        <span style="color:#dc2626; margin-right:3px; display:inline-flex; vertical-align:-2px"><x-icon name="flag" size="12" /></span>
+                    @endif
+                    {{ $task->title }}
+                </a>
+                @if($task->project)
+                    <span style="font-size:11px; color:var(--muted)">
+                        {{ $task->project->macroPlan?->title }} · {{ $task->project->title }}
+                    </span>
+                @elseif($task->is_ticket && $task->requester_name)
+                    <span style="font-size:11px; color:var(--muted)">{{ $task->requester_name }}</span>
                 @endif
-                {{ $task->title }}
-            </a>
-            @if($task->project)
-                <span style="font-size:11px; color:var(--muted)">
-                    {{ $task->project->macroPlan?->title }} · {{ $task->project->title }}
-                </span>
-            @elseif($task->is_ticket && $task->requester_name)
-                <span style="font-size:11px; color:var(--muted)">{{ $task->requester_name }}</span>
-            @endif
+            </div>
         </div>
     </td>
 

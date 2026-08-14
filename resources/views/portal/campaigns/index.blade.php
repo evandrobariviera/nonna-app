@@ -153,10 +153,17 @@
                         'google' => 'Google Ads',
                         'tiktok' => 'TikTok Ads',
                     ];
+                    $chipColor = match($campaign->status) {
+                        'active'   => 'green',
+                        'paused'   => 'orange',
+                        'deleted'  => 'red',
+                        default    => 'muted',
+                    };
                 @endphp
                 <div class="card mb-4">
                     <div class="px-6 py-4 border-b flex items-center justify-between" style="border-color: var(--border2)">
                         <div class="flex items-center gap-3">
+                            <x-icon-chip :icon="$campaign->platformIcon()" :color="$chipColor" size="32" />
                             <div>
                                 <p class="text-sm font-bold" style="color: var(--text)">{{ $campaign->name }}</p>
                                 <p class="text-xs mt-0.5" style="color: var(--muted)">

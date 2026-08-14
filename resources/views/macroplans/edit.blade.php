@@ -582,10 +582,7 @@
                                     <div class="flex items-center justify-between gap-4 mb-2">
                                         <div class="flex items-center gap-2 min-w-0">
                                             <span class="text-xs font-mono font-bold flex-shrink-0" style="color:var(--muted)">#{{ $loop->iteration }}</span>
-                                            <span class="text-xs font-mono px-2 py-0.5 rounded flex-shrink-0"
-                                                  style="background:color-mix(in srgb, {{ $typeColor }} 12%, transparent); color:{{ $typeColor }}">
-                                                {{ $project->typeLabel() }}
-                                            </span>
+                                            <x-icon-chip :icon="$project->typeIcon()" :color="$project->statusColor()" size="26" />
                                             <a href="{{ route('macroplans.projects.show', [$macroplan, $project]) }}"
                                                class="font-bold text-sm truncate transition-colors"
                                                style="color:var(--text)"

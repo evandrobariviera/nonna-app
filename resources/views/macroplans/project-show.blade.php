@@ -424,16 +424,18 @@
                             {{-- VIEW do card --}}
                             <div x-show="editTaskId !== '{{ $task->id }}'">
                                 <div class="flex items-start justify-between gap-2 mb-2">
-                                    <p class="text-xs font-semibold leading-snug flex-1" style="color:var(--text)">
-                                        {{ $task->title }}
-                                    </p>
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="30" />
+                                        <p class="text-xs font-semibold leading-snug min-w-0" style="color:var(--text)">
+                                            {{ $task->title }}
+                                        </p>
+                                    </div>
                                     <button @click="editTaskId = '{{ $task->id }}'" class="btn btn-ghost btn-xs flex-shrink-0">
                                         ✎
                                     </button>
                                 </div>
 
                                 <div class="flex flex-wrap items-center gap-1.5 mb-2">
-                                    <x-task-type-badge :task="$task" class="text-xs" />
                                     @if($task->destination)
                                         <span class="text-xs font-mono" style="color:var(--muted2)">{{ $task->destinationLabel() }}</span>
                                     @endif

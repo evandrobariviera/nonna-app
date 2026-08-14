@@ -53,25 +53,28 @@
 
     {{-- Título --}}
     <td>
-        <div class="flex flex-col justify-center gap-0.5">
-            <a href="{{ route('tasks.show', $task) }}"
-               class="font-semibold leading-snug hover:underline"
-               style="color:var(--text); font-size:13.5px">
-                @if(($task->priority ?? 'normal') === 'urgente')
-                    <span style="color:#dc2626; margin-right:3px; display:inline-flex; vertical-align:-2px"><x-icon name="flag" size="12" /></span>
-                @endif
-                {{ $task->title }}
-            </a>
-            @if($task->is_ticket && $task->requester_name)
-                <span style="font-size:11px; color:var(--muted)">
-                    {{ $task->requester_name }}
-                    @if($task->requester_channel)
-                        · {{ \App\Models\Task::$requesterChannels[$task->requester_channel] ?? '' }}
+        <div class="flex items-center gap-2">
+            <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="30" />
+            <div class="flex flex-col justify-center gap-0.5 min-w-0">
+                <a href="{{ route('tasks.show', $task) }}"
+                   class="font-semibold leading-snug hover:underline"
+                   style="color:var(--text); font-size:13.5px">
+                    @if(($task->priority ?? 'normal') === 'urgente')
+                        <span style="color:#dc2626; margin-right:3px; display:inline-flex; vertical-align:-2px"><x-icon name="flag" size="12" /></span>
                     @endif
-                </span>
-            @elseif($task->project?->title)
-                <span style="font-size:11px; color:var(--muted)">{{ $task->project->title }}</span>
-            @endif
+                    {{ $task->title }}
+                </a>
+                @if($task->is_ticket && $task->requester_name)
+                    <span style="font-size:11px; color:var(--muted)">
+                        {{ $task->requester_name }}
+                        @if($task->requester_channel)
+                            · {{ \App\Models\Task::$requesterChannels[$task->requester_channel] ?? '' }}
+                        @endif
+                    </span>
+                @elseif($task->project?->title)
+                    <span style="font-size:11px; color:var(--muted)">{{ $task->project->title }}</span>
+                @endif
+            </div>
         </div>
     </td>
 

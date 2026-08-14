@@ -45,7 +45,9 @@
 
                     {{-- Tarefa --}}
                     <td>
-                        <div class="flex flex-col justify-center gap-0.5">
+                        <div class="flex items-center gap-2">
+                        <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="30" />
+                        <div class="flex flex-col justify-center gap-0.5 min-w-0">
                             <a href="{{ route('tasks.show', $task) }}"
                                class="font-semibold leading-snug hover:underline"
                                style="color:var(--text); font-size:13.5px">
@@ -68,6 +70,7 @@
                                     </span>
                                 @endif
                             </div>
+                        </div>
                         </div>
                     </td>
 
