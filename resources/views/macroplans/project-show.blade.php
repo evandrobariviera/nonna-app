@@ -433,7 +433,7 @@
                                 </div>
 
                                 <div class="flex flex-wrap items-center gap-1.5 mb-2">
-                                    <span class="badge text-xs">{{ $task->typeLabel() }}</span>
+                                    <x-task-type-badge :task="$task" class="text-xs" />
                                     @if($task->destination)
                                         <span class="text-xs font-mono" style="color:var(--muted2)">{{ $task->destinationLabel() }}</span>
                                     @endif

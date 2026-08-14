@@ -394,7 +394,10 @@
                     </div>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Tipo</p>
-                        <p class="text-sm" style="color:var(--text); font-weight:500; line-height:1.4">{{ $task->typeLabel() }}</p>
+                        <p class="text-sm flex items-center gap-1.5" style="color:var(--text); font-weight:500; line-height:1.4">
+                            <x-icon :name="$task->typeIcon()" size="14" style="color:var(--muted)" />
+                            {{ $task->typeLabel() }}
+                        </p>
                     </div>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Origem</p>

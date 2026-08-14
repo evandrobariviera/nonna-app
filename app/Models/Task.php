@@ -65,6 +65,22 @@ class Task extends Model
         'reunioes'       => 'Reuniões / Atendimento',
     ];
 
+    // Ícone identifica o TIPO (eixo diferente de status, que já tem cor própria
+    // via $statuses — ver "Lei das Cores" em business-context.md). Nomes batem
+    // com resources/icons/lucide/*.svg (ver App\View\Components\Icon).
+    public static array $typeIcons = [
+        'criacao'        => 'clapperboard',
+        'web'            => 'code',
+        'trafego'        => 'trending-up',
+        'setup'          => 'settings-2',
+        'social'         => 'megaphone',
+        'seo'            => 'search',
+        'email'          => 'mail',
+        'estrategia'     => 'compass',
+        'administrativo' => 'circle-dollar-sign',
+        'reunioes'       => 'calendar',
+    ];
+
     public static array $destinations = [
         'publicacao_organica'      => 'Publicação Orgânica',
         'campanhas_patrocinadas'   => 'Campanhas Patrocinadas',
@@ -153,6 +169,11 @@ class Task extends Model
     public function typeLabel(): string
     {
         return self::$types[$this->task_type] ?? $this->task_type;
+    }
+
+    public function typeIcon(): string
+    {
+        return self::$typeIcons[$this->task_type] ?? 'tag';
     }
 
     public function situationLabel(): string

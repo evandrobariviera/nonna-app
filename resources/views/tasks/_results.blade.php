@@ -93,9 +93,7 @@
 
                     {{-- Tipo --}}
                     <td>
-                        <span class="text-sm" style="color:var(--muted2)">
-                            {{ $task->typeLabel() }}
-                        </span>
+                        <x-task-type-badge :task="$task" />
                     </td>
 
                     {{-- Executor --}}

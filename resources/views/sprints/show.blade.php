@@ -406,7 +406,7 @@
                             </div>
                             <p class="text-xs font-semibold mt-0.5 leading-snug" style="color:var(--text)">{{ $task->title }}</p>
                             <div class="flex items-center gap-2 mt-1">
-                                <span class="badge" style="font-size:10px">{{ $task->typeLabel() }}</span>
+                                <x-task-type-badge :task="$task" class="text-xs" />
                                 @if($task->executor)
                                     <span class="text-xs font-mono" style="color:var(--muted)">{{ explode(' ', $task->executor->name)[0] }}</span>
                                 @endif
