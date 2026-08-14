@@ -69,7 +69,7 @@ class Task extends Model
     // via $statuses — ver "Lei das Cores" em business-context.md). Nomes batem
     // com resources/icons/lucide/*.svg (ver App\View\Components\Icon).
     public static array $typeIcons = [
-        'criacao'        => 'clapperboard',
+        'criacao'        => 'image-play',
         'web'            => 'code',
         'trafego'        => 'trending-up',
         'setup'          => 'settings-2',
