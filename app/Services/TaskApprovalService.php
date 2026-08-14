@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\ClientContact;
 use App\Models\Contact;
 use App\Models\Task;
+use App\Models\TaskActivity;
 use App\Models\TaskApprovalRound;
 use App\Models\TaskApprovalToken;
 use App\Models\TaskAttachment;
@@ -282,6 +283,52 @@ class TaskApprovalService
         ]);
 
         $this->tryResolveRound($token->round()->with('tokens')->first());
+    }
+
+    /**
+     * Marca manualmente a decisão de um aprovador que ainda não respondeu —
+     * pra quando o time já sabe que a aprovação de outra pessoa cobre o
+     * resto e não quer esperar o clique de quem falta. Só entra num token
+     * ainda pending, de rodada ainda pending, e que não esteja desligado
+     * (will_notify) — nunca sobrescreve uma decisão real do contato. Fica
+     * registrado quem da equipe decidiu (manually_decided_by) pra nunca
+     * passar como se fosse o clique do próprio cliente.
+     */
+    public function manuallyDecideToken(TaskApprovalToken $token, string $status, User $actor, ?string $comment = null): void
+    {
+        $round = $token->round;
+
+        if ($round->status !== 'pending') {
+            throw new \RuntimeException('Essa rodada já foi encerrada.');
+        }
+        if (! $token->isPending()) {
+            throw new \RuntimeException('Esse aprovador já respondeu — não dá pra sobrescrever a decisão dele.');
+        }
+        if (! $token->will_notify) {
+            throw new \RuntimeException('Esse contato está desligado desta rodada.');
+        }
+
+        $token->update([
+            'status'              => $status,
+            'overall_comment'     => $comment,
+            'reviewed_at'         => now(),
+            'manually_decided_by' => $actor->id,
+        ]);
+
+        TaskActivity::log(
+            $round->task,
+            'approval_manual_decision',
+            null,
+            ($status === 'approved' ? 'Aprovado' : 'Ajustes solicitados') . " manualmente em nome de {$token->contact->name}",
+            $actor->id,
+        );
+
+        // Recarrega a rodada com os tokens frescos do banco — $round->tokens
+        // (relação já resolvida antes do update acima) ficaria com o status
+        // antigo do próprio $token que acabamos de decidir, e tryResolveRound()
+        // nunca veria unanimidade. Mesmo motivo pelo qual submitDecision() só
+        // recarrega depois de gravar a decisão.
+        $this->tryResolveRound($round->fresh('tokens'));
     }
 
     /**

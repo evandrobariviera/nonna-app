@@ -18,7 +18,7 @@ class TaskApprovalToken extends Model
 
     protected $fillable = [
         'round_id', 'contact_id', 'token', 'status', 'channels', 'will_notify',
-        'overall_comment', 'notified_at', 'reviewed_at', 'expires_at',
+        'overall_comment', 'notified_at', 'reviewed_at', 'expires_at', 'manually_decided_by',
     ];
 
     protected $casts = [
@@ -39,6 +39,11 @@ class TaskApprovalToken extends Model
         return $this->belongsTo(Contact::class);
     }
 
+    public function manuallyDecidedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'manually_decided_by');
+    }
+
     public function feedbacks(): HasMany
     {
         return $this->hasMany(DeliverableFeedback::class, 'token_id');
@@ -57,5 +62,10 @@ class TaskApprovalToken extends Model
     public function isValid(): bool
     {
         return $this->isPending() && ! $this->isExpired();
+    }
+
+    public function isManuallyDecided(): bool
+    {
+        return ! is_null($this->manually_decided_by);
     }
 }

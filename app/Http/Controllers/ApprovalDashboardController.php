@@ -8,6 +8,7 @@ use App\Models\TaskApprovalRound;
 use App\Models\TaskApprovalToken;
 use App\Services\TaskApprovalService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class ApprovalDashboardController extends Controller
 {
@@ -180,6 +181,24 @@ class ApprovalDashboardController extends Controller
         }
 
         return response()->json(['ok' => true]);
+    }
+
+    // Marca manualmente a decisão de um aprovador pendente (em nome dele) —
+    // form tradicional, chamado da tela da tarefa. Erro vira ValidationException
+    // pra aparecer na caixa global de $errors (layouts/app.blade.php).
+    public function manualDecision(Request $request, TaskApprovalToken $token, TaskApprovalService $service)
+    {
+        $data = $request->validate([
+            'decision' => 'required|in:approved,changes_requested',
+        ]);
+
+        try {
+            $service->manuallyDecideToken($token, $data['decision'], $request->user());
+        } catch (\RuntimeException $e) {
+            throw ValidationException::withMessages(['decision' => $e->getMessage()]);
+        }
+
+        return redirect()->back()->with('success', 'Decisão registrada manualmente.');
     }
 
     // Reenvia só pra quem ainda não respondeu (ex: e-mail estava errado, foi

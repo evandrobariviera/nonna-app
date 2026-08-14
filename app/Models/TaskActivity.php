@@ -26,17 +26,18 @@ class TaskActivity extends Model
     // Rótulo de cada ação — usado tanto na exibição (ícone+texto do histórico)
     // quanto pra escolher o ícone (ver task-activity-icon() na view).
     public static array $actions = [
-        'created'             => 'Tarefa criada',
-        'status_changed'      => 'Status alterado',
-        'situation_changed'   => 'Situação alterada',
-        'priority_changed'    => 'Prioridade alterada',
-        'destination_changed' => 'Destino alterado',
-        'task_type_changed'   => 'Tipo alterado',
-        'client_changed'      => 'Cliente alterado',
-        'project_changed'     => 'Projeto alterado',
-        'sprint_changed'      => 'Sprint alterada',
-        'responsavel_changed' => 'Responsável alterado',
-        'executor_changed'    => 'Executor alterado',
+        'created'                   => 'Tarefa criada',
+        'status_changed'            => 'Status alterado',
+        'situation_changed'         => 'Situação alterada',
+        'priority_changed'          => 'Prioridade alterada',
+        'destination_changed'       => 'Destino alterado',
+        'task_type_changed'         => 'Tipo alterado',
+        'client_changed'            => 'Cliente alterado',
+        'project_changed'           => 'Projeto alterado',
+        'sprint_changed'            => 'Sprint alterada',
+        'responsavel_changed'       => 'Responsável alterado',
+        'executor_changed'          => 'Executor alterado',
+        'approval_manual_decision'  => 'Aprovação manual',
     ];
 
     public function task(): BelongsTo

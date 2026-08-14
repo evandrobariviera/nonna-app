@@ -880,6 +880,13 @@
                                                 </div>
 
                                                 <div class="px-4 py-3 flex flex-col gap-2.5">
+                                                    {{-- Nunca deixar isso parecer clique real do cliente --}}
+                                                    @if($token->manually_decided_by)
+                                                        <p class="text-xs italic" style="color:var(--muted)">
+                                                            Decisão registrada manualmente por {{ $token->manuallyDecidedBy?->name }}, em nome do cliente.
+                                                        </p>
+                                                    @endif
+
                                                     {{-- Comentário geral do aprovador --}}
                                                     @if($token->overall_comment)
                                                         <div class="px-3 py-2.5 mb-1"
@@ -898,16 +905,45 @@
                                             </div>
                                         @else
                                             {{-- Aprovador ainda não respondeu --}}
-                                            <div class="flex items-center justify-between px-4 py-3"
+                                            <div class="flex flex-col gap-2 px-4 py-3"
                                                  style="background:var(--s2); border:1px dashed var(--border2)">
-                                                <div class="flex items-center gap-2">
-                                                    <div class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0"
-                                                         style="background:var(--grad); opacity:.4">
-                                                        {{ strtoupper(substr($token->contact->name, 0, 1)) }}
+                                                <div class="flex items-center justify-between">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0"
+                                                             style="background:var(--grad); opacity:.4">
+                                                            {{ strtoupper(substr($token->contact->name, 0, 1)) }}
+                                                        </div>
+                                                        <span class="text-sm" style="color:var(--muted)">{{ $token->contact->name }}</span>
                                                     </div>
-                                                    <span class="text-sm" style="color:var(--muted)">{{ $token->contact->name }}</span>
+                                                    <span class="text-xs" style="color:var(--muted)">Aguardando resposta…</span>
                                                 </div>
-                                                <span class="text-xs" style="color:var(--muted)">Aguardando resposta…</span>
+
+                                                {{-- Aprovação manual: só faz sentido enquanto a rodada segue aberta
+                                                     e o contato não foi desligado dela (will_notify). --}}
+                                                @if($rPending && $token->will_notify)
+                                                    <div class="flex items-center gap-2 pl-8">
+                                                        <form method="POST" action="{{ route('approvals.manual-decision', $token) }}"
+                                                              @submit.prevent="if (await $store.confirmDialog.ask('Marcar {{ addslashes($token->contact->name) }} como aprovado manualmente? Isso conta como se o cliente tivesse aprovado.')) $el.submit()">
+                                                            @csrf @method('PATCH')
+                                                            <input type="hidden" name="decision" value="approved">
+                                                            <button type="submit" class="text-xs font-semibold px-2 py-1 transition-colors"
+                                                                    style="border:1px solid rgba(34,197,94,.4); color:#22c55e"
+                                                                    onmouseover="this.style.background='rgba(34,197,94,.08)'" onmouseout="this.style.background='transparent'">
+                                                                ✓ Aprovar manualmente
+                                                            </button>
+                                                        </form>
+                                                        <form method="POST" action="{{ route('approvals.manual-decision', $token) }}"
+                                                              @submit.prevent="if (await $store.confirmDialog.ask('Marcar {{ addslashes($token->contact->name) }} como pedido de alteração manualmente?')) $el.submit()">
+                                                            @csrf @method('PATCH')
+                                                            <input type="hidden" name="decision" value="changes_requested">
+                                                            <button type="submit" class="text-xs font-semibold px-2 py-1 transition-colors"
+                                                                    style="border:1px solid rgba(238, 121, 25,.4); color:var(--orange)"
+                                                                    onmouseover="this.style.background='rgba(238, 121, 25,.08)'" onmouseout="this.style.background='transparent'">
+                                                                ✎ Pedir alteração manualmente
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                @endif
                                             </div>
                                         @endif
                                     @endforeach
