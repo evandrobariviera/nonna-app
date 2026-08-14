@@ -309,10 +309,10 @@
                                     <td style="max-width:320px">
                                         <div class="flex items-center gap-2">
                                             <span class="inline-flex items-center justify-center flex-shrink-0"
-                                                  style="width:30px; height:30px; border-radius:9px; color:#fff"
-                                                  :style="'width:30px; height:30px; border-radius:9px; color:#fff; background:' + colorHex(p.status_color)">
-                                                <span x-show="p.type_icon === 'megaphone'"><x-icon name="megaphone" size="15" /></span>
-                                                <span x-show="p.type_icon === 'folder-kanban'"><x-icon name="folder-kanban" size="15" /></span>
+                                                  style="width:20px; height:20px"
+                                                  :style="'width:20px; height:20px; color:' + colorHex(p.status_color)">
+                                                <span x-show="p.type_icon === 'megaphone'"><x-icon name="megaphone" size="18" /></span>
+                                                <span x-show="p.type_icon === 'folder-kanban'"><x-icon name="folder-kanban" size="18" /></span>
                                             </span>
                                             <a :href="p.url" class="font-semibold truncate" style="color:var(--text)" x-text="p.title"
                                                onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--text)'"></a>
@@ -437,10 +437,10 @@
                         {{-- Título --}}
                         <div class="flex items-center gap-2 mb-1 pr-6">
                             <span class="inline-flex items-center justify-center flex-shrink-0"
-                                  style="width:28px; height:28px; border-radius:8px; color:#fff"
-                                  :style="'width:28px; height:28px; border-radius:8px; color:#fff; background:' + colorHex(p.status_color)">
-                                <span x-show="p.type_icon === 'megaphone'"><x-icon name="megaphone" size="14" /></span>
-                                <span x-show="p.type_icon === 'folder-kanban'"><x-icon name="folder-kanban" size="14" /></span>
+                                  style="width:18px; height:18px"
+                                  :style="'width:18px; height:18px; color:' + colorHex(p.status_color)">
+                                <span x-show="p.type_icon === 'megaphone'"><x-icon name="megaphone" size="16" /></span>
+                                <span x-show="p.type_icon === 'folder-kanban'"><x-icon name="folder-kanban" size="16" /></span>
                             </span>
                             <h3 class="font-bold text-sm leading-snug min-w-0" style="color:var(--text)" x-text="p.title"></h3>
                         </div>
