@@ -300,8 +300,9 @@
                     @if($meeting->contacts->isNotEmpty() || $meeting->participants->isNotEmpty())
                         <form method="POST" action="{{ route('meetings.notify', $meeting) }}" class="mb-2">
                             @csrf
-                            <button type="submit" class="btn btn-ghost btn-sm w-full">
-                                📣 Notificar Participantes
+                            <button type="submit" class="btn btn-ghost btn-sm w-full flex items-center justify-center gap-1.5">
+                                <x-icon name="megaphone" size="14" />
+                                Notificar Participantes
                             </button>
                         </form>
                     @else

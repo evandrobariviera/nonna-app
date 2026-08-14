@@ -4,11 +4,15 @@
 
     {{-- Criativos prontos pra campanha (fila compartilhada — gerada pela automação, ver /automacoes) --}}
     <div class="card px-5 py-4">
-        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
-            🎨 Criativos Prontos pra Campanha ({{ $creativosProntos->count() }})
+        <h4 class="text-sm font-bold mb-3 flex items-center gap-1.5" style="color:var(--text)">
+            <x-icon name="palette" size="14" />
+            Criativos Prontos pra Campanha ({{ $creativosProntos->count() }})
         </h4>
         @if($creativosProntos->isEmpty())
-            <p class="text-xs" style="color:var(--muted)">Nenhum criativo pendente. 🎉</p>
+            <p class="text-xs flex items-center gap-1.5" style="color:var(--muted)">
+                <x-icon name="party-popper" size="13" />
+                Nenhum criativo pendente.
+            </p>
         @else
             <div class="flex flex-col gap-2">
                 @foreach($creativosProntos as $notification)
@@ -16,7 +20,10 @@
                     @continue(!$task)
                     <div class="px-3 py-2" style="background:var(--s2); border-left:2px solid var(--purple)">
                         <a href="{{ route('tasks.show', $task) }}" class="block">
-                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $task->title }}</p>
+                            <div class="flex items-start gap-1.5">
+                                <x-icon :name="$task->typeIcon()" size="12" class="flex-shrink-0" style="color:var(--muted); margin-top:1px" />
+                                <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $task->title }}</p>
+                            </div>
                             <div class="flex items-center gap-2 mt-1">
                                 <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->displayName() ?? '—' }}</span>
                                 <span class="badge" style="font-size:10px">{{ $task->statusLabel() }}</span>
@@ -34,11 +41,15 @@
 
     {{-- Orçamentos com adição necessária --}}
     <div class="card px-5 py-4">
-        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
-            💳 Orçamentos — Adição Necessária ({{ $budgetsNeedingAddition->count() }})
+        <h4 class="text-sm font-bold mb-3 flex items-center gap-1.5" style="color:var(--text)">
+            <x-icon name="credit-card" size="14" />
+            Orçamentos — Adição Necessária ({{ $budgetsNeedingAddition->count() }})
         </h4>
         @if($budgetsNeedingAddition->isEmpty())
-            <p class="text-xs" style="color:var(--muted)">Nenhum orçamento pendente. 🎉</p>
+            <p class="text-xs flex items-center gap-1.5" style="color:var(--muted)">
+                <x-icon name="party-popper" size="13" />
+                Nenhum orçamento pendente.
+            </p>
         @else
             <div class="flex flex-col gap-2">
                 @foreach($budgetsNeedingAddition as $account)
@@ -57,11 +68,15 @@
 
     {{-- Campanhas precisando de otimização --}}
     <div class="card px-5 py-4">
-        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
-            ⚙️ Campanhas Precisando de Otimização ({{ $campaignsNeedingOptimization->count() }})
+        <h4 class="text-sm font-bold mb-3 flex items-center gap-1.5" style="color:var(--text)">
+            <x-icon name="settings" size="14" />
+            Campanhas Precisando de Otimização ({{ $campaignsNeedingOptimization->count() }})
         </h4>
         @if($campaignsNeedingOptimization->isEmpty())
-            <p class="text-xs" style="color:var(--muted)">Nenhuma campanha atrasada. 🎉</p>
+            <p class="text-xs flex items-center gap-1.5" style="color:var(--muted)">
+                <x-icon name="party-popper" size="13" />
+                Nenhuma campanha atrasada.
+            </p>
         @else
             <div class="flex flex-col gap-2">
                 @foreach($campaignsNeedingOptimization as $campaign)

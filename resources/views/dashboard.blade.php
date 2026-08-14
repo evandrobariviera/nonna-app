@@ -28,7 +28,7 @@
 
     {{-- ── LINHA 1: boas-vindas (full width) + sprint (principal) | pendências de cadastro (cardo) ── --}}
     <div class="mb-4">
-        <h1 class="text-xl font-black" style="color:var(--text)">{{ $greeting }}, {{ $firstName }} 👋</h1>
+        <h1 class="text-xl font-black flex items-center gap-2" style="color:var(--text)">{{ $greeting }}, {{ $firstName }} <x-icon name="hand" size="20" /></h1>
         <p class="text-sm mt-1" style="color:var(--muted)">Aqui está o resumo do que precisa da sua atenção hoje.</p>
     </div>
 
@@ -45,8 +45,9 @@
                     <p class="text-xs font-semibold mt-2.5" style="color:var(--purple)">
                         — {{ $literaryQuote->author }}, <span style="font-style:italic">{{ $literaryQuote->book }}</span>
                     </p>
-                    <p class="text-xs mt-2" style="color:var(--muted2); line-height:1.6">
-                        📖 {{ $literaryQuote->justification }}
+                    <p class="text-xs mt-2 flex items-start gap-1.5" style="color:var(--muted2); line-height:1.6">
+                        <x-icon name="book-open" size="13" class="flex-shrink-0" style="margin-top:2px" />
+                        {{ $literaryQuote->justification }}
                     </p>
                 </div>
             </div>
@@ -59,8 +60,9 @@
         <div class="card px-5 py-4">
             @if($activeSprint)
                 <div class="flex items-center justify-between mb-1">
-                    <span class="text-sm font-bold" style="color:var(--text)">
-                        🏃 Sprint atual · {{ $activeSprint->title }}
+                    <span class="text-sm font-bold flex items-center gap-1.5" style="color:var(--text)">
+                        <x-icon name="activity" size="14" />
+                        Sprint atual · {{ $activeSprint->title }}
                     </span>
                     <a href="{{ route('sprints.show', $activeSprint) }}" class="text-xs font-mono" style="color:var(--purple)">
                         Ver Sprint →
@@ -77,7 +79,10 @@
                     <span class="text-xs font-mono flex-shrink-0" style="color:var(--muted)">{{ $sprintDone }} / {{ $sprintTotal }} concluídas</span>
                 </div>
             @else
-                <p class="text-sm" style="color:var(--muted)">🏃 Nenhuma sprint ativa no momento.</p>
+                <p class="text-sm flex items-center gap-1.5" style="color:var(--muted)">
+                    <x-icon name="activity" size="14" />
+                    Nenhuma sprint ativa no momento.
+                </p>
             @endif
         </div>
 
@@ -102,7 +107,10 @@
     @endphp
     <div class="mb-6" x-data="{ filterType: '' }">
         <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-bold" style="color:var(--text)">📅 Agenda</h3>
+            <h3 class="text-sm font-bold flex items-center gap-1.5" style="color:var(--text)">
+                <x-icon name="calendar" size="15" />
+                Agenda
+            </h3>
             <select x-model="filterType"
                 class="px-3 py-1.5 text-xs font-mono focus:outline-none"
                 style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2)">
@@ -141,7 +149,10 @@
                                 </div>
                             </a>
                         @empty
-                            <p class="text-xs" style="color:var(--muted)">Nada por aqui. 🎉</p>
+                            <p class="text-xs flex items-center gap-1.5" style="color:var(--muted)">
+                            <x-icon name="party-popper" size="13" />
+                            Nada por aqui.
+                        </p>
                         @endforelse
                     </div>
                 </div>
@@ -168,7 +179,10 @@
     {{-- ── Mídia Paga (papel Tráfego) ── --}}
     @if($showTrafegoSection)
         <div class="mb-6">
-            <h2 class="text-base font-bold mb-3" style="color:var(--text)">📢 Mídia Paga</h2>
+            <h2 class="text-base font-bold mb-3 flex items-center gap-2" style="color:var(--text)">
+                <x-icon name="megaphone" size="17" />
+                Mídia Paga
+            </h2>
             @include('dashboard.sections.midia-paga')
         </div>
     @endif
@@ -186,7 +200,8 @@
         <div class="card px-5 py-4 mb-4">
             <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
                 <span class="text-sm font-bold flex items-center gap-2" style="color:var(--text)">
-                    📊 Meus Números na Sprint
+                    <x-icon name="bar-chart-3" size="15" />
+                    Meus Números na Sprint
                     <span class="text-xs font-mono font-normal" style="color:var(--muted)">— como Executor</span>
                 </span>
                 <span class="text-xs font-mono" style="color:var(--muted)">{{ $activeSprint->title }}</span>
@@ -216,16 +231,19 @@
                     @endforeach
                 </div>
             @else
-                <p class="text-sm" style="color:var(--muted)">Nenhuma tarefa sua como executor nessa sprint. 🎉</p>
+                <p class="text-sm flex items-center gap-1.5" style="color:var(--muted)">
+                    <x-icon name="party-popper" size="14" />
+                    Nenhuma tarefa sua como executor nessa sprint.
+                </p>
             @endif
         </div>
     @endif
 
     @php
         $quadros = [
-            ['emoji' => '🔧', 'label' => 'Ajuste / Alteração',   'tasks' => $myAdjustmentTasks,         'status' => 'ajuste_alteracao', 'extra' => null],
-            ['emoji' => '⚙️', 'label' => 'Em Produção',           'tasks' => $myProductionTasks,         'status' => 'em_producao',      'extra' => null],
-            ['emoji' => '📋', 'label' => 'Pronto para Produção',  'tasks' => $myReadyForProductionTasks, 'status' => 'backlog',           'extra' => ['situation' => 'Pronto para produção']],
+            ['icon' => 'wrench',         'label' => 'Ajuste / Alteração',   'tasks' => $myAdjustmentTasks,         'status' => 'ajuste_alteracao', 'extra' => null],
+            ['icon' => 'settings',       'label' => 'Em Produção',           'tasks' => $myProductionTasks,         'status' => 'em_producao',      'extra' => null],
+            ['icon' => 'clipboard-list', 'label' => 'Pronto para Produção',  'tasks' => $myReadyForProductionTasks, 'status' => 'backlog',           'extra' => ['situation' => 'Pronto para produção']],
         ];
     @endphp
     <div id="dashboard-board" class="grid gap-4 mb-6" style="grid-template-columns: repeat(3, 1fr)"
@@ -235,8 +253,9 @@
                  data-kanban-column data-status="{{ $q['status'] }}"
                  @if($q['extra']) data-extra='{{ json_encode($q['extra']) }}' @endif>
                 <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-sm font-bold" style="color:var(--text)">
-                        {{ $q['emoji'] }} {{ $q['label'] }} (<span data-kanban-count>{{ $q['tasks']->count() }}</span>)
+                    <h3 class="text-sm font-bold flex items-center gap-1.5" style="color:var(--text)">
+                        <x-icon :name="$q['icon']" size="14" />
+                        {{ $q['label'] }} (<span data-kanban-count>{{ $q['tasks']->count() }}</span>)
                     </h3>
                     <a href="{{ route('tasks.index', ['executor_id' => auth()->id(), 'status' => $q['status']]) }}"
                        class="text-xs font-mono" style="color:var(--purple)">Ver todas</a>
@@ -253,7 +272,10 @@
                                     background:var(--s2); border-left:2px solid {{ $isApprovalOverdue ? 'var(--red)' : 'var(--purple)' }}"
                              onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'"
                              onclick="window.location='{{ route('tasks.show', $task) }}'">
-                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $task->title }}</p>
+                            <div class="flex items-start gap-1.5">
+                                <x-icon :name="$task->typeIcon()" size="12" class="flex-shrink-0" style="color:var(--muted); margin-top:1px" />
+                                <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $task->title }}</p>
+                            </div>
                             <div class="flex items-center gap-2 mt-1">
                                 <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->displayName() ?? '—' }}</span>
                                 @if($task->approval_date)
@@ -264,7 +286,10 @@
                             </div>
                         </div>
                     @empty
-                        <p class="text-xs" style="color:var(--muted)">Nada por aqui. 🎉</p>
+                        <p class="text-xs flex items-center gap-1.5" style="color:var(--muted)">
+                            <x-icon name="party-popper" size="13" />
+                            Nada por aqui.
+                        </p>
                     @endforelse
                 </div>
             </div>

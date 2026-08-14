@@ -1,5 +1,8 @@
 <div class="mb-6">
-    <h3 class="text-sm font-bold mb-3" style="color:var(--text)">⚡ Carga da Sprint</h3>
+    <h3 class="text-sm font-bold mb-3 flex items-center gap-1.5" style="color:var(--text)">
+        <x-icon name="zap" size="15" />
+        Carga da Sprint
+    </h3>
 
     {{-- Avatares por executor: total + breakdown por status, reage aos filtros acima --}}
     <div class="grid gap-4 mb-5" style="grid-template-columns: repeat(4, 1fr)">

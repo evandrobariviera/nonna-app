@@ -11,7 +11,7 @@
 
         @if($integrations->isEmpty())
             <div class="text-center py-16" style="border:1px dashed var(--border2); border-radius:8px">
-                <div class="text-4xl mb-3">📊</div>
+                <div class="mb-3 flex justify-center" style="color:var(--muted)"><x-icon name="bar-chart-3" size="36" /></div>
                 <div class="text-sm font-semibold mb-1" style="color:var(--text)">Nenhum número de atendimento cadastrado ainda</div>
                 <div class="text-xs mb-4" style="color:var(--muted)">Cadastre um número na aba "Atendimento" da ficha do cliente para começar.</div>
             </div>
@@ -25,7 +25,7 @@
                                 <a href="{{ route('service-diagnostics.integration', $integration) }}"
                                    class="card p-4 flex flex-col items-center justify-center text-center transition-colors"
                                    style="aspect-ratio: 1">
-                                    <span class="text-2xl mb-2">📱</span>
+                                    <span class="mb-2" style="color:var(--muted)"><x-icon name="smartphone" size="24" /></span>
                                     <p class="text-sm font-bold" style="color:var(--text)">{{ $integration->label }}</p>
                                     <p class="text-xs mt-1" style="color:var(--muted)">
                                         {{ $integration->diagnostics_count }} diagnóstico{{ $integration->diagnostics_count !== 1 ? 's' : '' }}

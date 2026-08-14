@@ -664,7 +664,7 @@
             {{-- Lista de links --}}
             @if($client->links->isEmpty())
                 <div class="tab-placeholder">
-                    <div class="tab-placeholder-icon">🔗</div>
+                    <div class="tab-placeholder-icon"><x-icon name="link" size="32" /></div>
                     <div class="tab-placeholder-title">Nenhum link cadastrado</div>
                     <div class="tab-placeholder-desc">Adicione o Drive, contratos e demais links importantes do cliente para centralizar tudo aqui.</div>
                 </div>
@@ -938,7 +938,7 @@
             {{-- LISTA de contatos vinculados --}}
             @if($client->contacts->isEmpty())
                 <div class="tab-placeholder">
-                    <div class="tab-placeholder-icon">👥</div>
+                    <div class="tab-placeholder-icon"><x-icon name="users" size="32" /></div>
                     <div class="tab-placeholder-title">Nenhum contato vinculado</div>
                     <div class="tab-placeholder-desc">Vincule contatos existentes do CRM ou cadastre um novo já vinculado.</div>
                 </div>
@@ -1350,7 +1350,7 @@
             {{-- Lista de contas --}}
             @if($client->adAccounts->isEmpty())
                 <div class="tab-placeholder">
-                    <div class="tab-placeholder-icon">📡</div>
+                    <div class="tab-placeholder-icon"><x-icon name="radio-tower" size="32" /></div>
                     <div class="tab-placeholder-title">Nenhuma conta cadastrada</div>
                     <div class="tab-placeholder-desc">Adicione os IDs de Meta Ads, Google Ads e outras plataformas para centralizar aqui.</div>
                 </div>
@@ -1694,7 +1694,7 @@
 
             @if($client->contracts->isEmpty())
                 <div class="tab-placeholder">
-                    <div class="tab-placeholder-icon">📃</div>
+                    <div class="tab-placeholder-icon"><x-icon name="file-text" size="32" /></div>
                     <div class="tab-placeholder-title">Nenhum contrato cadastrado</div>
                     <div class="tab-placeholder-desc">Clique em "Novo Contrato" para registrar vigência, valor e anexos do contrato deste cliente.</div>
                 </div>
@@ -1755,7 +1755,7 @@
 
             @if($client->dossiers->isEmpty())
                 <div class="tab-placeholder">
-                    <div class="tab-placeholder-icon">📋</div>
+                    <div class="tab-placeholder-icon"><x-icon name="clipboard-list" size="32" /></div>
                     <div class="tab-placeholder-title">Nenhum dossiê criado</div>
                     <div class="tab-placeholder-desc">Clique em "Novo Dossiê" para iniciar o processo de Etapa 01 — Dossiê de Marca.</div>
                 </div>
@@ -1835,7 +1835,7 @@
                                         <span class="font-bold text-sm" style="color:var(--text)">{{ $meeting->title }}</span>
                                         <span class="badge badge-{{ $meeting->statusColor() }}">{{ $meeting->statusLabel() }}</span>
                                         @if($meeting->hasAta())
-                                            <span class="badge badge-purple">📝 Ata registrada</span>
+                                            <span class="badge badge-purple" style="gap:4px"><x-icon name="file-text" size="11" /> Ata registrada</span>
                                         @endif
                                     </div>
                                     <p class="text-xs font-mono mb-2" style="color:var(--muted)">
@@ -2059,7 +2059,7 @@
             {{-- Lista de números --}}
             @if($client->integrations->isEmpty())
                 <div class="tab-placeholder">
-                    <div class="tab-placeholder-icon">📱</div>
+                    <div class="tab-placeholder-icon"><x-icon name="smartphone" size="32" /></div>
                     <div class="tab-placeholder-title">Nenhum número de atendimento cadastrado</div>
                     <div class="tab-placeholder-desc">Conecte um número de WhatsApp (uazapi) para começar a alimentar o Atendimento Assistido deste cliente.</div>
                 </div>

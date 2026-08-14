@@ -32,7 +32,7 @@
 {{-- ══ TABELA AGRUPADA ══ --}}
 @if($tasks->isEmpty())
     <div class="tab-placeholder">
-        <div class="tab-placeholder-icon">🎉</div>
+        <div class="tab-placeholder-icon"><x-icon name="party-popper" size="32" /></div>
         <p class="tab-placeholder-title">Fila vazia!</p>
         <p class="tab-placeholder-desc">Todas as tarefas foram alocadas em sprints ou não há tarefas no backlog.</p>
     </div>

@@ -7,17 +7,18 @@
 <div x-show="tab === 'board'" x-cloak>
     @php
         $boardColumns = [
-            ['key' => 'awaiting_send',     'label' => '📤 Aguardando Envio',     'color' => 'var(--muted2)'],
-            ['key' => 'pending',           'label' => '⏳ Aguardando Resposta',   'color' => 'var(--purple)'],
-            ['key' => 'changes_requested', 'label' => '✎ Ajustes Solicitados',   'color' => 'var(--orange)'],
-            ['key' => 'approved',          'label' => '✓ Aprovado',              'color' => 'var(--green)'],
+            ['key' => 'awaiting_send',     'icon' => 'send',      'label' => 'Aguardando Envio',     'color' => 'var(--muted2)'],
+            ['key' => 'pending',           'icon' => 'hourglass', 'label' => 'Aguardando Resposta',  'color' => 'var(--purple)'],
+            ['key' => 'changes_requested', 'icon' => 'pencil',    'label' => 'Ajustes Solicitados',  'color' => 'var(--orange)'],
+            ['key' => 'approved',          'icon' => 'check',     'label' => 'Aprovado',             'color' => 'var(--green)'],
         ];
     @endphp
     <div class="grid gap-4 mb-6" style="grid-template-columns: repeat(4, 1fr)">
         @foreach($boardColumns as $col)
             @php $colRounds = $board[$col['key']]; @endphp
             <div class="card px-4 py-4">
-                <h4 class="text-xs font-bold mb-3" style="color:var(--text)">
+                <h4 class="text-xs font-bold mb-3 flex items-center gap-1.5" style="color:var(--text)">
+                    <x-icon :name="$col['icon']" size="13" />
                     {{ $col['label'] }} ({{ $colRounds->count() }})
                 </h4>
                 @if($colRounds->isEmpty())
@@ -246,8 +247,9 @@
                             </span>
                             @if($total > 0)
                                 <div class="relative" x-data="{ open: false }">
-                                    <button type="button" @click="open = !open" class="btn btn-ghost btn-xs" title="Link de aprovação enviado ao cliente">
-                                        🔗 Link
+                                    <button type="button" @click="open = !open" class="btn btn-ghost btn-xs flex items-center gap-1" title="Link de aprovação enviado ao cliente">
+                                        <x-icon name="link" size="12" />
+                                        Link
                                     </button>
                                     <div x-show="open" @click.outside="open = false" x-cloak
                                          class="absolute right-0 mt-1 z-20 py-1"

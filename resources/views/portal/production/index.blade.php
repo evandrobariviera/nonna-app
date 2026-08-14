@@ -33,7 +33,7 @@
 
     @if($stats['total'] === 0)
         <div class="card p-10 text-center">
-            <p class="text-2xl mb-2">🎉</p>
+            <p class="mb-2 flex justify-center" style="color:var(--muted)"><x-icon name="party-popper" size="24" /></p>
             <p class="text-sm font-semibold" style="color: var(--text)">Nada ativo no momento</p>
             <p class="text-xs mt-1" style="color: var(--muted)">
                 @if(!$mostrarConcluidas)

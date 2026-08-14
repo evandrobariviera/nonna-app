@@ -25,7 +25,7 @@
 
         @if($automations->isEmpty())
             <div class="text-center py-16" style="border:1px dashed var(--border2)">
-                <div class="text-4xl mb-3">⚡</div>
+                <div class="mb-3 flex justify-center" style="color:var(--muted)"><x-icon name="zap" size="36" /></div>
                 <div class="text-sm font-semibold mb-1" style="color:var(--text)">Nenhuma automação criada ainda</div>
                 <div class="text-xs mb-4" style="color:var(--muted)">Crie regras do tipo "Se → Então" para automatizar o sistema.</div>
                 <a href="{{ route('automations.create') }}"

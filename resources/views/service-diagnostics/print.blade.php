@@ -22,9 +22,10 @@
             Diagnóstico de Atendimento · {{ $integration->client->displayName() }} · Versão {{ $diagnostic->version }}
         </span>
         <button onclick="window.print()"
-                class="px-4 py-1.5 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                class="px-4 py-1.5 text-xs font-bold font-mono uppercase tracking-widest text-white flex items-center gap-1.5"
                 style="background:var(--purple)">
-            🖨️ Imprimir / Salvar PDF
+            <x-icon name="printer" size="13" />
+            Imprimir / Salvar PDF
         </button>
     </div>
 

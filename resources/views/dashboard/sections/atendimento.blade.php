@@ -5,18 +5,25 @@
 
     {{-- Tickets abertos --}}
     <div class="card px-5 py-4">
-        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
-            🎫 Tickets Abertos ({{ $openTickets->count() }})
+        <h4 class="text-sm font-bold mb-3 flex items-center gap-1.5" style="color:var(--text)">
+            <x-icon name="ticket" size="14" />
+            Tickets Abertos ({{ $openTickets->count() }})
         </h4>
         @if($openTickets->isEmpty())
-            <p class="text-xs" style="color:var(--muted)">Nenhum ticket em aberto. 🎉</p>
+            <p class="text-xs flex items-center gap-1.5" style="color:var(--muted)">
+                <x-icon name="party-popper" size="13" />
+                Nenhum ticket em aberto.
+            </p>
         @else
             <div class="flex flex-col gap-2">
                 @foreach($openTickets as $ticket)
                     <a href="{{ route('tasks.show', $ticket) }}"
                        class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid {{ $ticket->isOverdue() ? 'var(--red)' : 'var(--purple)' }}"
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $ticket->title }}</p>
+                        <div class="flex items-start gap-1.5">
+                            <x-icon :name="$ticket->typeIcon()" size="12" class="flex-shrink-0" style="color:var(--muted); margin-top:1px" />
+                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $ticket->title }}</p>
+                        </div>
                         <div class="flex items-center gap-2 mt-1">
                             <span class="text-xs font-mono" style="color:var(--muted)">{{ $ticket->client?->displayName() ?? '—' }}</span>
                             @if($ticket->due_date)
@@ -31,8 +38,9 @@
 
     {{-- Voltou (mudanças solicitadas) --}}
     <div class="card px-5 py-4">
-        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
-            🔁 Voltou com Ajustes ({{ $roundsChangesRequested->count() }})
+        <h4 class="text-sm font-bold mb-3 flex items-center gap-1.5" style="color:var(--text)">
+            <x-icon name="refresh-cw" size="14" />
+            Voltou com Ajustes ({{ $roundsChangesRequested->count() }})
         </h4>
         @if($roundsChangesRequested->isEmpty())
             <p class="text-xs" style="color:var(--muted)">Nenhuma tarefa voltou pra ajustes recentemente.</p>
@@ -42,7 +50,10 @@
                     <a href="{{ route('tasks.show', $round->task) }}"
                        class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--red)"
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $round->task->title }}</p>
+                        <div class="flex items-start gap-1.5">
+                            <x-icon :name="$round->task->typeIcon()" size="12" class="flex-shrink-0" style="color:var(--muted); margin-top:1px" />
+                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $round->task->title }}</p>
+                        </div>
                         <div class="flex items-center gap-2 mt-1">
                             <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->task->client?->displayName() ?? '—' }}</span>
                             <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->resolved_at?->diffForHumans() }}</span>
@@ -56,8 +67,9 @@
     {{-- Em aprovação (aguardando resposta do cliente) --}}
     <div class="card px-5 py-4">
         <div class="flex items-center justify-between mb-3">
-            <h4 class="text-sm font-bold" style="color:var(--text)">
-                📤 Em Aprovação ({{ $roundsPending->count() }})
+            <h4 class="text-sm font-bold flex items-center gap-1.5" style="color:var(--text)">
+                <x-icon name="send" size="14" />
+                Em Aprovação ({{ $roundsPending->count() }})
             </h4>
             @if($roundsAwaitingSendCount > 0)
                 <a href="{{ route('approvals.index') }}" class="text-xs font-mono" style="color:var(--orange)">
@@ -73,7 +85,10 @@
                     <a href="{{ route('tasks.show', $round->task) }}"
                        class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--orange)"
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $round->task->title }}</p>
+                        <div class="flex items-start gap-1.5">
+                            <x-icon :name="$round->task->typeIcon()" size="12" class="flex-shrink-0" style="color:var(--muted); margin-top:1px" />
+                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $round->task->title }}</p>
+                        </div>
                         <div class="flex items-center gap-2 mt-1">
                             <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->task->client?->displayName() ?? '—' }}</span>
                             <span class="text-xs font-mono" style="color:var(--muted)">rodada {{ $round->round_number }} · {{ $round->submitted_at->diffForHumans() }}</span>
@@ -86,8 +101,9 @@
 
     {{-- Pronto para despacho (aprovado pelo cliente) --}}
     <div class="card px-5 py-4">
-        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
-            ✅ Pronto para Despacho ({{ $roundsApproved->count() }})
+        <h4 class="text-sm font-bold mb-3 flex items-center gap-1.5" style="color:var(--text)">
+            <x-icon name="circle-check" size="14" />
+            Pronto para Despacho ({{ $roundsApproved->count() }})
         </h4>
         @if($roundsApproved->isEmpty())
             <p class="text-xs" style="color:var(--muted)">Nenhuma aprovação concluída recentemente.</p>
@@ -97,7 +113,10 @@
                     <a href="{{ route('tasks.show', $round->task) }}"
                        class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--green)"
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $round->task->title }}</p>
+                        <div class="flex items-start gap-1.5">
+                            <x-icon :name="$round->task->typeIcon()" size="12" class="flex-shrink-0" style="color:var(--muted); margin-top:1px" />
+                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $round->task->title }}</p>
+                        </div>
                         <div class="flex items-center gap-2 mt-1">
                             <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->task->client?->displayName() ?? '—' }}</span>
                             <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->resolved_at?->diffForHumans() }}</span>

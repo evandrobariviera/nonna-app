@@ -83,7 +83,7 @@
                         :style="block === 'meta'
                             ? 'background:rgba(100, 59, 142,.12); color:var(--purple)'
                             : 'color:var(--muted2)'">
-                    <span class="text-xs font-mono font-bold opacity-40">⚙</span>
+                    <span class="opacity-40" style="display:inline-flex"><x-icon name="settings" size="13" /></span>
                     <span class="text-xs font-semibold">Configurações</span>
                 </button>
             </div>

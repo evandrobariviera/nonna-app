@@ -147,7 +147,7 @@
                 <tr>
                     <td colspan="9">
                         <div class="tab-placeholder">
-                            <div class="tab-placeholder-icon">📋</div>
+                            <div class="tab-placeholder-icon"><x-icon name="clipboard-list" size="32" /></div>
                             <div class="tab-placeholder-title">Nenhuma tarefa encontrada</div>
                             <div class="tab-placeholder-desc">Ajuste os filtros ou crie um novo ticket.</div>
                         </div>

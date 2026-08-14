@@ -19,7 +19,7 @@
                         <tr>
                             <td colspan="12">
                                 <div class="tab-placeholder">
-                                    <div class="tab-placeholder-icon">🎫</div>
+                                    <div class="tab-placeholder-icon"><x-icon name="ticket" size="32" /></div>
                                     <div class="tab-placeholder-title">Nenhum ticket encontrado</div>
                                     <div class="tab-placeholder-desc">Ajuste os filtros ou crie um novo ticket.</div>
                                 </div>

@@ -708,7 +708,7 @@
                                 <div class="flex items-center justify-between gap-3 px-4 py-3"
                                      style="background:var(--s2); border:1px solid var(--border2)">
                                     <div class="flex items-center gap-3 min-w-0">
-                                        <span class="text-lg flex-shrink-0">🔗</span>
+                                        <span class="flex-shrink-0" style="color:var(--muted)"><x-icon name="link" size="18" /></span>
                                         <div class="min-w-0">
                                             <a href="{{ $file['url'] }}" target="_blank" rel="noopener"
                                                class="text-sm font-medium truncate block hover:underline"
@@ -742,8 +742,9 @@
                         <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $entregaveis->count() }}</span>
                     @endif
                     @if($entregaveis->count() > 0)
-                        <a href="{{ route('task-attachments.zip', $task) }}" class="ml-auto btn btn-ghost btn-xs" style="text-transform:none; letter-spacing:normal; font-weight:600">
-                            ⬇ Baixar tudo (.zip)
+                        <a href="{{ route('task-attachments.zip', $task) }}" class="ml-auto btn btn-ghost btn-xs flex items-center gap-1" style="text-transform:none; letter-spacing:normal; font-weight:600">
+                            <x-icon name="download" size="13" />
+                            Baixar tudo (.zip)
                         </a>
                     @endif
                 </p>

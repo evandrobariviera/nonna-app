@@ -28,19 +28,19 @@
         <div style="max-width:480px; width:100%; text-align:center">
 
             @if($approvalToken->status === 'cancelled')
-                <div style="font-size:48px; margin-bottom:16px">🚫</div>
+                <div style="margin-bottom:16px; display:flex; justify-content:center; color:var(--red)"><x-icon name="ban" size="44" /></div>
                 <h1 style="font-size:22px; font-weight:800; margin:0 0 10px">Aprovação cancelada</h1>
                 <p style="font-size:14px; color:var(--muted); line-height:1.7; margin:0">
                     Esta rodada de aprovação foi cancelada pelo time da Nonna. Se precisar de mais informações, entre em contato com o time.
                 </p>
             @elseif(!$approvalToken->isPending())
-                <div style="font-size:48px; margin-bottom:16px">✅</div>
+                <div style="margin-bottom:16px; display:flex; justify-content:center; color:var(--green)"><x-icon name="circle-check" size="44" /></div>
                 <h1 style="font-size:22px; font-weight:800; margin:0 0 10px">Avaliação já enviada</h1>
                 <p style="font-size:14px; color:var(--muted); line-height:1.7; margin:0">
                     Você já registrou sua avaliação para este material. Obrigado!
                 </p>
             @else
-                <div style="font-size:48px; margin-bottom:16px">⏱</div>
+                <div style="margin-bottom:16px; display:flex; justify-content:center; color:var(--muted)"><x-icon name="clock" size="44" /></div>
                 <h1 style="font-size:22px; font-weight:800; margin:0 0 10px">Link Expirado</h1>
                 <p style="font-size:14px; color:var(--muted); line-height:1.7; margin:0">
                     Este link de aprovação expirou. Entre em contato com o time da Nonna para receber um novo link.

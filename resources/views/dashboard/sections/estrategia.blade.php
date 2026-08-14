@@ -3,11 +3,15 @@
 
     {{-- Clientes sem planejamento ativo --}}
     <div class="card px-5 py-4">
-        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
-            🚩 Sem planejamento ativo ({{ $clientsWithoutActivePlan->count() }})
+        <h4 class="text-sm font-bold mb-3 flex items-center gap-1.5" style="color:var(--text)">
+            <x-icon name="flag" size="14" />
+            Sem planejamento ativo ({{ $clientsWithoutActivePlan->count() }})
         </h4>
         @if($clientsWithoutActivePlan->isEmpty())
-            <p class="text-xs" style="color:var(--muted)">Todos os clientes ativos têm um ciclo em execução. 🎉</p>
+            <p class="text-xs flex items-center gap-1.5" style="color:var(--muted)">
+                <x-icon name="party-popper" size="13" />
+                Todos os clientes ativos têm um ciclo em execução.
+            </p>
         @else
             <div class="flex flex-col gap-2">
                 @foreach($clientsWithoutActivePlan as $client)
@@ -23,8 +27,9 @@
 
     {{-- Planejamentos vencendo em até 30 dias --}}
     <div class="card px-5 py-4">
-        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
-            ⏰ Vencendo em até 30 dias ({{ $plansExpiringSoon->count() }})
+        <h4 class="text-sm font-bold mb-3 flex items-center gap-1.5" style="color:var(--text)">
+            <x-icon name="alarm-clock" size="14" />
+            Vencendo em até 30 dias ({{ $plansExpiringSoon->count() }})
         </h4>
         @if($plansExpiringSoon->isEmpty())
             <p class="text-xs" style="color:var(--muted)">Nenhum planejamento vencendo em breve.</p>
@@ -47,8 +52,9 @@
 
     {{-- Planejamentos ativos --}}
     <div class="card px-5 py-4">
-        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
-            🟢 Planejamentos ativos ({{ $activePlans->count() }})
+        <h4 class="text-sm font-bold mb-3 flex items-center gap-1.5" style="color:var(--text)">
+            <span class="h-2 w-2 rounded-full" style="background:var(--green)"></span>
+            Planejamentos ativos ({{ $activePlans->count() }})
         </h4>
         @if($activePlans->isEmpty())
             <p class="text-xs" style="color:var(--muted)">Nenhum planejamento em execução no momento.</p>
@@ -72,8 +78,9 @@
 
     {{-- Reuniões em Pós-Reunião --}}
     <div class="card px-5 py-4">
-        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
-            📝 Em Pós-Reunião ({{ $meetingsPosReuniao->count() }})
+        <h4 class="text-sm font-bold mb-3 flex items-center gap-1.5" style="color:var(--text)">
+            <x-icon name="file-text" size="14" />
+            Em Pós-Reunião ({{ $meetingsPosReuniao->count() }})
         </h4>
         @if($meetingsPosReuniao->isEmpty())
             <p class="text-xs" style="color:var(--muted)">Nenhuma reunião aguardando ata/follow-up.</p>

@@ -4,8 +4,8 @@
     {{-- Saudação --}}
     <div class="mb-8 flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-black" style="color: var(--text)">
-                Olá, {{ $portalContact->name }} 👋
+            <h1 class="text-2xl font-black flex items-center gap-2" style="color: var(--text)">
+                Olá, {{ $portalContact->name }} <x-icon name="hand" size="22" />
             </h1>
             <p class="text-sm mt-1" style="color: var(--muted)">
                 {{ $client->company_name }} · acompanhe o andamento de tudo com a Nonna.
@@ -170,7 +170,7 @@
         </div>
     @else
         <div class="card p-10 text-center">
-            <p class="text-2xl mb-2">📋</p>
+            <p class="mb-2 flex justify-center" style="color:var(--muted)"><x-icon name="clipboard-list" size="28" /></p>
             <p class="text-sm font-semibold" style="color: var(--text)">Nenhum planejamento ativo</p>
             <p class="text-xs mt-1" style="color: var(--muted)">Em breve seu próximo ciclo estratégico aparecerá aqui.</p>
         </div>

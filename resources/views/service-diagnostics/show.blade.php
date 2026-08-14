@@ -26,9 +26,10 @@
             </p>
             <div class="flex items-center gap-3">
                 <a href="{{ route('service-diagnostics.print', [$integration, $diagnostic]) }}" target="_blank"
-                   class="px-4 py-1.5 text-xs font-bold font-mono uppercase tracking-widest"
+                   class="px-4 py-1.5 text-xs font-bold font-mono uppercase tracking-widest flex items-center gap-1.5"
                    style="border:1px solid var(--border2); color:var(--muted2)">
-                    🖨️ Exportar PDF
+                    <x-icon name="printer" size="13" />
+                    Exportar PDF
                 </a>
                 <span class="text-xs font-mono px-3 py-1 rounded"
                       style="background:var(--s3); color: {{ $diagnostic->isPublished() ? 'var(--green)' : 'var(--muted)' }}">

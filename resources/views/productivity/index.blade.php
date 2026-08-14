@@ -194,7 +194,10 @@
                 Tarefas Atrasadas, Por Executor <span style="color:var(--muted2); text-transform:none; letter-spacing:normal">· estado atual</span>
             </p>
             @if($overdueByExecutor->isEmpty())
-                <p class="text-sm py-6 text-center" style="color:var(--muted)">Nenhuma tarefa atrasada agora. 🎉</p>
+                <p class="text-sm py-6 text-center flex items-center justify-center gap-1.5" style="color:var(--muted)">
+                    <x-icon name="party-popper" size="15" />
+                    Nenhuma tarefa atrasada agora.
+                </p>
             @else
                 @php $maxOverdue = $overdueByExecutor->max('count'); @endphp
                 <div class="flex flex-col gap-3">

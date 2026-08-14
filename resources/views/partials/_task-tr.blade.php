@@ -58,7 +58,7 @@
                class="font-semibold leading-snug hover:underline"
                style="color:var(--text); font-size:13.5px">
                 @if(($task->priority ?? 'normal') === 'urgente')
-                    <span style="color:#dc2626; font-size:12px; margin-right:3px">🚩</span>
+                    <span style="color:#dc2626; margin-right:3px; display:inline-flex; vertical-align:-2px"><x-icon name="flag" size="12" /></span>
                 @endif
                 {{ $task->title }}
             </a>

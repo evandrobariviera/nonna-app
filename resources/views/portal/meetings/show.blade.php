@@ -67,7 +67,10 @@
 
     @if($meeting->hasAta())
         <div class="card p-6 mb-6">
-            <h2 class="text-sm font-bold uppercase tracking-wide mb-1" style="color: var(--purple)">📝 Ata da Reunião</h2>
+            <h2 class="text-sm font-bold uppercase tracking-wide mb-1 flex items-center gap-1.5" style="color: var(--purple)">
+                <x-icon name="file-text" size="14" />
+                Ata da Reunião
+            </h2>
             @if($meeting->ata_recorded_at)
                 <p class="text-xs mb-3" style="color: var(--muted)">Registrada em {{ $meeting->ata_recorded_at->format('d/m/Y') }}</p>
             @endif

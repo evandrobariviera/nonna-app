@@ -58,7 +58,10 @@
                         {{ $sc['label'] }}
                     </span>
                     @if($meeting->hasAta())
-                        <span class="text-xs font-semibold" style="color: var(--purple)">📝 ata disponível</span>
+                        <span class="text-xs font-semibold flex items-center gap-1" style="color: var(--purple)">
+                            <x-icon name="file-text" size="12" />
+                            ata disponível
+                        </span>
                     @endif
                 </div>
                 <p class="text-xs" style="color: var(--muted)">

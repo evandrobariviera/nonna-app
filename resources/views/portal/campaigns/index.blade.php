@@ -10,7 +10,7 @@
 
     @if(!$stats)
         <div class="card p-10 text-center">
-            <p class="text-2xl mb-2">📊</p>
+            <p class="mb-2 flex justify-center" style="color:var(--muted)"><x-icon name="bar-chart-3" size="24" /></p>
             <p class="text-sm font-semibold" style="color: var(--text)">Nenhuma conta de anúncios configurada</p>
             <p class="text-xs mt-1" style="color: var(--muted)">Assim que suas campanhas forem ativadas, os dados aparecerão aqui.</p>
         </div>

@@ -72,7 +72,7 @@
             @empty
                 <tr>
                     <td colspan="7" class="text-center py-16 text-[var(--muted)]">
-                        <div class="text-2xl mb-3 opacity-30">👤</div>
+                        <div class="mb-3 flex justify-center opacity-30"><x-icon name="user" size="24" /></div>
                         <div class="text-sm font-semibold text-[var(--muted2)] mb-1">Nenhum contato cadastrado</div>
                         <div class="text-xs text-[var(--muted)]">Cadastre o primeiro lead para iniciar o funil comercial.</div>
                     </td>

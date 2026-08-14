@@ -25,7 +25,7 @@
 
         @if($agents->isEmpty())
             <div class="text-center py-16" style="border:1px dashed var(--border2); border-radius:8px">
-                <div class="text-4xl mb-3">🤖</div>
+                <div class="mb-3 flex justify-center" style="color:var(--muted)"><x-icon name="bot" size="36" /></div>
                 <div class="text-sm font-semibold mb-1" style="color:var(--text)">Nenhum agente criado ainda</div>
                 <div class="text-xs mb-4" style="color:var(--muted)">Crie o primeiro agente para começar a usar IA no sistema.</div>
                 <a href="{{ route('ai.agents.create') }}"

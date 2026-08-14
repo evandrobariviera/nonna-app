@@ -28,13 +28,13 @@
         <div style="max-width:480px; width:100%; text-align:center">
 
             @if($approvalToken->status === 'approved')
-                <div style="font-size:48px; margin-bottom:16px">✅</div>
+                <div style="margin-bottom:16px; display:flex; justify-content:center; color:var(--green)"><x-icon name="circle-check" size="44" /></div>
                 <h1 style="font-size:22px; font-weight:800; margin:0 0 10px">Material Aprovado!</h1>
                 <p style="font-size:14px; color:var(--muted); line-height:1.7; margin:0 0 24px">
                     Sua aprovação foi registrada. O time da Nonna vai avançar com a produção.
                 </p>
             @else
-                <div style="font-size:48px; margin-bottom:16px">📝</div>
+                <div style="margin-bottom:16px; display:flex; justify-content:center; color:var(--muted)"><x-icon name="file-text" size="44" /></div>
                 <h1 style="font-size:22px; font-weight:800; margin:0 0 10px">Ajustes Registrados!</h1>
                 <p style="font-size:14px; color:var(--muted); line-height:1.7; margin:0 0 24px">
                     Suas sugestões foram enviadas para o time. Em breve você receberá o material revisado.
