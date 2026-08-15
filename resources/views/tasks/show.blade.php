@@ -293,7 +293,11 @@
                 $flowStatuses     = collect(\App\Models\Task::$statuses)->except('cancelado');
                 $canceladoStatus  = \App\Models\Task::$statuses['cancelado'];
                 $canceladoActive  = $task->status === 'cancelado';
-                $chevronPt        = 6;
+                $chevronPt        = 9;
+                // Traço de 1px branco ao redor da forma já recortada pelo clip-path (border
+                // normal ignora o clip-path) — só pra marcar a subdivisão entre as flechas,
+                // inclusive na ponta.
+                $chevronOutline   = "filter:drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff);";
             @endphp
             <div class="card card-body">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Status</p>
@@ -315,10 +319,10 @@
                                 @endforeach
                                 <input type="hidden" name="status" value="{{ $key }}">
                                 <button type="submit"
-                                    class="flex-shrink-0 py-2.5 text-[11px] font-bold uppercase text-center transition-colors"
-                                    style="clip-path:{{ $clip }}; min-width:70px;
-                                           padding-left:{{ $loop->first ? '9px' : '10px' }}; padding-right:{{ $loop->last ? '7px' : '10px' }};
-                                           margin-left:{{ $loop->first ? '0' : '-'.$chevronPt.'px' }}; letter-spacing:0;
+                                    class="flex-shrink-0 py-3 text-xs font-bold uppercase text-center transition-colors"
+                                    style="clip-path:{{ $clip }}; min-width:82px; {{ $chevronOutline }}
+                                           padding-left:{{ $loop->first ? '13px' : '15px' }}; padding-right:{{ $loop->last ? '13px' : '15px' }};
+                                           margin-left:{{ $loop->first ? '0' : '-'.$chevronPt.'px' }}; letter-spacing:.01em;
                                            {{ $active ? 'background:var(--'.$s['color'].'); color:#fff;' : 'background:var(--s2); color:var(--muted2);' }}"
                                     {{ !$active ? 'onmouseover="this.style.background=\'var(--s3)\'" onmouseout="this.style.background=\'var(--s2)\'"' : '' }}>
                                     {{ $statusShort[$key] ?? $s['label'] }}
@@ -335,8 +339,8 @@
                         @endforeach
                         <input type="hidden" name="status" value="cancelado">
                         <button type="submit"
-                            class="px-2 py-2 text-[11px] font-bold uppercase transition-colors"
-                            style="letter-spacing:0; border:1px solid {{ $canceladoActive ? 'var(--'.$canceladoStatus['color'].')' : 'var(--border2)' }};
+                            class="px-4 py-3 text-xs font-bold uppercase transition-colors"
+                            style="letter-spacing:.01em; border:1px solid {{ $canceladoActive ? 'var(--'.$canceladoStatus['color'].')' : 'var(--border2)' }};
                                    {{ $canceladoActive ? 'background:var(--'.$canceladoStatus['color'].'); color:#fff;' : 'background:transparent; color:var(--muted2);' }}"
                             {{ !$canceladoActive ? 'onmouseover="this.style.background=\'var(--s2)\'" onmouseout="this.style.background=\'transparent\'"' : '' }}>
                             Cancelado
