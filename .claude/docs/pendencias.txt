@@ -1,0 +1,22 @@
+Sistema de notificações
+ - Precisamos ainda escolher quais as notificações necessárias;
+
+Automações
+ - Sempre que uma tarefa ficar com status aprovação e situação enviar para o cliente,
+ temos que jogar para o sistema de aprovação e disparar o webhook;
+
+Layout
+
+
+Funcionalidades
+ - Integração com n8n e planilha das campanhas google docs
+ - upload do planejamento e pre preenchimento de tudoma sessão 
+
+
+Cadastros
+ - Conferir os cadastros de Campanhas, projetos e ligar todos em cascata com as tarefas
+
+
+ Testes
+ - Subir um planejamento via upload
+
