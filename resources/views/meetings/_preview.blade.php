@@ -33,7 +33,7 @@
             <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Planejamento</p>
             <a href="{{ route('macroplans.edit', $meeting->macroPlan) }}"
                class="card card-body flex items-center justify-between gap-3 transition-colors"
-               onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'">
+               onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
                 <span class="text-sm font-medium truncate" style="color:var(--text)">{{ $meeting->macroPlan->title }}</span>
                 <span class="badge badge-{{ $meeting->macroPlan->statusColor() }} flex-shrink-0">{{ $meeting->macroPlan->statusLabel() }}</span>
             </a>
@@ -48,7 +48,7 @@
                 @foreach($meeting->attachments as $attachment)
                     <a href="{{ $attachment->url() }}" target="_blank"
                        class="card card-body flex items-center justify-between gap-3 transition-colors"
-                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'">
+                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
                         <span class="text-sm font-medium truncate" style="color:var(--text)">{{ $attachment->icon() }} {{ $attachment->filename }}</span>
                         <span class="text-xs font-mono flex-shrink-0" style="color:var(--muted)">{{ $attachment->sizeForHumans() }}</span>
                     </a>
@@ -62,7 +62,7 @@
        class="text-center px-4 py-2.5 text-xs font-bold transition-colors"
        style="border:1px solid var(--border2); color:var(--muted2)"
        onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-       onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+       onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--muted2)'">
         Ver página completa da reunião →
     </a>
 </div>

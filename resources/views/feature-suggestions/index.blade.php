@@ -16,7 +16,7 @@
             <div class="flex items-center gap-2">
                 <input type="text" name="title" required autofocus placeholder="Nova sugestão..."
                     class="flex-1 px-3 py-2 text-sm focus:outline-none"
-                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                 <button type="submit" class="btn btn-primary btn-sm flex-shrink-0">Adicionar</button>
             </div>
 
@@ -26,7 +26,7 @@
             <div x-show="details" x-cloak class="mt-2">
                 <textarea name="description" rows="3" placeholder="Detalhes (opcional)..."
                     class="w-full px-3 py-2 text-sm focus:outline-none resize-none"
-                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"></textarea>
+                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"></textarea>
             </div>
         </form>
 

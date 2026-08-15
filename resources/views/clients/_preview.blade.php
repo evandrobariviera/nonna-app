@@ -96,7 +96,7 @@
                         @foreach($recentMacroplans as $plan)
                             <a href="{{ route('macroplans.edit', $plan) }}"
                                class="card card-body flex items-center justify-between gap-3 transition-colors"
-                               onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'">
+                               onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
                                 <span class="text-sm font-medium truncate" style="color:var(--text)">{{ $plan->title }}</span>
                                 <span class="badge badge-{{ $plan->statusColor() }} flex-shrink-0">{{ $plan->statusLabel() }}</span>
                             </a>
@@ -109,7 +109,7 @@
                class="text-center px-4 py-2.5 text-xs font-bold transition-colors"
                style="border:1px solid var(--border2); color:var(--muted2)"
                onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-               onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+               onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--muted2)'">
                 Ver página completa do cliente →
             </a>
         </div>
@@ -219,7 +219,7 @@
                     @foreach($client->links as $link)
                         <a href="{{ $link->url }}" target="_blank" rel="noopener"
                            class="card card-body flex items-center justify-between gap-3 transition-colors"
-                           onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'">
+                           onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
                             <div class="min-w-0">
                                 <p class="text-sm font-semibold" style="color:var(--text)">{{ $link->displayLabel() }}</p>
                                 <p class="text-xs font-mono truncate" style="color:var(--purple)">{{ $link->url }}</p>
@@ -243,7 +243,7 @@
                     @foreach($activeMacroplans as $plan)
                         <a href="{{ route('macroplans.edit', $plan) }}"
                            class="card card-body flex items-center justify-between gap-3 transition-colors"
-                           onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'">
+                           onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
                             <div class="min-w-0">
                                 <p class="text-sm font-semibold truncate" style="color:var(--text)">{{ $plan->title }}</p>
                                 @if($plan->period_start)
@@ -268,7 +268,7 @@
                     @foreach($activeCampaigns as $campaign)
                         <a href="{{ route('campaigns.show', $campaign) }}"
                            class="card card-body flex items-center justify-between gap-3 transition-colors"
-                           onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'">
+                           onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
                             <div class="min-w-0">
                                 <p class="text-sm font-semibold truncate" style="color:var(--text)">{{ $campaign->name }}</p>
                                 <p class="text-xs mt-0.5" style="color:var(--muted)">
@@ -291,7 +291,7 @@
                     @foreach($client->dossiers as $dossier)
                         <a href="{{ route('clients.dossiers.show', [$client, $dossier]) }}"
                            class="card card-body flex items-center justify-between gap-3 transition-colors"
-                           onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'">
+                           onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
                             <div class="min-w-0">
                                 <p class="text-sm font-semibold truncate" style="color:var(--text)">{{ $dossier->title }}</p>
                                 <p class="text-xs mt-0.5" style="color:var(--muted)">v{{ $dossier->version }} · criado em {{ $dossier->created_at->format('d/m/Y') }}</p>

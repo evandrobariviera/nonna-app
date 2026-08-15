@@ -80,27 +80,27 @@
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Título</label>
                     <input type="text" name="title" required value="{{ old('title', $sprint->title) }}"
                         class="w-full px-3 py-2 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     @error('title') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Início</label>
                     <input type="date" name="starts_at" required value="{{ old('starts_at', $sprint->starts_at->format('Y-m-d')) }}"
                         class="px-3 py-2 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     @error('starts_at') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Fim</label>
                     <input type="date" name="ends_at" required value="{{ old('ends_at', $sprint->ends_at->format('Y-m-d')) }}"
                         class="px-3 py-2 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     @error('ends_at') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Status</label>
                     <select name="status" class="px-3 py-2 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         @foreach(\App\Models\Sprint::$statuses as $key => $s)
                             <option value="{{ $key }}" {{ old('status', $sprint->status) === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
                         @endforeach
@@ -380,7 +380,7 @@
                     <span class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Filtrar:</span>
                     <select x-model="clientFilter"
                         class="px-3 py-1.5 text-xs focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         <option value="">Todos os clientes</option>
                         @foreach($clients as $c)
                             <option value="{{ $c->id }}">{{ $c->displayName() }}</option>

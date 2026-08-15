@@ -31,7 +31,7 @@
                   placeholder="Escreva um comentário..."
                   class="w-full px-4 py-3 text-sm focus:outline-none resize-none rounded-lg"
                   style="background: var(--s2); border: 1px solid var(--border2); color: var(--text); line-height: 1.65"
-                  onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'"></textarea>
+                  onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'"></textarea>
         <div class="flex justify-end mt-2" x-show="body.trim().length > 0" x-cloak>
             <button type="submit" class="px-4 py-2 text-sm font-semibold text-white rounded-lg"
                     style="background: var(--purple)"

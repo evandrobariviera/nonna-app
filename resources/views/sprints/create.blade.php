@@ -14,8 +14,8 @@
                         value="{{ old('title') }}"
                         placeholder="Ex: Sprint 24 — 09-13 Jun/2026"
                         class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
-                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                     @error('title')
                         <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p>
                     @enderror
@@ -28,7 +28,7 @@
                         </label>
                         <input type="date" name="starts_at" required value="{{ old('starts_at') }}"
                             class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     </div>
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">
@@ -36,7 +36,7 @@
                         </label>
                         <input type="date" name="ends_at" required value="{{ old('ends_at') }}"
                             class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     </div>
                 </div>
 
@@ -44,7 +44,7 @@
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Status</label>
                     <select name="status"
                         class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         @foreach(\App\Models\Sprint::$statuses as $key => $s)
                             <option value="{{ $key }}" {{ old('status', 'planning') === $key ? 'selected' : '' }}>
                                 {{ $s['label'] }}

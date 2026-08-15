@@ -34,7 +34,7 @@
                         </label>
                         <select name="client_id" required
                             class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                             <option value="">Selecione...</option>
                             @foreach($clients as $c)
                                 <option value="{{ $c->id }}">{{ $c->displayName() }}</option>
@@ -45,7 +45,7 @@
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Tipo</label>
                         <select name="type"
                             class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                             @foreach(\App\Models\Project::$types as $key => $t)
                                 <option value="{{ $key }}">{{ $t['label'] }}</option>
                             @endforeach
@@ -58,7 +58,7 @@
                         <input type="text" name="title" required
                             placeholder="Ex: Chamado — Ajuste na Landing Page"
                             class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     </div>
                 </div>
 
@@ -67,7 +67,7 @@
                     <textarea name="objective" rows="2"
                         placeholder="O que este projeto/campanha precisa alcançar?"
                         class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"></textarea>
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"></textarea>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
@@ -75,13 +75,13 @@
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Início</label>
                         <input type="date" name="start_date"
                             class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     </div>
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Término</label>
                         <input type="date" name="end_date"
                             class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     </div>
                 </div>
 
@@ -174,14 +174,14 @@
                 <input type="text" x-model="search" @input="applyFilters()"
                     placeholder="Buscar projeto, campanha ou cliente…"
                     class="w-full pl-8 pr-3 py-2 text-xs focus:outline-none"
-                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
-                    onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
+                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                    onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                 <x-icon name="search" size="14" class="absolute left-2.5 top-2.5" style="color:var(--muted)" />
             </div>
 
             <select x-model="filterClient" @change="applyFilters()"
                 class="px-3 py-2 text-xs focus:outline-none"
-                style="background:var(--s3); border:1px solid var(--border2); color:var(--text); min-width:160px">
+                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); min-width:160px">
                 <option value="">Todos os clientes</option>
                 @foreach($clients as $c)
                     <option value="{{ $c->id }}">{{ $c->displayName() }}</option>
@@ -190,7 +190,7 @@
 
             <select x-model="filterStatus" @change="applyFilters()"
                 class="px-3 py-2 text-xs focus:outline-none"
-                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                 <option value="">Todos os status</option>
                 @foreach(\App\Models\Project::$statuses as $key => $s)
                     <option value="{{ $key }}">{{ $s['label'] }}</option>
@@ -199,7 +199,7 @@
 
             <select x-model="filterDiscipline" @change="applyFilters()"
                 class="px-3 py-2 text-xs focus:outline-none"
-                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                 <option value="">Todas as disciplinas</option>
                 <option value="criacao">Criação</option>
                 <option value="web">Web / Dev</option>
@@ -231,7 +231,7 @@
                 <span class="text-xs font-mono" style="color:var(--muted)">Agrupar:</span>
                 <select x-model="groupBy"
                     class="px-3 py-2 text-xs focus:outline-none"
-                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     <template x-for="opt in groupOptions" :key="opt.key">
                         <option :value="opt.key" x-text="opt.label"></option>
                     </template>
@@ -254,7 +254,7 @@
                 <span x-text="filtered.length"></span> resultado<span x-show="filtered.length !== 1">s</span>
             </span>
 
-            <div class="flex gap-1 p-0.5" style="background:var(--s3); border:1px solid var(--border2)">
+            <div class="flex gap-1 p-0.5" style="background:var(--s3); border:1px solid var(--border); border-radius:8px">
                 <button @click="setViewMode('cards')"
                     class="px-3 py-1.5 text-xs font-mono transition-all"
                     :style="viewMode === 'cards'
@@ -562,7 +562,7 @@
                         <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Planejamento (Roadmap)</label>
                         <select x-model="editForm.macro_plan_id"
                             class="w-full px-3 py-2 text-xs focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                             <option value="">— Sem planejamento —</option>
                             <template x-for="mp in macroplans" :key="mp.id">
                                 <option :value="mp.id" x-text="mp.title"></option>

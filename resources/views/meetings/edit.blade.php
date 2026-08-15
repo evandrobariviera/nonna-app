@@ -34,8 +34,8 @@
                     </label>
                     <input type="text" name="title" value="{{ old('title', $meeting->title) }}" required
                         class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
-                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                 </div>
 
                 {{-- Tipo + Modalidade --}}
@@ -46,7 +46,7 @@
                         </label>
                         <select name="type" required
                             class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                             @foreach(\App\Models\Meeting::$types as $key => $label)
                                 <option value="{{ $key }}" {{ old('type', $meeting->type) === $key ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
@@ -58,7 +58,7 @@
                         </label>
                         <select name="modality" x-model="modality" required
                             class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                             @foreach(\App\Models\Meeting::$modalities as $key => $label)
                                 <option value="{{ $key }}" {{ old('modality', $meeting->modality) === $key ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
@@ -75,7 +75,7 @@
                         <input type="datetime-local" name="scheduled_at" required
                             value="{{ old('scheduled_at', $meeting->scheduled_at->format('Y-m-d\TH:i')) }}"
                             class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     </div>
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
@@ -84,7 +84,7 @@
                         <input type="number" name="duration_minutes" min="5" max="480"
                             value="{{ old('duration_minutes', $meeting->duration_minutes) }}"
                             class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     </div>
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
@@ -92,7 +92,7 @@
                         </label>
                         <select name="status" required
                             class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                             @foreach(\App\Models\Meeting::$statuses as $key => $s)
                                 <option value="{{ $key }}" {{ old('status', $meeting->status) === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
                             @endforeach
@@ -108,7 +108,7 @@
                     <input type="url" name="online_link" value="{{ old('online_link', $meeting->online_link) }}"
                         placeholder="https://meet.google.com/..."
                         class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                 </div>
 
                 {{-- Local físico --}}
@@ -119,7 +119,7 @@
                     <input type="text" name="location" value="{{ old('location', $meeting->location) }}"
                         placeholder="Endereço ou sala..."
                         class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                 </div>
 
                 {{-- Cliente + Oportunidade --}}
@@ -130,7 +130,7 @@
                         </label>
                         <select name="client_id" x-model="clientId"
                             class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                             <option value="">— sem cliente —</option>
                             @foreach($clients as $c)
                                 <option value="{{ $c->id }}" {{ old('client_id', $meeting->client_id) === $c->id ? 'selected' : '' }}>{{ $c->displayName() }}</option>
@@ -143,7 +143,7 @@
                         </label>
                         <select name="opportunity_id"
                             class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                             <option value="">— sem oportunidade —</option>
                             @foreach($opportunities as $o)
                                 <option value="{{ $o->id }}" {{ old('opportunity_id', $meeting->opportunity_id) === $o->id ? 'selected' : '' }}>{{ $o->title }}</option>
@@ -159,7 +159,7 @@
                     </label>
                     <select name="organized_by" required
                         class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         @foreach($users as $u)
                             <option value="{{ $u->id }}" {{ old('organized_by', $meeting->organized_by) == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
                         @endforeach
@@ -211,8 +211,8 @@
                     <textarea name="agenda" rows="5"
                         placeholder="Tópicos que serão abordados..."
                         class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
-                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">{{ old('agenda', $meeting->agenda) }}</textarea>
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ old('agenda', $meeting->agenda) }}</textarea>
                 </div>
 
             </div>
@@ -229,8 +229,8 @@
                     <textarea name="ata" rows="7"
                         placeholder="Registro do que foi discutido e decidido..."
                         class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
-                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">{{ old('ata', $meeting->ata) }}</textarea>
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ old('ata', $meeting->ata) }}</textarea>
                 </div>
 
                 <div>
@@ -238,8 +238,8 @@
                     <textarea name="next_steps" rows="4"
                         placeholder="Ações definidas, responsáveis, prazos..."
                         class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
-                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">{{ old('next_steps', $meeting->next_steps) }}</textarea>
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ old('next_steps', $meeting->next_steps) }}</textarea>
                 </div>
             </div>
 

@@ -1879,7 +1879,7 @@
                     <textarea name="briefing" rows="10"
                         placeholder="Quem é o cliente, posicionamento, personas, concorrentes, síntese estratégica..."
                         class="w-full px-4 py-3 text-sm focus:outline-none resize-none leading-relaxed"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $client->briefing }}</textarea>
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">{{ $client->briefing }}</textarea>
                     <button type="submit" class="mt-3 px-4 py-2 text-sm font-semibold text-white" style="background:var(--purple)">
                         Salvar Briefing
                     </button>

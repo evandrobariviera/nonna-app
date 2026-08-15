@@ -54,7 +54,7 @@
                     <div class="mb-4 grid gap-2">
                         @foreach($provider->apiKeys as $key)
                         <div class="flex items-center justify-between py-2 px-3 rounded"
-                             style="background:var(--s3); border:1px solid var(--border2)">
+                             style="background:var(--s3); border:1px solid var(--border); border-radius:8px">
                             <div class="flex items-center gap-3">
                                 <span class="h-2 w-2 rounded-full flex-shrink-0"
                                       style="background:{{ $key->is_active ? '#34d399' : 'var(--muted2)' }}"></span>
@@ -136,7 +136,7 @@
                     <div class="flex flex-wrap gap-2">
                         @foreach($provider->models as $model)
                         <div class="flex items-center gap-2 px-2 py-1 rounded text-xs"
-                             style="background:var(--s3); border:1px solid var(--border2)">
+                             style="background:var(--s3); border:1px solid var(--border); border-radius:8px">
                             <span class="font-mono" style="color:var(--text)">{{ $model['id'] }}</span>
                             <span style="color:var(--muted)">·</span>
                             <span style="color:var(--muted)">in ${{ number_format($model['input_per_1k'], 5) }}</span>

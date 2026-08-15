@@ -203,7 +203,7 @@
                             @foreach($checklist01 as $key => $label)
                                 <label class="flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors"
                                        style="border:1px solid var(--border); background:var(--s3)"
-                                       onmouseover="this.style.borderColor='var(--border2)'"
+                                       onmouseover="this.style.borderColor='var(--border)'"
                                        onmouseout="this.style.borderColor='var(--border)'">
                                     <input type="hidden" name="sec01[checklist][{{ $key }}]" value="0">
                                     <input type="checkbox" name="sec01[checklist][{{ $key }}]" value="1"

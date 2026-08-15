@@ -59,7 +59,7 @@
                     @csrf @method('PATCH')
                     <select name="project_id" onchange="this.form.submit()"
                         class="w-full px-3 py-2 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         <option value="">— nenhum —</option>
                         @foreach($clientProjects as $p)
                             <option value="{{ $p->id }}" {{ $campaign->project_id === $p->id ? 'selected' : '' }}>
@@ -240,7 +240,7 @@
                 <div class="relative mb-3" style="max-width:320px">
                     <button @click="open = !open"
                         class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         <span class="flex items-center gap-2">
                             <span class="h-2 w-2 rounded-full flex-shrink-0" style="background:var(--{{ $campaign->optimizationTierColor() }})"></span>
                             {{ $campaign->optimizationTierLabel() }}
@@ -285,7 +285,7 @@
                     <textarea name="comment" x-model="comment" rows="4" required
                         placeholder="O que foi otimizado? (obrigatório)"
                         class="w-full px-3 py-2 text-sm mb-2 focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text); resize:vertical"></textarea>
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); resize:vertical"></textarea>
                     <button type="submit" :disabled="!comment.trim()" :style="!comment.trim() ? 'opacity:.5; cursor:not-allowed' : ''"
                         class="btn btn-primary btn-sm">
                         Marcar otimização feita
@@ -301,7 +301,7 @@
                 <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
                     Histórico de Otimizações
                     @if($optimizationLogs->count() > 0)
-                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $optimizationLogs->count() }}</span>
+                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $optimizationLogs->count() }}</span>
                     @endif
                 </p>
 
@@ -330,7 +330,7 @@
                                                 @csrf @method('PATCH')
                                                 <textarea name="description" rows="3" required
                                                     class="w-full px-3 py-2 text-xs focus:outline-none resize-none"
-                                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text); line-height:1.55">{{ $log->description }}</textarea>
+                                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); line-height:1.55">{{ $log->description }}</textarea>
                                                 <div class="flex items-center gap-3 mt-2">
                                                     <button type="submit" class="btn btn-success btn-xs">Salvar</button>
                                                     <button type="button" @click="editId = null" class="btn btn-ghost btn-xs">Cancelar</button>
@@ -395,7 +395,7 @@
                 <div class="relative">
                     <button @click="open = !open"
                         class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         <span class="flex items-center gap-2">
                             <span class="h-2 w-2 rounded-full flex-shrink-0" style="background:var(--{{ $campaign->managementStatusColor() }})"></span>
                             {{ $campaign->managementStatusLabel() }}
@@ -428,7 +428,7 @@
                 <div class="relative">
                     <button @click="open = !open"
                         class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         <span class="flex items-center gap-2">
                             @if($campaign->management_situation)
                                 <span class="h-2 w-2 rounded-full flex-shrink-0" style="background:var(--{{ $campaign->managementSituationColor() }})"></span>
@@ -471,12 +471,12 @@
                     <div>
                         <label class="block text-xs mb-1" style="color:var(--muted)">Custo/resultado (R$)</label>
                         <input type="number" step="0.01" min="0" name="target_cost_per_result" value="{{ $campaign->target_cost_per_result }}"
-                               class="w-full px-3 py-2 text-sm" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                               class="w-full px-3 py-2 text-sm" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     </div>
                     <div>
                         <label class="block text-xs mb-1" style="color:var(--muted)">ROAS (x)</label>
                         <input type="number" step="0.1" min="0" name="target_roas" value="{{ $campaign->target_roas }}"
-                               class="w-full px-3 py-2 text-sm" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                               class="w-full px-3 py-2 text-sm" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     </div>
                     <button type="submit" class="btn btn-primary btn-sm mt-1">Salvar Metas</button>
                 </form>
@@ -494,7 +494,7 @@
                 <form method="POST" action="{{ route('campaigns.update-lock', $campaign) }}">
                     @csrf @method('PATCH')
                     <textarea name="optimization_locked_reason" rows="2" placeholder="Motivo (deixe em branco pra destravar)"
-                              class="w-full px-3 py-2 text-sm mb-2" style="background:var(--s3); border:1px solid var(--border2); color:var(--text); resize:vertical">{{ $campaign->optimization_locked_reason }}</textarea>
+                              class="w-full px-3 py-2 text-sm mb-2" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); resize:vertical">{{ $campaign->optimization_locked_reason }}</textarea>
                     <button type="submit" class="btn btn-ghost btn-sm">
                         {{ $campaign->optimization_locked_reason ? 'Atualizar' : 'Travar' }}
                     </button>
@@ -511,7 +511,7 @@
                       x-data="{ description: '', rows: 2 }"
                       @submit="if (!description.trim()) { $event.preventDefault(); }">
                     @csrf
-                    <select name="type" class="w-full mb-2 px-3 py-2 text-sm" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    <select name="type" class="w-full mb-2 px-3 py-2 text-sm" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         @foreach(\App\Models\CampaignLog::$types as $key => $t)
                             @continue($key === 'otimizacao')
                             <option value="{{ $key }}">{{ $t['label'] }}</option>
@@ -524,8 +524,8 @@
                         @focus="rows = 4"
                         placeholder="Descreva a atualização..."
                         class="w-full px-3 py-2 text-sm focus:outline-none resize-none transition-all"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text); line-height:1.55"
-                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'"
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); line-height:1.55"
+                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'"
                     ></textarea>
                     <div class="flex justify-end mt-2" x-show="description.trim().length > 0" x-cloak>
                         <button type="submit" class="btn btn-primary btn-sm">
@@ -540,7 +540,7 @@
                 <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
                     Histórico de Comentários
                     @if($commentLogs->count() > 0)
-                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $commentLogs->count() }}</span>
+                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $commentLogs->count() }}</span>
                     @endif
                 </p>
 
@@ -570,7 +570,7 @@
                                         <div x-show="editId === '{{ $log->id }}'" x-cloak>
                                             <form method="POST" action="{{ route('campaign-logs.update', [$campaign, $log]) }}">
                                                 @csrf @method('PATCH')
-                                                <select name="type" class="w-full mb-2 px-3 py-2 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                                <select name="type" class="w-full mb-2 px-3 py-2 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                                     @foreach(\App\Models\CampaignLog::$types as $key => $t)
                                                         @continue($key === 'otimizacao')
                                                         <option value="{{ $key }}" {{ $log->type === $key ? 'selected' : '' }}>{{ $t['label'] }}</option>
@@ -578,7 +578,7 @@
                                                 </select>
                                                 <textarea name="description" rows="3" required
                                                     class="w-full px-3 py-2 text-xs focus:outline-none resize-none"
-                                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text); line-height:1.55">{{ $log->description }}</textarea>
+                                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); line-height:1.55">{{ $log->description }}</textarea>
                                                 <div class="flex items-center gap-3 mt-2">
                                                     <button type="submit" class="btn btn-success btn-xs">Salvar</button>
                                                     <button type="button" @click="editId = null" class="btn btn-ghost btn-xs">Cancelar</button>

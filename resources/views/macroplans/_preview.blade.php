@@ -34,7 +34,7 @@
                 @foreach($macroplan->projects as $proj)
                     <a href="{{ route('macroplans.projects.show', [$macroplan, $proj]) }}"
                        class="card card-body flex items-center justify-between gap-3 transition-colors"
-                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'">
+                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
                         <span class="text-sm font-medium truncate" style="color:var(--text)">{{ $proj->title }}</span>
                         <span class="badge badge-{{ $proj->statusColor() }} flex-shrink-0">{{ $proj->statusLabel() }}</span>
                     </a>
@@ -48,7 +48,7 @@
        class="text-center px-4 py-2.5 text-xs font-bold transition-colors"
        style="border:1px solid var(--border2); color:var(--muted2)"
        onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-       onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+       onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--muted2)'">
         Ver página completa do planejamento →
     </a>
 </div>

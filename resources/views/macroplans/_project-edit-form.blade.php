@@ -51,13 +51,13 @@
             </label>
             <input type="text" name="title" value="{{ $project->title }}" required
                 class="w-full px-3 py-2 text-sm focus:outline-none"
-                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
         </div>
         <div>
             <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Tipo</label>
             <select name="type"
                 class="w-full px-3 py-2 text-sm focus:outline-none"
-                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                 @foreach(\App\Models\Project::$types as $key => $t)
                     <option value="{{ $key }}" {{ $project->type === $key ? 'selected' : '' }}>{{ $t['label'] }}</option>
                 @endforeach
@@ -67,7 +67,7 @@
             <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Status</label>
             <select name="status"
                 class="w-full px-3 py-2 text-sm focus:outline-none"
-                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                 @foreach(\App\Models\Project::$statuses as $key => $s)
                     @continue($key === 'cancelado')
                     <option value="{{ $key }}" {{ $project->status === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
@@ -81,7 +81,7 @@
         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Objetivo</label>
         <textarea name="objective" rows="2"
             class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $project->objective }}</textarea>
+            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">{{ $project->objective }}</textarea>
     </div>
 
     {{-- Datas + Budget --}}
@@ -91,14 +91,14 @@
             <input type="date" name="start_date"
                 value="{{ $project->start_date?->format('Y-m-d') }}"
                 class="w-full px-3 py-2 text-sm focus:outline-none"
-                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
         </div>
         <div>
             <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Término</label>
             <input type="date" name="end_date"
                 value="{{ $project->end_date?->format('Y-m-d') }}"
                 class="w-full px-3 py-2 text-sm focus:outline-none"
-                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
         </div>
         <div>
             <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Verba (R$)</label>
@@ -106,7 +106,7 @@
                 value="{{ $project->budget }}"
                 placeholder="0,00"
                 class="w-full px-3 py-2 text-sm focus:outline-none"
-                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
         </div>
     </div>
 
@@ -128,7 +128,7 @@
             <input type="text" x-model="newTag" @keydown.enter.prevent="addTag()"
                 placeholder="Digite uma tag e pressione Enter..."
                 class="flex-1 px-3 py-1.5 text-xs focus:outline-none"
-                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
             <button type="button" @click="addTag()"
                 class="px-3 py-1.5 text-xs font-mono"
                 style="border:1px solid var(--border2); color:var(--muted2)">+ Tag</button>
@@ -161,7 +161,7 @@
                 <textarea name="briefing_{{ $key }}" rows="3"
                     placeholder="Instruções específicas para {{ $label }}..."
                     class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $project->{'briefing_' . $key} }}</textarea>
+                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">{{ $project->{'briefing_' . $key} }}</textarea>
             </div>
         @endif
     @endforeach
@@ -176,7 +176,7 @@
         </div>
         <div class="space-y-2">
             <template x-for="(idea, i) in ideas" :key="i">
-                <div class="px-4 py-3 rounded relative" style="background:var(--s3); border:1px solid var(--border2)">
+                <div class="px-4 py-3 rounded relative" style="background:var(--s3); border:1px solid var(--border); border-radius:8px">
                     <button type="button" @click="removeIdea(i)"
                         class="absolute top-2 right-2 text-xs" style="color:var(--muted)">✕</button>
                     <div class="grid grid-cols-4 gap-2 mb-2">
@@ -223,7 +223,7 @@
         </div>
         <div class="space-y-3">
             <template x-for="(ph, i) in phases" :key="i">
-                <div class="px-4 py-4 rounded relative" style="background:var(--s3); border:1px solid var(--border2)">
+                <div class="px-4 py-4 rounded relative" style="background:var(--s3); border:1px solid var(--border); border-radius:8px">
                     <button type="button" @click="removePhase(i)"
                         class="absolute top-2 right-2 text-xs" style="color:var(--muted)">✕</button>
                     <div class="grid grid-cols-3 gap-2 mb-2">
@@ -306,14 +306,14 @@
                         <input type="text" name="big_idea_titulo" value="{{ $project->big_idea_titulo }}"
                             placeholder="A frase-conceito da campanha"
                             class="w-full px-3 py-2 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     </div>
                     <div class="col-span-2">
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Big Idea — Manifesto</label>
                         <textarea name="big_idea_manifesto" rows="3"
                             placeholder="O parágrafo que expande a Big Idea..."
                             class="w-full px-3 py-2 text-sm focus:outline-none resize-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $project->big_idea_manifesto }}</textarea>
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">{{ $project->big_idea_manifesto }}</textarea>
                     </div>
                 </div>
 
@@ -323,7 +323,7 @@
                     <textarea name="territorio_alternativo" rows="2"
                         placeholder="Rota criativa de reserva, caso a principal não seja aprovada..."
                         class="w-full px-3 py-2 text-sm focus:outline-none resize-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $project->territorio_alternativo }}</textarea>
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">{{ $project->territorio_alternativo }}</textarea>
                 </div>
 
                 {{-- Racional Estratégico --}}
@@ -332,7 +332,7 @@
                     <textarea name="racional_estrategico" rows="4"
                         placeholder="Por que essa ideia funciona para esse público/desafio..."
                         class="w-full px-3 py-2 text-sm focus:outline-none resize-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $project->racional_estrategico }}</textarea>
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">{{ $project->racional_estrategico }}</textarea>
                 </div>
 
                 {{-- Linha de Comunicação --}}
@@ -353,7 +353,7 @@
                             <input type="text" x-model="newTom" @keydown.enter.prevent="addTom()"
                                 placeholder="Ex: caloroso, direto..."
                                 class="flex-1 px-3 py-1.5 text-xs focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                             <button type="button" @click="addTom()"
                                 class="px-3 py-1.5 text-xs font-mono" style="border:1px solid var(--border2); color:var(--muted2)">+ Tom</button>
                         </div>
@@ -363,7 +363,7 @@
                         <input type="text" name="frase_voz" value="{{ $project->frase_voz }}"
                             placeholder="Uma frase que ilustra o tom da campanha"
                             class="w-full px-3 py-2 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     </div>
                 </div>
 
@@ -376,7 +376,7 @@
                     </div>
                     <div class="space-y-2">
                         <template x-for="(ang, i) in angulos" :key="i">
-                            <div class="px-4 py-3 rounded relative" style="background:var(--s3); border:1px solid var(--border2)">
+                            <div class="px-4 py-3 rounded relative" style="background:var(--s3); border:1px solid var(--border); border-radius:8px">
                                 <button type="button" @click="removeAngulo(i)" class="absolute top-2 right-2 text-xs" style="color:var(--muted)">✕</button>
                                 <input type="text" :name="'angulos['+i+'][titulo]'" x-model="ang.titulo"
                                     placeholder="Ex: Ângulo 01 — O dado que incomoda"
@@ -398,7 +398,7 @@
                     <input type="text" name="assinatura" value="{{ $project->assinatura }}"
                         placeholder="A linha de fechamento da campanha"
                         class="w-full px-3 py-2 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                 </div>
 
                 {{-- Mecânica --}}
@@ -410,7 +410,7 @@
                     </div>
                     <div class="space-y-2">
                         <template x-for="(passo, i) in passos" :key="i">
-                            <div class="px-4 py-3 rounded relative flex gap-3" style="background:var(--s3); border:1px solid var(--border2)">
+                            <div class="px-4 py-3 rounded relative flex gap-3" style="background:var(--s3); border:1px solid var(--border); border-radius:8px">
                                 <span class="text-xs font-mono flex-shrink-0 pt-1.5" style="color:var(--purple)" x-text="(i + 1) + '.'"></span>
                                 <div class="flex-1">
                                     <input type="text" :name="'mecanica['+i+'][titulo]'" x-model="passo.titulo"
@@ -435,7 +435,7 @@
                     <textarea name="ponto_atencao" rows="2"
                         placeholder="Algo que precisa de decisão/confirmação do cliente antes de executar..."
                         class="w-full px-3 py-2 text-sm focus:outline-none resize-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $project->ponto_atencao }}</textarea>
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">{{ $project->ponto_atencao }}</textarea>
                 </div>
 
                 {{-- Referências Visuais --}}
@@ -447,7 +447,7 @@
                     </div>
                     <div class="space-y-2">
                         <template x-for="(ref, i) in refsVisuais" :key="i">
-                            <div class="px-4 py-3 rounded relative" style="background:var(--s3); border:1px solid var(--border2)">
+                            <div class="px-4 py-3 rounded relative" style="background:var(--s3); border:1px solid var(--border); border-radius:8px">
                                 <button type="button" @click="removeRef(i)" class="absolute top-2 right-2 text-xs" style="color:var(--muted)">✕</button>
                                 <input type="text" :name="'referencias_visuais['+i+'][label]'" x-model="ref.label"
                                     placeholder="Ex: Paleta, Estilo de imagem, Tipografia..."
@@ -472,7 +472,7 @@
                     </div>
                     <div class="space-y-2">
                         <template x-for="(peca, i) in pecas" :key="i">
-                            <div class="px-4 py-3 rounded relative" style="background:var(--s3); border:1px solid var(--border2)">
+                            <div class="px-4 py-3 rounded relative" style="background:var(--s3); border:1px solid var(--border); border-radius:8px">
                                 <button type="button" @click="removePeca(i)" class="absolute top-2 right-2 text-xs" style="color:var(--muted)">✕</button>
                                 <input type="text" :name="'pecas['+i+'][nome]'" x-model="peca.nome"
                                     placeholder="Nome da peça (ex: Vídeo institucional)"

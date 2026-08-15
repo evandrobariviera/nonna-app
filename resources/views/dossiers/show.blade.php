@@ -806,7 +806,7 @@
             class="w-full py-2 text-xs font-mono transition-colors"
             style="border:1px dashed var(--border2); color:var(--muted)"
             onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-            onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted)'">
+            onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--muted)'">
         + Adicionar Valor
     </button>
 </div>

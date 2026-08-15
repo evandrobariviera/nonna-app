@@ -33,7 +33,7 @@
                 </label>
                 <select name="client_id" required
                         class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     <option value="">Selecione...</option>
                     @foreach($clients as $c)
                         <option value="{{ $c->id }}" {{ old('client_id') === $c->id ? 'selected' : '' }}>{{ $c->displayName() }}</option>
@@ -63,7 +63,7 @@
                     </label>
                     <input type="date" name="period_start" value="{{ old('period_start') }}" required
                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                           style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                           style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                 </div>
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
@@ -71,7 +71,7 @@
                     </label>
                     <input type="date" name="period_end" value="{{ old('period_end') }}" required
                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                           style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                           style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                 </div>
             </div>
 

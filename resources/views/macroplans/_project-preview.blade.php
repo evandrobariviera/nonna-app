@@ -44,7 +44,7 @@
                 @foreach($project->attachments as $a)
                     <a href="{{ $a->url() }}" target="_blank"
                        class="card card-body flex items-center gap-2 transition-colors"
-                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'"
+                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'"
                        title="{{ $a->filename }}">
                         <span style="font-size:16px">{{ $a->icon() }}</span>
                         <span class="text-sm font-medium truncate" style="color:var(--text)">{{ $a->filename }}</span>
@@ -63,7 +63,7 @@
                 @foreach($recentTasks as $task)
                     <a href="{{ route('tasks.show', $task) }}"
                        class="card card-body flex items-center justify-between gap-3 transition-colors"
-                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'">
+                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
                         <span class="text-sm font-medium truncate" style="color:var(--text)">{{ $task->title }}</span>
                         <span class="badge badge-{{ $task->statusColor() }} flex-shrink-0">{{ $task->statusLabel() }}</span>
                     </a>
@@ -77,7 +77,7 @@
        class="text-center px-4 py-2.5 text-xs font-bold transition-colors"
        style="border:1px solid var(--border2); color:var(--muted2)"
        onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-       onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+       onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--muted2)'">
         Ver página completa do projeto →
     </a>
 
@@ -90,7 +90,7 @@
                     <a href="{{ $d->url() }}" target="_blank"
                        class="card flex items-center justify-center overflow-hidden transition-colors"
                        style="aspect-ratio:1; padding:0"
-                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'"
+                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'"
                        title="{{ $d->filename }}">
                         @if($d->isImage())
                             <img src="{{ $d->url() }}" alt="{{ $d->filename }}" class="w-full h-full object-cover">

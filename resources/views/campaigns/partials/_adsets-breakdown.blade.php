@@ -59,7 +59,7 @@
                                 @csrf @method('PATCH')
                                 <input type="text" name="optimization_locked_reason" value="{{ $adset->optimization_locked_reason }}"
                                        placeholder="Motivo pra travar (deixe em branco pra destravar)"
-                                       class="flex-1 px-2 py-1.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                       class="flex-1 px-2 py-1.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                 <button type="submit" class="btn btn-xs" style="border:1px solid var(--border2); color:var(--text)">
                                     {{ $adset->optimization_locked_reason ? 'Atualizar' : 'Travar' }}
                                 </button>

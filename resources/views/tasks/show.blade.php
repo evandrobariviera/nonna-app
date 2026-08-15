@@ -440,7 +440,7 @@
                             <select name="client_id"
                                 @change="if ({{ $task->project_id ? 'true' : 'false' }} && !(await $store.confirmDialog.ask('Trocar o cliente vai desvincular a tarefa do projeto atual ({{ addslashes($task->project?->title) }}). Continuar?'))) { $el.value = '{{ $task->client_id }}'; return; } $el.form.submit()"
                                 class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                 @foreach($clients as $c)
                                     <option value="{{ $c->id }}" {{ $task->client_id === $c->id ? 'selected' : '' }}>
                                         {{ $c->displayName() }}
@@ -455,7 +455,7 @@
                             @csrf @method('PATCH')
                             <select name="project_id" onchange="this.form.submit()"
                                 class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                 <option value="">— nenhum —</option>
                                 @foreach($clientProjects as $p)
                                     <option value="{{ $p->id }}" {{ $task->project_id === $p->id ? 'selected' : '' }}>
@@ -479,8 +479,8 @@
                         <label class="block text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Título</label>
                         <input type="text" name="title" value="{{ $task->title }}" required
                             class="w-full px-4 py-3 text-sm font-semibold focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
-                            onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                            onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                     </div>
 
                     <div class="grid grid-cols-2 gap-4 md:grid-cols-3">
@@ -498,7 +498,7 @@
                             <div>
                                 <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">{{ $f['label'] }}</label>
                                 <select name="{{ $f['name'] }}" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                     @if($f['blank'] ?? false)
                                         <option value="">— nenhum —</option>
                                     @endif
@@ -512,7 +512,7 @@
                         <div>
                             <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Situação</label>
                             <select name="situation" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                 @foreach(\App\Models\Task::$situations as $key => $label)
                                     <option value="{{ $key }}" {{ ($task->situation ?? '') === $key ? 'selected' : '' }}
                                         @if($key === 'enviar_para_cliente') style="color:var(--orange); font-weight:600" @endif>
@@ -529,7 +529,7 @@
                                 <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">{{ $flabel }}</label>
                                 <input type="date" name="{{ $fname }}" value="{{ $task->$fname?->format('Y-m-d') }}"
                                     class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                             </div>
                         @endforeach
                     </div>
@@ -539,7 +539,7 @@
                         <div>
                             <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Responsável</label>
                             <select name="responsavel_id" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                 <option value="">— nenhum —</option>
                                 @foreach($users as $u)
                                     <option value="{{ $u->id }}" {{ $task->responsibles->first()?->id === $u->id ? 'selected' : '' }}>
@@ -551,7 +551,7 @@
                         <div>
                             <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Executor</label>
                             <select name="executor_id" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                 <option value="">— nenhum —</option>
                                 @foreach($users as $u)
                                     <option value="{{ $u->id }}" {{ $task->executor?->id === $u->id ? 'selected' : '' }}>
@@ -568,7 +568,7 @@
                         <div class="flex flex-wrap gap-2 mb-2" x-show="selected.length > 0">
                             <template x-for="(item, idx) in selected" :key="item.id">
                                 <div class="flex items-center gap-2 px-3 py-1.5 text-sm"
-                                     style="background:var(--s3); border:1px solid var(--border2)">
+                                     style="background:var(--s3); border:1px solid var(--border); border-radius:8px">
                                     <span x-text="item.name" style="color:var(--text); font-weight:500"></span>
                                     <input type="hidden" :name="'observer_ids[]'" :value="item.id">
                                     <button type="button" @click="remove(idx)" class="btn btn-danger btn-xs">✕</button>
@@ -576,7 +576,7 @@
                             </template>
                         </div>
                         <select @change="add($event)" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                             <option value="">+ Adicionar observador</option>
                             @foreach($users as $u)
                                 <option value="{{ $u->id }}" data-name="{{ $u->name }}">{{ $u->name }}</option>
@@ -644,7 +644,7 @@
                     <textarea name="caption" rows="5"
                         placeholder="Texto que vai junto do material pro cliente aprovar..."
                         class="w-full px-4 py-3 text-sm focus:outline-none resize-none leading-relaxed"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $task->caption }}</textarea>
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">{{ $task->caption }}</textarea>
                     <button type="submit" class="mt-3 px-4 py-2 text-sm font-semibold text-white" style="background:var(--purple)">
                         Salvar Legenda
                     </button>
@@ -660,7 +660,7 @@
                     </span>
                     Insumos
                     @if($insumos->count() > 0)
-                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $insumos->count() }}</span>
+                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $insumos->count() }}</span>
                     @endif
                 </p>
                 <p class="text-xs mb-4" style="color:var(--muted2)">Referências, briefings e materiais recebidos — não entram na aprovação do cliente.</p>
@@ -711,7 +711,7 @@
                     <div class="mt-4 pt-4" style="border-top:1px solid var(--border2)">
                         <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">
                             Arquivos do ClickUp
-                            <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ count($task->clickup_attachments) }}</span>
+                            <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ count($task->clickup_attachments) }}</span>
                         </p>
                         <div class="flex flex-col gap-1.5">
                             @foreach($task->clickup_attachments as $file)
@@ -749,7 +749,7 @@
                     </span>
                     Entregáveis
                     @if($entregaveis->count() > 0)
-                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $entregaveis->count() }}</span>
+                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $entregaveis->count() }}</span>
                     @endif
                     @if($entregaveis->count() > 0)
                         <a href="{{ route('task-attachments.zip', $task) }}" class="ml-auto btn btn-ghost btn-xs flex items-center gap-1" style="text-transform:none; letter-spacing:normal; font-weight:600">
@@ -827,7 +827,7 @@
                             </span>
                             Retorno do Cliente
                         </p>
-                        <span class="px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">
+                        <span class="px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">
                             {{ $allRounds->count() }} {{ $allRounds->count() === 1 ? 'rodada' : 'rodadas' }}
                         </span>
                     </div>
@@ -1181,7 +1181,7 @@
                     </span>
                     Comentários
                     @if($task->comments->count() > 0)
-                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $task->comments->count() }}</span>
+                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $task->comments->count() }}</span>
                     @endif
                 </p>
 
@@ -1401,8 +1401,8 @@
                        style="color:var(--muted); letter-spacing:.08em">Especialista</label>
                 <select x-model="selectedAgent"
                         class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
-                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                     <option value="">Selecione um especialista...</option>
                     <template x-for="agent in agents" :key="agent.id">
                         <option :value="agent.id" x-text="agent.name"></option>
@@ -1441,7 +1441,7 @@
                              :class="msg.role === 'user' ? 'self-end' : 'self-start'"
                              :style="msg.role === 'user'
                                  ? 'background:var(--purple); color:#fff; max-width:85%; border-radius:14px 14px 2px 14px'
-                                 : 'background:var(--s3); border:1px solid var(--border2); color:var(--text); max-width:92%; border-radius:2px 14px 14px 14px'"
+                                 : 'background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); max-width:92%; border-radius:2px 14px 14px 14px'"
                              x-text="msg.content">
                         </div>
                     </div>
@@ -1452,7 +1452,7 @@
                         <span class="text-xs" style="color:var(--muted); font-size:.68rem"
                               x-text="agents.find(a => a.id === selectedAgent)?.name ?? 'IA'"></span>
                         <div class="px-4 py-2.5 text-sm"
-                             style="background:var(--s3); border:1px solid var(--border2); border-radius:2px 14px 14px 14px">
+                             style="background:var(--s3); border:1px solid var(--border); border-radius:8px; border-radius:2px 14px 14px 14px">
                             <span class="animate-pulse" style="color:var(--muted)">digitando...</span>
                         </div>
                     </div>
@@ -1468,8 +1468,8 @@
                           rows="3"
                           placeholder="Mensagem para o especialista..."
                           class="w-full px-4 py-3 text-sm focus:outline-none resize-none"
-                          style="background:var(--s3); border:1px solid var(--border2); color:var(--text); line-height:1.6"
-                          onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'"></textarea>
+                          style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); line-height:1.6"
+                          onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'"></textarea>
                 <div class="flex items-center justify-between mt-3">
                     <span class="text-xs" style="color:var(--muted2)">⌘+Enter envia</span>
                     <button @click="send()"

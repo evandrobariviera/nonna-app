@@ -45,7 +45,7 @@
                         class="px-3 py-1.5 text-xs font-mono transition-colors"
                         style="border:1px solid var(--border2); color:var(--muted2)"
                         onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
-                        onmouseout="this.style.borderColor='var(--border2)'; this.style.color='var(--muted2)'">
+                        onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--muted2)'">
                         {{ $s['label'] }}
                     </button>
                 </form>
@@ -243,7 +243,7 @@
                     <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
                         Anexos
                         @if($meeting->attachments->count() > 0)
-                            <span class="ml-1 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $meeting->attachments->count() }}</span>
+                            <span class="ml-1 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $meeting->attachments->count() }}</span>
                         @endif
                     </p>
                 </div>

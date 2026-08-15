@@ -33,7 +33,7 @@
                     </label>
                     <select name="client_id" required
                         class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         <option value="">Selecione o cliente...</option>
                         @foreach($clients as $c)
                             <option value="{{ $c->id }}"
@@ -52,8 +52,8 @@
                     <input type="text" name="title" value="{{ old('title') }}" required
                         placeholder="Ex: Macroplanejamento Q3 2026 — Cliente"
                         class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
-                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                 </div>
 
                 {{-- Período --}}
@@ -64,7 +64,7 @@
                         </label>
                         <input type="date" name="period_start" value="{{ old('period_start') }}" required
                             class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     </div>
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
@@ -72,7 +72,7 @@
                         </label>
                         <input type="date" name="period_end" value="{{ old('period_end') }}" required
                             class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     </div>
                 </div>
 
@@ -84,7 +84,7 @@
                         </label>
                         <select name="responsible_id"
                             class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                             <option value="">— sem responsável —</option>
                             @foreach($users as $u)
                                 <option value="{{ $u->id }}" {{ old('responsible_id', auth()->id()) == $u->id ? 'selected' : '' }}>
@@ -99,7 +99,7 @@
                         </label>
                         <select name="status" required
                             class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                             @foreach(\App\Models\MacroPlan::$statuses as $key => $s)
                                 <option value="{{ $key }}" {{ old('status','draft') === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
                             @endforeach

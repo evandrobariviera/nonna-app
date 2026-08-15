@@ -15,7 +15,7 @@
                 </button>
             @else
                 <span class="flex items-center justify-center flex-shrink-0"
-                      style="width:40px; height:40px; border-radius:6px; background:var(--s3); border:1px solid var(--border2); font-size:18px">
+                      style="width:40px; height:40px; border-radius:6px; background:var(--s3); border:1px solid var(--border); border-radius:8px; font-size:18px">
                     {{ $attachment->icon() }}
                 </span>
             @endif

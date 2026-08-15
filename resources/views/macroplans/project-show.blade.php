@@ -31,7 +31,7 @@
                 <label class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted)">Planejamento</label>
                 <select name="macro_plan_id" onchange="this.form.submit()"
                     class="px-2 py-1.5 text-xs focus:outline-none"
-                    style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     <option value="">— nenhum —</option>
                     @foreach($clientMacroplans as $mp)
                         <option value="{{ $mp->id }}" {{ $project->macro_plan_id === $mp->id ? 'selected' : '' }}>
@@ -116,7 +116,7 @@
         <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">
             Anexos
             @if($project->attachments->count() > 0)
-                <span class="ml-1 px-1.5 py-0.5" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted2)">{{ $project->attachments->count() }}</span>
+                <span class="ml-1 px-1.5 py-0.5" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $project->attachments->count() }}</span>
             @endif
         </p>
         <form method="POST" action="{{ route('project-attachments.store', $project) }}"
@@ -155,7 +155,7 @@
                     <a href="{{ route('campaigns.show', $campaign) }}"
                        class="flex items-center justify-between gap-3 px-3 py-2.5 transition-colors"
                        style="background:var(--s2); border:1px solid var(--border2)"
-                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border2)'">
+                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
                         <div class="min-w-0">
                             <p class="text-sm font-semibold truncate" style="color:var(--text)">{{ $campaign->name }}</p>
                             <p class="text-xs mt-0.5" style="color:var(--muted)">{{ $campaign->platform }} · {{ $campaign->adAccount?->account_name ?? $campaign->adAccount?->account_id }}</p>
@@ -213,36 +213,36 @@
                     </label>
                     <input type="text" name="title" required placeholder="O que precisa ser feito?"
                         class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)"
-                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border2)'">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                 </div>
 
                 {{-- Data de Aprovação --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Data de Aprovação</label>
                     <input type="date" name="approval_date" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                 </div>
 
                 {{-- Data de Publicação --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Data de Publicação</label>
                     <input type="date" name="publish_date" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                 </div>
 
                 {{-- Vencimento --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Vencimento</label>
                     <input type="date" name="due_date" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                 </div>
 
                 {{-- Prioridade --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Prioridade</label>
                     <select name="priority" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         <option value="normal" selected>Normal</option>
                         @foreach(\App\Models\Task::$priorities as $key => $p)
                             <option value="{{ $key }}">{{ $p['label'] }}</option>
@@ -254,7 +254,7 @@
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Responsável</label>
                     <select name="responsavel_id" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         <option value="">— nenhum —</option>
                         @foreach($users as $u)
                             <option value="{{ $u->id }}">{{ $u->name }}</option>
@@ -268,7 +268,7 @@
                     <div class="flex flex-wrap gap-2 mb-2" x-show="selected.length > 0">
                         <template x-for="(item, idx) in selected" :key="item.id">
                             <div class="flex items-center gap-1 px-2 py-1 text-xs"
-                                 style="background:var(--s3); border:1px solid var(--border2)">
+                                 style="background:var(--s3); border:1px solid var(--border); border-radius:8px">
                                 <span x-text="item.name" style="color:var(--text)"></span>
                                 <select :name="'executor_roles[' + item.id + ']'" @change="setRole(item, $event.target.value, $event.target)"
                                     class="text-xs focus:outline-none ml-1"
@@ -283,7 +283,7 @@
                     </div>
                     <p x-show="roleError" x-text="roleError" x-cloak class="text-xs mb-1.5" style="color:var(--red)"></p>
                     <select @change="add($event)" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         <option value="">+ Adicionar executor</option>
                         @foreach($users as $u)
                             <option value="{{ $u->id }}" data-name="{{ $u->name }}">{{ $u->name }}</option>
@@ -295,7 +295,7 @@
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Origem</label>
                     <select name="origin" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         @foreach(\App\Models\Task::$origins as $key => $label)
                             <option value="{{ $key }}" {{ $key === 'projeto' ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
@@ -306,7 +306,7 @@
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Destino</label>
                     <select name="destination" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         <option value="">— sem destino —</option>
                         @foreach(\App\Models\Task::$destinations as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
@@ -318,7 +318,7 @@
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Tipo</label>
                     <select name="task_type" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         @foreach(\App\Models\Task::$types as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
                         @endforeach
@@ -329,7 +329,7 @@
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Método de Aprovação</label>
                     <select name="approval_method" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         <option value="">— não definido —</option>
                         @foreach(\App\Models\Task::$approvalMethods as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
@@ -341,7 +341,7 @@
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Status</label>
                     <select name="status" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         @foreach(\App\Models\Task::$statuses as $key => $s)
                             @if($key !== 'cancelado')
                                 <option value="{{ $key }}" {{ $key === 'backlog' ? 'selected' : '' }}>{{ $s['label'] }}</option>
@@ -354,7 +354,7 @@
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Situação</label>
                     <select name="situation" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         @foreach(\App\Models\Task::$situations as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
                         @endforeach
@@ -372,7 +372,7 @@
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Anexos</label>
                     <input type="file" name="files[]" multiple
                         class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                 </div>
 
                 <div class="col-span-2 md:col-span-4 flex items-center gap-3">
@@ -447,7 +447,7 @@
                                     <div class="flex flex-wrap gap-1 mb-2">
                                         @foreach($task->executors as $exec)
                                             <span class="text-xs px-1.5 py-0.5 font-mono"
-                                                  style="background:var(--s3); border:1px solid var(--border2); color:var(--{{ $exec->pivot->role === 'executor' ? 'orange' : ($exec->pivot->role === 'aprovador' ? 'purple' : 'text') }})">
+                                                  style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--{{ $exec->pivot->role === 'executor' ? 'orange' : ($exec->pivot->role === 'aprovador' ? 'purple' : 'text') }})">
                                                 {{ explode(' ', $exec->name)[0] }}
                                                 @if($exec->pivot->role !== 'executor')
                                                     <span style="color:var(--muted)"> · {{ \App\Models\TaskExecutor::$roles[$exec->pivot->role] ?? '' }}</span>
@@ -526,12 +526,12 @@
 
                                     <input type="text" name="title" value="{{ $task->title }}" required
                                         class="w-full px-3 py-2 text-xs focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
 
                                     <div class="grid grid-cols-2 gap-1.5">
                                         <select name="task_type"
                                             class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                             @foreach(\App\Models\Task::$types as $key => $label)
                                                 <option value="{{ $key }}" {{ $task->task_type === $key ? 'selected' : '' }}>{{ $label }}</option>
                                             @endforeach
@@ -539,7 +539,7 @@
 
                                         <select name="destination"
                                             class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                             <option value="">— destino —</option>
                                             @foreach(\App\Models\Task::$destinations as $key => $label)
                                                 <option value="{{ $key }}" {{ $task->destination === $key ? 'selected' : '' }}>{{ $label }}</option>
@@ -548,7 +548,7 @@
 
                                         <select name="status"
                                             class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                             @foreach(\App\Models\Task::$statuses as $key => $s)
                                                 <option value="{{ $key }}" {{ $task->status === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
                                             @endforeach
@@ -556,7 +556,7 @@
 
                                         <select name="origin"
                                             class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                             @foreach(\App\Models\Task::$origins as $key => $label)
                                                 <option value="{{ $key }}" {{ $task->origin === $key ? 'selected' : '' }}>{{ $label }}</option>
                                             @endforeach
@@ -564,7 +564,7 @@
 
                                         <select name="approval_method"
                                             class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                             <option value="">— aprovação —</option>
                                             @foreach(\App\Models\Task::$approvalMethods as $key => $label)
                                                 <option value="{{ $key }}" {{ $task->approval_method === $key ? 'selected' : '' }}>{{ $label }}</option>
@@ -588,21 +588,21 @@
                                             <input type="date" name="due_date"
                                                 value="{{ $task->due_date?->format('Y-m-d') }}"
                                                 class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                         </div>
                                         <div>
                                             <p class="text-xs font-mono mb-0.5" style="color:var(--muted)">Dt. Aprovação</p>
                                             <input type="date" name="approval_date"
                                                 value="{{ $task->approval_date?->format('Y-m-d') }}"
                                                 class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                         </div>
                                         <div>
                                             <p class="text-xs font-mono mb-0.5" style="color:var(--muted)">Dt. Publicação</p>
                                             <input type="date" name="publish_date"
                                                 value="{{ $task->publish_date?->format('Y-m-d') }}"
                                                 class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                                style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                         </div>
                                     </div>
 
@@ -612,7 +612,7 @@
                                         <div class="flex flex-wrap gap-1 mb-1.5" x-show="selected.length > 0">
                                             <template x-for="(item, idx) in selected" :key="item.id">
                                                 <div class="flex items-center gap-1 px-1.5 py-0.5 text-xs"
-                                                     style="background:var(--s3); border:1px solid var(--border2)">
+                                                     style="background:var(--s3); border:1px solid var(--border); border-radius:8px">
                                                     <span x-text="item.name" style="color:var(--text)"></span>
                                                     <select :name="'executor_roles[' + item.id + ']'" @change="setRole(item, $event.target.value, $event.target)"
                                                         class="text-xs focus:outline-none ml-1"
@@ -628,7 +628,7 @@
                                         </div>
                                         <p x-show="roleError" x-text="roleError" x-cloak class="text-xs mb-1" style="color:var(--red)"></p>
                                         <select @change="add($event)" class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                            style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                             <option value="">+ Adicionar executor</option>
                                             @foreach($users as $u)
                                                 <option value="{{ $u->id }}" data-name="{{ $u->name }}">{{ $u->name }}</option>
@@ -638,7 +638,7 @@
 
                                     {{-- Situação --}}
                                     <select name="situation" class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                         @foreach(\App\Models\Task::$situations as $key => $label)
                                             <option value="{{ $key }}" {{ ($task->situation ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
                                         @endforeach
@@ -648,7 +648,7 @@
                                     <textarea name="description" rows="2"
                                         placeholder="Descrição (opcional)"
                                         class="w-full px-2 py-2 text-xs focus:outline-none resize-none"
-                                        style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">{{ $task->description }}</textarea>
+                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">{{ $task->description }}</textarea>
 
                                     <div class="flex gap-2">
                                         <button type="submit" class="btn btn-primary btn-xs">
