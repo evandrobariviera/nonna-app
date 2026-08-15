@@ -276,104 +276,110 @@
                 </div>
             </div>
 
-            {{-- BARRA DE CAMPOS RÁPIDOS: Status / Prioridade / Situação —
-                 mesma mecânica de edição de sempre (mesmos endpoints), só reposicionada numa barra
-                 horizontal com ícone em vez de cards separados na sidebar. Vencimento saiu daqui
-                 e foi pro card Datas da lateral, junto com Aprovação/Publicação; Responsável e
-                 Executor saíram porque já aparecem como avatar no cabeçalho, logo acima. --}}
+            {{-- BARRA DE STATUS: segmentada, botão por status real (Task::$statuses), acende
+                 com a cor do próprio status quando ativo — troca substitui o dropdown antigo,
+                 clique já salva (mesmo endpoint tasks.update-inline de sempre). --}}
+            @php
+                $statusShort = [
+                    'backlog'              => 'Backlog',
+                    'em_producao'          => 'Produção',
+                    'revisao_interna'      => 'Revisão',
+                    'ajuste_alteracao'     => 'Ajuste',
+                    'aprovacao'            => 'Aprovação',
+                    'despacho_agendamento' => 'Agendamento',
+                    'concluido'            => 'Concluído',
+                    'cancelado'            => 'Cancelado',
+                ];
+            @endphp
             <div class="card card-body">
-                <div class="grid grid-cols-3 gap-x-4 gap-y-4">
-
-                    {{-- Status --}}
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Status</p>
-                        <div class="relative" x-data="{ open: false }">
-                            <button type="button" @click="open = !open" class="flex items-center gap-1.5 text-sm font-semibold" style="color:var(--text)">
-                                <span class="h-2 w-2 rounded-full flex-shrink-0" style="background:var(--{{ $task->statusColor() }})"></span>
-                                <span class="truncate">{{ $task->statusLabel() }}</span>
-                                <x-icon name="chevron-down" size="12" style="color:var(--muted)" />
+                <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Status</p>
+                {{-- Grid 4 col fixas (8 status = 2 linhas parelhas); gap-px + fundo var(--border2)
+                     desenha as linhas de grade sem precisar calcular borda por posição. --}}
+                <div class="grid grid-cols-4 gap-px" style="background:var(--border2); border:1px solid var(--border2)">
+                    @foreach(\App\Models\Task::$statuses as $key => $s)
+                        @php $active = $task->status === $key; @endphp
+                        <form method="POST" action="{{ route('tasks.update-inline', $task) }}">
+                            @csrf @method('PATCH')
+                            @foreach(['title','task_type','origin'] as $f)
+                                <input type="hidden" name="{{ $f }}" value="{{ $task->$f }}">
+                            @endforeach
+                            <input type="hidden" name="status" value="{{ $key }}">
+                            <button type="submit"
+                                class="w-full h-full px-2 py-2.5 text-xs font-bold uppercase text-center transition-colors"
+                                style="letter-spacing:.03em; {{ $active ? 'background:var(--'.$s['color'].'); color:#fff;' : 'background:var(--s2); color:var(--muted2);' }}"
+                                {{ !$active ? 'onmouseover="this.style.background=\'var(--s3)\'" onmouseout="this.style.background=\'var(--s2)\'"' : '' }}>
+                                {{ $statusShort[$key] ?? $s['label'] }}
                             </button>
-                            <div x-show="open" @click.outside="open = false" x-cloak
-                                 class="absolute left-0 mt-1 z-20 py-1" style="min-width:220px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
-                                @foreach(\App\Models\Task::$statuses as $key => $s)
-                                    <form method="POST" action="{{ route('tasks.update-inline', $task) }}">
-                                        @csrf @method('PATCH')
-                                        @foreach(['title','task_type','origin'] as $f)
-                                            <input type="hidden" name="{{ $f }}" value="{{ $task->$f }}">
-                                        @endforeach
-                                        <input type="hidden" name="status" value="{{ $key }}">
-                                        <button type="submit" @click="open = false"
-                                            class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
-                                            style="color:{{ $task->status === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ $task->status === $key ? '600' : '400' }}"
-                                            onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
-                                            <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:var(--{{ $s['color'] }})"></span>
-                                            {{ $s['label'] }}
-                                        </button>
-                                    </form>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Prioridade --}}
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Prioridade</p>
-                        <div class="relative" x-data="{ open: false }">
-                            <button type="button" @click="open = !open" class="flex items-center gap-1.5 text-sm font-semibold" style="color:var(--text)">
-                                <x-icon name="flag" size="14" style="color:{{ \App\Models\Task::colorHex((\App\Models\Task::$priorities[$task->priority ?? 'normal']['color'])) }}" />
-                                <span class="truncate">{{ $task->priorityLabel() }}</span>
-                                <x-icon name="chevron-down" size="12" style="color:var(--muted)" />
-                            </button>
-                            <div x-show="open" @click.outside="open = false" x-cloak
-                                 class="absolute left-0 mt-1 z-20 py-1" style="min-width:180px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
-                                @foreach(\App\Models\Task::$priorities as $key => $p)
-                                    <form method="POST" action="{{ route('tasks.update-priority', $task) }}">
-                                        @csrf @method('PATCH')
-                                        <input type="hidden" name="priority" value="{{ $key }}">
-                                        <button type="submit" @click="open = false"
-                                            class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
-                                            style="color:{{ ($task->priority ?? 'normal') === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ ($task->priority ?? 'normal') === $key ? '600' : '400' }}"
-                                            onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
-                                            <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:{{ \App\Models\Task::colorHex($p['color']) }}"></span>
-                                            {{ $p['label'] }}
-                                        </button>
-                                    </form>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Situação --}}
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Situação</p>
-                        <div class="relative" x-data="{ open: false }">
-                            <button type="button" @click="open = !open" class="flex items-center gap-1.5 text-sm font-semibold" style="color:var(--text)">
-                                <x-icon name="bookmark" size="14" style="color:{{ $task->situationColor() }}" />
-                                <span class="truncate">{{ $task->situationLabel() !== '—' ? $task->situationLabel() : 'Sem situação' }}</span>
-                                <x-icon name="chevron-down" size="12" style="color:var(--muted)" />
-                            </button>
-                            <div x-show="open" @click.outside="open = false" x-cloak
-                                 class="absolute left-0 mt-1 z-20 py-1" style="min-width:220px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
-                                @foreach(\App\Models\Task::$situations as $key => $label)
-                                    <form method="POST" action="{{ route('tasks.update-situation', $task) }}">
-                                        @csrf @method('PATCH')
-                                        <input type="hidden" name="situation" value="{{ $key }}">
-                                        <button type="submit" @click="open = false"
-                                            class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
-                                            style="color:{{ ($task->situation ?? '') === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ ($task->situation ?? '') === $key ? '600' : '400' }}"
-                                            onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
-                                            @if($key)
-                                                <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:{{ \App\Models\Task::$situationColors[$key] ?? '#94a3b8' }}"></span>
-                                            @endif
-                                            {{ $label }}
-                                        </button>
-                                    </form>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-
+                        </form>
+                    @endforeach
                 </div>
+            </div>
+
+            {{-- Prioridade / Situação — mesma mecânica de edição de sempre (mesmos endpoints),
+                 numa barra horizontal com ícone em vez de cards separados na sidebar. Vencimento
+                 saiu daqui e foi pro card Datas da lateral, junto com Aprovação/Publicação;
+                 Responsável e Executor saíram porque já aparecem como avatar no cabeçalho, logo acima. --}}
+            <div class="card card-body">
+
+                {{-- Prioridade — segue dropdown, lista curta (4 valores) não pede grid --}}
+                <div class="mb-5">
+                    <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Prioridade</p>
+                    <div class="relative" x-data="{ open: false }">
+                        <button type="button" @click="open = !open" class="flex items-center gap-1.5 text-sm font-semibold" style="color:var(--text)">
+                            <x-icon name="flag" size="14" style="color:{{ \App\Models\Task::colorHex((\App\Models\Task::$priorities[$task->priority ?? 'normal']['color'])) }}" />
+                            <span class="truncate">{{ $task->priorityLabel() }}</span>
+                            <x-icon name="chevron-down" size="12" style="color:var(--muted)" />
+                        </button>
+                        <div x-show="open" @click.outside="open = false" x-cloak
+                             class="absolute left-0 mt-1 z-20 py-1" style="min-width:180px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
+                            @foreach(\App\Models\Task::$priorities as $key => $p)
+                                <form method="POST" action="{{ route('tasks.update-priority', $task) }}">
+                                    @csrf @method('PATCH')
+                                    <input type="hidden" name="priority" value="{{ $key }}">
+                                    <button type="submit" @click="open = false"
+                                        class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
+                                        style="color:{{ ($task->priority ?? 'normal') === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ ($task->priority ?? 'normal') === $key ? '600' : '400' }}"
+                                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                        <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:{{ \App\Models\Task::colorHex($p['color']) }}"></span>
+                                        {{ $p['label'] }}
+                                    </button>
+                                </form>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Situação — mesma dinâmica de grid do Status: botão por valor real
+                     (Task::$situations), acende na cor própria (Task::$situationColors),
+                     clique já salva (mesmo endpoint tasks.update-situation de sempre). --}}
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Situação</p>
+                    <div class="grid grid-cols-4 gap-px" style="background:var(--border2); border:1px solid var(--border2)">
+                        @foreach(\App\Models\Task::$situations as $key => $label)
+                            @php
+                                $active = ($task->situation ?? '') === $key;
+                                $color  = \App\Models\Task::$situationColors[$key] ?? null;
+                            @endphp
+                            <form method="POST" action="{{ route('tasks.update-situation', $task) }}">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="situation" value="{{ $key }}">
+                                <button type="submit"
+                                    class="w-full h-full px-2 py-2 text-[11px] font-bold uppercase text-center leading-tight transition-colors"
+                                    style="letter-spacing:.02em; {{ $active ? 'background:'.($color ?? 'var(--muted2)').'; color:#fff;' : 'background:var(--s2); color:var(--muted2);' }}"
+                                    {{ !$active ? 'onmouseover="this.style.background=\'var(--s3)\'" onmouseout="this.style.background=\'var(--s2)\'"' : '' }}>
+                                    {{ $key === '' ? 'Sem situação' : $label }}
+                                </button>
+                            </form>
+                        @endforeach
+                        {{-- Preenche o resto da última linha com o fundo do card (em vez do
+                             cinza de divisória) pra sobra não parecer bloco sólido solto. --}}
+                        @php $sitFillers = (4 - (count(\App\Models\Task::$situations) % 4)) % 4; @endphp
+                        @for($f = 0; $f < $sitFillers; $f++)
+                            <div style="background:var(--s1)"></div>
+                        @endfor
+                    </div>
+                </div>
+
             </div>
 
             {{-- CAMPOS (sem título — some espaço): Sprint/Tipo em cima, Origem/Destino
@@ -1250,21 +1256,32 @@
                         </span>
                         Histórico
                     </p>
-                    <div class="flex flex-col gap-3" style="max-height:360px; overflow-y:auto">
+                    <div class="flex flex-col" style="max-height:360px; overflow-y:auto">
                         @foreach($task->activities as $activity)
-                            <div class="text-xs" style="border-left:2px solid var(--border2); padding-left:10px">
-                                <p style="color:var(--text); font-weight:500; line-height:1.4">
-                                    {{ $activity->actionLabel() }}
-                                    @if($activity->from_label && $activity->to_label)
-                                        <span style="color:var(--muted2)">— {{ $activity->from_label }} → {{ $activity->to_label }}</span>
-                                    @elseif($activity->to_label)
-                                        <span style="color:var(--muted2)">— {{ $activity->to_label }}</span>
+                            <div class="flex gap-3">
+                                {{-- Trilha: ponto + linha conectando ao próximo (o próprio ponto
+                                     mais recente vem preenchido em roxo, os demais só contorno). --}}
+                                <div class="flex flex-col items-center flex-shrink-0">
+                                    <span class="h-2.5 w-2.5 rounded-full flex-shrink-0"
+                                          style="{{ $loop->first ? 'background:var(--purple)' : 'background:var(--s1); border:2px solid var(--border2)' }}"></span>
+                                    @if(!$loop->last)
+                                        <span class="flex-1" style="width:1px; min-height:10px; background:var(--border2)"></span>
                                     @endif
-                                </p>
-                                <p class="mt-0.5" style="color:var(--muted)">
-                                    {{ $activity->user?->name ? explode(' ', $activity->user->name)[0] : 'Sistema' }}
-                                    · {{ $activity->created_at->format('d/m/Y H:i') }}
-                                </p>
+                                </div>
+                                <div class="text-xs {{ !$loop->last ? 'pb-4' : '' }}">
+                                    <p style="color:var(--text); font-weight:500; line-height:1.4">
+                                        {{ $activity->actionLabel() }}
+                                        @if($activity->from_label && $activity->to_label)
+                                            <span style="color:var(--muted2)">— {{ $activity->from_label }} → {{ $activity->to_label }}</span>
+                                        @elseif($activity->to_label)
+                                            <span style="color:var(--muted2)">— {{ $activity->to_label }}</span>
+                                        @endif
+                                    </p>
+                                    <p class="mt-0.5" style="color:var(--muted)">
+                                        {{ $activity->user?->name ? explode(' ', $activity->user->name)[0] : 'Sistema' }}
+                                        · {{ $activity->created_at->format('d/m/Y H:i') }}
+                                    </p>
+                                </div>
                             </div>
                         @endforeach
                     </div>
