@@ -276,9 +276,10 @@
                 </div>
             </div>
 
-            {{-- BARRA DE STATUS: segmentada, botão por status real (Task::$statuses), acende
-                 com a cor do próprio status quando ativo — troca substitui o dropdown antigo,
-                 clique já salva (mesmo endpoint tasks.update-inline de sempre). --}}
+            {{-- BARRA DE STATUS: fluxo em flecha (clip-path) com os 7 status que avançam pra
+                 frente, acende na cor real do status ativo. "Cancelado" fica de fora da corrente
+                 de propósito — é saída/exceção, não uma estação do fluxo — e vira um botão à
+                 parte, menor, ao lado. Clique já salva (mesmo endpoint tasks.update-inline). --}}
             @php
                 $statusShort = [
                     'backlog'              => 'Backlog',
@@ -288,30 +289,59 @@
                     'aprovacao'            => 'Aprovação',
                     'despacho_agendamento' => 'Agendamento',
                     'concluido'            => 'Concluído',
-                    'cancelado'            => 'Cancelado',
                 ];
+                $flowStatuses     = collect(\App\Models\Task::$statuses)->except('cancelado');
+                $canceladoStatus  = \App\Models\Task::$statuses['cancelado'];
+                $canceladoActive  = $task->status === 'cancelado';
+                $chevronPt        = 6;
             @endphp
             <div class="card card-body">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Status</p>
-                {{-- Grid 4 col fixas (8 status = 2 linhas parelhas); gap-px + fundo var(--border2)
-                     desenha as linhas de grade sem precisar calcular borda por posição. --}}
-                <div class="grid grid-cols-4 gap-px" style="background:var(--border2); border:1px solid var(--border2)">
-                    @foreach(\App\Models\Task::$statuses as $key => $s)
-                        @php $active = $task->status === $key; @endphp
-                        <form method="POST" action="{{ route('tasks.update-inline', $task) }}">
-                            @csrf @method('PATCH')
-                            @foreach(['title','task_type','origin'] as $f)
-                                <input type="hidden" name="{{ $f }}" value="{{ $task->$f }}">
-                            @endforeach
-                            <input type="hidden" name="status" value="{{ $key }}">
-                            <button type="submit"
-                                class="w-full h-full px-2 py-2.5 text-xs font-bold uppercase text-center transition-colors"
-                                style="letter-spacing:.03em; {{ $active ? 'background:var(--'.$s['color'].'); color:#fff;' : 'background:var(--s2); color:var(--muted2);' }}"
-                                {{ !$active ? 'onmouseover="this.style.background=\'var(--s3)\'" onmouseout="this.style.background=\'var(--s2)\'"' : '' }}>
-                                {{ $statusShort[$key] ?? $s['label'] }}
-                            </button>
-                        </form>
-                    @endforeach
+                <div class="flex items-center gap-1.5">
+                    <div class="flex flex-1 min-w-0" style="overflow-x:auto">
+                        @foreach($flowStatuses as $key => $s)
+                            @php
+                                $active = $task->status === $key;
+                                $clip = $loop->first
+                                    ? "polygon(0 0, calc(100% - {$chevronPt}px) 0, 100% 50%, calc(100% - {$chevronPt}px) 100%, 0 100%)"
+                                    : ($loop->last
+                                        ? "polygon(0 0, 100% 0, 100% 100%, 0 100%, {$chevronPt}px 50%)"
+                                        : "polygon(0 0, calc(100% - {$chevronPt}px) 0, 100% 50%, calc(100% - {$chevronPt}px) 100%, 0 100%, {$chevronPt}px 50%)");
+                            @endphp
+                            <form method="POST" action="{{ route('tasks.update-inline', $task) }}" style="display:contents">
+                                @csrf @method('PATCH')
+                                @foreach(['title','task_type','origin'] as $f)
+                                    <input type="hidden" name="{{ $f }}" value="{{ $task->$f }}">
+                                @endforeach
+                                <input type="hidden" name="status" value="{{ $key }}">
+                                <button type="submit"
+                                    class="flex-shrink-0 py-2.5 text-[11px] font-bold uppercase text-center transition-colors"
+                                    style="clip-path:{{ $clip }}; min-width:70px;
+                                           padding-left:{{ $loop->first ? '9px' : '10px' }}; padding-right:{{ $loop->last ? '7px' : '10px' }};
+                                           margin-left:{{ $loop->first ? '0' : '-'.$chevronPt.'px' }}; letter-spacing:0;
+                                           {{ $active ? 'background:var(--'.$s['color'].'); color:#fff;' : 'background:var(--s2); color:var(--muted2);' }}"
+                                    {{ !$active ? 'onmouseover="this.style.background=\'var(--s3)\'" onmouseout="this.style.background=\'var(--s2)\'"' : '' }}>
+                                    {{ $statusShort[$key] ?? $s['label'] }}
+                                </button>
+                            </form>
+                        @endforeach
+                    </div>
+
+                    {{-- Cancelado — separado da corrente, mesma mecânica de sempre --}}
+                    <form method="POST" action="{{ route('tasks.update-inline', $task) }}" class="flex-shrink-0">
+                        @csrf @method('PATCH')
+                        @foreach(['title','task_type','origin'] as $f)
+                            <input type="hidden" name="{{ $f }}" value="{{ $task->$f }}">
+                        @endforeach
+                        <input type="hidden" name="status" value="cancelado">
+                        <button type="submit"
+                            class="px-2 py-2 text-[11px] font-bold uppercase transition-colors"
+                            style="letter-spacing:0; border:1px solid {{ $canceladoActive ? 'var(--'.$canceladoStatus['color'].')' : 'var(--border2)' }};
+                                   {{ $canceladoActive ? 'background:var(--'.$canceladoStatus['color'].'); color:#fff;' : 'background:transparent; color:var(--muted2);' }}"
+                            {{ !$canceladoActive ? 'onmouseover="this.style.background=\'var(--s2)\'" onmouseout="this.style.background=\'transparent\'"' : '' }}>
+                            Cancelado
+                        </button>
+                    </form>
                 </div>
             </div>
 
