@@ -349,39 +349,12 @@
                 </div>
             </div>
 
-            {{-- Prioridade / Situação — mesma mecânica de edição de sempre (mesmos endpoints),
-                 numa barra horizontal com ícone em vez de cards separados na sidebar. Vencimento
-                 saiu daqui e foi pro card Datas da lateral, junto com Aprovação/Publicação;
-                 Responsável e Executor saíram porque já aparecem como avatar no cabeçalho, logo acima. --}}
+            {{-- Situação — mesma mecânica de edição de sempre (mesmo endpoint). Prioridade saiu
+                 daqui e foi pro card Datas da lateral (primeiro item) — fazia mais sentido junto
+                 dos outros metadados de "visão rápida" do que solto sozinho aqui em cima da
+                 Situação. Responsável e Executor saíram porque já aparecem como avatar no
+                 cabeçalho, logo acima. --}}
             <div class="card card-body">
-
-                {{-- Prioridade — segue dropdown, lista curta (4 valores) não pede grid --}}
-                <div class="mb-5">
-                    <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Prioridade</p>
-                    <div class="relative" x-data="{ open: false }">
-                        <button type="button" @click="open = !open" class="flex items-center gap-1.5 text-sm font-semibold" style="color:var(--text)">
-                            <x-icon name="flag" size="14" style="color:{{ \App\Models\Task::colorHex((\App\Models\Task::$priorities[$task->priority ?? 'normal']['color'])) }}" />
-                            <span class="truncate">{{ $task->priorityLabel() }}</span>
-                            <x-icon name="chevron-down" size="12" style="color:var(--muted)" />
-                        </button>
-                        <div x-show="open" @click.outside="open = false" x-cloak
-                             class="absolute left-0 mt-1 z-20 py-1" style="min-width:180px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
-                            @foreach(\App\Models\Task::$priorities as $key => $p)
-                                <form method="POST" action="{{ route('tasks.update-priority', $task) }}">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="priority" value="{{ $key }}">
-                                    <button type="submit" @click="open = false"
-                                        class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
-                                        style="color:{{ ($task->priority ?? 'normal') === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ ($task->priority ?? 'normal') === $key ? '600' : '400' }}"
-                                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
-                                        <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:{{ \App\Models\Task::colorHex($p['color']) }}"></span>
-                                        {{ $p['label'] }}
-                                    </button>
-                                </form>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
 
                 {{-- Situação — mesma dinâmica de grid do Status: botão por valor real
                      (Task::$situations), acende na cor própria (Task::$situationColors),
@@ -1005,8 +978,10 @@
         ══════════════════════════════════════════════════════════ --}}
         <div class="flex flex-col gap-4" style="width:320px; flex-shrink:0">
 
-            {{-- DATAS: Aprovação / Publicação / Vencimento (Vencimento antes ficava na barra de
-                 campos rápidos) — Aprovação um pouco mais destacada porque é a data que
+            {{-- DATAS: Prioridade / Aprovação / Publicação / Vencimento — vira o card de "visão
+                 rápida" da lateral. Prioridade entrou aqui como primeiro item (antes ficava
+                 solta em cima da Situação, sem contexto); Vencimento já tinha saído da barra de
+                 campos rápidos antes. Aprovação um pouco mais destacada porque é a data que
                  coordena a entrega da operação. --}}
             <div class="card card-body">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
@@ -1017,6 +992,32 @@
                 </p>
                 <div class="flex flex-col gap-4">
                     <div class="pb-3" style="border-bottom:1px solid var(--border2)">
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Prioridade</p>
+                        <div class="relative" x-data="{ open: false }">
+                            <button type="button" @click="open = !open" class="flex items-center gap-1.5 text-sm font-semibold" style="color:var(--text)">
+                                <x-icon name="flag" size="14" style="color:{{ \App\Models\Task::colorHex((\App\Models\Task::$priorities[$task->priority ?? 'normal']['color'])) }}" />
+                                <span class="truncate">{{ $task->priorityLabel() }}</span>
+                                <x-icon name="chevron-down" size="12" style="color:var(--muted)" />
+                            </button>
+                            <div x-show="open" @click.outside="open = false" x-cloak
+                                 class="absolute left-0 mt-1 z-20 py-1" style="min-width:180px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
+                                @foreach(\App\Models\Task::$priorities as $key => $p)
+                                    <form method="POST" action="{{ route('tasks.update-priority', $task) }}">
+                                        @csrf @method('PATCH')
+                                        <input type="hidden" name="priority" value="{{ $key }}">
+                                        <button type="submit" @click="open = false"
+                                            class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
+                                            style="color:{{ ($task->priority ?? 'normal') === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ ($task->priority ?? 'normal') === $key ? '600' : '400' }}"
+                                            onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                            <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:{{ \App\Models\Task::colorHex($p['color']) }}"></span>
+                                            {{ $p['label'] }}
+                                        </button>
+                                    </form>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    <div>
                         <div class="flex items-center gap-1.5 mb-1">
                             <span class="h-2 w-2 rounded-full flex-shrink-0" style="background:var(--orange)"></span>
                             <p class="text-xs font-bold uppercase tracking-widest" style="color:var(--orange); letter-spacing:.08em">Aprovação</p>
