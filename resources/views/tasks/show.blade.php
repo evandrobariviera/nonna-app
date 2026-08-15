@@ -320,7 +320,7 @@
                                 <input type="hidden" name="status" value="{{ $key }}">
                                 <button type="submit"
                                     class="flex-shrink-0 py-3 text-xs font-bold uppercase text-center transition-colors"
-                                    style="clip-path:{{ $clip }}; min-width:82px; {{ $chevronOutline }}
+                                    style="clip-path:{{ $clip }}; min-width:82px; {{ $chevronOutline }} cursor:pointer;
                                            padding-left:{{ $loop->first ? '13px' : '15px' }}; padding-right:{{ $loop->last ? '13px' : '15px' }};
                                            margin-left:{{ $loop->first ? '0' : '-'.$chevronPt.'px' }}; letter-spacing:.01em;
                                            {{ $active ? 'background:var(--'.$s['color'].'); color:#fff;' : 'background:var(--s2); color:var(--muted2);' }}"
@@ -340,7 +340,7 @@
                         <input type="hidden" name="status" value="cancelado">
                         <button type="submit"
                             class="px-4 py-3 text-xs font-bold uppercase transition-colors"
-                            style="letter-spacing:.01em; border:1px solid {{ $canceladoActive ? 'var(--'.$canceladoStatus['color'].')' : 'var(--border2)' }};
+                            style="letter-spacing:.01em; cursor:pointer; border:1px solid {{ $canceladoActive ? 'var(--'.$canceladoStatus['color'].')' : 'var(--border2)' }};
                                    {{ $canceladoActive ? 'background:var(--'.$canceladoStatus['color'].'); color:#fff;' : 'background:transparent; color:var(--muted2);' }}"
                             {{ !$canceladoActive ? 'onmouseover="this.style.background=\'var(--s2)\'" onmouseout="this.style.background=\'transparent\'"' : '' }}>
                             Cancelado
@@ -385,10 +385,13 @@
 
                 {{-- Situação — mesma dinâmica de grid do Status: botão por valor real
                      (Task::$situations), acende na cor própria (Task::$situationColors),
-                     clique já salva (mesmo endpoint tasks.update-situation de sempre). --}}
+                     clique já salva (mesmo endpoint tasks.update-situation de sempre).
+                     7 colunas fecha os 14 valores em 2 linhas exatas, sem sobra. Chips
+                     arredondados com espaço entre si (em vez de linha de grade dura) —
+                     o contraste do próprio preenchimento contra o card já separa. --}}
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Situação</p>
-                    <div class="grid grid-cols-4 gap-px" style="background:var(--border2); border:1px solid var(--border2)">
+                    <div class="grid grid-cols-7 gap-1.5">
                         @foreach(\App\Models\Task::$situations as $key => $label)
                             @php
                                 $active = ($task->situation ?? '') === $key;
@@ -398,19 +401,13 @@
                                 @csrf @method('PATCH')
                                 <input type="hidden" name="situation" value="{{ $key }}">
                                 <button type="submit"
-                                    class="w-full h-full px-2 py-2 text-[11px] font-bold uppercase text-center leading-tight transition-colors"
-                                    style="letter-spacing:.02em; {{ $active ? 'background:'.($color ?? 'var(--muted2)').'; color:#fff;' : 'background:var(--s2); color:var(--muted2);' }}"
+                                    class="w-full h-full px-2 py-2.5 text-[11px] font-bold uppercase text-center leading-tight transition-colors rounded-lg"
+                                    style="letter-spacing:.01em; cursor:pointer; {{ $active ? 'background:'.($color ?? 'var(--muted2)').'; color:#fff;' : 'background:var(--s2); color:var(--muted2); border:1px solid var(--border);' }}"
                                     {{ !$active ? 'onmouseover="this.style.background=\'var(--s3)\'" onmouseout="this.style.background=\'var(--s2)\'"' : '' }}>
                                     {{ $key === '' ? 'Sem situação' : $label }}
                                 </button>
                             </form>
                         @endforeach
-                        {{-- Preenche o resto da última linha com o fundo do card (em vez do
-                             cinza de divisória) pra sobra não parecer bloco sólido solto. --}}
-                        @php $sitFillers = (4 - (count(\App\Models\Task::$situations) % 4)) % 4; @endphp
-                        @for($f = 0; $f < $sitFillers; $f++)
-                            <div style="background:var(--s1)"></div>
-                        @endfor
                     </div>
                 </div>
 
