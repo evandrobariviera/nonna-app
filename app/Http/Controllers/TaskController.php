@@ -15,6 +15,7 @@ use App\Models\TaskExecutor;
 use App\Models\TaskStatusTransition;
 use App\Models\User;
 use App\Services\AutomationEngine;
+use App\Services\TaskExecutorSync;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -261,7 +262,7 @@ class TaskController extends Controller
             'created_by'        => Auth::id(),
         ]);
 
-        $this->syncExecutors($task, $data);
+        TaskExecutorSync::sync($task, $data);
         $this->storeAttachments($task, $request);
 
         return redirect()->route('macroplans.projects.show', [$macroplan, $project])
@@ -288,7 +289,7 @@ class TaskController extends Controller
             'created_by'        => Auth::id(),
         ]);
 
-        $this->syncExecutors($task, $data);
+        TaskExecutorSync::sync($task, $data);
         $this->storeAttachments($task, $request);
 
         return redirect()->route('projects.showDirect', $project)
@@ -306,7 +307,7 @@ class TaskController extends Controller
         }
 
         $task->update([...$data, 'internal_approval' => $request->boolean('internal_approval')]);
-        $this->syncExecutors($task, $data);
+        TaskExecutorSync::sync($task, $data);
 
         return redirect()->route('macroplans.projects.show', [$macroplan, $project])
             ->with('success', 'Tarefa atualizada.');
@@ -323,7 +324,7 @@ class TaskController extends Controller
         }
 
         $task->update([...$data, 'internal_approval' => $request->boolean('internal_approval')]);
-        $this->syncExecutors($task, $data);
+        TaskExecutorSync::sync($task, $data);
 
         return redirect()->route('projects.showDirect', $project)
             ->with('success', 'Tarefa atualizada.');
@@ -600,8 +601,8 @@ class TaskController extends Controller
     }
 
     // Resolve o id de quem vai ficar como 'executor' a partir de executor_ids[]/
-    // executor_roles[] (formato usado por store/update via syncExecutors()) — o mesmo
-    // "primeira pessoa com esse papel" que o dedupe de syncExecutors() aplica.
+    // executor_roles[] (formato usado por store/update via TaskExecutorSync::sync()) —
+    // o mesmo "primeira pessoa com esse papel" que o dedupe de lá aplica.
     private function firstExecutorId(array $data): ?string
     {
         foreach (($data['executor_ids'] ?? []) as $userId) {
@@ -888,67 +889,6 @@ class TaskController extends Controller
                     $newlyAdded[] = ['role' => 'observador', 'user_id' => $uid];
                 }
             }
-        }
-
-        foreach ($newlyAdded as $added) {
-            AutomationEngine::evaluate('executor_added', $task, $added);
-        }
-    }
-
-    private function syncExecutors(Task $task, array $data): void
-    {
-        $ids           = $data['executor_ids'] ?? [];
-        $roles         = $data['executor_roles'] ?? [];
-        $responsavelId = $data['responsavel_id'] ?? null;
-
-        // Rede de segurança — a validação (Task::executorRoleCapRule()) já devia ter
-        // barrado 2+ pessoas no mesmo papel capado antes de chegar aqui. Mantém só a
-        // primeira de cada papel (executor/responsavel) na ordem de submissão.
-        $seenCappedRole = [];
-        foreach ($ids as $key => $userId) {
-            $role = $roles[$userId] ?? 'executor';
-            if (in_array($role, ['executor', 'responsavel'], true)) {
-                if (isset($seenCappedRole[$role])) {
-                    unset($ids[$key]);
-                    continue;
-                }
-                $seenCappedRole[$role] = true;
-            }
-        }
-        $ids = array_values($ids);
-
-        if (empty($ids) && !$responsavelId) {
-            return;
-        }
-
-        // Papel de responsável é independente dos demais (executor/aprovador) — a mesma
-        // pessoa pode acumular os dois na mesma tarefa (task_executors permite 1 linha por
-        // (task_id, user_id, role)). sync() não dava conta disso (só 1 linha por user_id no
-        // array), então troca-se pra 2 blocos delete+attach separados por papel.
-        $before = TaskExecutor::where('task_id', $task->id)->get(['user_id', 'role'])
-            ->map(fn ($e) => "{$e->role}:{$e->user_id}");
-
-        $newlyAdded = [];
-
-        TaskExecutor::where('task_id', $task->id)->where('role', '!=', 'responsavel')->delete();
-        foreach ($ids as $userId) {
-            $role = $roles[$userId] ?? 'executor';
-            $task->executors()->attach($userId, ['role' => $role]);
-            if (!$before->contains("{$role}:{$userId}")) {
-                $newlyAdded[] = ['role' => $role, 'user_id' => $userId];
-            }
-        }
-
-        TaskExecutor::where('task_id', $task->id)->where('role', 'responsavel')->delete();
-        if ($responsavelId) {
-            $task->executors()->attach($responsavelId, ['role' => 'responsavel']);
-            if (!$before->contains("responsavel:{$responsavelId}")) {
-                $newlyAdded[] = ['role' => 'responsavel', 'user_id' => $responsavelId];
-            }
-        }
-
-        if (!$task->executor_id && !empty($ids)) {
-            $task->updateQuietly(['executor_id' => $ids[0]]);
         }
 
         foreach ($newlyAdded as $added) {

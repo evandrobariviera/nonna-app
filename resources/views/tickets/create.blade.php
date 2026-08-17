@@ -111,6 +111,30 @@
                     </select>
                 </div>
 
+                {{-- Prioridade --}}
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Prioridade</label>
+                    <select name="priority"
+                        class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                        @foreach(\App\Models\Task::$priorities as $key => $p)
+                            <option value="{{ $key }}" {{ old('priority', 'normal') === $key ? 'selected' : '' }}>{{ $p['label'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Situação --}}
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Situação</label>
+                    <select name="situation"
+                        class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                        @foreach(\App\Models\Task::$situations as $key => $label)
+                            <option value="{{ $key }}" {{ old('situation') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
                 {{-- Vencimento --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Vencimento</label>

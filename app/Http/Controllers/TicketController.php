@@ -9,7 +9,7 @@ use App\Models\Task;
 use App\Models\TaskAttachment;
 use App\Models\TaskExecutor;
 use App\Models\User;
-use App\Services\AutomationEngine;
+use App\Services\TaskExecutorSync;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -112,6 +112,7 @@ class TicketController extends Controller
             'executor_roles.*'   => 'in:executor,responsavel,aprovador,observador',
             'responsavel_id'     => 'nullable|exists:users,id',
             'sprint_id'          => 'nullable|uuid|exists:sprints,id',
+            'priority'           => 'nullable|in:urgente,medio,normal',
             'due_date'           => 'nullable|date',
             'approval_date'      => 'nullable|date',
             'publish_date'       => 'nullable|date',
@@ -142,35 +143,7 @@ class TicketController extends Controller
             'created_by'        => Auth::id(),
         ]);
 
-        // Sync executores + responsável — papéis independentes, a mesma pessoa pode ser
-        // executor e responsável ao mesmo tempo (task_executors permite 1 linha por
-        // (task_id, user_id, role)).
-        $ids   = $data['executor_ids'] ?? [];
-        $roles = $data['executor_roles'] ?? [];
-
-        // Rede de segurança — a validação (Task::executorRoleCapRule()) já devia ter
-        // barrado 2+ pessoas no mesmo papel capado antes de chegar aqui.
-        $seenCappedRole = [];
-        foreach ($ids as $key => $userId) {
-            $role = $roles[$userId] ?? 'executor';
-            if (in_array($role, ['executor', 'responsavel'], true)) {
-                if (isset($seenCappedRole[$role])) {
-                    unset($ids[$key]);
-                    continue;
-                }
-                $seenCappedRole[$role] = true;
-            }
-        }
-
-        foreach ($ids as $userId) {
-            $role = $roles[$userId] ?? 'executor';
-            $task->executors()->attach($userId, ['role' => $role]);
-            AutomationEngine::evaluate('executor_added', $task, ['role' => $role, 'user_id' => $userId]);
-        }
-        if (!empty($data['responsavel_id'])) {
-            $task->executors()->attach($data['responsavel_id'], ['role' => 'responsavel']);
-            AutomationEngine::evaluate('executor_added', $task, ['role' => 'responsavel', 'user_id' => $data['responsavel_id']]);
-        }
+        TaskExecutorSync::sync($task, $data);
 
         // Anexos enviados junto na criação — mesma lógica de TaskAttachmentController::store(),
         // sempre como "insumo" (material de referência; ainda não existe entregável nesse ponto).
