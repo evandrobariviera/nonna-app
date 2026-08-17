@@ -11,12 +11,23 @@
     @if($visibleComments->isNotEmpty())
         <div class="flex flex-col mb-5">
             @foreach($visibleComments as $comment)
+                @php
+                    // Comentário antigo (anterior ao editor rico) é texto puro, sem tag
+                    // nenhuma — converte pra <p>/<br> só na exibição (mesma lógica de
+                    // tasks/show.blade.php e tiptap-editor.js:normalizeContent).
+                    $commentHtml = $comment->body;
+                    if (!preg_match('/<[a-z][\s\S]*>/i', $commentHtml)) {
+                        $commentHtml = collect(preg_split('/\n\n+/', $commentHtml))
+                            ->map(fn ($p) => '<p>' . nl2br(e($p)) . '</p>')
+                            ->implode('');
+                    }
+                @endphp
                 <div class="py-3" style="{{ !$loop->last ? 'border-bottom:1px solid var(--border2)' : '' }}">
                     <div class="flex items-baseline gap-3 mb-1 flex-wrap">
-                        <span class="text-sm font-semibold" style="color: var(--text)">{{ $comment->user->name }}</span>
+                        <span class="text-sm font-semibold" style="color: var(--text)">{{ $comment->commenter()?->name ?? '—' }}</span>
                         <span class="text-xs" style="color: var(--muted)">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
                     </div>
-                    <p class="text-sm whitespace-pre-wrap" style="color: var(--text); line-height: 1.65">{{ $comment->body }}</p>
+                    <div class="text-sm" style="color: var(--text); line-height: 1.65">{!! $commentHtml !!}</div>
                 </div>
             @endforeach
         </div>

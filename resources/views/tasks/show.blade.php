@@ -1190,12 +1190,21 @@
                     <div class="flex flex-col mb-6">
                         @foreach($task->comments as $comment)
                             <div class="flex gap-3 py-4" style="{{ !$loop->last ? 'border-bottom:1px solid var(--border2)' : '' }}">
-                                <x-user-avatar :user="$comment->user" size="7" class="mt-0.5" />
+                                @if($comment->user)
+                                    <x-user-avatar :user="$comment->user" size="7" class="mt-0.5" />
+                                @else
+                                    <div class="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0 mt-0.5" style="background:var(--grad)">
+                                        {{ strtoupper(substr($comment->contact->name ?? '?', 0, 1)) }}
+                                    </div>
+                                @endif
                                 <div class="flex-1 min-w-0">
                                     {{-- Exibição --}}
                                     <div x-show="editId !== '{{ $comment->id }}'">
                                         <div class="flex items-baseline gap-2 mb-1.5 flex-wrap">
-                                            <span class="text-sm font-semibold" style="color:var(--text)">{{ $comment->user->name }}</span>
+                                            <span class="text-sm font-semibold" style="color:var(--text)">{{ $comment->commenter()?->name ?? '—' }}</span>
+                                            @if($comment->contact_id)
+                                                <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full" style="background:rgba(5,150,105,.1); color:var(--green)">Cliente</span>
+                                            @endif
                                             <span class="text-xs" style="color:var(--muted2)">{{ $comment->created_at->diffForHumans() }}</span>
                                             @if($comment->updated_at->ne($comment->created_at))
                                                 <span class="text-xs" style="color:var(--muted2)">(editado)</span>

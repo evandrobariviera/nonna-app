@@ -4,7 +4,7 @@
 
 @php
 $inputStyle = "background:var(--s1); border:1px solid var(--border2); color:var(--text); outline:none; font-family:'Inter',sans-serif";
-$inputMono  = "background:var(--s1); border:1px solid var(--border2); color:var(--text); outline:none; font-family:Arial,"Segoe UI",Tahoma,sans-serif";
+$inputMono  = "background:var(--s1); border:1px solid var(--border2); color:var(--text); outline:none; font-family:Arial,'Segoe UI',Tahoma,sans-serif";
 $selectStyle = "background:var(--s1); border:1px solid var(--border2); color:var(--muted2); outline:none; cursor:pointer; font-family:'Inter',sans-serif";
 @endphp
 

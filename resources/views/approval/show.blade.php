@@ -218,10 +218,21 @@
                 <div class="piece-card" style="padding:18px">
                     <span class="label-sm">Comentários</span>
                     @foreach($visibleComments as $comment)
+                        @php
+                            // Comentário antigo (anterior ao editor rico) é texto puro, sem tag
+                            // nenhuma — converte pra <p>/<br> só na exibição (mesma lógica de
+                            // tasks/show.blade.php e tiptap-editor.js:normalizeContent).
+                            $commentHtml = $comment->body;
+                            if (!preg_match('/<[a-z][\s\S]*>/i', $commentHtml)) {
+                                $commentHtml = collect(preg_split('/\n\n+/', $commentHtml))
+                                    ->map(fn ($p) => '<p>' . nl2br(e($p)) . '</p>')
+                                    ->implode('');
+                            }
+                        @endphp
                         <div class="comment-item">
                             <span class="comment-author">{{ $comment->commenter()?->name ?? '—' }}</span>
                             <span class="comment-date">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
-                            <p class="comment-body">{{ $comment->body }}</p>
+                            <div class="comment-body">{!! $commentHtml !!}</div>
                         </div>
                     @endforeach
                 </div>
