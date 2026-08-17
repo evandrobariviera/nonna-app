@@ -59,6 +59,14 @@ class TaskAttachmentController extends Controller
 
         abort_if($attachments->isEmpty(), 404);
 
+        // php.ini limita a 60s (max_execution_time) — suficiente pra requests normais,
+        // mas baixar+re-empacotar vários entregáveis grandes (ex: artes de adesivo em
+        // alta resolução) do R2 pode passar disso, matando o PHP no meio do stream e
+        // entregando um .zip truncado/corrompido pro navegador. Só essa rota precisa
+        // de mais tempo — não mexe no limite global (nginx.conf tem o mesmo ajuste em
+        // fastcgi_read_timeout, senão o nginx corta antes do PHP).
+        set_time_limit(300);
+
         $zipFilename = Str::slug($task->title) . '-entregaveis.zip';
 
         return response()->streamDownload(function () use ($attachments) {
