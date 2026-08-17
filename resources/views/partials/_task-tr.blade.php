@@ -116,12 +116,12 @@
     {{-- Data de Aprovação --}}
     <td style="width:100px">
         @if($task->approval_date)
-            <span class="text-xs" style="color:var(--muted2); font-family:Arial,"Segoe UI",Tahoma,sans-serif">
+            <span class="text-xs" style="color:var(--muted2); font-family:Arial,'Segoe UI',Tahoma,sans-serif">
                 {{ $task->approval_date->format('d/m/Y') }}
             </span>
         @elseif($task->due_date)
             <span class="text-xs {{ $task->isOverdue() ? 'font-semibold' : '' }}"
-                  style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted2)' }}; font-family:Arial,"Segoe UI",Tahoma,sans-serif">
+                  style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted2)' }}; font-family:Arial,'Segoe UI',Tahoma,sans-serif">
                 {{ $task->due_date->format('d/m/Y') }}
             </span>
         @else
@@ -132,7 +132,7 @@
     {{-- Data de Publicação --}}
     <td style="width:100px">
         @if($task->publish_date)
-            <span class="text-xs" style="color:var(--muted2); font-family:Arial,"Segoe UI",Tahoma,sans-serif">
+            <span class="text-xs" style="color:var(--muted2); font-family:Arial,'Segoe UI',Tahoma,sans-serif">
                 {{ $task->publish_date->format('d/m/Y') }}
             </span>
         @else

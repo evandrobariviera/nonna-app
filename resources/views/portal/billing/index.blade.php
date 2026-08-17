@@ -31,7 +31,7 @@
                 </a>
             @elseif($doc->pix_code)
                 <div class="flex items-center gap-3 p-3 rounded-lg" style="background: var(--s2)">
-                    <code class="text-xs flex-1 break-all" style="color: var(--purple); font-family:Arial,"Segoe UI",Tahoma,sans-serif">
+                    <code class="text-xs flex-1 break-all" style="color: var(--purple); font-family:Arial,'Segoe UI',Tahoma,sans-serif">
                         {{ $doc->pix_code }}
                     </code>
                     <button onclick="navigator.clipboard.writeText(`{{ $doc->pix_code }}`)"

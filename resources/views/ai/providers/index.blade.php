@@ -106,14 +106,14 @@
                                   class="flex items-end gap-3">
                                 @csrf
                                 <div class="flex-1">
-                                    <label class="block text-xs font-semibold mb-1" style="color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif; letter-spacing:.05em">RÓTULO</label>
+                                    <label class="block text-xs font-semibold mb-1" style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">RÓTULO</label>
                                     <input type="text" name="label" placeholder="ex: Chave Principal"
                                            required
                                            class="w-full rounded px-3 py-2 text-sm"
                                            style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
                                 </div>
                                 <div style="flex:2">
-                                    <label class="block text-xs font-semibold mb-1" style="color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif; letter-spacing:.05em">CHAVE DE API</label>
+                                    <label class="block text-xs font-semibold mb-1" style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">CHAVE DE API</label>
                                     <input type="password" name="api_key" placeholder="sk-..."
                                            required autocomplete="off"
                                            class="w-full rounded px-3 py-2 text-sm font-mono"
@@ -132,7 +132,7 @@
                 {{-- Modelos disponíveis --}}
                 @if($provider->models)
                 <div class="px-5 pb-4">
-                    <div class="text-xs font-semibold mb-2" style="color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif; letter-spacing:.05em">MODELOS</div>
+                    <div class="text-xs font-semibold mb-2" style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">MODELOS</div>
                     <div class="flex flex-wrap gap-2">
                         @foreach($provider->models as $model)
                         <div class="flex items-center gap-2 px-2 py-1 rounded text-xs"

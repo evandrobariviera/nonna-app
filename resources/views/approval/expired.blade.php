@@ -12,7 +12,7 @@
     @vite(['resources/css/app.css'])
     <style>
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
-        .mono { font-family:Arial,"Segoe UI",Tahoma,sans-serif; }
+        .mono { font-family:Arial,'Segoe UI',Tahoma,sans-serif; }
     </style>
 </head>
 <body>

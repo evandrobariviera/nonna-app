@@ -19,18 +19,18 @@
         }
         .pub-input:focus { border-color: var(--purple); }
         .pub-input::placeholder { color: var(--muted); }
-        .pub-mono { font-family:Arial,"Segoe UI",Tahoma,sans-serif; }
+        .pub-mono { font-family:Arial,'Segoe UI',Tahoma,sans-serif; }
         .pub-select {
             width: 100%; padding: 10px 14px; font-size: 13px; font-family: 'Inter', sans-serif;
             background: var(--s2); border: 1px solid var(--border2); color: var(--muted2); outline: none; cursor: pointer;
             transition: border-color .15s;
         }
         .pub-select:focus { border-color: var(--purple); }
-        .pub-label { font-family:Arial,"Segoe UI",Tahoma,sans-serif; font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 7px; }
+        .pub-label { font-family:Arial,'Segoe UI',Tahoma,sans-serif; font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 7px; }
         .req { color: var(--orange); }
         .field-error { font-size: 11px; color: var(--red); margin-top: 4px; }
         .block-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; gap: 12px; }
-        .block-num { font-family:Arial,"Segoe UI",Tahoma,sans-serif; font-size: 9px; letter-spacing: .18em; color: var(--muted); }
+        .block-num { font-family:Arial,'Segoe UI',Tahoma,sans-serif; font-size: 9px; letter-spacing: .18em; color: var(--muted); }
         .block-title { font-size: 14px; font-weight: 700; color: var(--text); }
         .block-body { padding: 24px; display: grid; gap: 18px; }
         .col-2 { grid-template-columns: 1fr 1fr; }
@@ -52,7 +52,7 @@
 
         {{-- HERO --}}
         <div style="margin-bottom:36px">
-            <p style="font-family:Arial,"Segoe UI",Tahoma,sans-serif; font-size:9px; letter-spacing:.22em; text-transform:uppercase; color:var(--muted2); margin-bottom:10px">
+            <p style="font-family:Arial,'Segoe UI',Tahoma,sans-serif; font-size:9px; letter-spacing:.22em; text-transform:uppercase; color:var(--muted2); margin-bottom:10px">
                 Onboarding · Cadastro de Cliente
             </p>
             <h1 style="font-size:clamp(22px,4vw,34px); font-weight:800; line-height:1.15; letter-spacing:-.02em; margin-bottom:12px">

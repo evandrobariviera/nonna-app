@@ -1056,7 +1056,7 @@ window._dossierUrls = {
     margin-bottom: 20px;
 }
 .section-tag {
-    font-family:Arial,"Segoe UI",Tahoma,sans-serif;
+    font-family:Arial,'Segoe UI',Tahoma,sans-serif;
     font-size: 9px;
     font-weight: 500;
     letter-spacing: .16em;
@@ -1075,7 +1075,7 @@ window._dossierUrls = {
 .form-group:last-child { margin-bottom: 0; }
 .form-label {
     display: block;
-    font-family:Arial,"Segoe UI",Tahoma,sans-serif;
+    font-family:Arial,'Segoe UI',Tahoma,sans-serif;
     font-size: 9px;
     font-weight: 500;
     letter-spacing: .16em;

@@ -13,8 +13,8 @@
     @vite(['resources/css/app.css'])
     <style>
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
-        .mono { font-family:Arial,"Segoe UI",Tahoma,sans-serif; }
-        .label-sm { font-family:Arial,"Segoe UI",Tahoma,sans-serif; font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
+        .mono { font-family:Arial,'Segoe UI',Tahoma,sans-serif; }
+        .label-sm { font-family:Arial,'Segoe UI',Tahoma,sans-serif; font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
 
         .piece-card { background: var(--s1); border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
 
@@ -47,7 +47,7 @@
         .file-link:hover { border-color: var(--purple); }
         .file-link + .file-link { border-top: 1px solid var(--border); }
 
-        .badge { font-family:Arial,"Segoe UI",Tahoma,sans-serif; font-size: 9px; letter-spacing: .1em; padding: 3px 8px; }
+        .badge { font-family:Arial,'Segoe UI',Tahoma,sans-serif; font-size: 9px; letter-spacing: .1em; padding: 3px 8px; }
         .badge-pending  { background: rgba(100,100,130,.2); color: var(--muted); }
         .badge-approved { background: rgba(34,197,94,.15); color: #22c55e; }
         .badge-changes  { background: rgba(238, 121, 25,.15); color: var(--orange); }
@@ -199,13 +199,13 @@
                             <a href="{{ $file->url() }}" target="_blank" class="file-link" style="border-top:1px solid var(--border)">
                                 <span style="font-size:22px">{{ $file->icon() }}</span>
                                 <span>Vídeo não abre? Baixar {{ $file->filename }}</span>
-                                <span style="margin-left:auto; font-size:10px; color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif">↗ abrir</span>
+                                <span style="margin-left:auto; font-size:10px; color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif">↗ abrir</span>
                             </a>
                         @else
                             <a href="{{ $file->url() }}" target="_blank" class="file-link">
                                 <span style="font-size:22px">{{ $file->icon() }}</span>
                                 <span>{{ $file->filename }}</span>
-                                <span style="margin-left:auto; font-size:10px; color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif">↗ abrir</span>
+                                <span style="margin-left:auto; font-size:10px; color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif">↗ abrir</span>
                             </a>
                         @endif
                     </div>

@@ -23,7 +23,7 @@
         <p style="font-size:14px; color:var(--muted2); line-height:1.7; margin-bottom:32px">
             Recebemos as suas informações. Nossa equipe vai entrar em contato em breve para dar início à sua estratégia.
         </p>
-        <p style="font-size:12px; color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif">
+        <p style="font-size:12px; color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif">
             Nonna Agência Digital
         </p>
     </div>
