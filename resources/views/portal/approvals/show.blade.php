@@ -106,6 +106,16 @@
                                 <span class="text-xs flex-shrink-0" style="color: var(--muted)">{{ $file->sizeForHumans() }}</span>
                             </div>
                         </a>
+                    @elseif($file->isVideo())
+                        <div class="rounded-lg overflow-hidden" style="border: 1px solid var(--border2)">
+                            <video controls preload="metadata" playsinline class="w-full h-40" style="background:#000; object-fit:contain">
+                                <source src="{{ $file->url() }}" type="{{ $file->mime_type }}">
+                            </video>
+                            <a href="{{ $file->url() }}" target="_blank" class="px-3 py-2 flex items-center justify-between" style="background: var(--s2); text-decoration:none">
+                                <span class="text-xs truncate" style="color: var(--text)">{{ $file->filename }}</span>
+                                <span class="text-xs flex-shrink-0" style="color: var(--muted)">↗ {{ $file->sizeForHumans() }}</span>
+                            </a>
+                        </div>
                     @else
                         <a href="{{ $file->url() }}" target="_blank"
                            class="flex items-center gap-3 p-3 rounded-lg transition-colors"

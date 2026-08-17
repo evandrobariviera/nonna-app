@@ -52,19 +52,21 @@ class ApprovalDashboardController extends Controller
     {
         $query = TaskApprovalRound::with(['task.client', 'tokens.contact', 'submittedBy'])
             ->whereHas('task')
-            // Rodada com ajuste pedido some daqui assim que a agência "trata" ela
-            // (roteia a tarefa de volta via o quick-select de status/situação) —
-            // continua intacta no histórico da tarefa/portal, só não polui mais
-            // a Central de Aprovações. Cancelada some sempre — cancelar já é a
-            // ação definitiva, não precisa de "tratar" depois (não fica visível
-            // nem filtrando por status=cancelled de propósito; histórico continua
-            // na tarefa/portal).
-            ->where(fn ($q) => $q->where('status', '!=', 'changes_requested')->orWhereNull('handled_at'))
+            // Cancelada some sempre — cancelar já é a ação definitiva, não precisa
+            // de "tratar" depois (não fica visível nem filtrando por
+            // status=cancelled de propósito; histórico continua na tarefa/portal).
             ->where('status', '!=', 'cancelled')
             ->orderByDesc('submitted_at');
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        } else {
+            // Ajuste solicitado já significa que a tarefa voltou pra produção —
+            // some da Lista assim que o cliente pede, sem esperar handled_at
+            // (esse continua valendo só pro Quadro e pro badge/sino, que rastreiam
+            // "ainda precisa rotear de volta pra Sprint" separado disso). Só
+            // aparece de novo aqui se o usuário filtrar por status explicitamente.
+            $query->where('status', '!=', 'changes_requested');
         }
 
         if ($request->filled('client_id')) {

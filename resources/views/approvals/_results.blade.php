@@ -245,7 +245,13 @@
                                          border:1px solid {{ $isCancelled ? 'var(--border2)' : ($notSent ? 'var(--border2)' : ($isApproved ? 'rgba(34,197,94,.25)' : ($isChanges ? 'rgba(238, 121, 25,.25)' : 'rgba(100, 59, 142,.25)'))) }}">
                                 {{ $round->displayStatusLabel() }}
                             </span>
-                            @if($total > 0)
+                            @if($total === 1)
+                                <a href="{{ route('approval.show', $round->tokens->first()->token) }}" target="_blank" rel="noopener"
+                                   class="btn btn-ghost btn-xs flex items-center gap-1" title="Abrir o link de aprovação em nova aba">
+                                    <x-icon name="link" size="12" />
+                                    Link
+                                </a>
+                            @elseif($total > 1)
                                 <div class="relative" x-data="{ open: false }">
                                     <button type="button" @click="open = !open" class="btn btn-ghost btn-xs flex items-center gap-1" title="Link de aprovação enviado ao cliente">
                                         <x-icon name="link" size="12" />
@@ -255,13 +261,12 @@
                                          class="absolute right-0 mt-1 z-20 py-1"
                                          style="min-width:220px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
                                         @foreach($round->tokens as $token)
-                                            <button type="button"
-                                                    onclick="navigator.clipboard.writeText('{{ route('approval.show', $token->token) }}')"
-                                                    class="w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors"
-                                                    style="color:var(--muted2)"
-                                                    onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
-                                                Copiar link — {{ $token->contact->name }}
-                                            </button>
+                                            <a href="{{ route('approval.show', $token->token) }}" target="_blank" rel="noopener"
+                                               class="w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors"
+                                               style="color:var(--muted2)"
+                                               onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                                Abrir link — {{ $token->contact->name }}
+                                            </a>
                                         @endforeach
                                     </div>
                                 </div>

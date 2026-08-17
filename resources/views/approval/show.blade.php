@@ -20,14 +20,20 @@
 
         .preview-img { width: 100%; max-height: 460px; object-fit: contain; background: #000; display: block; }
 
-        {{-- Material + Legenda: empilhado (material primeiro) em telas pequenas;
+        {{-- Material + Comentários: empilhado (material primeiro) em telas pequenas;
              lado a lado a partir de tablet/desktop. --}}
         .approval-media-row .media-col { min-width: 0; }
         @media (min-width: 768px) {
             .approval-media-row { display: flex; gap: 20px; align-items: flex-start; }
             .approval-media-row .media-col { flex: 1 1 60%; }
-            .approval-media-row .caption-col { flex: 1 1 40%; }
+            .approval-media-row .side-col { flex: 1 1 40%; }
         }
+
+        .comment-item { padding: 10px 0; }
+        .comment-item + .comment-item { border-top: 1px solid var(--border); }
+        .comment-author { font-size: 12px; font-weight: 700; color: var(--text); }
+        .comment-date { font-size: 10px; color: var(--muted); margin-left: 6px; }
+        .comment-body { font-size: 13px; color: var(--text); line-height: 1.6; white-space: pre-wrap; margin: 4px 0 0; }
 
         .btn-decision { flex: 1; padding: 12px 10px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; border: 2px solid var(--border2); cursor: pointer; transition: all .15s; background: transparent; color: var(--muted2); }
         .btn-decision.sel-approve  { border-color: #22c55e; background: rgba(34,197,94,.12); color: #22c55e; }
@@ -166,9 +172,19 @@
         </div>
         @endif
 
-        {{-- MATERIAL + LEGENDA — lado a lado a partir de tablet/desktop; em celular fica
-             empilhado na ordem do DOM (material primeiro, legenda depois). --}}
-        @if($deliverables->isNotEmpty() || $approvalToken->round->caption)
+        {{-- LEGENDA — largura cheia, acima do material + comentários. --}}
+        @if($approvalToken->round->caption)
+        <div class="piece-card" style="padding:18px">
+            <span class="label-sm">Legenda</span>
+            <p style="font-size:14px; white-space:pre-wrap; margin:0; color:var(--text); line-height:1.6">{{ $approvalToken->round->caption }}</p>
+        </div>
+        @endif
+
+        {{-- MATERIAL + COMENTÁRIOS — lado a lado a partir de tablet/desktop; em
+             celular fica empilhado na ordem do DOM (material primeiro). Os
+             comentários são os marcados como visíveis pro cliente na tarefa — é a
+             "venda" da arte feita pelo designer, explicando a produção. --}}
+        @if($deliverables->isNotEmpty() || $visibleComments->isNotEmpty())
         <div class="approval-media-row">
             @if($deliverables->isNotEmpty())
             <div class="media-col">
@@ -176,6 +192,15 @@
                     <div class="piece-card">
                         @if($file->isImage())
                             <img src="{{ $file->url() }}" alt="{{ $file->filename }}" class="preview-img">
+                        @elseif($file->isVideo())
+                            <video controls preload="metadata" playsinline class="preview-img">
+                                <source src="{{ $file->url() }}" type="{{ $file->mime_type }}">
+                            </video>
+                            <a href="{{ $file->url() }}" target="_blank" class="file-link" style="border-top:1px solid var(--border)">
+                                <span style="font-size:22px">{{ $file->icon() }}</span>
+                                <span>Vídeo não abre? Baixar {{ $file->filename }}</span>
+                                <span style="margin-left:auto; font-size:10px; color:var(--muted); font-family:Arial,"Segoe UI",Tahoma,sans-serif">↗ abrir</span>
+                            </a>
                         @else
                             <a href="{{ $file->url() }}" target="_blank" class="file-link">
                                 <span style="font-size:22px">{{ $file->icon() }}</span>
@@ -188,11 +213,17 @@
             </div>
             @endif
 
-            @if($approvalToken->round->caption)
-            <div class="caption-col">
+            @if($visibleComments->isNotEmpty())
+            <div class="side-col">
                 <div class="piece-card" style="padding:18px">
-                    <span class="label-sm">Legenda</span>
-                    <p style="font-size:14px; white-space:pre-wrap; margin:0; color:var(--text); line-height:1.6">{{ $approvalToken->round->caption }}</p>
+                    <span class="label-sm">Comentários</span>
+                    @foreach($visibleComments as $comment)
+                        <div class="comment-item">
+                            <span class="comment-author">{{ $comment->commenter()?->name ?? '—' }}</span>
+                            <span class="comment-date">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
+                            <p class="comment-body">{{ $comment->body }}</p>
+                        </div>
+                    @endforeach
                 </div>
             </div>
             @endif

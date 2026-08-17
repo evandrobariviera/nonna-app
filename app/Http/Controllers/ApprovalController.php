@@ -21,6 +21,10 @@ class ApprovalController extends Controller
                 // ajuste em cada uma) — pra o aprovador ver o quadro completo, não só
                 // a rodada atual.
                 'round.task.approvalRounds.tokens.contact',
+                // Comentários marcados como visíveis pro cliente na tarefa — é a
+                // "venda" da arte feita pelo designer, explicando a produção.
+                'round.task.comments.user',
+                'round.task.comments.contact',
                 'contact',
             ])
             ->firstOrFail();
@@ -40,8 +44,11 @@ class ApprovalController extends Controller
 
         $deliverables = $approvalToken->round->deliverables();
         $batch = $this->batchForContact($approvalToken);
+        $visibleComments = $approvalToken->round->task->comments
+            ->where('visible_to_client', true)
+            ->sortBy('created_at');
 
-        return view('approval.show', compact('approvalToken', 'deliverables', 'batch'));
+        return view('approval.show', compact('approvalToken', 'deliverables', 'batch', 'visibleComments'));
     }
 
     /**
