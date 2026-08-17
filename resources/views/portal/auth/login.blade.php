@@ -1,6 +1,10 @@
-<x-guest-layout>
+<x-portal-guest-layout>
     <div class="mb-8">
-        <h2 class="text-2xl font-black mb-1" style="color: var(--text)">Portal do Cliente</h2>
+        <span class="portal-badge mb-3" style="display:inline-flex">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Portal do Cliente
+        </span>
+        <h2 class="text-2xl font-black mt-3 mb-1" style="color: var(--text)">Acesse sua conta</h2>
         <p class="text-sm" style="color: var(--muted)">Entre com suas credenciais para acompanhar seus projetos</p>
     </div>
 
@@ -62,4 +66,4 @@
             Entrar
         </button>
     </form>
-</x-guest-layout>
+</x-portal-guest-layout>

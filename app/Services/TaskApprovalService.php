@@ -222,6 +222,17 @@ class TaskApprovalService
 
         $round->update(['status' => 'cancelled', 'resolved_at' => now()]);
 
+        // Libera os entregáveis dessa rodada (is_deliverable volta a false) —
+        // sem isso, maybeAutoSubmitOnApprovalTransition() nunca mais encontra
+        // esses arquivos como "novos" pra submeter (ela procura is_deliverable
+        // = false), e toda tentativa seguinte de reenviar a MESMA tarefa pra
+        // aprovação cai no fallback de "sem entregável" e cria um Aviso em vez
+        // de uma rodada de verdade — mesmo com os arquivos certos ali na tarefa.
+        TaskAttachment::where('task_id', $round->task_id)
+            ->where('kind', 'entregavel')
+            ->where('round_number', $round->round_number)
+            ->update(['is_deliverable' => false]);
+
         if ($wasPending) {
             $round->task->update(['status' => 'revisao_interna', 'situation' => 'Revisão Interna']);
         }

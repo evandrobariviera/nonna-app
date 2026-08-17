@@ -59,6 +59,17 @@ services:
       start_period: 240s
     deploy:
       replicas: 1
+      # Fixo no manager de propósito (incidente 2026-08-17): a rede overlay do
+      # Swarm entre o node "nonna-project-01-database" e o Traefik (que roda
+      # no manager) está quebrada — toda vez que o Swarm reagendava o
+      # container pra lá, o container ficava saudável por dentro mas
+      # inalcançável de fora, e o site caía. Enquanto isso não for corrigido
+      # na infra (rede overlay entre os dois nodes), manter fixo aqui evita
+      # repetir o incidente. Se um dia precisar rodar em mais de 1 réplica ou
+      # tirar essa trava, resolver a rede overlay primeiro.
+      placement:
+        constraints:
+          - node.hostname==nonna-project-02-manager
       update_config:
         parallelism: 1
         delay: 10s

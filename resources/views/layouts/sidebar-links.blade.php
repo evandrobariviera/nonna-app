@@ -1,30 +1,33 @@
+{{-- Esse partial é @include()ado 2x por página (sidebar desktop + menu mobile,
+     ver layouts/app.blade.php) — sem memoizar, cada contador aqui rodava a
+     query duas vezes por request, sempre, em toda tela do sistema. once()
+     memoiza pelo local da chamada (mesmo arquivo+linha), então a 2ª inclusão
+     reaproveita o resultado da 1ª em vez de rodar tudo de novo. --}}
 @php
-    $_sidebarSprints = \App\Models\Sprint::whereIn('status', ['active', 'planning'])
+    $_sidebarSprints = once(fn () => \App\Models\Sprint::whereIn('status', ['active', 'planning'])
         ->orderByRaw("CASE status WHEN 'active' THEN 0 ELSE 1 END")
         ->orderByDesc('starts_at')
         ->limit(5)
-        ->get(['id', 'title', 'status']);
+        ->get(['id', 'title', 'status']));
 
-    $_filaCount = \App\Models\Task::whereNull('sprint_id')
+    $_filaCount = once(fn () => \App\Models\Task::whereNull('sprint_id')
         ->whereNotIn('status', ['concluido', 'cancelado'])
-        ->count();
+        ->count());
 
-    $_approvalPending = \App\Models\TaskApprovalRound::whereIn('status', ['pending', 'changes_requested'])->count();
-
-    $_ticketsCount = \App\Models\Task::where('is_ticket', true)
+    $_ticketsCount = once(fn () => \App\Models\Task::where('is_ticket', true)
         ->whereNotIn('status', ['concluido', 'cancelado'])
         ->whereNull('sprint_id')
-        ->count();
+        ->count());
 
-    $_campaignInsightsCount = \App\Models\CampaignInsight::whereIn('status', ['novo', 'lido'])->count();
+    $_campaignInsightsCount = once(fn () => \App\Models\CampaignInsight::whereIn('status', ['novo', 'lido'])->count());
 
-    $_orcamentosAlertCount = \App\Models\ClientAdAccount::whereIn('platform', \App\Models\ClientAdAccount::billingPlatforms())
+    $_orcamentosAlertCount = once(fn () => \App\Models\ClientAdAccount::whereIn('platform', \App\Models\ClientAdAccount::billingPlatforms())
         ->where('budget_status', 'aguardando_pagto')
-        ->count();
+        ->count());
 
-    $_financialOverdueCount = \App\Models\FinancialTransaction::where('status', 'previsto')
+    $_financialOverdueCount = once(fn () => \App\Models\FinancialTransaction::where('status', 'previsto')
         ->where('due_date', '<', today())
-        ->count();
+        ->count());
 @endphp
 
 {{-- ══ CRM ══ --}}
@@ -197,9 +200,9 @@
 
 {{-- Aprovações --}}
 @php
-    $_approvalPending = \App\Models\TaskApprovalRound::where('status', 'pending')
+    $_approvalPending = once(fn () => \App\Models\TaskApprovalRound::where('status', 'pending')
         ->orWhere(fn ($q) => $q->where('status', 'changes_requested')->whereNull('handled_at'))
-        ->count();
+        ->count());
 @endphp
 <a href="{{ route('approvals.index') }}"
    class="nav-group-trigger {{ request()->routeIs('approvals.*') ? 'open' : '' }}"
