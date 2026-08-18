@@ -56,21 +56,33 @@ class DashboardController extends Controller
             $sprintTotal = $sprintDone = $sprintProgress = 0;
         }
 
-        // Camada operacional: minhas tarefas por etapa (sempre como executor).
-        // Ordenado/exibido por data de aprovação, não vencimento — é o prazo que
-        // importa pra essas etapas (ver dashboard.blade.php, quadro "Operação").
-        $myAdjustmentTasks = $this->executorTasksQuery($userId)
-            ->where('status', 'ajuste_alteracao')
-            ->with('client')->orderBy('approval_date')->limit(8)->get();
+        // Camada operacional: minhas tarefas por etapa (sempre como executor), só da
+        // sprint aberta — Operação é a única tela do time operacional, sem "Ver
+        // todas" pra outra página (o time se perdia nela); então mostra tudo aqui
+        // mesmo, sem limit(): se tiver dezenas de tarefas, a pessoa vê a régua real
+        // do que precisa cumprir. Ordenado/exibido por data de aprovação, não
+        // vencimento — é o prazo que importa pra essas etapas (dashboard.blade.php).
+        $myAdjustmentTasks = collect();
+        $myProductionTasks = collect();
+        $myReadyForProductionTasks = collect();
 
-        $myProductionTasks = $this->executorTasksQuery($userId)
-            ->where('status', 'em_producao')
-            ->with('client')->orderBy('approval_date')->limit(8)->get();
+        if ($activeSprint) {
+            $myAdjustmentTasks = $this->executorTasksQuery($userId)
+                ->where('sprint_id', $activeSprint->id)
+                ->where('status', 'ajuste_alteracao')
+                ->with('client')->orderBy('approval_date')->get();
 
-        $myReadyForProductionTasks = $this->executorTasksQuery($userId)
-            ->where('status', 'backlog')
-            ->where('situation', 'Pronto para produção')
-            ->with('client')->orderBy('approval_date')->limit(8)->get();
+            $myProductionTasks = $this->executorTasksQuery($userId)
+                ->where('sprint_id', $activeSprint->id)
+                ->where('status', 'em_producao')
+                ->with('client')->orderBy('approval_date')->get();
+
+            $myReadyForProductionTasks = $this->executorTasksQuery($userId)
+                ->where('sprint_id', $activeSprint->id)
+                ->where('status', 'backlog')
+                ->where('situation', 'Pronto para produção')
+                ->with('client')->orderBy('approval_date')->get();
+        }
 
         // "Meus Números na Sprint" — recorte pessoal acima dos 3 quadros de Operação:
         // quantas tarefas eu executo na sprint atual e como estão distribuídas por

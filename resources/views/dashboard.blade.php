@@ -311,8 +311,6 @@
                         <x-icon :name="$q['icon']" size="14" />
                         {{ $q['label'] }} (<span data-kanban-count>{{ $q['tasks']->count() }}</span>)
                     </h3>
-                    <a href="{{ route('tasks.index', ['executor_id' => auth()->id(), 'status' => $q['status']]) }}"
-                       class="text-xs font-mono" style="color:var(--purple)">Ver todas</a>
                 </div>
                 <div class="flex flex-col gap-2" style="min-height:40px" data-kanban-list>
                     @forelse($q['tasks'] as $task)
