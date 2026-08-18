@@ -100,7 +100,13 @@
                         <div class="grid grid-cols-3 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">CAMPO MONITORADO *</label>
+                                {{-- x-init força o valor de novo depois que o x-for (abaixo) já criou as
+                                     <option>s — sem isso, o x-model roda ANTES das options existirem
+                                     (select ainda só com "Selecione..."), o navegador ignora o valor
+                                     silenciosamente, e o campo salvo (ex: "situation") não aparece
+                                     selecionado ao editar, mesmo a automação continuando correta por baixo. --}}
                                 <select name="trigger_config[field]" x-model="fieldUpdatedField"
+                                        x-init="$nextTick(() => $el.value = fieldUpdatedField)"
                                         class="w-full px-3 py-2.5 text-sm focus:outline-none"
                                         style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                     <option value="">Selecione...</option>
@@ -252,7 +258,9 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">CAMPO</label>
+                                {{-- mesmo motivo do x-init em CAMPO MONITORADO acima --}}
                                 <select name="action_config[field]" x-model="actionField"
+                                        x-init="$nextTick(() => $el.value = actionField)"
                                         class="w-full px-3 py-2.5 text-sm focus:outline-none"
                                         style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                     <option value="">Selecione...</option>
@@ -263,7 +271,9 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">NOVO VALOR</label>
+                                {{-- mesmo motivo do x-init em CAMPO MONITORADO acima --}}
                                 <select name="action_config[value]" x-model="actionValue"
+                                        x-init="$nextTick(() => $el.value = actionValue)"
                                         x-show="Object.keys(actionFieldOptions()).length > 0"
                                         :disabled="Object.keys(actionFieldOptions()).length === 0"
                                         class="w-full px-3 py-2.5 text-sm focus:outline-none"

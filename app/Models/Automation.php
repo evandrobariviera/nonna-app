@@ -164,6 +164,7 @@ class Automation extends Model
     public function triggerSummary(): string
     {
         $config = $this->trigger_config ?? [];
+        $fields = self::conditionFieldsFor($this->entity_type);
 
         $base = match ($this->trigger_type) {
             'status_changed' => sprintf(
@@ -171,7 +172,12 @@ class Automation extends Model
                 $config['from'] ?? '*',
                 $config['to'] ?? '*'
             ),
-            'field_updated'  => 'Campo "' . ($config['field'] ?? '?') . '" atualizado',
+            'field_updated'  => sprintf(
+                'Campo "%s": "%s" → "%s"',
+                $fields[$config['field'] ?? '']['label'] ?? ($config['field'] ?? '?'),
+                $config['from'] ?? '*',
+                $config['to'] ?? '*'
+            ),
             'date_reached'   => 'Quando "' . (self::$dateFields[$config['date_field'] ?? ''] ?? '?') . '" chega',
             'executor_added' => 'Responsável/Executor adicionado',
             'created'        => 'Ao ser criado',
@@ -191,11 +197,12 @@ class Automation extends Model
     public function actionSummary(): string
     {
         $config = $this->action_config ?? [];
+        $fields = self::conditionFieldsFor($this->entity_type);
 
         return match ($this->action_type) {
             'run_ai_agent'      => 'Agente: ' . ($config['agent_name'] ?? $config['agent_id'] ?? '?'),
             'send_webhook'      => 'POST → ' . ($config['url'] ?? '?'),
-            'update_field'      => 'Campo "' . ($config['field'] ?? '?') . '" = "' . ($config['value'] ?? '?') . '"',
+            'update_field'      => 'Campo "' . ($fields[$config['field'] ?? '']['label'] ?? ($config['field'] ?? '?')) . '" = "' . ($config['value'] ?? '?') . '"',
             'send_notification' => 'Notificar ' . ($config['to'] ?? '?'),
             'create_record'     => 'Criar ' . (($config['record_type'] ?? 'ticket') === 'task' ? 'Tarefa' : 'Ticket'),
             'create_macroplan_review' => 'Cria Macroplanejamento + Reunião de Revisão Interna',
