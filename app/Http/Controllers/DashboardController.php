@@ -34,6 +34,14 @@ class DashboardController extends Controller
             $literaryQuote = $quotes[$daysSinceEpoch % $quotes->count()];
         }
 
+        // Pendências pessoais — logo abaixo do card da Sprint, propositalmente chamativa
+        // (ver dashboard.blade.php). Só "novo" (não "lido"): a seção deve sumir assim que
+        // resolvida, não continuar ali só porque foi vista.
+        $myNotifications = InternalNotification::where('user_id', $userId)
+            ->where('status', 'novo')
+            ->orderBy('generated_at')
+            ->get();
+
         $activeSprint = Sprint::where('status', 'active')->first();
         $sprintByStatus = collect();
         if ($activeSprint) {
@@ -256,7 +264,8 @@ class DashboardController extends Controller
             'roundsPending', 'roundsAwaitingSendCount', 'roundsApproved', 'roundsChangesRequested',
             'headsTickets', 'headsRevisaoInterna',
             'pendingTasksCount',
-            'creativosProntos', 'creativosProntosTasks', 'budgetsNeedingAddition', 'campaignsNeedingOptimization'
+            'creativosProntos', 'creativosProntosTasks', 'budgetsNeedingAddition', 'campaignsNeedingOptimization',
+            'myNotifications'
         ));
     }
 

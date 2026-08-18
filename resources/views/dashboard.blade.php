@@ -109,6 +109,48 @@
         </a>
     </div>
 
+    {{-- ── PENDÊNCIAS PESSOAIS — só as SUAS notificações (não a fila do papel, como
+         Mídia Paga abaixo). Some completamente sem nada pendente (ver
+         DashboardController::index(), filtra status=novo) — de propósito chamativa,
+         largura cheia, pra não passar batido igual um card discreto a mais. ── --}}
+    @if($myNotifications->isNotEmpty())
+        <div class="mb-6 flex flex-col gap-3">
+            @foreach($myNotifications as $notification)
+                <div class="flex items-center gap-4 px-5 py-4"
+                     style="background:rgba(238, 121, 25,.06); border:1px solid rgba(238, 121, 25,.3); border-left:4px solid var(--orange)">
+                    <x-icon-chip :icon="$notification->kindIcon()" color="orange" size="40" />
+                    @if($notification->link)
+                        <a href="{{ $notification->link }}" class="flex-1 min-w-0">
+                            <p class="text-sm font-bold" style="color:var(--text)">{{ $notification->title }}</p>
+                            @if($notification->body)
+                                <p class="text-xs mt-0.5" style="color:var(--muted2)">{{ $notification->body }}</p>
+                            @endif
+                        </a>
+                    @else
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold" style="color:var(--text)">{{ $notification->title }}</p>
+                            @if($notification->body)
+                                <p class="text-xs mt-0.5" style="color:var(--muted2)">{{ $notification->body }}</p>
+                            @endif
+                        </div>
+                    @endif
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <form method="POST" action="{{ route('notifications.update-status', $notification) }}">
+                            @csrf @method('PATCH')
+                            <input type="hidden" name="status" value="descartado">
+                            <button type="submit" class="btn btn-ghost btn-xs">Descartar</button>
+                        </form>
+                        <form method="POST" action="{{ route('notifications.update-status', $notification) }}">
+                            @csrf @method('PATCH')
+                            <input type="hidden" name="status" value="resolvido">
+                            <button type="submit" class="btn btn-primary btn-xs">✓ Resolver</button>
+                        </form>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
+
     {{-- ── LINHA 1.5: Agenda — quadro por status (para_agendar/agendada/pos_reuniao) ──
          Estático (sem drag-and-drop) — mudar status é só na própria página da reunião. --}}
     @php

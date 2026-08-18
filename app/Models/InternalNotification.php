@@ -37,6 +37,16 @@ class InternalNotification extends Model
         'descartado' => ['label' => 'Descartado', 'color' => 'muted'],
     ];
 
+    // 'kind' é texto livre (preenchido na automação que gera a notificação — ver
+    // AutomationJob::sendNotification) — mapa best-effort só pros valores conhecidos hoje;
+    // kind sem entrada aqui cai no ícone genérico (mesmo padrão de Task::$typeIcons).
+    public static array $kindIcons = [
+        'criativo_pronto_campanha' => 'palette',
+        'reuniao_lembrete'         => 'calendar',
+        'saldo_baixo'              => 'credit-card',
+        'automation'               => 'zap',
+    ];
+
     public function statusLabel(): string
     {
         return self::$statuses[$this->status]['label'] ?? $this->status;
@@ -45,6 +55,11 @@ class InternalNotification extends Model
     public function statusColor(): string
     {
         return self::$statuses[$this->status]['color'] ?? 'muted';
+    }
+
+    public function kindIcon(): string
+    {
+        return self::$kindIcons[$this->kind] ?? 'bell';
     }
 
     public function user(): BelongsTo
