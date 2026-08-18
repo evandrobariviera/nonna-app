@@ -69,11 +69,19 @@
                         </select>
                     </div>
 
+                    {{-- IMPORTANTE: trigger_config[from]/[to] existem duas vezes (aqui e no bloco
+                         "field_updated" logo abaixo) — MESMO name nos dois, porque só um bloco
+                         fica visível por vez (x-show). x-show só esconde com CSS, não remove do
+                         formulário: sem :disabled, os dois sempre eram enviados juntos no submit,
+                         e o PHP fica com o ÚLTIMO valor do corpo da request — o campo escondido
+                         sempre vencia e apagava o valor certo do campo visível (causa real de
+                         "salvei e o PARA sumiu", mesmo a tela mostrando o valor certo antes de
+                         salvar). --}}
                     <div x-show="triggerType === 'status_changed'" x-cloak>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DE (OPCIONAL)</label>
-                                <select name="trigger_config[from]"
+                                <select name="trigger_config[from]" :disabled="triggerType !== 'status_changed'"
                                         class="w-full px-3 py-2.5 text-sm focus:outline-none"
                                         style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                     <option value="*" {{ ($automation->trigger_config['from'] ?? '*') === '*' ? 'selected' : '' }}>Qualquer</option>
@@ -84,7 +92,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">PARA</label>
-                                <select name="trigger_config[to]"
+                                <select name="trigger_config[to]" :disabled="triggerType !== 'status_changed'"
                                         class="w-full px-3 py-2.5 text-sm focus:outline-none"
                                         style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                     <option value="">Selecione...</option>
@@ -107,6 +115,7 @@
                                      selecionado ao editar, mesmo a automação continuando correta por baixo. --}}
                                 <select name="trigger_config[field]" x-model="fieldUpdatedField"
                                         x-init="$nextTick(() => $el.value = fieldUpdatedField)"
+                                        :disabled="triggerType !== 'field_updated'"
                                         class="w-full px-3 py-2.5 text-sm focus:outline-none"
                                         style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                     <option value="">Selecione...</option>
@@ -117,7 +126,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DE (OPCIONAL)</label>
-                                <select name="trigger_config[from]"
+                                <select name="trigger_config[from]" :disabled="triggerType !== 'field_updated'"
                                         class="w-full px-3 py-2.5 text-sm focus:outline-none"
                                         style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                     <option value="*" {{ ($automation->trigger_config['from'] ?? '*') === '*' ? 'selected' : '' }}>Qualquer valor</option>
@@ -128,7 +137,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">PARA</label>
-                                <select name="trigger_config[to]"
+                                <select name="trigger_config[to]" :disabled="triggerType !== 'field_updated'"
                                         class="w-full px-3 py-2.5 text-sm focus:outline-none"
                                         style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                     <option value="">Qualquer valor</option>
@@ -175,7 +184,10 @@
 
                         <template x-for="(cond, idx) in conditions" :key="idx">
                             <div class="flex items-center gap-2 mb-2">
+                                {{-- mesmo motivo do x-init em CAMPO MONITORADO (acima) — options dinâmicas
+                                     via x-for, x-model sozinho não reaplica o valor salvo ao editar --}}
                                 <select :name="'trigger_config[conditions][' + idx + '][field]'" x-model="cond.field"
+                                        x-init="$nextTick(() => $el.value = cond.field)"
                                         class="flex-1 px-2 py-1.5 text-xs focus:outline-none"
                                         style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                     <option value="">Campo...</option>
@@ -189,6 +201,7 @@
                                     <option value="!=">não é</option>
                                 </select>
                                 <select :name="'trigger_config[conditions][' + idx + '][value]'" x-model="cond.value"
+                                        x-init="$nextTick(() => $el.value = cond.value)"
                                         class="flex-1 px-2 py-1.5 text-xs focus:outline-none"
                                         style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                     <option value="">Valor...</option>
