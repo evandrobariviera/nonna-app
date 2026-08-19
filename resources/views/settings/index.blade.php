@@ -597,26 +597,30 @@
                                     </span>
                                 </td>
                                 <td class="px-5 py-3.5">
-                                    @if(!$isOrgOwner)
-                                        <div class="flex items-center gap-2 justify-end">
-                                            <button type="button"
-                                                    @click="open({{ json_encode(['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'role' => $role, 'function_roles' => $member->functionalRoles->pluck('key')->all(), 'avatar_url' => $member->avatarUrl()]) }})"
-                                                    class="btn btn-ghost btn-xs">
-                                                Editar
-                                            </button>
-                                            @if(!$isSelf)
-                                                <form method="POST"
-                                                      action="{{ route('settings.members.destroy', $member) }}"
-                                                      @submit.prevent="if (await $store.confirmDialog.ask('Remover {{ addslashes($member->name) }} da organização?')) $el.submit()">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-xs">
-                                                        Remover
-                                                    </button>
-                                                </form>
-                                            @endif
-                                        </div>
-                                    @endif
+                                    <div class="flex items-center gap-2 justify-end">
+                                        {{-- Editar sempre disponível, inclusive pro dono da organização — só
+                                             a remoção é bloqueada pra ele (o backend já rejeita remover o
+                                             owner em OrganizationMemberController::destroy()). Antes o
+                                             @if(!$isOrgOwner) envolvia os dois botões e deixava o dono sem
+                                             nenhuma ação, inclusive impossibilitado de ajustar os próprios
+                                             papéis funcionais. --}}
+                                        <button type="button"
+                                                @click="open({{ json_encode(['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'role' => $role, 'function_roles' => $member->functionalRoles->pluck('key')->all(), 'avatar_url' => $member->avatarUrl()]) }})"
+                                                class="btn btn-ghost btn-xs">
+                                            Editar
+                                        </button>
+                                        @if(!$isOrgOwner && !$isSelf)
+                                            <form method="POST"
+                                                  action="{{ route('settings.members.destroy', $member) }}"
+                                                  @submit.prevent="if (await $store.confirmDialog.ask('Remover {{ addslashes($member->name) }} da organização?')) $el.submit()">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-xs">
+                                                    Remover
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
