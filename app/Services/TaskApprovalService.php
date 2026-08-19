@@ -88,6 +88,15 @@ class TaskApprovalService
      */
     public function submitForApproval(Task $task, User $submitter, array $attachmentIds, ?string $notes = null): TaskApprovalRound
     {
+        // Reenviar já significa "tratamos o retorno do cliente" — sem isso, a rodada antiga
+        // (Ajustes Solicitados, sem handled_at) ficava viva na Central de Aprovações ao mesmo
+        // tempo que a rodada nova (Aguardando Envio/Resposta), fazendo a MESMA tarefa aparecer
+        // em duas colunas do quadro simultaneamente (confusão relatada pelo Alisson).
+        $task->approvalRounds()
+            ->where('status', 'changes_requested')
+            ->whereNull('handled_at')
+            ->update(['handled_at' => now()]);
+
         $roundNumber = $task->approvalRounds()->count() + 1;
 
         TaskAttachment::whereIn('id', $attachmentIds)
