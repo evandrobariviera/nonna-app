@@ -156,9 +156,12 @@ class TaskController extends Controller
             'activities.user',
             'latestApprovalRound.tokens.contact',
             'approvalRounds.tokens.contact',
+            'checklistItems.assignedTo',
         ]);
 
-        $users  = User::orderBy('name')->get(['id', 'name']);
+        // avatar_path/avatar_disk também — o dropdown "Item de ação" (assinar comentário
+        // a alguém) mostra a foto de quem pode ser escolhido, mesmo padrão de SprintController.
+        $users  = User::orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']);
         $agents = AiAgent::where('is_active', true)->orderBy('name')->get(['id', 'name']);
 
         // Projetos do mesmo cliente da tarefa, pra permitir reatribuir direto

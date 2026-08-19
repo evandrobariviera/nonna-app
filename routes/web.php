@@ -442,6 +442,14 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::delete('/tarefas/{task}/comentarios/{comment}', [TaskCommentController::class, 'destroy'])
         ->name('task-comments.destroy');
 
+    // ── Itens de Ação (checklist nascido de comentário) ──
+    Route::post('/tarefas/{task}/itens-acao', [\App\Http\Controllers\TaskChecklistItemController::class, 'store'])
+        ->name('task-checklist-items.store');
+    Route::patch('/tarefas/{task}/itens-acao/{item}/concluir', [\App\Http\Controllers\TaskChecklistItemController::class, 'toggle'])
+        ->name('task-checklist-items.toggle');
+    Route::delete('/tarefas/{task}/itens-acao/{item}', [\App\Http\Controllers\TaskChecklistItemController::class, 'destroy'])
+        ->name('task-checklist-items.destroy');
+
     // ── Submissão para aprovação (autenticado — designer/gestor) ──
     Route::post('/tarefas/{task}/aprovacao', [TaskApprovalController::class, 'store'])
         ->name('task-approval.store');

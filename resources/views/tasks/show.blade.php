@@ -1184,6 +1184,54 @@
                 </div>
             @endif
 
+            {{-- ══ ITENS DE AÇÃO — checklist nascido de comentário virado tarefa pra alguém
+                 (ver TaskChecklistItemController). Pendente primeiro (ordenação já vem do
+                 relacionamento Task::checklistItems()), concluído fica riscado no fim. ══ --}}
+            @if($task->checklistItems->isNotEmpty())
+                <div class="card card-body-lg">
+                    <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                        <span class="icon-badge">
+                            <x-icon name="list-checks" size="16" />
+                        </span>
+                        Itens de Ação
+                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">
+                            {{ $task->checklistItems->where('done', false)->count() }}/{{ $task->checklistItems->count() }}
+                        </span>
+                    </p>
+                    <div class="flex flex-col">
+                        @foreach($task->checklistItems as $item)
+                            <div class="flex items-start gap-2.5 py-2.5" style="{{ !$loop->last ? 'border-bottom:1px solid var(--border2)' : '' }}">
+                                <form method="POST" action="{{ route('task-checklist-items.toggle', [$task, $item]) }}" class="mt-0.5 flex-shrink-0">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" title="{{ $item->done ? 'Marcar como pendente' : 'Marcar como concluído' }}"
+                                            style="background:none; border:none; padding:0; cursor:pointer; line-height:0">
+                                        <x-icon :name="$item->done ? 'square-check' : 'square'" size="16" style="color:{{ $item->done ? 'var(--green)' : 'var(--muted)' }}" />
+                                    </button>
+                                </form>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm" style="color:var(--text); {{ $item->done ? 'text-decoration:line-through; opacity:.55' : '' }}">
+                                        {{ $item->title }}
+                                    </p>
+                                    <div class="flex items-center gap-1.5 mt-1">
+                                        <x-user-avatar :user="$item->assignedTo" size="4" />
+                                        <span class="text-xs" style="color:var(--muted)">{{ $item->assignedTo?->name ?? '—' }}</span>
+                                        @if($item->source_comment_id)
+                                            <span style="color:var(--border2)">·</span>
+                                            <a href="#comentarios" class="text-xs" style="color:var(--muted2)">do comentário</a>
+                                        @endif
+                                    </div>
+                                </div>
+                                <form method="POST" action="{{ route('task-checklist-items.destroy', [$task, $item]) }}"
+                                      @submit.prevent="if (await $store.confirmDialog.ask('Remover esse item de ação?')) $el.submit()" class="flex-shrink-0">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="text-xs" style="color:var(--muted2)" title="Remover">✕</button>
+                                </form>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             {{-- ══ COMENTÁRIOS (antes na coluna principal, movido pra lateral) ══ --}}
             <div class="card card-body-lg" id="comentarios" x-data="{ editId: null }">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-5 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
@@ -1240,8 +1288,38 @@
                                             }
                                         @endphp
                                         <div class="ProseMirror" style="color:var(--text); line-height:1.65">{!! $commentHtml !!}</div>
-                                        @if($comment->user_id === auth()->id())
-                                            <div class="flex items-center gap-3 mt-1.5">
+                                        <div class="flex items-center gap-3 mt-1.5">
+                                            {{-- Item de ação — vira checklist atribuído a alguém (ver
+                                                 TaskChecklistItemController). Disponível em qualquer
+                                                 comentário, não só o próprio (quem lê decide o que virar tarefa). --}}
+                                            <div class="relative" x-data="{ assignOpen: false }">
+                                                <button type="button" @click="assignOpen = !assignOpen"
+                                                        class="flex items-center gap-1 text-xs font-mono" style="color:var(--muted)"
+                                                        title="Atribuir o comentário como item de ação">
+                                                    <x-icon name="list-checks" size="12" />
+                                                    Item de ação
+                                                </button>
+                                                <div x-show="assignOpen" @click.outside="assignOpen = false" x-cloak
+                                                     class="absolute left-0 mt-1 z-20 py-1"
+                                                     style="min-width:200px; max-height:260px; overflow-y:auto; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
+                                                    <p class="px-3 py-1.5 text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Atribuir a</p>
+                                                    @foreach($users as $u)
+                                                        <form method="POST" action="{{ route('task-checklist-items.store', $task) }}">
+                                                            @csrf
+                                                            <input type="hidden" name="comment_id" value="{{ $comment->id }}">
+                                                            <input type="hidden" name="assigned_to" value="{{ $u->id }}">
+                                                            <button type="submit"
+                                                                    class="w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors"
+                                                                    style="color:var(--muted2)"
+                                                                    onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                                                <x-user-avatar :user="$u" size="5" />
+                                                                {{ $u->name }}
+                                                            </button>
+                                                        </form>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                            @if($comment->user_id === auth()->id())
                                                 <button type="button" @click="editId = '{{ $comment->id }}'" class="text-xs font-mono" style="color:var(--muted)">Editar</button>
                                                 <form method="POST"
                                                       action="{{ route('task-comments.destroy', [$task, $comment]) }}"
@@ -1249,8 +1327,8 @@
                                                     @csrf @method('DELETE')
                                                     <button type="submit" class="text-xs font-mono" style="color:var(--red)">Remover</button>
                                                 </form>
-                                            </div>
-                                        @endif
+                                            @endif
+                                        </div>
                                     </div>
 
                                     {{-- Edição --}}

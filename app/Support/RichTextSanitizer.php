@@ -60,6 +60,25 @@ class RichTextSanitizer
         return $out;
     }
 
+    // Texto puro do HTML rico — usado pra virar título de item de ação (checklist)
+    // a partir de um comentário: perde formatação de propósito, só o texto.
+    public static function toPlainText(?string $html): string
+    {
+        $html = trim((string) $html);
+        if ($html === '') {
+            return '';
+        }
+
+        $dom = new DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML('<?xml encoding="utf-8" ?><div>' . $html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_clear_errors();
+
+        $text = trim(preg_replace('/\s+/', ' ', $dom->textContent ?? ''));
+
+        return $text;
+    }
+
     private static function cleanChildren(DOMNode $node): void
     {
         foreach (iterator_to_array($node->childNodes) as $child) {

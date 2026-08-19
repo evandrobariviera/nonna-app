@@ -379,6 +379,14 @@ class Task extends Model
         return $this->hasMany(TaskActivity::class)->orderByDesc('created_at');
     }
 
+    // Itens de ação — checklist nascido de um comentário virado tarefa pra alguém
+    // (ver TaskChecklistItemController). Pendentes primeiro, mais recentes primeiro
+    // dentro de cada grupo — feito vira "arquivado visualmente" no fim da lista.
+    public function checklistItems(): HasMany
+    {
+        return $this->hasMany(TaskChecklistItem::class)->orderBy('done')->orderByDesc('created_at');
+    }
+
     /**
      * Tarefa "pendente" = falta algum dado essencial pra entrar em produção/sprint (datas,
      * destino, executor, responsável, descrição, origem, situação). Usado pro card de
