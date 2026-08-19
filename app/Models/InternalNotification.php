@@ -45,6 +45,7 @@ class InternalNotification extends Model
         'reuniao_lembrete'         => 'calendar',
         'saldo_baixo'              => 'credit-card',
         'automation'               => 'zap',
+        'modulo_solicitado'        => 'megaphone',
     ];
 
     public function statusLabel(): string

@@ -14,6 +14,8 @@
         ->where('status', 'em_execucao')
         ->orderByDesc('period_start')
         ->first();
+
+    $_leadsModuleActive = $_portalClient->moduleStatus('central_leads') === 'ativo';
 @endphp
 
 {{-- ══ ATENDIMENTO ══ --}}
@@ -69,6 +71,20 @@
 
 {{-- ══ ESTRATÉGICO ══ --}}
 <div class="nav-group-label" style="margin-top:8px">Estratégico</div>
+
+<a href="{{ route('portal.leads.index') }}"
+   class="nav-group-trigger {{ request()->routeIs('portal.leads.*') ? 'open' : '' }}"
+   style="{{ request()->routeIs('portal.leads.*') ? 'color:var(--purple);' : '' }}">
+    <span class="flex items-center gap-3">
+        <x-icon name="megaphone" size="16" class="flex-shrink-0" />
+        <span class="flex items-center justify-between w-full">
+            <span>Central de Leads</span>
+            @unless($_leadsModuleActive)
+                <span class="badge badge-muted" style="font-size:9px; padding:1px 6px; white-space:nowrap; flex-shrink:0">Contratar</span>
+            @endunless
+        </span>
+    </span>
+</a>
 
 <span class="nav-group-trigger" style="opacity:.45; cursor:not-allowed">
     <span class="flex items-center gap-3">

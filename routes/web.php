@@ -13,6 +13,7 @@ use App\Http\Controllers\Portal\TicketController as PortalTickets;
 use App\Http\Controllers\Portal\ApprovalController as PortalApprovals;
 use App\Http\Controllers\Portal\TaskCommentController as PortalTaskComments;
 use App\Http\Controllers\Portal\ProductionController as PortalProduction;
+use App\Http\Controllers\Portal\LeadController as PortalLeads;
 use App\Http\Controllers\Portal\Auth\AuthenticatedSessionController as PortalSession;
 use App\Http\Controllers\Portal\ClientContextController as PortalClientContext;
 use App\Http\Controllers\ClientPortalAccessController;
@@ -44,6 +45,7 @@ use App\Http\Controllers\MacroPlanController;
 use App\Http\Controllers\MacroPlanAttachmentController;
 use App\Http\Controllers\MacroPlanImportController;
 use App\Http\Controllers\MeetingAttachmentController;
+use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\OpportunityController;
 use App\Http\Controllers\ProjectController;
@@ -334,6 +336,22 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
 
     Route::post('/oportunidades/{opportunity}/perder', [OpportunityController::class, 'lose'])
         ->name('opportunities.lose');
+
+    // ── CRM: Central de Leads (leads dos CLIENTES da Nonna, não o funil comercial acima) ──
+    Route::get('/central-de-leads', [LeadController::class, 'index'])
+        ->name('leads.index');
+
+    Route::get('/central-de-leads/{lead}', [LeadController::class, 'show'])
+        ->name('leads.show');
+
+    Route::patch('/central-de-leads/{lead}', [LeadController::class, 'update'])
+        ->name('leads.update');
+
+    Route::post('/central-de-leads/{lead}/notas', [LeadController::class, 'storeNote'])
+        ->name('leads.notes.store');
+
+    Route::patch('/central-de-leads/{lead}/stage', [LeadController::class, 'updateStage'])
+        ->name('leads.update-stage');
 
     // ── Agenda (Reuniões) ──
     // Precisa vir ANTES do resource() — senão "resultados" colide com o {meeting}
@@ -766,6 +784,11 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
     Route::get('/aprovacoes/{round}', [PortalApprovals::class, 'show'])->name('approvals.show');
     Route::post('/aprovacoes/{round}/decidir', [PortalApprovals::class, 'decide'])->name('approvals.decide');
     Route::get('/producao', [PortalProduction::class, 'index'])->name('production.index');
+    Route::get('/central-de-leads', [PortalLeads::class, 'index'])->name('leads.index');
+    Route::get('/central-de-leads/{lead}', [PortalLeads::class, 'show'])->name('leads.show');
+    Route::post('/central-de-leads/{lead}/notas', [PortalLeads::class, 'storeNote'])->name('leads.notes.store');
+    Route::patch('/central-de-leads/{lead}/stage', [PortalLeads::class, 'updateStage'])->name('leads.update-stage');
+    Route::post('/central-de-leads/contratar', [PortalLeads::class, 'requestModule'])->name('leads.request-module');
     Route::get('/campanhas', [PortalCampaigns::class, 'index'])->name('campaigns.index');
     Route::get('/campanhas/{campaign}', [PortalCampaigns::class, 'show'])->name('campaigns.show');
     Route::get('/boletos', [PortalBilling::class, 'index'])->name('boletos.index');

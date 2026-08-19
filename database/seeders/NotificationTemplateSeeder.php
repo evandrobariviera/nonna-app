@@ -105,6 +105,15 @@ class NotificationTemplateSeeder extends Seeder
                     'body'    => "Olá {{contato}},\n\nConfirmamos o encerramento do contrato de {{cliente}} com a Nonna, previsto para {{data_encerramento}}.\n\nVamos acompanhar de perto essa transição pra garantir que tudo corra da melhor forma possível.\n\nQualquer dúvida, estamos à disposição.\n\nEquipe Nonna",
                 ],
             ],
+            'lead_capturado' => [
+                'whatsapp' => [
+                    'body' => "Oi {{contato}}! Chegou um lead novo pra {{cliente}} via {{canal}}: {{lead_nome}} ({{lead_telefone}}).",
+                ],
+                'email' => [
+                    'subject' => 'Novo lead capturado — {{cliente}}',
+                    'body'    => "Olá {{contato}},\n\nUm novo lead foi capturado para {{cliente}} via {{canal}}.\n\nNome: {{lead_nome}}\nTelefone: {{lead_telefone}}\n\nEquipe Nonna",
+                ],
+            ],
         ];
 
         $organizationIds = Organization::pluck('id');

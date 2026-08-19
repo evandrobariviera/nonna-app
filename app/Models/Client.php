@@ -273,6 +273,26 @@ class Client extends Model
         return $this->serviceDiagnostics()->where('status', 'published')->first();
     }
 
+    public function leadSources(): HasMany
+    {
+        return $this->hasMany(ClientLeadSource::class);
+    }
+
+    public function leads(): HasMany
+    {
+        return $this->hasMany(ClientLead::class);
+    }
+
+    public function modules(): HasMany
+    {
+        return $this->hasMany(ClientModule::class);
+    }
+
+    public function moduleStatus(string $moduleKey): string
+    {
+        return $this->modules()->where('module_key', $moduleKey)->value('status') ?? 'nao_contratado';
+    }
+
     // Delete de verdade só é permitido quando não sobra NENHUMA associação —
     // devolve um mapa label => contagem só com o que estiver bloqueando
     // (array vazio = seguro apagar). Usado por ClientController::destroy().
@@ -294,6 +314,7 @@ class Client extends Model
             'conversas de atendimento'     => $this->serviceConversations()->count(),
             'diagnósticos de atendimento assistido' => $this->serviceDiagnostics()->count(),
             'links salvos'                 => $this->links()->count(),
+            'leads captados'               => $this->leads()->count(),
             'onboarding'                   => $this->onboarding ? 1 : 0,
         ];
 

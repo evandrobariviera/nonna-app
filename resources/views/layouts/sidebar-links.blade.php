@@ -33,13 +33,23 @@
 {{-- ══ CRM ══ --}}
 <div class="nav-group-label">CRM</div>
 
-{{-- Comercial (só Oportunidades — Contratos mora em Financeiro) --}}
+{{-- Comercial (Oportunidades + Central de Leads — Contratos mora em Financeiro) --}}
 <a href="{{ route('opportunities.index') }}"
    class="nav-group-trigger {{ request()->routeIs('opportunities.*') ? 'open' : '' }}"
    style="{{ request()->routeIs('opportunities.*') ? 'color:var(--purple);' : '' }}">
     <span class="flex items-center gap-3">
         <x-icon name="receipt" size="16" class="flex-shrink-0" />
         Oportunidades
+    </span>
+</a>
+
+{{-- Leads dos CLIENTES da Nonna (site/Meta/WhatsApp) — diferente de Oportunidades acima --}}
+<a href="{{ route('leads.index') }}"
+   class="nav-group-trigger {{ request()->routeIs('leads.*') ? 'open' : '' }}"
+   style="{{ request()->routeIs('leads.*') ? 'color:var(--purple);' : '' }}">
+    <span class="flex items-center gap-3">
+        <x-icon name="megaphone" size="16" class="flex-shrink-0" />
+        Central de Leads
     </span>
 </a>
 

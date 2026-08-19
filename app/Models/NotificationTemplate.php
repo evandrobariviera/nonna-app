@@ -29,6 +29,7 @@ class NotificationTemplate extends Model
         'cobranca'               => 'Cobrança / Faturamento',
         'cs_survey'              => 'Pesquisa de Satisfação (CS)',
         'offboarding'            => 'Offboarding',
+        'lead_capturado'         => 'Lead Capturado (Central de Leads)',
     ];
 
     public static array $channels = [
@@ -50,6 +51,7 @@ class NotificationTemplate extends Model
         'cobranca'               => ['{{cliente}}', '{{contato}}', '{{valor}}', '{{vencimento}}', '{{link_fatura}}'],
         'cs_survey'              => ['{{cliente}}', '{{contato}}', '{{link_pesquisa}}'],
         'offboarding'            => ['{{cliente}}', '{{contato}}', '{{data_encerramento}}'],
+        'lead_capturado'         => ['{{cliente}}', '{{contato}}', '{{lead_nome}}', '{{lead_telefone}}', '{{canal}}'],
     ];
 
     public function organization(): BelongsTo
