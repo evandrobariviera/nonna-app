@@ -172,10 +172,6 @@ class TaskController extends Controller
 
         $clients = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
 
-        // Pro botão Fila ↔ Sprint do cabeçalho: se a tarefa não estiver em
-        // nenhuma sprint, "→ Sprint" manda pra essa (só existe uma ativa por vez).
-        $activeSprint = Sprint::where('status', 'active')->first();
-
         // Pro seletor "mudar de sprint" do campo Sprint — mesmo recorte (aberta pra
         // receber tarefa) da Fila/Ticket (ver TicketController). Se a sprint atual da
         // tarefa já estiver encerrada, inclui ela também — senão o <select> perderia o
@@ -205,51 +201,67 @@ class TaskController extends Controller
                 ->values()
             : collect();
 
-        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages', 'clientProjects', 'clients', 'activeSprint', 'sprints'));
+        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages', 'clientProjects', 'clients', 'sprints'));
     }
 
-    public function updateInline(Request $request, Task $task)
+    // Campo único, salvo na hora (clicou/saiu do campo já grava) — cobre todo campo
+    // "simples" da tarefa que não carrega regra de negócio própria (isso continua em
+    // endpoints dedicados: status/situação/prioridade/responsável/executor/cliente/
+    // projeto/sprint, cada um com sua validação/efeito colateral específico). Ver
+    // tasks/show.blade.php (inlineField/debouncedField) — nenhum campo da tarefa
+    // depende mais de um botão "Editar" + "Salvar".
+    private function simpleFieldRules(): array
     {
-        $situationKeys = array_keys(array_filter(Task::$situations, fn($k) => $k !== '', ARRAY_FILTER_USE_KEY));
+        return [
+            'title'              => ['required', 'string', 'max:300'],
+            'description'        => ['nullable', 'string'],
+            'task_type'          => ['required', 'in:' . implode(',', array_keys(Task::$types))],
+            'destination'        => ['nullable', 'in:' . implode(',', array_keys(Task::$destinations))],
+            'origin'             => ['nullable', 'in:' . implode(',', array_keys(Task::$origins))],
+            'approval_method'    => ['nullable', 'in:' . implode(',', array_keys(Task::$approvalMethods))],
+            'due_date'           => ['nullable', 'date'],
+            'approval_date'      => ['nullable', 'date'],
+            'publish_date'       => ['nullable', 'date'],
+        ];
+    }
 
+    public function updateField(Request $request, Task $task)
+    {
+        $rules = $this->simpleFieldRules();
+
+        $field = $request->validate(['field' => 'required|in:' . implode(',', array_keys($rules))])['field'];
+        $value = $request->validate(['value' => $rules[$field]])['value'] ?? null;
+
+        $task->update([$field => $value]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->back()->with('success', 'Tarefa atualizada.');
+    }
+
+    // Observadores — igual syncPersonnel() faz pro papel 'observador', só que sozinho
+    // (sem mexer em executor/responsável), pra poder salvar a cada adição/remoção de
+    // chip sem esperar um "Salvar" geral.
+    public function updateObservers(Request $request, Task $task)
+    {
         $data = $request->validate([
-            'title'              => 'required|string|max:300',
-            'description'        => 'nullable|string',
-            'task_type'          => 'required|in:' . implode(',', array_keys(Task::$types)),
-            'destination'        => 'nullable|in:' . implode(',', array_keys(Task::$destinations)),
-            'situation'          => 'nullable|in:' . implode(',', $situationKeys),
-            'status'             => 'required|in:' . implode(',', array_keys(Task::$statuses)),
-            'origin'             => 'nullable|in:' . implode(',', array_keys(Task::$origins)),
-            'priority'           => 'nullable|in:urgente,medio,normal',
-            'approval_method'    => 'nullable|in:' . implode(',', array_keys(Task::$approvalMethods)),
-            'internal_approval'  => 'nullable|boolean',
-            'due_date'           => 'nullable|date',
-            'approval_date'      => 'nullable|date',
-            'publish_date'       => 'nullable|date',
-            'executor_id'        => 'nullable|exists:users,id',
-            'responsavel_id'     => 'nullable|exists:users,id',
-            'observer_ids'       => 'nullable|array',
-            'observer_ids.*'     => 'exists:users,id',
-            'requester_name'     => 'nullable|string|max:150',
-            'requester_whatsapp' => 'nullable|string|max:30',
-            'requester_channel'  => 'nullable|in:' . implode(',', array_keys(Task::$requesterChannels)),
-            'sprint_id'          => 'nullable|uuid|exists:sprints,id',
+            'observer_ids'   => 'nullable|array',
+            'observer_ids.*' => 'exists:users,id',
         ]);
 
-        if ($reason = $this->wipBlockReasonForSave($task, $data['status'], $data['executor_id'] ?? null, $request->has('executor_id'))) {
-            throw ValidationException::withMessages(['status' => $reason]);
+        TaskExecutor::where('task_id', $task->id)->where('role', 'observador')->delete();
+
+        foreach (array_unique($data['observer_ids'] ?? []) as $uid) {
+            $task->executors()->attach($uid, ['role' => 'observador']);
         }
 
-        $task->update([
-            ...$data,
-            'internal_approval' => $request->boolean('internal_approval'),
-        ]);
-
-        if ($request->hasAny(['executor_id', 'responsavel_id', 'observer_ids'])) {
-            $this->syncPersonnel($task, $data);
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
         }
 
-        return redirect()->route('tasks.show', $task)->with('success', 'Tarefa atualizada.');
+        return redirect()->back()->with('success', 'Observadores atualizados.');
     }
 
     public function store(Request $request, MacroPlan $macroplan, Project $project)
@@ -359,6 +371,10 @@ class TaskController extends Controller
             'priority' => 'required|in:urgente,medio,normal',
         ])['priority']]);
 
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
         return redirect()->back()->with('success', 'Prioridade atualizada.');
     }
 
@@ -382,6 +398,10 @@ class TaskController extends Controller
         $task->update(['caption' => $request->validate([
             'caption' => 'nullable|string',
         ])['caption']]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->back()->with('success', 'Legenda atualizada.');
     }
@@ -475,10 +495,19 @@ class TaskController extends Controller
 
         if ($data['project_id']) {
             $project = Project::findOrFail($data['project_id']);
-            abort_unless((string) $task->client_id === (string) $project->client_id, 422, 'Esse projeto é de outro cliente.');
+            if ((string) $task->client_id !== (string) $project->client_id) {
+                if ($request->wantsJson()) {
+                    return response()->json(['message' => 'Esse projeto é de outro cliente.'], 422);
+                }
+                abort(422, 'Esse projeto é de outro cliente.');
+            }
         }
 
         $task->update(['project_id' => $data['project_id']]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->back()->with('success', 'Projeto atualizado.');
     }
@@ -492,25 +521,33 @@ class TaskController extends Controller
         $data = $request->validate(['sprint_id' => 'nullable|uuid|exists:pgsql.sprints,id']);
 
         if ($data['sprint_id'] === $task->sprint_id) {
-            return redirect()->back();
+            return $request->wantsJson() ? response()->json(['success' => true]) : redirect()->back();
         }
 
+        $error = null;
         if ($task->sprint_id && $task->sprint?->isLocked()) {
-            abort(403, 'Sprint atual travada. Desbloqueie antes de mover essa tarefa.');
-        }
-
-        if ($data['sprint_id']) {
+            $error = 'Sprint atual travada. Desbloqueie antes de mover essa tarefa.';
+        } elseif ($data['sprint_id']) {
             $sprint = Sprint::findOrFail($data['sprint_id']);
-            abort_if($sprint->status === 'closed', 403, 'Essa sprint está encerrada.');
-
-            if ($task->isPendente()) {
-                throw ValidationException::withMessages([
-                    'pendencia' => 'Essa tarefa tem pendências de cadastro e não pode ser adicionada à sprint. Corrija-a antes.',
-                ]);
+            if ($sprint->status === 'closed') {
+                $error = 'Essa sprint está encerrada.';
+            } elseif ($task->isPendente()) {
+                $error = 'Essa tarefa tem pendências de cadastro e não pode ser adicionada à sprint. Corrija-a antes.';
             }
         }
 
+        if ($error) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => $error], 422);
+            }
+            throw ValidationException::withMessages(['sprint_id' => $error]);
+        }
+
         $task->update(['sprint_id' => $data['sprint_id']]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->back()->with('success', $data['sprint_id'] ? 'Tarefa movida para a sprint.' : 'Tarefa devolvida para a Fila.');
     }
@@ -524,15 +561,25 @@ class TaskController extends Controller
         $data = $request->validate(['client_id' => 'required|uuid|exists:pgsql.clients,id']);
 
         if ($data['client_id'] === $task->client_id) {
-            return redirect()->back();
+            return $request->wantsJson() ? response()->json(['success' => true]) : redirect()->back();
         }
 
-        abort_if($task->approvalRounds()->where('status', 'pending')->exists(), 422, 'Essa tarefa tem uma rodada de aprovação pendente — resolva ou cancele antes de trocar o cliente.');
+        if ($task->approvalRounds()->where('status', 'pending')->exists()) {
+            $error = 'Essa tarefa tem uma rodada de aprovação pendente — resolva ou cancele antes de trocar o cliente.';
+            if ($request->wantsJson()) {
+                return response()->json(['message' => $error], 422);
+            }
+            abort(422, $error);
+        }
 
         $task->update([
             'client_id'  => $data['client_id'],
             'project_id' => null,
         ]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->back()->with('success', 'Cliente atualizado.');
     }
@@ -625,8 +672,8 @@ class TaskController extends Controller
         return Task::wipBlockReason($execId, $task->id);
     }
 
-    // Variante pra formulários que reenviam status + executor juntos (updateInline,
-    // update/updateStandalone) — dispara se o status está virando em_producao OU se
+    // Variante pra formulários que reenviam status + executor juntos (update/
+    // updateStandalone) — dispara se o status está virando em_producao OU se
     // o executor está mudando numa tarefa que já está em_producao.
     private function wipBlockReasonForSave(Task $task, string $newStatus, ?string $newExecutorId, bool $executorSubmitted = true): ?string
     {

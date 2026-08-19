@@ -75,16 +75,99 @@
         document.addEventListener('alpine:init', () => {
             Alpine.store('ui', { chatOpen: false });
 
-            Alpine.data('observerPicker', (initial = []) => ({
+            // Observadores salva na hora a cada adição/remoção (PATCH pra
+            // tasks.update-observers) — não depende mais de um "Salvar" geral.
+            Alpine.data('observerPicker', (initial = [], url = '') => ({
                 selected: initial,
+                saving: false,
                 add(event) {
                     const id   = event.target.value;
                     const name = event.target.selectedOptions[0]?.dataset?.name;
                     if (!id || this.selected.find(s => s.id == id)) { event.target.value = ''; return; }
                     this.selected.push({ id, name });
                     event.target.value = '';
+                    this.persist();
                 },
-                remove(idx) { this.selected.splice(idx, 1); }
+                remove(idx) {
+                    this.selected.splice(idx, 1);
+                    this.persist();
+                },
+                async persist() {
+                    this.saving = true;
+                    const { ok, message } = await window.inlinePatch(url, { observer_ids: this.selected.map(s => s.id) });
+                    this.saving = false;
+                    if (!ok) alert(message || 'Falha ao salvar observadores. Atualize a página e tente novamente.');
+                },
+            }));
+
+            // Campo de texto/data — clica, edita, sai do campo (blur) já salva via PATCH,
+            // sem reload. Usado pra Título, as 3 datas, Legenda e campos de Solicitante.
+            Alpine.data('inlineField', ({ url, field = null, payloadKey = null, value }) => ({
+                editing: false,
+                value: value,
+                original: value,
+                saving: false,
+                open() {
+                    this.original = this.value;
+                    this.editing = true;
+                    this.$nextTick(() => this.$refs.input?.focus());
+                },
+                async commit() {
+                    if (!this.editing) return;
+                    this.editing = false;
+                    if (this.value === this.original) return;
+                    this.saving = true;
+                    const payload = field ? { field, value: this.value } : { [payloadKey]: this.value };
+                    const { ok, message } = await window.inlinePatch(url, payload);
+                    this.saving = false;
+                    if (!ok) {
+                        alert(message || 'Falha ao salvar. Tente de novo.');
+                        this.value = this.original;
+                    } else {
+                        this.original = this.value;
+                    }
+                },
+                cancel() {
+                    this.value = this.original;
+                    this.editing = false;
+                },
+            }));
+
+            // <select> que salva sozinho ao trocar — sem form, sem reload. `field` usa o
+            // endpoint genérico (tasks.update-field, campo simples sem regra própria);
+            // `payloadKey` usa um endpoint dedicado (ex: tasks.update-sprint) que já resolve
+            // sua própria regra de negócio no back-end.
+            Alpine.data('selectField', ({ url, field = null, payloadKey = null, value }) => ({
+                value: value,
+                saving: false,
+                async change() {
+                    this.saving = true;
+                    const payload = field ? { field, value: this.value } : { [payloadKey]: this.value || null };
+                    const { ok, message } = await window.inlinePatch(url, payload);
+                    this.saving = false;
+                    if (!ok) alert(message || 'Falha ao salvar. Tente de novo.');
+                },
+            }));
+
+            // Campo que salva sozinho um tempo depois de parar de digitar (debounce) — pro
+            // editor rico (Descrição), onde "sair do campo" não é confiável (toolbar usa
+            // mousedown.prevent de propósito pra não tirar o foco do editor).
+            Alpine.data('debouncedField', ({ url, field, value, wait = 1200 }) => ({
+                value: value,
+                saving: false,
+                _timer: null,
+                queue(newValue) {
+                    this.value = newValue;
+                    clearTimeout(this._timer);
+                    this._timer = setTimeout(() => this.commit(), wait);
+                },
+                async commit() {
+                    clearTimeout(this._timer);
+                    this.saving = true;
+                    const { ok, message } = await window.inlinePatch(url, { field, value: this.value });
+                    this.saving = false;
+                    if (!ok) alert(message || 'Falha ao salvar. Tente de novo.');
+                },
             }));
 
             Alpine.data('taskChat', () => ({
@@ -160,7 +243,7 @@
         });
     </script>
 
-    <div x-data="{ editing: false }" class="flex gap-5" style="align-items: start;">
+    <div class="flex gap-5" style="align-items: start;">
 
         {{-- ══════════════════════════════════════════════════════════
              COLUNA PRINCIPAL
@@ -180,7 +263,12 @@
                                 <span class="badge" style="background:rgba(239,68,68,.08); color:var(--red); border-color:rgba(239,68,68,.25)">Atrasada</span>
                             @endif
                         </div>
-                        <h1 class="text-2xl leading-tight" style="color:var(--text); font-weight:700; letter-spacing:-0.02em">{{ $task->title }}</h1>
+                        <div x-data="inlineField({ url: '{{ route('tasks.update-field', $task) }}', field: 'title', value: @js($task->title) })">
+                            <h1 x-show="!editing" @click="open()" x-text="value" class="text-2xl leading-tight cursor-text" style="color:var(--text); font-weight:700; letter-spacing:-0.02em" title="Clique para editar"></h1>
+                            <input x-show="editing" x-cloak x-ref="input" x-model="value" type="text"
+                                   @blur="commit()" @keydown.enter.prevent="commit()" @keydown.escape="cancel()"
+                                   class="text-2xl w-full focus:outline-none" style="color:var(--text); font-weight:700; letter-spacing:-0.02em; background:var(--s3); border:1px solid var(--purple); border-radius:6px; padding:2px 6px">
+                        </div>
                     </div>
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <button @click="$store.ui.chatOpen = true"
@@ -189,35 +277,6 @@
                                 onmouseover="this.style.background='rgba(100, 59, 142,.12)'" onmouseout="this.style.background='rgba(100, 59, 142,.06)'">
                             <x-icon name="sparkles" size="12" />
                             Chat IA
-                        </button>
-                        @if($task->sprint_id)
-                            @php $sprintLocked = $task->sprint?->isLocked(); @endphp
-                            <form method="POST" action="{{ route('sprints.remove-task', [$task->sprint_id, $task]) }}"
-                                  @submit.prevent="if (await $store.confirmDialog.ask('Devolver esta tarefa pra Fila?')) $el.submit()">
-                                @csrf @method('DELETE')
-                                <button type="submit" {{ $sprintLocked ? 'disabled' : '' }}
-                                    class="px-4 py-2 text-xs font-semibold transition-colors"
-                                    style="border:1px solid var(--orange); color:var(--orange); {{ $sprintLocked ? 'opacity:.4; cursor:not-allowed' : '' }}"
-                                    title="{{ $sprintLocked ? 'Sprint travada' : 'Devolver pra Fila' }}">
-                                    ← Fila
-                                </button>
-                            </form>
-                        @elseif($activeSprint)
-                            <form method="POST" action="{{ route('sprints.add-task', [$activeSprint, $task]) }}">
-                                @csrf
-                                <button type="submit"
-                                    class="px-4 py-2 text-xs font-semibold text-white transition-colors"
-                                    style="background:var(--green); border:1px solid var(--green)"
-                                    title="Enviar para: {{ $activeSprint->title }}">
-                                    → Sprint
-                                </button>
-                            </form>
-                        @endif
-                        <button @click="editing = !editing"
-                            :style="editing ? 'background:var(--purple); color:#fff; border-color:var(--purple)' : ''"
-                            class="px-4 py-2 text-xs font-semibold transition-colors"
-                            style="border:1px solid var(--border2); color:var(--muted2)">
-                            <span x-text="editing ? '✕  Cancelar' : '✎  Editar'"></span>
                         </button>
                     </div>
                 </div>
@@ -279,7 +338,8 @@
             {{-- BARRA DE STATUS: fluxo em flecha (clip-path) com os 7 status que avançam pra
                  frente, acende na cor real do status ativo. "Cancelado" fica de fora da corrente
                  de propósito — é saída/exceção, não uma estação do fluxo — e vira um botão à
-                 parte, menor, ao lado. Clique já salva (mesmo endpoint tasks.update-inline). --}}
+                 parte, menor, ao lado. Clique já salva via fetch (tasks.update-status-direct),
+                 sem reload — statusKey local decide a cor de cada botão a partir daqui pra baixo. --}}
             @php
                 $statusShort = [
                     'backlog'              => 'Backlog',
@@ -291,61 +351,59 @@
                     'concluido'            => 'Concluído',
                 ];
                 $flowStatuses     = collect(\App\Models\Task::$statuses)->except('cancelado');
-                $canceladoStatus  = \App\Models\Task::$statuses['cancelado'];
-                $canceladoActive  = $task->status === 'cancelado';
                 $chevronPt        = 9;
                 // Traço de 1px branco ao redor da forma já recortada pelo clip-path (border
                 // normal ignora o clip-path) — só pra marcar a subdivisão entre as flechas,
                 // inclusive na ponta.
                 $chevronOutline   = "filter:drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff);";
             @endphp
-            <div class="card card-body">
+            <div class="card card-body"
+                 x-data="{
+                     statusKey: @js($task->status),
+                     saving: false,
+                     colors: @js(collect(\App\Models\Task::$statuses)->map(fn($s) => $s['color'])),
+                     async set(key) {
+                         if (this.statusKey === key || this.saving) return;
+                         this.saving = true;
+                         const { ok, message } = await window.inlinePatch('{{ route('tasks.update-status-direct', $task) }}', { status: key });
+                         this.saving = false;
+                         if (ok) { this.statusKey = key; } else { alert(message || 'Não foi possível mudar o status.'); }
+                     },
+                 }">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Status</p>
                 <div class="flex items-center gap-1.5">
                     <div class="flex flex-1 min-w-0" style="overflow-x:auto">
                         @foreach($flowStatuses as $key => $s)
                             @php
-                                $active = $task->status === $key;
                                 $clip = $loop->first
                                     ? "polygon(0 0, calc(100% - {$chevronPt}px) 0, 100% 50%, calc(100% - {$chevronPt}px) 100%, 0 100%)"
                                     : ($loop->last
                                         ? "polygon(0 0, 100% 0, 100% 100%, 0 100%, {$chevronPt}px 50%)"
                                         : "polygon(0 0, calc(100% - {$chevronPt}px) 0, 100% 50%, calc(100% - {$chevronPt}px) 100%, 0 100%, {$chevronPt}px 50%)");
                             @endphp
-                            <form method="POST" action="{{ route('tasks.update-inline', $task) }}" style="display:contents">
-                                @csrf @method('PATCH')
-                                @foreach(['title','task_type','origin'] as $f)
-                                    <input type="hidden" name="{{ $f }}" value="{{ $task->$f }}">
-                                @endforeach
-                                <input type="hidden" name="status" value="{{ $key }}">
-                                <button type="submit"
-                                    class="flex-shrink-0 py-3 text-xs font-bold uppercase text-center transition-colors"
-                                    style="clip-path:{{ $clip }}; min-width:82px; {{ $chevronOutline }} cursor:pointer;
-                                           padding-left:{{ $loop->first ? '13px' : '15px' }}; padding-right:{{ $loop->last ? '13px' : '15px' }};
-                                           margin-left:{{ $loop->first ? '0' : '-'.$chevronPt.'px' }}; letter-spacing:.01em;
-                                           {{ $active ? 'background:var(--'.$s['color'].'); color:#fff;' : 'background:var(--s2); color:var(--muted2);' }}"
-                                    {{ !$active ? 'onmouseover="this.style.background=\'var(--s3)\'" onmouseout="this.style.background=\'var(--s2)\'"' : '' }}>
-                                    {{ $statusShort[$key] ?? $s['label'] }}
-                                </button>
-                            </form>
+                            <button type="button" @click="set('{{ $key }}')"
+                                class="flex-shrink-0 py-3 text-xs font-bold uppercase text-center transition-colors"
+                                :style="statusKey === '{{ $key }}' ? 'background:var(--' + colors['{{ $key }}'] + ');color:#fff;' : 'background:var(--s2);color:var(--muted2);'"
+                                style="clip-path:{{ $clip }}; min-width:82px; {{ $chevronOutline }} cursor:pointer;
+                                       padding-left:{{ $loop->first ? '13px' : '15px' }}; padding-right:{{ $loop->last ? '13px' : '15px' }};
+                                       margin-left:{{ $loop->first ? '0' : '-'.$chevronPt.'px' }}; letter-spacing:.01em;"
+                                @mouseover="if (statusKey !== '{{ $key }}') $el.style.background = 'var(--s3)'"
+                                @mouseout="if (statusKey !== '{{ $key }}') $el.style.background = 'var(--s2)'">
+                                {{ $statusShort[$key] ?? $s['label'] }}
+                            </button>
                         @endforeach
                     </div>
 
                     {{-- Cancelado — separado da corrente, mesma mecânica de sempre --}}
-                    <form method="POST" action="{{ route('tasks.update-inline', $task) }}" class="flex-shrink-0">
-                        @csrf @method('PATCH')
-                        @foreach(['title','task_type','origin'] as $f)
-                            <input type="hidden" name="{{ $f }}" value="{{ $task->$f }}">
-                        @endforeach
-                        <input type="hidden" name="status" value="cancelado">
-                        <button type="submit"
-                            class="px-4 py-3 text-xs font-bold uppercase transition-colors"
-                            style="letter-spacing:.01em; cursor:pointer; border:1px solid {{ $canceladoActive ? 'var(--'.$canceladoStatus['color'].')' : 'var(--border2)' }};
-                                   {{ $canceladoActive ? 'background:var(--'.$canceladoStatus['color'].'); color:#fff;' : 'background:transparent; color:var(--muted2);' }}"
-                            {{ !$canceladoActive ? 'onmouseover="this.style.background=\'var(--s2)\'" onmouseout="this.style.background=\'transparent\'"' : '' }}>
-                            Cancelado
-                        </button>
-                    </form>
+                    <button type="button" @click="set('cancelado')" class="flex-shrink-0 px-4 py-3 text-xs font-bold uppercase transition-colors"
+                        style="letter-spacing:.01em; cursor:pointer;"
+                        :style="statusKey === 'cancelado'
+                            ? 'border:1px solid var(--' + colors.cancelado + ');background:var(--' + colors.cancelado + ');color:#fff;'
+                            : 'border:1px solid var(--border2);background:transparent;color:var(--muted2);'"
+                        @mouseover="if (statusKey !== 'cancelado') $el.style.background = 'var(--s2)'"
+                        @mouseout="if (statusKey !== 'cancelado') $el.style.background = 'transparent'">
+                        Cancelado
+                    </button>
                 </div>
             </div>
 
@@ -362,24 +420,31 @@
                      7 colunas fecha os 14 valores em 2 linhas exatas, sem sobra. Chips
                      arredondados com espaço entre si (em vez de linha de grade dura) —
                      o contraste do próprio preenchimento contra o card já separa. --}}
-                <div>
+                <div x-data="{
+                        situacaoKey: @js($task->situation ?? ''),
+                        saving: false,
+                        colors: @js(collect(\App\Models\Task::$situationColors)),
+                        async set(key) {
+                            if (this.situacaoKey === key || this.saving) return;
+                            this.saving = true;
+                            const { ok, message } = await window.inlinePatch('{{ route('tasks.update-situation', $task) }}', { situation: key });
+                            this.saving = false;
+                            if (ok) { this.situacaoKey = key; } else { alert(message || 'Não foi possível mudar a situação.'); }
+                        },
+                    }">
                     <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Situação</p>
                     <div class="grid grid-cols-7 gap-1.5">
                         @foreach(\App\Models\Task::$situations as $key => $label)
-                            @php
-                                $active = ($task->situation ?? '') === $key;
-                                $color  = \App\Models\Task::$situationColors[$key] ?? null;
-                            @endphp
-                            <form method="POST" action="{{ route('tasks.update-situation', $task) }}">
-                                @csrf @method('PATCH')
-                                <input type="hidden" name="situation" value="{{ $key }}">
-                                <button type="submit"
-                                    class="w-full h-full px-2 py-2.5 text-[11px] font-bold uppercase text-center leading-tight transition-colors rounded-lg"
-                                    style="letter-spacing:.01em; cursor:pointer; {{ $active ? 'background:'.($color ?? 'var(--muted2)').'; color:#fff;' : 'background:var(--s2); color:var(--muted2); border:1px solid var(--border);' }}"
-                                    {{ !$active ? 'onmouseover="this.style.background=\'var(--s3)\'" onmouseout="this.style.background=\'var(--s2)\'"' : '' }}>
-                                    {{ $key === '' ? 'Sem situação' : $label }}
-                                </button>
-                            </form>
+                            <button type="button" @click="set('{{ $key }}')"
+                                class="w-full h-full px-2 py-2.5 text-[11px] font-bold uppercase text-center leading-tight transition-colors rounded-lg"
+                                style="letter-spacing:.01em; cursor:pointer;"
+                                :style="situacaoKey === '{{ $key }}'
+                                    ? 'background:' + (colors['{{ $key }}'] || 'var(--muted2)') + ';color:#fff;'
+                                    : 'background:var(--s2);color:var(--muted2);border:1px solid var(--border);'"
+                                @mouseover="if (situacaoKey !== '{{ $key }}') $el.style.background = 'var(--s3)'"
+                                @mouseout="if (situacaoKey !== '{{ $key }}') $el.style.background = 'var(--s2)'">
+                                {{ $key === '' ? 'Sem situação' : $label }}
+                            </button>
                         @endforeach
                     </div>
                 </div>
@@ -388,24 +453,22 @@
 
             {{-- CAMPOS (sem título — some espaço): Sprint/Tipo em cima, Origem/Destino
                  embaixo, Solicitante por último (só ticket com nome preenchido). --}}
-            <div x-show="!editing" class="card card-body-lg">
+            <div class="card card-body-lg">
                 <div class="grid grid-cols-2 gap-x-10 gap-y-5">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Sprint</p>
-                        <div class="flex items-center gap-1.5">
-                            <form method="POST" action="{{ route('tasks.update-sprint', $task) }}" class="flex-1 min-w-0">
-                                @csrf @method('PATCH')
-                                <select name="sprint_id" onchange="this.form.submit()"
-                                    class="w-full px-2 py-1.5 text-sm font-semibold focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text)">
-                                    <option value="">Backlog (fora de sprint)</option>
-                                    @foreach($sprints as $sp)
-                                        <option value="{{ $sp->id }}" {{ $task->sprint_id === $sp->id ? 'selected' : '' }}>
-                                            {{ $sp->title }}{{ $sp->status === 'closed' ? ' (encerrada)' : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </form>
+                        <div class="flex items-center gap-1.5"
+                             x-data="selectField({ url: '{{ route('tasks.update-sprint', $task) }}', payloadKey: 'sprint_id', value: @js($task->sprint_id) })">
+                            <select x-model="value" @change="change()"
+                                class="flex-1 min-w-0 px-2 py-1.5 text-sm font-semibold focus:outline-none"
+                                style="background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text)">
+                                <option value="">Backlog (fora de sprint)</option>
+                                @foreach($sprints as $sp)
+                                    <option value="{{ $sp->id }}">
+                                        {{ $sp->title }}{{ $sp->status === 'closed' ? ' (encerrada)' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
                             @if($task->sprint)
                                 <a href="{{ route('sprints.show', $task->sprint) }}" class="btn btn-ghost btn-xs flex-shrink-0" title="Abrir a sprint">
                                     <x-icon name="external-link" size="12" />
@@ -415,18 +478,49 @@
                     </div>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Tipo</p>
-                        <p class="text-sm flex items-center gap-1.5" style="color:var(--text); font-weight:500; line-height:1.4">
-                            <x-icon :name="$task->typeIcon()" size="14" style="color:var(--muted)" />
-                            {{ $task->typeLabel() }}
-                        </p>
+                        <select x-data="selectField({ url: '{{ route('tasks.update-field', $task) }}', field: 'task_type', value: @js($task->task_type) })"
+                            x-model="value" @change="change()"
+                            class="w-full px-2 py-1.5 text-sm font-semibold focus:outline-none"
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text)">
+                            @foreach(\App\Models\Task::$types as $key => $label)
+                                <option value="{{ $key }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Origem</p>
-                        <span class="badge mt-0.5">{{ $task->originLabel() }}</span>
+                        <select x-data="selectField({ url: '{{ route('tasks.update-field', $task) }}', field: 'origin', value: @js($task->origin) })"
+                            x-model="value" @change="change()"
+                            class="w-full px-2 py-1.5 text-sm font-semibold focus:outline-none"
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text)">
+                            @foreach(\App\Models\Task::$origins as $key => $label)
+                                <option value="{{ $key }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Destino</p>
-                        <p class="text-sm" style="color:var(--text); font-weight:500; line-height:1.4">{{ $task->destination ? $task->destinationLabel() : '—' }}</p>
+                        <select x-data="selectField({ url: '{{ route('tasks.update-field', $task) }}', field: 'destination', value: @js($task->destination) })"
+                            x-model="value" @change="change()"
+                            class="w-full px-2 py-1.5 text-sm font-semibold focus:outline-none"
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text)">
+                            <option value="">— nenhum —</option>
+                            @foreach(\App\Models\Task::$destinations as $key => $label)
+                                <option value="{{ $key }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Método de Aprovação</p>
+                        <select x-data="selectField({ url: '{{ route('tasks.update-field', $task) }}', field: 'approval_method', value: @js($task->approval_method) })"
+                            x-model="value" @change="change()"
+                            class="w-full px-2 py-1.5 text-sm font-semibold focus:outline-none"
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text)">
+                            <option value="">— nenhum —</option>
+                            @foreach(\App\Models\Task::$approvalMethods as $key => $label)
+                                <option value="{{ $key }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     @if($task->is_ticket && $task->requester_name)
                         <div>
@@ -437,198 +531,123 @@
                 </div>
             </div>
 
-            {{-- REATRIBUIR CLIENTE / PROJETO — só aparece em modo de edição (antes vivia na
-                 seção Contexto da lateral, removida por duplicar os links do cabeçalho).
-                 Continuam como forms próprios (auto-submit, mesmos endpoints/validações de
-                 sempre) porque não dá pra aninhar <form> dentro do form de edição abaixo. --}}
-            <div x-show="editing" x-cloak class="card card-body-lg flex flex-col gap-5">
-                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Reatribuir Cliente / Projeto</p>
+            {{-- CLIENTE / PROJETO — sempre visível, salva na hora. Cliente pede confirmação
+                 se já houver Projeto vinculado (troca desvincula, mesma regra de sempre de
+                 TaskController::updateClient()). --}}
+            <div class="card card-body-lg flex flex-col gap-5">
+                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Cliente / Projeto</p>
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
+                    <div x-data="{
+                            value: @js($task->client_id),
+                            saving: false,
+                            async change() {
+                                if (@js((bool) $task->project_id) && !(await $store.confirmDialog.ask('Trocar o cliente vai desvincular a tarefa do projeto atual ({{ addslashes($task->project?->title ?? '') }}). Continuar?'))) {
+                                    this.value = @js($task->client_id);
+                                    return;
+                                }
+                                this.saving = true;
+                                const { ok, message } = await window.inlinePatch('{{ route('tasks.update-client', $task) }}', { client_id: this.value });
+                                this.saving = false;
+                                if (ok) { window.dispatchEvent(new CustomEvent('task-client-changed')); }
+                                else { alert(message || 'Falha ao salvar.'); this.value = @js($task->client_id); }
+                            },
+                        }">
                         <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Cliente</label>
-                        <form method="POST" action="{{ route('tasks.update-client', $task) }}">
-                            @csrf @method('PATCH')
-                            <select name="client_id"
-                                @change="if ({{ $task->project_id ? 'true' : 'false' }} && !(await $store.confirmDialog.ask('Trocar o cliente vai desvincular a tarefa do projeto atual ({{ addslashes($task->project?->title) }}). Continuar?'))) { $el.value = '{{ $task->client_id }}'; return; } $el.form.submit()"
-                                class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                                @foreach($clients as $c)
-                                    <option value="{{ $c->id }}" {{ $task->client_id === $c->id ? 'selected' : '' }}>
-                                        {{ $c->displayName() }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </form>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Projeto</label>
-                        <form method="POST" action="{{ route('tasks.update-project', $task) }}">
-                            @csrf @method('PATCH')
-                            <select name="project_id" onchange="this.form.submit()"
-                                class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                                <option value="">— nenhum —</option>
-                                @foreach($clientProjects as $p)
-                                    <option value="{{ $p->id }}" {{ $task->project_id === $p->id ? 'selected' : '' }}>
-                                        {{ $p->title }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </form>
-                    </div>
-                </div>
-                <p class="text-xs" style="color:var(--muted2); line-height:1.5">A lista de Projetos reflete o Cliente atual — troque o Cliente e salve/recarregue pra ver os projetos do novo cliente.</p>
-            </div>
-
-            {{-- FORMULÁRIO DE EDIÇÃO --}}
-            <form method="POST" action="{{ route('tasks.update-inline', $task) }}" x-show="editing" x-cloak>
-                @csrf @method('PATCH')
-                <div class="card card-body-lg flex flex-col gap-5">
-                    <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Editando tarefa</p>
-
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Título</label>
-                        <input type="text" name="title" value="{{ $task->title }}" required
-                            class="w-full px-4 py-3 text-sm font-semibold focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
-                            onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4 md:grid-cols-3">
-                        @php
-                            $editFields = [
-                                ['name'=>'status',          'label'=>'Status',              'opts'=>\App\Models\Task::$statuses,        'val'=>$task->status,              'map'=>fn($k,$v)=>['v'=>$k,'l'=>$v['label']]],
-                                ['name'=>'task_type',       'label'=>'Tipo',                'opts'=>\App\Models\Task::$types,           'val'=>$task->task_type,           'map'=>fn($k,$v)=>['v'=>$k,'l'=>$v]],
-                                ['name'=>'priority',        'label'=>'Prioridade',          'opts'=>\App\Models\Task::$priorities,      'val'=>$task->priority ?? 'normal','map'=>fn($k,$v)=>['v'=>$k,'l'=>$v['label']]],
-                                ['name'=>'destination',     'label'=>'Destino',             'opts'=>\App\Models\Task::$destinations,    'val'=>$task->destination,         'map'=>fn($k,$v)=>['v'=>$k,'l'=>$v], 'blank'=>true],
-                                ['name'=>'origin',          'label'=>'Origem',              'opts'=>\App\Models\Task::$origins,         'val'=>$task->origin,              'map'=>fn($k,$v)=>['v'=>$k,'l'=>$v]],
-                                ['name'=>'approval_method', 'label'=>'Método de Aprovação', 'opts'=>\App\Models\Task::$approvalMethods, 'val'=>$task->approval_method,     'map'=>fn($k,$v)=>['v'=>$k,'l'=>$v], 'blank'=>true],
-                            ];
-                        @endphp
-                        @foreach($editFields as $f)
-                            <div>
-                                <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">{{ $f['label'] }}</label>
-                                <select name="{{ $f['name'] }}" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                                    @if($f['blank'] ?? false)
-                                        <option value="">— nenhum —</option>
-                                    @endif
-                                    @foreach($f['opts'] as $k => $v)
-                                        @php $item = ($f['map'])($k,$v); @endphp
-                                        <option value="{{ $item['v'] }}" {{ $f['val'] === $k ? 'selected' : '' }}>{{ $item['l'] }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        @endforeach
-                        <div>
-                            <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Situação</label>
-                            <select name="situation" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                                @foreach(\App\Models\Task::$situations as $key => $label)
-                                    <option value="{{ $key }}" {{ ($task->situation ?? '') === $key ? 'selected' : '' }}
-                                        @if($key === 'enviar_para_cliente') style="color:var(--orange); font-weight:600" @endif>
-                                        {{ $label }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-4">
-                        @foreach([['due_date','Vencimento'],['approval_date','Dt. Aprovação'],['publish_date','Dt. Publicação']] as [$fname,$flabel])
-                            <div>
-                                <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">{{ $flabel }}</label>
-                                <input type="date" name="{{ $fname }}" value="{{ $task->$fname?->format('Y-m-d') }}"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                            </div>
-                        @endforeach
-                    </div>
-
-                    {{-- Pessoas --}}
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Responsável</label>
-                            <select name="responsavel_id" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                                <option value="">— nenhum —</option>
-                                @foreach($users as $u)
-                                    <option value="{{ $u->id }}" {{ $task->responsibles->first()?->id === $u->id ? 'selected' : '' }}>
-                                        {{ $u->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Executor</label>
-                            <select name="executor_id" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                                <option value="">— nenhum —</option>
-                                @foreach($users as $u)
-                                    <option value="{{ $u->id }}" {{ $task->executor?->id === $u->id ? 'selected' : '' }}>
-                                        {{ $u->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    {{-- Observadores --}}
-                    <div x-data="observerPicker({{ json_encode($task->observers->map(fn($u) => ['id' => $u->id, 'name' => $u->name])) }})">
-                        <label class="block text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Observadores</label>
-                        <div class="flex flex-wrap gap-2 mb-2" x-show="selected.length > 0">
-                            <template x-for="(item, idx) in selected" :key="item.id">
-                                <div class="flex items-center gap-2 px-3 py-1.5 text-sm"
-                                     style="background:var(--s3); border:1px solid var(--border); border-radius:8px">
-                                    <span x-text="item.name" style="color:var(--text); font-weight:500"></span>
-                                    <input type="hidden" :name="'observer_ids[]'" :value="item.id">
-                                    <button type="button" @click="remove(idx)" class="btn btn-danger btn-xs">✕</button>
-                                </div>
-                            </template>
-                        </div>
-                        <select @change="add($event)" class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                        <select x-model="value" @change="change()"
+                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
                             style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                            <option value="">+ Adicionar observador</option>
-                            @foreach($users as $u)
-                                <option value="{{ $u->id }}" data-name="{{ $u->name }}">{{ $u->name }}</option>
+                            @foreach($clients as $c)
+                                <option value="{{ $c->id }}">{{ $c->displayName() }}</option>
                             @endforeach
                         </select>
                     </div>
+                    <div x-data="selectField({ url: '{{ route('tasks.update-project', $task) }}', payloadKey: 'project_id', value: @js($task->project_id) })"
+                         @task-client-changed.window="value = ''">
+                        <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Projeto</label>
+                        <select x-model="value" @change="change()"
+                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            <option value="">— nenhum —</option>
+                            @foreach($clientProjects as $p)
+                                <option value="{{ $p->id }}">{{ $p->title }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <p class="text-xs" style="color:var(--muted2); line-height:1.5">A lista de Projetos reflete o Cliente com que a página foi carregada — se você trocar o Cliente, atualize a página pra ver os projetos do novo cliente.</p>
+            </div>
 
+            {{-- PESSOAS — Responsável/Executor salvam ao trocar a seleção; Observadores
+                 salva a cada chip adicionado/removido. Nenhum dos três depende de "Salvar". --}}
+            <div class="card card-body-lg flex flex-col gap-5">
+                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Pessoas</p>
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Descrição / Briefing</label>
-                        <x-rich-editor name="description" :value="$task->description" min-height="180px" />
+                        <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Responsável</label>
+                        <select x-data="selectField({ url: '{{ route('tasks.update-responsavel', $task) }}', payloadKey: 'responsavel_id', value: @js($task->responsibles->first()?->id) })"
+                            x-model="value" @change="change()"
+                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            <option value="">— nenhum —</option>
+                            @foreach($users as $u)
+                                <option value="{{ $u->id }}">{{ $u->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
-
-                    <div class="flex items-center gap-3 pt-2" style="border-top:1px solid var(--border2)">
-                        <button type="submit"
-                            class="px-5 py-2.5 text-sm font-semibold text-white"
-                            style="background:var(--purple)">
-                            Salvar Alterações
-                        </button>
-                        <button type="button" @click="editing = false"
-                            class="text-sm" style="color:var(--muted)">Cancelar</button>
-                    </div>
-                </div>
-            </form>
-
-            {{-- DESCRIÇÃO --}}
-            @if($task->description)
-                <div x-show="!editing" class="card card-body-lg">
-                    <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
-                        <span class="icon-badge">
-                            <x-icon name="file-text" size="16" />
-                        </span>
-                        Briefing / Descrição
-                    </p>
-                    <div class="rich-editor" style="padding:0; margin:0; min-height:0; cursor:default; resize:none; overflow:visible">
-                        <div class="ProseMirror">{!! $task->description !!}</div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Executor</label>
+                        <select x-data="selectField({ url: '{{ route('tasks.update-executor', $task) }}', payloadKey: 'executor_id', value: @js($task->executor?->id) })"
+                            x-model="value" @change="change()"
+                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            <option value="">— nenhum —</option>
+                            @foreach($users as $u)
+                                <option value="{{ $u->id }}">{{ $u->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
-            @endif
 
-            {{-- LEGENDA (sempre visível, com edição própria — é o que o cliente avalia) --}}
-            <div class="card card-body-lg" x-data="{ editingCaption: false }">
+                {{-- Observadores --}}
+                <div x-data="observerPicker({{ json_encode($task->observers->map(fn($u) => ['id' => $u->id, 'name' => $u->name])) }}, '{{ route('tasks.update-observers', $task) }}')">
+                    <label class="block text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Observadores</label>
+                    <div class="flex flex-wrap gap-2 mb-2" x-show="selected.length > 0">
+                        <template x-for="(item, idx) in selected" :key="item.id">
+                            <div class="flex items-center gap-2 px-3 py-1.5 text-sm"
+                                 style="background:var(--s3); border:1px solid var(--border); border-radius:8px">
+                                <span x-text="item.name" style="color:var(--text); font-weight:500"></span>
+                                <button type="button" @click="remove(idx)" class="btn btn-danger btn-xs">✕</button>
+                            </div>
+                        </template>
+                    </div>
+                    <select @change="add($event)" class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                        <option value="">+ Adicionar observador</option>
+                        @foreach($users as $u)
+                            <option value="{{ $u->id }}" data-name="{{ $u->name }}">{{ $u->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            {{-- DESCRIÇÃO / BRIEFING — salva sozinho um tempo depois de parar de digitar
+                 (debounce), sem depender de blur (toolbar do editor rico usa
+                 mousedown.prevent de propósito pra não tirar o foco do editor). --}}
+            <div class="card card-body-lg" x-data="debouncedField({ url: '{{ route('tasks.update-field', $task) }}', field: 'description', value: @js($task->description ?? '') })"
+                 @input="queue($event.target.value)">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                    <span class="icon-badge">
+                        <x-icon name="file-text" size="16" />
+                    </span>
+                    Briefing / Descrição
+                    <span x-show="saving" x-cloak class="text-xs normal-case font-normal" style="color:var(--muted2); letter-spacing:normal">salvando...</span>
+                </p>
+                <x-rich-editor name="description" :value="$task->description" min-height="180px" />
+            </div>
+
+            {{-- LEGENDA — clica pra editar, sai do campo já salva (sem botão Salvar). --}}
+            <div class="card card-body-lg"
+                 x-data="inlineField({ url: '{{ route('tasks.update-caption', $task) }}', payloadKey: 'caption', value: @js($task->caption ?? '') })">
                 <div class="flex items-center justify-between mb-1">
                     <p class="text-xs font-semibold uppercase tracking-widest flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
                         <span class="icon-badge">
@@ -636,30 +655,24 @@
                         </span>
                         Legenda
                     </p>
-                    <button type="button" @click="editingCaption = !editingCaption" class="text-xs font-semibold" style="color:var(--purple)">
-                        <span x-text="editingCaption ? 'Cancelar' : (@js((bool) $task->caption) ? 'Editar' : '+ Adicionar')"></span>
-                    </button>
+                    <span x-show="saving" x-cloak class="text-xs" style="color:var(--muted2)">salvando...</span>
                 </div>
                 <p class="text-xs mb-4" style="color:var(--muted2)">Texto que vai junto do material pra aprovação do cliente — diferente do Briefing acima, que é interno.</p>
 
-                <div x-show="!editingCaption">
-                    @if($task->caption)
-                        <div class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.75">{{ $task->caption }}</div>
-                    @else
-                        <p class="text-sm" style="color:var(--muted)">Nenhuma legenda ainda.</p>
-                    @endif
+                <div x-show="!editing" @click="open()" class="cursor-text" title="Clique para editar">
+                    <template x-if="value">
+                        <div class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.75" x-text="value"></div>
+                    </template>
+                    <template x-if="!value">
+                        <p class="text-sm" style="color:var(--muted)">Nenhuma legenda ainda — clique para adicionar.</p>
+                    </template>
                 </div>
 
-                <form method="POST" action="{{ route('tasks.update-caption', $task) }}" x-show="editingCaption" x-cloak>
-                    @csrf @method('PATCH')
-                    <textarea name="caption" rows="5"
-                        placeholder="Texto que vai junto do material pro cliente aprovar..."
-                        class="w-full px-4 py-3 text-sm focus:outline-none resize-none leading-relaxed"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">{{ $task->caption }}</textarea>
-                    <button type="submit" class="mt-3 px-4 py-2 text-sm font-semibold text-white" style="background:var(--purple)">
-                        Salvar Legenda
-                    </button>
-                </form>
+                <textarea x-show="editing" x-cloak x-ref="input" x-model="value" rows="5"
+                    @blur="commit()" @keydown.escape="cancel()"
+                    placeholder="Texto que vai junto do material pro cliente aprovar..."
+                    class="w-full px-4 py-3 text-sm focus:outline-none resize-none leading-relaxed"
+                    style="background:var(--s3); border:1px solid var(--purple); border-radius:8px; color:var(--text)"></textarea>
             </div>
 
             {{-- INSUMOS --}}
@@ -1002,61 +1015,74 @@
                     Datas
                 </p>
                 <div class="flex flex-col gap-4">
-                    <div class="pb-3" style="border-bottom:1px solid var(--border2)">
+                    <div class="pb-3" style="border-bottom:1px solid var(--border2)"
+                         x-data="{
+                             open: false,
+                             key: @js($task->priority ?? 'normal'),
+                             saving: false,
+                             priorities: @js(collect(\App\Models\Task::$priorities)->map(fn($p, $k) => ['label' => $p['label'], 'hex' => \App\Models\Task::colorHex($p['color'])])),
+                             async set(k) {
+                                 this.open = false;
+                                 if (this.key === k || this.saving) return;
+                                 this.saving = true;
+                                 const { ok, message } = await window.inlinePatch('{{ route('tasks.update-priority', $task) }}', { priority: k });
+                                 this.saving = false;
+                                 if (ok) { this.key = k; } else { alert(message || 'Não foi possível mudar a prioridade.'); }
+                             },
+                         }">
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Prioridade</p>
-                        <div class="relative" x-data="{ open: false }">
+                        <div class="relative">
                             <button type="button" @click="open = !open" class="flex items-center gap-1.5 text-sm font-semibold" style="color:var(--text)">
-                                <x-icon name="flag" size="14" style="color:{{ \App\Models\Task::colorHex((\App\Models\Task::$priorities[$task->priority ?? 'normal']['color'])) }}" />
-                                <span class="truncate">{{ $task->priorityLabel() }}</span>
+                                <x-icon name="flag" size="14" x-bind:style="'color:' + priorities[key].hex" />
+                                <span class="truncate" x-text="priorities[key].label"></span>
                                 <x-icon name="chevron-down" size="12" style="color:var(--muted)" />
                             </button>
                             <div x-show="open" @click.outside="open = false" x-cloak
                                  class="absolute left-0 mt-1 z-20 py-1" style="min-width:180px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
                                 @foreach(\App\Models\Task::$priorities as $key => $p)
-                                    <form method="POST" action="{{ route('tasks.update-priority', $task) }}">
-                                        @csrf @method('PATCH')
-                                        <input type="hidden" name="priority" value="{{ $key }}">
-                                        <button type="submit" @click="open = false"
-                                            class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
-                                            style="color:{{ ($task->priority ?? 'normal') === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ ($task->priority ?? 'normal') === $key ? '600' : '400' }}"
-                                            onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
-                                            <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:{{ \App\Models\Task::colorHex($p['color']) }}"></span>
-                                            {{ $p['label'] }}
-                                        </button>
-                                    </form>
+                                    <button type="button" @click="set('{{ $key }}')"
+                                        class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
+                                        :style="key === '{{ $key }}' ? 'color:var(--purple);font-weight:600' : 'color:var(--muted2);font-weight:400'"
+                                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                        <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:{{ \App\Models\Task::colorHex($p['color']) }}"></span>
+                                        {{ $p['label'] }}
+                                    </button>
                                 @endforeach
                             </div>
                         </div>
                     </div>
-                    <div>
+                    <div x-data="inlineField({ url: '{{ route('tasks.update-field', $task) }}', field: 'approval_date', value: @js($task->approval_date?->format('Y-m-d')) })">
                         <div class="flex items-center gap-1.5 mb-1">
                             <span class="h-2 w-2 rounded-full flex-shrink-0" style="background:var(--orange)"></span>
                             <p class="text-xs font-bold uppercase tracking-widest" style="color:var(--orange); letter-spacing:.08em">Aprovação</p>
                         </div>
-                        <p class="text-base" style="color:var(--orange); font-weight:800">
-                            {{ $task->approval_date?->format('d/m/Y') ?? '—' }}
-                        </p>
+                        <p x-show="!editing" @click="open()" class="text-base cursor-text" style="color:var(--orange); font-weight:800" title="Clique para editar"
+                           x-text="value ? new Date(value + 'T00:00:00').toLocaleDateString('pt-BR') : '—'"></p>
+                        <input x-show="editing" x-cloak x-ref="input" x-model="value" type="date"
+                               @blur="commit()" @change="commit()" @keydown.escape="cancel()"
+                               class="text-sm px-2 py-1 focus:outline-none" style="background:var(--s3); border:1px solid var(--orange); border-radius:6px; color:var(--text)">
                     </div>
-                    <div>
+                    <div x-data="inlineField({ url: '{{ route('tasks.update-field', $task) }}', field: 'publish_date', value: @js($task->publish_date?->format('Y-m-d')) })">
                         <div class="flex items-center gap-1.5 mb-1">
                             <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:var(--green)"></span>
                             <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Publicação</p>
                         </div>
-                        <p class="text-sm" style="color:var(--text); font-weight:600">
-                            {{ $task->publish_date?->format('d/m/Y') ?? '—' }}
-                        </p>
+                        <p x-show="!editing" @click="open()" class="text-sm cursor-text" style="color:var(--text); font-weight:600" title="Clique para editar"
+                           x-text="value ? new Date(value + 'T00:00:00').toLocaleDateString('pt-BR') : '—'"></p>
+                        <input x-show="editing" x-cloak x-ref="input" x-model="value" type="date"
+                               @blur="commit()" @change="commit()" @keydown.escape="cancel()"
+                               class="text-sm px-2 py-1 focus:outline-none" style="background:var(--s3); border:1px solid var(--purple); border-radius:6px; color:var(--text)">
                     </div>
-                    <div>
+                    <div x-data="inlineField({ url: '{{ route('tasks.update-field', $task) }}', field: 'due_date', value: @js($task->due_date?->format('Y-m-d')) })">
                         <div class="flex items-center gap-1.5 mb-1">
                             <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:var(--red)"></span>
                             <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Vencimento</p>
                         </div>
-                        <p class="text-sm" style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--text)' }}; font-weight:600">
-                            {{ $task->due_date?->format('d/m/Y') ?? '—' }}
-                        </p>
-                        @if($task->due_date)
-                            <p class="text-xs mt-0.5" style="color:var(--muted)">{{ $task->due_date->diffForHumans() }}</p>
-                        @endif
+                        <p x-show="!editing" @click="open()" class="text-sm cursor-text" style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--text)' }}; font-weight:600" title="Clique para editar"
+                           x-text="value ? new Date(value + 'T00:00:00').toLocaleDateString('pt-BR') : '—'"></p>
+                        <input x-show="editing" x-cloak x-ref="input" x-model="value" type="date"
+                               @blur="commit()" @change="commit()" @keydown.escape="cancel()"
+                               class="text-sm px-2 py-1 focus:outline-none" style="background:var(--s3); border:1px solid var(--purple); border-radius:6px; color:var(--text)">
                     </div>
                 </div>
             </div>

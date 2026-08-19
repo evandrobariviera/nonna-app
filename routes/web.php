@@ -419,8 +419,11 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Detalhe da tarefa ──
     Route::get('/tarefas/{task}', [TaskController::class, 'show'])
         ->name('tasks.show');
-    Route::patch('/tarefas/{task}', [TaskController::class, 'updateInline'])
-        ->name('tasks.update-inline');
+    // Campo único, salva na hora — ver TaskController::updateField().
+    Route::patch('/tarefas/{task}/campo', [TaskController::class, 'updateField'])
+        ->name('tasks.update-field');
+    Route::patch('/tarefas/{task}/observadores', [TaskController::class, 'updateObservers'])
+        ->name('tasks.update-observers');
 
     // ── Anexos da tarefa ──
     Route::post('/tarefas/{task}/anexos', [TaskAttachmentController::class, 'store'])
