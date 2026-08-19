@@ -692,6 +692,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
             ->name('settings.notification-templates.update');
         Route::post('/configuracoes/mensagens/{type}/{channel}/testar', [\App\Http\Controllers\NotificationTemplateController::class, 'test'])
             ->name('settings.notification-templates.test');
+
+        // ── Monitor de Trabalho — o que cada usuário fez no dia (login + ações) ──
+        Route::get('/monitor-trabalho', [\App\Http\Controllers\WorkMonitorController::class, 'index'])
+            ->name('work-monitor.index');
     });
 
 });

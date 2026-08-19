@@ -367,4 +367,12 @@
         Configurações
     </span>
 </a>
+<a href="{{ route('work-monitor.index') }}"
+   class="nav-group-trigger {{ request()->routeIs('work-monitor.*') ? 'open' : '' }}"
+   style="{{ request()->routeIs('work-monitor.*') ? 'color:var(--purple);' : '' }}">
+    <span class="flex items-center gap-3">
+        <x-icon name="activity" size="16" class="flex-shrink-0" />
+        Monitor de Trabalho
+    </span>
+</a>
 @endif
