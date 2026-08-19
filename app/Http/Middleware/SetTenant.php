@@ -58,11 +58,16 @@ class SetTenant
             view()->share('currentOrg', $organization);
             view()->share('currentOrgRole', $role);
             view()->share('isOrgAdmin', in_array($role, ['owner', 'admin']));
+            // "Gestor" (manager) — nível acima de Membro mas abaixo de Admin. Usado em
+            // telas que Admin também deve ver (ex: Monitor de Trabalho), por isso já
+            // inclui owner/admin também, não é exclusivo de manager.
+            view()->share('isOrgManager', in_array($role, ['owner', 'admin', 'manager']));
             view()->share('userFunctionRoles', $functionRoles);
         } else {
             view()->share('currentOrg', null);
             view()->share('currentOrgRole', null);
             view()->share('isOrgAdmin', false);
+            view()->share('isOrgManager', false);
             view()->share('userFunctionRoles', []);
         }
 

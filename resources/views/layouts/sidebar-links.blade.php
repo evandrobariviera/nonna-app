@@ -356,9 +356,11 @@
 </div>
 @endif
 
-{{-- ══ ADMINISTRAÇÃO ══ --}}
-@if($isOrgAdmin ?? false)
+{{-- ══ ADMINISTRAÇÃO ══ — Configurações é só Admin/Owner; Monitor de Trabalho
+     também libera Gestor (ver $isOrgManager, App\Http\Middleware\SetTenant). --}}
+@if(($isOrgAdmin ?? false) || ($isOrgManager ?? false))
 <div class="nav-group-label" style="margin-top:8px">Administração</div>
+@if($isOrgAdmin ?? false)
 <a href="{{ route('settings.index') }}"
    class="nav-group-trigger {{ request()->routeIs('settings.*') ? 'open' : '' }}"
    style="{{ request()->routeIs('settings.*') ? 'color:var(--purple);' : '' }}">
@@ -367,6 +369,8 @@
         Configurações
     </span>
 </a>
+@endif
+@if($isOrgManager ?? false)
 <a href="{{ route('work-monitor.index') }}"
    class="nav-group-trigger {{ request()->routeIs('work-monitor.*') ? 'open' : '' }}"
    style="{{ request()->routeIs('work-monitor.*') ? 'color:var(--purple);' : '' }}">
@@ -375,4 +379,5 @@
         Monitor de Trabalho
     </span>
 </a>
+@endif
 @endif

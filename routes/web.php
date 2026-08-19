@@ -694,8 +694,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
             ->name('settings.notification-templates.update');
         Route::post('/configuracoes/mensagens/{type}/{channel}/testar', [\App\Http\Controllers\NotificationTemplateController::class, 'test'])
             ->name('settings.notification-templates.test');
+    });
 
-        // ── Monitor de Trabalho — o que cada usuário fez no dia (login + ações) ──
+    // ── Monitor de Trabalho — o que cada usuário fez no dia (login + ações). Admin
+    // e Gestor (não Membro comum) — grupo próprio porque libera mais papéis que o
+    // resto de Configurações acima.
+    Route::middleware('org.admin:owner,admin,manager')->group(function () {
         Route::get('/monitor-trabalho', [\App\Http\Controllers\WorkMonitorController::class, 'index'])
             ->name('work-monitor.index');
     });
