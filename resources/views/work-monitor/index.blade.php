@@ -51,7 +51,7 @@
                             </span>
                         @endif
                     </div>
-                    <p class="text-xs mb-4" style="color:var(--muted2)">{{ $timeline->action_count }} {{ Str::plural('ação', $timeline->action_count) }} registrada{{ $timeline->action_count === 1 ? '' : 's' }}</p>
+                    <p class="text-xs mb-4" style="color:var(--muted2)">{{ $timeline->action_count }} {{ $timeline->action_count === 1 ? 'ação registrada' : 'ações registradas' }}</p>
 
                     @if($timeline->events->isEmpty())
                         <p class="text-xs" style="color:var(--muted)">Nada registrado nesse dia.</p>
