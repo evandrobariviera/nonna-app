@@ -16,8 +16,9 @@
             <div class="flex flex-col gap-2">
                 @foreach($clientsWithoutActivePlan as $client)
                     <a href="{{ route('clients.show', [$client, 'tab' => 'planejamentos']) }}"
-                       class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--red)"
+                       class="flex items-center gap-2 px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--red)"
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+                        <x-icon-chip icon="building-2" :color="$client->statusColor()" size="24" />
                         <p class="text-xs font-semibold" style="color:var(--text)">{{ $client->displayName() }}</p>
                     </a>
                 @endforeach
@@ -38,12 +39,15 @@
                 @foreach($plansExpiringSoon as $plan)
                     @php $daysLeft = today()->diffInDays($plan->period_end, false); @endphp
                     <a href="{{ route('macroplans.edit', $plan) }}"
-                       class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--orange)"
+                       class="flex items-center gap-2 px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--orange)"
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $plan->client?->displayName() ?? '—' }}</p>
-                        <p class="text-xs font-mono mt-0.5" style="color:var(--orange)">
-                            {{ $daysLeft <= 0 ? 'vence hoje' : $daysLeft . ' dia' . ($daysLeft !== 1 ? 's' : '') }} · {{ $plan->period_end->format('d/m') }}
-                        </p>
+                        <x-icon-chip icon="compass" :color="$plan->statusColor()" size="24" />
+                        <div class="min-w-0">
+                            <p class="text-xs font-semibold" style="color:var(--text)">{{ $plan->client?->displayName() ?? '—' }}</p>
+                            <p class="text-xs font-mono mt-0.5" style="color:var(--orange)">
+                                {{ $daysLeft <= 0 ? 'vence hoje' : $daysLeft . ' dia' . ($daysLeft !== 1 ? 's' : '') }} · {{ $plan->period_end->format('d/m') }}
+                            </p>
+                        </div>
                     </a>
                 @endforeach
             </div>
@@ -62,10 +66,13 @@
             <div class="flex flex-col gap-2">
                 @foreach($activePlans as $plan)
                     <a href="{{ route('macroplans.edit', $plan) }}"
-                       class="block px-3 py-2 transition-colors" style="background:var(--s2)"
+                       class="flex items-center gap-2 px-3 py-2 transition-colors" style="background:var(--s2)"
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $plan->client?->displayName() ?? '—' }}</p>
-                        <p class="text-xs font-mono mt-0.5" style="color:var(--muted)">{{ $plan->periodLabel() }}</p>
+                        <x-icon-chip icon="compass" :color="$plan->statusColor()" size="24" />
+                        <div class="min-w-0">
+                            <p class="text-xs font-semibold" style="color:var(--text)">{{ $plan->client?->displayName() ?? '—' }}</p>
+                            <p class="text-xs font-mono mt-0.5" style="color:var(--muted)">{{ $plan->periodLabel() }}</p>
+                        </div>
                     </a>
                 @endforeach
             </div>
@@ -88,12 +95,15 @@
             <div class="flex flex-col gap-2">
                 @foreach($meetingsPosReuniao as $meeting)
                     <a href="{{ route('meetings.show', $meeting) }}"
-                       class="block px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--orange)"
+                       class="flex items-center gap-2 px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--orange)"
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $meeting->title }}</p>
-                        <div class="flex items-center gap-2 mt-0.5">
-                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->displayName() ?? '—' }}</span>
-                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->scheduled_at->format('d/m') }}</span>
+                        <x-icon-chip :icon="$meeting->typeIcon()" :color="$meeting->statusColor()" size="24" />
+                        <div class="min-w-0">
+                            <p class="text-xs font-semibold" style="color:var(--text)">{{ $meeting->title }}</p>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->displayName() ?? '—' }}</span>
+                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->scheduled_at->format('d/m') }}</span>
+                            </div>
                         </div>
                     </a>
                 @endforeach
@@ -112,12 +122,15 @@
             <div class="flex flex-col gap-2">
                 @foreach($meetingsRealizadas as $meeting)
                     <a href="{{ route('meetings.show', $meeting) }}"
-                       class="block px-3 py-2 transition-colors" style="background:var(--s2)"
+                       class="flex items-center gap-2 px-3 py-2 transition-colors" style="background:var(--s2)"
                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $meeting->title }}</p>
-                        <div class="flex items-center gap-2 mt-0.5">
-                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->displayName() ?? '—' }}</span>
-                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->scheduled_at->format('d/m') }}</span>
+                        <x-icon-chip :icon="$meeting->typeIcon()" :color="$meeting->statusColor()" size="24" />
+                        <div class="min-w-0">
+                            <p class="text-xs font-semibold" style="color:var(--text)">{{ $meeting->title }}</p>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->displayName() ?? '—' }}</span>
+                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->scheduled_at->format('d/m') }}</span>
+                            </div>
                         </div>
                     </a>
                 @endforeach
