@@ -381,12 +381,17 @@
                                         ? "polygon(0 0, 100% 0, 100% 100%, 0 100%, {$chevronPt}px 50%)"
                                         : "polygon(0 0, calc(100% - {$chevronPt}px) 0, 100% 50%, calc(100% - {$chevronPt}px) 100%, 0 100%, {$chevronPt}px 50%)");
                             @endphp
+                            {{-- :style com string SUBSTITUI o atributo style inteiro (Alpine
+                                 setStylesFromString faz el.setAttribute('style', valor)) — por
+                                 isso clip-path/padding/margin (fixos, não reativos) entram
+                                 DENTRO da mesma string, nunca num style="" estático separado,
+                                 senão o Alpine apaga tudo isso ao aplicar o bind. --}}
                             <button type="button" @click="set('{{ $key }}')"
                                 class="flex-shrink-0 py-3 text-xs font-bold uppercase text-center transition-colors"
-                                :style="statusKey === '{{ $key }}' ? 'background:var(--' + colors['{{ $key }}'] + ');color:#fff;' : 'background:var(--s2);color:var(--muted2);'"
-                                style="clip-path:{{ $clip }}; min-width:82px; {{ $chevronOutline }} cursor:pointer;
-                                       padding-left:{{ $loop->first ? '13px' : '15px' }}; padding-right:{{ $loop->last ? '13px' : '15px' }};
-                                       margin-left:{{ $loop->first ? '0' : '-'.$chevronPt.'px' }}; letter-spacing:.01em;"
+                                :style="'clip-path:{{ $clip }};min-width:82px;{{ $chevronOutline }}cursor:pointer;
+                                         padding-left:{{ $loop->first ? '13px' : '15px' }};padding-right:{{ $loop->last ? '13px' : '15px' }};
+                                         margin-left:{{ $loop->first ? '0' : '-'.$chevronPt.'px' }};letter-spacing:.01em;' +
+                                        (statusKey === '{{ $key }}' ? 'background:var(--' + colors['{{ $key }}'] + ');color:#fff;' : 'background:var(--s2);color:var(--muted2);')"
                                 @mouseover="if (statusKey !== '{{ $key }}') $el.style.background = 'var(--s3)'"
                                 @mouseout="if (statusKey !== '{{ $key }}') $el.style.background = 'var(--s2)'">
                                 {{ $statusShort[$key] ?? $s['label'] }}
@@ -396,10 +401,9 @@
 
                     {{-- Cancelado — separado da corrente, mesma mecânica de sempre --}}
                     <button type="button" @click="set('cancelado')" class="flex-shrink-0 px-4 py-3 text-xs font-bold uppercase transition-colors"
-                        style="letter-spacing:.01em; cursor:pointer;"
-                        :style="statusKey === 'cancelado'
+                        :style="'letter-spacing:.01em;cursor:pointer;' + (statusKey === 'cancelado'
                             ? 'border:1px solid var(--' + colors.cancelado + ');background:var(--' + colors.cancelado + ');color:#fff;'
-                            : 'border:1px solid var(--border2);background:transparent;color:var(--muted2);'"
+                            : 'border:1px solid var(--border2);background:transparent;color:var(--muted2);')"
                         @mouseover="if (statusKey !== 'cancelado') $el.style.background = 'var(--s2)'"
                         @mouseout="if (statusKey !== 'cancelado') $el.style.background = 'transparent'">
                         Cancelado
@@ -437,10 +441,9 @@
                         @foreach(\App\Models\Task::$situations as $key => $label)
                             <button type="button" @click="set('{{ $key }}')"
                                 class="w-full h-full px-2 py-2.5 text-[11px] font-bold uppercase text-center leading-tight transition-colors rounded-lg"
-                                style="letter-spacing:.01em; cursor:pointer;"
-                                :style="situacaoKey === '{{ $key }}'
+                                :style="'letter-spacing:.01em;cursor:pointer;' + (situacaoKey === '{{ $key }}'
                                     ? 'background:' + (colors['{{ $key }}'] || 'var(--muted2)') + ';color:#fff;'
-                                    : 'background:var(--s2);color:var(--muted2);border:1px solid var(--border);'"
+                                    : 'background:var(--s2);color:var(--muted2);border:1px solid var(--border);')"
                                 @mouseover="if (situacaoKey !== '{{ $key }}') $el.style.background = 'var(--s3)'"
                                 @mouseout="if (situacaoKey !== '{{ $key }}') $el.style.background = 'var(--s2)'">
                                 {{ $key === '' ? 'Sem situação' : $label }}
