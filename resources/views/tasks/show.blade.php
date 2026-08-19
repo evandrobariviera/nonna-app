@@ -392,15 +392,26 @@
                 <div class="grid grid-cols-2 gap-x-10 gap-y-5">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Sprint</p>
-                        @if($task->sprint)
-                            <a href="{{ route('sprints.show', $task->sprint) }}"
-                               class="text-sm font-semibold transition-colors" style="color:var(--orange)"
-                               onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
-                                {{ $task->sprint->title }}
-                            </a>
-                        @else
-                            <p class="text-sm" style="color:var(--muted)">Backlog</p>
-                        @endif
+                        <div class="flex items-center gap-1.5">
+                            <form method="POST" action="{{ route('tasks.update-sprint', $task) }}" class="flex-1 min-w-0">
+                                @csrf @method('PATCH')
+                                <select name="sprint_id" onchange="this.form.submit()"
+                                    class="w-full px-2 py-1.5 text-sm font-semibold focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text)">
+                                    <option value="">Backlog (fora de sprint)</option>
+                                    @foreach($sprints as $sp)
+                                        <option value="{{ $sp->id }}" {{ $task->sprint_id === $sp->id ? 'selected' : '' }}>
+                                            {{ $sp->title }}{{ $sp->status === 'closed' ? ' (encerrada)' : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </form>
+                            @if($task->sprint)
+                                <a href="{{ route('sprints.show', $task->sprint) }}" class="btn btn-ghost btn-xs flex-shrink-0" title="Abrir a sprint">
+                                    <x-icon name="external-link" size="12" />
+                                </a>
+                            @endif
+                        </div>
                     </div>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Tipo</p>

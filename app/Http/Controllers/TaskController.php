@@ -173,6 +173,15 @@ class TaskController extends Controller
         // nenhuma sprint, "→ Sprint" manda pra essa (só existe uma ativa por vez).
         $activeSprint = Sprint::where('status', 'active')->first();
 
+        // Pro seletor "mudar de sprint" do campo Sprint — mesmo recorte (aberta pra
+        // receber tarefa) da Fila/Ticket (ver TicketController). Se a sprint atual da
+        // tarefa já estiver encerrada, inclui ela também — senão o <select> perderia o
+        // valor selecionado (ela continua sendo o estado real até alguém trocar).
+        $sprints = Sprint::whereIn('status', ['active', 'planning'])->orderByDesc('starts_at')->get(['id', 'title', 'status']);
+        if ($task->sprint && !$sprints->contains('id', $task->sprint_id)) {
+            $sprints->push($task->sprint);
+        }
+
         $chat = AiChat::where('entity_type', 'task')
             ->where('entity_id', $task->id)
             ->first();
@@ -193,7 +202,7 @@ class TaskController extends Controller
                 ->values()
             : collect();
 
-        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages', 'clientProjects', 'clients', 'activeSprint'));
+        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages', 'clientProjects', 'clients', 'activeSprint', 'sprints'));
     }
 
     public function updateInline(Request $request, Task $task)
@@ -469,6 +478,38 @@ class TaskController extends Controller
         $task->update(['project_id' => $data['project_id']]);
 
         return redirect()->back()->with('success', 'Projeto atualizado.');
+    }
+
+    // Troca/atribui/remove a Sprint direto da própria tarefa — mesmas regras de negócio
+    // de SprintController::addTask/removeTask (pendência bloqueia entrada, sprint travada
+    // bloqueia saída, sprint encerrada não recebe tarefa nova), só que fica na tarefa
+    // (redirect back) em vez de pular pra página da Sprint.
+    public function updateSprint(Request $request, Task $task)
+    {
+        $data = $request->validate(['sprint_id' => 'nullable|uuid|exists:pgsql.sprints,id']);
+
+        if ($data['sprint_id'] === $task->sprint_id) {
+            return redirect()->back();
+        }
+
+        if ($task->sprint_id && $task->sprint?->isLocked()) {
+            abort(403, 'Sprint atual travada. Desbloqueie antes de mover essa tarefa.');
+        }
+
+        if ($data['sprint_id']) {
+            $sprint = Sprint::findOrFail($data['sprint_id']);
+            abort_if($sprint->status === 'closed', 403, 'Essa sprint está encerrada.');
+
+            if ($task->isPendente()) {
+                throw ValidationException::withMessages([
+                    'pendencia' => 'Essa tarefa tem pendências de cadastro e não pode ser adicionada à sprint. Corrija-a antes.',
+                ]);
+            }
+        }
+
+        $task->update(['sprint_id' => $data['sprint_id']]);
+
+        return redirect()->back()->with('success', $data['sprint_id'] ? 'Tarefa movida para a sprint.' : 'Tarefa devolvida para a Fila.');
     }
 
     // Troca o cliente da tarefa. Bloqueia se houver rodada de aprovação pendente
