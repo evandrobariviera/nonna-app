@@ -28,7 +28,8 @@
                         @foreach($colRounds as $round)
                             <div class="block px-3 py-2" style="background:var(--s2); border-left:2px solid {{ $col['color'] }}"
                                  x-data="{ statusOpen: false, situacaoOpen: false, statusStyle: '', situacaoStyle: '' }">
-                                <a href="{{ route('tasks.show', $round->task_id) }}" class="hover:underline">
+                                <a href="{{ route('tasks.show', $round->task_id) }}" class="flex items-center gap-2 hover:underline">
+                                    <x-icon-chip :icon="$round->task?->typeIcon() ?? 'tag'" :color="$round->task?->statusColor() ?? 'muted'" size="24" />
                                     <p class="text-xs font-semibold leading-snug" style="color:var(--text)">
                                         {{ $round->task?->title ?? '—' }}
                                     </p>
@@ -122,9 +123,11 @@
                             </div>
 
                             <a href="{{ route('tasks.show', $round->task_id) }}"
-                               class="text-base font-semibold leading-snug hover:underline"
-                               style="color:var(--text)">
-                                {{ $round->task?->title ?? '—' }}
+                               class="flex items-center gap-2 hover:underline">
+                                <x-icon-chip :icon="$round->task?->typeIcon() ?? 'tag'" :color="$round->task?->statusColor() ?? 'muted'" size="30" />
+                                <span class="text-base font-semibold leading-snug" style="color:var(--text)">
+                                    {{ $round->task?->title ?? '—' }}
+                                </span>
                             </a>
 
                             {{-- Aprovadores --}}
