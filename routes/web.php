@@ -341,6 +341,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::get('/central-de-leads', [LeadController::class, 'index'])
         ->name('leads.index');
 
+    // Precisa vir ANTES do {lead} — senão "resultados" colide com o wildcard.
+    Route::get('/central-de-leads/resultados', [LeadController::class, 'results'])
+        ->name('leads.results');
+
     Route::get('/central-de-leads/{lead}', [LeadController::class, 'show'])
         ->name('leads.show');
 
@@ -785,6 +789,8 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
     Route::post('/aprovacoes/{round}/decidir', [PortalApprovals::class, 'decide'])->name('approvals.decide');
     Route::get('/producao', [PortalProduction::class, 'index'])->name('production.index');
     Route::get('/central-de-leads', [PortalLeads::class, 'index'])->name('leads.index');
+    // Precisa vir ANTES do {lead} — senão "resultados" colide com o wildcard.
+    Route::get('/central-de-leads/resultados', [PortalLeads::class, 'results'])->name('leads.results');
     Route::get('/central-de-leads/{lead}', [PortalLeads::class, 'show'])->name('leads.show');
     Route::post('/central-de-leads/{lead}/notas', [PortalLeads::class, 'storeNote'])->name('leads.notes.store');
     Route::patch('/central-de-leads/{lead}/stage', [PortalLeads::class, 'updateStage'])->name('leads.update-stage');

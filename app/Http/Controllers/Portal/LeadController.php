@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Client;
 use App\Models\ClientLeadOpportunity;
+use App\Models\ClientLeadSource;
 use App\Models\ClientModule;
+use App\Models\LeadChannel;
 use App\Models\User;
 use App\Services\NotificationService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,7 +18,7 @@ class LeadController extends Controller
 {
     private const MODULE_KEY = 'central_leads';
 
-    public function index()
+    public function index(Request $request)
     {
         $client = app('currentPortalClient');
 
@@ -24,13 +28,83 @@ class LeadController extends Controller
             return view('portal.leads.upsell', compact('client', 'module'));
         }
 
-        $board = ClientLeadOpportunity::with(['lead', 'channel'])
-            ->whereHas('lead', fn ($q) => $q->where('client_id', $client->id))
-            ->orderByDesc('created_at')
-            ->get()
-            ->groupBy('stage');
+        $view = $request->get('view', 'kanban');
+        $filterOptions = $this->filterOptions($client);
 
-        return view('portal.leads.index', compact('board', 'client'));
+        if ($view === 'lista') {
+            $leads = $this->filteredQuery($request, $client)->paginate(20)->withQueryString();
+
+            return view('portal.leads.index', array_merge(compact('view', 'leads', 'client'), $filterOptions));
+        }
+
+        $board = $this->filteredQuery($request, $client)->get()->groupBy('stage');
+
+        return view('portal.leads.index', array_merge(compact('view', 'board', 'client'), $filterOptions));
+    }
+
+    public function results(Request $request)
+    {
+        $client = app('currentPortalClient');
+        $leads  = $this->filteredQuery($request, $client)->paginate(20)->withQueryString();
+
+        return view('leads._results', [
+            'leads'        => $leads,
+            'showClient'   => false,
+            'showAssignee' => false,
+            'showRoute'    => 'portal.leads.show',
+        ]);
+    }
+
+    // channels/sources escopados manualmente pelo Cliente do Portal — o guard
+    // "portal" não passa por SetApiTenant/currentOrganization, então o global
+    // scope de Tenantable do LeadChannel não tem org pra filtrar sozinho aqui.
+    private function filterOptions(Client $client): array
+    {
+        return [
+            'channels' => LeadChannel::where('organization_id', $client->organization_id)->active()->orderBy('name')->get(),
+            'sources'  => ClientLeadSource::where('client_id', $client->id)->where('is_active', true)->orderBy('label')->get(),
+        ];
+    }
+
+    private function filteredQuery(Request $request, Client $client): Builder
+    {
+        $query = ClientLeadOpportunity::with(['lead', 'channel', 'source'])
+            ->whereHas('lead', fn ($q) => $q->where('client_id', $client->id))
+            ->orderByDesc('created_at');
+
+        if ($request->filled('stage')) {
+            $query->where('stage', $request->stage);
+        }
+
+        if ($request->filled('channel_id')) {
+            $query->where('lead_channel_id', $request->channel_id);
+        }
+
+        if ($request->filled('source_id')) {
+            $query->where('client_lead_source_id', $request->source_id);
+        }
+
+        if ($request->filled('utm_source')) {
+            $query->where('utm_source', 'ilike', '%' . $request->utm_source . '%');
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        if ($request->filled('q')) {
+            $query->whereHas('lead', function ($q) use ($request) {
+                $q->where('name', 'ilike', '%' . $request->q . '%')
+                    ->orWhere('phone', 'ilike', '%' . $request->q . '%')
+                    ->orWhere('email', 'ilike', '%' . $request->q . '%');
+            });
+        }
+
+        return $query;
     }
 
     public function show(ClientLeadOpportunity $lead)
