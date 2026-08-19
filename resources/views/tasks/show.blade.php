@@ -380,18 +380,16 @@
                                     : ($loop->last
                                         ? "polygon(0 0, 100% 0, 100% 100%, 0 100%, {$chevronPt}px 50%)"
                                         : "polygon(0 0, calc(100% - {$chevronPt}px) 0, 100% 50%, calc(100% - {$chevronPt}px) 100%, 0 100%, {$chevronPt}px 50%)");
+                                // JS string literal ('...') não pode conter quebra de linha crua —
+                                // Blade não some com os \n do template, então o :style precisa ficar
+                                // montado numa string PHP de uma linha só antes de ir pro atributo
+                                // (foi exatamente isso que quebrou o Alpine: SyntaxError silencioso
+                                // que travava TODO o resto da página, não só a barra de Status).
+                                $staticStyle = "clip-path:{$clip};min-width:82px;{$chevronOutline}cursor:pointer;padding-left:" . ($loop->first ? '13px' : '15px') . ';padding-right:' . ($loop->last ? '13px' : '15px') . ';margin-left:' . ($loop->first ? '0' : '-' . $chevronPt . 'px') . ';letter-spacing:.01em;';
                             @endphp
-                            {{-- :style com string SUBSTITUI o atributo style inteiro (Alpine
-                                 setStylesFromString faz el.setAttribute('style', valor)) — por
-                                 isso clip-path/padding/margin (fixos, não reativos) entram
-                                 DENTRO da mesma string, nunca num style="" estático separado,
-                                 senão o Alpine apaga tudo isso ao aplicar o bind. --}}
                             <button type="button" @click="set('{{ $key }}')"
                                 class="flex-shrink-0 py-3 text-xs font-bold uppercase text-center transition-colors"
-                                :style="'clip-path:{{ $clip }};min-width:82px;{{ $chevronOutline }}cursor:pointer;
-                                         padding-left:{{ $loop->first ? '13px' : '15px' }};padding-right:{{ $loop->last ? '13px' : '15px' }};
-                                         margin-left:{{ $loop->first ? '0' : '-'.$chevronPt.'px' }};letter-spacing:.01em;' +
-                                        (statusKey === '{{ $key }}' ? 'background:var(--' + colors['{{ $key }}'] + ');color:#fff;' : 'background:var(--s2);color:var(--muted2);')"
+                                :style="'{{ $staticStyle }}' + (statusKey === '{{ $key }}' ? 'background:var(--' + colors['{{ $key }}'] + ');color:#fff;' : 'background:var(--s2);color:var(--muted2);')"
                                 @mouseover="if (statusKey !== '{{ $key }}') $el.style.background = 'var(--s3)'"
                                 @mouseout="if (statusKey !== '{{ $key }}') $el.style.background = 'var(--s2)'">
                                 {{ $statusShort[$key] ?? $s['label'] }}
@@ -401,9 +399,7 @@
 
                     {{-- Cancelado — separado da corrente, mesma mecânica de sempre --}}
                     <button type="button" @click="set('cancelado')" class="flex-shrink-0 px-4 py-3 text-xs font-bold uppercase transition-colors"
-                        :style="'letter-spacing:.01em;cursor:pointer;' + (statusKey === 'cancelado'
-                            ? 'border:1px solid var(--' + colors.cancelado + ');background:var(--' + colors.cancelado + ');color:#fff;'
-                            : 'border:1px solid var(--border2);background:transparent;color:var(--muted2);')"
+                        :style="'letter-spacing:.01em;cursor:pointer;' + (statusKey === 'cancelado' ? 'border:1px solid var(--' + colors.cancelado + ');background:var(--' + colors.cancelado + ');color:#fff;' : 'border:1px solid var(--border2);background:transparent;color:var(--muted2);')"
                         @mouseover="if (statusKey !== 'cancelado') $el.style.background = 'var(--s2)'"
                         @mouseout="if (statusKey !== 'cancelado') $el.style.background = 'transparent'">
                         Cancelado
