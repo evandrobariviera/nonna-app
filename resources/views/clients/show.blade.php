@@ -71,6 +71,12 @@
             <button class="tab-btn" :class="{ active: tab === 'contas' }" @click="tab = 'contas'">
                 Contas de Anúncios
             </button>
+            <button class="tab-btn" :class="{ active: tab === 'leads' }" @click="tab = 'leads'">
+                Fontes de Lead
+                @if($client->leadSources->count())
+                    <span class="tab-count">{{ $client->leadSources->count() }}</span>
+                @endif
+            </button>
             <button class="tab-btn" :class="{ active: tab === 'contratos' }" @click="tab = 'contratos'">
                 Contratos
                 @if($client->contracts->count())
@@ -354,9 +360,17 @@
                             <h3 class="text-sm font-bold" style="color:var(--text)">Metadados</h3>
                         </div>
                         <div class="p-5 flex flex-col gap-3">
-                            <div>
+                            <div x-data="{ copied: false }">
                                 <p class="stat-label mb-1">ID interno</p>
-                                <p class="text-xs truncate" style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif">{{ $client->id }}</p>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-xs truncate" style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif">{{ $client->id }}</p>
+                                    <button type="button"
+                                            @click="navigator.clipboard.writeText('{{ $client->id }}'); copied = true; setTimeout(() => copied = false, 1500)"
+                                            class="text-xs flex-shrink-0" style="color:var(--purple)" title="Copiar ID">
+                                        <span x-show="!copied">Copiar</span>
+                                        <span x-show="copied" x-cloak>Copiado!</span>
+                                    </button>
+                                </div>
                             </div>
                             @if($client->clickup_task_id)
                             <div>
@@ -1673,6 +1687,143 @@
                     </table>
                 </div>
             @endif
+        </div>
+
+        {{-- TAB: FONTES DE LEAD --}}
+        <div x-show="tab === 'leads'" x-cloak
+             x-data="{
+                modal: false,
+                editing: null,
+                form: { lead_channel_id: '', external_id: '', label: '', is_active: true },
+                open(source) {
+                    if (source) {
+                        this.editing = source;
+                        this.form = { lead_channel_id: source.lead_channel_id, external_id: source.external_id, label: source.label || '', is_active: source.is_active };
+                    } else {
+                        this.editing = null;
+                        this.form = { lead_channel_id: '', external_id: '{{ $client->id }}', label: '', is_active: true };
+                    }
+                    this.modal = true;
+                },
+                close() { this.modal = false; this.editing = null; }
+             }">
+
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-sm font-bold" style="color:var(--text)">Fontes de Lead</h3>
+                    <p class="text-xs mt-1" style="color:var(--muted)">
+                        Mapeia "de onde vem o lead" pra esse Cliente — o identificador (<code>external_id</code>) que o n8n manda em
+                        <code>POST /api/leads/captura</code> precisa bater exatamente com um desses. Pra canal "Site", o padrão é usar
+                        o próprio ID interno do Cliente (copie na aba Geral) como identificador no script embutido no site.
+                    </p>
+                </div>
+                <button type="button" @click="open(null)" class="btn btn-primary btn-sm">+ Nova Fonte</button>
+            </div>
+
+            @if($client->leadSources->isEmpty())
+                <div class="card p-10 text-center">
+                    <p class="text-sm" style="color:var(--muted)">Nenhuma fonte de lead cadastrada pra esse Cliente ainda.</p>
+                </div>
+            @else
+                <div class="card overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="nonna-table">
+                        <thead>
+                            <tr>
+                                <th>Canal</th>
+                                <th>Identificador (external_id)</th>
+                                <th>Rótulo</th>
+                                <th style="width:80px">Ativa</th>
+                                <th style="width:90px"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($client->leadSources as $source)
+                                <tr>
+                                    <td class="text-sm" style="color:var(--text)">{{ $source->channel?->name ?? '—' }}</td>
+                                    <td class="text-xs font-mono" style="color:var(--muted2)">{{ $source->external_id }}</td>
+                                    <td class="text-sm" style="color:var(--muted)">{{ $source->label ?? '—' }}</td>
+                                    <td>
+                                        <span class="badge {{ $source->is_active ? 'badge-green' : 'badge-muted' }}">
+                                            {{ $source->is_active ? 'Sim' : 'Não' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="flex items-center gap-2 justify-end">
+                                            <button type="button"
+                                                    @click="open({{ json_encode(['id' => $source->id, 'lead_channel_id' => $source->lead_channel_id, 'external_id' => $source->external_id, 'label' => $source->label, 'is_active' => $source->is_active]) }})"
+                                                    class="btn btn-ghost btn-xs">
+                                                Editar
+                                            </button>
+                                            <form method="POST" action="{{ route('clients.lead-sources.destroy', [$client, $source]) }}"
+                                                  @submit.prevent="if (await $store.confirmDialog.ask('Remover essa fonte de lead?')) $el.submit()">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-xs">Remover</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            @endif
+
+            {{-- Modal criar/editar --}}
+            <div x-show="modal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center" style="background: rgba(0,0,0,0.7);">
+                <div class="absolute inset-0" @click="close()"></div>
+                <div class="card p-6 w-full max-w-md mx-4 relative">
+                    <h3 class="text-lg font-black mb-4" style="color:var(--text)" x-text="editing ? 'Editar Fonte de Lead' : 'Nova Fonte de Lead'"></h3>
+                    <form :action="editing
+                              ? '{{ url('clientes/' . $client->id . '/fontes-lead') }}/' + editing.id
+                              : '{{ route('clients.lead-sources.store', $client) }}'"
+                          method="POST" class="space-y-4">
+                        @csrf
+                        <input type="hidden" name="_method" value="PATCH" :disabled="!editing">
+
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Canal</label>
+                            <select name="lead_channel_id" x-model="form.lead_channel_id" required
+                                    class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm px-4 py-2.5 focus:outline-none focus:border-[var(--purple)]" style="color:var(--text)">
+                                <option value="">Selecione…</option>
+                                @foreach($leadChannels as $channel)
+                                    <option value="{{ $channel->id }}">{{ $channel->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                                Identificador (external_id)
+                            </label>
+                            <input type="text" name="external_id" x-model="form.external_id" required maxlength="150"
+                                   placeholder="Domínio do site, page_id:form_id do Meta, ou nº do WhatsApp"
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm px-4 py-2.5 focus:outline-none focus:border-[var(--purple)]" style="color:var(--text)">
+                            <p class="text-xs mt-1" style="color:var(--muted)">
+                                Pra canal "Site", use o ID interno do Cliente (já preenchido acima em Fonte nova).
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Rótulo</label>
+                            <input type="text" name="label" x-model="form.label" maxlength="150" placeholder="Ex: Site institucional"
+                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm px-4 py-2.5 focus:outline-none focus:border-[var(--purple)]" style="color:var(--text)">
+                        </div>
+
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="is_active" value="1" x-model="form.is_active" class="accent-[var(--purple)]">
+                            <span class="text-sm" style="color:var(--muted2)">Ativa</span>
+                        </label>
+
+                        <div class="flex gap-3 mt-5">
+                            <button type="submit" class="flex-1 btn btn-primary" x-text="editing ? 'Salvar Alterações' : 'Criar Fonte'"></button>
+                            <button type="button" @click="close()" class="btn btn-ghost">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
 
         {{-- TAB: CONTRATOS --}}

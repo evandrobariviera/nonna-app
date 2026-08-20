@@ -105,7 +105,9 @@ class ClientController extends Controller
 
     public function show(Client $client)
     {
-        $client->load(['credentials', 'adAccounts', 'dossiers', 'contacts', 'macroplans.projects', 'contracts', 'adBudgets.createdBy', 'integrations']);
+        $client->load(['credentials', 'adAccounts', 'dossiers', 'contacts', 'macroplans.projects', 'contracts', 'adBudgets.createdBy', 'integrations', 'leadSources.channel']);
+
+        $leadChannels = \App\Models\LeadChannel::active()->orderBy('name')->get();
 
         $aiAgents = \App\Models\AiAgent::where('is_active', true)->orderBy('name')->get(['id', 'name']);
 
@@ -123,7 +125,7 @@ class ClientController extends Controller
             ->get()
             ->keyBy('contact_id');
 
-        return view('clients.show', compact('client', 'availableContacts', 'subscriptionsByContact', 'aiAgents'));
+        return view('clients.show', compact('client', 'availableContacts', 'subscriptionsByContact', 'aiAgents', 'leadChannels'));
     }
 
     /**

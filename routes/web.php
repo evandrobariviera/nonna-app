@@ -18,6 +18,7 @@ use App\Http\Controllers\Portal\Auth\AuthenticatedSessionController as PortalSes
 use App\Http\Controllers\Portal\ClientContextController as PortalClientContext;
 use App\Http\Controllers\ClientPortalAccessController;
 use App\Http\Controllers\ClientAdAccountController;
+use App\Http\Controllers\ClientLeadSourceController;
 use App\Http\Controllers\ClientAdBillingDocumentController;
 use App\Http\Controllers\FilaController;
 use App\Http\Controllers\OrganizationIntegrationController;
@@ -165,6 +166,14 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('clients.ad-accounts.update');
     Route::delete('/clientes/{client}/contas-anuncios/{adAccount}', [ClientAdAccountController::class, 'destroy'])
         ->name('clients.ad-accounts.destroy');
+
+    // ── Fontes de Lead do cliente (Central de Leads) ──
+    Route::post('/clientes/{client}/fontes-lead', [ClientLeadSourceController::class, 'store'])
+        ->name('clients.lead-sources.store');
+    Route::patch('/clientes/{client}/fontes-lead/{leadSource}', [ClientLeadSourceController::class, 'update'])
+        ->name('clients.lead-sources.update');
+    Route::delete('/clientes/{client}/fontes-lead/{leadSource}', [ClientLeadSourceController::class, 'destroy'])
+        ->name('clients.lead-sources.destroy');
 
     // ── Boletos/PIX da conta de anúncios (Orçamentos) ──
     Route::post('/clientes/{client}/contas-anuncios/{adAccount}/boletos', [ClientAdBillingDocumentController::class, 'store'])
