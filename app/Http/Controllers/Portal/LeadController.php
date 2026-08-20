@@ -28,7 +28,7 @@ class LeadController extends Controller
             return view('portal.leads.upsell', compact('client', 'module'));
         }
 
-        $view = $request->get('view', 'kanban');
+        $view = $request->get('view', 'lista');
         $filterOptions = $this->filterOptions($client);
 
         if ($view === 'lista') {

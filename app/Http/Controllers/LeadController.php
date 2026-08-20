@@ -21,7 +21,7 @@ class LeadController extends Controller
 
     public function index(Request $request)
     {
-        $view = $request->get('view', 'kanban');
+        $view = $request->get('view', 'lista');
         $filterOptions = $this->filterOptions();
 
         if ($view === 'lista') {
