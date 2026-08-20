@@ -91,7 +91,16 @@ export function registerBrowserNotify(Alpine) {
 
         async _poll() {
             try {
-                const res = await fetch('/notificacoes/novas?since=' + encodeURIComponent(this._since));
+                // Headers explícitos são essenciais aqui: sem eles o Laravel não reconhece
+                // esse fetch como chamada AJAX/JSON, e se a sessão expirar com a aba aberta,
+                // trata como navegação de página normal — guardando ESSA url de API como
+                // "intended URL" e jogando o usuário aqui (JSON cru) depois do próximo login.
+                const res = await fetch('/notificacoes/novas?since=' + encodeURIComponent(this._since), {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
                 if (!res.ok) {
                     return;
                 }
