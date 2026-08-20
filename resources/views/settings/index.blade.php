@@ -1236,6 +1236,7 @@
                     <p class="text-xs font-mono" style="color:var(--muted)">GET  <span style="color:var(--text)">/api/ad-accounts</span> — contas de anúncios ativas</p>
                     <p class="text-xs font-mono" style="color:var(--muted)">POST <span style="color:var(--text)">/api/sync/campaigns</span> — sincroniza estrutura de campanhas</p>
                     <p class="text-xs font-mono" style="color:var(--muted)">POST <span style="color:var(--text)">/api/sync/snapshots</span> — grava métricas diárias</p>
+                    <p class="text-xs font-mono" style="color:var(--muted)">POST <span style="color:var(--text)">/api/leads/captura</span> — Central de Leads (site/Meta/WhatsApp)</p>
                 </div>
             </div>
 
