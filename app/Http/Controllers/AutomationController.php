@@ -49,7 +49,7 @@ class AutomationController extends Controller
             'entity_type'   => 'required|in:task,ticket,project,campaign,opportunity,meeting',
             'trigger_type'  => 'required|in:status_changed,field_updated,date_reached,executor_added,created,manual',
             'trigger_config'=> 'nullable|array',
-            'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification,create_record,create_macroplan_review',
+            'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification,create_record,create_macroplan_review,create_internal_review_pauta',
             'action_config' => 'nullable|array',
             'is_active'     => 'boolean',
         ]);
@@ -60,7 +60,7 @@ class AutomationController extends Controller
         $data['action_config'] = $request->input('action_config', []);
 
         // Armazena o nome do agente no action_config para facilitar exibição
-        if ($data['action_type'] === 'run_ai_agent' && !empty($data['action_config']['agent_id'])) {
+        if (in_array($data['action_type'], ['run_ai_agent', 'create_internal_review_pauta'], true) && !empty($data['action_config']['agent_id'])) {
             $agent = AiAgent::find($data['action_config']['agent_id']);
             if ($agent) {
                 $data['action_config']['agent_name'] = $agent->name;
@@ -101,7 +101,7 @@ class AutomationController extends Controller
             'entity_type'   => 'required|in:task,ticket,project,campaign,opportunity,meeting',
             'trigger_type'  => 'required|in:status_changed,field_updated,date_reached,executor_added,created,manual',
             'trigger_config'=> 'nullable|array',
-            'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification,create_record,create_macroplan_review',
+            'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification,create_record,create_macroplan_review,create_internal_review_pauta',
             'action_config' => 'nullable|array',
             'is_active'     => 'boolean',
         ]);
@@ -110,7 +110,7 @@ class AutomationController extends Controller
         $data['trigger_config']= $request->input('trigger_config', []);
         $data['action_config'] = $request->input('action_config', []);
 
-        if ($data['action_type'] === 'run_ai_agent' && !empty($data['action_config']['agent_id'])) {
+        if (in_array($data['action_type'], ['run_ai_agent', 'create_internal_review_pauta'], true) && !empty($data['action_config']['agent_id'])) {
             $agent = AiAgent::find($data['action_config']['agent_id']);
             if ($agent) {
                 $data['action_config']['agent_name'] = $agent->name;

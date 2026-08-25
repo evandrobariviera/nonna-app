@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Meeting extends Model
 {
@@ -24,6 +25,7 @@ class Meeting extends Model
         'client_id',
         'opportunity_id',
         'macro_plan_id',
+        'source_meeting_id',
         'organized_by',
         'created_by',
         'scheduled_at',
@@ -113,6 +115,20 @@ class Meeting extends Model
     public function macroPlan(): BelongsTo
     {
         return $this->belongsTo(MacroPlan::class);
+    }
+
+    // Reunião com o cliente que originou esta Reunião Interna (pauta gerada por IA
+    // a partir da ATA dela) — só preenchido em reuniões type=revisao_interna criadas
+    // pela automação.
+    public function sourceMeeting(): BelongsTo
+    {
+        return $this->belongsTo(Meeting::class, 'source_meeting_id');
+    }
+
+    // Reunião Interna gerada a partir desta (lado inverso de sourceMeeting).
+    public function internalReview(): HasOne
+    {
+        return $this->hasOne(Meeting::class, 'source_meeting_id');
     }
 
     public function organizer(): BelongsTo

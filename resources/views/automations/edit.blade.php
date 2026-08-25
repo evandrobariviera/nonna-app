@@ -436,6 +436,38 @@
                             <p class="text-xs mt-1" style="color:var(--muted)">Notifica todo mundo com esse papel quando o Macro e a reunião de revisão forem criados.</p>
                         </div>
                     </div>
+
+                    <div x-show="actionType === 'create_internal_review_pauta'" x-cloak class="grid gap-3">
+                        <p class="text-sm" style="color:var(--muted)">
+                            Lê a ATA da Reunião que disparou, chama o agente de IA abaixo pra gerar a pauta da
+                            Reunião Interna, e já cria essa Reunião Interna pro próximo dia útil com a pauta
+                            preenchida. Exige que a Reunião já tenha ATA — pensado pro gatilho "Status mudou" →
+                            Realizada numa Reunião do tipo Kickoff Estratégico ou Macroplanejamento.
+                        </p>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">AGENTE DE IA *</label>
+                            <select name="action_config[agent_id]"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                <option value="">Selecione um agente...</option>
+                                @foreach($agents as $agent)
+                                    <option value="{{ $agent->id }}" {{ ($automation->action_config['agent_id'] ?? '') === $agent->id ? 'selected' : '' }}>{{ $agent->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">PAPEL FUNCIONAL A NOTIFICAR *</label>
+                            <select name="action_config[role]"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                <option value="">Selecione...</option>
+                                @foreach($functionRoles as $value => $label)
+                                    <option value="{{ $value }}" {{ ($automation->action_config['role'] ?? '') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs mt-1" style="color:var(--muted)">Notifica todo mundo com esse papel quando a Reunião Interna for criada.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 

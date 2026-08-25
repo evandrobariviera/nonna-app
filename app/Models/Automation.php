@@ -54,6 +54,7 @@ class Automation extends Model
         'send_notification'       => 'Enviar Notificação',
         'create_record'           => 'Criar Tarefa/Ticket',
         'create_macroplan_review' => 'Criar Macroplanejamento + Reunião de Revisão Interna',
+        'create_internal_review_pauta' => 'Gerar Pauta (IA) + Criar Reunião Interna',
     ];
 
     // Campos de data disponíveis pro gatilho "Data alcançada" (só Tarefa por enquanto).
@@ -206,6 +207,7 @@ class Automation extends Model
             'send_notification' => 'Notificar ' . ($config['to'] ?? '?'),
             'create_record'     => 'Criar ' . (($config['record_type'] ?? 'ticket') === 'task' ? 'Tarefa' : 'Ticket'),
             'create_macroplan_review' => 'Cria Macroplanejamento + Reunião de Revisão Interna',
+            'create_internal_review_pauta' => 'Agente: ' . ($config['agent_name'] ?? $config['agent_id'] ?? '?') . ' gera pauta + cria Reunião Interna',
             default             => $this->action_type,
         };
     }

@@ -94,6 +94,7 @@ class AutomationJob implements ShouldQueue
             'send_notification' => $this->sendNotification($config, $entity, $context),
             'create_record'     => $this->createRecord($config, $context, $entity),
             'create_macroplan_review' => $this->createMacroplanReview($config, $entity),
+            'create_internal_review_pauta' => $this->createInternalReviewPauta($config, $entity),
             default             => throw new \RuntimeException("Tipo de ação desconhecido: {$this->automation->action_type}"),
         };
     }
@@ -277,6 +278,109 @@ class AutomationJob implements ShouldQueue
             : '';
 
         return "Macroplanejamento {$macroPlan->id} criado; Reunião de Revisão Interna agendada para {$reviewMeeting->scheduled_at->format('d/m/Y H:i')}{$attachmentsNote}.";
+    }
+
+    // Gera a pauta da Reunião Interna via IA a partir da ATA da reunião com o cliente
+    // (kickoff ou macroplanejamento recorrente) e já cria a Reunião Interna com essa pauta
+    // preenchida. Substitui o antigo create_macroplan_review nesse ponto do fluxo — o Macro
+    // em si passou a nascer manualmente, depois, a partir das duas ATAs (decisão do
+    // usuário); esta ação só cuida do elo Reunião cliente → Reunião Interna.
+    private function createInternalReviewPauta(array $config, mixed $entity): string
+    {
+        if (!$entity instanceof Meeting) {
+            throw new \RuntimeException('create_internal_review_pauta só funciona com entidade Reunião.');
+        }
+
+        // Idempotente: se já existe uma Reunião Interna gerada a partir desta, não recria
+        // (evita duplicar se o status da reunião original oscilar pra trás e pra frente).
+        $alreadyExists = Meeting::where('source_meeting_id', $entity->id)->exists();
+        if ($alreadyExists) {
+            return "Reunião {$entity->id} já tem uma Reunião Interna gerada — nada feito.";
+        }
+
+        if (empty($entity->ata)) {
+            throw new \RuntimeException('Reunião sem ATA preenchida — não é possível gerar a pauta da Reunião Interna.');
+        }
+
+        if (!$entity->client_id) {
+            throw new \RuntimeException('Reunião sem cliente vinculado — não é possível gerar a Reunião Interna.');
+        }
+
+        $agentId = $config['agent_id'] ?? throw new \RuntimeException('create_internal_review_pauta sem agente de IA configurado.');
+        $agent = AiAgent::findOrFail($agentId);
+
+        $entity->loadMissing('client', 'attachments');
+
+        $organizationId = $entity->organization_id ?? $this->automation->createdBy?->organizations()->value('organizations.id');
+
+        $userMessage = "Tipo da reunião: {$entity->typeLabel()}\n"
+            . "Cliente: {$entity->client->displayName()}\n"
+            . "Data da reunião: {$entity->scheduled_at->format('d/m/Y')}\n\n"
+            . "ATA:\n{$entity->ata}\n\n"
+            . "Gere a pauta da Reunião Interna seguindo a estrutura definida.";
+
+        $pauta = app(\App\Services\AiService::class)->run(
+            agent: $agent,
+            userMessage: $userMessage,
+            userId: $this->automation->created_by,
+            clientId: $entity->client_id,
+            trigger: 'automation:create_internal_review_pauta',
+        );
+
+        // Próximo dia útil (pula sábado/domingo), no mesmo horário da reunião original.
+        $reviewDate = now()->addDay();
+        while ($reviewDate->isWeekend()) {
+            $reviewDate->addDay();
+        }
+        $reviewDate->setTimeFromTimeString($entity->scheduled_at->format('H:i:s'));
+
+        $reviewMeeting = Meeting::create([
+            'organization_id'   => $organizationId,
+            'title'             => 'Revisão Interna — ' . $entity->client->displayName(),
+            'type'              => 'revisao_interna',
+            'modality'          => $entity->modality,
+            'status'            => 'agendada',
+            'client_id'         => $entity->client_id,
+            'source_meeting_id' => $entity->id,
+            'organized_by'      => $entity->organized_by,
+            'created_by'        => $this->automation->created_by,
+            'scheduled_at'      => $reviewDate,
+            'duration_minutes'  => $entity->duration_minutes,
+            'agenda'            => $pauta,
+        ]);
+
+        // Copia os anexos complementares da reunião com cliente (documentos, materiais) —
+        // mesmo arquivo no R2, só uma referência nova, não move nem duplica.
+        foreach ($entity->attachments as $attachment) {
+            MeetingAttachment::create([
+                'meeting_id'  => $reviewMeeting->id,
+                'filename'    => $attachment->filename,
+                'disk_path'   => $attachment->disk_path,
+                'disk'        => $attachment->disk,
+                'mime_type'   => $attachment->mime_type,
+                'size'        => $attachment->size,
+                'uploaded_by' => $attachment->uploaded_by,
+            ]);
+        }
+
+        $role = !empty($config['role']) ? FunctionalRole::where('key', $config['role'])->first() : null;
+        $recipients = $role ? $role->users : collect();
+
+        if ($recipients->isNotEmpty()) {
+            $reviewMeeting->participants()->sync($recipients->pluck('id'));
+
+            app(NotificationService::class)->notifyUsers(
+                $recipients,
+                'automation',
+                'Reunião Interna com pauta gerada — ' . $entity->client->displayName(),
+                'Pauta gerada por IA a partir da ATA. Reunião marcada para ' . $reviewMeeting->scheduled_at->format('d/m/Y H:i') . '.',
+                route('meetings.show', $reviewMeeting),
+                $reviewMeeting,
+                $organizationId
+            );
+        }
+
+        return "Reunião Interna {$reviewMeeting->id} criada para {$reviewMeeting->scheduled_at->format('d/m/Y H:i')} com pauta gerada por IA ({$agent->name}).";
     }
 
     private function sendNotification(array $config, mixed $entity, array $context): string

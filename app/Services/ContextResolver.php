@@ -40,6 +40,7 @@ class ContextResolver
             'meeting_date'  => $meeting->scheduled_at?->format('d/m/Y H:i') ?? '',
             'client_name'   => $meeting->client?->displayName() ?? '',
             'organizer_name'=> $meeting->organizer?->name ?? '',
+            'ata'           => $meeting->ata ?? '',
         ];
     }
 
