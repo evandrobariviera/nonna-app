@@ -188,6 +188,82 @@
                 </div>
             </div>
 
+            {{-- Tarefas — nascidas direto da Reunião, antes até de existir Planejamento
+                 (ver Task::meeting()); se a Reunião entrar num Macro depois, elas
+                 acompanham sozinhas (MeetingObserver). --}}
+            <div class="card" x-data="{ showTaskForm: false }">
+                <div class="px-5 py-4 flex items-center justify-between" style="border-bottom:1px solid var(--border2)">
+                    <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
+                        Tarefas
+                        @if($meeting->tasks->count() > 0)
+                            <span class="ml-1 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $meeting->tasks->count() }}</span>
+                        @endif
+                    </p>
+                    @if($meeting->client_id)
+                        <button type="button" @click="showTaskForm = !showTaskForm" class="btn btn-ghost btn-xs">+ Nova Tarefa</button>
+                    @endif
+                </div>
+                <div class="px-5 py-4">
+                    @if(!$meeting->client_id)
+                        <p class="text-sm" style="color:var(--muted)">Vincule um cliente à reunião pra poder criar tarefas a partir dela.</p>
+                    @else
+                        <div x-show="showTaskForm" x-cloak class="mb-4 pb-4" style="border-bottom:1px solid var(--border2)">
+                            <form method="POST" action="{{ route('meetings.tasks.store', $meeting) }}"
+                                  enctype="multipart/form-data" class="grid grid-cols-2 gap-3">
+                                @csrf
+                                <div class="col-span-2">
+                                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">
+                                        Título <span style="color:var(--orange)">*</span>
+                                    </label>
+                                    <input type="text" name="title" required autofocus placeholder="Próximo passo combinado na reunião..."
+                                        class="w-full px-3 py-2 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Tipo</label>
+                                    <select name="task_type" class="w-full px-3 py-2 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        @foreach(\App\Models\Task::$types as $key => $label)
+                                            <option value="{{ $key }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Responsável</label>
+                                    <select name="responsavel_id" class="w-full px-3 py-2 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        <option value="">— nenhum —</option>
+                                        @foreach($users as $u)
+                                            <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-span-2 flex items-center justify-end gap-2 pt-1">
+                                    <button type="button" @click="showTaskForm = false" class="btn btn-ghost btn-xs">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary btn-xs">Criar Tarefa</button>
+                                </div>
+                            </form>
+                        </div>
+                    @endif
+
+                    @if($meeting->tasks->isEmpty())
+                        <p class="text-sm" style="color:var(--muted)">Nenhuma tarefa vinculada ainda.</p>
+                    @else
+                        <ul class="flex flex-col gap-2">
+                            @foreach($meeting->tasks as $task)
+                                <li>
+                                    <a href="{{ route('tasks.show', $task) }}"
+                                       class="flex items-center gap-2 text-sm hover:underline" style="color:var(--text)">
+                                        <span class="badge badge-{{ $task->statusColor() }} flex-shrink-0">{{ $task->statusLabel() }}</span>
+                                        <span class="truncate">{{ $task->title }}</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
+            </div>
+
         </div>
 
         {{-- Coluna lateral --}}

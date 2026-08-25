@@ -16,5 +16,12 @@ class MeetingObserver
                 'to'    => $meeting->status,
             ]);
         }
+
+        // Tarefa nascida da Reunião (Task::meeting()) não tem Planejamento no início —
+        // quando a Reunião entra num Macro depois, as tarefas acompanham automaticamente
+        // (é assim que elas aparecem em "Tarefas Soltas do Planejamento").
+        if ($meeting->wasChanged('macro_plan_id')) {
+            $meeting->tasks()->update(['macro_plan_id' => $meeting->macro_plan_id]);
+        }
     }
 }

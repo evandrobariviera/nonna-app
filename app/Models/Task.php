@@ -18,7 +18,7 @@ class Task extends Model
     protected $connection = 'pgsql';
 
     protected $fillable = [
-        'organization_id', 'project_id', 'macro_plan_id', 'sprint_id', 'client_id',
+        'organization_id', 'project_id', 'macro_plan_id', 'meeting_id', 'sprint_id', 'client_id',
         'title', 'description', 'caption', 'task_type', 'destination', 'status', 'situation',
         'priority',
         'executor_id', 'created_by', 'contact_id',
@@ -101,6 +101,7 @@ class Task extends Model
         'roadmap'    => 'Roadmap',
         'ticket'     => 'Ticket',
         'automation' => 'Automação',
+        'reuniao'    => 'Reunião',
     ];
 
     // Situação = sub-status cru vindo do ClickUp (texto livre). As chaves abaixo são
@@ -274,6 +275,13 @@ class Task extends Model
     public function macroPlan(): BelongsTo
     {
         return $this->belongsTo(MacroPlan::class);
+    }
+
+    // Reunião que originou esta tarefa (ver meetings.tasks) — permanente, mesmo depois
+    // que a tarefa ganha macro_plan_id via MeetingObserver.
+    public function meeting(): BelongsTo
+    {
+        return $this->belongsTo(Meeting::class);
     }
 
     public function client(): BelongsTo

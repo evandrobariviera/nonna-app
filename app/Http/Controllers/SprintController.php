@@ -74,6 +74,7 @@ class SprintController extends Controller
             'tasks.client',
             'tasks.project.macroPlan',
             'tasks.macroPlan',
+            'tasks.meeting',
             'tasks.attachments',
             'tasks.statusTransitions',
         ]);
@@ -97,7 +98,7 @@ class SprintController extends Controller
         // Backlog disponível para adicionar (sem sprint, status backlog) — cliente
         // inativo some daqui também, mesma regra da Fila (não faz sentido puxar
         // pra sprint uma tarefa de cliente que já saiu).
-        $backlogTasks = Task::with(['client', 'project.macroPlan', 'macroPlan', 'executor'])
+        $backlogTasks = Task::with(['client', 'project.macroPlan', 'macroPlan', 'meeting', 'executor'])
             ->whereNull('sprint_id')
             ->whereNotIn('status', ['cancelado', 'concluido'])
             ->whereHas('client', fn ($q) => $q->where('status', '!=', 'inactive'))
@@ -133,7 +134,7 @@ class SprintController extends Controller
     // usuário filtra, sem recarregar a página inteira (Board/Planejamento ficam intocados).
     public function listResults(Request $request, Sprint $sprint)
     {
-        $sprint->load(['tasks.executor', 'tasks.executors', 'tasks.client', 'tasks.project.macroPlan', 'tasks.macroPlan', 'tasks.attachments', 'tasks.statusTransitions']);
+        $sprint->load(['tasks.executor', 'tasks.executors', 'tasks.client', 'tasks.project.macroPlan', 'tasks.macroPlan', 'tasks.meeting', 'tasks.attachments', 'tasks.statusTransitions']);
 
         [$listTasks, $listGrouped, $listGroupBy] = $this->filteredListTasks($request, $sprint);
         $chartTasks = $this->applyCommonFilters($request, $sprint->tasks);

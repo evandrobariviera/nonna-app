@@ -66,7 +66,7 @@ class TicketController extends Controller
 
     private function filteredTickets(Request $request)
     {
-        $query = Task::with(['client', 'executor', 'executors', 'project.macroPlan', 'macroPlan'])
+        $query = Task::with(['client', 'executor', 'executors', 'project.macroPlan', 'macroPlan', 'meeting'])
             ->where('is_ticket', true)
             // Depois que o chamado é triado pra uma Sprint, ele passa a ser
             // executado por lá — mantê-lo aqui também duplicaria a tarefa nas

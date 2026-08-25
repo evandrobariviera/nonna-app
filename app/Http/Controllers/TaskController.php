@@ -6,6 +6,7 @@ use App\Models\AiAgent;
 use App\Models\AiChat;
 use App\Models\Client;
 use App\Models\MacroPlan;
+use App\Models\Meeting;
 use App\Models\Project;
 use App\Models\Sprint;
 use App\Models\Task;
@@ -90,7 +91,7 @@ class TaskController extends Controller
 
     private function filteredTasks(Request $request)
     {
-        $query = Task::with(['client', 'executor', 'executors', 'project.macroPlan', 'macroPlan', 'sprint'])
+        $query = Task::with(['client', 'executor', 'executors', 'project.macroPlan', 'macroPlan', 'meeting', 'sprint'])
             ->where('is_ticket', false)
             ->orderByRaw("CASE status
                 WHEN 'em_producao'           THEN 1
@@ -144,6 +145,7 @@ class TaskController extends Controller
             'project.macroPlan.client',
             'project.macroPlan.attachments',
             'macroPlan',
+            'meeting',
             'sprint',
             'executor',
             'executors',
@@ -323,6 +325,40 @@ class TaskController extends Controller
         $this->storeAttachments($task, $request);
 
         return redirect()->route('projects.showDirect', $project)
+            ->with('success', 'Tarefa criada.');
+    }
+
+    // Tarefa nascida direto de uma Reunião (ação/próximo passo da ata) — antes até de
+    // existir Planejamento. Herda client_id e (se já houver) macro_plan_id da Reunião;
+    // MeetingObserver mantém o macro_plan_id sincronizado se a Reunião entrar num Macro
+    // depois. Mesmo padrão de storeStandalone(), só que a partir da Reunião.
+    public function storeFromMeeting(Request $request, Meeting $meeting)
+    {
+        abort_unless($meeting->client_id, 422, 'Reunião sem cliente vinculado — não é possível criar tarefa.');
+
+        $data = $request->validate($this->storeRules());
+
+        if (($data['status'] ?? 'backlog') === 'em_producao') {
+            if ($reason = Task::wipBlockReason($this->firstExecutorId($data))) {
+                throw ValidationException::withMessages(['status' => $reason]);
+            }
+        }
+
+        $task = $meeting->tasks()->create([
+            ...$data,
+            'macro_plan_id'     => $meeting->macro_plan_id,
+            'client_id'         => $meeting->client_id,
+            'status'            => $data['status'] ?? 'backlog',
+            'origin'            => 'reuniao',
+            'queued_at'         => now(),
+            'internal_approval' => $request->boolean('internal_approval'),
+            'created_by'        => Auth::id(),
+        ]);
+
+        TaskExecutorSync::sync($task, $data);
+        $this->storeAttachments($task, $request);
+
+        return redirect()->route('meetings.show', $meeting)
             ->with('success', 'Tarefa criada.');
     }
 

@@ -173,9 +173,10 @@ class MeetingController extends Controller
 
     public function show(Meeting $meeting)
     {
-        $meeting->load(['client', 'opportunity', 'organizer', 'participants', 'contacts', 'createdBy', 'attachments.uploadedBy', 'macroPlan']);
+        $meeting->load(['client', 'opportunity', 'organizer', 'participants', 'contacts', 'createdBy', 'attachments.uploadedBy', 'macroPlan', 'tasks' => fn ($q) => $q->orderByDesc('created_at')]);
+        $users = User::orderBy('name')->get(['id', 'name']);
 
-        return view('meetings.show', compact('meeting'));
+        return view('meetings.show', compact('meeting', 'users'));
     }
 
     /**

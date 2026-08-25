@@ -22,11 +22,16 @@
                    onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
                     {{ $task->macroPlan->title }}
                 </a>
+            @elseif($task->meeting)
+                <a href="{{ route('meetings.show', $task->meeting) }}" class="font-semibold transition-colors" style="color:var(--muted)"
+                   onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                    {{ $task->meeting->title }}
+                </a>
             @elseif($task->is_ticket)
                 <a href="{{ route('tickets.index') }}" class="font-semibold transition-colors" style="color:var(--muted)"
                    onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Tickets</a>
             @endif
-            @if($task->project || $task->macroPlan || $task->is_ticket)
+            @if($task->project || $task->macroPlan || $task->meeting || $task->is_ticket)
                 <span style="color:var(--border2)">/</span>
             @endif
             <span class="font-semibold" style="color:var(--text)">{{ $task->title }}</span>
@@ -336,8 +341,16 @@
                            onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted2)'">
                             {{ $task->macroPlan->title }}
                         </a>
+                    @elseif($task->meeting)
+                        <span style="color:var(--border2)">›</span>
+                        <a href="{{ route('meetings.show', $task->meeting) }}"
+                           @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('meetings.preview', $task->meeting) }}') }"
+                           style="color:var(--muted2)"
+                           onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted2)'">
+                            {{ $task->meeting->title }}
+                        </a>
                     @endif
-                    @if($task->client || $task->project || $task->macroPlan)
+                    @if($task->client || $task->project || $task->macroPlan || $task->meeting)
                         <span style="color:var(--border2)">•</span>
                     @endif
                     <span>Criada por <strong style="color:var(--muted2); font-weight:600">{{ explode(' ', $task->createdBy?->name ?? '—')[0] }}</strong> em {{ $task->created_at->format('d/m/Y') }} ({{ $task->created_at->diffForHumans() }})</span>

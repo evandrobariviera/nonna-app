@@ -398,6 +398,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::delete('/agenda/{meeting}/anexos/{attachment}', [MeetingAttachmentController::class, 'destroy'])
         ->name('meeting-attachments.destroy');
 
+    Route::post('/agenda/{meeting}/tarefas', [TaskController::class, 'storeFromMeeting'])
+        ->name('meetings.tasks.store');
+
     // ── Macroplanejamentos ──
     Route::get('/planejamentos', [MacroPlanController::class, 'index'])
         ->name('macroplans.index');

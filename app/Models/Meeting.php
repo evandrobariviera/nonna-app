@@ -117,6 +117,14 @@ class Meeting extends Model
         return $this->belongsTo(MacroPlan::class);
     }
 
+    // Tarefas nascidas direto desta Reunião (ver Task::meeting()) — antes até de existir
+    // Planejamento. Quando a Reunião entra num Macro depois, MeetingObserver replica
+    // macro_plan_id pra essas tarefas.
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
     // Reunião com o cliente que originou esta Reunião Interna (pauta gerada por IA
     // a partir da ATA dela) — só preenchido em reuniões type=revisao_interna criadas
     // pela automação.
