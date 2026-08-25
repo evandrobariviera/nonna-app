@@ -59,7 +59,7 @@ class ContextResolver
 
     public static function forTask(Task $task): array
     {
-        $task->loadMissing(['project', 'client', 'executor']);
+        $task->loadMissing(['project', 'macroPlan', 'client', 'executor']);
 
         $context = [
             'task_id'          => $task->id,
@@ -80,6 +80,9 @@ class ContextResolver
         if ($task->project) {
             $context['project_name']  = $task->project->name ?? '';
             $context['project_brief'] = $task->project->description ?? '';
+        } elseif ($task->macroPlan) {
+            // Vinculada direto ao Planejamento, sem Projeto — ver Task::macroPlan().
+            $context['macro_plan_name'] = $task->macroPlan->title ?? '';
         }
 
         if ($task->executor) {

@@ -116,6 +116,14 @@ class MacroPlan extends Model
         return $this->hasMany(Project::class)->orderBy('position');
     }
 
+    // Tarefas/tickets vinculados direto ao planejamento, sem passar por um Projeto
+    // (ver Task::macroPlan()) — inclui as que também têm project_id; filtrar
+    // whereNull('project_id') pra pegar só as soltas.
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
     public function attachments(): HasMany
     {
         return $this->hasMany(MacroPlanAttachment::class)->latest();

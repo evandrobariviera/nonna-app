@@ -90,7 +90,7 @@ class TaskController extends Controller
 
     private function filteredTasks(Request $request)
     {
-        $query = Task::with(['client', 'executor', 'executors', 'project.macroPlan', 'sprint'])
+        $query = Task::with(['client', 'executor', 'executors', 'project.macroPlan', 'macroPlan', 'sprint'])
             ->where('is_ticket', false)
             ->orderByRaw("CASE status
                 WHEN 'em_producao'           THEN 1
@@ -170,6 +170,12 @@ class TaskController extends Controller
             ? Project::where('client_id', $task->client_id)->orderBy('title')->get(['id', 'title'])
             : collect();
 
+        // Planejamentos do mesmo cliente, pra reatribuir o vínculo direto (sem Projeto)
+        // desta página — ver TaskController::updateMacroPlan().
+        $clientMacroPlans = $task->client_id
+            ? MacroPlan::where('client_id', $task->client_id)->orderBy('title')->get(['id', 'title'])
+            : collect();
+
         $clients = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
 
         // Pro seletor "mudar de sprint" do campo Sprint — mesmo recorte (aberta pra
@@ -201,7 +207,7 @@ class TaskController extends Controller
                 ->values()
             : collect();
 
-        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages', 'clientProjects', 'clients', 'sprints'));
+        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages', 'clientProjects', 'clientMacroPlans', 'clients', 'sprints'));
     }
 
     // Campo único, salvo na hora (clicou/saiu do campo já grava) — cobre todo campo
@@ -510,6 +516,35 @@ class TaskController extends Controller
         }
 
         return redirect()->back()->with('success', 'Projeto atualizado.');
+    }
+
+    // Reatribui a tarefa a um Planejamento direto, sem Projeto — mesmo padrão de
+    // updateProject() acima. Só faz sentido quando a tarefa não tem projeto (o vínculo
+    // com o Planejamento aí é o do projeto, ver Project::macroPlan()); a view já
+    // desabilita esse seletor enquanto houver Projeto selecionado.
+    public function updateMacroPlan(Request $request, Task $task)
+    {
+        abort_if($task->project_id, 422, 'Essa tarefa já está vinculada a um Projeto — desvincule antes de trocar o Planejamento direto.');
+
+        $data = $request->validate(['macro_plan_id' => 'nullable|uuid|exists:pgsql.macro_plans,id']);
+
+        if ($data['macro_plan_id']) {
+            $macroplan = MacroPlan::findOrFail($data['macro_plan_id']);
+            if ((string) $task->client_id !== (string) $macroplan->client_id) {
+                if ($request->wantsJson()) {
+                    return response()->json(['message' => 'Esse planejamento é de outro cliente.'], 422);
+                }
+                abort(422, 'Esse planejamento é de outro cliente.');
+            }
+        }
+
+        $task->update(['macro_plan_id' => $data['macro_plan_id']]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->back()->with('success', 'Planejamento atualizado.');
     }
 
     // Troca/atribui/remove a Sprint direto da própria tarefa — mesmas regras de negócio

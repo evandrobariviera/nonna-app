@@ -17,11 +17,16 @@
                    onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
                     {{ $task->project->title }}
                 </a>
+            @elseif($task->macroPlan)
+                <a href="{{ route('macroplans.edit', $task->macro_plan_id) }}" class="font-semibold transition-colors" style="color:var(--muted)"
+                   onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                    {{ $task->macroPlan->title }}
+                </a>
             @elseif($task->is_ticket)
                 <a href="{{ route('tickets.index') }}" class="font-semibold transition-colors" style="color:var(--muted)"
                    onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Tickets</a>
             @endif
-            @if($task->project || $task->is_ticket)
+            @if($task->project || $task->macroPlan || $task->is_ticket)
                 <span style="color:var(--border2)">/</span>
             @endif
             <span class="font-semibold" style="color:var(--text)">{{ $task->title }}</span>
@@ -323,8 +328,16 @@
                            onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted2)'">
                             {{ $task->project->title }}
                         </a>
+                    @elseif($task->macroPlan)
+                        <span style="color:var(--border2)">›</span>
+                        <a href="{{ route('macroplans.edit', $task->macro_plan_id) }}"
+                           @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('macroplans.preview', $task->macro_plan_id) }}') }"
+                           style="color:var(--muted2)"
+                           onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted2)'">
+                            {{ $task->macroPlan->title }}
+                        </a>
                     @endif
-                    @if($task->client || $task->project)
+                    @if($task->client || $task->project || $task->macroPlan)
                         <span style="color:var(--border2)">•</span>
                     @endif
                     <span>Criada por <strong style="color:var(--muted2); font-weight:600">{{ explode(' ', $task->createdBy?->name ?? '—')[0] }}</strong> em {{ $task->created_at->format('d/m/Y') }} ({{ $task->created_at->diffForHumans() }})</span>
@@ -534,8 +547,8 @@
                  se já houver Projeto vinculado (troca desvincula, mesma regra de sempre de
                  TaskController::updateClient()). --}}
             <div class="card card-body-lg flex flex-col gap-5">
-                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Cliente / Projeto</p>
-                <div class="grid grid-cols-2 gap-4">
+                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Cliente / Projeto / Planejamento</p>
+                <div class="grid grid-cols-3 gap-4">
                     <div x-data="{
                             value: @js($task->client_id),
                             saving: false,
@@ -572,8 +585,25 @@
                             @endforeach
                         </select>
                     </div>
+                    {{-- Planejamento direto (sem Projeto) — só editável quando a tarefa não
+                         tem Projeto; com Projeto, o planejamento é sempre o dele (ver breadcrumb). --}}
+                    <div x-data="selectField({ url: '{{ route('tasks.update-macroplan', $task) }}', payloadKey: 'macro_plan_id', value: @js($task->macro_plan_id) })"
+                         @task-client-changed.window="value = ''">
+                        <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Planejamento</label>
+                        <select x-model="value" @change="change()" :disabled="@js((bool) $task->project_id)"
+                            class="w-full px-3 py-2.5 text-sm focus:outline-none disabled:opacity-50"
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            <option value="">— nenhum —</option>
+                            @foreach($clientMacroPlans as $m)
+                                <option value="{{ $m->id }}">{{ $m->title }}</option>
+                            @endforeach
+                        </select>
+                        @if($task->project_id)
+                            <p class="text-xs mt-1" style="color:var(--muted2)">Definido pelo Projeto — remova o Projeto pra editar direto.</p>
+                        @endif
+                    </div>
                 </div>
-                <p class="text-xs" style="color:var(--muted2); line-height:1.5">A lista de Projetos reflete o Cliente com que a página foi carregada — se você trocar o Cliente, atualize a página pra ver os projetos do novo cliente.</p>
+                <p class="text-xs" style="color:var(--muted2); line-height:1.5">A lista de Projetos/Planejamentos reflete o Cliente com que a página foi carregada — se você trocar o Cliente, atualize a página pra ver as opções do novo cliente.</p>
             </div>
 
             {{-- PESSOAS — Responsável/Executor salvam ao trocar a seleção; Observadores

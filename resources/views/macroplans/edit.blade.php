@@ -656,6 +656,31 @@
                         @endforeach
                     @endif
                 </div>
+
+                {{-- Tarefas/tickets vinculados direto ao planejamento (sem Projeto) — nascem
+                     no Ticket (Cliente/Planejamento) ou por reatribuição na própria tarefa. --}}
+                @if($macroplan->tasks->isNotEmpty())
+                    <div class="card mt-4">
+                        <div class="px-5 py-4" style="border-bottom:1px solid var(--border2)">
+                            <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Sem Projeto</p>
+                            <h2 class="text-base font-bold" style="color:var(--text)">Tarefas Soltas do Planejamento</h2>
+                        </div>
+                        <div class="flex flex-col">
+                            @foreach($macroplan->tasks as $task)
+                                <a href="{{ route('tasks.show', $task) }}"
+                                   class="flex items-center gap-3 px-5 py-3 transition-colors"
+                                   style="border-bottom:1px solid var(--border2)"
+                                   onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                                    <span class="badge badge-{{ $task->statusColor() }} flex-shrink-0">{{ $task->statusLabel() }}</span>
+                                    <span class="text-sm truncate" style="color:var(--text)">{{ $task->title }}</span>
+                                    @if($task->is_ticket)
+                                        <span class="badge flex-shrink-0 ml-auto">ticket</span>
+                                    @endif
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
 
             {{-- ══ BLOCO 4: TAREFAS ISOLADAS E ROTINA ══ --}}

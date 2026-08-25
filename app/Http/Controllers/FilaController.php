@@ -29,7 +29,7 @@ class FilaController extends Controller
 
     private function filteredTasksData(Request $request): array
     {
-        $query = Task::with(['client', 'project.macroPlan', 'executor', 'executors'])
+        $query = Task::with(['client', 'project.macroPlan', 'macroPlan', 'executor', 'executors'])
             ->whereNull('sprint_id')
             // Chamado (is_ticket=true) só entra aqui depois de "enviado pra Fila"
             // (queued_at) — antes disso fica só na tela de Tickets (triagem, protege

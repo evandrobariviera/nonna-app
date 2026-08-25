@@ -555,6 +555,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('tasks.update-executor');
     Route::patch('/tarefas/{task}/projeto', [TaskController::class, 'updateProject'])
         ->name('tasks.update-project');
+    Route::patch('/tarefas/{task}/planejamento', [TaskController::class, 'updateMacroPlan'])
+        ->name('tasks.update-macroplan');
     Route::patch('/tarefas/{task}/cliente', [TaskController::class, 'updateClient'])
         ->name('tasks.update-client');
     Route::patch('/tarefas/{task}/sprint', [TaskController::class, 'updateSprint'])

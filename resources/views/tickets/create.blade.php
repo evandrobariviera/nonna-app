@@ -6,7 +6,7 @@
             <form method="POST" action="{{ route('tickets.store') }}"
                   enctype="multipart/form-data"
                   class="grid grid-cols-2 gap-4 md:grid-cols-3"
-                  x-data="{ ...executorPicker(), selectedClient: '{{ old('client_id') }}', selectedProject: '{{ old('project_id') }}', allProjects: @js($projects->map(fn ($p) => ['id' => $p->id, 'title' => $p->title, 'client_id' => $p->client_id])) }">
+                  x-data="{ ...executorPicker(), selectedClient: '{{ old('client_id') }}', selectedProject: '{{ old('project_id') }}', selectedMacroplan: '{{ old('macro_plan_id') }}', allProjects: @js($projects->map(fn ($p) => ['id' => $p->id, 'title' => $p->title, 'client_id' => $p->client_id])), allMacroplans: @js($macroplans->map(fn ($m) => ['id' => $m->id, 'title' => $m->title, 'client_id' => $m->client_id])) }">
                 @csrf
 
                 {{-- Título --}}
@@ -27,7 +27,7 @@
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">
                         Cliente <span style="color:var(--orange)">*</span>
                     </label>
-                    <select name="client_id" required x-model="selectedClient" @change="selectedProject = ''"
+                    <select name="client_id" required x-model="selectedClient" @change="selectedProject = ''; selectedMacroplan = ''"
                         class="w-full px-4 py-2.5 text-sm focus:outline-none"
                         style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         <option value="">— selecione —</option>
@@ -43,8 +43,9 @@
                 {{-- Projeto / Campanha --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Projeto / Campanha</label>
-                    <select name="project_id" x-model="selectedProject"
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                    <select name="project_id" x-model="selectedProject" @change="if ($event.target.value) selectedMacroplan = ''"
+                        :disabled="selectedMacroplan !== ''"
+                        class="w-full px-4 py-2.5 text-sm focus:outline-none disabled:opacity-50"
                         style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         <option value="">— sem vínculo (fica em Tickets) —</option>
                         {{-- Opções montadas via JS (não com x-bind:hidden num <option> fixo) —
@@ -56,6 +57,22 @@
                     </select>
                     <p class="text-xs mt-1" style="color:var(--muted)">Selecionar já manda direto pra Fila, pulando a triagem.</p>
                     @error('project_id') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Planejamento (direto, sem Projeto) --}}
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Planejamento</label>
+                    <select name="macro_plan_id" x-model="selectedMacroplan" @change="if ($event.target.value) selectedProject = ''"
+                        :disabled="selectedProject !== ''"
+                        class="w-full px-4 py-2.5 text-sm focus:outline-none disabled:opacity-50"
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                        <option value="">— sem vínculo (fica em Tickets) —</option>
+                        <template x-for="m in allMacroplans.filter(m => !selectedClient || m.client_id === selectedClient)" :key="m.id">
+                            <option :value="m.id" x-text="m.title"></option>
+                        </template>
+                    </select>
+                    <p class="text-xs mt-1" style="color:var(--muted)">Vincula ao planejamento sem passar por um Projeto/Campanha específico.</p>
+                    @error('macro_plan_id') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
                 </div>
 
                 {{-- Tipo --}}

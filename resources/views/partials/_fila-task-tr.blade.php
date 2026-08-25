@@ -61,6 +61,8 @@
                     <span style="font-size:11px; color:var(--muted)">
                         {{ $task->project->macroPlan?->title }} · {{ $task->project->title }}
                     </span>
+                @elseif($task->macroPlan)
+                    <span style="font-size:11px; color:var(--muted)">{{ $task->macroPlan->title }}</span>
                 @elseif($task->is_ticket && $task->requester_name)
                     <span style="font-size:11px; color:var(--muted)">{{ $task->requester_name }}</span>
                 @endif
@@ -86,6 +88,14 @@
                title="{{ $task->project->title }}">
                 <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; max-width:136px">
                     {{ $task->project->title }}
+                </span>
+            </a>
+        @elseif($task->macroPlan)
+            <a href="{{ route('macroplans.edit', $task->macro_plan_id) }}"
+               class="text-sm hover:underline" style="color:var(--text)"
+               title="{{ $task->macroPlan->title }}">
+                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; max-width:136px">
+                    {{ $task->macroPlan->title }}
                 </span>
             </a>
         @else
