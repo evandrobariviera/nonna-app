@@ -38,20 +38,32 @@ class TaskApprovalService
             return false;
         }
 
-        if ($task->approvalRounds()->where('status', 'pending')->exists()) {
-            return false;
+        $attachmentIds = $task->attachments()
+            ->where('is_deliverable', false)
+            ->where('kind', 'entregavel')
+            ->pluck('id')
+            ->toArray();
+
+        $pendingRound = $task->approvalRounds()->where('status', 'pending')->first();
+        if ($pendingRound) {
+            // Achado real: quando a situação vira "Enviar para o cliente" ANTES do
+            // entregável existir, isso cria um Aviso (sem entregável nenhum ainda) —
+            // e esse Aviso pending bloqueava pra sempre a criação da rodada de
+            // verdade quando o arquivo chegava logo depois (segundos/minutos
+            // depois, mesmo dia), porque esse guard sempre devolvia false. Só o
+            // Aviso AINDA NÃO ENVIADO pode ser substituído — Aviso já enviado ou
+            // rodada de aprovação normal pending não mexe (decisão real em jogo).
+            if (!$pendingRound->isAviso() || $pendingRound->sent_at || empty($attachmentIds)) {
+                return false;
+            }
+
+            $pendingRound->update(['status' => 'cancelled', 'resolved_at' => now()]);
         }
 
         $submitter = Auth::user();
         if (!$submitter) {
             return false;
         }
-
-        $attachmentIds = $task->attachments()
-            ->where('is_deliverable', false)
-            ->where('kind', 'entregavel')
-            ->pluck('id')
-            ->toArray();
 
         if (empty($attachmentIds)) {
             TaskApprovalRound::create([
