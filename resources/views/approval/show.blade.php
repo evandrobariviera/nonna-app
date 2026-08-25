@@ -201,6 +201,18 @@
                                 <span>Vídeo não abre? Baixar {{ $file->filename }}</span>
                                 <span style="margin-left:auto; font-size:10px; color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif">↗ abrir</span>
                             </a>
+                        @elseif($file->isPdf())
+                            {{-- iframe usa o visualizador de PDF nativo do navegador — dá pra ler
+                                 e rolar direto aqui, sem baixar. Alguns navegadores mobile mais
+                                 antigos não renderizam PDF em iframe, por isso o link "abrir em
+                                 nova aba" embaixo continua, mesma rede de segurança do vídeo. --}}
+                            <iframe src="{{ $file->url() }}" title="{{ $file->filename }}"
+                                    style="width:100%; height:460px; border:none; display:block; background:#fff"></iframe>
+                            <a href="{{ $file->url() }}" target="_blank" class="file-link" style="border-top:1px solid var(--border)">
+                                <span style="font-size:22px">{{ $file->icon() }}</span>
+                                <span>Não abriu aqui? Abrir {{ $file->filename }} em nova aba</span>
+                                <span style="margin-left:auto; font-size:10px; color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif">↗ abrir</span>
+                            </a>
                         @else
                             <a href="{{ $file->url() }}" target="_blank" class="file-link">
                                 <span style="font-size:22px">{{ $file->icon() }}</span>

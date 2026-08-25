@@ -96,6 +96,11 @@ class TaskAttachment extends Model
         return str_starts_with($this->mime_type ?? '', 'video/');
     }
 
+    public function isPdf(): bool
+    {
+        return $this->mime_type === 'application/pdf';
+    }
+
     public function icon(): string
     {
         $mime = $this->mime_type ?? '';
