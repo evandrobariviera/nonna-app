@@ -876,10 +876,11 @@
         </div>
     @endif
 
-</x-app-layout>
-
-@push('scripts')
-<script>
+    {{-- @push precisa ficar dentro do <x-app-layout> — fora dele, o slot já foi
+         renderizado e o @stack('scripts') do layout já rodou, então o script nunca
+         aparece na página (Alpine perde a função, e o kanban-dnd do board também). --}}
+    @push('scripts')
+    <script>
 function executorPicker(initial = []) {
     return {
         selected: initial,
@@ -952,4 +953,5 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
-@endpush
+    @endpush
+</x-app-layout>

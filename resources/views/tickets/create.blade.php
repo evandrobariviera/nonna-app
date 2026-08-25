@@ -40,6 +40,22 @@
                     @error('client_id') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
                 </div>
 
+                {{-- Planejamento (direto, sem Projeto) --}}
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Planejamento</label>
+                    <select name="macro_plan_id" x-model="selectedMacroplan" @change="if ($event.target.value) selectedProject = ''"
+                        :disabled="selectedProject !== ''"
+                        class="w-full px-4 py-2.5 text-sm focus:outline-none disabled:opacity-50"
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                        <option value="">— sem vínculo (fica em Tickets) —</option>
+                        <template x-for="m in allMacroplans.filter(m => !selectedClient || m.client_id === selectedClient)" :key="m.id">
+                            <option :value="m.id" x-text="m.title"></option>
+                        </template>
+                    </select>
+                    <p class="text-xs mt-1" style="color:var(--muted)">Vincula ao planejamento sem passar por um Projeto/Campanha específico.</p>
+                    @error('macro_plan_id') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
+                </div>
+
                 {{-- Projeto / Campanha --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Projeto / Campanha</label>
@@ -57,22 +73,6 @@
                     </select>
                     <p class="text-xs mt-1" style="color:var(--muted)">Selecionar já manda direto pra Fila, pulando a triagem.</p>
                     @error('project_id') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
-                </div>
-
-                {{-- Planejamento (direto, sem Projeto) --}}
-                <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Planejamento</label>
-                    <select name="macro_plan_id" x-model="selectedMacroplan" @change="if ($event.target.value) selectedProject = ''"
-                        :disabled="selectedProject !== ''"
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none disabled:opacity-50"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                        <option value="">— sem vínculo (fica em Tickets) —</option>
-                        <template x-for="m in allMacroplans.filter(m => !selectedClient || m.client_id === selectedClient)" :key="m.id">
-                            <option :value="m.id" x-text="m.title"></option>
-                        </template>
-                    </select>
-                    <p class="text-xs mt-1" style="color:var(--muted)">Vincula ao planejamento sem passar por um Projeto/Campanha específico.</p>
-                    @error('macro_plan_id') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
                 </div>
 
                 {{-- Tipo --}}
@@ -288,46 +288,48 @@
         </div>
     </div>
 
-</x-app-layout>
-
-@push('scripts')
-<script>
-function executorPicker(initial = []) {
-    return {
-        selected: initial,
-        roleError: '',
-        // 'executor' e 'responsavel' são papéis capados em 1 por tarefa — 'aprovador'/
-        // 'observador' não têm limite aqui.
-        countRole(role, excludeId = null) {
-            return this.selected.filter(s => s.role === role && s.id != excludeId).length;
-        },
-        add(event) {
-            const id   = event.target.value;
-            const name = event.target.selectedOptions[0]?.dataset?.name;
-            if (!id || this.selected.find(s => s.id == id)) {
+    {{-- @push precisa ficar dentro do <x-app-layout> — fora dele, o slot já foi
+         renderizado e o @stack('scripts') do layout já rodou, então o script nunca
+         aparece na página (Alpine perde a função e quebra o x-data inteiro). --}}
+    @push('scripts')
+    <script>
+    function executorPicker(initial = []) {
+        return {
+            selected: initial,
+            roleError: '',
+            // 'executor' e 'responsavel' são papéis capados em 1 por tarefa — 'aprovador'/
+            // 'observador' não têm limite aqui.
+            countRole(role, excludeId = null) {
+                return this.selected.filter(s => s.role === role && s.id != excludeId).length;
+            },
+            add(event) {
+                const id   = event.target.value;
+                const name = event.target.selectedOptions[0]?.dataset?.name;
+                if (!id || this.selected.find(s => s.id == id)) {
+                    event.target.value = '';
+                    return;
+                }
+                const role = this.countRole('executor') > 0 ? 'aprovador' : 'executor';
+                this.selected.push({ id, name, role });
                 event.target.value = '';
-                return;
+            },
+            setRole(item, newRole, selectEl) {
+                if ((newRole === 'executor' || newRole === 'responsavel') && this.countRole(newRole, item.id) > 0) {
+                    selectEl.value = item.role;
+                    this.roleError = newRole === 'executor'
+                        ? 'Já existe um Executor nesse ticket — troque o outro primeiro.'
+                        : 'Já existe um Responsável nesse ticket — troque o outro primeiro.';
+                    return;
+                }
+                item.role = newRole;
+                this.roleError = '';
+            },
+            remove(idx) {
+                this.selected.splice(idx, 1);
+                this.roleError = '';
             }
-            const role = this.countRole('executor') > 0 ? 'aprovador' : 'executor';
-            this.selected.push({ id, name, role });
-            event.target.value = '';
-        },
-        setRole(item, newRole, selectEl) {
-            if ((newRole === 'executor' || newRole === 'responsavel') && this.countRole(newRole, item.id) > 0) {
-                selectEl.value = item.role;
-                this.roleError = newRole === 'executor'
-                    ? 'Já existe um Executor nesse ticket — troque o outro primeiro.'
-                    : 'Já existe um Responsável nesse ticket — troque o outro primeiro.';
-                return;
-            }
-            item.role = newRole;
-            this.roleError = '';
-        },
-        remove(idx) {
-            this.selected.splice(idx, 1);
-            this.roleError = '';
         }
     }
-}
-</script>
-@endpush
+    </script>
+    @endpush
+</x-app-layout>

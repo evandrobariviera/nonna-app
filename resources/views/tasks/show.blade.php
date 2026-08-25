@@ -547,7 +547,7 @@
                  se já houver Projeto vinculado (troca desvincula, mesma regra de sempre de
                  TaskController::updateClient()). --}}
             <div class="card card-body-lg flex flex-col gap-5">
-                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Cliente / Projeto / Planejamento</p>
+                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Cliente / Planejamento / Projeto</p>
                 <div class="grid grid-cols-3 gap-4">
                     <div x-data="{
                             value: @js($task->client_id),
@@ -573,18 +573,6 @@
                             @endforeach
                         </select>
                     </div>
-                    <div x-data="selectField({ url: '{{ route('tasks.update-project', $task) }}', payloadKey: 'project_id', value: @js($task->project_id) })"
-                         @task-client-changed.window="value = ''">
-                        <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Projeto</label>
-                        <select x-model="value" @change="change()"
-                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                            <option value="">— nenhum —</option>
-                            @foreach($clientProjects as $p)
-                                <option value="{{ $p->id }}">{{ $p->title }}</option>
-                            @endforeach
-                        </select>
-                    </div>
                     {{-- Planejamento direto (sem Projeto) — só editável quando a tarefa não
                          tem Projeto; com Projeto, o planejamento é sempre o dele (ver breadcrumb). --}}
                     <div x-data="selectField({ url: '{{ route('tasks.update-macroplan', $task) }}', payloadKey: 'macro_plan_id', value: @js($task->macro_plan_id) })"
@@ -601,6 +589,18 @@
                         @if($task->project_id)
                             <p class="text-xs mt-1" style="color:var(--muted2)">Definido pelo Projeto — remova o Projeto pra editar direto.</p>
                         @endif
+                    </div>
+                    <div x-data="selectField({ url: '{{ route('tasks.update-project', $task) }}', payloadKey: 'project_id', value: @js($task->project_id) })"
+                         @task-client-changed.window="value = ''">
+                        <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Projeto</label>
+                        <select x-model="value" @change="change()"
+                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            <option value="">— nenhum —</option>
+                            @foreach($clientProjects as $p)
+                                <option value="{{ $p->id }}">{{ $p->title }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
                 <p class="text-xs" style="color:var(--muted2); line-height:1.5">A lista de Projetos/Planejamentos reflete o Cliente com que a página foi carregada — se você trocar o Cliente, atualize a página pra ver as opções do novo cliente.</p>
