@@ -560,8 +560,8 @@
                  se já houver Projeto vinculado (troca desvincula, mesma regra de sempre de
                  TaskController::updateClient()). --}}
             <div class="card card-body-lg flex flex-col gap-5">
-                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Cliente / Planejamento / Projeto</p>
-                <div class="grid grid-cols-3 gap-4">
+                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Cliente / Planejamento / Projeto{{ $task->meeting ? ' / Reunião' : '' }}</p>
+                <div class="grid {{ $task->meeting ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-3' }} gap-4">
                     <div x-data="{
                             value: @js($task->client_id),
                             saving: false,
@@ -615,6 +615,19 @@
                             @endforeach
                         </select>
                     </div>
+                    {{-- Reunião de origem (Task::meeting()) — permanente, não reatribuível
+                         daqui; só um acesso rápido de volta pra reunião que gerou a tarefa. --}}
+                    @if($task->meeting)
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Reunião</label>
+                            <a href="{{ route('meetings.show', $task->meeting) }}"
+                               class="flex items-center w-full px-3 py-2.5 text-sm truncate hover:underline"
+                               style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--purple)"
+                               title="{{ $task->meeting->title }}">
+                                {{ $task->meeting->title }}
+                            </a>
+                        </div>
+                    @endif
                 </div>
                 <p class="text-xs" style="color:var(--muted2); line-height:1.5">A lista de Projetos/Planejamentos reflete o Cliente com que a página foi carregada — se você trocar o Cliente, atualize a página pra ver as opções do novo cliente.</p>
             </div>

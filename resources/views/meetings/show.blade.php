@@ -209,9 +209,9 @@
                     @else
                         <div x-show="showTaskForm" x-cloak class="mb-4 pb-4" style="border-bottom:1px solid var(--border2)">
                             <form method="POST" action="{{ route('meetings.tasks.store', $meeting) }}"
-                                  enctype="multipart/form-data" class="grid grid-cols-2 gap-3">
+                                  enctype="multipart/form-data" class="grid grid-cols-2 gap-3 md:grid-cols-4">
                                 @csrf
-                                <div class="col-span-2">
+                                <div class="col-span-2 md:col-span-4">
                                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">
                                         Título <span style="color:var(--orange)">*</span>
                                     </label>
@@ -219,12 +219,40 @@
                                         class="w-full px-3 py-2 text-sm focus:outline-none"
                                         style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                 </div>
+
+                                <div class="col-span-2 md:col-span-4">
+                                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Descrição</label>
+                                    <x-rich-editor name="description" min-height="120px" />
+                                </div>
+
                                 <div>
                                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Tipo</label>
                                     <select name="task_type" class="w-full px-3 py-2 text-sm focus:outline-none"
                                         style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                                         @foreach(\App\Models\Task::$types as $key => $label)
                                             <option value="{{ $key }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Destino</label>
+                                    <select name="destination" class="w-full px-3 py-2 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        <option value="">— sem destino —</option>
+                                        @foreach(\App\Models\Task::$destinations as $key => $label)
+                                            <option value="{{ $key }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Prioridade</label>
+                                    <select name="priority" class="w-full px-3 py-2 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        <option value="normal" selected>Normal</option>
+                                        @foreach(\App\Models\Task::$priorities as $key => $p)
+                                            @if($key !== 'normal')
+                                                <option value="{{ $key }}">{{ $p['label'] }}</option>
+                                            @endif
                                         @endforeach
                                     </select>
                                 </div>
@@ -238,7 +266,53 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-span-2 flex items-center justify-end gap-2 pt-1">
+
+                                <div>
+                                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Vencimento</label>
+                                    <input type="date" name="due_date" class="w-full px-3 py-2 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Data de Aprovação</label>
+                                    <input type="date" name="approval_date" class="w-full px-3 py-2 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Data de Publicação</label>
+                                    <input type="date" name="publish_date" class="w-full px-3 py-2 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                </div>
+
+                                {{-- Executores (múltiplos) --}}
+                                <div class="col-span-2 md:col-span-4" x-data="executorPicker()">
+                                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Executores</label>
+                                    <div class="flex flex-wrap gap-2 mb-2" x-show="selected.length > 0">
+                                        <template x-for="(item, idx) in selected" :key="item.id">
+                                            <div class="flex items-center gap-1 px-2 py-1 text-xs"
+                                                 style="background:var(--s3); border:1px solid var(--border); border-radius:8px">
+                                                <span x-text="item.name" style="color:var(--text)"></span>
+                                                <select :name="'executor_roles[' + item.id + ']'" @change="setRole(item, $event.target.value, $event.target)"
+                                                    class="text-xs focus:outline-none ml-1"
+                                                    style="background:var(--s3); color:var(--muted); border:none">
+                                                    <option value="executor" :selected="item.role === 'executor'">Executor</option>
+                                                    <option value="aprovador" :selected="item.role === 'aprovador'">Aprovador</option>
+                                                </select>
+                                                <input type="hidden" :name="'executor_ids[]'" :value="item.id">
+                                                <button type="button" @click="remove(idx)" class="btn btn-danger btn-xs ml-1">✕</button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <p x-show="roleError" x-text="roleError" x-cloak class="text-xs mb-1.5" style="color:var(--red)"></p>
+                                    <select @change="add($event)" class="w-full px-3 py-2 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        <option value="">+ Adicionar executor</option>
+                                        @foreach($users as $u)
+                                            <option value="{{ $u->id }}" data-name="{{ $u->name }}">{{ $u->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-span-2 md:col-span-4 flex items-center justify-end gap-2 pt-1">
                                     <button type="button" @click="showTaskForm = false" class="btn btn-ghost btn-xs">Cancelar</button>
                                     <button type="submit" class="btn btn-primary btn-xs">Criar Tarefa</button>
                                 </div>
@@ -397,4 +471,48 @@
         </div>
     </div>
 
+    {{-- @push precisa ficar dentro do <x-app-layout> — fora dele, o slot já foi
+         renderizado e o @stack('scripts') do layout já rodou, então o script nunca
+         aparece na página (Alpine perde a função e quebra o x-data inteiro). --}}
+    @push('scripts')
+    <script>
+    function executorPicker(initial = []) {
+        return {
+            selected: initial,
+            roleError: '',
+            // 'executor' e 'responsavel' são papéis capados em 1 por tarefa — 'aprovador'/
+            // 'observador' não têm limite aqui.
+            countRole(role, excludeId = null) {
+                return this.selected.filter(s => s.role === role && s.id != excludeId).length;
+            },
+            add(event) {
+                const id   = event.target.value;
+                const name = event.target.selectedOptions[0]?.dataset?.name;
+                if (!id || this.selected.find(s => s.id == id)) {
+                    event.target.value = '';
+                    return;
+                }
+                const role = this.countRole('executor') > 0 ? 'aprovador' : 'executor';
+                this.selected.push({ id, name, role });
+                event.target.value = '';
+            },
+            setRole(item, newRole, selectEl) {
+                if ((newRole === 'executor' || newRole === 'responsavel') && this.countRole(newRole, item.id) > 0) {
+                    selectEl.value = item.role;
+                    this.roleError = newRole === 'executor'
+                        ? 'Já existe um Executor nessa tarefa — troque o outro primeiro.'
+                        : 'Já existe um Responsável nessa tarefa — troque o outro primeiro.';
+                    return;
+                }
+                item.role = newRole;
+                this.roleError = '';
+            },
+            remove(idx) {
+                this.selected.splice(idx, 1);
+                this.roleError = '';
+            }
+        }
+    }
+    </script>
+    @endpush
 </x-app-layout>
