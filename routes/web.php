@@ -55,6 +55,7 @@ use App\Http\Controllers\SprintController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\TaskApprovalController;
 use App\Http\Controllers\TaskAttachmentController;
+use App\Http\Controllers\TaskEditorImageController;
 use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
@@ -466,6 +467,14 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('task-attachments.zip');
     Route::delete('/tarefas/{task}/anexos/{attachment}', [TaskAttachmentController::class, 'destroy'])
         ->name('task-attachments.destroy');
+
+    // ── Imagem colada/arrastada no editor rico (descrição/comentário) — vira arquivo
+    // de verdade no storage em vez de base64 embutido no texto (ver TaskEditorImageController).
+    Route::post('/tarefas/{task}/editor-imagem', [TaskEditorImageController::class, 'store'])
+        ->name('tasks.editor-image.store');
+    Route::get('/tarefas/{task}/editor-imagem/{filename}', [TaskEditorImageController::class, 'show'])
+        ->name('tasks.editor-image.show')
+        ->where('filename', '[0-9a-f-]+\.[a-zA-Z0-9]+');
 
     // ── Chat IA na tarefa ──
     Route::post('/tarefas/{task}/chat', [AiChatController::class, 'storeForTask'])

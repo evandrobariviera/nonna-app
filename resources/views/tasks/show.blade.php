@@ -697,7 +697,7 @@
                     Briefing / Descrição
                     <span x-show="saving" x-cloak class="text-xs normal-case font-normal" style="color:var(--muted2); letter-spacing:normal">salvando...</span>
                 </p>
-                <x-rich-editor name="description" :value="$task->description" min-height="180px" />
+                <x-rich-editor name="description" :value="$task->description" min-height="180px" :upload-url="route('tasks.editor-image.store', $task)" />
             </div>
 
             {{-- LEGENDA — clica pra editar, sai do campo já salva (sem botão Salvar). --}}
@@ -1417,7 +1417,7 @@
                                         <div x-show="editId === '{{ $comment->id }}'" x-cloak>
                                             <form method="POST" action="{{ route('task-comments.update', [$task, $comment]) }}">
                                                 @csrf @method('PATCH')
-                                                <x-rich-editor name="body" :value="$comment->body" min-height="100px" />
+                                                <x-rich-editor name="body" :value="$comment->body" min-height="100px" :upload-url="route('tasks.editor-image.store', $task)" />
                                                 <div class="flex items-center gap-3 mt-2">
                                                     <button type="submit" class="text-xs font-mono text-[var(--purple)] hover:underline">Salvar</button>
                                                     <button type="button" @click="editId = null" class="text-xs font-mono" style="color:var(--muted)">Cancelar</button>
@@ -1439,7 +1439,7 @@
                 <form method="POST" action="{{ route('task-comments.store', $task) }}">
                     @csrf
                     <div class="flex flex-col gap-2">
-                        <x-rich-editor name="body" min-height="80px" />
+                        <x-rich-editor name="body" min-height="80px" :upload-url="route('tasks.editor-image.store', $task)" />
                         <div class="flex items-center justify-between">
                             <label class="flex items-center gap-2 text-xs" style="color:var(--muted)">
                                 <input type="checkbox" name="visible_to_client" value="1">

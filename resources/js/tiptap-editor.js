@@ -15,9 +15,30 @@ function normalizeContent(content) {
         .join('') || `<p>${content}</p>`;
 }
 
+// Envia o arquivo pro storage de verdade (ver TaskEditorImageController) e devolve a
+// URL permanente — nunca embutir o arquivo como base64 no texto (comentário real
+// passou de 900 mil caracteres e deixou a página pesada só naquela tarefa).
+async function uploadEditorImage(file, uploadUrl) {
+    const formData = new FormData();
+    formData.append('image', file);
+    const res = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: formData,
+    });
+    if (!res.ok) throw new Error('upload failed');
+    const data = await res.json();
+    return data.url;
+}
+
 export function registerRichEditor() {
-    Alpine.data('richEditor', (initialContent = '') => ({
+    Alpine.data('richEditor', (initialContent = '', uploadUrl = null) => ({
         editor: null,
+        uploadUrl,
         _observer: null,
         tick: 0, // reactive counter — forces Alpine to re-evaluate active() on every editor change
 
@@ -73,20 +94,14 @@ export function registerRichEditor() {
                             const img   = items.find(i => i.type.startsWith('image/'));
                             if (!img) return false;
                             event.preventDefault();
-                            const reader = new FileReader();
-                            reader.onload = e => self.editor.chain().focus().setImage({ src: e.target.result }).run();
-                            reader.readAsDataURL(img.getAsFile());
+                            self.insertImageFile(img.getAsFile());
                             return true;
                         },
                         handleDrop(view, event) {
                             const files = Array.from(event.dataTransfer?.files ?? []).filter(f => f.type.startsWith('image/'));
                             if (!files.length) return false;
                             event.preventDefault();
-                            files.forEach(file => {
-                                const reader = new FileReader();
-                                reader.onload = e => self.editor.chain().focus().setImage({ src: e.target.result }).run();
-                                reader.readAsDataURL(file);
-                            });
+                            files.forEach(file => self.insertImageFile(file));
                             return true;
                         },
                     },
@@ -178,6 +193,18 @@ export function registerRichEditor() {
             const file = event.target.files[0];
             if (!file) return;
             event.target.value = ''; // reset so same file can be picked again
+            this.insertImageFile(file);
+        },
+
+        // Sem uploadUrl (editores que não têm um registro pra escopar o upload ainda,
+        // ex: descrição de tarefa que nem foi criada), cai de volta pro base64 antigo.
+        insertImageFile(file) {
+            if (this.uploadUrl) {
+                uploadEditorImage(file, this.uploadUrl)
+                    .then(url => this.editor.chain().focus().setImage({ src: url }).run())
+                    .catch(() => alert('Falha ao enviar a imagem. Tente novamente.'));
+                return;
+            }
             const reader = new FileReader();
             reader.onload = e => this.editor.chain().focus().setImage({ src: e.target.result }).run();
             reader.readAsDataURL(file);

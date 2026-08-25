@@ -1,6 +1,10 @@
-@props(['name', 'value' => '', 'minHeight' => '160px'])
+{{-- uploadUrl: quando informado, imagem colada/arrastada/inserida vira upload de
+     verdade (ver TaskEditorImageController) em vez de base64 embutido no texto —
+     use sempre que o editor grava conteúdo persistente ligado a um registro que já
+     existe (precisa do :id pra escopar o upload). --}}
+@props(['name', 'value' => '', 'minHeight' => '160px', 'uploadUrl' => null])
 
-<div x-data="richEditor(@js($value ?? ''))"
+<div x-data="richEditor(@js($value ?? ''), @js($uploadUrl))"
      class="rich-wrapper">
 
     {{-- ── Toolbar ── --}}
