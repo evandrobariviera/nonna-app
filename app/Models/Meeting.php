@@ -34,6 +34,7 @@ class Meeting extends Model
         'online_link',
         'agenda',
         'ata',
+        'ata_estruturada',
         'next_steps',
         'ata_recorded_at',
     ];
