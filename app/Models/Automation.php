@@ -36,6 +36,7 @@ class Automation extends Model
         'campaign'    => 'Campanha',
         'opportunity' => 'Oportunidade',
         'meeting'     => 'Reunião',
+        'macro_plan'  => 'Planejamento',
     ];
 
     public static array $triggerTypes = [
@@ -55,14 +56,30 @@ class Automation extends Model
         'create_record'           => 'Criar Tarefa/Ticket',
         'create_macroplan_review' => 'Criar Macroplanejamento + Reunião de Revisão Interna',
         'create_internal_review_pauta' => 'Gerar Pauta (IA) + Criar Reunião Interna',
+        'create_macroplan_from_meeting' => 'Criar Macroplanejamento + Tarefa a partir da Reunião',
     ];
 
-    // Campos de data disponíveis pro gatilho "Data alcançada" (só Tarefa por enquanto).
-    public static array $dateFields = [
-        'due_date'      => 'Vencimento',
-        'approval_date' => 'Data de Aprovação',
-        'publish_date'  => 'Data de Publicação',
-    ];
+    /**
+     * Campos de data disponíveis pro gatilho "Data alcançada", por entity_type — cada
+     * entidade tem seus próprios campos de data (Tarefa: vencimento/aprovação/publicação;
+     * Planejamento: fim do ciclo). Substitui o antigo $dateFields fixo (só Tarefa); o
+     * formato salvo em trigger_config.date_field não muda, só a lista de opções na UI
+     * passa a variar por entidade — mesmo padrão de conditionFieldsFor().
+     */
+    public static function dateFieldsFor(string $entityType): array
+    {
+        return match ($entityType) {
+            'task', 'ticket' => [
+                'due_date'      => 'Vencimento',
+                'approval_date' => 'Data de Aprovação',
+                'publish_date'  => 'Data de Publicação',
+            ],
+            'macro_plan' => [
+                'period_end' => 'Fim do Ciclo',
+            ],
+            default => [],
+        };
+    }
 
     /**
      * Campos disponíveis pra montar condições (bloco "SE") por entity_type — usado tanto no
@@ -92,6 +109,10 @@ class Automation extends Model
                     'responsavel' => 'Responsável',
                     'observador'  => 'Observador',
                 ]],
+                // Só faz sentido combinado com o gatilho "Responsável/Executor adicionado"
+                // (changeData carrega user_id — ver TaskExecutorSync::sync()) — filtra por
+                // uma pessoa específica em vez de só o papel, ex: "atribuído ao Fulano".
+                'user_id'     => ['label' => 'Responsável/Executor específico', 'options' => self::userOptions()],
             ];
         }
 
@@ -123,6 +144,12 @@ class Automation extends Model
             ];
         }
 
+        if ($entityType === 'macro_plan') {
+            return [
+                'status' => ['label' => 'Status', 'options' => self::labelMap(MacroPlan::$statuses)],
+            ];
+        }
+
         return [
             'status' => ['label' => 'Status', 'options' => []],
         ];
@@ -131,6 +158,21 @@ class Automation extends Model
     private static function labelMap(array $withLabels): array
     {
         return collect($withLabels)->map(fn ($meta) => $meta['label'] ?? $meta)->all();
+    }
+
+    // Lista de usuários pra montar o dropdown da condição "Responsável/Executor
+    // específico" — escopada à organização atual (User não é Tenantable, é ligado por
+    // pivot organization_users, então o filtro precisa ser explícito aqui).
+    private static function userOptions(): array
+    {
+        if (!app()->has('currentOrganization')) {
+            return [];
+        }
+
+        return User::whereHas('organizations', fn ($q) => $q->where('organizations.id', app('currentOrganization')->id))
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
     }
 
     // ── Relationships ──────────────────────────────────────────────────────
@@ -179,7 +221,7 @@ class Automation extends Model
                 $config['from'] ?? '*',
                 $config['to'] ?? '*'
             ),
-            'date_reached'   => 'Quando "' . (self::$dateFields[$config['date_field'] ?? ''] ?? '?') . '" chega',
+            'date_reached'   => $this->dateReachedSummary($config),
             'executor_added' => 'Responsável/Executor adicionado',
             'created'        => 'Ao ser criado',
             'manual'         => 'Acionado manualmente',
@@ -195,6 +237,18 @@ class Automation extends Model
         return $base;
     }
 
+    private function dateReachedSummary(array $config): string
+    {
+        $label = self::dateFieldsFor($this->entity_type)[$config['date_field'] ?? ''] ?? '?';
+        $offsetDays = (int) ($config['offset_days'] ?? 0);
+
+        if ($offsetDays > 0) {
+            return "Quando faltam {$offsetDays} dia(s) pra \"{$label}\"";
+        }
+
+        return 'Quando "' . $label . '" chega';
+    }
+
     public function actionSummary(): string
     {
         $config = $this->action_config ?? [];
@@ -208,6 +262,7 @@ class Automation extends Model
             'create_record'     => 'Criar ' . (($config['record_type'] ?? 'ticket') === 'task' ? 'Tarefa' : 'Ticket'),
             'create_macroplan_review' => 'Cria Macroplanejamento + Reunião de Revisão Interna',
             'create_internal_review_pauta' => 'Agente: ' . ($config['agent_name'] ?? $config['agent_id'] ?? '?') . ' gera pauta + cria Reunião Interna',
+            'create_macroplan_from_meeting' => 'Cria Macroplanejamento + Tarefa vinculada',
             default             => $this->action_type,
         };
     }

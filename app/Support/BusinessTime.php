@@ -34,6 +34,22 @@ class BusinessTime
         return $seconds;
     }
 
+    /**
+     * Avança $date até o próximo dia útil (pula sábado/domingo). Se $date já cai num
+     * dia útil, ela é retornada como está — "próximo dia útil" aqui é sobre não deixar
+     * a data cair num fim de semana, não sobre sempre avançar pelo menos 1 dia.
+     */
+    public static function nextBusinessDay(CarbonInterface $date): CarbonInterface
+    {
+        $result = $date->copy();
+
+        while ($result->isWeekend()) {
+            $result = $result->addDay();
+        }
+
+        return $result;
+    }
+
     public static function humanize(int $seconds): string
     {
         if ($seconds < 3600) {

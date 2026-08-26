@@ -10,6 +10,7 @@ use App\Models\AdAd;
 use App\Models\CampaignLog;
 use App\Models\Opportunity;
 use App\Models\Meeting;
+use App\Models\MacroPlan;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -25,8 +26,23 @@ class ContextResolver
             $entity instanceof AdAd        => self::forAd($entity),
             $entity instanceof Opportunity => self::forOpportunity($entity),
             $entity instanceof Meeting     => self::forMeeting($entity),
+            $entity instanceof MacroPlan   => self::forMacroPlan($entity),
             default                        => [],
         };
+    }
+
+    public static function forMacroPlan(MacroPlan $macroPlan): array
+    {
+        $macroPlan->loadMissing(['client', 'responsible']);
+
+        return [
+            'macro_plan_id'        => $macroPlan->id,
+            'macro_plan_title'     => $macroPlan->title ?? '',
+            'macro_plan_status'    => $macroPlan->statusLabel(),
+            'client_name'          => $macroPlan->client?->displayName() ?? '',
+            'responsible_name'     => $macroPlan->responsible?->name ?? '',
+            'period_end'           => $macroPlan->period_end?->format('d/m/Y') ?? '',
+        ];
     }
 
     public static function forMeeting(Meeting $meeting): array

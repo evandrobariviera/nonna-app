@@ -7,6 +7,11 @@ use App\Services\AutomationEngine;
 
 class MeetingObserver
 {
+    public function created(Meeting $meeting): void
+    {
+        AutomationEngine::evaluate('created', $meeting);
+    }
+
     public function updated(Meeting $meeting): void
     {
         if ($meeting->wasChanged('status')) {

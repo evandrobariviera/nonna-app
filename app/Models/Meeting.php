@@ -64,11 +64,12 @@ class Meeting extends Model
     ];
 
     public static array $statuses = [
-        'para_agendar' => ['label' => 'Para Agendar', 'color' => 'muted'],
-        'agendada'     => ['label' => 'Agendada',     'color' => 'green'],
-        'pos_reuniao'  => ['label' => 'Pós-Reunião',  'color' => 'red'],
-        'realizada'    => ['label' => 'Realizada',    'color' => 'green'],
-        'cancelada'    => ['label' => 'Cancelada',    'color' => 'red'],
+        'para_agendar' => ['label' => 'Para Agendar',    'color' => 'muted'],
+        'agendada'     => ['label' => 'Agendada',        'color' => 'green'],
+        'pos_reuniao'  => ['label' => 'Pós-Reunião',     'color' => 'red'],
+        'revisao_ata'  => ['label' => 'Revisão Interna', 'color' => 'purple'],
+        'realizada'    => ['label' => 'Realizada',       'color' => 'green'],
+        'cancelada'    => ['label' => 'Cancelada',       'color' => 'red'],
     ];
 
     public function typeLabel(): string

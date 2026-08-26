@@ -145,16 +145,26 @@
                     </div>
 
                     <div x-show="triggerType === 'date_reached'" x-cloak>
-                        <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">QUAL DATA *</label>
-                        <select name="trigger_config[date_field]"
-                                class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                            <option value="">Selecione...</option>
-                            @foreach($dateFields as $value => $label)
-                                <option value="{{ $value }}">{{ $label }}</option>
-                            @endforeach
-                        </select>
-                        <p class="text-xs mt-1" style="color:var(--muted)">Checado 1x por dia (07:00) — dispara pras tarefas cuja data cai em hoje.</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">QUAL DATA *</label>
+                                <select name="trigger_config[date_field]"
+                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    <option value="">Selecione...</option>
+                                    <template x-for="[val, label] in Object.entries(dateFieldsMap[entityType] || {})" :key="val">
+                                        <option :value="val" x-text="label"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DIAS DE ANTECEDÊNCIA</label>
+                                <input type="number" name="trigger_config[offset_days]" min="0" value="0"
+                                       class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                       style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            </div>
+                        </div>
+                        <p class="text-xs mt-1" style="color:var(--muted)">Checado 1x por dia (07:00) — dispara quando faltam N dias pra data escolhida (0 = dispara no próprio dia).</p>
                     </div>
 
                     <div x-show="triggerType === 'executor_added'" x-cloak>
@@ -321,6 +331,7 @@
                                 <option value="executor">Executor da tarefa</option>
                                 <option value="creator">Criador da tarefa</option>
                                 <option value="all">Todos os envolvidos</option>
+                                <option value="participants" x-show="entityType === 'meeting'">Participantes da Reunião</option>
                                 <option value="sector">Um setor</option>
                                 <option value="role">Um papel funcional</option>
                             </select>
@@ -388,24 +399,15 @@
                                       class="w-full px-3 py-2.5 text-sm focus:outline-none resize-none"
                                       style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"></textarea>
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">TIPO</label>
-                                <select name="action_config[task_type]"
-                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                                    @foreach($taskTypes as $value => $label)
-                                        <option value="{{ $value }}" {{ $value === 'estrategia' ? 'selected' : '' }}>{{ $label }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">VENCE EM (DIAS, OPCIONAL)</label>
-                                <input type="number" name="action_config[due_in_days]" min="0"
-                                       placeholder="Ex: 3"
-                                       class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                       style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                            </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">TIPO</label>
+                            <select name="action_config[task_type]"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                @foreach($taskTypes as $value => $label)
+                                    <option value="{{ $value }}" {{ $value === 'estrategia' ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">CLIENTE</label>
@@ -418,6 +420,102 @@
                                 @endforeach
                             </select>
                             <p class="text-xs mt-1" style="color:var(--muted)">Sem cliente resolvido, o registro criado entra na fila de Pendências de Cadastro.</p>
+                        </div>
+
+                        <div class="pt-3" style="border-top:1px solid var(--border2)">
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">RESPONSÁVEL/EXECUTOR</label>
+                            <select name="action_config[assignee_source]" x-model="assigneeSource"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                <option value="none">Não atribuir</option>
+                                <option value="fixed_user">Pessoa fixa</option>
+                                <option value="trigger_organizer" x-show="entityType === 'meeting'">Organizador da Reunião que disparou</option>
+                            </select>
+                            <p class="text-xs mt-1" style="color:var(--muted)">A pessoa escolhida vira Responsável e Executor da tarefa ao mesmo tempo.</p>
+                        </div>
+                        <div x-show="assigneeSource === 'fixed_user'" x-cloak>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">QUAL PESSOA *</label>
+                            <select name="action_config[user_id]"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                <option value="">Selecione...</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">SPRINT</label>
+                            <select name="action_config[sprint_target]"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                <option value="none">Fica no Backlog</option>
+                                <option value="active_sprint">Já nasce na Sprint ativa</option>
+                            </select>
+                        </div>
+
+                        <div class="pt-3" style="border-top:1px solid var(--border2)">
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">BASE DO PRAZO</label>
+                            <select name="action_config[due_base]" x-model="dueBase"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                <option value="now">A partir de agora (quando a automação dispara)</option>
+                                <option value="entity_field" x-show="entityType === 'meeting'">A partir de uma data da Reunião que disparou</option>
+                            </select>
+                        </div>
+                        <div x-show="dueBase === 'entity_field'" x-cloak>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">CAMPO DE DATA DE ORIGEM</label>
+                            <select name="action_config[due_base_field]"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                <option value="scheduled_at">Data/hora da Reunião</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DIAS A SOMAR</label>
+                                <input type="number" name="action_config[due_in_days]" min="0" value="0"
+                                       class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                       style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                <p class="text-xs mt-1" style="color:var(--muted)">Ex: 1 = "dia seguinte" à base escolhida acima.</p>
+                            </div>
+                            <div class="flex items-end pb-2.5">
+                                <label class="flex items-center gap-2 cursor-pointer text-xs" style="color:var(--text)">
+                                    <input type="hidden" name="action_config[due_skip_weekends]" value="0">
+                                    <input type="checkbox" name="action_config[due_skip_weekends]" value="1"
+                                           style="width:16px; height:16px; accent-color:var(--purple)">
+                                    Rolar pro próximo dia útil se cair em fim de semana
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="actionType === 'create_macroplan_from_meeting'" x-cloak class="grid gap-3">
+                        <p class="text-sm" style="color:var(--muted)">
+                            Cria um Macroplanejamento vinculado à Reunião que disparou (responsável = primeiro
+                            usuário do papel funcional abaixo) e já cria a Tarefa de checklist "Criar
+                            macroplanejamento" vinculada ao Macro, atribuída ao organizador da reunião, com prazo
+                            no próximo dia útil. Pensado pro gatilho "Status mudou" → Realizada numa Reunião do
+                            tipo Macroplanejamento ou Kickoff Estratégico.
+                        </p>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">PAPEL FUNCIONAL RESPONSÁVEL PELO MACRO *</label>
+                            <select name="action_config[responsible_role]"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                <option value="">Selecione...</option>
+                                @foreach($functionRoles as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">TÍTULO DA TAREFA (OPCIONAL)</label>
+                            <input type="text" name="action_config[task_title]"
+                                   placeholder="Criar macroplanejamento"
+                                   class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                   style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         </div>
                     </div>
 
@@ -501,6 +599,7 @@
 @push('scripts')
 <script>
 const conditionFieldsMap = @json($conditionFields);
+const dateFieldsMap = @json($dateFields);
 
 function automationBuilder() {
     return {
@@ -513,6 +612,8 @@ function automationBuilder() {
         fieldUpdatedField: '{{ old('trigger_config.field', '') }}',
         conditionsLogic: '{{ old('trigger_config.conditions_logic', 'and') }}',
         conditions: {!! json_encode(old('trigger_config.conditions', [])) !!},
+        assigneeSource: '{{ old('action_config.assignee_source', 'none') }}',
+        dueBase: '{{ old('action_config.due_base', 'now') }}',
         primaryField() {
             const fields = conditionFieldsMap[this.entityType] || {};
             if (fields.status) return 'status';

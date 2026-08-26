@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\MacroPlan;
 use App\Models\Meeting;
 use App\Models\Opportunity;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\UserLogin;
+use App\Observers\MacroPlanObserver;
 use App\Observers\MeetingObserver;
 use App\Observers\OpportunityObserver;
 use App\Observers\TaskObserver;
@@ -24,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
         Task::observe(TaskObserver::class);
         Opportunity::observe(OpportunityObserver::class);
         Meeting::observe(MeetingObserver::class);
+        MacroPlan::observe(MacroPlanObserver::class);
 
         // diffForHumans()/translatedFormat() usam o locale do Carbon, que não
         // segue sozinho o locale do Laravel (config('app.locale')) — sem isso,

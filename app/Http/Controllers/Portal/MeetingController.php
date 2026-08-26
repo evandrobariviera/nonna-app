@@ -17,7 +17,7 @@ class MeetingController extends Controller
             ->get();
 
         $upcoming = $meetings->whereIn('status', ['para_agendar', 'agendada']);
-        $past     = $meetings->whereIn('status', ['pos_reuniao', 'realizada', 'cancelada']);
+        $past     = $meetings->whereIn('status', ['pos_reuniao', 'revisao_ata', 'realizada', 'cancelada']);
 
         return view('portal.meetings.index', compact('client', 'upcoming', 'past'));
     }

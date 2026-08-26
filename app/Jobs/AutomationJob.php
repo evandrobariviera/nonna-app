@@ -14,10 +14,13 @@ use App\Models\MeetingAttachment;
 use App\Models\Opportunity;
 use App\Models\FunctionalRole;
 use App\Models\Sector;
+use App\Models\Sprint;
 use App\Models\User;
 use App\Services\AiService;
 use App\Services\ContextResolver;
 use App\Services\NotificationService;
+use App\Services\TaskExecutorSync;
+use App\Support\BusinessTime;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Collection;
@@ -95,6 +98,7 @@ class AutomationJob implements ShouldQueue
             'create_record'     => $this->createRecord($config, $context, $entity),
             'create_macroplan_review' => $this->createMacroplanReview($config, $entity),
             'create_internal_review_pauta' => $this->createInternalReviewPauta($config, $entity),
+            'create_macroplan_from_meeting' => $this->createMacroplanFromMeeting($config, $entity),
             default             => throw new \RuntimeException("Tipo de ação desconhecido: {$this->automation->action_type}"),
         };
     }
@@ -172,11 +176,91 @@ class AutomationJob implements ShouldQueue
             'is_ticket'   => $isTicket,
             'origin'      => 'automation',
             'status'      => 'backlog',
-            'due_date'    => !empty($config['due_in_days']) ? now()->addDays((int) $config['due_in_days']) : null,
+            'sprint_id'   => $this->resolveSprintId($config, $organizationId),
+            'due_date'    => $this->resolveDueDate($config, $entity),
             'created_by'  => $this->automation->created_by,
         ]);
 
-        return "Registro criado: {$task->id} ({$task->title}).";
+        $assigneeNote = $this->assignCreatedTask($task, $config, $entity);
+
+        return "Registro criado: {$task->id} ({$task->title}).{$assigneeNote}";
+    }
+
+    // Resolve o usuário a ser atribuído (Responsável + Executor) a partir de
+    // action_config.assignee_source — 'fixed_user' usa action_config.user_id direto,
+    // 'trigger_organizer' só resolve quando a entidade que disparou é uma Reunião
+    // ($entity->organized_by). Sem fonte configurada, não atribui ninguém (comportamento
+    // igual ao de antes dessa config existir).
+    private function resolveAssigneeUserId(array $config, mixed $entity): ?string
+    {
+        return match ($config['assignee_source'] ?? 'none') {
+            'fixed_user'        => $config['user_id'] ?? null,
+            'trigger_organizer' => $entity instanceof Meeting ? $entity->organized_by : null,
+            default              => null,
+        };
+    }
+
+    // Atribui a mesma pessoa como Responsável E Executor da tarefa recém-criada, via
+    // TaskExecutorSync::sync() — mesmo helper usado por TaskController::store(), garante
+    // que a coluna legada tasks.executor_id também seja preenchida.
+    private function assignCreatedTask(Task $task, array $config, mixed $entity): string
+    {
+        $userId = $this->resolveAssigneeUserId($config, $entity);
+        if (!$userId) {
+            return '';
+        }
+
+        TaskExecutorSync::sync($task, [
+            'executor_ids'   => [$userId],
+            'executor_roles' => [$userId => 'executor'],
+            'responsavel_id' => $userId,
+        ]);
+
+        return ' Responsável/Executor atribuído automaticamente.';
+    }
+
+    private function resolveSprintId(array $config, ?string $organizationId): ?string
+    {
+        if (($config['sprint_target'] ?? 'none') !== 'active_sprint') {
+            return null;
+        }
+
+        return Sprint::where('organization_id', $organizationId)
+            ->where('status', 'active')
+            ->latest('starts_at')
+            ->value('id');
+    }
+
+    // Base da data de vencimento: 'now' (padrão, comportamento antigo) ou 'entity_field'
+    // (lê um campo de data da própria entidade que disparou, ex: scheduled_at da Reunião,
+    // pra prazos relativos ao evento — "dia seguinte à reunião" — em vez de relativos a
+    // "agora"). due_skip_weekends rola a data resultante pro próximo dia útil quando cai
+    // em fim de semana.
+    private function resolveDueDate(array $config, mixed $entity): ?\Carbon\CarbonInterface
+    {
+        $days         = (int) ($config['due_in_days'] ?? 0);
+        $skipWeekends = !empty($config['due_skip_weekends']);
+
+        if (($config['due_base'] ?? 'now') === 'entity_field') {
+            $field = $config['due_base_field'] ?? null;
+            $base  = $field ? ($entity->{$field} ?? null) : null;
+
+            if (!$base instanceof \Carbon\CarbonInterface) {
+                return null;
+            }
+
+            $date = $base->copy()->addDays($days);
+            return $skipWeekends ? BusinessTime::nextBusinessDay($date) : $date;
+        }
+
+        // due_base=now: só computa vencimento se algo foi de fato configurado — sem
+        // due_in_days nem due_skip_weekends, mantém o comportamento antigo (sem prazo).
+        if (empty($config['due_in_days']) && !$skipWeekends) {
+            return null;
+        }
+
+        $date = now()->addDays($days);
+        return $skipWeekends ? BusinessTime::nextBusinessDay($date) : $date;
     }
 
     // Cria o Macroplanejamento a partir de uma Reunião de planejamento realizada, linka a
@@ -220,10 +304,7 @@ class AutomationJob implements ShouldQueue
         $entity->update(['macro_plan_id' => $macroPlan->id]);
 
         // Próximo dia útil (pula sábado/domingo), no mesmo horário da reunião original.
-        $reviewDate = now()->addDay();
-        while ($reviewDate->isWeekend()) {
-            $reviewDate->addDay();
-        }
+        $reviewDate = BusinessTime::nextBusinessDay(now()->addDay());
         $reviewDate->setTimeFromTimeString($entity->scheduled_at->format('H:i:s'));
 
         $reviewMeeting = Meeting::create([
@@ -328,10 +409,7 @@ class AutomationJob implements ShouldQueue
         );
 
         // Próximo dia útil (pula sábado/domingo), no mesmo horário da reunião original.
-        $reviewDate = now()->addDay();
-        while ($reviewDate->isWeekend()) {
-            $reviewDate->addDay();
-        }
+        $reviewDate = BusinessTime::nextBusinessDay(now()->addDay());
         $reviewDate->setTimeFromTimeString($entity->scheduled_at->format('H:i:s'));
 
         $reviewMeeting = Meeting::create([
@@ -381,6 +459,78 @@ class AutomationJob implements ShouldQueue
         }
 
         return "Reunião Interna {$reviewMeeting->id} criada para {$reviewMeeting->scheduled_at->format('d/m/Y H:i')} com pauta gerada por IA ({$agent->name}).";
+    }
+
+    // Cria o Macroplanejamento a partir de uma Reunião (Macro/Kickoff) realizada, linka a
+    // reunião a ele, e cria a Tarefa de checklist "Criar macroplanejamento" já vinculada
+    // (macro_plan_id), atribuída ao organizador da reunião. Ação específica (mesmo
+    // princípio de create_macroplan_review/create_internal_review_pauta): encadeia 2
+    // registros diferentes, um referenciando o outro, o que não cabe num action_config
+    // genérico sem um motor de ações em sequência — o gatilho (status/tipo de reunião,
+    // via condições) continua 100% configurável pela tela, só o conteúdo da ação é fixo.
+    // Não cria mais nenhuma segunda Reunião (isso passou a ser resolvido via mudança de
+    // status na própria reunião do cliente, ver Meeting::$statuses['revisao_ata']).
+    private function createMacroplanFromMeeting(array $config, mixed $entity): string
+    {
+        if (!$entity instanceof Meeting) {
+            throw new \RuntimeException('create_macroplan_from_meeting só funciona com entidade Reunião.');
+        }
+
+        // Idempotente: se o status oscilar de novo pra "realizada", não recria um
+        // segundo Macro/Tarefa pra mesma reunião original.
+        if ($entity->macro_plan_id) {
+            return "Reunião já vinculada ao Macroplanejamento {$entity->macro_plan_id} — nada feito.";
+        }
+
+        if (!$entity->client_id) {
+            throw new \RuntimeException('Reunião sem cliente vinculado — não é possível criar o Macroplanejamento.');
+        }
+
+        $entity->loadMissing('client');
+
+        $organizationId = $entity->organization_id ?? $this->automation->createdBy?->organizations()->value('organizations.id');
+
+        $role = !empty($config['responsible_role']) ? FunctionalRole::where('key', $config['responsible_role'])->first() : null;
+        // MacroPlan.responsible_id é FK única — um Papel Funcional pode ter mais de uma
+        // pessoa, então fica o primeiro usuário do papel (simplificação assumida).
+        $responsibleId = $role?->users->first()?->id;
+
+        $macroPlan = MacroPlan::create([
+            'organization_id' => $organizationId,
+            'client_id'       => $entity->client_id,
+            'responsible_id'  => $responsibleId,
+            'created_by'      => $this->automation->created_by,
+            'title'           => $entity->client->displayName() . ' — Planejamento ' . now()->format('m/Y'),
+            'period_start'    => now(),
+            'period_end'      => now()->addDays(89),
+            'status'          => 'em_planejamento',
+        ]);
+
+        $entity->update(['macro_plan_id' => $macroPlan->id]);
+
+        $task = Task::create([
+            'organization_id' => $organizationId,
+            'macro_plan_id'   => $macroPlan->id,
+            'meeting_id'      => $entity->id,
+            'client_id'       => $entity->client_id,
+            'title'           => $this->interpolate($config['task_title'] ?? 'Criar macroplanejamento', ['client_name' => $entity->client->displayName()]),
+            'description'     => 'Gerado automaticamente a partir da Reunião "' . $entity->title . '".',
+            'task_type'       => 'estrategia',
+            'origin'          => 'automation',
+            'status'          => 'backlog',
+            'due_date'        => BusinessTime::nextBusinessDay(now()->addDay()),
+            'created_by'      => $this->automation->created_by,
+        ]);
+
+        if ($entity->organized_by) {
+            TaskExecutorSync::sync($task, [
+                'executor_ids'   => [$entity->organized_by],
+                'executor_roles' => [$entity->organized_by => 'executor'],
+                'responsavel_id' => $entity->organized_by,
+            ]);
+        }
+
+        return "Macroplanejamento {$macroPlan->id} criado; Tarefa \"{$task->title}\" ({$task->id}) vinculada, prazo {$task->due_date->format('d/m/Y')}.";
     }
 
     private function sendNotification(array $config, mixed $entity, array $context): string
@@ -433,6 +583,10 @@ class AutomationJob implements ShouldQueue
             return $functionalRole ? $functionalRole->users : collect();
         }
 
+        if ($to === 'participants') {
+            return $entity instanceof Meeting ? $entity->participants : collect();
+        }
+
         if (!$entity instanceof Task) {
             // Executor/criador/envolvidos só existem pra Tarefa hoje — outras
             // entidades (Projeto/Campanha) só suportam notificação por setor.
@@ -455,6 +609,7 @@ class AutomationJob implements ShouldQueue
             $entity instanceof Task        => route('tasks.show', $entity),
             $entity instanceof Opportunity => route('opportunities.show', $entity),
             $entity instanceof Meeting     => route('meetings.show', $entity),
+            $entity instanceof MacroPlan   => route('macroplans.edit', $entity),
             default                         => null,
         };
     }
@@ -479,6 +634,7 @@ class AutomationJob implements ShouldQueue
             'campaign'       => AdCampaign::find($this->entityId),
             'opportunity'    => Opportunity::find($this->entityId),
             'meeting'        => Meeting::find($this->entityId),
+            'macro_plan'     => MacroPlan::find($this->entityId),
             default          => null,
         };
     }

@@ -41,6 +41,7 @@ class AutomationEngine
             $entity instanceof \App\Models\AdCampaign  => 'campaign',
             $entity instanceof \App\Models\Opportunity => 'opportunity',
             $entity instanceof \App\Models\Meeting     => 'meeting',
+            $entity instanceof \App\Models\MacroPlan   => 'macro_plan',
             default                                     => null,
         };
     }
