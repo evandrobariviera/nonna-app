@@ -95,7 +95,12 @@
 
     @if($deliverables->isNotEmpty())
         <div class="card p-6 mb-6">
-            <h2 class="text-sm font-bold uppercase tracking-wide mb-4" style="color: var(--muted)">Arquivos para Aprovação</h2>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-bold uppercase tracking-wide" style="color: var(--muted)">{{ $round->status === 'approved' ? 'Arquivos Aprovados' : 'Arquivos para Aprovação' }}</h2>
+                @if($round->status === 'approved')
+                    <a href="{{ route('portal.materials.index') }}" class="text-xs font-semibold" style="color: var(--purple)">Ver todos aprovados →</a>
+                @endif
+            </div>
             <div class="grid grid-cols-2 gap-3">
                 @foreach($deliverables as $file)
                     @if($file->isImage())

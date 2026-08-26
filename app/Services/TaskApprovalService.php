@@ -435,6 +435,23 @@ class TaskApprovalService
         $round->task->update($status === 'changes_requested'
             ? ['status' => 'ajuste_alteracao', 'situation' => 'Alteração Solicitada']
             : ['status' => 'despacho_agendamento']);
+
+        // Avisa que já dá pra baixar — o mesmo link público passa a mostrar o
+        // banner de download assim que a rodada fecha aprovada (ver
+        // approval/show.blade.php). Não se aplica a Aviso (sendAviso() nunca
+        // passa por aqui) — Aviso não tem entregável pra baixar.
+        if ($status === 'approved') {
+            $this->notifyApproved($round);
+        }
+    }
+
+    private function notifyApproved(TaskApprovalRound $round): void
+    {
+        $round->loadMissing('tokens.contact');
+
+        foreach ($round->tokens->where('will_notify', true) as $token) {
+            $this->dispatchWebhook($round, $token, $token->contact, 'aprovacao_concluida');
+        }
     }
 
     private function dispatchWebhook(TaskApprovalRound $round, TaskApprovalToken $approvalToken, Contact $contact, string $trigger = 'aprovacao', array $extraVariables = []): void

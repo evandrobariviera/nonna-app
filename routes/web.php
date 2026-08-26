@@ -11,6 +11,7 @@ use App\Http\Controllers\Portal\ServiceDiagnosticController as PortalServiceDiag
 use App\Http\Controllers\Portal\MeetingController as PortalMeetings;
 use App\Http\Controllers\Portal\TicketController as PortalTickets;
 use App\Http\Controllers\Portal\ApprovalController as PortalApprovals;
+use App\Http\Controllers\Portal\MaterialsController as PortalMaterials;
 use App\Http\Controllers\Portal\TaskCommentController as PortalTaskComments;
 use App\Http\Controllers\Portal\ProductionController as PortalProduction;
 use App\Http\Controllers\Portal\LeadController as PortalLeads;
@@ -810,6 +811,7 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
     Route::get('/aprovacoes', [PortalApprovals::class, 'index'])->name('approvals.index');
     Route::get('/aprovacoes/{round}', [PortalApprovals::class, 'show'])->name('approvals.show');
     Route::post('/aprovacoes/{round}/decidir', [PortalApprovals::class, 'decide'])->name('approvals.decide');
+    Route::get('/materiais-aprovados', [PortalMaterials::class, 'index'])->name('materials.index');
     Route::get('/producao', [PortalProduction::class, 'index'])->name('production.index');
     Route::get('/central-de-leads', [PortalLeads::class, 'index'])->name('leads.index');
     // Precisa vir ANTES do {lead} — senão "resultados" colide com o wildcard.

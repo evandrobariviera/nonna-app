@@ -33,16 +33,15 @@ class ApprovalController extends Controller
         // TaskApprovalService::sendAviso()), então isValid()/isPending() não
         // se aplicam; só a expiração importa pro link continuar acessível.
         $isAviso = $approvalToken->round->isAviso();
+        $deliverables = $approvalToken->round->deliverables();
 
         if (! $isAviso && ! $approvalToken->isValid()) {
-            return view('approval.expired', compact('approvalToken'));
+            return view('approval.expired', compact('approvalToken', 'deliverables'));
         }
 
         if ($isAviso && $approvalToken->isExpired()) {
-            return view('approval.expired', compact('approvalToken'));
+            return view('approval.expired', compact('approvalToken', 'deliverables'));
         }
-
-        $deliverables = $approvalToken->round->deliverables();
         $batch = $this->batchForContact($approvalToken);
         $visibleComments = $approvalToken->round->task->comments
             ->where('visible_to_client', true)
@@ -95,7 +94,14 @@ class ApprovalController extends Controller
         $this->service->submitDecision($approvalToken, $data['decision'], $data['comment'] ?? null);
 
         $approvalToken->refresh();
+        $approvalToken->load('round.task');
 
-        return view('approval.thanks', ['approvalToken' => $approvalToken->load('round.task')]);
+        // Só existe entregável pra baixar se a rodada (não só este token) já fechou
+        // aprovada — com mais de um aprovador, pode faltar gente decidir ainda.
+        $deliverables = $approvalToken->round->status === 'approved'
+            ? $approvalToken->round->deliverables()
+            : collect();
+
+        return view('approval.thanks', compact('approvalToken', 'deliverables'));
     }
 }

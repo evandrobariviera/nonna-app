@@ -13,6 +13,9 @@
     <style>
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
         .mono { font-family:Arial,'Segoe UI',Tahoma,sans-serif; }
+    .file-link { display: flex; align-items: center; gap: 10px; padding: 14px; background: var(--s2); border: 1px solid var(--border); color: var(--text); text-decoration: none; font-size: 13px; text-align: left; }
+    .file-link:hover { border-color: var(--purple); }
+    .file-link + .file-link { border-top: 1px solid var(--border); }
     </style>
 </head>
 <body>
@@ -45,6 +48,21 @@
                 <p class="mono" style="font-size:9px; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); margin:0 0 4px">Tarefa</p>
                 <p style="font-size:13px; font-weight:600; margin:0">{{ $approvalToken->round->task->title }}</p>
             </div>
+
+            {{-- Sua decisão fechou a rodada com unanimidade — já dá pra baixar aqui,
+                 sem precisar voltar depois. Se ainda faltar outro aprovador decidir,
+                 $deliverables vem vazio (ver ApprovalController::submit()). --}}
+            @if($deliverables->isNotEmpty())
+                <div style="margin-top:16px; text-align:left">
+                    @foreach($deliverables as $file)
+                        <a href="{{ $file->downloadUrl() }}" class="file-link">
+                            <span style="font-size:20px">{{ $file->icon() }}</span>
+                            <span>{{ $file->filename }}</span>
+                            <span style="margin-left:auto; font-size:10px; color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif">⬇ baixar</span>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
 
             <p class="mono" style="font-size:10px; color:var(--muted); margin-top:24px">
                 Você já pode fechar esta janela.

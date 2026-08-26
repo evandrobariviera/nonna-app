@@ -141,6 +141,15 @@
     </span>
 </a>
 
+<a href="{{ route('portal.materials.index') }}"
+   class="nav-group-trigger {{ request()->routeIs('portal.materials.*') ? 'open' : '' }}"
+   style="{{ request()->routeIs('portal.materials.*') ? 'color:var(--purple);' : '' }}">
+    <span class="flex items-center gap-3">
+        <x-icon name="download" size="16" class="flex-shrink-0" />
+        Materiais Aprovados
+    </span>
+</a>
+
 {{-- ══ DESEMPENHO ══ --}}
 <div class="nav-group-label" style="margin-top:8px">Desempenho</div>
 
