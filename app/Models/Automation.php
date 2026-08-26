@@ -57,7 +57,7 @@ class Automation extends Model
         'create_macroplan_review' => 'Criar Macroplanejamento + Reunião de Revisão Interna',
         'create_internal_review_pauta' => 'Gerar Pauta (IA) + Criar Reunião Interna',
         'create_macroplan_from_meeting' => 'Criar Macroplanejamento + Tarefa a partir da Reunião',
-        'structure_ata_notify'    => 'Estruturar ATA (IA) + Notificar Participantes',
+        'structure_ata'    => 'Estruturar ATA (IA)',
     ];
 
     /**
@@ -264,7 +264,7 @@ class Automation extends Model
             'create_macroplan_review' => 'Cria Macroplanejamento + Reunião de Revisão Interna',
             'create_internal_review_pauta' => 'Agente: ' . ($config['agent_name'] ?? $config['agent_id'] ?? '?') . ' gera pauta + cria Reunião Interna',
             'create_macroplan_from_meeting' => 'Cria Macroplanejamento + Tarefa vinculada',
-            'structure_ata_notify' => 'Estrutura ATA (IA) + notifica participantes',
+            'structure_ata' => 'Estrutura ATA (IA)',
             default             => $this->action_type,
         };
     }

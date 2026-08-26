@@ -11,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::connection('pgsql')->table('meetings', function (Blueprint $table) {
-            // Versão da ATA reescrita/organizada por IA (ação structure_ata_notify) — a
+            // Versão da ATA reescrita/organizada por IA (ação structure_ata) — a
             // ATA bruta (campo "ata") continua intocada, essa é só a versão apresentável
             // liberada pra equipe quando a reunião entra em Revisão Interna.
             $table->text('ata_estruturada')->nullable()->after('ata');

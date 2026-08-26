@@ -99,7 +99,7 @@ class AutomationJob implements ShouldQueue
             'create_macroplan_review' => $this->createMacroplanReview($config, $entity),
             'create_internal_review_pauta' => $this->createInternalReviewPauta($config, $entity),
             'create_macroplan_from_meeting' => $this->createMacroplanFromMeeting($config, $entity),
-            'structure_ata_notify' => $this->structureAtaNotify($config, $entity),
+            'structure_ata' => $this->structureAta($config, $entity),
             default             => throw new \RuntimeException("Tipo de ação desconhecido: {$this->automation->action_type}"),
         };
     }
@@ -535,26 +535,25 @@ class AutomationJob implements ShouldQueue
     }
 
     // Reescreve a ATA bruta da Reunião num formato organizado via IA (salva em
-    // ata_estruturada, sem tocar no campo "ata" original) e notifica todos os
-    // participantes de que a ATA foi liberada. Substitui create_internal_review_pauta
-    // pra esse ponto do fluxo — não cria mais nenhuma Reunião Interna, só libera a ATA
-    // estruturada pra quem participou.
-    private function structureAtaNotify(array $config, mixed $entity): string
+    // ata_estruturada, sem tocar no campo "ata" original). Não notifica ninguém — isso
+    // fica por conta de uma automação separada (send_notification, destinatário
+    // "participants"), já que geração da ATA estruturada e aviso ao time nem sempre
+    // precisam do mesmo gatilho/destinatário. Substitui create_internal_review_pauta
+    // pra esse ponto do fluxo — não cria mais nenhuma Reunião Interna.
+    private function structureAta(array $config, mixed $entity): string
     {
         if (!$entity instanceof Meeting) {
-            throw new \RuntimeException('structure_ata_notify só funciona com entidade Reunião.');
+            throw new \RuntimeException('structure_ata só funciona com entidade Reunião.');
         }
 
         if (empty($entity->ata)) {
             throw new \RuntimeException('Reunião sem ATA preenchida — não é possível estruturar a ATA.');
         }
 
-        $agentId = $config['agent_id'] ?? throw new \RuntimeException('structure_ata_notify sem agente de IA configurado.');
+        $agentId = $config['agent_id'] ?? throw new \RuntimeException('structure_ata sem agente de IA configurado.');
         $agent = AiAgent::findOrFail($agentId);
 
-        $entity->loadMissing('client', 'participants');
-
-        $organizationId = $entity->organization_id ?? $this->automation->createdBy?->organizations()->value('organizations.id');
+        $entity->loadMissing('client');
 
         $userMessage = "Tipo da reunião: {$entity->typeLabel()}\n"
             . 'Cliente: ' . ($entity->client?->displayName() ?? '—') . "\n"
@@ -567,24 +566,12 @@ class AutomationJob implements ShouldQueue
             userMessage: $userMessage,
             userId: $this->automation->created_by,
             clientId: $entity->client_id,
-            trigger: 'automation:structure_ata_notify',
+            trigger: 'automation:structure_ata',
         );
 
         $entity->update(['ata_estruturada' => $ataEstruturada]);
 
-        if ($entity->participants->isNotEmpty()) {
-            app(NotificationService::class)->notifyUsers(
-                $entity->participants,
-                'automation',
-                'ATA liberada — ' . ($entity->client?->displayName() ?? $entity->title),
-                'A ATA da reunião "' . $entity->title . '" foi revisada e liberada.',
-                route('meetings.show', $entity),
-                $entity,
-                $organizationId
-            );
-        }
-
-        return "ATA estruturada gerada ({$agent->name}) e {$entity->participants->count()} participante(s) notificado(s).";
+        return "ATA estruturada gerada e salva ({$agent->name}).";
     }
 
     private function sendNotification(array $config, mixed $entity, array $context): string

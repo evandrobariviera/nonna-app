@@ -570,7 +570,7 @@
                         </div>
                     </div>
 
-                    <div x-show="actionType === 'structure_ata_notify'" x-cloak class="grid gap-3">
+                    <div x-show="actionType === 'structure_ata'" x-cloak class="grid gap-3">
                         <p class="text-sm" style="color:var(--muted)">
                             Lê a ATA bruta da Reunião que disparou, chama o agente de IA abaixo pra reescrever
                             numa versão organizada (salva à parte, sem alterar a ATA original), e notifica todos
