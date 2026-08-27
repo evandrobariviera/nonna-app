@@ -100,6 +100,7 @@ class AutomationJob implements ShouldQueue
             'create_internal_review_pauta' => $this->createInternalReviewPauta($config, $entity),
             'create_macroplan_from_meeting' => $this->createMacroplanFromMeeting($config, $entity),
             'structure_ata' => $this->structureAta($config, $entity),
+            'adjust_date'   => $this->adjustDate($config, $entity),
             default             => throw new \RuntimeException("Tipo de ação desconhecido: {$this->automation->action_type}"),
         };
     }
@@ -582,6 +583,33 @@ class AutomationJob implements ShouldQueue
         ]);
 
         return "ATA gerada e salva ({$agent->name}).";
+    }
+
+    // Desloca um campo de data existente na própria entidade por N dias (positivo ou
+    // negativo) — ex: reunião reagendada empurra o vencimento de uma tarefa ligada a ela,
+    // ou uma tarefa atrasada tem o prazo automaticamente adiado. offset_days negativo
+    // adianta a data em vez de atrasar. skip_weekends rola o resultado pro próximo dia
+    // útil (mesmo BusinessTime::nextBusinessDay usado em create_record/due_skip_weekends).
+    private function adjustDate(array $config, mixed $entity): string
+    {
+        $field = $config['date_field'] ?? throw new \RuntimeException('adjust_date sem campo de data configurado.');
+
+        $current = $entity->{$field} ?? null;
+        if (!$current instanceof \Carbon\CarbonInterface) {
+            throw new \RuntimeException("Campo '{$field}' sem data preenchida — não é possível ajustar.");
+        }
+
+        $offsetDays = (int) ($config['offset_days'] ?? 0);
+        $skipWeekends = !empty($config['skip_weekends']);
+
+        $new = $current->copy()->addDays($offsetDays);
+        if ($skipWeekends) {
+            $new = BusinessTime::nextBusinessDay($new);
+        }
+
+        $entity->update([$field => $new]);
+
+        return "Campo '{$field}' ajustado de {$current->format('d/m/Y H:i')} para {$new->format('d/m/Y H:i')}.";
     }
 
     private function sendNotification(array $config, mixed $entity, array $context): string

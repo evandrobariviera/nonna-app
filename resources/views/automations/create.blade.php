@@ -591,6 +591,41 @@
                             </select>
                         </div>
                     </div>
+
+                    <div x-show="actionType === 'adjust_date'" x-cloak class="grid gap-3">
+                        <p class="text-sm" style="color:var(--muted)">
+                            Desloca um campo de data já preenchido na própria entidade que disparou —
+                            ex: reunião muda de status e empurra sua Data/Hora, ou uma tarefa atrasada tem o
+                            vencimento adiado automaticamente. Não funciona se o campo estiver vazio.
+                        </p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">QUAL DATA *</label>
+                                <select name="action_config[date_field]"
+                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    <option value="">Selecione...</option>
+                                    <template x-for="[val, label] in Object.entries(dateFieldsMap[entityType] || {})" :key="val">
+                                        <option :value="val" x-text="label"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DESLOCAR (DIAS) *</label>
+                                <input type="number" name="action_config[offset_days]" value="0"
+                                       placeholder="Ex: 3 ou -2"
+                                       class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                       style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                <p class="text-xs mt-1" style="color:var(--muted)">Positivo adia, negativo antecipa.</p>
+                            </div>
+                        </div>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs" style="color:var(--text)">
+                            <input type="hidden" name="action_config[skip_weekends]" value="0">
+                            <input type="checkbox" name="action_config[skip_weekends]" value="1"
+                                   style="width:16px; height:16px; accent-color:var(--purple)">
+                            Rolar pro próximo dia útil se cair em fim de semana
+                        </label>
+                    </div>
                 </div>
             </div>
 

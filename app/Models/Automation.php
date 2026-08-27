@@ -58,14 +58,16 @@ class Automation extends Model
         'create_internal_review_pauta' => 'Gerar Pauta (IA) + Criar Reunião Interna',
         'create_macroplan_from_meeting' => 'Criar Macroplanejamento + Tarefa a partir da Reunião',
         'structure_ata'    => 'Estruturar ATA (IA)',
+        'adjust_date'      => 'Ajustar Data',
     ];
 
     /**
-     * Campos de data disponíveis pro gatilho "Data alcançada", por entity_type — cada
-     * entidade tem seus próprios campos de data (Tarefa: vencimento/aprovação/publicação;
-     * Planejamento: fim do ciclo). Substitui o antigo $dateFields fixo (só Tarefa); o
-     * formato salvo em trigger_config.date_field não muda, só a lista de opções na UI
-     * passa a variar por entidade — mesmo padrão de conditionFieldsFor().
+     * Campos de data disponíveis pro gatilho "Data alcançada" E pra ação "Ajustar Data",
+     * por entity_type — cada entidade tem seus próprios campos de data (Tarefa:
+     * vencimento/aprovação/publicação; Planejamento: fim do ciclo; Reunião: data/hora).
+     * Substitui o antigo $dateFields fixo (só Tarefa); o formato salvo em
+     * trigger_config.date_field/action_config.date_field não muda, só a lista de opções
+     * na UI passa a variar por entidade — mesmo padrão de conditionFieldsFor().
      */
     public static function dateFieldsFor(string $entityType): array
     {
@@ -77,6 +79,9 @@ class Automation extends Model
             ],
             'macro_plan' => [
                 'period_end' => 'Fim do Ciclo',
+            ],
+            'meeting' => [
+                'scheduled_at' => 'Data/Hora da Reunião',
             ],
             default => [],
         };
@@ -265,8 +270,18 @@ class Automation extends Model
             'create_internal_review_pauta' => 'Agente: ' . ($config['agent_name'] ?? $config['agent_id'] ?? '?') . ' gera pauta + cria Reunião Interna',
             'create_macroplan_from_meeting' => 'Cria Macroplanejamento + Tarefa vinculada',
             'structure_ata' => 'Estrutura ATA (IA)',
+            'adjust_date'   => $this->adjustDateSummary($config),
             default             => $this->action_type,
         };
+    }
+
+    private function adjustDateSummary(array $config): string
+    {
+        $label = self::dateFieldsFor($this->entity_type)[$config['date_field'] ?? ''] ?? '?';
+        $offset = (int) ($config['offset_days'] ?? 0);
+        $sign = $offset >= 0 ? '+' : '';
+
+        return "Ajusta \"{$label}\" em {$sign}{$offset} dia(s)";
     }
 
     // Verifica se esta automação deve disparar dado um gatilho e dados de mudança. $entity é

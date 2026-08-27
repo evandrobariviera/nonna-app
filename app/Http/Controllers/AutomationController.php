@@ -51,7 +51,7 @@ class AutomationController extends Controller
             'entity_type'   => 'required|in:task,ticket,project,campaign,opportunity,meeting,macro_plan',
             'trigger_type'  => 'required|in:status_changed,field_updated,date_reached,executor_added,created,manual',
             'trigger_config'=> 'nullable|array',
-            'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification,create_record,create_macroplan_review,create_internal_review_pauta,create_macroplan_from_meeting,structure_ata',
+            'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification,create_record,create_macroplan_review,create_internal_review_pauta,create_macroplan_from_meeting,structure_ata,adjust_date',
             'action_config' => 'nullable|array',
             'is_active'     => 'boolean',
         ]);
@@ -104,7 +104,7 @@ class AutomationController extends Controller
             'entity_type'   => 'required|in:task,ticket,project,campaign,opportunity,meeting,macro_plan',
             'trigger_type'  => 'required|in:status_changed,field_updated,date_reached,executor_added,created,manual',
             'trigger_config'=> 'nullable|array',
-            'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification,create_record,create_macroplan_review,create_internal_review_pauta,create_macroplan_from_meeting,structure_ata',
+            'action_type'   => 'required|in:run_ai_agent,send_webhook,update_field,send_notification,create_record,create_macroplan_review,create_internal_review_pauta,create_macroplan_from_meeting,structure_ata,adjust_date',
             'action_config' => 'nullable|array',
             'is_active'     => 'boolean',
         ]);
