@@ -8,6 +8,7 @@ use App\Models\Meeting;
 use App\Models\NotificationTemplate;
 use App\Models\Opportunity;
 use App\Models\User;
+use App\Services\AtaMarkdownRenderer;
 use App\Services\NotificationDispatchService;
 use App\Services\NotificationService;
 use Carbon\Carbon;
@@ -187,6 +188,14 @@ class MeetingController extends Controller
         $meeting->load(['client', 'organizer', 'macroPlan', 'attachments']);
 
         return view('meetings._preview', compact('meeting'));
+    }
+
+    public function ataPrint(Meeting $meeting)
+    {
+        $meeting->load(['client', 'organizer', 'participants']);
+        $cards = AtaMarkdownRenderer::toCards($meeting->ata ?? '');
+
+        return view('meetings.ata-print', compact('meeting', 'cards'));
     }
 
     public function edit(Meeting $meeting)

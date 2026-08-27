@@ -163,7 +163,7 @@
                     <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">ATA da Reunião</p>
                     @if($meeting->ata_recorded_at)
                         <span class="text-xs font-mono" style="color:var(--muted)">
-                            Registrada em {{ $meeting->ata_recorded_at->format('d/m/Y H:i') }}
+                            Atualizada em {{ $meeting->ata_recorded_at->format('d/m/Y H:i') }}
                         </span>
                     @endif
                 </div>
@@ -174,9 +174,12 @@
                             <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Próximos Passos</p>
                             <p class="text-sm whitespace-pre-wrap" style="color:var(--text)">{{ $meeting->next_steps }}</p>
                         @endif
-                        <div class="mt-4">
+                        <div class="mt-4 flex gap-3">
                             <a href="{{ route('meetings.edit', $meeting) }}#ata" class="btn btn-ghost btn-xs">
                                 Editar ATA →
+                            </a>
+                            <a href="{{ route('meetings.ata-print', $meeting) }}" target="_blank" class="btn btn-ghost btn-xs">
+                                Ver ATA formatada →
                             </a>
                         </div>
                     @else
@@ -187,17 +190,6 @@
                     @endif
                 </div>
             </div>
-
-            @if($meeting->ata_estruturada)
-            <div class="card">
-                <div class="px-5 py-4" style="border-bottom:1px solid var(--border2)">
-                    <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">ATA Estruturada (gerada por IA)</p>
-                </div>
-                <div class="px-5 py-4">
-                    <p class="text-sm whitespace-pre-wrap" style="color:var(--text)">{{ $meeting->ata_estruturada }}</p>
-                </div>
-            </div>
-            @endif
 
             {{-- Tarefas — nascidas direto da Reunião, antes até de existir Planejamento
                  (ver Task::meeting()); se a Reunião entrar num Macro depois, elas

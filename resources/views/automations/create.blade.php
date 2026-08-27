@@ -575,7 +575,7 @@
                     <div x-show="actionType === 'structure_ata'" x-cloak class="grid gap-3">
                         <p class="text-sm" style="color:var(--muted)">
                             Lê a Transcrição da Reunião que disparou, chama o agente de IA abaixo pra gerar a
-                            ATA Estruturada a partir dela (salva em campo próprio, sem notificar ninguém — use
+                            ATA a partir dela (atualiza a própria ATA da reunião, sem notificar ninguém — use
                             uma automação "Enviar Notificação" separada pra isso). Exige que a Reunião já tenha
                             Transcrição preenchida — pensado pro gatilho "Status mudou" → Revisão Interna.
                         </p>

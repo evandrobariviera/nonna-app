@@ -534,15 +534,14 @@ class AutomationJob implements ShouldQueue
         return "Macroplanejamento {$macroPlan->id} criado; Tarefa \"{$task->title}\" ({$task->id}) vinculada, prazo {$task->due_date->format('d/m/Y')}.";
     }
 
-    // Gera (ou atualiza) a ATA estruturada via IA a partir da TRANSCRIÇÃO bruta da call
-    // (campo "transcricao" — colada manualmente, ex: saída de gravação/Whisper). Quando
-    // a reunião já tem uma ata_estruturada de uma rodada anterior, ela entra no prompt
-    // como contexto pra fusão — o agente deve atualizar/enriquecer, não substituir do
-    // zero (suporta reunião que recebe uma segunda transcrição depois, ex: continuação).
-    // A ATA manual (campo "ata") também entra como contexto, se preenchida. Não notifica
-    // ninguém — isso fica por conta de uma automação separada (send_notification,
-    // destinatário "participants"). Substitui create_internal_review_pauta pra esse
-    // ponto do fluxo — não cria mais nenhuma Reunião Interna.
+    // Gera (ou atualiza) a ATA via IA a partir da TRANSCRIÇÃO bruta da call (campo
+    // "transcricao" — colada manualmente, ex: saída de gravação/Whisper). Quando a
+    // reunião já tem uma ATA de uma rodada anterior (gerada por IA ou escrita à mão), ela
+    // entra no prompt como contexto pra fusão — o agente deve atualizar/enriquecer, não
+    // substituir do zero (suporta reunião que recebe uma segunda transcrição depois, ex:
+    // continuação). Não notifica ninguém — isso fica por conta de uma automação separada
+    // (send_notification, destinatário "participants"). Substitui create_internal_review_pauta
+    // pra esse ponto do fluxo — não cria mais nenhuma Reunião Interna.
     private function structureAta(array $config, mixed $entity): string
     {
         if (!$entity instanceof Meeting) {
@@ -550,7 +549,7 @@ class AutomationJob implements ShouldQueue
         }
 
         if (empty($entity->transcricao)) {
-            throw new \RuntimeException('Reunião sem Transcrição preenchida — não é possível gerar a ATA estruturada.');
+            throw new \RuntimeException('Reunião sem Transcrição preenchida — não é possível gerar a ATA.');
         }
 
         $agentId = $config['agent_id'] ?? throw new \RuntimeException('structure_ata sem agente de IA configurado.');
@@ -562,18 +561,14 @@ class AutomationJob implements ShouldQueue
             . 'Cliente: ' . ($entity->client?->displayName() ?? '—') . "\n"
             . "Data da reunião: {$entity->scheduled_at->format('d/m/Y')}\n\n";
 
-        if (!empty($entity->ata_estruturada)) {
-            $userMessage .= "ATA JÁ EXISTENTE (atualize e enriqueça, não substitua do zero):\n{$entity->ata_estruturada}\n\n";
-        }
-
         if (!empty($entity->ata)) {
-            $userMessage .= "ATA MANUAL (anotações rápidas de quem conduziu a reunião):\n{$entity->ata}\n\n";
+            $userMessage .= "ATA JÁ EXISTENTE (atualize e enriqueça, não substitua do zero):\n{$entity->ata}\n\n";
         }
 
         $userMessage .= "TRANSCRIÇÃO BRUTA (nova):\n{$entity->transcricao}\n\n"
-            . 'Gere a ATA estruturada seguindo o formato definido.';
+            . 'Gere a ATA seguindo o formato definido.';
 
-        $ataEstruturada = app(\App\Services\AiService::class)->run(
+        $ata = app(\App\Services\AiService::class)->run(
             agent: $agent,
             userMessage: $userMessage,
             userId: $this->automation->created_by,
@@ -581,9 +576,12 @@ class AutomationJob implements ShouldQueue
             trigger: 'automation:structure_ata',
         );
 
-        $entity->update(['ata_estruturada' => $ataEstruturada]);
+        $entity->update([
+            'ata' => $ata,
+            'ata_recorded_at' => $entity->ata_recorded_at ?? now(),
+        ]);
 
-        return "ATA estruturada gerada e salva ({$agent->name}).";
+        return "ATA gerada e salva ({$agent->name}).";
     }
 
     private function sendNotification(array $config, mixed $entity, array $context): string

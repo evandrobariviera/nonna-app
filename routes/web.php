@@ -395,6 +395,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::get('/agenda/{meeting}/preview', [MeetingController::class, 'preview'])
         ->name('meetings.preview');
 
+    Route::get('/agenda/{meeting}/ata', [MeetingController::class, 'ataPrint'])
+        ->name('meetings.ata-print');
+
     Route::post('/agenda/{meeting}/anexos', [MeetingAttachmentController::class, 'store'])
         ->name('meeting-attachments.store');
     Route::delete('/agenda/{meeting}/anexos/{attachment}', [MeetingAttachmentController::class, 'destroy'])

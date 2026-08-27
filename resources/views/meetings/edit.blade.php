@@ -225,17 +225,8 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">ATA</label>
-                    <textarea name="ata" rows="7"
-                        placeholder="Registro do que foi discutido e decidido..."
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
-                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ old('ata', $meeting->ata) }}</textarea>
-                </div>
-
-                <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Transcrição</label>
-                    <p class="text-xs mb-2" style="color:var(--muted)">Cole aqui a transcrição bruta da call (gravação/Whisper). É a partir dela que a automação gera a ATA Estruturada por IA.</p>
+                    <p class="text-xs mb-2" style="color:var(--muted)">Cole aqui a transcrição bruta da call (gravação/Whisper). A cada nova transcrição colada, a automação atualiza a ATA abaixo — some o texto anterior antes de colar o novo.</p>
                     <textarea name="transcricao" rows="10"
                         placeholder="Cole a transcrição da reunião..."
                         class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
@@ -243,12 +234,20 @@
                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ old('transcricao', $meeting->transcricao) }}</textarea>
                 </div>
 
-                @if($meeting->ata_estruturada)
                 <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">ATA Estruturada (gerada por IA)</label>
-                    <div class="text-sm whitespace-pre-wrap px-4 py-2.5" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">{{ $meeting->ata_estruturada }}</div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">ATA</label>
+                    <p class="text-xs mb-2" style="color:var(--muted)">Gerada/atualizada automaticamente pela IA a partir da Transcrição — pode editar à mão se precisar ajustar.</p>
+                    <textarea name="ata" rows="14"
+                        placeholder="Registro do que foi discutido e decidido..."
+                        class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ old('ata', $meeting->ata) }}</textarea>
+                    @if($meeting->hasAta())
+                        <a href="{{ route('meetings.ata-print', $meeting) }}" target="_blank" class="btn btn-ghost btn-xs mt-2">
+                            Ver ATA formatada →
+                        </a>
+                    @endif
                 </div>
-                @endif
 
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Próximos Passos</label>
