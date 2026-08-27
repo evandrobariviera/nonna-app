@@ -105,6 +105,17 @@ class AiService
         };
     }
 
+    // Modelos "reasoning" da OpenAI (o1/o3/o4/gpt-5.x) usam um contrato de API diferente
+    // na Chat Completions: rejeitam max_tokens (exigem max_completion_tokens) e rejeitam
+    // temperature customizada (só aceitam o default, 1) — descoberto na prática tentando
+    // rodar gpt-5.6-terra no agente de ATA. max_completion_tokens funciona igual em
+    // modelos antigos também (testado com gpt-4o-mini), então não precisa de branch pra
+    // esse parâmetro — só a omissão de temperature é condicional.
+    private function isReasoningModel(string $model): bool
+    {
+        return (bool) preg_match('/^(o1|o3|o4|gpt-5)/', $model);
+    }
+
     private function callOpenAiCompatChat(AiAgent $agent, string $apiKey, string $systemPrompt, array $history): array
     {
         $messages = array_merge(
@@ -112,14 +123,18 @@ class AiService
             $history
         );
 
+        $payload = [
+            'model'                 => $agent->model,
+            'messages'              => $messages,
+            'max_completion_tokens' => $agent->max_tokens,
+        ];
+        if (!$this->isReasoningModel($agent->model)) {
+            $payload['temperature'] = $agent->temperature;
+        }
+
         $response = Http::withToken($apiKey)
             ->timeout(120)
-            ->post(rtrim($agent->provider->base_url, '/') . '/chat/completions', [
-                'model'       => $agent->model,
-                'messages'    => $messages,
-                'temperature' => $agent->temperature,
-                'max_tokens'  => $agent->max_tokens,
-            ])
+            ->post(rtrim($agent->provider->base_url, '/') . '/chat/completions', $payload)
             ->throw()
             ->json();
 
@@ -241,17 +256,21 @@ class AiService
     // OpenAI e Groq usam o mesmo formato de API
     private function callOpenAiCompat(AiAgent $agent, string $apiKey, string $systemPrompt, string $userMessage): array
     {
+        $payload = [
+            'model'                 => $agent->model,
+            'messages'              => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user',   'content' => $userMessage],
+            ],
+            'max_completion_tokens' => $agent->max_tokens,
+        ];
+        if (!$this->isReasoningModel($agent->model)) {
+            $payload['temperature'] = $agent->temperature;
+        }
+
         $response = Http::withToken($apiKey)
             ->timeout(120)
-            ->post(rtrim($agent->provider->base_url, '/') . '/chat/completions', [
-                'model'       => $agent->model,
-                'messages'    => [
-                    ['role' => 'system', 'content' => $systemPrompt],
-                    ['role' => 'user',   'content' => $userMessage],
-                ],
-                'temperature' => $agent->temperature,
-                'max_tokens'  => $agent->max_tokens,
-            ])
+            ->post(rtrim($agent->provider->base_url, '/') . '/chat/completions', $payload)
             ->throw()
             ->json();
 
@@ -371,18 +390,22 @@ class AiService
     // OpenAI/Groq têm modo JSON nativo (response_format) - garante saída parseável
     private function callOpenAiCompatStructured(AiAgent $agent, string $apiKey, string $systemPrompt, string $userMessage): array
     {
+        $payload = [
+            'model'                 => $agent->model,
+            'messages'              => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user',   'content' => $userMessage],
+            ],
+            'max_completion_tokens' => $agent->max_tokens,
+            'response_format'       => ['type' => 'json_object'],
+        ];
+        if (!$this->isReasoningModel($agent->model)) {
+            $payload['temperature'] = $agent->temperature;
+        }
+
         $response = Http::withToken($apiKey)
             ->timeout(180)
-            ->post(rtrim($agent->provider->base_url, '/') . '/chat/completions', [
-                'model'           => $agent->model,
-                'messages'        => [
-                    ['role' => 'system', 'content' => $systemPrompt],
-                    ['role' => 'user',   'content' => $userMessage],
-                ],
-                'temperature'     => $agent->temperature,
-                'max_tokens'      => $agent->max_tokens,
-                'response_format' => ['type' => 'json_object'],
-            ])
+            ->post(rtrim($agent->provider->base_url, '/') . '/chat/completions', $payload)
             ->throw()
             ->json();
 
