@@ -185,7 +185,11 @@ class MeetingController extends Controller
             ->orderByDesc('generated_at')
             ->get();
 
-        return view('meetings.show', compact('meeting', 'users', 'meetingNotifications'));
+        // Pauta gerada pelo agente de IA (structure_ata) vem em Markdown com a mesma
+        // sintaxe da ATA — reaproveita o parser em vez de mostrar texto cru.
+        $agendaCards = $meeting->agenda ? AtaMarkdownRenderer::toCards($meeting->agenda) : [];
+
+        return view('meetings.show', compact('meeting', 'users', 'meetingNotifications', 'agendaCards'));
     }
 
     /**

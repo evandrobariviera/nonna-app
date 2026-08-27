@@ -204,7 +204,7 @@
                 </div>
 
                 {{-- Pauta --}}
-                <div>
+                <div id="agenda">
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
                         Pauta
                     </label>

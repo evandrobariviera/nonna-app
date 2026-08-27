@@ -570,7 +570,7 @@ class AutomationJob implements ShouldQueue
         $userMessage .= "TRANSCRIÇÃO BRUTA (nova):\n{$entity->transcricao}\n\n"
             . 'Gere a ATA seguindo o formato definido.';
 
-        $ata = app(\App\Services\AiService::class)->run(
+        $response = app(\App\Services\AiService::class)->run(
             agent: $agent,
             userMessage: $userMessage,
             userId: $this->automation->created_by,
@@ -578,12 +578,44 @@ class AutomationJob implements ShouldQueue
             trigger: 'automation:structure_ata',
         );
 
-        $entity->update([
+        // O agente pode devolver só a ATA (agentes antigos que não conhecem o marcador)
+        // ou ATA + Pauta de Revisão Interna separadas pelo marcador abaixo — contrato
+        // definido no system_prompt do agente, não aqui (ver AiAgent "ATA Estruturada —
+        // Reunião com Cliente"). A pauta usa a mesma sintaxe de checklist da ATA
+        // ("- [ ]"/"- [x]") pra marcar o que já foi identificado e o que ficou pendente.
+        [$ata, $agenda] = self::splitAtaAndAgenda($response);
+
+        $update = [
             'ata' => $ata,
             'ata_recorded_at' => $entity->ata_recorded_at ?? now(),
-        ]);
+        ];
+        if ($agenda !== null) {
+            $update['agenda'] = $agenda;
+        }
 
-        return "ATA gerada e salva ({$agent->name}).";
+        $entity->update($update);
+
+        return $agenda !== null
+            ? "ATA e Pauta de Revisão Interna geradas e salvas ({$agent->name})."
+            : "ATA gerada e salva ({$agent->name}).";
+    }
+
+    private const PAUTA_MARKER = '===PAUTA_REVISAO_INTERNA===';
+
+    /**
+     * @return array{0: string, 1: ?string}
+     */
+    private static function splitAtaAndAgenda(string $response): array
+    {
+        $pos = mb_strpos($response, self::PAUTA_MARKER);
+        if ($pos === false) {
+            return [trim($response), null];
+        }
+
+        $ata = trim(mb_substr($response, 0, $pos));
+        $agenda = trim(mb_substr($response, $pos + mb_strlen(self::PAUTA_MARKER)));
+
+        return [$ata, $agenda !== '' ? $agenda : null];
     }
 
     // Ajusta um campo de data na própria entidade por N dias (positivo ou negativo) a

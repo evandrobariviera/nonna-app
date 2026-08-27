@@ -145,14 +145,60 @@
                 </div>
             </div>
 
-            {{-- Pauta --}}
+            {{-- Pauta — gerada pelo agente de IA junto com a ATA (structure_ata) ou escrita
+                 à mão; renderiza como cards quando reconhece o Markdown (##/###/checklist),
+                 senão cai pro texto cru. Checklist marcado = já identificado na ATA,
+                 desmarcado = pendência a discutir na Revisão Interna. --}}
             @if($meeting->agenda)
                 <div class="card">
-                    <div class="px-5 py-4" style="border-bottom:1px solid var(--border2)">
+                    <div class="px-5 py-4 flex items-center justify-between" style="border-bottom:1px solid var(--border2)">
                         <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Pauta</p>
+                        <a href="{{ route('meetings.edit', $meeting) }}#agenda" class="btn btn-ghost btn-xs">Editar →</a>
                     </div>
-                    <div class="px-5 py-4">
-                        <p class="text-sm whitespace-pre-wrap" style="color:var(--text)">{{ $meeting->agenda }}</p>
+                    <div class="px-5 py-4 space-y-3">
+                        @forelse($agendaCards as $card)
+                            <div class="p-4" style="background:var(--s3); border:1px solid var(--border2); border-radius:10px">
+                                @if($card['title'])
+                                    <p class="text-xs font-mono uppercase tracking-widest mb-3" style="color:var(--purple)">{{ $card['title'] }}</p>
+                                @endif
+                                @foreach($card['blocks'] as $block)
+                                    @if($block['type'] === 'h3')
+                                        <p class="text-sm font-semibold mb-2" style="color:var(--text)">{{ $block['text'] }}</p>
+                                    @elseif($block['type'] === 'p')
+                                        <p class="text-sm mb-2" style="color:var(--text)">{!! $block['html'] !!}</p>
+                                    @elseif($block['type'] === 'ul')
+                                        <ul class="list-disc pl-5 text-sm mb-2" style="color:var(--text)">
+                                            @foreach($block['items'] as $item)
+                                                <li class="mb-1">{!! $item !!}</li>
+                                            @endforeach
+                                        </ul>
+                                    @elseif($block['type'] === 'ol')
+                                        <ol class="list-decimal pl-5 text-sm mb-2" style="color:var(--text)">
+                                            @foreach($block['items'] as $item)
+                                                <li class="mb-1">{!! $item !!}</li>
+                                            @endforeach
+                                        </ol>
+                                    @elseif($block['type'] === 'checklist')
+                                        <div class="space-y-1.5">
+                                            @foreach($block['items'] as $item)
+                                                <div class="flex items-start gap-2.5 px-3 py-2"
+                                                     style="border-radius:8px; background:{{ $item['done'] ? 'var(--s2)' : 'rgba(238,121,25,0.06)' }}; border:1px solid {{ $item['done'] ? 'var(--border2)' : 'rgba(238,121,25,0.25)' }}">
+                                                    <span class="flex-shrink-0" style="width:14px; height:14px; margin-top:3px; border-radius:4px; border:2px solid {{ $item['done'] ? '#10B981' : 'var(--orange)' }}; background:{{ $item['done'] ? '#10B981' : 'transparent' }}"></span>
+                                                    <span class="text-sm flex-1" style="color:var(--text)">
+                                                        {!! $item['html'] !!}
+                                                        @if($item['resp'])
+                                                            <span class="block text-xs font-mono mt-0.5" style="color:{{ $item['done'] ? 'var(--muted)' : 'var(--orange)' }}">{{ $item['resp'] }}</span>
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @empty
+                            <p class="text-sm whitespace-pre-wrap" style="color:var(--text)">{{ $meeting->agenda }}</p>
+                        @endforelse
                     </div>
                 </div>
             @endif
