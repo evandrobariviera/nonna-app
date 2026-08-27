@@ -14,7 +14,7 @@ class ContractAttachmentController extends Controller
     public function store(Request $request, Contract $contract)
     {
         $request->validate([
-            'file' => 'required|file|max:102400', // 100 MB
+            'file' => 'required|file|max:153600', // 150 MB
             'kind' => 'nullable|in:proposta,assinado,aditivo,outro',
         ]);
 

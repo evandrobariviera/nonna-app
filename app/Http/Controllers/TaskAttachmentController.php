@@ -19,7 +19,7 @@ class TaskAttachmentController extends Controller
     {
         $request->validate([
             'files'   => 'required|array|min:1', // carrossel/múltiplas peças de uma vez
-            'files.*' => 'file|max:102400', // 100 MB
+            'files.*' => 'file|max:153600', // 150 MB
             'kind'    => 'required|in:insumo,entregavel',
         ]);
 

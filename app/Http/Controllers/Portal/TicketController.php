@@ -61,7 +61,7 @@ class TicketController extends Controller
             'task_type'   => 'required|in:' . implode(',', array_keys(Task::$types)),
             'priority'    => 'nullable|in:' . implode(',', array_keys(Task::$priorities)),
             'files'       => 'nullable|array',
-            'files.*'     => 'file|max:102400', // 100 MB, mesmo limite do chamado interno
+            'files.*'     => 'file|max:153600', // 150 MB
         ]);
 
         $task = Task::create([

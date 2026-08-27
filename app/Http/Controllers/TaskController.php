@@ -974,7 +974,7 @@ class TaskController extends Controller
             'requester_whatsapp' => 'nullable|string|max:30',
             'requester_channel'  => 'nullable|in:' . implode(',', array_keys(Task::$requesterChannels)),
             'files'              => 'nullable|array',
-            'files.*'            => 'file|max:102400', // 100 MB, mesmo limite de TaskAttachmentController
+            'files.*'            => 'file|max:153600', // 150 MB
         ];
     }
 

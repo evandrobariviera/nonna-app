@@ -15,7 +15,7 @@ class MeetingAttachmentController extends Controller
     {
         $request->validate([
             'files'   => 'required|array|min:1',
-            'files.*' => 'file|max:102400', // 100 MB
+            'files.*' => 'file|max:153600', // 150 MB
         ]);
 
         $disk = config('filesystems.default', 'r2');
