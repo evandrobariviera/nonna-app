@@ -210,7 +210,15 @@ class TaskController extends Controller
                 ->values()
             : collect();
 
-        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages', 'clientProjects', 'clientMacroPlans', 'clients', 'sprints'));
+        // Notificações internas geradas por esta tarefa (ver NotificationService::notifyUsers,
+        // source_type = class_basename do model — sempre "Task", ticket incluso, mesma tabela).
+        $taskNotifications = \App\Models\InternalNotification::where('source_type', 'Task')
+            ->where('source_id', $task->id)
+            ->with('user:id,name')
+            ->orderByDesc('generated_at')
+            ->get();
+
+        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages', 'clientProjects', 'clientMacroPlans', 'clients', 'sprints', 'taskNotifications'));
     }
 
     // Campo único, salvo na hora (clicou/saiu do campo já grava) — cobre todo campo

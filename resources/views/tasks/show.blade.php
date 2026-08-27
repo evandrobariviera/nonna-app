@@ -1313,6 +1313,8 @@
                 </div>
             @endif
 
+            <x-notification-status-list :notifications="$taskNotifications" />
+
             {{-- ══ COMENTÁRIOS (antes na coluna principal, movido pra lateral) ══ --}}
             <div class="card card-body-lg" id="comentarios" x-data="{ editId: null }">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-5 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">

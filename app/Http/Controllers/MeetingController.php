@@ -177,7 +177,15 @@ class MeetingController extends Controller
         $meeting->load(['client', 'opportunity', 'organizer', 'participants', 'contacts', 'createdBy', 'attachments.uploadedBy', 'macroPlan', 'tasks' => fn ($q) => $q->orderByDesc('created_at')]);
         $users = User::orderBy('name')->get(['id', 'name']);
 
-        return view('meetings.show', compact('meeting', 'users'));
+        // Notificações internas geradas por esta reunião (ver NotificationService::notifyUsers,
+        // source_type = class_basename do model, sempre "Meeting").
+        $meetingNotifications = \App\Models\InternalNotification::where('source_type', 'Meeting')
+            ->where('source_id', $meeting->id)
+            ->with('user:id,name')
+            ->orderByDesc('generated_at')
+            ->get();
+
+        return view('meetings.show', compact('meeting', 'users', 'meetingNotifications'));
     }
 
     /**

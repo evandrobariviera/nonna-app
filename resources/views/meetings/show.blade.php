@@ -191,6 +191,8 @@
                 </div>
             </div>
 
+            <x-notification-status-list :notifications="$meetingNotifications" />
+
             {{-- Tarefas — nascidas direto da Reunião, antes até de existir Planejamento
                  (ver Task::meeting()); se a Reunião entrar num Macro depois, elas
                  acompanham sozinhas (MeetingObserver). --}}
