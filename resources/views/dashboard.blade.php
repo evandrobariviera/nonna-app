@@ -151,10 +151,10 @@
         </div>
     @endif
 
-    {{-- ── LINHA 1.5: Agenda — quadro por status (para_agendar/agendada/pos_reuniao) ──
+    {{-- ── LINHA 1.5: Agenda — quadro por status (para_agendar/agendada/pos_reuniao/revisao_ata) ──
          Estático (sem drag-and-drop) — mudar status é só na própria página da reunião. --}}
     @php
-        $agendaStatuses = ['para_agendar', 'agendada', 'pos_reuniao'];
+        $agendaStatuses = ['para_agendar', 'agendada', 'pos_reuniao', 'revisao_ata'];
     @endphp
     <div class="mb-6" x-data="{ filterType: '' }">
         <div class="flex items-center justify-between mb-3">
@@ -171,7 +171,7 @@
                 @endforeach
             </select>
         </div>
-        <div class="grid gap-4" style="grid-template-columns: repeat(3, 1fr)">
+        <div class="grid gap-4" style="grid-template-columns: repeat(4, 1fr)">
             @foreach($agendaStatuses as $status)
                 @php $statusMeetings = $myMeetingsByStatus->get($status, collect()); @endphp
                 <div class="card px-5 py-4">
