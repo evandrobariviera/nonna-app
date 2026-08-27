@@ -592,10 +592,20 @@
 
                     <div x-show="actionType === 'adjust_date'" x-cloak class="grid gap-3">
                         <p class="text-sm" style="color:var(--muted)">
-                            Desloca um campo de data já preenchido na própria entidade que disparou —
-                            ex: reunião muda de status e empurra sua Data/Hora, ou uma tarefa atrasada tem o
-                            vencimento adiado automaticamente. Não funciona se o campo estiver vazio.
+                            Ajusta um campo de data na própria entidade que disparou — ex: reunião muda de
+                            status e sua Data/Hora se ajusta, ou uma tarefa atrasada tem o vencimento adiado
+                            automaticamente.
                         </p>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">BASE DA DATA</label>
+                            <select name="action_config[date_base]" x-model="adjustDateBase"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                <option value="field">A partir do valor atual do próprio campo</option>
+                                <option value="trigger">A partir de agora (quando a automação disparar)</option>
+                            </select>
+                            <p class="text-xs mt-1" style="color:var(--muted)">"Valor atual" desloca a data que já está lá (exige o campo preenchido). "Agora" ignora o valor anterior — útil quando a data nova não depende da antiga, só de quando o gatilho aconteceu.</p>
+                        </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">QUAL DATA *</label>
@@ -616,7 +626,7 @@
                                        placeholder="Ex: 3 ou -2"
                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                                <p class="text-xs mt-1" style="color:var(--muted)">Positivo adia, negativo antecipa.</p>
+                                <p class="text-xs mt-1" style="color:var(--muted)">Positivo adia, negativo antecipa. 0 = igual à base.</p>
                             </div>
                         </div>
                         <label class="flex items-center gap-2 cursor-pointer text-xs" style="color:var(--text)">
@@ -669,6 +679,7 @@ function automationBuilder() {
         fieldUpdatedField: '{{ old('trigger_config.field', $automation->trigger_config['field'] ?? '') }}',
         dateField: '{{ old('trigger_config.date_field', $automation->trigger_config['date_field'] ?? '') }}',
         adjustDateField: '{{ old('action_config.date_field', $automation->action_config['date_field'] ?? '') }}',
+        adjustDateBase: '{{ old('action_config.date_base', $automation->action_config['date_base'] ?? 'field') }}',
         conditionsLogic: '{{ old('trigger_config.conditions_logic', $automation->trigger_config['conditions_logic'] ?? 'and') }}',
         conditions: {!! json_encode(old('trigger_config.conditions', $automation->trigger_config['conditions'] ?? [])) !!},
         assigneeSource: '{{ old('action_config.assignee_source', $automation->action_config['assignee_source'] ?? 'none') }}',

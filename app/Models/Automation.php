@@ -280,8 +280,9 @@ class Automation extends Model
         $label = self::dateFieldsFor($this->entity_type)[$config['date_field'] ?? ''] ?? '?';
         $offset = (int) ($config['offset_days'] ?? 0);
         $sign = $offset >= 0 ? '+' : '';
+        $base = ($config['date_base'] ?? 'field') === 'trigger' ? 'a partir de agora' : 'a partir do valor atual';
 
-        return "Ajusta \"{$label}\" em {$sign}{$offset} dia(s)";
+        return "Ajusta \"{$label}\" em {$sign}{$offset} dia(s) ({$base})";
     }
 
     // Verifica se esta automação deve disparar dado um gatilho e dados de mudança. $entity é
