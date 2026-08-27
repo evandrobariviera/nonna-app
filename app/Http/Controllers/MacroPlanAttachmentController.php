@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MacroPlan;
 use App\Models\MacroPlanAttachment;
+use App\Support\UploadOptions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -18,14 +19,15 @@ class MacroPlanAttachmentController extends Controller
 
         $file = $request->file('file');
         $disk = config('filesystems.default', 'r2');
-        $path = $file->store("macroplans/{$macroplan->id}", $disk);
+        $mimeType = $file->getMimeType();
+        $path = $file->store("macroplans/{$macroplan->id}", UploadOptions::forStore($mimeType, $disk));
 
         MacroPlanAttachment::create([
             'macro_plan_id' => $macroplan->id,
             'filename'      => $file->getClientOriginalName(),
             'disk_path'     => $path,
             'disk'          => $disk,
-            'mime_type'     => $file->getMimeType(),
+            'mime_type'     => $mimeType,
             'size'          => $file->getSize(),
             'uploaded_by'   => Auth::id(),
         ]);

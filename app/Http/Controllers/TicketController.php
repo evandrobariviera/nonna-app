@@ -11,6 +11,7 @@ use App\Models\TaskAttachment;
 use App\Models\TaskExecutor;
 use App\Models\User;
 use App\Services\TaskExecutorSync;
+use App\Support\UploadOptions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -174,13 +175,14 @@ class TicketController extends Controller
         if ($request->hasFile('files')) {
             $disk = config('filesystems.default', 'r2');
             foreach ($request->file('files') as $file) {
-                $path = $file->store("tasks/{$task->id}", $disk);
+                $mimeType = $file->getMimeType();
+                $path = $file->store("tasks/{$task->id}", UploadOptions::forStore($mimeType, $disk));
                 TaskAttachment::create([
                     'task_id'     => $task->id,
                     'filename'    => $file->getClientOriginalName(),
                     'disk_path'   => $path,
                     'disk'        => $disk,
-                    'mime_type'   => $file->getMimeType(),
+                    'mime_type'   => $mimeType,
                     'size'        => $file->getSize(),
                     'uploaded_by' => Auth::id(),
                     'kind'        => 'insumo',

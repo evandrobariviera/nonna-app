@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\ClientAdAccount;
 use App\Models\ClientAdBillingDocument;
 use App\Services\NotificationDispatchService;
+use App\Support\UploadOptions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -32,12 +33,13 @@ class ClientAdBillingDocumentController extends Controller
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $disk = config('filesystems.default', 'r2');
-            $path = $file->store("client-ad-billing/{$adAccount->id}", $disk);
+            $mimeType = $file->getMimeType();
+            $path = $file->store("client-ad-billing/{$adAccount->id}", UploadOptions::forStore($mimeType, $disk));
 
             $data['filename']  = $file->getClientOriginalName();
             $data['disk_path'] = $path;
             $data['disk']      = $disk;
-            $data['mime_type'] = $file->getMimeType();
+            $data['mime_type'] = $mimeType;
             $data['size']      = $file->getSize();
         }
 

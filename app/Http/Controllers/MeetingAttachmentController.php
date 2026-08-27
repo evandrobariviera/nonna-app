@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Meeting;
 use App\Models\MeetingAttachment;
+use App\Support\UploadOptions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -21,17 +22,7 @@ class MeetingAttachmentController extends Controller
 
         foreach ($request->file('files') as $file) {
             $mimeType = $file->getMimeType();
-
-            // Sem "; charset=UTF-8" no Content-Type, o R2 devolve só "text/plain" — o
-            // navegador chuta a codificação ao abrir o arquivo direto (link assinado) e
-            // vira mojibake em qualquer conteúdo com acento, mesmo o arquivo em si estando
-            // 100% UTF-8 correto (visto num anexo real: "aÃ­" no lugar de "aí").
-            $options = ['disk' => $disk];
-            if (str_starts_with($mimeType, 'text/')) {
-                $options['ContentType'] = $mimeType . '; charset=UTF-8';
-            }
-
-            $path = $file->store("meetings/{$meeting->id}", $options);
+            $path = $file->store("meetings/{$meeting->id}", UploadOptions::forStore($mimeType, $disk));
 
             MeetingAttachment::create([
                 'meeting_id'  => $meeting->id,

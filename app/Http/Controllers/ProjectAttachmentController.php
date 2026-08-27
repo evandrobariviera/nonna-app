@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\ProjectAttachment;
+use App\Support\UploadOptions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -18,14 +19,15 @@ class ProjectAttachmentController extends Controller
 
         $file = $request->file('file');
         $disk = config('filesystems.default', 'r2');
-        $path = $file->store("projects/{$project->id}", $disk);
+        $mimeType = $file->getMimeType();
+        $path = $file->store("projects/{$project->id}", UploadOptions::forStore($mimeType, $disk));
 
         ProjectAttachment::create([
             'project_id' => $project->id,
             'filename'   => $file->getClientOriginalName(),
             'disk_path'  => $path,
             'disk'       => $disk,
-            'mime_type'  => $file->getMimeType(),
+            'mime_type'  => $mimeType,
             'size'       => $file->getSize(),
             'uploaded_by' => Auth::id(),
         ]);

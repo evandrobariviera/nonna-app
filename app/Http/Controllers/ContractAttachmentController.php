@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Contract;
 use App\Models\ContractAttachment;
+use App\Support\UploadOptions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -19,7 +20,8 @@ class ContractAttachmentController extends Controller
 
         $file = $request->file('file');
         $disk = config('filesystems.default', 'r2');
-        $path = $file->store("contracts/{$contract->id}", $disk);
+        $mimeType = $file->getMimeType();
+        $path = $file->store("contracts/{$contract->id}", UploadOptions::forStore($mimeType, $disk));
 
         ContractAttachment::create([
             'contract_id' => $contract->id,
@@ -27,7 +29,7 @@ class ContractAttachmentController extends Controller
             'filename'    => $file->getClientOriginalName(),
             'disk_path'   => $path,
             'disk'        => $disk,
-            'mime_type'   => $file->getMimeType(),
+            'mime_type'   => $mimeType,
             'size'        => $file->getSize(),
             'uploaded_by' => Auth::id(),
         ]);
