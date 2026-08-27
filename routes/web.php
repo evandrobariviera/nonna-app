@@ -701,6 +701,30 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::get('/automacoes/{automation}/logs', [\App\Http\Controllers\AutomationController::class, 'logs'])
         ->name('automations.logs');
 
+    // ── Central de Ajuda (wiki interno) ──
+    // /ajuda/resultados precisa vir ANTES do {article:slug} — senão "resultados" colide
+    // com o wildcard de slug (mesmo motivo do /agenda/resultados).
+    Route::get('/ajuda/resultados', [\App\Http\Controllers\HelpArticleController::class, 'results'])
+        ->name('help.results');
+    Route::get('/ajuda/nova', [\App\Http\Controllers\HelpArticleController::class, 'create'])
+        ->name('help.create');
+    Route::post('/ajuda', [\App\Http\Controllers\HelpArticleController::class, 'store'])
+        ->name('help.store');
+    Route::get('/ajuda', [\App\Http\Controllers\HelpArticleController::class, 'index'])
+        ->name('help.index');
+    Route::get('/ajuda/{article:slug}', [\App\Http\Controllers\HelpArticleController::class, 'show'])
+        ->name('help.show');
+    Route::get('/ajuda/{article:slug}/editar', [\App\Http\Controllers\HelpArticleController::class, 'edit'])
+        ->name('help.edit');
+    Route::patch('/ajuda/{article:slug}', [\App\Http\Controllers\HelpArticleController::class, 'update'])
+        ->name('help.update');
+    Route::delete('/ajuda/{article:slug}', [\App\Http\Controllers\HelpArticleController::class, 'destroy'])
+        ->name('help.destroy');
+    Route::post('/ajuda/{article:slug}/editor-imagem', [\App\Http\Controllers\HelpArticleEditorImageController::class, 'store'])
+        ->name('help.editor-image.store');
+    Route::get('/ajuda/{article:slug}/editor-imagem/{filename}', [\App\Http\Controllers\HelpArticleEditorImageController::class, 'show'])
+        ->name('help.editor-image.show');
+
     // ── Configurações da Organização (somente admin/owner) ──
     Route::middleware('org.admin')->group(function () {
         Route::get('/configuracoes', [OrganizationSettingsController::class, 'index'])

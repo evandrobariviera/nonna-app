@@ -324,6 +324,16 @@
     </span>
 </a>
 
+{{-- Central de Ajuda (wiki interno de processos) --}}
+<a href="{{ route('help.index') }}"
+   class="nav-group-trigger {{ request()->routeIs('help.*') ? 'open' : '' }}"
+   style="{{ request()->routeIs('help.*') ? 'color:var(--purple);' : '' }}">
+    <span class="flex items-center gap-3">
+        <x-icon name="book-open" size="16" class="flex-shrink-0" />
+        Central de Ajuda
+    </span>
+</a>
+
 {{-- ══ VISÕES ══ --}}
 @php
     $_visionRoles = [
