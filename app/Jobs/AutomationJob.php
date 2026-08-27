@@ -174,6 +174,7 @@ class AutomationJob implements ShouldQueue
             'title'       => $this->interpolate($config['title'] ?? 'Nova tarefa', $context),
             'description' => $this->interpolate($config['description'] ?? '', $context),
             'task_type'   => $config['task_type'] ?? 'estrategia',
+            'situation'   => $config['situation'] ?? null,
             'client_id'   => $clientId,
             'is_ticket'   => $isTicket,
             'origin'      => 'automation',

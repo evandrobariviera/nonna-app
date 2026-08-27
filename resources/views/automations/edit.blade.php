@@ -405,6 +405,16 @@
                             </select>
                         </div>
                         <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">SITUAÇÃO INICIAL (OPCIONAL)</label>
+                            <select name="action_config[situation]"
+                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                @foreach($taskSituations as $value => $label)
+                                    <option value="{{ $value }}" {{ ($automation->action_config['situation'] ?? '') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">CLIENTE</label>
                             <select name="action_config[client_id]"
                                     class="w-full px-3 py-2.5 text-sm focus:outline-none"

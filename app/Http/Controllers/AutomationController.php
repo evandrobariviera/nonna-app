@@ -37,6 +37,7 @@ class AutomationController extends Controller
             'sectors'         => Sector::orderBy('name')->get(),
             'clients'         => Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(),
             'taskTypes'       => Task::$types,
+            'taskSituations'  => Task::$situations,
             'users'           => $this->organizationUsers(),
             'functionRoles'   => \App\Models\FunctionalRole::where('organization_id', app('currentOrganization')->id)
                 ->orderBy('name')->pluck('name', 'key'),
@@ -90,6 +91,7 @@ class AutomationController extends Controller
             'sectors'         => Sector::orderBy('name')->get(),
             'clients'         => Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(),
             'taskTypes'       => Task::$types,
+            'taskSituations'  => Task::$situations,
             'users'           => $this->organizationUsers(),
             'functionRoles'   => \App\Models\FunctionalRole::where('organization_id', app('currentOrganization')->id)
                 ->orderBy('name')->pluck('name', 'key'),
