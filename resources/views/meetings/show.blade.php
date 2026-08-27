@@ -188,6 +188,17 @@
                 </div>
             </div>
 
+            @if($meeting->ata_estruturada)
+            <div class="card">
+                <div class="px-5 py-4" style="border-bottom:1px solid var(--border2)">
+                    <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">ATA Estruturada (gerada por IA)</p>
+                </div>
+                <div class="px-5 py-4">
+                    <p class="text-sm whitespace-pre-wrap" style="color:var(--text)">{{ $meeting->ata_estruturada }}</p>
+                </div>
+            </div>
+            @endif
+
             {{-- Tarefas — nascidas direto da Reunião, antes até de existir Planejamento
                  (ver Task::meeting()); se a Reunião entrar num Macro depois, elas
                  acompanham sozinhas (MeetingObserver). --}}

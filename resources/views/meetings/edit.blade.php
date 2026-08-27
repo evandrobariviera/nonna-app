@@ -234,6 +234,23 @@
                 </div>
 
                 <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Transcrição</label>
+                    <p class="text-xs mb-2" style="color:var(--muted)">Cole aqui a transcrição bruta da call (gravação/Whisper). É a partir dela que a automação gera a ATA Estruturada por IA.</p>
+                    <textarea name="transcricao" rows="10"
+                        placeholder="Cole a transcrição da reunião..."
+                        class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
+                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ old('transcricao', $meeting->transcricao) }}</textarea>
+                </div>
+
+                @if($meeting->ata_estruturada)
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">ATA Estruturada (gerada por IA)</label>
+                    <div class="text-sm whitespace-pre-wrap px-4 py-2.5" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">{{ $meeting->ata_estruturada }}</div>
+                </div>
+                @endif
+
+                <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Próximos Passos</label>
                     <textarea name="next_steps" rows="4"
                         placeholder="Ações definidas, responsáveis, prazos..."

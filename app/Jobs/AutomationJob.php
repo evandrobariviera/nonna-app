@@ -534,20 +534,21 @@ class AutomationJob implements ShouldQueue
         return "Macroplanejamento {$macroPlan->id} criado; Tarefa \"{$task->title}\" ({$task->id}) vinculada, prazo {$task->due_date->format('d/m/Y')}.";
     }
 
-    // Reescreve a ATA bruta da Reunião num formato organizado via IA (salva em
-    // ata_estruturada, sem tocar no campo "ata" original). Não notifica ninguém — isso
-    // fica por conta de uma automação separada (send_notification, destinatário
-    // "participants"), já que geração da ATA estruturada e aviso ao time nem sempre
-    // precisam do mesmo gatilho/destinatário. Substitui create_internal_review_pauta
-    // pra esse ponto do fluxo — não cria mais nenhuma Reunião Interna.
+    // Gera a ATA estruturada via IA a partir da TRANSCRIÇÃO bruta da call (campo
+    // "transcricao" — colada manualmente, ex: saída de gravação/Whisper), não da ATA
+    // manual (campo "ata", texto curto escrito por quem conduziu a reunião). Salva em
+    // ata_estruturada, sem tocar em nenhum dos dois campos de origem. Não notifica
+    // ninguém — isso fica por conta de uma automação separada (send_notification,
+    // destinatário "participants"). Substitui create_internal_review_pauta pra esse
+    // ponto do fluxo — não cria mais nenhuma Reunião Interna.
     private function structureAta(array $config, mixed $entity): string
     {
         if (!$entity instanceof Meeting) {
             throw new \RuntimeException('structure_ata só funciona com entidade Reunião.');
         }
 
-        if (empty($entity->ata)) {
-            throw new \RuntimeException('Reunião sem ATA preenchida — não é possível estruturar a ATA.');
+        if (empty($entity->transcricao)) {
+            throw new \RuntimeException('Reunião sem Transcrição preenchida — não é possível gerar a ATA estruturada.');
         }
 
         $agentId = $config['agent_id'] ?? throw new \RuntimeException('structure_ata sem agente de IA configurado.');
@@ -558,8 +559,8 @@ class AutomationJob implements ShouldQueue
         $userMessage = "Tipo da reunião: {$entity->typeLabel()}\n"
             . 'Cliente: ' . ($entity->client?->displayName() ?? '—') . "\n"
             . "Data da reunião: {$entity->scheduled_at->format('d/m/Y')}\n\n"
-            . "ATA bruta:\n{$entity->ata}\n\n"
-            . 'Estruture essa ATA seguindo o formato definido.';
+            . "Transcrição bruta:\n{$entity->transcricao}\n\n"
+            . 'Estruture essa transcrição seguindo o formato definido.';
 
         $ataEstruturada = app(\App\Services\AiService::class)->run(
             agent: $agent,

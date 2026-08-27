@@ -216,6 +216,7 @@ class MeetingController extends Controller
             'online_link'      => 'nullable|url|max:500',
             'agenda'           => 'nullable|string',
             'ata'              => 'nullable|string',
+            'transcricao'      => 'nullable|string',
             'next_steps'       => 'nullable|string',
             'participants'     => 'nullable|array',
             'participants.*'   => 'exists:users,id',

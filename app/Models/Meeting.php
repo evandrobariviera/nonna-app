@@ -35,6 +35,7 @@ class Meeting extends Model
         'agenda',
         'ata',
         'ata_estruturada',
+        'transcricao',
         'next_steps',
         'ata_recorded_at',
     ];
