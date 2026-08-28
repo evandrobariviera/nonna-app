@@ -9,7 +9,39 @@
             </a>
         </div>
     @else
-        <div class="overflow-x-auto">
+        {{-- ── MOBILE: lista de cards (a tabela abaixo é hidden md:block) ── --}}
+        <div class="md:hidden flex flex-col">
+            @foreach($meetings as $meeting)
+                <a href="{{ route('meetings.show', $meeting) }}"
+                   class="flex items-start gap-3 px-4 py-3.5"
+                   style="border-bottom:1px solid var(--border2)">
+                    <x-icon-chip :icon="$meeting->typeIcon()" :color="$meeting->statusColor()" size="34" />
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-start justify-between gap-2">
+                            <p class="font-semibold text-sm leading-snug" style="color:var(--text)">
+                                {{ $meeting->title }}
+                                @if($meeting->hasAta())
+                                    <span class="badge badge-green ml-1">ATA</span>
+                                @endif
+                            </p>
+                            <span class="badge badge-{{ $meeting->statusColor() }} flex-shrink-0">{{ $meeting->statusLabel() }}</span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-xs" style="color:var(--muted)">
+                            <span class="font-mono">{{ $meeting->scheduled_at->format('d/m/Y H:i') }}</span>
+                            <span>·</span>
+                            <span>{{ $meeting->typeLabel() }}</span>
+                            @if($meeting->client)
+                                <span>·</span>
+                                <span style="color:var(--purple)">{{ $meeting->client->displayName() }}</span>
+                            @endif
+                        </div>
+                    </div>
+                </a>
+            @endforeach
+        </div>
+
+        {{-- ── DESKTOP: tabela ── --}}
+        <div class="hidden md:block overflow-x-auto">
             <table class="nonna-table">
                 <thead>
                     <tr>
@@ -77,7 +109,7 @@
         </div>
 
         @if($meetings->hasPages())
-            <div class="px-6 py-4 flex items-center justify-between" style="border-top:1px solid var(--border)">
+            <div class="px-4 md:px-6 py-4 flex items-center justify-between" style="border-top:1px solid var(--border)">
                 <span class="text-xs font-mono" style="color:var(--muted)">
                     {{ $meetings->firstItem() }}–{{ $meetings->lastItem() }} de {{ $meetings->total() }}
                 </span>

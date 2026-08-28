@@ -1,12 +1,12 @@
 {{-- Visão em quadros (Kanban) — uma coluna por status de reunião. Reaproveita o
      drag-and-drop genérico de resources/js/kanban-dnd.js (mesmo contrato usado
      em Oportunidades/Sprint/Projeto) e a rota meetings.update-status já existente. --}}
-<div id="meetings-board" class="flex gap-4 overflow-x-auto pb-4" style="min-height:60vh"
+<div id="meetings-board" class="flex gap-4 overflow-x-auto pb-4 snap-x" style="min-height:60vh"
      data-kanban-board data-status-field="status">
 
     @foreach(\App\Models\Meeting::$statuses as $key => $s)
         @php($columnMeetings = $board->get($key, collect()))
-        <div class="flex-shrink-0 w-64 flex flex-col gap-3"
+        <div class="flex-shrink-0 w-64 flex flex-col gap-3 snap-start"
              data-kanban-column data-status="{{ $key }}">
 
             {{-- Column Header --}}
@@ -63,7 +63,9 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    if (document.getElementById('meetings-board')) {
+    // Arraste só no desktop — no toque conflita com o scroll horizontal das
+    // colunas. No mobile o card abre o preview / a reunião no toque.
+    if (document.getElementById('meetings-board') && window.matchMedia('(min-width: 768px)').matches) {
         initKanbanDnd('#meetings-board');
     }
 });

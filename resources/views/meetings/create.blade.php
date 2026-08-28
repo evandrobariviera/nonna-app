@@ -38,7 +38,7 @@
                 </div>
 
                 {{-- Tipo + Modalidade --}}
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
                             Tipo de Reunião <span style="color:var(--orange)">*</span>
@@ -67,7 +67,7 @@
                 </div>
 
                 {{-- Data + Duração + Status --}}
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
                             Data e Hora <span style="color:var(--orange)">*</span>
@@ -123,7 +123,7 @@
                 </div>
 
                 {{-- Cliente + Oportunidade --}}
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
                             Cliente (opcional)
@@ -171,7 +171,7 @@
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
                         Participantes
                     </label>
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         @foreach($users as $u)
                             <label class="flex items-center gap-2 text-sm cursor-pointer py-1" style="color:var(--text)">
                                 <input type="checkbox" name="participants[]" value="{{ $u->id }}"
@@ -189,7 +189,7 @@
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
                         Contatos (para notificações)
                     </label>
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         @foreach($contacts as $c)
                             <label class="flex items-center gap-2 text-sm cursor-pointer py-1" style="color:var(--text)"
                                 x-show="!clientId || [{{ $c->clients->pluck('id')->map(fn ($id) => "'{$id}'")->implode(',') }}].includes(clientId)">

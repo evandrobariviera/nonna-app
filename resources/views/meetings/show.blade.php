@@ -1,16 +1,16 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between w-full">
-            <div>
+        <div class="flex items-center justify-between w-full gap-2">
+            <div class="min-w-0">
                 <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">
                     <a href="{{ route('meetings.index') }}"
                        style="color:var(--muted)"
                        onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">← Agenda</a>
                     / {{ $meeting->typeLabel() }}
                 </p>
-                <h1 class="text-xl font-black" style="color:var(--text)">{{ $meeting->title }}</h1>
+                <h1 class="text-base sm:text-xl font-black truncate" style="color:var(--text)">{{ $meeting->title }}</h1>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-shrink-0">
                 <span class="badge badge-{{ $meeting->statusColor() }}">{{ $meeting->statusLabel() }}</span>
                 <a href="{{ route('meetings.edit', $meeting) }}" class="btn btn-ghost btn-sm">
                     Editar
@@ -53,7 +53,7 @@
         @endforeach
     </div>
 
-    <div class="flex gap-5 items-start">
+    <div class="flex flex-col lg:flex-row gap-5 lg:items-start">
 
         {{-- Coluna principal --}}
         <div class="flex-1 min-w-0 flex flex-col gap-5">
@@ -392,7 +392,7 @@
         </div>
 
         {{-- Coluna lateral --}}
-        <div class="flex flex-col gap-5" style="width:280px; flex-shrink:0">
+        <div class="flex flex-col gap-5 w-full lg:w-[280px] lg:flex-shrink-0">
 
             {{-- Participantes --}}
             <div class="card">
