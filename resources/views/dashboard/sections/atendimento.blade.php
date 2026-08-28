@@ -1,7 +1,7 @@
 {{-- Seção "Operação" (papel Atendimento) — tickets e funil de aprovações.
      "Agenda de Hoje · Equipe" foi retirada daqui: o quadro Agenda global,
      logo acima na dashboard, já cobre isso. --}}
-<div class="grid gap-4" style="grid-template-columns: repeat(4, 1fr)">
+<div class="auto-grid">
 
     {{-- Tickets abertos --}}
     <div class="card px-5 py-4">

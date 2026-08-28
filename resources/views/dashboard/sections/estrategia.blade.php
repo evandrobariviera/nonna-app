@@ -1,5 +1,5 @@
 {{-- Seção "Estratégia" do dashboard — macroplanejamentos + reuniões em acompanhamento --}}
-<div class="grid gap-4 mb-4" style="grid-template-columns: repeat(3, 1fr)">
+<div class="auto-grid mb-4">
 
     {{-- Clientes sem planejamento ativo --}}
     <div class="card px-5 py-4">
@@ -81,7 +81,7 @@
 
 </div>
 
-<div class="grid gap-4" style="grid-template-columns: repeat(2, 1fr)">
+<div class="auto-grid">
 
     {{-- Reuniões em Pós-Reunião --}}
     <div class="card px-5 py-4">

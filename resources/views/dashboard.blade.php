@@ -54,7 +54,7 @@
         </div>
     @endif
 
-    <div class="grid gap-4 mb-6" style="grid-template-columns: 7fr 3fr; align-items: stretch">
+    <div class="grid gap-4 mb-6 md:grid-cols-[7fr_3fr] items-stretch">
 
         {{-- Coluna 1: Sprint --}}
         <div class="card px-5 py-4">
@@ -116,7 +116,7 @@
     @if($myNotifications->isNotEmpty())
         <div class="mb-6 flex flex-col gap-3">
             @foreach($myNotifications as $notification)
-                <div class="flex items-center gap-4 px-5 py-4"
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 px-5 py-4"
                      style="background:rgba(238, 121, 25,.06); border:1px solid rgba(238, 121, 25,.3); border-left:4px solid var(--orange)">
                     <x-icon-chip :icon="$notification->kindIcon()" color="orange" size="40" />
                     @if($notification->link)
@@ -171,7 +171,7 @@
                 @endforeach
             </select>
         </div>
-        <div class="grid gap-4" style="grid-template-columns: repeat(4, 1fr)">
+        <div class="auto-grid">
             @foreach($agendaStatuses as $status)
                 @php $statusMeetings = $myMeetingsByStatus->get($status, collect()); @endphp
                 <div class="card px-5 py-4">
@@ -300,7 +300,7 @@
             ['icon' => 'clipboard-list', 'label' => 'Pronto para Produção',  'tasks' => $myReadyForProductionTasks, 'status' => 'backlog',           'extra' => ['situation' => 'Pronto para produção']],
         ];
     @endphp
-    <div id="dashboard-board" class="grid gap-4 mb-6" style="grid-template-columns: repeat(3, 1fr)"
+    <div id="dashboard-board" class="auto-grid mb-6"
          data-kanban-board data-status-field="status">
         @foreach($quadros as $q)
             <div class="card px-5 py-4"
@@ -351,7 +351,9 @@
     @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            if (document.getElementById('dashboard-board')) {
+            // Arraste-e-solte só no desktop — no toque conflita com o scroll da
+            // página; no mobile os cards viram lista e abrem a tarefa no toque.
+            if (document.getElementById('dashboard-board') && window.matchMedia('(min-width: 768px)').matches) {
                 initKanbanDnd('#dashboard-board');
             }
         });

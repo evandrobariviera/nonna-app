@@ -48,6 +48,12 @@
         transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
     }
 
+    html {
+        /* Impede o Safari no iOS de inflar a fonte ao rotacionar / em blocos largos */
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+
     html, body {
         background-color: var(--bg);
         color: var(--text);
@@ -663,6 +669,68 @@
     float: left;
     height: 0;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   MOBILE — fundações da adaptação pra celular (ver .claude / artifact
+   "Nonna OS no Celular"). Fase 0: grids fluidos, barra inferior, touch.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── GRIDS FLUIDOS ──────────────────────────────────────────────────────
+   As colunas se reorganizam sozinhas conforme a largura, sem breakpoint.
+   Substituem os style="grid-template-columns: repeat(N,1fr)" inline, que o
+   Tailwind não conseguia sobrescrever no mobile. O min(100%, Npx) evita
+   estouro horizontal quando o container é menor que Npx.
+   Use gap-* do Tailwind pra sobrescrever o gap padrão (utilities > components). */
+.auto-grid,
+.auto-grid-sm,
+.auto-grid-lg {
+    display: grid;
+    gap: 1rem;
+}
+.auto-grid    { grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+.auto-grid-sm { grid-template-columns: repeat(auto-fit, minmax(min(100%, 168px), 1fr)); }
+.auto-grid-lg { grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+
+/* ── TOUCH: sem hover, revela o que só aparecia no :hover ─────────────── */
+@media (hover: none) {
+    .row-actions { opacity: 1 !important; }
+}
+
+/* ── BARRA DE NAVEGAÇÃO INFERIOR (só mobile) — layouts/bottom-nav.blade.php ── */
+.bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 30;
+    display: flex;
+    background: var(--s1);
+    border-top: 1px solid var(--border2);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    box-shadow: 0 -1px 12px rgba(0, 0, 0, 0.05);
+}
+.dark .bottom-nav { box-shadow: 0 -1px 12px rgba(0, 0, 0, 0.35); }
+.bottom-nav-item {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 9px 2px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--muted);
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.12s, background 0.12s;
+}
+.bottom-nav-item span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bottom-nav-item.active { color: var(--purple); }
+.bottom-nav-item:active { background: var(--s3); }
 
 /* ══ Kanban drag-and-drop (SortableJS, ver resources/js/kanban-dnd.js) ══ */
 .kanban-ghost {

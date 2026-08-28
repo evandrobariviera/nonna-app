@@ -128,15 +128,15 @@
         <div class="flex flex-1 flex-col min-w-0">
 
             {{-- TOPBAR --}}
-            <header class="topbar flex h-16 flex-shrink-0 items-center gap-4 px-6">
+            <header class="topbar flex h-16 flex-shrink-0 items-center gap-2 md:gap-4 px-3 md:px-6">
                 {{-- Botão mobile --}}
                 <button type="button" class="md:hidden -ml-1 p-1.5" style="color:var(--muted)" @click="sidebarOpen = true">
                     <x-icon name="menu" size="20" />
                 </button>
 
-                {{-- Início --}}
+                {{-- Início — no mobile isso já mora na barra inferior --}}
                 <a href="{{ route('dashboard') }}"
-                    class="flex items-center justify-center w-8 h-8 rounded-lg transition-colors flex-shrink-0"
+                    class="hidden md:flex items-center justify-center w-8 h-8 rounded-lg transition-colors flex-shrink-0"
                     style="color:var(--muted)"
                     onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
                     onmouseout="this.style.background=''; this.style.color='var(--muted)'"
@@ -170,7 +170,8 @@
                      de /tarefas). Atalho "/" abre quando nada mais está focado. --}}
                 @auth
                     <div class="relative" x-data="{ open:false, q:'', results:[], loading:false, timer:null }"
-                         @keydown.slash.window.prevent="if (!open && document.activeElement === document.body) { open = true; $nextTick(() => $refs.globalSearchInput.focus()) }">
+                         @keydown.slash.window.prevent="if (!open && document.activeElement === document.body) { open = true; $nextTick(() => $refs.globalSearchInput.focus()) }"
+                         @nonna-open-search.window="open = true; $nextTick(() => $refs.globalSearchInput.focus())">
                         <button @click="open = !open; if (open) $nextTick(() => $refs.globalSearchInput.focus())"
                             class="flex items-center justify-center w-8 h-8 rounded-lg transition-colors flex-shrink-0"
                             style="color:var(--muted)"
@@ -180,8 +181,8 @@
                             <x-icon name="search" size="16" />
                         </button>
                         <div x-show="open" @click.outside="open = false" x-cloak
-                             class="absolute right-0 mt-1 z-30"
-                             style="width:360px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.15)">
+                             class="absolute right-0 mt-1 z-30 w-[360px] max-md:fixed max-md:inset-x-3 max-md:top-16 max-md:w-auto"
+                             style="background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.15)">
                             <div class="p-2" style="border-bottom:1px solid var(--border2)">
                                 <input type="text" x-ref="globalSearchInput" x-model="q"
                                     @input="
@@ -281,8 +282,8 @@
                             @endif
                         </button>
                         <div x-show="open" @click.outside="open = false" x-cloak
-                             class="absolute right-0 mt-1 z-30"
-                             style="width:340px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.15)">
+                             class="absolute right-0 mt-1 z-30 w-[340px] max-md:fixed max-md:inset-x-3 max-md:top-16 max-md:w-auto"
+                             style="background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.15)">
                             <div class="px-4 py-3" style="border-bottom:1px solid var(--border2)">
                                 <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted)">Notificações</p>
                             </div>
@@ -325,14 +326,14 @@
                     </div>
                 @endauth
 
-                {{-- Badge ambiente --}}
-                <span class="badge badge-purple">
+                {{-- Badge ambiente — escondido no mobile pra dar espaço na topbar --}}
+                <span class="badge badge-purple hidden sm:inline-flex">
                     Nonna OS
                 </span>
             </header>
 
             {{-- PÁGINA --}}
-            <main class="app-page flex-1 overflow-y-auto p-6" style="background:var(--bg)">
+            <main class="app-page flex-1 overflow-y-auto p-4 pb-24 md:p-6 md:pb-6" style="background:var(--bg)">
                 @if($errors->any())
                     <div class="mb-5 px-4 py-3 text-sm font-semibold" style="background:rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.25); color:var(--red)">
                         @foreach($errors->all() as $error)
@@ -344,6 +345,11 @@
             </main>
         </div>
     </div>
+
+    {{-- ── BARRA DE NAVEGAÇÃO INFERIOR (só mobile) ── --}}
+    @auth
+        @include('layouts.bottom-nav')
+    @endauth
 
     {{-- ── PAINEL LATERAL (canvas) ── carrega detalhe de Cliente/Projeto sem sair da página atual ── --}}
     <div x-show="$store.sidePanel.visible" x-cloak

@@ -1,6 +1,6 @@
 {{-- Seção "Mídia Paga" (papel Tráfego) — fila compartilhada de criativos prontos, orçamentos
      precisando de adição e campanhas com otimização atrasada. --}}
-<div class="grid gap-4" style="grid-template-columns: repeat(3, 1fr)">
+<div class="auto-grid">
 
     {{-- Criativos prontos pra campanha (fila compartilhada — gerada pela automação, ver /automacoes) --}}
     <div class="card px-5 py-4">

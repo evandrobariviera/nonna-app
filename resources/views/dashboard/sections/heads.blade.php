@@ -1,7 +1,7 @@
 {{-- Seção "Heads" do dashboard — Direção Criativa e Head de Tecnologia compartilham a
      mesma seção (não faz sentido separar por setor aqui): tickets e tarefas em revisão
      interna sob a responsabilidade (papel "responsável", não "executor") do usuário logado. --}}
-<div class="grid gap-4" style="grid-template-columns: repeat(2, 1fr)">
+<div class="auto-grid">
 
     {{-- Tickets sob responsabilidade --}}
     <div class="card px-5 py-4">
