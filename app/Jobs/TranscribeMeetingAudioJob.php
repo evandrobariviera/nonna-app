@@ -58,8 +58,12 @@ class TranscribeMeetingAudioJob implements ShouldQueue
         if ($transcript) {
             // Substitui a transcrição anterior, mesmo comportamento do campo manual
             // (ver meetings/edit.blade.php) — a automação structure_ata sempre lê a
-            // transcrição mais recente.
-            $meeting->update(['transcricao' => $transcript]);
+            // transcrição mais recente. transcricao_updated_at alimenta o
+            // finalize_macro_meeting (decide se re-processa a ATA).
+            $meeting->update([
+                'transcricao'            => $transcript,
+                'transcricao_updated_at' => now(),
+            ]);
         }
 
         $notificationService->notifyUsers(

@@ -236,7 +236,7 @@ class AiService
         }
 
         $response = Http::withToken($apiKey)
-            ->timeout(120)
+            ->timeout(300)
             ->post(rtrim($agent->provider->base_url, '/') . '/chat/completions', $payload)
             ->throw()
             ->json();
@@ -257,7 +257,7 @@ class AiService
                 'x-api-key'         => $apiKey,
                 'anthropic-version' => '2023-06-01',
             ])
-            ->timeout(120)
+            ->timeout(300)
             ->post(rtrim($agent->provider->base_url, '/') . '/messages', [
                 'model'      => $agent->model,
                 'system'     => $systemPrompt,
@@ -289,7 +289,7 @@ class AiService
             'parts' => [['text' => $m['content']]],
         ], $history);
 
-        $response = Http::timeout(120)
+        $response = Http::timeout(300)
             ->post($url, [
                 'systemInstruction' => ['parts' => [['text' => $systemPrompt]]],
                 'contents'          => $contents,
@@ -372,7 +372,7 @@ class AiService
         }
 
         $response = Http::withToken($apiKey)
-            ->timeout(120)
+            ->timeout(300)
             ->post(rtrim($agent->provider->base_url, '/') . '/chat/completions', $payload)
             ->throw()
             ->json();
@@ -393,7 +393,7 @@ class AiService
                 'x-api-key'         => $apiKey,
                 'anthropic-version' => '2023-06-01',
             ])
-            ->timeout(120)
+            ->timeout(300)
             ->post(rtrim($agent->provider->base_url, '/') . '/messages', [
                 'model'      => $agent->model,
                 'system'     => $systemPrompt,
@@ -422,7 +422,7 @@ class AiService
     {
         $url = rtrim($agent->provider->base_url, '/') . "/models/{$agent->model}:generateContent?key={$apiKey}";
 
-        $response = Http::timeout(120)
+        $response = Http::timeout(300)
             ->post($url, [
                 'systemInstruction' => [
                     'parts' => [['text' => $systemPrompt]],
@@ -507,7 +507,7 @@ class AiService
         }
 
         $response = Http::withToken($apiKey)
-            ->timeout(180)
+            ->timeout(300)
             ->post(rtrim($agent->provider->base_url, '/') . '/chat/completions', $payload)
             ->throw()
             ->json();
@@ -527,7 +527,7 @@ class AiService
     {
         $url = rtrim($agent->provider->base_url, '/') . "/models/{$agent->model}:generateContent?key={$apiKey}";
 
-        $response = Http::timeout(180)
+        $response = Http::timeout(300)
             ->post($url, [
                 'systemInstruction' => ['parts' => [['text' => $systemPrompt]]],
                 'contents'          => [

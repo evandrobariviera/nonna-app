@@ -35,14 +35,16 @@ class Meeting extends Model
         'agenda',
         'ata',
         'transcricao',
+        'transcricao_updated_at',
         'next_steps',
         'ata_recorded_at',
     ];
 
     protected $casts = [
-        'scheduled_at'    => 'datetime',
-        'ata_recorded_at' => 'datetime',
-        'duration_minutes'=> 'integer',
+        'scheduled_at'           => 'datetime',
+        'ata_recorded_at'        => 'datetime',
+        'transcricao_updated_at' => 'datetime',
+        'duration_minutes'       => 'integer',
     ];
 
     public static array $types = [

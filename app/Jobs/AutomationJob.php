@@ -23,7 +23,9 @@ use App\Services\TaskExecutorSync;
 use App\Support\BusinessTime;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -32,7 +34,11 @@ class AutomationJob implements ShouldQueue
     use Queueable;
 
     public int $tries = 2;
-    public int $timeout = 120;
+
+    // Ações com IA (structure_ata, finalize_macro_meeting) processam ATA +
+    // transcrição de 2h e podem levar vários minutos — o worker do supervisord
+    // roda --timeout=90, esta propriedade tem precedência.
+    public int $timeout = 600;
 
     public function __construct(
         public readonly Automation $automation,
@@ -40,6 +46,20 @@ class AutomationJob implements ShouldQueue
         public readonly string $entityId,
         public readonly array $changeData = [],
     ) {}
+
+    /**
+     * retry_after da fila (database) é 90s — sem isso, uma ação de IA que passe
+     * disso seria re-reservada e rodada em paralelo por outro worker (chamada de
+     * IA e registro duplicados). Serializa por (automação, entidade).
+     */
+    public function middleware(): array
+    {
+        return [
+            (new WithoutOverlapping('automation:' . $this->automation->id . ':' . $this->entityId))
+                ->releaseAfter(120)
+                ->expireAfter(900),
+        ];
+    }
 
     public function handle(): void
     {
@@ -99,6 +119,7 @@ class AutomationJob implements ShouldQueue
             'create_macroplan_review' => $this->createMacroplanReview($config, $entity),
             'create_internal_review_pauta' => $this->createInternalReviewPauta($config, $entity),
             'create_macroplan_from_meeting' => $this->createMacroplanFromMeeting($config, $entity),
+            'finalize_macro_meeting' => $this->finalizeMacroMeeting($config, $entity),
             'structure_ata' => $this->structureAta($config, $entity),
             'adjust_date'   => $this->adjustDate($config, $entity),
             default             => throw new \RuntimeException("Tipo de ação desconhecido: {$this->automation->action_type}"),
@@ -182,6 +203,11 @@ class AutomationJob implements ShouldQueue
             'sprint_id'   => $this->resolveSprintId($config, $organizationId),
             'due_date'    => $this->resolveDueDate($config, $entity),
             'created_by'  => $this->automation->created_by,
+            // Tarefa nascida de uma Reunião fica ligada a ela (Task::meeting()) — quando
+            // a Reunião entra num Macroplanejamento depois, o MeetingObserver replica o
+            // macro_plan_id pra essas tarefas automaticamente.
+            'meeting_id'  => $entity instanceof Meeting ? $entity->id : null,
+            'macro_plan_id' => $entity instanceof MacroPlan ? $entity->id : ($entity instanceof Meeting ? $entity->macro_plan_id : null),
         ]);
 
         $assigneeNote = $this->assignCreatedTask($task, $config, $entity);
@@ -534,6 +560,235 @@ class AutomationJob implements ShouldQueue
         }
 
         return "Macroplanejamento {$macroPlan->id} criado; Tarefa \"{$task->title}\" ({$task->id}) vinculada, prazo {$task->due_date->format('d/m/Y')}.";
+    }
+
+    // Fecha o ciclo de uma Reunião de Macro/Kickoff (revisao_ata → realizada): um
+    // único agente de IA funde a ATA atual + a transcrição complementar (a conversa
+    // interna + 2ª call com o cliente) + a pauta da Revisão Interna, atualiza a ATA
+    // e devolve o Macroplanejamento já estruturado (blocos + projetos/campanhas, sem
+    // as tarefas). Cria o MacroPlan, vincula a reunião (o MeetingObserver puxa as
+    // tarefas dela) e joga o plano pra Revisão Interna (dispara a tarefa "Revisar
+    // Macroplanejamento"). Se o agente falhar, NÃO cria nada — notifica o gestor.
+    private function finalizeMacroMeeting(array $config, mixed $entity): string
+    {
+        if (!$entity instanceof Meeting) {
+            throw new \RuntimeException('finalize_macro_meeting só funciona com entidade Reunião.');
+        }
+
+        // Idempotente — se o status oscilar de volta pra "realizada" não recria.
+        if ($entity->macro_plan_id) {
+            return "Reunião já vinculada ao Macroplanejamento {$entity->macro_plan_id} — nada feito.";
+        }
+        if (!$entity->client_id) {
+            throw new \RuntimeException('Reunião sem cliente vinculado — não é possível montar o Macroplanejamento.');
+        }
+        if (empty($entity->ata) && empty($entity->transcricao)) {
+            throw new \RuntimeException('Reunião sem ATA nem transcrição — nada pra processar.');
+        }
+
+        $entity->loadMissing('client');
+        $organizationId = $entity->organization_id
+            ?? $this->automation->createdBy?->organizations()->value('organizations.id');
+
+        $agentId = $config['agent_id'] ?? throw new \RuntimeException('finalize_macro_meeting sem agente de IA configurado.');
+        $agent = AiAgent::with('provider')->findOrFail($agentId);
+
+        // Só re-processa a ATA se a transcrição mudou depois da última geração dela.
+        $transcricaoMudou = filled($entity->transcricao)
+            && $entity->transcricao_updated_at
+            && (!$entity->ata_recorded_at || $entity->transcricao_updated_at->greaterThan($entity->ata_recorded_at));
+
+        $userMessage = "Tipo da reunião: {$entity->typeLabel()}\n"
+            . 'Cliente: ' . ($entity->client?->displayName() ?? '—') . "\n"
+            . "Data: {$entity->scheduled_at->format('d/m/Y')}\n\n";
+
+        if (filled($entity->ata)) {
+            $userMessage .= "ATA ATUAL (base — preserve e enriqueça, nunca reescreva do zero):\n{$entity->ata}\n\n";
+        }
+        if (filled($entity->agenda)) {
+            $userMessage .= "PAUTA DA REVISÃO INTERNA (o roteiro que a equipe usou pra fechar o ciclo):\n{$entity->agenda}\n\n";
+        }
+        if ($transcricaoMudou) {
+            $userMessage .= "TRANSCRIÇÃO COMPLEMENTAR (nova — incorpore à ATA):\n{$entity->transcricao}\n\n";
+        } else {
+            $userMessage .= "(Sem transcrição complementar nova — devolva a ATA ATUAL sem alterações no campo \"ata\".)\n\n";
+        }
+        $userMessage .= 'Gere a saída JSON no formato definido.';
+
+        try {
+            $out = app(\App\Services\AiService::class)->runStructured(
+                agent: $agent,
+                userMessage: $userMessage,
+                userId: $this->automation->created_by,
+                clientId: $entity->client_id,
+                trigger: 'automation:finalize_macro_meeting',
+            );
+        } catch (\Throwable $e) {
+            $this->notifyMacroFailure($entity, $config, $organizationId, $e->getMessage());
+            throw $e;
+        }
+
+        $plano = $out['planejamento'] ?? null;
+        if (!is_array($plano)) {
+            $this->notifyMacroFailure($entity, $config, $organizationId, 'A resposta do agente não trouxe o objeto "planejamento".');
+            throw new \RuntimeException('finalize_macro_meeting: resposta do agente sem "planejamento".');
+        }
+
+        // ATA atualizada — só grava quando entrou transcrição nova.
+        if ($transcricaoMudou && filled($out['ata'] ?? null)) {
+            $entity->update([
+                'ata'             => trim($out['ata']),
+                'ata_recorded_at' => now(),
+            ]);
+        }
+
+        [$periodStart, $periodEnd] = $this->resolvePlanPeriod($plano);
+
+        $role = !empty($config['responsible_role'])
+            ? FunctionalRole::where('key', $config['responsible_role'])->first()
+            : null;
+        $responsibleId = $role?->users->first()?->id;
+
+        $macroPlan = DB::connection('pgsql')->transaction(function () use ($entity, $organizationId, $responsibleId, $plano, $periodStart, $periodEnd) {
+            $mp = MacroPlan::create([
+                'organization_id' => $organizationId,
+                'client_id'       => $entity->client_id,
+                'responsible_id'  => $responsibleId,
+                'created_by'      => $this->automation->created_by,
+                'title'           => $entity->client->displayName() . ' — Planejamento ' . now()->format('m/Y'),
+                'version'         => '1.0',
+                'period_start'    => $periodStart,
+                'period_end'      => $periodEnd,
+                'status'          => 'em_planejamento',
+                'disciplines'     => $this->collectPlanDisciplines($plano),
+                'bloco1'          => $plano['bloco1'] ?? null,
+                'bloco2'          => $plano['bloco2'] ?? null,
+                'bloco4'          => $plano['bloco4'] ?? null,
+                'bloco5'          => $plano['bloco5'] ?? null,
+            ]);
+
+            foreach (array_values($plano['projetos'] ?? []) as $i => $proj) {
+                if (is_array($proj)) {
+                    $this->createPlanProject($mp, $entity, $proj, $i + 1, $organizationId);
+                }
+            }
+
+            return $mp;
+        });
+
+        // MeetingObserver replica macro_plan_id pras tarefas com meeting_id desta reunião.
+        $entity->update(['macro_plan_id' => $macroPlan->id]);
+
+        // Passo 5: dispara a tarefa "Revisar Macroplanejamento".
+        $macroPlan->update(['status' => 'revisao_interna']);
+
+        $projCount = count($plano['projetos'] ?? []);
+        $ataNote = $transcricaoMudou ? ' ATA atualizada com a transcrição complementar.' : '';
+        return "Macroplanejamento {$macroPlan->id} montado por IA ({$agent->name}): {$projCount} projeto(s)/campanha(s)."
+            . "{$ataNote} Reunião e tarefas vinculadas; plano → Revisão Interna.";
+    }
+
+    private function notifyMacroFailure(Meeting $meeting, array $config, ?string $organizationId, string $reason): void
+    {
+        $roleKey = $config['responsible_role'] ?? 'gestor_projetos';
+        $users = FunctionalRole::where('key', $roleKey)->first()?->users ?? collect();
+        if ($users->isEmpty() && $this->automation->created_by) {
+            $users = User::where('id', $this->automation->created_by)->get();
+        }
+        if ($users->isEmpty()) {
+            return;
+        }
+
+        app(NotificationService::class)->notifyUsers(
+            $users,
+            'macroplan_generation_failed',
+            'Falha ao montar o Macroplanejamento por IA',
+            "A reunião \"{$meeting->title}\" (" . ($meeting->client?->displayName() ?? '—') . ') foi encerrada, '
+                . "mas o agente não gerou o planejamento: {$reason}. Monte o Macroplanejamento manualmente a partir da ATA.",
+            route('meetings.show', $meeting),
+            $meeting,
+            $organizationId,
+        );
+    }
+
+    /**
+     * @return array{0: \Carbon\CarbonInterface, 1: \Carbon\CarbonInterface}
+     */
+    private function resolvePlanPeriod(array $plano): array
+    {
+        $start = $this->parsePlanDate($plano['period_start'] ?? null);
+        $end   = $this->parsePlanDate($plano['period_end'] ?? null);
+        if ($start && $end && $end->greaterThan($start)) {
+            return [$start, $end];
+        }
+        $start = now();
+        return [$start, $start->copy()->addDays(89)];
+    }
+
+    private function parsePlanDate(mixed $value): ?\Carbon\CarbonInterface
+    {
+        if (!is_string($value) || trim($value) === '') {
+            return null;
+        }
+        try {
+            return \Carbon\Carbon::parse($value);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * União das disciplinas de todos os projetos/campanhas gerados.
+     */
+    private function collectPlanDisciplines(array $plano): array
+    {
+        $valid = array_keys(Project::$disciplines);
+        $found = [];
+        foreach (($plano['projetos'] ?? []) as $proj) {
+            foreach ((array) ($proj['disciplines'] ?? []) as $d) {
+                if (in_array($d, $valid, true)) {
+                    $found[$d] = true;
+                }
+            }
+        }
+        return array_keys($found);
+    }
+
+    private function createPlanProject(MacroPlan $mp, Meeting $meeting, array $proj, int $position, ?string $organizationId): void
+    {
+        $type = in_array($proj['type'] ?? 'projeto', ['projeto', 'campanha'], true) ? $proj['type'] : 'projeto';
+
+        $disciplines = array_values(array_intersect(
+            array_map('strval', (array) ($proj['disciplines'] ?? [])),
+            array_keys(Project::$disciplines)
+        ));
+
+        $data = [
+            'organization_id' => $organizationId,
+            'macro_plan_id'   => $mp->id,
+            'client_id'       => $meeting->client_id,
+            'position'        => $position,
+            'title'           => \Illuminate\Support\Str::limit(trim((string) ($proj['title'] ?? 'Projeto sem título')), 200, ''),
+            'objective'       => $proj['objective'] ?? null,
+            'type'            => $type,
+            'status'          => 'em_planejamento',
+            'brief_status'    => 'basico',
+            'disciplines'     => $disciplines,
+            'content_ideas'   => $type === 'campanha' ? (array) ($proj['content_ideas'] ?? []) : [],
+            'start_date'      => $this->parsePlanDate($proj['start_date'] ?? null),
+            'end_date'        => $this->parsePlanDate($proj['end_date'] ?? null),
+        ];
+
+        // Briefings por disciplina — aceita tanto {"briefings":{"trafego":"..."}}
+        // quanto {"briefing_trafego":"..."} na saída do agente.
+        foreach ($disciplines as $disc) {
+            $text = $proj['briefings'][$disc] ?? $proj["briefing_{$disc}"] ?? null;
+            if (filled($text)) {
+                $data["briefing_{$disc}"] = $text;
+            }
+        }
+
+        Project::create($data);
     }
 
     // Gera (ou atualiza) a ATA via IA a partir da TRANSCRIÇÃO bruta da call (campo

@@ -250,6 +250,12 @@ class MeetingController extends Controller
             $data['ata_recorded_at'] = now();
         }
 
+        // Carimba quando a transcrição muda — a automação de fechamento de Macro
+        // usa isso pra decidir se re-processa a ATA (ver finalize_macro_meeting).
+        if (array_key_exists('transcricao', $data) && ($data['transcricao'] ?? null) !== $meeting->transcricao) {
+            $data['transcricao_updated_at'] = now();
+        }
+
         $meeting->update($data);
 
         $meeting->participants()->sync($data['participants'] ?? []);
