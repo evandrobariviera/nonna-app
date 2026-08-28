@@ -400,6 +400,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
 
     Route::post('/agenda/{meeting}/anexos', [MeetingAttachmentController::class, 'store'])
         ->name('meeting-attachments.store');
+    Route::post('/agenda/{meeting}/anexos/{attachment}/transcrever', [MeetingAttachmentController::class, 'transcribe'])
+        ->name('meeting-attachments.transcribe');
     Route::delete('/agenda/{meeting}/anexos/{attachment}', [MeetingAttachmentController::class, 'destroy'])
         ->name('meeting-attachments.destroy');
 

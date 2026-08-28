@@ -56,6 +56,20 @@ class AiProviderSeeder extends Seeder
             ],
             [
                 'id'       => Str::uuid(),
+                'name'     => 'ElevenLabs',
+                'slug'     => 'elevenlabs',
+                'base_url' => 'https://api.elevenlabs.io/v1',
+                'models'   => json_encode([
+                    // Transcrição (speech-to-text). Custo é por hora de áudio, não por
+                    // token — as colunas per_1k ficam zeradas; ver AiService::transcribeAudioLong.
+                    ['id' => 'scribe_v2', 'label' => 'Scribe v2 (transcrição de áudio)', 'input_per_1k' => 0, 'output_per_1k' => 0],
+                ]),
+                'is_active'  => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id'       => Str::uuid(),
                 'name'     => 'Groq',
                 'slug'     => 'groq',
                 'base_url' => 'https://api.groq.com/openai/v1',

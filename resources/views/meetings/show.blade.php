@@ -480,11 +480,20 @@
                                             {{ $attachment->filename }}
                                         </a>
                                     </div>
-                                    <form method="POST" action="{{ route('meeting-attachments.destroy', [$meeting, $attachment]) }}"
-                                          @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-xs flex-shrink-0">✕</button>
-                                    </form>
+                                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                                        @if(str_starts_with($attachment->mime_type ?? '', 'audio/') || str_starts_with($attachment->mime_type ?? '', 'video/'))
+                                            <form method="POST" action="{{ route('meeting-attachments.transcribe', [$meeting, $attachment]) }}"
+                                                  @submit.prevent="if (await $store.confirmDialog.ask('Transcrever este áudio via IA e substituir a Transcrição atual da reunião?')) $el.submit()">
+                                                @csrf
+                                                <button type="submit" class="btn btn-ghost btn-xs" title="Transcrever via IA">🎙️ Transcrever</button>
+                                            </form>
+                                        @endif
+                                        <form method="POST" action="{{ route('meeting-attachments.destroy', [$meeting, $attachment]) }}"
+                                              @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-xs">✕</button>
+                                        </form>
+                                    </div>
                                 </div>
                             @endforeach
                         </div>

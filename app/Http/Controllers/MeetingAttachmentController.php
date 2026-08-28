@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\TranscribeMeetingAudioJob;
 use App\Models\Meeting;
 use App\Models\MeetingAttachment;
 use App\Support\UploadOptions;
@@ -38,6 +39,20 @@ class MeetingAttachmentController extends Controller
         $label = count($request->file('files')) > 1 ? 'Arquivos anexados.' : 'Arquivo anexado.';
 
         return redirect()->route('meetings.show', $meeting)->with('success', $label);
+    }
+
+    public function transcribe(Meeting $meeting, MeetingAttachment $attachment)
+    {
+        abort_unless($attachment->meeting_id === $meeting->id, 403);
+
+        $isAudioLike = str_starts_with($attachment->mime_type ?? '', 'audio/')
+            || str_starts_with($attachment->mime_type ?? '', 'video/');
+        abort_unless($isAudioLike, 422, 'Este anexo não é um áudio/vídeo.');
+
+        TranscribeMeetingAudioJob::dispatch($meeting->id, $attachment->id, Auth::id());
+
+        return redirect()->route('meetings.show', $meeting)
+            ->with('success', 'Transcrição iniciada — você será notificado quando terminar.');
     }
 
     public function destroy(Meeting $meeting, MeetingAttachment $attachment)

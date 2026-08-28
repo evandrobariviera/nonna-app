@@ -6,14 +6,18 @@ use App\Models\AiAgent;
 use App\Models\AiProvider;
 use App\Models\AiTokenUsage;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class AiService
 {
     /**
-     * Transcreve um áudio (mp3/ogg/etc, já descriptografado) via Whisper da OpenAI.
-     * Usa a chave ativa do provider "openai" diretamente - não depende de um AiAgent
-     * configurado, porque transcrição de mídia não é uma "skill" configurável, é
-     * infraestrutura de ingestão (ver UazapiMessageIngestor).
+     * Transcreve um áudio curto (mp3/ogg/etc) via Whisper da OpenAI. Usa a chave
+     * ativa do provider "openai" diretamente - não depende de um AiAgent configurado,
+     * porque transcrição de mídia não é uma "skill" configurável, é infraestrutura
+     * de ingestão (ver UazapiMessageIngestor).
+     *
+     * Whisper tem teto rígido de 25 MB — serve os áudios de WhatsApp, não gravações
+     * de reunião. Para arquivos grandes use transcribeAudioLong() (ElevenLabs Scribe).
      */
     public function transcribeAudio(string $audioUrl): ?string
     {
@@ -35,7 +39,106 @@ class AiService
                 'model' => 'whisper-1',
             ]);
 
-        return $response->successful() ? $response->json('text') : null;
+        if (!$response->successful()) {
+            Log::warning('AiService::transcribeAudio falhou', [
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
+            return null;
+        }
+
+        return $response->json('text');
+    }
+
+    /**
+     * Transcreve áudios longos (reuniões de 1-3h) via ElevenLabs Scribe. Diferente
+     * do transcribeAudio()/Whisper: não baixa o arquivo pro servidor — manda a URL
+     * direto pra ElevenLabs buscar (sem o teto de 25 MB) e pede diarização, que
+     * ajuda o agente da ATA a separar quem falou o quê.
+     *
+     * Chamada síncrona: o Scribe batch processa ~10-20x tempo real, então uma
+     * reunião de 2h volta em poucos minutos. Só rodar de dentro de um Job
+     * (TranscribeMeetingAudioJob), nunca numa request web.
+     */
+    public function transcribeAudioLong(string $audioUrl): ?string
+    {
+        $provider = AiProvider::where('slug', 'elevenlabs')->first();
+        $apiKey = $provider?->activeKey();
+        if (!$apiKey) {
+            Log::warning('AiService::transcribeAudioLong — provider "elevenlabs" sem chave ativa');
+            return null;
+        }
+
+        $response = Http::withHeaders(['xi-api-key' => $apiKey->getApiKey()])
+            ->connectTimeout(30)
+            ->timeout(1140) // margem pra reunião de ~3h no batch do Scribe
+            ->asMultipart()
+            ->post('https://api.elevenlabs.io/v1/speech-to-text', [
+                ['name' => 'model_id',          'contents' => 'scribe_v2'],
+                ['name' => 'source_url',        'contents' => $audioUrl],
+                ['name' => 'language_code',     'contents' => 'pt'],
+                ['name' => 'diarize',           'contents' => 'true'],
+                ['name' => 'tag_audio_events',  'contents' => 'false'],
+            ]);
+
+        if (!$response->successful()) {
+            Log::warning('AiService::transcribeAudioLong falhou', [
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
+            return null;
+        }
+
+        $text = $this->formatDiarizedTranscript($response->json() ?? []);
+
+        return $text !== '' ? $text : null;
+    }
+
+    /**
+     * Monta o texto final a partir da resposta do Scribe. Se houver mais de um
+     * falante, prefixa cada bloco com "Falante N:"; senão devolve o texto corrido.
+     */
+    private function formatDiarizedTranscript(array $json): string
+    {
+        $words = $json['words'] ?? [];
+        $flat  = trim($json['text'] ?? '');
+
+        if (empty($words)) {
+            return $flat;
+        }
+
+        $speakers = array_filter(array_unique(array_map(
+            fn ($w) => $w['speaker_id'] ?? null,
+            $words
+        )));
+        if (count($speakers) <= 1) {
+            return $flat;
+        }
+
+        $labels  = [];
+        $lines   = [];
+        $current = null;
+        $buffer  = '';
+
+        $flush = function () use (&$lines, &$labels, &$current, &$buffer) {
+            if ($current !== null && trim($buffer) !== '') {
+                $label = $labels[$current] ??= 'Falante ' . (count($labels) + 1);
+                $lines[] = $label . ': ' . trim($buffer);
+            }
+        };
+
+        foreach ($words as $w) {
+            $speaker = $w['speaker_id'] ?? $current ?? 'speaker_0';
+            if ($speaker !== $current) {
+                $flush();
+                $current = $speaker;
+                $buffer  = '';
+            }
+            $buffer .= $w['text'] ?? '';
+        }
+        $flush();
+
+        return implode("\n\n", $lines);
     }
     public function chat(
         AiAgent $agent,

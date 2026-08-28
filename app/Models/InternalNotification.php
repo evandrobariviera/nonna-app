@@ -46,6 +46,8 @@ class InternalNotification extends Model
         'saldo_baixo'              => 'credit-card',
         'automation'               => 'zap',
         'modulo_solicitado'        => 'megaphone',
+        'meeting_transcribed'      => 'mic',
+        'meeting_transcribe_failed' => 'mic',
     ];
 
     public function statusLabel(): string
