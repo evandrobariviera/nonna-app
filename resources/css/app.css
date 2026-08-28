@@ -680,7 +680,7 @@
    Substituem os style="grid-template-columns: repeat(N,1fr)" inline, que o
    Tailwind não conseguia sobrescrever no mobile. O min(100%, Npx) evita
    estouro horizontal quando o container é menor que Npx.
-   Use gap-* do Tailwind pra sobrescrever o gap padrão (utilities > components). */
+   gap padrão = 1rem (= gap-4); pra outro valor, use style="gap:…" no elemento. */
 .auto-grid,
 .auto-grid-sm,
 .auto-grid-lg {
@@ -696,7 +696,11 @@
     .row-actions { opacity: 1 !important; }
 }
 
-/* ── BARRA DE NAVEGAÇÃO INFERIOR (só mobile) — layouts/bottom-nav.blade.php ── */
+/* ── BARRA DE NAVEGAÇÃO INFERIOR (só mobile) — layouts/bottom-nav.blade.php ──
+   Este bloco não está dentro de @layer, então o `md:hidden` do Tailwind (que
+   mora em @layer utilities) NÃO consegue sobrescrever o display daqui — CSS sem
+   layer sempre ganha de CSS com layer. Por isso o "esconder no desktop" é feito
+   aqui mesmo, com media query própria. */
 .bottom-nav {
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -706,6 +710,9 @@
     border-top: 1px solid var(--border2);
     padding-bottom: env(safe-area-inset-bottom, 0);
     box-shadow: 0 -1px 12px rgba(0, 0, 0, 0.05);
+}
+@media (min-width: 768px) {
+    .bottom-nav { display: none; }
 }
 .dark .bottom-nav { box-shadow: 0 -1px 12px rgba(0, 0, 0, 0.35); }
 .bottom-nav-item {
