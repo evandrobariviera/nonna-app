@@ -3,7 +3,7 @@
      juntos com o filtro (mesmo escopo); "Sprint Ativa" fica fora, não depende de filtro. --}}
 
 {{-- ══ STATS ══ --}}
-<div class="grid grid-cols-6 gap-3 mb-5">
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
     @php
         $statsConfig = [
             ['label' => 'Na Fila',      'value' => $stats['total'],      'color' => 'var(--text)',   'filter' => null],
