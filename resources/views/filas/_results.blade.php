@@ -39,7 +39,16 @@
 @else
     <div x-data="taskBulk()" x-cloak>
     @include('partials._task-bulk-bar')
-    <div class="card overflow-hidden">
+
+    {{-- ── MOBILE: cards agrupados (seleção em massa é desktop-only) ── --}}
+    <div class="card overflow-hidden md:hidden">
+        @foreach($grouped as $groupKey => $groupTasks)
+            @include('partials._task-group-cards', ['groupBy' => $groupBy, 'groupKey' => $groupKey, 'groupTasks' => $groupTasks, 'activeSprint' => $activeSprint, 'sprints' => $sprints])
+        @endforeach
+    </div>
+
+    {{-- ── DESKTOP: tabela ── --}}
+    <div class="card overflow-hidden hidden md:block">
         <div class="overflow-x-auto">
             <table class="nonna-table">
                 @include('partials._task-thead')

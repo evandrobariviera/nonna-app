@@ -7,8 +7,21 @@
 <div x-data="taskBulk()" x-cloak>
     @include('partials._task-bulk-bar')
 
-    {{-- TABELA --}}
-    <div class="card overflow-hidden">
+    {{-- ── MOBILE: cards (seleção em massa é desktop-only) ── --}}
+    <div class="card overflow-hidden md:hidden">
+        @forelse($tickets as $ticket)
+            @include('partials._task-card', ['task' => $ticket, 'context' => 'ticket'])
+        @empty
+            <div class="tab-placeholder">
+                <div class="tab-placeholder-icon"><x-icon name="ticket" size="32" /></div>
+                <div class="tab-placeholder-title">Nenhum ticket encontrado</div>
+                <div class="tab-placeholder-desc">Ajuste os filtros ou crie um novo ticket.</div>
+            </div>
+        @endforelse
+    </div>
+
+    {{-- ── DESKTOP: tabela ── --}}
+    <div class="card overflow-hidden hidden md:block">
         <div class="overflow-x-auto">
             <table class="nonna-table">
                 @include('partials._task-thead')
