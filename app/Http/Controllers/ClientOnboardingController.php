@@ -10,6 +10,25 @@ use Illuminate\Support\Facades\Auth;
 
 class ClientOnboardingController extends Controller
 {
+    // Lista de clientes em onboarding — "Gestão de Clientes > Entrada (Onboarding)".
+    public function index(Request $request)
+    {
+        $emAndamento = ClientOnboarding::with('client', 'responsible')
+            ->whereNull('completed_at')
+            ->whereHas('client', fn ($q) => $q->where('status', '!=', 'inactive'))
+            ->get()
+            ->sortBy(fn ($o) => $o->client?->displayName())
+            ->values();
+
+        $concluidos = ClientOnboarding::with('client', 'responsible')
+            ->whereNotNull('completed_at')
+            ->orderByDesc('completed_at')
+            ->limit(15)
+            ->get();
+
+        return view('onboarding.index', compact('emAndamento', 'concluidos'));
+    }
+
     // Cria a esteira de onboarding pra um cliente que não tem (ex: fechado
     // antes dessa feature existir, ou cadastro feito por fora).
     public function store(Client $client, ClientOnboardingService $service)

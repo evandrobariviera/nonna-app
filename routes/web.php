@@ -87,6 +87,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::get('/clientes/resultados', [ClientController::class, 'results'])
         ->name('clients.results');
 
+    // Idem — lista de clientes em onboarding (Gestão de Clientes > Entrada).
+    Route::get('/clientes/onboarding', [\App\Http\Controllers\ClientOnboardingController::class, 'index'])
+        ->name('clients.onboarding.index');
+
     Route::resource('clientes', ClientController::class)->parameters([
         'clientes' => 'client',
     ])->names([
