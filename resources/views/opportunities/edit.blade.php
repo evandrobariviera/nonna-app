@@ -82,14 +82,14 @@
                         <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
                             Fee mensal proposto (R$)
                         </label>
-                        <input type="number" name="proposed_fee" value="{{ old('proposed_fee', $opportunity->proposed_fee) }}" min="0" step="100"
+                        <input type="number" name="proposed_fee" value="{{ old('proposed_fee', $opportunity->proposed_fee) }}" min="0" step="0.01"
                                class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-4 py-2.5 focus:outline-none focus:border-[var(--purple)]">
                     </div>
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
                             Verba de mídia estimada (R$)
                         </label>
-                        <input type="number" name="proposed_ad_budget" value="{{ old('proposed_ad_budget', $opportunity->proposed_ad_budget) }}" min="0" step="100"
+                        <input type="number" name="proposed_ad_budget" value="{{ old('proposed_ad_budget', $opportunity->proposed_ad_budget) }}" min="0" step="0.01"
                                class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-4 py-2.5 focus:outline-none focus:border-[var(--purple)]">
                     </div>
                 </div>
