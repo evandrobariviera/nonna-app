@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Contact;
 use App\Models\Opportunity;
 use App\Models\User;
+use App\Services\ClientOnboardingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -144,7 +145,7 @@ class OpportunityController extends Controller
             'notes'              => 'nullable|string',
         ]);
 
-        DB::transaction(function () use ($opportunity, $data) {
+        $client = DB::transaction(function () use ($opportunity, $data) {
             // Create client
             $client = Client::create([
                 'company_name'        => $data['company_name'],
@@ -172,9 +173,15 @@ class OpportunityController extends Controller
 
             // Update contact status
             $opportunity->contact->update(['status' => 'ganho']);
+
+            return $client;
         });
 
-        return redirect()->route('clients.show', $opportunity->fresh()->client)
+        // Esteira de onboarding: gera token de cadastro, cria o registro de
+        // onboarding e dispara o WhatsApp de boas-vindas + link do cadastro (n8n).
+        app(ClientOnboardingService::class)->start($client, $opportunity->fresh(), Auth::id());
+
+        return redirect()->route('clients.show', $client)
             ->with('success', 'Negócio fechado! Cliente criado com sucesso.');
     }
 

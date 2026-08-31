@@ -303,6 +303,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::delete('/clientes/{client}/contratos/{contract}', [ContractController::class, 'destroy'])
         ->name('clients.contracts.destroy');
 
+    // ── Onboarding do cliente ──
+    Route::post('/clientes/{client}/onboarding', [\App\Http\Controllers\ClientOnboardingController::class, 'store'])
+        ->name('clients.onboarding.store');
+    Route::patch('/clientes/{client}/onboarding/item', [\App\Http\Controllers\ClientOnboardingController::class, 'toggle'])
+        ->name('clients.onboarding.toggle');
+
     // ── Anexos do contrato ──
     Route::post('/contratos/{contract}/anexos', [ContractAttachmentController::class, 'store'])
         ->name('contract-attachments.store');

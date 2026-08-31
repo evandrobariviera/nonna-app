@@ -105,7 +105,7 @@ class ClientController extends Controller
 
     public function show(Client $client)
     {
-        $client->load(['credentials', 'adAccounts', 'dossiers', 'contacts', 'macroplans.projects', 'contracts', 'adBudgets.createdBy', 'integrations', 'leadSources.channel']);
+        $client->load(['credentials', 'adAccounts', 'dossiers', 'contacts', 'macroplans.projects', 'contracts', 'adBudgets.createdBy', 'integrations', 'leadSources.channel', 'onboarding.responsible']);
 
         $leadChannels = \App\Models\LeadChannel::active()->orderBy('name')->get();
 

@@ -140,6 +140,7 @@ class Automation extends Model
         if ($entityType === 'opportunity') {
             return [
                 'stage' => ['label' => 'Estágio', 'options' => self::labelMap(Opportunity::$stages)],
+                'type'  => ['label' => 'Tipo',    'options' => Opportunity::$types],
             ];
         }
 

@@ -30,6 +30,7 @@ class Contract extends Model
         'renewal_type',
         'notice_period_days',
         'notes',
+        'document_url',
         'created_by',
     ];
 

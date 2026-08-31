@@ -44,6 +44,7 @@ class InternalNotification extends Model
         'criativo_pronto_campanha' => 'palette',
         'oportunidade_ganha'       => 'party-popper',
         'oportunidade_perdida'     => 'ban',
+        'contrato_analise'         => 'file-text',
         'reuniao_lembrete'         => 'calendar',
         'saldo_baixo'              => 'credit-card',
         'automation'               => 'zap',

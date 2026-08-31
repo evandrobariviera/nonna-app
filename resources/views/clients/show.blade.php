@@ -83,6 +83,12 @@
                     <span class="tab-count">{{ $client->contracts->count() }}</span>
                 @endif
             </button>
+            <button class="tab-btn" :class="{ active: tab === 'onboarding' }" @click="tab = 'onboarding'">
+                Onboarding
+                @if($client->onboarding)
+                    <span class="tab-count">{{ $client->onboarding->progressPercent() }}%</span>
+                @endif
+            </button>
             <button class="tab-btn" :class="{ active: tab === 'dossies' }" @click="tab = 'dossies'">
                 Dossiê de Marca
             </button>
@@ -1883,6 +1889,111 @@
                             @endforeach
                         </tbody>
                     </table>
+                </div>
+            @endif
+        </div>
+
+        {{-- TAB: ONBOARDING --}}
+        <div x-show="tab === 'onboarding'" x-cloak
+             x-data="{
+                async toggle(key, done) {
+                    const r = await fetch('{{ route('clients.onboarding.toggle', $client) }}', {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content'),
+                        },
+                        body: JSON.stringify({ key, done }),
+                    });
+                    if (r.ok) window.location.reload();
+                }
+             }">
+
+            @php $ob = $client->onboarding; @endphp
+
+            @if(!$ob)
+                <div class="tab-placeholder">
+                    <div class="tab-placeholder-icon"><x-icon name="list-checks" size="32" /></div>
+                    <div class="tab-placeholder-title">Onboarding não iniciado</div>
+                    <div class="tab-placeholder-desc">
+                        A esteira começa sozinha quando uma oportunidade "Novo Cliente" é fechada como ganha.
+                        Este cliente foi cadastrado por fora — inicie manualmente se quiser acompanhar as 5 fases.
+                    </div>
+                    <form method="POST" action="{{ route('clients.onboarding.store', $client) }}" class="mt-4">
+                        @csrf
+                        <button type="submit" class="px-4 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white" style="background: var(--purple);">
+                            Iniciar Onboarding
+                        </button>
+                    </form>
+                </div>
+            @else
+                <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                    <div>
+                        <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">Onboarding</h3>
+                        <div class="text-sm text-[var(--text)] mt-1">
+                            {{ $ob->phaseLabel() }}
+                            @if($ob->responsible)
+                                · <span class="text-[var(--muted2)]">resp. {{ $ob->responsible->name }}</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-black" style="color: var(--green);">{{ $ob->progressPercent() }}%</div>
+                        <div class="text-xs text-[var(--muted)] font-mono">
+                            {{ $ob->completed_at ? 'concluído ' . $ob->completed_at->format('d/m/Y') : 'em andamento' }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full h-1.5 rounded mb-6" style="background: var(--s3);">
+                    <div class="h-1.5 rounded" style="background: var(--green); width: {{ $ob->progressPercent() }}%;"></div>
+                </div>
+
+                @if(!$client->isRegistrationComplete() && $client->registration_token)
+                    <div class="card p-4 mb-4" style="border-color: rgba(238,121,25,.25);">
+                        <div class="text-xs font-mono uppercase tracking-widest mb-2" style="color: var(--orange);">Link do cadastro (pendente)</div>
+                        <div class="flex items-center gap-2" x-data="{ copied: false }">
+                            <input readonly value="{{ route('clients.register', $client->registration_token) }}"
+                                   class="flex-1 bg-[var(--s3)] border border-[var(--border2)] text-xs text-[var(--muted2)] px-3 py-2 font-mono">
+                            <button type="button"
+                                    @click="navigator.clipboard.writeText('{{ route('clients.register', $client->registration_token) }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                                    class="px-3 py-2 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)]">
+                                <span x-show="!copied">Copiar</span>
+                                <span x-show="copied" x-cloak>Copiado!</span>
+                            </button>
+                        </div>
+                    </div>
+                @endif
+
+                <div class="space-y-4">
+                    @foreach($ob->phaseKeys() as $phase)
+                        @php
+                            $checklist = $ob->{$phase . '_checklist'} ?? \App\Models\ClientOnboarding::$defaultChecklists[$phase] ?? [];
+                            $doneAt = $ob->{$phase . '_completed_at'};
+                        @endphp
+                        <div class="card p-5">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">
+                                    {{ \App\Models\ClientOnboarding::$phases[$phase] ?? $phase }}
+                                </h4>
+                                @if($doneAt)
+                                    <span class="badge badge-green" style="font-size:10px;">✓ {{ $doneAt->format('d/m/Y') }}</span>
+                                @endif
+                            </div>
+                            <div class="space-y-2">
+                                @foreach($checklist as $key => $done)
+                                    <label class="flex items-center gap-2 cursor-pointer text-sm">
+                                        <input type="checkbox" {{ $done ? 'checked' : '' }}
+                                               @change="toggle('{{ $key }}', $event.target.checked)"
+                                               class="accent-[var(--purple)]">
+                                        <span class="{{ $done ? 'text-[var(--muted)] line-through' : 'text-[var(--muted2)]' }}">
+                                            {{ \App\Models\ClientOnboarding::$checklistLabels[$key] ?? $key }}
+                                        </span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             @endif
         </div>

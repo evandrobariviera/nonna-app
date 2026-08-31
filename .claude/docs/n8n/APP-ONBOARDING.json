@@ -1,0 +1,349 @@
+{
+  "name": "APP - ONBOARDING (ganho + cadastro)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "app-onboarding",
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000001",
+      "name": "APP EVENT",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-640, 320],
+      "webhookId": "app-onboarding"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "c1", "name": "UAZAPI_URL", "value": "https://nonna.uazapi.com", "type": "string" },
+            { "id": "c2", "name": "UAZAPI_TOKEN", "value": "COLOQUE_O_TOKEN_DA_INSTANCIA", "type": "string" },
+            { "id": "c3", "name": "ALISSON_WHATS", "value": "554930902873", "type": "string" },
+            { "id": "c4", "name": "TOKEN_API_APP", "value": "COLOQUE_O_BEARER_TOKEN_SANCTUM_DA_ORG", "type": "string" },
+            { "id": "c5", "name": "DRIVE_PASTA_EM_CARTEIRA", "value": "1vDmicP8fQArvGuJZxJxgyD4SO14HRl5D", "type": "string" },
+            { "id": "c6", "name": "DOC_TEMPLATE_CONTRATO", "value": "1swDUVDJWFv1MsfbeG9lOQxuezBaA8DK0vyaM8zAlvgk", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000002",
+      "name": "CONSTANTES",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-420, 320]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 },
+                "conditions": [
+                  {
+                    "id": "r1",
+                    "leftValue": "={{ $node['APP EVENT'].json.body.event }}",
+                    "rightValue": "opportunity_won",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "opportunity_won"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 },
+                "conditions": [
+                  {
+                    "id": "r2",
+                    "leftValue": "={{ $node['APP EVENT'].json.body.event }}",
+                    "rightValue": "client_registration_completed",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "client_registration_completed"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000003",
+      "name": "POR EVENTO",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [-200, 320]
+    },
+
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $node['CONSTANTES'].json.UAZAPI_URL }}/send/text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "token", "value": "={{ $node['CONSTANTES'].json.UAZAPI_TOKEN }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "number", "value": "={{ $node['APP EVENT'].json.body.contact.whatsapp }}" },
+            { "name": "text", "value": "=Olá {{ $node['APP EVENT'].json.body.contact.name }}! \n\nQue bom ter você por aqui! É um prazer dar as boas-vindas a você como nosso mais novo parceiro. Estamos animados pra começar essa jornada.\n\nA primeira etapa é preencher este formulário com as informações pra elaborarmos o contrato:\n\n{{ $node['APP EVENT'].json.body.client.registration_url }}\n\nQualquer dúvida, estamos à disposição!" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000010",
+      "name": "WhatsApp Boas-vindas (cliente)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [140, 96]
+    },
+
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $node['CONSTANTES'].json.UAZAPI_URL }}/group/create",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "token", "value": "={{ $node['CONSTANTES'].json.UAZAPI_TOKEN }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"[NONNA] {{ $node['APP EVENT'].json.body.client.company_name.split(' ').slice(0,2).join(' ') }}\",\n  \"participants\": [\n    \"{{ $node['CONSTANTES'].json.ALISSON_WHATS }}\",\n    \"{{ $node['APP EVENT'].json.body.contact.whatsapp }}\"\n  ]\n}",
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000020",
+      "name": "Cria Grupo WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [140, 400],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $node['APP EVENT'].json.body.contract.doc_callback_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $node['CONSTANTES'].json.TOKEN_API_APP }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "step", "value": "grupo_whatsapp_criado" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000021",
+      "name": "Callback: grupo criado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [360, 400],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $node['APP EVENT'].json.body.client.company_name }}",
+        "driveId": { "__rl": true, "mode": "list", "value": "My Drive" },
+        "folderId": { "__rl": true, "value": "={{ $node['CONSTANTES'].json.DRIVE_PASTA_EM_CARTEIRA }}", "mode": "id" },
+        "options": { "simplifyOutput": false }
+      },
+      "id": "a1000000-0000-0000-0000-000000000030",
+      "name": "Cria Pasta Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [140, 640],
+      "credentials": { "googleDriveOAuth2Api": { "id": "REVISAR", "name": "Google Drive" } },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "operation": "share",
+        "folderNoRootId": { "__rl": true, "value": "={{ $json.id }}", "mode": "id" },
+        "permissionsUi": { "permissionsValues": { "role": "writer", "type": "anyone" } },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000031",
+      "name": "Compartilha Pasta",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [360, 640],
+      "credentials": { "googleDriveOAuth2Api": { "id": "REVISAR", "name": "Google Drive" } },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": { "__rl": true, "value": "={{ $node['CONSTANTES'].json.DOC_TEMPLATE_CONTRATO }}", "mode": "id" },
+        "name": "=CONTRATO - {{ $node['APP EVENT'].json.body.client.id }}",
+        "sameFolder": false,
+        "driveId": { "__rl": true, "mode": "list", "value": "My Drive" },
+        "folderId": { "__rl": true, "value": "={{ $node['Cria Pasta Drive'].json.id }}", "mode": "id" },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000032",
+      "name": "Copia Documento",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [580, 640],
+      "credentials": { "googleDriveOAuth2Api": { "id": "REVISAR", "name": "Google Drive" } },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            { "action": "replaceAll", "text": "%%nomeFantasia%%", "replaceText": "={{ $node['APP EVENT'].json.body.client.company_name }}" },
+            { "action": "replaceAll", "text": "%%documentoEmpresa%%", "replaceText": "={{ $node['APP EVENT'].json.body.client.tax_id }}" },
+            { "action": "replaceAll", "text": "%%enderecoCompleto%%", "replaceText": "={{ $node['APP EVENT'].json.body.client.address }}" },
+            { "action": "replaceAll", "text": "%%cep%%", "replaceText": "={{ $node['APP EVENT'].json.body.client.zip_code }}" },
+            { "action": "replaceAll", "text": "%%representanteLegal%%", "replaceText": "={{ $node['APP EVENT'].json.body.client.responsible_name }}" },
+            { "action": "replaceAll", "text": "%%documentoResponsavel%%", "replaceText": "={{ $node['APP EVENT'].json.body.client.responsible_cpf }}" },
+            { "action": "replaceAll", "text": "%%enderecoRepresentante%%", "replaceText": "={{ $node['APP EVENT'].json.body.client.responsible_address }}" },
+            { "action": "replaceAll", "text": "%%ID CLIENTE%%", "replaceText": "={{ $node['APP EVENT'].json.body.client.id }}" },
+            { "action": "replaceAll", "text": "%%servicos%%", "replaceText": "={{ ($node['APP EVENT'].json.body.services || []).join(', ') }}" },
+            { "action": "replaceAll", "text": "%%diaPagamento%%", "replaceText": "={{ $node['APP EVENT'].json.body.contract.billing_day }}" },
+            { "action": "replaceAll", "text": "%%metodoPagamento%%", "replaceText": "={{ $node['APP EVENT'].json.body.contract.payment_method }}" },
+            { "action": "replaceAll", "text": "%%tempoContrato%%", "replaceText": "={{ $node['APP EVENT'].json.body.contract.months }}" },
+            { "action": "replaceAll", "text": "%%dataInicial%%", "replaceText": "={{ $node['APP EVENT'].json.body.contract.start_date }}" },
+            { "action": "replaceAll", "text": "%%dataFinal%%", "replaceText": "={{ $node['APP EVENT'].json.body.contract.end_date }}" },
+            { "action": "replaceAll", "text": "%%valorMensal%%", "replaceText": "={{ String($node['APP EVENT'].json.body.contract.fee_value).replace('.', ',') }}" }
+          ]
+        }
+      },
+      "id": "a1000000-0000-0000-0000-000000000033",
+      "name": "Preenche Contrato",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [800, 640],
+      "credentials": { "googleDocsOAuth2Api": { "id": "REVISAR", "name": "Google Docs" } },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $node['APP EVENT'].json.body.contract.doc_callback_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $node['CONSTANTES'].json.TOKEN_API_APP }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "step", "value": "contrato_gerado" },
+            { "name": "contract_url", "value": "=https://docs.google.com/document/d/{{ $node['Copia Documento'].json.id }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000034",
+      "name": "Callback: contrato gerado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1020, 640],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $node['APP EVENT'].json.body.contract.doc_callback_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $node['CONSTANTES'].json.TOKEN_API_APP }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "step", "value": "pasta_drive_criada" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000035",
+      "name": "Callback: pasta criada",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1240, 640],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $node['CONSTANTES'].json.UAZAPI_URL }}/send/text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "token", "value": "={{ $node['CONSTANTES'].json.UAZAPI_TOKEN }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "number", "value": "={{ $node['APP EVENT'].json.body.contact.whatsapp }}" },
+            { "name": "text", "value": "=Olá {{ $node['APP EVENT'].json.body.contact.name }}, seu cadastro já foi recebido pela nossa equipe e o contrato já está pronto e em análise! Assim que revisado pelo financeiro, você recebe pra conferência e assinatura.\n\nProntos pra começar uma excelente parceria!" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000036",
+      "name": "WhatsApp Cadastro Recebido (cliente)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1460, 640]
+    },
+
+    {
+      "parameters": {
+        "content": "## APP → n8n\nUm webhook só. O App posta no `webhook_url` da integração n8n com `body.event`.\nRe-selecione as credenciais Google (marcadas REVISAR) e preencha a CONSTANTES.\n\nConfira o endpoint de criação de grupo da uazapi (`/group/create`) e o formato de `participants` — ajuste se a sua instância usar outro.",
+        "height": 280,
+        "width": 420
+      },
+      "id": "a1000000-0000-0000-0000-0000000000ff",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-640, 0]
+    }
+  ],
+  "connections": {
+    "APP EVENT": { "main": [[{ "node": "CONSTANTES", "type": "main", "index": 0 }]] },
+    "CONSTANTES": { "main": [[{ "node": "POR EVENTO", "type": "main", "index": 0 }]] },
+    "POR EVENTO": {
+      "main": [
+        [{ "node": "WhatsApp Boas-vindas (cliente)", "type": "main", "index": 0 }],
+        [
+          { "node": "Cria Grupo WhatsApp", "type": "main", "index": 0 },
+          { "node": "Cria Pasta Drive", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Cria Grupo WhatsApp": { "main": [[{ "node": "Callback: grupo criado", "type": "main", "index": 0 }]] },
+    "Cria Pasta Drive": { "main": [[{ "node": "Compartilha Pasta", "type": "main", "index": 0 }]] },
+    "Compartilha Pasta": { "main": [[{ "node": "Copia Documento", "type": "main", "index": 0 }]] },
+    "Copia Documento": { "main": [[{ "node": "Preenche Contrato", "type": "main", "index": 0 }]] },
+    "Preenche Contrato": { "main": [[{ "node": "Callback: contrato gerado", "type": "main", "index": 0 }]] },
+    "Callback: contrato gerado": { "main": [[{ "node": "Callback: pasta criada", "type": "main", "index": 0 }]] },
+    "Callback: pasta criada": { "main": [[{ "node": "WhatsApp Cadastro Recebido (cliente)", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "nonna" }, { "name": "onboarding" }]
+}

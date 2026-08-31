@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ClickupMacroPlanImportController;
 use App\Http\Controllers\Api\ClickupProjectImportController;
 use App\Http\Controllers\Api\IntegrationCredentialController;
 use App\Http\Controllers\Api\LeadCaptureController;
+use App\Http\Controllers\Api\OnboardingCallbackController;
 use App\Http\Controllers\Api\SyncController;
 use App\Http\Controllers\Api\UazapiWebhookController;
 use App\Http\Middleware\SetApiTenant;
@@ -48,5 +49,8 @@ Route::middleware(['auth:sanctum', SetApiTenant::class])->group(function () {
 
     // ── Central de Leads — n8n normaliza site/Meta Lead Ads/WhatsApp num único formato ──
     Route::post('/leads/captura', [LeadCaptureController::class, 'store']);
+
+    // ── Onboarding — n8n confirma passos externos (grupo WhatsApp, Drive, contrato Docs) ──
+    Route::post('/onboarding/{client}/step', [OnboardingCallbackController::class, 'step']);
 
 });

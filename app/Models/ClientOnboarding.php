@@ -61,10 +61,11 @@ class ClientOnboarding extends Model
         'fase1' => [
             'whatsapp_boas_vindas'  => false,
             'link_cadastro_enviado' => false,
+            'cadastro_preenchido'   => false,
             'contrato_gerado'       => false,
             'pasta_drive_criada'    => false,
             'grupo_whatsapp_criado' => false,
-            'clickup_notificado'    => false,
+            'ticket_contrato_aberto' => false,
         ],
         'fase2' => [
             'welcome_call_realizada' => false,
@@ -97,10 +98,11 @@ class ClientOnboarding extends Model
     public static array $checklistLabels = [
         'whatsapp_boas_vindas'       => 'WhatsApp de boas-vindas enviado',
         'link_cadastro_enviado'      => 'Link de cadastro enviado',
+        'cadastro_preenchido'        => 'Cliente preencheu o cadastro',
         'contrato_gerado'            => 'Contrato gerado automaticamente',
         'pasta_drive_criada'         => 'Pasta no Drive criada',
         'grupo_whatsapp_criado'      => 'Grupo de WhatsApp criado',
-        'clickup_notificado'         => 'COO notificado no ClickUp',
+        'ticket_contrato_aberto'     => 'Ticket "Contrato em análise" aberto',
         'welcome_call_realizada'     => 'Welcome Call realizada',
         'regras_apresentadas'        => 'Regras da agência apresentadas',
         'acessos_coletados'          => 'Acessos e senhas coletados',
@@ -126,18 +128,48 @@ class ClientOnboarding extends Model
         return self::$phases[$this->current_phase] ?? $this->current_phase;
     }
 
-    public function progressPercent(): int
+    /**
+     * Marca (ou desmarca) um item de checklist em qualquer fase — encontra a fase
+     * dona da chave sozinho. Retorna false se a chave não existe em nenhuma fase.
+     */
+    public function setChecklistItem(string $key, bool $done): bool
     {
-        $phases = ['fase1', 'fase2', 'fase3', 'fase4', 'fase5'];
-        $completed = 0;
-
-        foreach ($phases as $phase) {
-            if ($this->{$phase . '_completed_at'}) {
-                $completed++;
+        foreach (['fase1', 'fase2', 'fase3', 'fase4', 'fase5'] as $phase) {
+            $checklist = $this->{$phase . '_checklist'} ?? self::$defaultChecklists[$phase];
+            if (array_key_exists($key, $checklist)) {
+                $checklist[$key] = $done;
+                $this->{$phase . '_checklist'} = $checklist;
+                $this->save();
+                return true;
             }
         }
+        return false;
+    }
 
-        return (int) round(($completed / count($phases)) * 100);
+    public function markDone(string ...$keys): void
+    {
+        foreach ($keys as $key) {
+            $this->setChecklistItem($key, true);
+        }
+    }
+
+    public function phaseKeys(): array
+    {
+        return ['fase1', 'fase2', 'fase3', 'fase4', 'fase5'];
+    }
+
+    public function progressPercent(): int
+    {
+        $total = 0;
+        $done = 0;
+
+        foreach (['fase1', 'fase2', 'fase3', 'fase4', 'fase5'] as $phase) {
+            $checklist = $this->{$phase . '_checklist'} ?? self::$defaultChecklists[$phase] ?? [];
+            $total += count($checklist);
+            $done  += count(array_filter($checklist));
+        }
+
+        return $total > 0 ? (int) round(($done / $total) * 100) : 0;
     }
 
     public function client(): BelongsTo

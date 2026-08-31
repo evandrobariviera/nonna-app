@@ -2,12 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\Client;
 use App\Models\MacroPlan;
 use App\Models\Meeting;
 use App\Models\Opportunity;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\UserLogin;
+use App\Observers\ClientObserver;
 use App\Observers\MacroPlanObserver;
 use App\Observers\MeetingObserver;
 use App\Observers\OpportunityObserver;
@@ -24,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Task::observe(TaskObserver::class);
+        Client::observe(ClientObserver::class);
         Opportunity::observe(OpportunityObserver::class);
         Meeting::observe(MeetingObserver::class);
         MacroPlan::observe(MacroPlanObserver::class);
