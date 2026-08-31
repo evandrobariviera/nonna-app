@@ -160,8 +160,9 @@ Mapa dos `%%placeholders%%` do template → payload:
 
 ## Callback n8n → App: `POST /api/onboarding/{client}/step`
 
-Autenticado por **Bearer token Sanctum** da Organização (o mesmo que o n8n já usa
-pros outros endpoints da API interna).
+Autenticado por **Bearer token Sanctum** da Organização — no n8n é a credencial
+Header Auth **"App Nonna"** (`Authorization: Bearer <token>`), a mesma já usada
+pelos fluxos de Leads/sync. Se não existir, gerar em `Configurações > API`.
 
 ```
 POST {contract.doc_callback_url}
@@ -189,7 +190,10 @@ sem onboarding.
 ## Workflow n8n pronto pra importar
 
 `.claude/docs/n8n/APP-ONBOARDING.json` — um único workflow: Webhook → Switch por
-`event` → dois ramos. Precisa: re-selecionar credenciais (uazapi, Google Drive,
-Google Docs), preencher a constante `ALISSON_WHATS` e `TOKEN_API_APP`, e apontar
-o `webhook_url` da integração n8n do App pra esse Webhook node (ou mover o Switch
-pra dentro do workflow que já recebe o `webhook_url` atual).
+`event` → dois ramos. Precisa:
+- re-selecionar credenciais Google (Drive, Docs) nos nós marcados `REVISAR`;
+- re-selecionar a credencial Header Auth **App Nonna** nos 3 nós `Callback:`;
+- preencher a `CONSTANTES`: `UAZAPI_TOKEN`, `ALISSON_WHATS`;
+- conferir o endpoint uazapi de criar grupo (`/group/create` + formato de `participants`);
+- apontar o `webhook_url` da integração n8n do App pra esse Webhook node (ou mover
+  o Switch pra dentro do workflow que já recebe o `webhook_url` atual).

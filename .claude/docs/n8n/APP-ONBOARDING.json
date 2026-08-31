@@ -21,7 +21,6 @@
             { "id": "c1", "name": "UAZAPI_URL", "value": "https://nonna.uazapi.com", "type": "string" },
             { "id": "c2", "name": "UAZAPI_TOKEN", "value": "COLOQUE_O_TOKEN_DA_INSTANCIA", "type": "string" },
             { "id": "c3", "name": "ALISSON_WHATS", "value": "554930902873", "type": "string" },
-            { "id": "c4", "name": "TOKEN_API_APP", "value": "COLOQUE_O_BEARER_TOKEN_SANCTUM_DA_ORG", "type": "string" },
             { "id": "c5", "name": "DRIVE_PASTA_EM_CARTEIRA", "value": "1vDmicP8fQArvGuJZxJxgyD4SO14HRl5D", "type": "string" },
             { "id": "c6", "name": "DOC_TEMPLATE_CONTRATO", "value": "1swDUVDJWFv1MsfbeG9lOQxuezBaA8DK0vyaM8zAlvgk", "type": "string" }
           ]
@@ -131,12 +130,8 @@
       "parameters": {
         "method": "POST",
         "url": "={{ $node['APP EVENT'].json.body.contract.doc_callback_url }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "Authorization", "value": "=Bearer {{ $node['CONSTANTES'].json.TOKEN_API_APP }}" }
-          ]
-        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -150,6 +145,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [360, 400],
+      "credentials": { "httpHeaderAuth": { "id": "REVISAR", "name": "App Nonna" } },
       "onError": "continueRegularOutput"
     },
     {
@@ -238,12 +234,8 @@
       "parameters": {
         "method": "POST",
         "url": "={{ $node['APP EVENT'].json.body.contract.doc_callback_url }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "Authorization", "value": "=Bearer {{ $node['CONSTANTES'].json.TOKEN_API_APP }}" }
-          ]
-        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -258,18 +250,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [1020, 640],
+      "credentials": { "httpHeaderAuth": { "id": "REVISAR", "name": "App Nonna" } },
       "onError": "continueRegularOutput"
     },
     {
       "parameters": {
         "method": "POST",
         "url": "={{ $node['APP EVENT'].json.body.contract.doc_callback_url }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "Authorization", "value": "=Bearer {{ $node['CONSTANTES'].json.TOKEN_API_APP }}" }
-          ]
-        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -283,6 +272,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [1240, 640],
+      "credentials": { "httpHeaderAuth": { "id": "REVISAR", "name": "App Nonna" } },
       "onError": "continueRegularOutput"
     },
     {
@@ -313,7 +303,7 @@
 
     {
       "parameters": {
-        "content": "## APP → n8n\nUm webhook só. O App posta no `webhook_url` da integração n8n com `body.event`.\nRe-selecione as credenciais Google (marcadas REVISAR) e preencha a CONSTANTES.\n\nConfira o endpoint de criação de grupo da uazapi (`/group/create`) e o formato de `participants` — ajuste se a sua instância usar outro.",
+        "content": "## APP → n8n\nUm webhook só. O App posta no `webhook_url` da integração n8n com `body.event`.\n\nRe-selecione:\n- credenciais Google (nós marcados REVISAR)\n- credencial Header Auth **App Nonna** nos 3 nós `Callback:` (é a que manda `Authorization: Bearer <token Sanctum>`)\n\nPreencha a CONSTANTES: `UAZAPI_TOKEN`, `ALISSON_WHATS`.\n\nConfira o endpoint de criação de grupo da uazapi (`/group/create`) e o formato de `participants`.",
         "height": 280,
         "width": 420
       },
