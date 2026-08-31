@@ -1878,7 +1878,14 @@
                                     <td class="text-xs font-mono text-[var(--muted2)]">
                                         {{ $contract->fee_value ? 'R$ ' . number_format($contract->fee_value, 2, ',', '.') : '—' }}
                                     </td>
-                                    <td class="text-right">
+                                    <td class="text-right whitespace-nowrap">
+                                        @if($contract->document_url)
+                                            <a href="{{ $contract->document_url }}" target="_blank" rel="noopener"
+                                               class="text-xs font-mono hover:underline mr-3"
+                                               style="color:var(--muted2)" title="Documento no Google Docs">
+                                                📄 Doc
+                                            </a>
+                                        @endif
                                         <a href="{{ route('clients.contracts.show', [$client, $contract]) }}"
                                            class="text-xs font-mono hover:underline"
                                            style="color:var(--purple)">
@@ -1989,6 +1996,11 @@
                                         <span class="{{ $done ? 'text-[var(--muted)] line-through' : 'text-[var(--muted2)]' }}">
                                             {{ \App\Models\ClientOnboarding::$checklistLabels[$key] ?? $key }}
                                         </span>
+                                        @if($key === 'contrato_gerado' && ($docUrl = $client->contracts->firstWhere('document_url', '!=', null)?->document_url))
+                                            <a href="{{ $docUrl }}" target="_blank" rel="noopener"
+                                               class="text-xs font-mono hover:underline" style="color:var(--purple)"
+                                               @click.stop>📄 abrir</a>
+                                        @endif
                                     </label>
                                 @endforeach
                             </div>

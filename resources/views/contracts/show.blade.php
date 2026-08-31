@@ -24,6 +24,22 @@
 
     <div class="flex flex-col gap-6 max-w-3xl">
 
+        {{-- DOCUMENTO GERADO (Google Docs, via esteira de onboarding / n8n) --}}
+        @if($contract->document_url)
+            <a href="{{ $contract->document_url }}" target="_blank" rel="noopener"
+               class="card px-5 py-4 flex items-center justify-between gap-3 hover:border-[var(--purple)] transition-colors"
+               style="text-decoration:none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="text-xl flex-shrink-0">📄</span>
+                    <div class="min-w-0">
+                        <p class="text-sm font-bold" style="color:var(--text)">Documento do contrato (Google Docs)</p>
+                        <p class="text-xs truncate" style="color:var(--muted)">{{ $contract->document_url }}</p>
+                    </div>
+                </div>
+                <span class="text-xs font-mono flex-shrink-0" style="color:var(--purple)">Abrir ↗</span>
+            </a>
+        @endif
+
         {{-- DADOS DO CONTRATO --}}
         <div class="card">
             <div class="px-5 py-4" style="border-bottom:1px solid var(--border2)">
@@ -166,6 +182,14 @@
                     </template>
 
                     <input type="hidden" name="line_items" x-ref="lineItemsInput">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Link do documento (Google Docs)</label>
+                    <input type="url" name="document_url" value="{{ $contract->document_url }}"
+                           placeholder="https://docs.google.com/document/d/..."
+                           class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                    <p class="text-xs mt-1" style="color:var(--muted)">Preenchido sozinho quando o contrato é gerado na esteira de onboarding (callback do n8n).</p>
                 </div>
 
                 <div>

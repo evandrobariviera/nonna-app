@@ -85,6 +85,7 @@ class ContractController extends Controller
             'renewal_type'        => 'nullable|in:' . implode(',', array_keys(Contract::$renewalTypes)),
             'notice_period_days'  => 'nullable|integer|min:0',
             'notes'               => 'nullable|string',
+            'document_url'        => 'nullable|url|max:500',
             'line_items'          => 'nullable|string',
         ]);
 
