@@ -42,6 +42,8 @@ class InternalNotification extends Model
     // kind sem entrada aqui cai no ícone genérico (mesmo padrão de Task::$typeIcons).
     public static array $kindIcons = [
         'criativo_pronto_campanha' => 'palette',
+        'oportunidade_ganha'       => 'party-popper',
+        'oportunidade_perdida'     => 'ban',
         'reuniao_lembrete'         => 'calendar',
         'saldo_baixo'              => 'credit-card',
         'automation'               => 'zap',

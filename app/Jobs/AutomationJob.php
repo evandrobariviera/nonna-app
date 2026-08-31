@@ -917,7 +917,12 @@ class AutomationJob implements ShouldQueue
         }
 
         $message = $this->interpolate($config['message'] ?? 'Automação executada.', $context);
-        $title   = $context['task_title'] ?? $context['campaign_name'] ?? $context['project_name'] ?? $this->automation->name;
+        $title   = $context['task_title']
+            ?? $context['campaign_name']
+            ?? $context['project_name']
+            ?? $context['opportunity_title']
+            ?? $context['meeting_title']
+            ?? $this->automation->name;
         $link    = $this->resolveLink($entity);
         $kind    = $config['kind'] ?? 'automation';
 

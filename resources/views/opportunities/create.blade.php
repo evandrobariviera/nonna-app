@@ -63,6 +63,21 @@
                 </div>
 
                 <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                        Tipo de oportunidade
+                    </label>
+                    <select name="type"
+                            class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-4 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                        @foreach(\App\Models\Opportunity::$types as $key => $label)
+                            <option value="{{ $key }}" {{ old('type', 'novo_cliente') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-[var(--muted)] mt-1">
+                        "Novo Cliente" cria a ficha do cliente ao fechar. "Projeto" e "Follow-up" vinculam a um cliente que já existe.
+                    </p>
+                </div>
+
+                <div>
                     <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-3">
                         Serviços de interesse
                     </label>

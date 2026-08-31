@@ -65,12 +65,21 @@ class ContextResolver
         $opportunity->loadMissing(['client', 'contact', 'assignedTo']);
 
         return [
-            'opportunity_id'    => $opportunity->id,
-            'opportunity_title' => $opportunity->title ?? '',
-            'opportunity_stage' => $opportunity->stageLabel(),
-            'client_name'       => $opportunity->client?->displayName() ?? $opportunity->contact?->name ?? '',
-            'assigned_to_name'  => $opportunity->assignedTo?->name ?? '',
-            'proposed_fee'      => $opportunity->proposed_fee !== null ? number_format((float) $opportunity->proposed_fee, 2, ',', '.') : '',
+            'opportunity_id'        => $opportunity->id,
+            'opportunity_title'     => $opportunity->title ?? '',
+            'opportunity_stage'     => $opportunity->stageLabel(),
+            'opportunity_type'      => $opportunity->typeLabel(),
+            'opportunity_type_key'  => $opportunity->type ?? '',
+            'client_name'           => $opportunity->client?->displayName() ?? $opportunity->contact?->name ?? '',
+            'contact_name'          => $opportunity->contact?->name ?? '',
+            'contact_whatsapp'      => $opportunity->contact?->whatsapp ?? '',
+            'assigned_to_name'      => $opportunity->assignedTo?->name ?? '',
+            'proposed_fee'          => $opportunity->proposed_fee !== null ? number_format((float) $opportunity->proposed_fee, 2, ',', '.') : '',
+            'proposed_ad_budget'    => $opportunity->proposed_ad_budget !== null ? number_format((float) $opportunity->proposed_ad_budget, 2, ',', '.') : '',
+            'contract_months'       => $opportunity->contract_months ?? '',
+            'proposal_url'          => $opportunity->proposal_url ?? '',
+            'services_interest'     => collect($opportunity->services_interest ?? [])
+                ->map(fn ($s) => \App\Models\Client::$services[$s] ?? $s)->implode(', '),
         ];
     }
 

@@ -69,12 +69,18 @@
                                     </a>
                                 </div>
 
-                                <div class="text-xs text-[var(--muted)] mb-3">
+                                <div class="text-xs text-[var(--muted)] mb-2">
                                     {{ $opp->contact->name }}
                                     @if($opp->contact->company_name)
                                         · {{ $opp->contact->company_name }}
                                     @endif
                                 </div>
+
+                                @if(($opp->type ?? 'novo_cliente') !== 'novo_cliente')
+                                    <div class="mb-2">
+                                        <span class="badge" style="font-size:9px; padding:1px 6px;">{{ $opp->typeLabel() }}</span>
+                                    </div>
+                                @endif
 
                                 @if($opp->proposed_fee)
                                     <div class="text-xs font-mono text-[var(--green)] mb-2">
@@ -93,7 +99,7 @@
                                 @endif
 
                                 {{-- Stage move buttons --}}
-                                <div class="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div class="flex flex-wrap items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     @if($stage !== 'novo_lead')
                                         @php
                                             $prevStage = $openStages[array_search($stage, $openStages) - 1];
@@ -113,6 +119,25 @@
                                             Avançar →
                                         </button>
                                     @endif
+
+                                    <button type="button" class="btn btn-ghost btn-xs" style="color: var(--green);"
+                                            @click.stop="openWin(@js([
+                                                'winUrl'        => route('opportunities.win', $opp),
+                                                'title'         => $opp->title,
+                                                'typeLabel'     => $opp->typeLabel(),
+                                                'createsClient' => $opp->createsClient(),
+                                                'companyName'   => $opp->contact->company_name,
+                                                'clientId'      => $opp->client_id,
+                                            ]))">
+                                        ✓ Ganho
+                                    </button>
+                                    <button type="button" class="btn btn-ghost btn-xs" style="color: var(--red);"
+                                            @click.stop="openLose(@js([
+                                                'loseUrl' => route('opportunities.lose', $opp),
+                                                'title'   => $opp->title,
+                                            ]))">
+                                        ✗ Perdido
+                                    </button>
                                 </div>
 
                                 <div class="text-xs text-[var(--muted)] font-mono mt-2">
@@ -125,13 +150,6 @@
                             </div>
                         @endforelse
                     </div>
-
-                    {{-- Ganhar / Perder (only for last open stage) --}}
-                    @if($stage === 'negociando')
-                        @foreach($stageCards as $opp)
-                            {{-- rendered inline above --}}
-                        @endforeach
-                    @endif
 
                 </div>
             @endforeach
@@ -192,11 +210,112 @@
             </div>
         @endif
 
+        {{-- Modal: Fechar Negócio (kanban) --}}
+        <div x-show="winOpp" x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center" style="background: rgba(0,0,0,0.7);"
+             @keydown.escape.window="winOpp = null">
+            <div class="card p-6 w-full max-w-md mx-4">
+                <h3 class="text-lg font-black text-[var(--text)] mb-1">Fechar Negócio</h3>
+                <p class="text-xs text-[var(--muted)] mb-4" x-text="winOpp?.title"></p>
+                <form :action="winOpp?.winUrl" method="POST">
+                    @csrf
+                    <div class="space-y-4">
+                        <template x-if="winOpp && winOpp.createsClient">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                        Nome da empresa / Razão Social *
+                                    </label>
+                                    <input type="text" name="company_name" :value="winOpp?.companyName" required
+                                           class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-4 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                        Verba de mídia mensal
+                                    </label>
+                                    <input type="text" name="monthly_ad_budget" placeholder="Ex: R$ 3.000 / mês"
+                                           class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-4 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                </div>
+                                <p class="text-xs text-[var(--muted)]">Serviços contratados = serviços de interesse da oportunidade (ajustáveis depois na ficha do cliente).</p>
+                            </div>
+                        </template>
+                        <template x-if="winOpp && !winOpp.createsClient">
+                            <div>
+                                <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                    Cliente vinculado
+                                </label>
+                                <select name="client_id"
+                                        class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-4 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                    <option value="">— resolver pelo contato —</option>
+                                    @foreach($clients as $c)
+                                        <option value="{{ $c->id }}">{{ $c->displayName() }}</option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-[var(--muted)] mt-1">Não cria cliente novo — só fecha como ganha.</p>
+                            </div>
+                        </template>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                Observações internas
+                            </label>
+                            <textarea name="notes" rows="2"
+                                      class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-4 py-2.5 focus:outline-none focus:border-[var(--purple)] resize-none"></textarea>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 mt-5">
+                        <button type="submit" class="flex-1 py-2.5 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                                style="background: var(--green);">
+                            Confirmar Ganho →
+                        </button>
+                        <button type="button" @click="winOpp = null"
+                                class="px-4 py-2.5 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] transition-colors">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- Modal: Marcar Perdido (kanban) --}}
+        <div x-show="loseOpp" x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center" style="background: rgba(0,0,0,0.7);"
+             @keydown.escape.window="loseOpp = null">
+            <div class="card p-6 w-full max-w-sm mx-4">
+                <h3 class="text-lg font-black text-[var(--text)] mb-1">Marcar como Perdido</h3>
+                <p class="text-xs text-[var(--muted)] mb-4" x-text="loseOpp?.title"></p>
+                <form :action="loseOpp?.loseUrl" method="POST">
+                    @csrf
+                    <div>
+                        <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                            Motivo da perda
+                        </label>
+                        <textarea name="lost_reason" rows="3" placeholder="Preço, concorrente, timing, desistência..."
+                                  class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-4 py-2.5 focus:outline-none focus:border-[var(--red)] resize-none"></textarea>
+                    </div>
+                    <div class="flex gap-3 mt-4">
+                        <button type="submit" class="flex-1 py-2.5 text-xs font-bold font-mono uppercase tracking-widest"
+                                style="background: rgba(248,113,113,.15); border: 1px solid var(--red); color: var(--red);">
+                            Confirmar Perda
+                        </button>
+                        <button type="button" @click="loseOpp = null"
+                                class="px-4 py-2.5 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] transition-colors">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </div>
 
     <script>
     function kanban() {
-        return {};
+        return {
+            winOpp: null,
+            loseOpp: null,
+            openWin(data) { this.loseOpp = null; this.winOpp = data; },
+            openLose(data) { this.winOpp = null; this.loseOpp = data; },
+        };
     }
 
     function moveStage(id, stage) {

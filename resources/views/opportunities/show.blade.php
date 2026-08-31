@@ -9,10 +9,11 @@
                 {{ $opportunity->title }}
             </p>
             <h1 class="text-2xl font-black text-[var(--text)]">{{ $opportunity->title }}</h1>
-            <div class="mt-1">
+            <div class="mt-1 flex items-center gap-2">
                 <span class="badge badge-{{ $opportunity->stageColor() }}">
                     {{ $opportunity->stageLabel() }}
                 </span>
+                <span class="badge" style="font-size:10px;">{{ $opportunity->typeLabel() }}</span>
             </div>
         </div>
 
@@ -40,10 +41,12 @@
                          class="fixed inset-0 z-50 flex items-center justify-center"
                          style="background: rgba(0,0,0,0.7);">
                         <div class="card p-6 w-full max-w-md mx-4">
-                            <h3 class="text-lg font-black text-[var(--text)] mb-4">Fechar Negócio</h3>
+                            <h3 class="text-lg font-black text-[var(--text)] mb-1">Fechar Negócio</h3>
+                            <p class="text-xs text-[var(--muted)] mb-4">{{ $opportunity->typeLabel() }}</p>
                             <form method="POST" action="{{ route('opportunities.win', $opportunity) }}">
                                 @csrf
                                 <div class="space-y-4">
+                                    @if($opportunity->createsClient())
                                     <div>
                                         <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
                                             Nome da empresa / Razão Social *
@@ -76,6 +79,24 @@
                                                placeholder="Ex: R$ 3.000 / mês"
                                                class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-4 py-2.5 focus:outline-none focus:border-[var(--purple)]">
                                     </div>
+                                    @else
+                                    <div>
+                                        <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
+                                            Cliente vinculado
+                                        </label>
+                                        <select name="client_id"
+                                                class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-4 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                            <option value="">— resolver pelo contato —</option>
+                                            @foreach($clients as $c)
+                                                <option value="{{ $c->id }}"
+                                                    {{ $opportunity->client_id === $c->id ? 'selected' : '' }}>
+                                                    {{ $c->displayName() }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <p class="text-xs text-[var(--muted)] mt-1">Não cria cliente novo — só fecha como ganha.</p>
+                                    </div>
+                                    @endif
                                     <div>
                                         <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">
                                             Observações internas
@@ -88,7 +109,7 @@
                                     <button type="submit"
                                             class="flex-1 py-2.5 text-xs font-bold font-mono uppercase tracking-widest text-white"
                                             style="background: var(--green);">
-                                        Criar Cliente →
+                                        {{ $opportunity->createsClient() ? 'Criar Cliente →' : 'Fechar como Ganha →' }}
                                     </button>
                                     <button type="button" @click="winModal = false"
                                             class="px-4 py-2.5 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] transition-colors">

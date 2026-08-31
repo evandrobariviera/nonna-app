@@ -18,6 +18,7 @@ class Opportunity extends Model
         'contact_id',
         'client_id',
         'title',
+        'type',
         'stage',
         'services_interest',
         'proposed_fee',
@@ -41,6 +42,14 @@ class Opportunity extends Model
         'contract_months'    => 'integer',
     ];
 
+    // Tipo da oportunidade — muda o fluxo de fechamento e a mensagem que a
+    // equipe manda no grupo da agência (ver Automações "Oportunidade Ganha").
+    public static array $types = [
+        'novo_cliente' => 'Novo Cliente',
+        'projeto'      => 'Projeto (cliente atual)',
+        'follow_up'    => 'Follow-up',
+    ];
+
     public static array $stages = [
         'novo_lead'          => ['label' => 'Novo Lead',          'color' => 'muted'],
         'qualificacao'       => ['label' => 'Qualificação',       'color' => 'purple'],
@@ -54,6 +63,19 @@ class Opportunity extends Model
     public function stageLabel(): string
     {
         return self::$stages[$this->stage]['label'] ?? $this->stage;
+    }
+
+    public function typeLabel(): string
+    {
+        $type = $this->type ?? 'novo_cliente';
+        return self::$types[$type] ?? $type;
+    }
+
+    // Só "novo_cliente" cria um Client no fechamento; os outros vinculam a um
+    // cliente já existente.
+    public function createsClient(): bool
+    {
+        return ($this->type ?? 'novo_cliente') === 'novo_cliente';
     }
 
     public function stageColor(): string

@@ -28,7 +28,9 @@ class OpportunityController extends Controller
             ->limit(20)
             ->get();
 
-        return view('opportunities.index', compact('stages', 'opportunities', 'closed'));
+        $clients = $this->closableClients();
+
+        return view('opportunities.index', compact('stages', 'opportunities', 'closed', 'clients'));
     }
 
     public function create(Request $request)
@@ -47,6 +49,7 @@ class OpportunityController extends Controller
         $data = $request->validate([
             'contact_id'         => 'required|exists:contacts,id',
             'title'              => 'required|string|max:255',
+            'type'               => 'nullable|in:' . implode(',', array_keys(Opportunity::$types)),
             'services_interest'  => 'nullable|array',
             'proposed_fee'       => 'nullable|numeric|min:0',
             'proposed_ad_budget' => 'nullable|numeric|min:0',
@@ -55,6 +58,7 @@ class OpportunityController extends Controller
             'notes'              => 'nullable|string',
         ]);
 
+        $data['type']       = $data['type'] ?? 'novo_cliente';
         $data['stage']      = 'novo_lead';
         $data['created_by'] = Auth::id();
 
@@ -70,7 +74,20 @@ class OpportunityController extends Controller
     public function show(Opportunity $opportunity)
     {
         $opportunity->load('contact', 'client');
-        return view('opportunities.show', compact('opportunity'));
+        $clients = $this->closableClients();
+        return view('opportunities.show', compact('opportunity', 'clients'));
+    }
+
+    /**
+     * Clientes ativos (sem o cliente interno) pra vincular no fechamento de uma
+     * oportunidade do tipo "projeto"/"follow_up".
+     */
+    private function closableClients()
+    {
+        return Client::where('is_internal', false)
+            ->where('status', '!=', 'inactive')
+            ->orderBy('company_name')
+            ->get(['id', 'company_name', 'nickname']);
     }
 
     public function updateStage(Request $request, Opportunity $opportunity)
@@ -95,6 +112,31 @@ class OpportunityController extends Controller
 
     public function win(Request $request, Opportunity $opportunity)
     {
+        // "Projeto" / "Follow-up": não cria Client novo — só fecha como ganho
+        // vinculando a um cliente existente (upsell / retomada).
+        if (!$opportunity->createsClient()) {
+            $data = $request->validate([
+                'client_id' => 'nullable|exists:clients,id',
+                'notes'     => 'nullable|string',
+            ]);
+
+            $clientId = $data['client_id']
+                ?? $opportunity->contact->clients()->value('clients.id');
+
+            $opportunity->update([
+                'stage'     => 'ganho',
+                'client_id' => $clientId,
+                'won_at'    => now(),
+                'notes'     => $this->appendNote($opportunity->notes, $data['notes'] ?? null),
+            ]);
+
+            $opportunity->contact->update(['status' => 'ganho']);
+
+            return $clientId
+                ? redirect()->route('clients.show', $clientId)->with('success', 'Oportunidade fechada como ganha.')
+                : redirect()->route('opportunities.index')->with('success', 'Oportunidade fechada como ganha.');
+        }
+
         $data = $request->validate([
             'company_name'       => 'required|string|max:255',
             'contracted_services'=> 'nullable|array',
@@ -102,11 +144,11 @@ class OpportunityController extends Controller
             'notes'              => 'nullable|string',
         ]);
 
-        DB::transaction(function () use ($opportunity, $data, $request) {
+        DB::transaction(function () use ($opportunity, $data) {
             // Create client
             $client = Client::create([
                 'company_name'        => $data['company_name'],
-                'contracted_services' => $data['contracted_services'] ?? [],
+                'contracted_services' => $data['contracted_services'] ?? $opportunity->services_interest ?? [],
                 'monthly_ad_budget'   => $data['monthly_ad_budget'],
                 'notes'               => $data['notes'],
                 'status'              => 'active',
@@ -134,6 +176,16 @@ class OpportunityController extends Controller
 
         return redirect()->route('clients.show', $opportunity->fresh()->client)
             ->with('success', 'Negócio fechado! Cliente criado com sucesso.');
+    }
+
+    private function appendNote(?string $current, ?string $extra): ?string
+    {
+        $extra = trim((string) $extra);
+        if ($extra === '') {
+            return $current;
+        }
+
+        return trim(($current ? $current . "\n\n" : '') . $extra);
     }
 
     public function lose(Request $request, Opportunity $opportunity)
@@ -164,6 +216,7 @@ class OpportunityController extends Controller
     {
         $data = $request->validate([
             'title'              => 'required|string|max:255',
+            'type'               => 'required|in:' . implode(',', array_keys(Opportunity::$types)),
             'services_interest'  => 'nullable|array',
             'proposed_fee'       => 'nullable|numeric|min:0',
             'proposed_ad_budget' => 'nullable|numeric|min:0',
