@@ -1,0 +1,479 @@
+{
+  "name": "Notificacoes (+ Onboarding)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "a3c57f1c-c284-4396-855e-7c257eacff15",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-2000, -432],
+      "id": "4a63c36b-2dc6-4a89-b732-ba02c3c47eef",
+      "name": "Webhook",
+      "webhookId": "a3c57f1c-c284-4396-855e-7c257eacff15"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-2000, -192],
+      "id": "572f7c24-b328-416d-8ec4-2dd6d9241014",
+      "name": "When clicking Execute workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "aa524dd0-c6c4-4d6d-a106-4214dcc03c2b", "name": "event", "value": "={{ $json.body.event }}", "type": "string" },
+            { "id": "aec647c4-04d0-4a8b-a955-2778c286f834", "name": "channel", "value": "={{ $json.body.channel }}", "type": "string" },
+            { "id": "5d9a7282-7e0c-4246-8596-877e31fed8a1", "name": "client.id", "value": "={{ $json.body.client.id }}", "type": "string" },
+            { "id": "3f736cd5-7c7f-4b2e-9927-035ce9772c95", "name": "client.company_name", "value": "={{ $json.body.client.company_name }}", "type": "string" },
+            { "id": "ac77d831-d530-49ff-8b2b-da5113bd5150", "name": "contact.id", "value": "={{ $json.body.contact.id }}", "type": "string" },
+            { "id": "252f295d-11cd-42a7-a35a-0f9f4e108701", "name": "contact.name", "value": "={{ $json.body.contact.name }}", "type": "string" },
+            { "id": "e06db2e9-c1df-4b05-8975-d2bdd9cbdf4f", "name": "contact.email", "value": "={{ $json.body.contact.email }}", "type": "string" },
+            { "id": "3eff8c2f-d673-4310-9d2e-98fafd264d81", "name": "contact.whatsapp", "value": "={{ $json.body.contact.whatsapp }}", "type": "string" },
+            { "id": "c34c2df9-8556-4b58-8f52-ee80629e0766", "name": "message.subject", "value": "={{ $json.body.message?.subject }}", "type": "string" },
+            { "id": "4ea2cba4-893d-48a4-b010-3a7d151146e0", "name": "message.body", "value": "={{ $json.body.message?.body }}", "type": "string" },
+            { "id": "7bde6318-310e-4c6b-a3fd-149b92c56fa5", "name": "message.attachment_url", "value": "={{ $json.body.message?.attachment_url }}", "type": "string" },
+            { "id": "e8cdd251-3073-45f7-878e-6f71ccb56905", "name": "uazapi_instance", "value": "Nonna Agência Digital", "type": "string" },
+            { "id": "ad6f4de2-8b8c-4ad7-b51f-21b6766b2d5b", "name": "uazapi_token", "value": "46fb0f81-02c2-425d-bf6d-0788403d727c", "type": "string" },
+            { "id": "onb-url", "name": "uazapi_url", "value": "https://nonna.uazapi.com", "type": "string" },
+            { "id": "onb-alisson", "name": "alisson_whats", "value": "554930902873", "type": "string" },
+            { "id": "onb-carteira", "name": "drive_pasta_em_carteira", "value": "1vDmicP8fQArvGuJZxJxgyD4SO14HRl5D", "type": "string" },
+            { "id": "onb-doctpl", "name": "doc_template_contrato", "value": "1swDUVDJWFv1MsfbeG9lOQxuezBaA8DK0vyaM8zAlvgk", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-1808, -304],
+      "id": "d4551785-1149-4cd5-93ad-0ea44e6c71cb",
+      "name": "CONSTANTES"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "typeValidation": "strict", "version": 3 },
+                "conditions": [
+                  { "id": "rw1", "leftValue": "={{ $('Webhook').item.json.body.event }}", "rightValue": "opportunity_won", "operator": { "type": "string", "operation": "equals" } }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "opportunity_won"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "typeValidation": "strict", "version": 3 },
+                "conditions": [
+                  { "id": "rw2", "leftValue": "={{ $('Webhook').item.json.body.event }}", "rightValue": "client_registration_completed", "operator": { "type": "string", "operation": "equals" } }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "client_registration_completed"
+            }
+          ]
+        },
+        "options": { "fallbackOutput": "extra", "renameFallbackOutput": "notificacao" }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [-1616, -304],
+      "id": "b0000000-0000-0000-0000-000000000001",
+      "name": "Roteia por evento"
+    },
+
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+                "conditions": [
+                  { "leftValue": "={{ $json.channel }}", "rightValue": "email", "operator": { "type": "string", "operation": "equals" }, "id": "41c32d5d-7507-4a29-9083-946762b69239" }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "email"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+                "conditions": [
+                  { "id": "d55a68ad-43ef-44d6-98d7-d40f7b010f99", "leftValue": "={{ $json.channel }}", "rightValue": "whatsapp", "operator": { "type": "string", "operation": "equals" } }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "whatsapp"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [-1424, -304],
+      "id": "fa65a8f6-5149-4822-ba8d-e8a17db6bb75",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "fromEmail": "Nonna Agencia Digital <atendimento@nonnaagenciadigital.com.br>",
+        "toEmail": "={{ $json.contact.email }}",
+        "subject": "={{ $json.message.subject }}",
+        "html": "={{ $json.message.body }}",
+        "options": { "appendAttribution": false, "ccEmail": "nonnaagenciadigital@gmail.com" }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [-1232, -448],
+      "id": "c2d64532-7e9a-4dd7-b99a-49bddab0c898",
+      "name": "Send an Email",
+      "webhookId": "0db3282e-8a00-4793-9652-c030b93e03f4",
+      "credentials": { "smtp": { "id": "WFtDdf9HfxM0XYao", "name": "atendimento@nonnaagenciadigital.com.br" } },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://nonna.uazapi.com/send/text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "token", "value": "={{ $('CONSTANTES').item.json.uazapi_token }}" },
+            { "name": "session", "value": "={{ $('CONSTANTES').item.json.uazapi_instance }}" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"number\": \"55\" + $('CONSTANTES').item.json.contact.whatsapp.replace(/\\D/g, ''),\n  \"text\": $('CONSTANTES').item.json.message.body\n} }}",
+        "options": {}
+      },
+      "id": "2c0785c3-56ea-4908-b647-19307ee82ca0",
+      "name": "msg whats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-1232, -288],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "7acac70d-b710-4bc0-ad00-79fd8694748b", "name": "Erro", "value": "={{ $json.error }}", "type": "string" },
+            { "id": "0654263e-c47a-41e9-8b0a-0f7d72a3c013", "name": "Evento", "value": "={{ $json.event }}", "type": "string" },
+            { "id": "6f0d5c1c-b470-4e16-9372-d1251ce4978e", "name": "Chanal de envio", "value": "={{ $json.channel }}", "type": "string" },
+            { "id": "369c1761-540f-4615-96e7-00a43f58270c", "name": "Nome do cliente", "value": "={{ $json.client.company_name }}", "type": "string" },
+            { "id": "8c46dcba-01c5-41a9-9932-4b676b48ac78", "name": "Nome do contato", "value": "={{ $json.contact.name }}", "type": "string" },
+            { "id": "ffc7122d-8252-4ef4-a7fd-941972e29663", "name": "Email do contato", "value": "={{ $json.contact.email }}", "type": "string" },
+            { "id": "5f4ef2b4-bff7-4c2c-8c5d-20d093ef1166", "name": "Whatsapp do contato", "value": "={{ $json.contact.whatsapp }}", "type": "string" },
+            { "id": "dfabc2c7-1cb4-4e06-b598-fe507d7699fc", "name": "Título da mensagem", "value": "={{ $json.message.subject }}", "type": "string" },
+            { "id": "2bee7022-8198-4125-98bd-eaba0cc8f846", "name": "Mensagem", "value": "={{ $json.message.body }}", "type": "string" },
+            { "id": "31c2d88e-d379-46a5-b79e-8d32e74a28d8", "name": "Url da mensagem", "value": "={{ $json.message.attachment_url }}", "type": "string" },
+            { "id": "e05ab244-2541-4e90-8bed-11f220069df7", "name": "Id do cliente", "value": "={{ $json.client.id }}", "type": "string" },
+            { "id": "f7f4ad8b-8a8d-4d47-8fa4-0a2157511d1f", "name": "Id do contato", "value": "={{ $json.contact.id }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-1040, -272],
+      "id": "d65d43ea-2380-4737-b81c-9f3683a3368c",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": { "__rl": true, "value": "11_pciyAq1zGRJ_31QwVcHMVPVcy9OQDzfuBOvR43Z3Y", "mode": "list" },
+        "sheetName": { "__rl": true, "value": "gid=0", "mode": "list" },
+        "columns": { "mappingMode": "autoMapInputData", "value": {}, "matchingColumns": [], "schema": [], "attemptToConvertTypes": false, "convertFieldsToString": false },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [-864, -272],
+      "id": "a97246b6-ef78-4b3b-8f1a-76c1ce9b8a3a",
+      "name": "Append row in sheet",
+      "credentials": { "googleSheetsOAuth2Api": { "id": "1Hno3BL2PclNewDn", "name": "Google Sheets [nonnagestaodetrafego.com.br]" } }
+    },
+
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('CONSTANTES').item.json.uazapi_url }}/send/text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "token", "value": "={{ $('CONSTANTES').item.json.uazapi_token }}" },
+            { "name": "session", "value": "={{ $('CONSTANTES').item.json.uazapi_instance }}" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"number\": \"55\" + $('Webhook').item.json.body.contact.whatsapp.replace(/\\D/g, ''),\n  \"text\": \"Olá \" + $('Webhook').item.json.body.contact.name + \"! \\n\\nQue bom ter você por aqui! É um prazer dar as boas-vindas a você como nosso mais novo parceiro.\\n\\nA primeira etapa é preencher este formulário com as informações pra elaborarmos o contrato:\\n\\n\" + $('Webhook').item.json.body.client.registration_url + \"\\n\\nQualquer dúvida, estamos à disposição!\"\n} }}",
+        "options": {}
+      },
+      "id": "b0000000-0000-0000-0000-000000000002",
+      "name": "WhatsApp Boas-vindas (cliente)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-1424, -96],
+      "onError": "continueRegularOutput"
+    },
+
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('CONSTANTES').item.json.uazapi_url }}/group/create",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "token", "value": "={{ $('CONSTANTES').item.json.uazapi_token }}" },
+            { "name": "session", "value": "={{ $('CONSTANTES').item.json.uazapi_instance }}" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"name\": \"[NONNA] \" + $('Webhook').item.json.body.client.company_name.split(' ').slice(0,2).join(' '),\n  \"participants\": [\n    $('CONSTANTES').item.json.alisson_whats,\n    \"55\" + $('Webhook').item.json.body.contact.whatsapp.replace(/\\D/g, '')\n  ]\n} }}",
+        "options": {}
+      },
+      "id": "b0000000-0000-0000-0000-000000000003",
+      "name": "Cria Grupo WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-1424, 128],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Webhook').item.json.body.contract.doc_callback_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": { "parameters": [ { "name": "step", "value": "grupo_whatsapp_criado" } ] },
+        "options": {}
+      },
+      "id": "b0000000-0000-0000-0000-000000000004",
+      "name": "Callback: grupo criado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-1200, 128],
+      "credentials": { "httpHeaderAuth": { "id": "REVISAR", "name": "App Nonna" } },
+      "onError": "continueRegularOutput"
+    },
+
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Webhook').item.json.body.client.company_name }}",
+        "driveId": { "__rl": true, "mode": "list", "value": "My Drive" },
+        "folderId": { "__rl": true, "value": "={{ $('CONSTANTES').item.json.drive_pasta_em_carteira }}", "mode": "id" },
+        "options": { "simplifyOutput": false }
+      },
+      "id": "b0000000-0000-0000-0000-000000000005",
+      "name": "Cria Pasta Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [-1424, 352],
+      "credentials": { "googleDriveOAuth2Api": { "id": "iXSnwDc1VdhZZbkr", "name": "Google Drive account [nonnaagenciadigital.com.br]" } },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "operation": "share",
+        "folderNoRootId": { "__rl": true, "value": "={{ $json.id }}", "mode": "id" },
+        "permissionsUi": { "permissionsValues": { "role": "writer", "type": "anyone" } },
+        "options": {}
+      },
+      "id": "b0000000-0000-0000-0000-000000000006",
+      "name": "Compartilha Pasta",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [-1200, 352],
+      "credentials": { "googleDriveOAuth2Api": { "id": "iXSnwDc1VdhZZbkr", "name": "Google Drive account [nonnaagenciadigital.com.br]" } },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": { "__rl": true, "value": "={{ $('CONSTANTES').item.json.doc_template_contrato }}", "mode": "id" },
+        "name": "=CONTRATO - {{ $('Webhook').item.json.body.client.id }}",
+        "sameFolder": false,
+        "driveId": { "__rl": true, "mode": "list", "value": "My Drive" },
+        "folderId": { "__rl": true, "value": "={{ $('Cria Pasta Drive').item.json.id }}", "mode": "id" },
+        "options": {}
+      },
+      "id": "b0000000-0000-0000-0000-000000000007",
+      "name": "Copia Documento",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [-976, 352],
+      "credentials": { "googleDriveOAuth2Api": { "id": "iXSnwDc1VdhZZbkr", "name": "Google Drive account [nonnaagenciadigital.com.br]" } },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            { "action": "replaceAll", "text": "%%nomeFantasia%%", "replaceText": "={{ $('Webhook').item.json.body.client.company_name }}" },
+            { "action": "replaceAll", "text": "%%documentoEmpresa%%", "replaceText": "={{ $('Webhook').item.json.body.client.tax_id }}" },
+            { "action": "replaceAll", "text": "%%enderecoCompleto%%", "replaceText": "={{ $('Webhook').item.json.body.client.address }}" },
+            { "action": "replaceAll", "text": "%%cep%%", "replaceText": "={{ $('Webhook').item.json.body.client.zip_code }}" },
+            { "action": "replaceAll", "text": "%%representanteLegal%%", "replaceText": "={{ $('Webhook').item.json.body.client.responsible_name }}" },
+            { "action": "replaceAll", "text": "%%documentoResponsavel%%", "replaceText": "={{ $('Webhook').item.json.body.client.responsible_cpf }}" },
+            { "action": "replaceAll", "text": "%%enderecoRepresentante%%", "replaceText": "={{ $('Webhook').item.json.body.client.responsible_address }}" },
+            { "action": "replaceAll", "text": "%%ID CLIENTE%%", "replaceText": "={{ $('Webhook').item.json.body.client.id }}" },
+            { "action": "replaceAll", "text": "%%servicos%%", "replaceText": "={{ ($('Webhook').item.json.body.services || []).join(', ') }}" },
+            { "action": "replaceAll", "text": "%%diaPagamento%%", "replaceText": "={{ $('Webhook').item.json.body.contract.billing_day }}" },
+            { "action": "replaceAll", "text": "%%metodoPagamento%%", "replaceText": "={{ $('Webhook').item.json.body.contract.payment_method }}" },
+            { "action": "replaceAll", "text": "%%tempoContrato%%", "replaceText": "={{ $('Webhook').item.json.body.contract.months }}" },
+            { "action": "replaceAll", "text": "%%dataInicial%%", "replaceText": "={{ $('Webhook').item.json.body.contract.start_date }}" },
+            { "action": "replaceAll", "text": "%%dataFinal%%", "replaceText": "={{ $('Webhook').item.json.body.contract.end_date }}" },
+            { "action": "replaceAll", "text": "%%valorMensal%%", "replaceText": "={{ String($('Webhook').item.json.body.contract.fee_value).replace('.', ',') }}" }
+          ]
+        }
+      },
+      "id": "b0000000-0000-0000-0000-000000000008",
+      "name": "Preenche Contrato",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [-752, 352],
+      "credentials": { "googleDocsOAuth2Api": { "id": "BRpaOqI64TJg3go4", "name": "Google Docs account" } },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Webhook').item.json.body.contract.doc_callback_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "step", "value": "contrato_gerado" },
+            { "name": "contract_url", "value": "=https://docs.google.com/document/d/{{ $('Copia Documento').item.json.id }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b0000000-0000-0000-0000-000000000009",
+      "name": "Callback: contrato gerado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-528, 352],
+      "credentials": { "httpHeaderAuth": { "id": "REVISAR", "name": "App Nonna" } },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Webhook').item.json.body.contract.doc_callback_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": { "parameters": [ { "name": "step", "value": "pasta_drive_criada" } ] },
+        "options": {}
+      },
+      "id": "b0000000-0000-0000-0000-00000000000a",
+      "name": "Callback: pasta criada",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-304, 352],
+      "credentials": { "httpHeaderAuth": { "id": "REVISAR", "name": "App Nonna" } },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('CONSTANTES').item.json.uazapi_url }}/send/text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "token", "value": "={{ $('CONSTANTES').item.json.uazapi_token }}" },
+            { "name": "session", "value": "={{ $('CONSTANTES').item.json.uazapi_instance }}" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"number\": \"55\" + $('Webhook').item.json.body.contact.whatsapp.replace(/\\D/g, ''),\n  \"text\": \"Olá \" + $('Webhook').item.json.body.contact.name + \", seu cadastro já foi recebido pela nossa equipe e o contrato já está pronto e em análise! Assim que revisado pelo financeiro, você recebe pra conferência e assinatura.\\n\\nProntos pra começar uma excelente parceria!\"\n} }}",
+        "options": {}
+      },
+      "id": "b0000000-0000-0000-0000-00000000000b",
+      "name": "WhatsApp Cadastro Recebido (cliente)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-80, 352]
+    },
+
+    {
+      "parameters": {
+        "content": "## Onboarding (ramo novo)\n`Roteia por evento` separa por `body.event`:\n- **opportunity_won** → WhatsApp boas-vindas + link do cadastro\n- **client_registration_completed** → grupo + Drive + contrato Docs + confirmação\n- **fallback (notificacao)** → Switch de canal (fluxo antigo, intacto)\n\nRevisar: credencial **App Nonna** nos 3 nós `Callback:`, credenciais Google, e o endpoint uazapi `/group/create` (formato de `participants`).",
+        "height": 300,
+        "width": 460
+      },
+      "id": "b0000000-0000-0000-0000-0000000000ff",
+      "name": "Sticky Onboarding",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-1616, 0]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": { "main": [[{ "node": "CONSTANTES", "type": "main", "index": 0 }]] },
+    "When clicking Execute workflow": { "main": [[{ "node": "CONSTANTES", "type": "main", "index": 0 }]] },
+    "CONSTANTES": { "main": [[{ "node": "Roteia por evento", "type": "main", "index": 0 }]] },
+    "Roteia por evento": {
+      "main": [
+        [{ "node": "WhatsApp Boas-vindas (cliente)", "type": "main", "index": 0 }],
+        [
+          { "node": "Cria Grupo WhatsApp", "type": "main", "index": 0 },
+          { "node": "Cria Pasta Drive", "type": "main", "index": 0 }
+        ],
+        [{ "node": "Switch", "type": "main", "index": 0 }]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [{ "node": "Send an Email", "type": "main", "index": 0 }],
+        [{ "node": "msg whats", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send an Email": { "main": [[], [{ "node": "Edit Fields", "type": "main", "index": 0 }]] },
+    "msg whats": { "main": [[], [{ "node": "Edit Fields", "type": "main", "index": 0 }]] },
+    "Edit Fields": { "main": [[{ "node": "Append row in sheet", "type": "main", "index": 0 }]] },
+    "Cria Grupo WhatsApp": { "main": [[{ "node": "Callback: grupo criado", "type": "main", "index": 0 }]] },
+    "Cria Pasta Drive": { "main": [[{ "node": "Compartilha Pasta", "type": "main", "index": 0 }]] },
+    "Compartilha Pasta": { "main": [[{ "node": "Copia Documento", "type": "main", "index": 0 }]] },
+    "Copia Documento": { "main": [[{ "node": "Preenche Contrato", "type": "main", "index": 0 }]] },
+    "Preenche Contrato": { "main": [[{ "node": "Callback: contrato gerado", "type": "main", "index": 0 }]] },
+    "Callback: contrato gerado": { "main": [[{ "node": "Callback: pasta criada", "type": "main", "index": 0 }]] },
+    "Callback: pasta criada": { "main": [[{ "node": "WhatsApp Cadastro Recebido (cliente)", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1", "binaryMode": "separate" },
+  "tags": [{ "name": "nonna" }, { "name": "onboarding" }]
+}

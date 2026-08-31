@@ -189,11 +189,23 @@ sem onboarding.
 
 ## Workflow n8n pronto pra importar
 
-`.claude/docs/n8n/APP-ONBOARDING.json` — um único workflow: Webhook → Switch por
-`event` → dois ramos. Precisa:
-- re-selecionar credenciais Google (Drive, Docs) nos nós marcados `REVISAR`;
-- re-selecionar a credencial Header Auth **App Nonna** nos 3 nós `Callback:`;
-- preencher a `CONSTANTES`: `UAZAPI_TOKEN`, `ALISSON_WHATS`;
+`.claude/docs/n8n/Notificacoes-com-onboarding.json` — é o workflow **Notificacoes**
+existente (path `a3c57f1c-…`, o mesmo `webhook_url` já cadastrado) **com o ramo de
+onboarding enxertado**. Estrutura:
+
+```
+Webhook → CONSTANTES → Roteia por evento
+    ├─ opportunity_won               → WhatsApp boas-vindas (+ link do cadastro)
+    ├─ client_registration_completed → grupo + Drive + contrato Docs + callbacks + WhatsApp
+    └─ fallback (notificacao)        → Switch de canal (email/whatsapp) — fluxo antigo, intacto
+```
+
+Antes de ativar:
+- re-selecionar credenciais Google (Drive/Docs/Sheets) e a **App Nonna** (Header Auth)
+  nos 3 nós `Callback:`;
 - conferir o endpoint uazapi de criar grupo (`/group/create` + formato de `participants`);
-- apontar o `webhook_url` da integração n8n do App pra esse Webhook node (ou mover
-  o Switch pra dentro do workflow que já recebe o `webhook_url` atual).
+- nada muda no App nem no `webhook_url` — só importar por cima do workflow atual.
+
+O `CONSTANTES` ganhou `uazapi_url`, `alisson_whats`, `drive_pasta_em_carteira` e
+`doc_template_contrato`. O número do WhatsApp é montado como `"55" + só-dígitos`
+(mesma convenção do nó `msg whats`) — o App manda DDD+número sem código de país.
