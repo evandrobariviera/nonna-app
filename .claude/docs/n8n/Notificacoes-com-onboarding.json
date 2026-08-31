@@ -336,21 +336,21 @@
         "documentURL": "={{ $json.id }}",
         "actionsUi": {
           "actionFields": [
-            { "action": "replaceAll", "text": "%%nomeFantasia%%", "replaceText": "={{ $('Webhook').item.json.body.client.company_name }}" },
-            { "action": "replaceAll", "text": "%%documentoEmpresa%%", "replaceText": "={{ $('Webhook').item.json.body.client.tax_id }}" },
-            { "action": "replaceAll", "text": "%%enderecoCompleto%%", "replaceText": "={{ $('Webhook').item.json.body.client.address }}" },
-            { "action": "replaceAll", "text": "%%cep%%", "replaceText": "={{ $('Webhook').item.json.body.client.zip_code }}" },
-            { "action": "replaceAll", "text": "%%representanteLegal%%", "replaceText": "={{ $('Webhook').item.json.body.client.responsible_name }}" },
-            { "action": "replaceAll", "text": "%%documentoResponsavel%%", "replaceText": "={{ $('Webhook').item.json.body.client.responsible_cpf }}" },
-            { "action": "replaceAll", "text": "%%enderecoRepresentante%%", "replaceText": "={{ $('Webhook').item.json.body.client.responsible_address }}" },
-            { "action": "replaceAll", "text": "%%ID CLIENTE%%", "replaceText": "={{ $('Webhook').item.json.body.client.id }}" },
+            { "action": "replaceAll", "text": "%%nomeFantasia%%", "replaceText": "={{ String($('Webhook').item.json.body.client.company_name ?? '') }}" },
+            { "action": "replaceAll", "text": "%%documentoEmpresa%%", "replaceText": "={{ String($('Webhook').item.json.body.client.tax_id ?? '') }}" },
+            { "action": "replaceAll", "text": "%%enderecoCompleto%%", "replaceText": "={{ String($('Webhook').item.json.body.client.address ?? '') }}" },
+            { "action": "replaceAll", "text": "%%cep%%", "replaceText": "={{ String($('Webhook').item.json.body.client.zip_code ?? '') }}" },
+            { "action": "replaceAll", "text": "%%representanteLegal%%", "replaceText": "={{ String($('Webhook').item.json.body.client.responsible_name ?? '') }}" },
+            { "action": "replaceAll", "text": "%%documentoResponsavel%%", "replaceText": "={{ String($('Webhook').item.json.body.client.responsible_cpf ?? '') }}" },
+            { "action": "replaceAll", "text": "%%enderecoRepresentante%%", "replaceText": "={{ String($('Webhook').item.json.body.client.responsible_address ?? '') }}" },
+            { "action": "replaceAll", "text": "%%ID CLIENTE%%", "replaceText": "={{ String($('Webhook').item.json.body.client.id ?? '') }}" },
             { "action": "replaceAll", "text": "%%servicos%%", "replaceText": "={{ ($('Webhook').item.json.body.services || []).join(', ') }}" },
-            { "action": "replaceAll", "text": "%%diaPagamento%%", "replaceText": "={{ $('Webhook').item.json.body.contract.billing_day }}" },
-            { "action": "replaceAll", "text": "%%metodoPagamento%%", "replaceText": "={{ $('Webhook').item.json.body.contract.payment_method }}" },
-            { "action": "replaceAll", "text": "%%tempoContrato%%", "replaceText": "={{ $('Webhook').item.json.body.contract.months }}" },
-            { "action": "replaceAll", "text": "%%dataInicial%%", "replaceText": "={{ $('Webhook').item.json.body.contract.start_date }}" },
-            { "action": "replaceAll", "text": "%%dataFinal%%", "replaceText": "={{ $('Webhook').item.json.body.contract.end_date }}" },
-            { "action": "replaceAll", "text": "%%valorMensal%%", "replaceText": "={{ String($('Webhook').item.json.body.contract.fee_value).replace('.', ',') }}" }
+            { "action": "replaceAll", "text": "%%diaPagamento%%", "replaceText": "={{ String($('Webhook').item.json.body.contract.billing_day ?? '') }}" },
+            { "action": "replaceAll", "text": "%%metodoPagamento%%", "replaceText": "={{ String($('Webhook').item.json.body.contract.payment_method ?? '') }}" },
+            { "action": "replaceAll", "text": "%%tempoContrato%%", "replaceText": "={{ String($('Webhook').item.json.body.contract.months ?? '') }}" },
+            { "action": "replaceAll", "text": "%%dataInicial%%", "replaceText": "={{ ($('Webhook').item.json.body.contract.start_date ?? '').split('-').reverse().join('/') }}" },
+            { "action": "replaceAll", "text": "%%dataFinal%%", "replaceText": "={{ ($('Webhook').item.json.body.contract.end_date ?? '').split('-').reverse().join('/') }}" },
+            { "action": "replaceAll", "text": "%%valorMensal%%", "replaceText": "={{ String($('Webhook').item.json.body.contract.fee_value ?? '').replace('.', ',') }}" }
           ]
         }
       },
