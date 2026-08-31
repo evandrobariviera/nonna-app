@@ -6,7 +6,7 @@ use App\Models\Meeting;
 use App\Models\MeetingAttachment;
 use App\Models\User;
 use App\Services\AiService;
-use App\Services\NotificationService;
+use App\Services\SystemNotificationService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
@@ -43,7 +43,7 @@ class TranscribeMeetingAudioJob implements ShouldQueue
         ];
     }
 
-    public function handle(AiService $aiService, NotificationService $notificationService): void
+    public function handle(AiService $aiService, SystemNotificationService $notifications): void
     {
         $meeting = Meeting::find($this->meetingId);
         $attachment = MeetingAttachment::find($this->attachmentId);
@@ -66,13 +66,10 @@ class TranscribeMeetingAudioJob implements ShouldQueue
             ]);
         }
 
-        $notificationService->notifyUsers(
+        $notifications->send(
+            $transcript ? 'meeting.transcricao_ok' : 'meeting.transcricao_falhou',
             Collection::make([$user]),
-            $transcript ? 'meeting_transcribed' : 'meeting_transcribe_failed',
-            $transcript ? 'Transcrição concluída' : 'Falha na transcrição',
-            $transcript
-                ? "O áudio \"{$attachment->filename}\" foi transcrito e preenchido na reunião \"{$meeting->title}\"."
-                : "Não foi possível transcrever \"{$attachment->filename}\" — verifique se o áudio abre normalmente e tente de novo.",
+            ['attachment_name' => $attachment->filename, 'meeting_title' => $meeting->title],
             route('meetings.show', $meeting),
             $meeting,
             $meeting->organization_id

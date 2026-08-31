@@ -19,6 +19,7 @@ use App\Models\User;
 use App\Services\AiService;
 use App\Services\ContextResolver;
 use App\Services\NotificationService;
+use App\Services\SystemNotificationService;
 use App\Services\TaskExecutorSync;
 use App\Support\BusinessTime;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -699,12 +700,14 @@ class AutomationJob implements ShouldQueue
             return;
         }
 
-        app(NotificationService::class)->notifyUsers(
+        app(SystemNotificationService::class)->send(
+            'macroplan.geracao_falhou',
             $users,
-            'macroplan_generation_failed',
-            'Falha ao montar o Macroplanejamento por IA',
-            "A reunião \"{$meeting->title}\" (" . ($meeting->client?->displayName() ?? '—') . ') foi encerrada, '
-                . "mas o agente não gerou o planejamento: {$reason}. Monte o Macroplanejamento manualmente a partir da ATA.",
+            [
+                'meeting_title' => $meeting->title,
+                'client_name'   => $meeting->client?->displayName() ?? '—',
+                'reason'        => $reason,
+            ],
             route('meetings.show', $meeting),
             $meeting,
             $organizationId,

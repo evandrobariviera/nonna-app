@@ -10,7 +10,7 @@ use App\Models\Opportunity;
 use App\Models\User;
 use App\Services\AtaMarkdownRenderer;
 use App\Services\NotificationDispatchService;
-use App\Services\NotificationService;
+use App\Services\SystemNotificationService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -283,7 +283,7 @@ class MeetingController extends Controller
     // Notifica todo mundo vinculado à reunião: contatos do cliente (WhatsApp/e-mail,
     // via webhook n8n) e participantes internos (sino de notificação do próprio App,
     // ver NotificationService — não há canal e-mail/WhatsApp genérico pra User).
-    public function notify(Meeting $meeting, NotificationDispatchService $service, NotificationService $notificationService)
+    public function notify(Meeting $meeting, NotificationDispatchService $service)
     {
         $meeting->loadMissing('contacts', 'participants');
 
@@ -302,13 +302,16 @@ class MeetingController extends Controller
 
         $notifiedParticipants = 0;
         if ($meeting->participants->isNotEmpty()) {
-            $notificationService->notifyUsers(
+            app(SystemNotificationService::class)->send(
+                'meeting.lembrete_manual',
                 $meeting->participants,
-                'reuniao_lembrete',
-                'Lembrete: ' . $meeting->title,
-                'Reunião em ' . $meeting->scheduled_at->format('d/m/Y H:i') . ($meeting->online_link ? ' — ' . $meeting->online_link : ''),
+                [
+                    'meeting_title' => $meeting->title,
+                    'meeting_date'  => $meeting->scheduled_at->format('d/m/Y H:i'),
+                ],
                 route('meetings.show', $meeting),
-                $meeting
+                $meeting,
+                $meeting->organization_id,
             );
             $notifiedParticipants = $meeting->participants->count();
         }

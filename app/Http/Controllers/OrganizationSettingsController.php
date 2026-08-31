@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\AiAgent;
 use App\Models\FunctionalRole;
+use App\Models\NotificationSetting;
 use App\Models\NotificationTemplate;
 use App\Models\Sector;
 use App\Models\User;
+use App\Services\SystemNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -38,7 +40,41 @@ class OrganizationSettingsController extends Controller
             ->groupBy('type')
             ->map(fn ($group) => $group->keyBy('channel'));
 
-        return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens', 'aiAgents', 'notificationTemplates', 'sectors', 'orphanUsers', 'functionalRoles'));
+        // hasTable: a tabela pode não existir na janela entre push e deploy da migration.
+        $notificationSettings = \Illuminate\Support\Facades\Schema::hasTable('notification_settings')
+            ? NotificationSetting::where('organization_id', $org->id)->get()->keyBy('event_key')
+            : collect();
+
+        return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens', 'aiAgents', 'notificationTemplates', 'notificationSettings', 'sectors', 'orphanUsers', 'functionalRoles'));
+    }
+
+    public function updateNotificationSettings(Request $request): RedirectResponse
+    {
+        $org = app('currentOrganization');
+
+        $data = $request->validate([
+            'settings'            => ['array'],
+            'settings.*.title'    => ['nullable', 'string', 'max:255'],
+            'settings.*.body'     => ['nullable', 'string', 'max:2000'],
+            'settings.*.enabled'  => ['nullable', 'boolean'],
+        ]);
+
+        foreach ($data['settings'] ?? [] as $key => $values) {
+            if (!array_key_exists($key, SystemNotificationService::$catalog)) {
+                continue;
+            }
+
+            NotificationSetting::updateOrCreate(
+                ['organization_id' => $org->id, 'event_key' => $key],
+                [
+                    'title'      => filled($values['title'] ?? null) ? $values['title'] : null,
+                    'body'       => filled($values['body'] ?? null) ? $values['body'] : null,
+                    'is_enabled' => (bool) ($values['enabled'] ?? false),
+                ],
+            );
+        }
+
+        return back()->with('success', 'Notificações internas atualizadas.')->with('tab', 'notificacoes-internas');
     }
 
     public function createToken(Request $request): RedirectResponse

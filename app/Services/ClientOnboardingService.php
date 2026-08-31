@@ -239,11 +239,10 @@ class ClientOnboardingService
             return;
         }
 
-        app(NotificationService::class)->notifyUsers(
+        app(SystemNotificationService::class)->send(
+            'onboarding.contrato_analise',
             $users,
-            'contrato_analise',
-            'Contrato em análise — ' . $client->displayName(),
-            'Cliente concluiu o cadastro. Contrato gerado (rascunho) e ticket aberto para conferência.',
+            ['client_name' => $client->displayName()],
             route('tasks.show', $ticket),
             $ticket,
             $client->organization_id,

@@ -9,7 +9,7 @@ use App\Models\ClientLeadSource;
 use App\Models\ClientModule;
 use App\Models\LeadChannel;
 use App\Models\User;
-use App\Services\NotificationService;
+use App\Services\SystemNotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -168,7 +168,7 @@ class LeadController extends Controller
     // Vitrine → "Quero contratar": não ativa nada sozinho (decisão de venda
     // continua manual do lado Nonna) — só registra o pedido e avisa a
     // Direção Geral, que decide e ativa o módulo pra esse Cliente.
-    public function requestModule(NotificationService $notifications)
+    public function requestModule()
     {
         $client = app('currentPortalClient');
 
@@ -181,13 +181,16 @@ class LeadController extends Controller
             $module->update(['requested_at' => now()]);
 
             $users = User::whereHas('functionalRoles', fn ($q) => $q->where('key', 'direcao_geral'))->get();
-            $notifications->notifyUsers(
+            app(SystemNotificationService::class)->send(
+                'portal.modulo_solicitado',
                 $users,
-                'modulo_solicitado',
-                "Pedido de contratação — {$module->moduleLabel()}",
-                "{$client->displayName()} quer contratar o módulo \"{$module->moduleLabel()}\".",
+                [
+                    'client_name'  => $client->displayName(),
+                    'module_label' => $module->moduleLabel(),
+                ],
                 route('leads.index', ['client_id' => $client->id]),
-                $module
+                $module,
+                $client->organization_id,
             );
         }
 

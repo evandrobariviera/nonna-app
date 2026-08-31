@@ -790,6 +790,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
             ->name('settings.notification-templates.update');
         Route::post('/configuracoes/mensagens/{type}/{channel}/testar', [\App\Http\Controllers\NotificationTemplateController::class, 'test'])
             ->name('settings.notification-templates.test');
+
+        Route::post('/configuracoes/notificacoes-internas', [OrganizationSettingsController::class, 'updateNotificationSettings'])
+            ->name('settings.notification-settings.update');
     });
 
     // ── Monitor de Trabalho — o que cada usuário fez no dia (login + ações). Admin

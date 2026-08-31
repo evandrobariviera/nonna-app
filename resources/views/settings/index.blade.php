@@ -27,7 +27,7 @@
 
         {{-- Tabs --}}
         <div class="flex gap-1 mb-6 border-b" style="border-color:var(--border)">
-            @foreach(['geral' => 'Geral', 'integracoes' => 'Integrações', 'equipe' => 'Equipe', 'setores' => 'Setores', 'papeis' => 'Papéis Funcionais', 'mensagens' => 'Mensagens Padrão', 'api' => 'API & Tokens'] as $key => $label)
+            @foreach(['geral' => 'Geral', 'integracoes' => 'Integrações', 'equipe' => 'Equipe', 'setores' => 'Setores', 'papeis' => 'Papéis Funcionais', 'mensagens' => 'Mensagens Padrão', 'notificacoes-internas' => 'Notificações Internas', 'api' => 'API & Tokens'] as $key => $label)
                 <button @click="tab = '{{ $key }}'"
                         class="tab-btn px-4 py-2.5 text-sm font-semibold transition-colors"
                         :class="tab === '{{ $key }}'
@@ -1108,14 +1108,7 @@
                         </button>
 
                         <div x-show="open" x-transition class="mt-4 space-y-4">
-                            @if(!empty($hints))
-                                <p class="text-xs" style="color:var(--muted)">
-                                    Variáveis disponíveis:
-                                    @foreach($hints as $hint)
-                                        <code class="px-1 py-0.5 rounded" style="background:var(--s3); color:var(--purple)">{{ $hint }}</code>
-                                    @endforeach
-                                </p>
-                            @endif
+                            <x-variable-hints :tokens="$hints" />
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 @foreach(\App\Models\NotificationTemplate::$channels as $channel => $channelLabel)
@@ -1170,6 +1163,79 @@
                     </form>
                 @endforeach
             @endforeach
+        </div>
+
+        {{-- ══ TAB NOTIFICAÇÕES INTERNAS ══ --}}
+        <div x-show="tab === 'notificacoes-internas'" x-cloak>
+            <div class="mb-5">
+                <h2 class="text-sm font-bold" style="color:var(--text)">Notificações Internas</h2>
+                <p class="text-xs mt-0.5 max-w-lg" style="color:var(--muted)">
+                    Texto e liga/desliga das notificações do sino que o sistema dispara sozinho
+                    (onboarding, reuniões, planejamento, portal). Quem recebe cada uma é definido
+                    no código. As notificações que vêm de uma <strong>Automação</strong> são editadas
+                    em Automações, não aqui. Interpolação por <code style="background:var(--s3);color:var(--purple);padding:0 3px">&#123;variavel&#125;</code>.
+                </p>
+            </div>
+
+            <form method="POST" action="{{ route('settings.notification-settings.update') }}" class="space-y-4">
+                @csrf
+
+                @php
+                    $catalog = collect(\App\Services\SystemNotificationService::$catalog)->groupBy('group');
+                    $catalogKeys = collect(\App\Services\SystemNotificationService::$catalog);
+                @endphp
+
+                @foreach($catalog as $group => $_)
+                    <div class="card p-5" x-data="{ open: {{ $loop->first ? 'true' : 'false' }} }">
+                        <button type="button" @click="open = !open" class="w-full flex items-center justify-between text-left">
+                            <span class="text-sm font-bold" style="color:var(--text)">{{ $group }}</span>
+                            <x-icon name="chevron-right" size="16" class="flex-shrink-0 transition-transform" x-bind:class="open ? 'rotate-90' : ''" style="color:var(--muted)" />
+                        </button>
+
+                        <div x-show="open" x-transition class="mt-4 space-y-5">
+                            @foreach($catalogKeys->where('group', $group) as $key => $cat)
+                                @php $setting = $notificationSettings[$key] ?? null; @endphp
+                                <div class="rounded-lg p-4" style="background:var(--s2); border:1px solid var(--border2)">
+                                    <div class="flex items-start justify-between gap-3 mb-3">
+                                        <div>
+                                            <p class="text-sm font-semibold" style="color:var(--text)">{{ $cat['label'] }}</p>
+                                            <p class="text-xs" style="color:var(--muted)">Contexto: {{ \App\Support\TemplateVariables::contexts()[$cat['context']] ?? $cat['context'] }}</p>
+                                        </div>
+                                        <label class="flex items-center gap-2 text-xs flex-shrink-0" style="color:var(--muted)">
+                                            <input type="hidden" name="settings[{{ $key }}][enabled]" value="0">
+                                            <input type="checkbox" name="settings[{{ $key }}][enabled]" value="1"
+                                                   {{ ($setting?->is_enabled ?? true) ? 'checked' : '' }}
+                                                   class="accent-[var(--purple)]">
+                                            Ativa
+                                        </label>
+                                    </div>
+
+                                    <input type="text" name="settings[{{ $key }}][title]"
+                                           value="{{ old("settings.{$key}.title", $setting?->title) }}"
+                                           placeholder="{{ $cat['title'] }}"
+                                           class="w-full rounded-lg border px-3 py-2 text-sm mb-2"
+                                           style="background:var(--s1); border-color:var(--border2); color:var(--text)">
+
+                                    <textarea name="settings[{{ $key }}][body]" rows="2"
+                                              placeholder="{{ $cat['body'] }}"
+                                              class="w-full rounded-lg border px-3 py-2 text-sm resize-none mb-3"
+                                              style="background:var(--s1); border-color:var(--border2); color:var(--text)">{{ old("settings.{$key}.body", $setting?->body) }}</textarea>
+
+                                    <x-variable-hints :context="$cat['context']" />
+
+                                    <p class="text-xs mt-2" style="color:var(--muted); opacity:.7">
+                                        Em branco = usa o padrão (mostrado no placeholder acima).
+                                    </p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+
+                <button type="submit" class="btn-primary px-4 py-2 text-sm rounded-lg font-semibold">
+                    Salvar Notificações
+                </button>
+            </form>
         </div>
 
         {{-- ══ TAB API & TOKENS ══ --}}
