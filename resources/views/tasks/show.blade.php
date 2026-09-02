@@ -281,6 +281,13 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2 flex-shrink-0">
+                        <form method="POST" action="{{ route('tasks.duplicate', $task) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-ghost btn-xs flex items-center gap-1.5" title="Duplicar tarefa">
+                                <x-icon name="copy" size="12" />
+                                Duplicar
+                            </button>
+                        </form>
                         <button @click="$store.ui.chatOpen = true"
                                 class="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-all"
                                 style="border:1px solid rgba(100, 59, 142,.35); color:var(--purple); background:rgba(100, 59, 142,.06)"

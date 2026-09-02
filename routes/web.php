@@ -475,6 +475,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('tasks.update-field');
     Route::patch('/tarefas/{task}/observadores', [TaskController::class, 'updateObservers'])
         ->name('tasks.update-observers');
+    Route::post('/tarefas/{task}/duplicar', [TaskController::class, 'duplicate'])
+        ->name('tasks.duplicate');
 
     // ── Anexos da tarefa ──
     Route::post('/tarefas/{task}/anexos', [TaskAttachmentController::class, 'store'])

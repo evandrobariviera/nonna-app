@@ -416,6 +416,48 @@ class TaskController extends Controller
         return redirect()->back()->with('success', 'Chamado enviado para a Fila.');
     }
 
+    // Cria uma cópia da tarefa — mesmo conteúdo (título, descrição, tipo, destino,
+    // prioridade, cliente/projeto/planejamento, time, datas, sprint) mas
+    // operacionalmente "nova": status volta pro Backlog e anexos/comentários/
+    // aprovações/checklist/vínculo ClickUp NÃO são copiados (não fazem sentido
+    // reaproveitados — a cópia começa do zero nesses pontos). TaskObserver::created()
+    // já cuida do log de atividade/automação 'created', igual qualquer tarefa nova.
+    public function duplicate(Task $task)
+    {
+        $copy = Task::create([
+            'project_id'         => $task->project_id,
+            'macro_plan_id'      => $task->macro_plan_id,
+            'client_id'          => $task->client_id,
+            'sprint_id'          => $task->sprint_id,
+            'title'              => $task->title . ' (cópia)',
+            'description'        => $task->description,
+            'task_type'          => $task->task_type,
+            'destination'        => $task->destination,
+            'priority'           => $task->priority,
+            'approval_method'    => $task->approval_method,
+            'internal_approval'  => $task->internal_approval,
+            'origin'             => $task->origin,
+            'is_ticket'          => $task->is_ticket,
+            'requester_name'     => $task->requester_name,
+            'requester_whatsapp' => $task->requester_whatsapp,
+            'requester_channel'  => $task->requester_channel,
+            'due_date'           => $task->due_date,
+            'approval_date'      => $task->approval_date,
+            'publish_date'       => $task->publish_date,
+            'status'             => 'backlog',
+            'created_by'         => Auth::id(),
+        ]);
+
+        foreach ($task->executorLinks as $link) {
+            $copy->executors()->attach($link->user_id, ['role' => $link->role]);
+            if ($link->role === 'executor') {
+                $copy->updateQuietly(['executor_id' => $link->user_id]);
+            }
+        }
+
+        return redirect()->route('tasks.show', $copy)->with('success', 'Tarefa duplicada.');
+    }
+
     public function updatePriority(Request $request, Task $task)
     {
         $task->update(['priority' => $request->validate([
