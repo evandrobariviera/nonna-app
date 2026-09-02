@@ -40,8 +40,20 @@ class ProductivityDashboardController extends Controller
             ->with(['client', 'executor', 'executors'])
             ->get();
 
-        // ── Quem entrega mais (Executor) ──
-        $byExecutor = $this->groupByExecutor($completedTasks);
+        // ── Quem entrega mais (Executor) — filtrável por status via query string
+        // (ex: "quem mais manda pra Revisão Interna" = status_filter=revisao_interna).
+        // "concluido" reaproveita $completedTasks já calculado acima; qualquer outro
+        // status busca as transições PRA aquele status no período, mesma lógica de
+        // dedupe (última transição no recorte, se entrou/saiu mais de uma vez).
+        $statusFilter = $request->get('status_filter', 'concluido');
+        if (!array_key_exists($statusFilter, Task::$statuses)) {
+            $statusFilter = 'concluido';
+        }
+
+        $byExecutorTasks = $statusFilter === 'concluido'
+            ? $completedTasks
+            : $this->tasksEnteringStatus($statusFilter, $since);
+        $byExecutor = $this->groupByExecutor($byExecutorTasks);
 
         // ── Tipo de tarefa mais entregue ──
         $byType = $completedTasks->groupBy('task_type')
@@ -111,6 +123,7 @@ class ProductivityDashboardController extends Controller
 
         return view('productivity.index', [
             'period'                   => $period,
+            'statusFilter'             => $statusFilter,
             'byExecutor'               => $byExecutor,
             'byType'                   => $byType,
             'byClient'                 => $byClient,
@@ -142,6 +155,25 @@ class ProductivityDashboardController extends Controller
             })
             ->sortByDesc('count')
             ->values();
+    }
+
+    /**
+     * Tarefas que ENTRARAM num status específico dentro do período (pela
+     * transição, não pelo estado atual — uma tarefa que passou por "Revisão
+     * Interna" e já saiu de lá continua contando). Mesmo dedupe de
+     * $completedTransitions: se entrou mais de uma vez no recorte, conta 1x.
+     */
+    private function tasksEnteringStatus(string $status, \Illuminate\Support\Carbon $since): Collection
+    {
+        $taskIds = TaskStatusTransition::whereIn('task_id', Task::pluck('id'))
+            ->where('to_status', $status)
+            ->where('changed_at', '>=', $since)
+            ->distinct()
+            ->pluck('task_id');
+
+        return Task::whereIn('id', $taskIds)
+            ->with(['executor', 'executors'])
+            ->get();
     }
 
     /**

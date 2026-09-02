@@ -62,13 +62,27 @@
 
     <div class="grid grid-cols-2 gap-4 mb-4">
 
-        {{-- QUEM ENTREGA MAIS --}}
+        {{-- QUEM ENTREGA MAIS / VOLUME POR EXECUTOR (filtrável por status) --}}
         <div class="card card-body-lg">
-            <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
-                Quem Entrega Mais <span style="color:var(--muted2); text-transform:none; letter-spacing:normal">· tarefas concluídas, por executor</span>
-            </p>
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
+                    @if($statusFilter === 'concluido')
+                        Quem Entrega Mais <span style="color:var(--muted2); text-transform:none; letter-spacing:normal">· tarefas concluídas, por executor</span>
+                    @else
+                        Quem Mais Envia Para {{ \App\Models\Task::$statuses[$statusFilter]['label'] }} <span style="color:var(--muted2); text-transform:none; letter-spacing:normal">· no período, por executor</span>
+                    @endif
+                </p>
+                <select onchange="location.href='{{ route('productivity.index', ['period' => $period]) }}&status_filter=' + this.value"
+                        class="text-xs font-semibold flex-shrink-0" style="background:var(--s3); color:var(--muted); border:1px solid var(--border2); padding:4px 6px">
+                    @foreach(\App\Models\Task::$statuses as $key => $status)
+                        <option value="{{ $key }}" @selected($statusFilter === $key)>{{ $key === 'concluido' ? 'Concluído (entrega)' : $status['label'] }}</option>
+                    @endforeach
+                </select>
+            </div>
             @if($byExecutor->isEmpty())
-                <p class="text-sm py-6 text-center" style="color:var(--muted)">Nenhuma tarefa concluída nesse período.</p>
+                <p class="text-sm py-6 text-center" style="color:var(--muted)">
+                    {{ $statusFilter === 'concluido' ? 'Nenhuma tarefa concluída nesse período.' : 'Nenhuma tarefa entrou nesse status no período.' }}
+                </p>
             @else
                 @php $maxExec = $byExecutor->max('count'); @endphp
                 <div class="flex flex-col gap-3">
