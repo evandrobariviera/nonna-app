@@ -219,9 +219,12 @@ class AiService
             'macro_plan_title'    => 'Macroplanejamento',
             'macro_plan_status'   => 'Status do Macroplanejamento',
             'macro_plan_period'   => 'Período do Macroplanejamento',
-            'existing_tasks_summary'   => 'Tarefas já existentes neste projeto',
-            'playbooks_catalog'        => 'Playbooks disponíveis',
-            'functional_roles_catalog' => 'Papéis funcionais disponíveis',
+            'existing_tasks_summary'    => 'Tarefas já existentes neste projeto',
+            'playbooks_catalog'         => 'Playbooks disponíveis',
+            'functional_roles_catalog'  => 'Papéis funcionais disponíveis',
+            'task_types_catalog'        => 'Tipos de tarefa válidos (chave: rótulo) — task_type só pode usar uma dessas chaves',
+            'task_destinations_catalog' => 'Destinos de tarefa válidos (chave: rótulo) — destination só pode usar uma dessas chaves',
+            'task_priorities_catalog'   => 'Prioridades de tarefa válidas (chave: rótulo) — priority só pode usar uma dessas chaves',
         ];
 
         $skip = ['task_id', 'project_id', 'campaign_id', 'client_id'];

@@ -162,6 +162,13 @@ class ContextResolver
         $context['playbooks_catalog']       = self::playbooksCatalog();
         $context['functional_roles_catalog']= self::functionalRolesCatalog();
 
+        // Chaves válidas de task_type/destination/priority — sem isso a IA não tem
+        // como saber quais valores usar em draft_tasks (project_disciplines é uma
+        // lista parecida mas DIFERENTE de Task::$types, não dá pra confundir).
+        $context['task_types_catalog']       = collect(Task::$types)->map(fn ($label, $key) => "{$key}: {$label}")->implode('; ');
+        $context['task_destinations_catalog']= collect(Task::$destinations)->map(fn ($label, $key) => "{$key}: {$label}")->implode('; ');
+        $context['task_priorities_catalog']  = collect(Task::$priorities)->map(fn ($meta, $key) => "{$key}: {$meta['label']}")->implode('; ');
+
         return $context;
     }
 
