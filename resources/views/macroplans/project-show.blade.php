@@ -73,6 +73,13 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="mb-5 px-4 py-3 text-sm font-semibold"
+             style="background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.25); color:var(--red)">
+            {{ session('error') }}
+        </div>
+    @endif
+
     {{-- PAINEL DE PROGRESSO --}}
     <div class="card px-5 py-4 mb-5">
         <div class="flex items-center justify-between gap-6 flex-wrap">

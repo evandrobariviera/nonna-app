@@ -99,6 +99,10 @@ class ProjectPlaybookController extends Controller
     {
         $result = $service->applyPlaybook($project, $playbook, Auth::id());
 
+        if ($result['already_applied']) {
+            return back()->with('error', "O Playbook \"{$playbook->name}\" já foi aplicado a este projeto — nada foi criado, pra evitar tarefa duplicada.");
+        }
+
         $count = $result['tasks']->count();
         $message = "{$count} tarefa(s) criada(s) a partir do Playbook \"{$playbook->name}\".";
         if (!empty($result['warnings'])) {

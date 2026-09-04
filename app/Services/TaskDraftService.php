@@ -31,12 +31,23 @@ class TaskDraftService
     /**
      * Aplica um Playbook a um Projeto: cria, de uma vez, exatamente as tarefas
      * cadastradas no Playbook (sem IA — determinístico). Marca o Projeto como
-     * originado deste Playbook (só rastreabilidade, ver Project::playbook()).
+     * originado deste Playbook (rastreabilidade — ver Project::playbook() —
+     * e também trava de reaplicação, ver abaixo).
      *
-     * @return array{tasks: Collection<int, Task>, warnings: string[]}
+     * Bloqueia reaplicar o MESMO Playbook no mesmo Projeto (pedido explícito
+     * do usuário, pra evitar tarefa duplicada por duplo clique) — comparando
+     * com projects.project_playbook_id. Só detecta o último Playbook
+     * aplicado (o campo guarda 1 valor só); aplicar A, depois B, depois A de
+     * novo não é pego por essa checagem — limitação aceita, cobre o caso comum.
+     *
+     * @return array{tasks: Collection<int, Task>, warnings: string[], already_applied: bool}
      */
     public function applyPlaybook(Project $project, ProjectPlaybook $playbook, ?int $userId = null): array
     {
+        if ($project->project_playbook_id === $playbook->id) {
+            return ['tasks' => collect(), 'warnings' => [], 'already_applied' => true];
+        }
+
         $playbook->loadMissing('tasks');
         $warnings = [];
 
@@ -58,17 +69,16 @@ class TaskDraftService
 
                 return $task;
             });
-
-            // Reaproveitável: se no futuro quisermos bloquear reaplicação do
-            // mesmo Playbook, projects.project_playbook_id é o sinal a checar
-            // antes de chegar aqui (ver risco #2 do plano).
         });
 
-        if ($tasks->isNotEmpty() && !$project->project_playbook_id) {
+        // Atualiza sempre (não só quando vazio) — é o sinal que a checagem de
+        // reaplicação no topo do método usa pra reconhecer "este Playbook já
+        // foi aplicado aqui" na próxima tentativa.
+        if ($tasks->isNotEmpty()) {
             $project->update(['project_playbook_id' => $playbook->id]);
         }
 
-        return ['tasks' => $tasks, 'warnings' => $warnings];
+        return ['tasks' => $tasks, 'warnings' => $warnings, 'already_applied' => false];
     }
 
     /**
