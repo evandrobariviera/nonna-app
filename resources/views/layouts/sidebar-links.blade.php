@@ -283,7 +283,7 @@
     </span>
 </a>
 
-<div x-data="{ open: {{ request()->routeIs('ai.*') || request()->routeIs('automations.*') || request()->routeIs('service-diagnostics.*') ? 'true' : 'false' }} }">
+<div x-data="{ open: {{ request()->routeIs('ai.*') || request()->routeIs('automations.*') || request()->routeIs('service-diagnostics.*') || request()->routeIs('playbooks.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <x-icon name="sparkles" size="16" class="flex-shrink-0" />
@@ -311,6 +311,10 @@
         <a href="{{ route('automations.index') }}"
            class="nav-sub-item {{ request()->routeIs('automations.*') ? 'active' : '' }}">
             Automações
+        </a>
+        <a href="{{ route('playbooks.index') }}"
+           class="nav-sub-item {{ request()->routeIs('playbooks.*') ? 'active' : '' }}">
+            Playbooks
         </a>
     </div>
 </div>

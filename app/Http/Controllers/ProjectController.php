@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AiAgent;
+use App\Models\AiChat;
 use App\Models\Client;
 use App\Models\MacroPlan;
 use App\Models\Project;
+use App\Models\ProjectPlaybook;
 use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\User;
@@ -131,9 +134,9 @@ class ProjectController extends Controller
         $clientMacroplans = MacroPlan::where('client_id', $project->client_id)->orderBy('title')->get(['id', 'title']);
         [$sprints, $activeSprint] = $this->sprintsForFila();
 
-        return view('macroplans.project-show', compact(
+        return view('macroplans.project-show', array_merge(compact(
             'macroplan', 'project', 'users', 'kanban', 'cancelled', 'progress', 'totalTasks', 'doneTasks', 'standalone', 'clientMacroplans', 'sprints', 'activeSprint'
-        ));
+        ), $this->chatDrawerData($project)));
     }
 
     /**
@@ -185,9 +188,38 @@ class ProjectController extends Controller
         $clientMacroplans = MacroPlan::where('client_id', $project->client_id)->orderBy('title')->get(['id', 'title']);
         [$sprints, $activeSprint] = $this->sprintsForFila();
 
-        return view('macroplans.project-show', compact(
+        return view('macroplans.project-show', array_merge(compact(
             'macroplan', 'project', 'users', 'kanban', 'cancelled', 'progress', 'totalTasks', 'doneTasks', 'standalone', 'clientMacroplans', 'sprints', 'activeSprint'
-        ));
+        ), $this->chatDrawerData($project)));
+    }
+
+    // Dados do drawer do Assistente de Lançamento de Tarefas — compartilhado
+    // entre show() e showDirect() (mesma view, project-show.blade.php). Mesmo
+    // shape de chatMessages usado por TaskController::show() (ver tasks/show.blade.php).
+    private function chatDrawerData(Project $project): array
+    {
+        $chat = AiChat::where('entity_type', 'project')->where('entity_id', $project->id)->first();
+
+        return [
+            'agents'          => AiAgent::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'playbooks'       => ProjectPlaybook::where('is_active', true)->orderBy('name')->get(),
+            'functionalRoles' => \App\Models\FunctionalRole::orderBy('name')->get(['id', 'name']),
+            'chatMessages'    => $chat
+                ? $chat->messages()
+                    ->with('user:id,name', 'agent:id,name')
+                    ->orderBy('created_at')
+                    ->get()
+                    ->map(fn ($m) => [
+                        'id'         => $m->id,
+                        'role'       => $m->role,
+                        'content'    => $m->content,
+                        'user_name'  => $m->user?->name,
+                        'agent_name' => $m->agent?->name,
+                        'time'       => $m->created_at->format('H:i'),
+                    ])
+                    ->values()
+                : collect(),
+        ];
     }
 
     // Sprints abertas (pra oferecer "→ Sprint" na view de Fila da página do

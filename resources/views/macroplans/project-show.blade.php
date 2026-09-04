@@ -41,6 +41,10 @@
                 </select>
             </form>
             <span class="badge badge-{{ $project->statusColor() }}">{{ $project->statusLabel() }}</span>
+            <button type="button" @click="$store.taskAssistant.open = true" class="btn btn-ghost btn-xs flex items-center gap-1.5">
+                <x-icon name="sparkles" size="14" style="color:var(--purple)" />
+                Assistente de Tarefas
+            </button>
             <button type="button" @click="editingProject = !editingProject" class="btn btn-ghost btn-xs">
                 <span x-text="editingProject ? 'Fechar edição' : 'Editar Projeto'"></span>
             </button>
@@ -954,4 +958,12 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
     @endpush
+
+    @include('projects._task-assistant-drawer', [
+        'project'         => $project,
+        'agents'          => $agents,
+        'playbooks'       => $playbooks,
+        'chatMessages'    => $chatMessages,
+        'functionalRoles' => $functionalRoles,
+    ])
 </x-app-layout>

@@ -567,6 +567,14 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('project-attachments.destroy');
     Route::post('/projetos/{project}/tarefas', [TaskController::class, 'storeStandalone'])
         ->name('tasks.storeStandalone');
+
+    // ── Assistente de Lançamento de Tarefas (chat IA + playbooks, escopado a um Projeto) ──
+    Route::post('/projetos/{project}/chat', [\App\Http\Controllers\ProjectTaskAssistantController::class, 'chat'])
+        ->name('projects.chat');
+    Route::post('/projetos/{project}/tarefas/lote', [\App\Http\Controllers\ProjectTaskAssistantController::class, 'confirmDrafts'])
+        ->name('projects.tasks.confirm-batch');
+    Route::post('/projetos/{project}/playbooks/{playbook}/aplicar', [\App\Http\Controllers\ProjectPlaybookController::class, 'apply'])
+        ->name('project-playbooks.apply');
     Route::patch('/projetos/{project}/tarefas/{task}', [TaskController::class, 'updateStandalone'])
         ->name('tasks.updateStandalone');
     Route::patch('/projetos/{project}/tarefas/{task}/status', [TaskController::class, 'updateStatusStandalone'])
@@ -696,6 +704,22 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         Route::get('/uso', [\App\Http\Controllers\Ai\AiUsageController::class, 'index'])
             ->name('usage.index');
     });
+
+    // ── Playbooks de Projeto (modelos reutilizáveis de estrutura de tarefas) ──
+    Route::get('/playbooks', [\App\Http\Controllers\ProjectPlaybookController::class, 'index'])
+        ->name('playbooks.index');
+    Route::get('/playbooks/novo', [\App\Http\Controllers\ProjectPlaybookController::class, 'create'])
+        ->name('playbooks.create');
+    Route::post('/playbooks', [\App\Http\Controllers\ProjectPlaybookController::class, 'store'])
+        ->name('playbooks.store');
+    Route::get('/playbooks/{playbook}/editar', [\App\Http\Controllers\ProjectPlaybookController::class, 'edit'])
+        ->name('playbooks.edit');
+    Route::patch('/playbooks/{playbook}', [\App\Http\Controllers\ProjectPlaybookController::class, 'update'])
+        ->name('playbooks.update');
+    Route::delete('/playbooks/{playbook}', [\App\Http\Controllers\ProjectPlaybookController::class, 'destroy'])
+        ->name('playbooks.destroy');
+    Route::patch('/playbooks/{playbook}/toggle', [\App\Http\Controllers\ProjectPlaybookController::class, 'toggleActive'])
+        ->name('playbooks.toggle');
 
     // ── Automações ──
     Route::get('/automacoes', [\App\Http\Controllers\AutomationController::class, 'index'])

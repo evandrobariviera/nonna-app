@@ -18,6 +18,7 @@ class Project extends Model
         'organization_id',
         'macro_plan_id',
         'client_id',
+        'project_playbook_id',
         'position',
         'title',
         'objective',
@@ -222,5 +223,12 @@ class Project extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    // Playbook que originou este projeto (ver TaskDraftService::applyPlaybook())
+    // — só rastreabilidade, projeto continua funcionando normalmente sem um.
+    public function playbook(): BelongsTo
+    {
+        return $this->belongsTo(ProjectPlaybook::class, 'project_playbook_id');
     }
 }

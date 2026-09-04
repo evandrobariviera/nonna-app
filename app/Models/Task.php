@@ -96,12 +96,14 @@ class Task extends Model
     ];
 
     public static array $origins = [
-        'onboarding' => 'Onboarding',
-        'projeto'    => 'Projeto',
-        'roadmap'    => 'Roadmap',
-        'ticket'     => 'Ticket',
-        'automation' => 'Automação',
-        'reuniao'    => 'Reunião',
+        'onboarding'   => 'Onboarding',
+        'projeto'      => 'Projeto',
+        'roadmap'      => 'Roadmap',
+        'ticket'       => 'Ticket',
+        'automation'   => 'Automação',
+        'reuniao'      => 'Reunião',
+        'playbook'     => 'Playbook',
+        'ai_assistant' => 'Assistente de Tarefas (IA)',
     ];
 
     // Situação = sub-status cru vindo do ClickUp (texto livre). As chaves abaixo são

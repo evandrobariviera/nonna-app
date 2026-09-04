@@ -155,10 +155,40 @@ class AiService
         }
 
         $systemPrompt = $this->buildChatSystemPrompt($agent->system_prompt, $context);
-        [$responseText, $usage] = $this->dispatchChat($agent, $apiKey->getApiKey(), $systemPrompt, $history);
+        [$responseText, $usage] = $this->dispatchChat($agent, $apiKey->getApiKey(), $systemPrompt, $history, false);
         $this->logUsage($agent, $usage, $userId, $clientId, 'chat');
 
         return $responseText;
+    }
+
+    /**
+     * Como chat() (histórico multi-turno), mas pede saída em JSON estruturado
+     * e devolve o array já decodificado — usado pelo Assistente de Lançamento
+     * de Tarefas, que precisa de conversa iterativa ("tira a tarefa de SEO",
+     * "adiciona uma de setup") com resposta sempre em JSON. runStructured()
+     * não serve aqui porque é single-turn (sem histórico).
+     */
+    public function chatStructured(
+        AiAgent $agent,
+        array $history,
+        array $context = [],
+        ?int $userId = null,
+        ?string $clientId = null,
+    ): array {
+        $agent->loadMissing('provider');
+
+        $apiKey = $agent->resolvedApiKey();
+        if (!$apiKey) {
+            throw new \RuntimeException("Agente '{$agent->name}': nenhuma chave de API configurada para {$agent->provider->name}.");
+        }
+
+        $systemPrompt = $this->buildChatSystemPrompt($agent->system_prompt, $context);
+        $systemPrompt .= "\n\n---\nIMPORTANTE: responda ESTRITAMENTE com um único objeto JSON válido, sem markdown, sem texto antes ou depois, sem \`\`\`. Se não conseguir preencher um campo, use null - nunca invente dado.";
+
+        [$responseText, $usage] = $this->dispatchChat($agent, $apiKey->getApiKey(), $systemPrompt, $history, true);
+        $this->logUsage($agent, $usage, $userId, $clientId, 'chat_structured');
+
+        return $this->parseJsonResponse($responseText, $agent);
     }
 
     private function buildChatSystemPrompt(string $agentPrompt, array $context): string
@@ -168,17 +198,30 @@ class AiService
         }
 
         $labelMap = [
-            'task_title'      => 'Tarefa',
-            'task_description'=> 'Descrição',
-            'task_type'       => 'Tipo',
-            'task_status'     => 'Status',
-            'task_situation'  => 'Situação',
-            'client_name'     => 'Cliente',
-            'client_segment'  => 'Segmento',
-            'project_name'    => 'Projeto',
-            'project_brief'   => 'Brief do Projeto',
-            'executor_name'   => 'Executor',
-            'macro_plan_name' => 'Macroplanejamento',
+            'task_title'          => 'Tarefa',
+            'task_description'    => 'Descrição',
+            'task_type'           => 'Tipo',
+            'task_status'         => 'Status',
+            'task_situation'      => 'Situação',
+            'client_name'         => 'Cliente',
+            'client_segment'      => 'Segmento',
+            'project_name'        => 'Projeto',
+            'project_brief'       => 'Brief do Projeto',
+            'executor_name'       => 'Executor',
+            'macro_plan_name'     => 'Macroplanejamento',
+            'project_title'       => 'Projeto',
+            'project_objective'   => 'Objetivo do Projeto',
+            'project_type'        => 'Tipo de Projeto',
+            'project_status'      => 'Status do Projeto',
+            'project_disciplines' => 'Disciplinas do Projeto',
+            'project_start_date'  => 'Início do Projeto',
+            'project_end_date'    => 'Término do Projeto',
+            'macro_plan_title'    => 'Macroplanejamento',
+            'macro_plan_status'   => 'Status do Macroplanejamento',
+            'macro_plan_period'   => 'Período do Macroplanejamento',
+            'existing_tasks_summary'   => 'Tarefas já existentes neste projeto',
+            'playbooks_catalog'        => 'Playbooks disponíveis',
+            'functional_roles_catalog' => 'Papéis funcionais disponíveis',
         ];
 
         $skip = ['task_id', 'project_id', 'campaign_id', 'client_id'];
@@ -198,12 +241,12 @@ class AiService
         return $agentPrompt . "\n\n---\nCONTEXTO ATUAL:\n" . implode("\n", $lines);
     }
 
-    private function dispatchChat(AiAgent $agent, string $apiKey, string $systemPrompt, array $history): array
+    private function dispatchChat(AiAgent $agent, string $apiKey, string $systemPrompt, array $history, bool $jsonMode = false): array
     {
         return match ($agent->provider->slug) {
-            'openai', 'groq' => $this->callOpenAiCompatChat($agent, $apiKey, $systemPrompt, $history),
+            'openai', 'groq' => $this->callOpenAiCompatChat($agent, $apiKey, $systemPrompt, $history, $jsonMode),
             'anthropic'      => $this->callAnthropicChat($agent, $apiKey, $systemPrompt, $history),
-            'google'         => $this->callGoogleChat($agent, $apiKey, $systemPrompt, $history),
+            'google'         => $this->callGoogleChat($agent, $apiKey, $systemPrompt, $history, $jsonMode),
             default          => throw new \RuntimeException("Provider '{$agent->provider->slug}' não suportado."),
         };
     }
@@ -219,7 +262,7 @@ class AiService
         return (bool) preg_match('/^(o1|o3|o4|gpt-5)/', $model);
     }
 
-    private function callOpenAiCompatChat(AiAgent $agent, string $apiKey, string $systemPrompt, array $history): array
+    private function callOpenAiCompatChat(AiAgent $agent, string $apiKey, string $systemPrompt, array $history, bool $jsonMode = false): array
     {
         $messages = array_merge(
             [['role' => 'system', 'content' => $systemPrompt]],
@@ -231,6 +274,9 @@ class AiService
             'messages'              => $messages,
             'max_completion_tokens' => $agent->max_tokens,
         ];
+        if ($jsonMode) {
+            $payload['response_format'] = ['type' => 'json_object'];
+        }
         if (!$this->isReasoningModel($agent->model)) {
             $payload['temperature'] = $agent->temperature;
         }
@@ -280,7 +326,7 @@ class AiService
         ];
     }
 
-    private function callGoogleChat(AiAgent $agent, string $apiKey, string $systemPrompt, array $history): array
+    private function callGoogleChat(AiAgent $agent, string $apiKey, string $systemPrompt, array $history, bool $jsonMode = false): array
     {
         $url = rtrim($agent->provider->base_url, '/') . "/models/{$agent->model}:generateContent?key={$apiKey}";
 
@@ -289,14 +335,19 @@ class AiService
             'parts' => [['text' => $m['content']]],
         ], $history);
 
+        $generationConfig = [
+            'temperature'     => $agent->temperature,
+            'maxOutputTokens' => $agent->max_tokens,
+        ];
+        if ($jsonMode) {
+            $generationConfig['responseMimeType'] = 'application/json';
+        }
+
         $response = Http::timeout(300)
             ->post($url, [
                 'systemInstruction' => ['parts' => [['text' => $systemPrompt]]],
                 'contents'          => $contents,
-                'generationConfig'  => [
-                    'temperature'     => $agent->temperature,
-                    'maxOutputTokens' => $agent->max_tokens,
-                ],
+                'generationConfig'  => $generationConfig,
             ])
             ->throw()
             ->json();

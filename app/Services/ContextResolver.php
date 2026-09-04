@@ -128,21 +128,96 @@ class ContextResolver
         $project->loadMissing(['client', 'macroPlan']);
 
         $context = [
-            'project_id'          => $project->id,
-            'project_name'        => $project->name ?? '',
-            'project_description' => $project->description ?? '',
+            'project_id'         => $project->id,
+            'project_title'      => $project->title ?? '',
+            'project_objective'  => $project->objective ?? '',
+            'project_type'       => $project->typeLabel(),
+            'project_status'     => $project->statusLabel(),
+            'project_disciplines'=> implode(', ', $project->disciplineLabels()),
+            'project_start_date' => $project->start_date?->format('d/m/Y') ?? '',
+            'project_end_date'   => $project->end_date?->format('d/m/Y') ?? '',
         ];
 
         if ($project->client) {
-            $context['client_name']    = $project->client->name ?? '';
+            $context['client_name']    = $project->client->displayName() ?? '';
             $context['client_segment'] = $project->client->segment ?? '';
         }
 
         if ($project->macroPlan) {
-            $context['macro_plan_name'] = $project->macroPlan->name ?? '';
+            $context['macro_plan_title']  = $project->macroPlan->title ?? '';
+            $context['macro_plan_status'] = $project->macroPlan->statusLabel();
+            $context['macro_plan_period'] = ($project->macroPlan->period_start && $project->macroPlan->period_end)
+                ? $project->macroPlan->period_start->format('d/m/Y') . ' a ' . $project->macroPlan->period_end->format('d/m/Y')
+                : '';
         }
 
+        foreach ($project->disciplines ?? [] as $discipline) {
+            $field = 'briefing_' . $discipline;
+            if (!empty($project->{$field})) {
+                $context[$field] = \Illuminate\Support\Str::limit($project->{$field}, 500);
+            }
+        }
+
+        $context['existing_tasks_summary']  = self::existingTasksSummary($project);
+        $context['playbooks_catalog']       = self::playbooksCatalog();
+        $context['functional_roles_catalog']= self::functionalRolesCatalog();
+
         return $context;
+    }
+
+    /**
+     * Papéis Funcionais da organização, formatado como "chave: Nome" — é
+     * assim que a IA referencia um responsável no JSON de rascunho
+     * (functional_role_key), já que ela não tem acesso direto à tabela
+     * functional_roles.
+     */
+    private static function functionalRolesCatalog(): string
+    {
+        $roles = \App\Models\FunctionalRole::orderBy('name')->get(['key', 'name']);
+        if ($roles->isEmpty()) {
+            return 'Nenhum papel funcional cadastrado.';
+        }
+
+        return $roles->map(fn ($r) => "{$r->key}: {$r->name}")->implode('; ');
+    }
+
+    /**
+     * Contagem por status + até 20 títulos de tarefas abertas do Projeto —
+     * evita que a IA sugira uma tarefa que já existe. Cortado em 20 pra não
+     * inflar o prompt em projetos com muitas tarefas (ver risco #5 do plano).
+     */
+    private static function existingTasksSummary(Project $project): string
+    {
+        $tasks = $project->tasks()->where('status', '!=', 'cancelado')->get(['status', 'title']);
+        if ($tasks->isEmpty()) {
+            return 'Nenhuma tarefa criada ainda neste projeto.';
+        }
+
+        $byStatus = $tasks->groupBy('status')->map->count();
+        $counts = $byStatus->map(fn ($count, $status) => (Task::$statuses[$status]['label'] ?? $status) . ": {$count}")->implode(', ');
+
+        $titles = $tasks->take(20)->pluck('title')->implode('; ');
+
+        return "Contagem por status — {$counts}. Títulos (até 20): {$titles}";
+    }
+
+    /**
+     * Catálogo de Playbooks ativos da organização, formatado pra a IA saber
+     * que existem e poder orientar o usuário a aplicá-los em vez de gerar um
+     * rascunho equivalente na mão (ver ProjectPlaybook, regra #3 do prompt do
+     * Assistente de Lançamento de Tarefas).
+     */
+    private static function playbooksCatalog(): string
+    {
+        $playbooks = \App\Models\ProjectPlaybook::where('is_active', true)->withCount('tasks')->orderBy('name')->get();
+        if ($playbooks->isEmpty()) {
+            return 'Nenhum playbook cadastrado ainda.';
+        }
+
+        return $playbooks->map(function ($p) {
+            $desc = $p->description ? " — {$p->description}" : '';
+            return "\"{$p->name}\" ({$p->tasks_count} tarefa(s)){$desc}";
+        })->implode('; ');
     }
 
     public static function forCampaign(AdCampaign $campaign): array
