@@ -9,6 +9,7 @@
     window._taskAssistant = {
         chatEndpoint:    '{{ route('projects.chat', $project) }}',
         confirmEndpoint: '{{ route('projects.tasks.confirm-batch', $project) }}',
+        clearEndpoint:   '{{ route('projects.chat.clear', $project) }}',
         agents:          @json($agents->map(fn ($a) => ['id' => $a->id, 'name' => $a->name])),
         messages:        @json($chatMessages),
         functionalRoles: @json($functionalRoles->map(fn ($r) => ['id' => $r->id, 'name' => $r->name])),
@@ -55,12 +56,22 @@
                 <x-icon name="sparkles" size="16" class="flex-shrink-0" style="color:var(--purple)" />
                 <span class="text-sm font-semibold" style="color:var(--text)">Assistente de Lançamento de Tarefas</span>
             </div>
-            <button @click="$store.taskAssistant.open = false"
-                    class="flex items-center justify-center h-7 w-7 text-sm transition-colors"
-                    style="color:var(--muted)"
-                    onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
-                ✕
-            </button>
+            <div class="flex items-center gap-3">
+                <button @click="newConversation()"
+                        x-show="messages.length > 0"
+                        x-cloak
+                        class="text-xs font-semibold transition-colors"
+                        style="color:var(--muted)"
+                        onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='var(--muted)'">
+                    Nova conversa
+                </button>
+                <button @click="$store.taskAssistant.open = false"
+                        class="flex items-center justify-center h-7 w-7 text-sm transition-colors"
+                        style="color:var(--muted)"
+                        onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                    ✕
+                </button>
+            </div>
         </div>
 
         {{-- Aplicar Playbook (determinístico, sem IA) --}}

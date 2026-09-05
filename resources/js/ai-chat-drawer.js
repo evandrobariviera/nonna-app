@@ -8,6 +8,7 @@ export function registerAiChatDrawer(Alpine) {
     Alpine.data('taskAssistantDrawer', () => ({
         endpoint:        window._taskAssistant?.chatEndpoint    ?? '',
         confirmEndpoint: window._taskAssistant?.confirmEndpoint ?? '',
+        clearEndpoint:   window._taskAssistant?.clearEndpoint   ?? '',
         agents:          window._taskAssistant?.agents          ?? [],
         messages:        window._taskAssistant?.messages        ?? [],
         functionalRoles: window._taskAssistant?.functionalRoles ?? [],
@@ -27,6 +28,30 @@ export function registerAiChatDrawer(Alpine) {
 
         removeDraft(i) {
             this.drafts.splice(i, 1);
+        },
+
+        // Botão "Nova conversa" — apaga o histórico deste projeto no servidor
+        // e limpa o estado local (sem reload, a conversa some na hora).
+        async newConversation() {
+            if (this.messages.length === 0 && this.drafts.length === 0) return;
+            if (!confirm('Apagar o histórico desta conversa e começar do zero?')) return;
+
+            try {
+                await fetch(this.clearEndpoint, {
+                    method:  'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept':       'application/json',
+                    },
+                });
+            } catch (e) {
+                // Mesmo se a chamada falhar, limpa a tela — na pior hipótese o
+                // histórico antigo reaparece na próxima vez que a página carregar.
+            }
+
+            this.messages = [];
+            this.drafts   = [];
+            this.error    = '';
         },
 
         async send() {

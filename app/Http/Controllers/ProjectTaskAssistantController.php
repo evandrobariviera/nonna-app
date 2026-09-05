@@ -99,10 +99,31 @@ class ProjectTaskAssistantController extends Controller
 
         $result = $service->createFromDrafts($project, $data['tasks'], auth()->id(), 'ai_assistant');
 
+        // Encerra a conversa automaticamente após confirmar — o assunto foi
+        // resolvido (as tarefas já existem), então a próxima vez que o painel
+        // abrir vem em branco, pronto pra um novo pedido (pedido do Evandro,
+        // pra não ficar vendo conversa antiga sem querer).
+        $this->clearChatFor($project);
+
         return response()->json([
             'created'  => $result['tasks']->count(),
             'warnings' => $result['warnings'],
         ]);
+    }
+
+    // Botão "Nova conversa" no painel — apaga o histórico de chat deste
+    // projeto. É rascunho de trabalho, não registro de auditoria (diferente
+    // de task_activities), então apagar de vez é aceitável aqui.
+    public function clearChat(Project $project)
+    {
+        $this->clearChatFor($project);
+
+        return response()->json(['cleared' => true]);
+    }
+
+    private function clearChatFor(Project $project): void
+    {
+        AiChat::where('entity_type', 'project')->where('entity_id', $project->id)->delete();
     }
 
     /**

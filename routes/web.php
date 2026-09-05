@@ -571,6 +571,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Assistente de Lançamento de Tarefas (chat IA + playbooks, escopado a um Projeto) ──
     Route::post('/projetos/{project}/chat', [\App\Http\Controllers\ProjectTaskAssistantController::class, 'chat'])
         ->name('projects.chat');
+    Route::delete('/projetos/{project}/chat', [\App\Http\Controllers\ProjectTaskAssistantController::class, 'clearChat'])
+        ->name('projects.chat.clear');
     Route::post('/projetos/{project}/tarefas/lote', [\App\Http\Controllers\ProjectTaskAssistantController::class, 'confirmDrafts'])
         ->name('projects.tasks.confirm-batch');
     Route::post('/projetos/{project}/playbooks/{playbook}/aplicar', [\App\Http\Controllers\ProjectPlaybookController::class, 'apply'])
