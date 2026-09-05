@@ -74,44 +74,10 @@
             </div>
         </div>
 
-        {{-- Aplicar Playbook (determinístico, sem IA) --}}
-        <div class="px-4 py-3.5 flex-shrink-0" style="border-bottom:1px solid var(--border2); background:var(--s2)"
-             x-data="{ playbookId: '' }">
-            <label class="block text-xs font-semibold uppercase tracking-widest mb-2"
-                   style="color:var(--muted); letter-spacing:.08em">Aplicar um Playbook</label>
-            @if($playbooks->isEmpty())
-                <p class="text-xs" style="color:var(--muted)">
-                    Nenhum playbook cadastrado.
-                    <a href="{{ route('playbooks.create') }}" style="color:var(--purple)">Criar playbook →</a>
-                </p>
-            @else
-                <div class="flex gap-2">
-                    <select x-model="playbookId"
-                            class="flex-1 px-3 py-2 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                        <option value="">Selecione um playbook...</option>
-                        @foreach($playbooks as $p)
-                            <option value="{{ $p->id }}">{{ $p->name }} ({{ $p->tasks()->count() }} tarefa(s))</option>
-                        @endforeach
-                    </select>
-                    <button type="button"
-                            :disabled="!playbookId"
-                            @click="if (playbookId) $refs['playbookForm_' + playbookId].submit()"
-                            class="px-4 py-2 text-sm font-semibold text-white flex-shrink-0"
-                            :style="!playbookId ? 'background:var(--purple); opacity:.35; cursor:not-allowed' : 'background:var(--purple)'">
-                        Aplicar
-                    </button>
-                </div>
-                @foreach($playbooks as $p)
-                    <form x-ref="playbookForm_{{ $p->id }}"
-                          method="POST" action="{{ route('project-playbooks.apply', [$project, $p]) }}" class="hidden">
-                        @csrf
-                    </form>
-                @endforeach
-                <p class="text-xs mt-1.5" style="color:var(--muted2)">
-                    Cria de uma vez todas as tarefas do modelo escolhido, sem passar pela IA.
-                </p>
-            @endif
+        {{-- Aplicar Playbook (determinístico, sem IA) — mesmo parcial usado no
+             cabeçalho da página do projeto, ver _apply-playbook-picker.blade.php --}}
+        <div class="px-4 py-3.5 flex-shrink-0" style="border-bottom:1px solid var(--border2); background:var(--s2)">
+            @include('projects._apply-playbook-picker', ['project' => $project, 'playbooks' => $playbooks, 'compact' => false])
         </div>
 
         {{-- Seletor de especialista --}}

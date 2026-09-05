@@ -45,6 +45,7 @@
                 <x-icon name="sparkles" size="14" style="color:var(--purple)" />
                 Assistente de Tarefas
             </button>
+            @include('projects._apply-playbook-picker', ['project' => $project, 'playbooks' => $playbooks, 'compact' => true])
             <button type="button" @click="editingProject = !editingProject" class="btn btn-ghost btn-xs">
                 <span x-text="editingProject ? 'Fechar edição' : 'Editar Projeto'"></span>
             </button>
