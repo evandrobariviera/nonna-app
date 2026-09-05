@@ -173,7 +173,10 @@
                                    style="background:var(--s3); border:1px solid var(--border); color:var(--text)">
                             <div class="grid grid-cols-2 gap-2 mb-2">
                                 <select x-model="d.task_type" class="px-2 py-1.5 text-xs rounded focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); color:var(--text)">
+                                        :style="!d.task_type
+                                            ? 'background:var(--s3); border:1px solid var(--red); color:var(--red)'
+                                            : 'background:var(--s3); border:1px solid var(--border); color:var(--text)'">
+                                    <option value="">Escolha o tipo *</option>
                                     @foreach(\App\Models\Task::$types as $key => $label)
                                         <option value="{{ $key }}">{{ $label }}</option>
                                     @endforeach

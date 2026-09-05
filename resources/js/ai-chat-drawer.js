@@ -79,6 +79,16 @@ export function registerAiChatDrawer(Alpine) {
 
         async confirmDrafts() {
             if (this.drafts.length === 0 || this.confirming) return;
+
+            // Checagem client-side antes de bater no servidor — task_type é
+            // obrigatório pra criar a tarefa de verdade (ver Task::storeRules()),
+            // mas o rascunho pode ter chegado sem ele (ver sanitizeDrafts() em
+            // ProjectTaskAssistantController) quando o pedido era vago demais.
+            if (this.drafts.some(d => !d.task_type)) {
+                this.error = 'Escolha o tipo em todos os cartões antes de confirmar (destacados sem tipo selecionado).';
+                return;
+            }
+
             this.confirming = true;
             this.error = '';
 
@@ -96,7 +106,8 @@ export function registerAiChatDrawer(Alpine) {
                 const data = await res.json();
 
                 if (!res.ok) {
-                    this.error = data.message || 'Erro ao criar tarefas.';
+                    const firstFieldError = data.errors ? Object.values(data.errors)[0]?.[0] : null;
+                    this.error = firstFieldError || data.message || 'Erro ao criar tarefas.';
                     return;
                 }
 

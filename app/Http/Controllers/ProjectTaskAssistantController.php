@@ -107,8 +107,14 @@ class ProjectTaskAssistantController extends Controller
 
     /**
      * Valida cada item de draft_tasks vindo da IA contra os enums reais de
-     * Task — item inválido é descartado com aviso, não derruba a resposta
-     * inteira. Também resolve functional_role_key (como a IA referencia um
+     * Task. Só descarta o item quando falta até o título — sem ele não dá
+     * nem pra mostrar um cartão. task_type/destination/priority inválidos ou
+     * ausentes viram null em vez de derrubar o item inteiro: a tarefa real
+     * exige task_type (ver Task::storeRules()), mas isso é cobrado na hora
+     * de CONFIRMAR (confirmDrafts() revalida), não na hora de gerar o
+     * rascunho — o cartão aparece com o campo em branco pro usuário escolher
+     * (ver resources/views/projects/_task-assistant-drawer.blade.php).
+     * Também resolve functional_role_key (como a IA referencia um
      * responsável, ver ContextResolver::functionalRolesCatalog()) pro
      * functional_role_id que o front-end precisa pra pré-selecionar o campo.
      *
@@ -120,9 +126,14 @@ class ProjectTaskAssistantController extends Controller
         $warnings = [];
 
         foreach ($rawDrafts as $i => $item) {
-            if (!is_array($item) || empty($item['title']) || empty($item['task_type']) || !array_key_exists($item['task_type'], Task::$types)) {
-                $warnings[] = 'Um item de rascunho inválido foi descartado (posição ' . ($i + 1) . ').';
+            if (!is_array($item) || empty($item['title'])) {
+                $warnings[] = 'Um item de rascunho sem título foi descartado (posição ' . ($i + 1) . ').';
                 continue;
+            }
+
+            $taskType = $item['task_type'] ?? null;
+            if (!$taskType || !array_key_exists($taskType, Task::$types)) {
+                $taskType = null;
             }
 
             $destination = $item['destination'] ?? null;
@@ -144,7 +155,7 @@ class ProjectTaskAssistantController extends Controller
             $valid[] = [
                 'title'                => (string) $item['title'],
                 'description'          => $item['description'] ?? null,
-                'task_type'            => $item['task_type'],
+                'task_type'            => $taskType,
                 'destination'          => $destination,
                 'priority'             => $priority,
                 'due_offset_days'      => $dueOffsetDays,
