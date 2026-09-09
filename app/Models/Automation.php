@@ -46,6 +46,10 @@ class Automation extends Model
         'executor_added' => 'Responsável/Executor adicionado',
         'created'        => 'Criado',
         'manual'         => 'Manual (botão)',
+        // Só faz sentido pra entidade Tarefa — disparado por
+        // TaskApprovalService::sendAviso() quando um Aviso (rodada sem
+        // entregável, sem decisão do cliente) é enviado pela Central de Aprovações.
+        'aviso_sent'     => 'Aviso enviado ao cliente (Aprovações)',
     ];
 
     public static array $actionTypes = [
@@ -232,6 +236,7 @@ class Automation extends Model
             'executor_added' => 'Responsável/Executor adicionado',
             'created'        => 'Ao ser criado',
             'manual'         => 'Acionado manualmente',
+            'aviso_sent'     => 'Aviso enviado ao cliente (Central de Aprovações)',
             default          => $this->trigger_type,
         };
 
@@ -315,7 +320,7 @@ class Automation extends Model
             return $fromMatch && $toMatch && $this->conditionsMatch($entity, $changeData);
         }
 
-        if (in_array($triggerType, ['date_reached', 'executor_added'], true)) {
+        if (in_array($triggerType, ['date_reached', 'executor_added', 'aviso_sent'], true)) {
             return $this->conditionsMatch($entity, $changeData);
         }
 

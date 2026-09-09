@@ -288,6 +288,11 @@ class TaskApprovalService
 
         // Só a situação — o status da tarefa continua "Aprovação", intocado.
         $round->task->update(['situation' => 'Em Aprovação Cliente']);
+
+        // Gatilho de Automação — a regra "aviso enviado → concluir a tarefa" é
+        // uma automação seedada (entity_type=task, trigger=aviso_sent,
+        // update_field status=concluido), pra poder ser desligada em /automacoes.
+        AutomationEngine::evaluate('aviso_sent', $round->task);
     }
 
     /**

@@ -177,9 +177,12 @@
                     <div x-show="triggerType === 'executor_added'" x-cloak>
                         <p class="text-sm" style="color:var(--muted)">Dispara quando alguém é adicionado como Responsável, Executor ou Observador de uma tarefa. Pra filtrar só um papel específico, use a condição "Papel (Responsável/Executor)" abaixo.</p>
                     </div>
+                    <div x-show="triggerType === 'aviso_sent'" x-cloak>
+                        <p class="text-sm" style="color:var(--muted)">Dispara quando um <strong>Aviso</strong> (rodada sem entregável, sem decisão do cliente) é enviado pela Central de Aprovações. Só faz sentido pra entidade <strong>Tarefa</strong>.</p>
+                    </div>
 
                     {{-- Condições extras — E/OU, aparece pros gatilhos que fazem sentido combinar com filtro --}}
-                    <div x-show="['status_changed','field_updated','date_reached','executor_added'].includes(triggerType)" x-cloak
+                    <div x-show="['status_changed','field_updated','date_reached','executor_added','aviso_sent'].includes(triggerType)" x-cloak
                          class="pt-3" style="border-top:1px solid var(--border2)">
                         <div class="flex items-center justify-between mb-2">
                             <label class="block text-xs font-semibold" style="color:var(--muted); letter-spacing:.05em">CONDIÇÕES EXTRAS (OPCIONAL)</label>
