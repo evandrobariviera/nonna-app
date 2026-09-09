@@ -32,9 +32,14 @@ class ApprovalDashboardController extends Controller
             ->filter()
             ->unique();
 
+        // nickname carregado (senão displayName() cai na razão social) e ordenação
+        // pelo mesmo texto que aparece na opção — sem isso, um cliente cujo apelido
+        // difere muito da razão social aparece sob um nome que a equipe não
+        // reconhece e numa posição alfabética inesperada ("parece que sumiu").
         $clients = Client::whereIn('id', $clientIds)
-            ->orderBy('company_name')
-            ->get(['id', 'company_name']);
+            ->get(['id', 'company_name', 'nickname'])
+            ->sortBy(fn ($c) => mb_strtolower($c->displayName()), SORT_NATURAL)
+            ->values();
 
         return view('approvals.index', compact('rounds', 'stats', 'clients', 'board'));
     }
