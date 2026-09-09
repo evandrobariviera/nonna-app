@@ -69,8 +69,15 @@ return [
             'endpoint' => env('CLOUDFLARE_R2_ENDPOINT'),
             'url' => env('CLOUDFLARE_R2_PUBLIC_URL'),
             'use_path_style_endpoint' => true,
-            'throw' => false,
+            'throw' => false, // checagem de falha é feita nos pontos de upload (ver App\Support\R2Upload)
             'report' => false,
+            // aws-sdk-php >= 3.337 manda checksum CRC32 por padrão em todo upload
+            // (PutObject + cada parte do multipart). O R2 rejeita isso em multipart
+            // — o SDK então retenta várias vezes, prendendo o worker e estourando
+            // memória em arquivo grande (>16MB vira multipart). 'when_required'
+            // só manda checksum quando a operação exige de fato.
+            'request_checksum_calculation'  => 'when_required',
+            'response_checksum_validation'  => 'when_required',
         ],
 
     ],

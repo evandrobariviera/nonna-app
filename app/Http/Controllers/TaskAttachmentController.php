@@ -29,6 +29,13 @@ class TaskAttachmentController extends Controller
             $mimeType = $file->getMimeType();
             $path = $file->store("tasks/{$task->id}", UploadOptions::forStore($mimeType, $disk));
 
+            // Disco r2 está com throw=false — store() devolve false quando o
+            // upload pro Cloudflare falha. Sem esse guard, gravava um
+            // TaskAttachment com disk_path vazio (anexo "fantasma").
+            if ($path === false) {
+                return back()->with('warning', "Falha ao enviar \"{$file->getClientOriginalName()}\" — o arquivo não foi anexado. Tente de novo; se for um arquivo grande, pode levar um tempo.");
+            }
+
             TaskAttachment::create([
                 'task_id'     => $task->id,
                 'filename'    => $file->getClientOriginalName(),
