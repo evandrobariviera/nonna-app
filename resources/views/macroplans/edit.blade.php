@@ -162,7 +162,7 @@
 
             {{-- ══ BLOCO 1: VISÃO GERAL E METAS ══ --}}
             <div x-show="block === 'bloco1'" x-cloak>
-                @php $b1 = $macroplan->bloco1 ?? []; @endphp
+                @php $b1 = $macroplan->block('bloco1'); @endphp
                 @php
                     $defaultKpis = [
                         ['label' => 'KPI Principal',     'title' => '', 'desc' => ''],
@@ -287,7 +287,7 @@
             {{-- ══ BLOCO 2: CONTEXTO E ESTRATÉGIA ══ --}}
             <div x-show="block === 'bloco2'" x-cloak>
                 @php
-                    $b2 = $macroplan->bloco2 ?? [];
+                    $b2 = $macroplan->block('bloco2');
                     $defaultPilares = [['nome' => '', 'desc' => ''], ['nome' => '', 'desc' => ''], ['nome' => '', 'desc' => '']];
                     $pilaresJson = json_encode($b2['pilares'] ?? (isset($b2['pilares_comunicacao']) ? [] : $defaultPilares));
                 @endphp
@@ -685,7 +685,7 @@
 
             {{-- ══ BLOCO 4: TAREFAS ISOLADAS E ROTINA ══ --}}
             <div x-show="block === 'bloco4'" x-cloak>
-                @php $b4 = $macroplan->bloco4 ?? []; @endphp
+                @php $b4 = $macroplan->block('bloco4'); @endphp
                 <div class="card">
                     <div class="px-5 py-4" style="border-bottom:1px solid var(--border2)">
                         <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Bloco 04</p>
@@ -744,7 +744,7 @@
 
             {{-- ══ BLOCO 5: INFRAESTRUTURA E ACESSOS ══ --}}
             <div x-show="block === 'bloco5'" x-cloak>
-                @php $b5 = $macroplan->bloco5 ?? []; @endphp
+                @php $b5 = $macroplan->block('bloco5'); @endphp
                 <div class="card">
                     <div class="px-5 py-4" style="border-bottom:1px solid var(--border2)">
                         <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Bloco 05</p>

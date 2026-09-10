@@ -662,10 +662,13 @@ class AutomationJob implements ShouldQueue
                 'period_end'      => $periodEnd,
                 'status'          => 'em_planejamento',
                 'disciplines'     => $this->collectPlanDisciplines($plano),
-                'bloco1'          => $plano['bloco1'] ?? null,
-                'bloco2'          => $plano['bloco2'] ?? null,
-                'bloco4'          => $plano['bloco4'] ?? null,
-                'bloco5'          => $plano['bloco5'] ?? null,
+                // A IA às vezes devolve campo de texto (ex: bloco5.pendencias) como
+                // lista — flattenBlockText junta em linhas, senão a tela de edição
+                // do planejamento quebra (htmlspecialchars num array).
+                'bloco1'          => MacroPlan::flattenBlockText($plano['bloco1'] ?? null) ?: null,
+                'bloco2'          => MacroPlan::flattenBlockText($plano['bloco2'] ?? null) ?: null,
+                'bloco4'          => MacroPlan::flattenBlockText($plano['bloco4'] ?? null) ?: null,
+                'bloco5'          => MacroPlan::flattenBlockText($plano['bloco5'] ?? null) ?: null,
             ]);
 
             foreach (array_values($plano['projetos'] ?? []) as $i => $proj) {

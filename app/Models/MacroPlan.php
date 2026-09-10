@@ -76,6 +76,39 @@ class MacroPlan extends Model
         'bloco5' => ['num' => '05', 'label' => 'Checklist de Infraestrutura'],
     ];
 
+    /**
+     * Normaliza um bloco (bloco1/2/4/5) pra exibição/edição: campos que a UI
+     * trata como texto às vezes chegam como lista (a IA do finalize_macro_meeting
+     * devolve "pendências" como array de strings) — junta em linhas. Estruturas
+     * legítimas com sub-objetos (kpis, pilares, linha_tempo) passam intactas.
+     */
+    public static function flattenBlockText(?array $block): array
+    {
+        if (empty($block)) {
+            return [];
+        }
+
+        return array_map(function ($value) {
+            if (!is_array($value)) {
+                return $value;
+            }
+            foreach ($value as $item) {
+                if (is_array($item)) {
+                    return $value; // lista de objetos (kpis/pilares/linha_tempo) — não mexe
+                }
+            }
+            if (array_is_list($value)) {
+                return implode("\n", array_map(fn ($v) => (string) $v, $value));
+            }
+            return implode("\n", array_map(fn ($k, $v) => "{$k}: {$v}", array_keys($value), array_values($value)));
+        }, $block);
+    }
+
+    public function block(string $name): array
+    {
+        return static::flattenBlockText($this->{$name} ?? []);
+    }
+
     public function statusLabel(): string
     {
         return self::$statuses[$this->status]['label'] ?? $this->status;
