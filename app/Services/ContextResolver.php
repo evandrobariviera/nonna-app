@@ -13,6 +13,7 @@ use App\Models\Meeting;
 use App\Models\MacroPlan;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ContextResolver
 {
@@ -80,6 +81,7 @@ class ContextResolver
             'proposal_url'          => $opportunity->proposal_url ?? '',
             'services_interest'     => collect($opportunity->services_interest ?? [])
                 ->map(fn ($s) => \App\Models\Client::$services[$s] ?? $s)->implode(', '),
+            'opportunity_notes'     => $opportunity->notes ? Str::limit($opportunity->notes, 240) : 'sem observações registradas',
         ];
     }
 
