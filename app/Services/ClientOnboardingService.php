@@ -234,7 +234,7 @@ class ClientOnboardingService
 
     private function notifyFinance(Client $client, Task $ticket): void
     {
-        $users = $this->financeUsers($client);
+        $users = \App\Models\User::all();
         if ($users->isEmpty()) {
             return;
         }

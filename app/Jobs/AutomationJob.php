@@ -972,6 +972,12 @@ class AutomationJob implements ShouldQueue
             return $entity instanceof Meeting ? $entity->participants : collect();
         }
 
+        if ($to === 'all' && !$entity instanceof Task) {
+            // Pra entidades sem executor/responsável/observador (Oportunidade,
+            // Projeto, Campanha), "Todos" é literal: todo mundo do time.
+            return User::all();
+        }
+
         if (!$entity instanceof Task) {
             // Executor/criador/envolvidos só existem pra Tarefa hoje — outras
             // entidades (Projeto/Campanha) só suportam notificação por setor.
