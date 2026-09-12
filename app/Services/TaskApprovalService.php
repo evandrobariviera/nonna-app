@@ -164,6 +164,8 @@ class TaskApprovalService
             $this->dispatchWebhook($round, $token, $token->contact);
         }
 
+        $this->notifyRequester($round, 'O material está em aprovação com o cliente');
+
         $round->update(['sent_at' => now()]);
 
         // Só a situação — o status da tarefa continua "Aprovação", intocado.
@@ -283,6 +285,8 @@ class TaskApprovalService
 
             $this->dispatchWebhook($round, $token, $clientContact->contact, 'aviso_tarefa', ['mensagem' => $message]);
         }
+
+        $this->notifyRequester($round, 'A equipe enviou um retorno sobre a demanda', $message);
 
         $round->update(['sent_at' => now(), 'status' => 'approved', 'resolved_at' => now()]);
 
@@ -457,6 +461,8 @@ class TaskApprovalService
         foreach ($round->tokens->where('will_notify', true) as $token) {
             $this->dispatchWebhook($round, $token, $token->contact, 'aprovacao_concluida');
         }
+
+        $this->notifyRequester($round, 'O cliente aprovou o material — já pode seguir pra publicação/finalização');
     }
 
     private function dispatchWebhook(TaskApprovalRound $round, TaskApprovalToken $approvalToken, Contact $contact, string $trigger = 'aprovacao', array $extraVariables = []): void
@@ -479,5 +485,37 @@ class TaskApprovalService
         }
 
         $approvalToken->update(['notified_at' => now()]);
+    }
+
+    /**
+     * Aviso informativo pro solicitante externo do ticket (requester_name/
+     * requester_whatsapp, texto livre digitado na criação — nem sempre é um
+     * Contact do cliente, às vezes é um terceiro pedindo algo em nome dele).
+     * Template próprio ("solicitante_aviso", editável em Mensagens Padrão) —
+     * não reaproveita o texto de "aprovacao" porque aquele pede uma decisão e
+     * cita um link que o solicitante não tem (só WhatsApp cadastrado, sem
+     * Contact/token: é um FYI, não conta pra unanimidade nem dá acesso à
+     * decisão).
+     */
+    private function notifyRequester(TaskApprovalRound $round, string $etapa, ?string $mensagem = null): void
+    {
+        $task = $round->task;
+
+        if (!$task->requester_whatsapp || !$task->client) {
+            return;
+        }
+
+        $requester = new Contact([
+            'name'     => $task->requester_name ?: 'Solicitante',
+            'whatsapp' => $task->requester_whatsapp,
+        ]);
+
+        $variables = [
+            'tarefa'   => $task->title,
+            'etapa'    => $etapa,
+            'mensagem' => $mensagem ?? '',
+        ];
+
+        app(NotificationDispatchService::class)->dispatch('solicitante_aviso', 'whatsapp', $task->client, $requester, $variables);
     }
 }

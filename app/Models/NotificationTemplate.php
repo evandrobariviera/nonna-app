@@ -31,6 +31,7 @@ class NotificationTemplate extends Model
         'cs_survey'              => 'Pesquisa de Satisfação (CS)',
         'offboarding'            => 'Offboarding',
         'lead_capturado'         => 'Lead Capturado (Central de Leads)',
+        'solicitante_aviso'      => 'Atualização pro Solicitante (terceiro do ticket)',
     ];
 
     public static array $channels = [
@@ -54,6 +55,7 @@ class NotificationTemplate extends Model
         'cs_survey'              => ['{{cliente}}', '{{contato}}', '{{link_pesquisa}}'],
         'offboarding'            => ['{{cliente}}', '{{contato}}', '{{data_encerramento}}'],
         'lead_capturado'         => ['{{cliente}}', '{{contato}}', '{{lead_nome}}', '{{lead_telefone}}', '{{canal}}'],
+        'solicitante_aviso'      => ['{{contato}}', '{{tarefa}}', '{{etapa}}', '{{mensagem}}'],
     ];
 
     public function organization(): BelongsTo
