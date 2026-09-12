@@ -164,7 +164,7 @@ class TaskApprovalService
             $this->dispatchWebhook($round, $token, $token->contact);
         }
 
-        $this->notifyRequester($round, 'O material está em aprovação com o cliente');
+        $this->notifyRequester($round, 'Sua demanda entrou em aprovação com o cliente.');
 
         $round->update(['sent_at' => now()]);
 
@@ -286,7 +286,7 @@ class TaskApprovalService
             $this->dispatchWebhook($round, $token, $clientContact->contact, 'aviso_tarefa', ['mensagem' => $message]);
         }
 
-        $this->notifyRequester($round, 'A equipe enviou um retorno sobre a demanda', $message);
+        $this->notifyRequester($round, 'Sua demanda foi finalizada!', $message);
 
         $round->update(['sent_at' => now(), 'status' => 'approved', 'resolved_at' => now()]);
 
@@ -462,7 +462,7 @@ class TaskApprovalService
             $this->dispatchWebhook($round, $token, $token->contact, 'aprovacao_concluida');
         }
 
-        $this->notifyRequester($round, 'O cliente aprovou o material — já pode seguir pra publicação/finalização');
+        $this->notifyRequester($round, 'Boas notícias: o cliente aprovou o material da sua demanda.');
     }
 
     private function dispatchWebhook(TaskApprovalRound $round, TaskApprovalToken $approvalToken, Contact $contact, string $trigger = 'aprovacao', array $extraVariables = []): void
