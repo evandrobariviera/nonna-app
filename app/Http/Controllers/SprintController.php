@@ -94,7 +94,7 @@ class SprintController extends Controller
         [$listTasks, $listGrouped, $listGroupBy] = $this->filteredListTasks($request, $sprint);
         $chartTasks = $this->applyCommonFilters($request, $sprint->tasks);
         [$sprintTasksByExecutor, $statusVolumeByDay] = $this->sprintLoadData($listTasks, $chartTasks, $sprint);
-        [$weekDays, $weekKanban, $weekOutsideCount, $beforeWeekDate] = $this->weekBoardData($request, $sprint);
+        [$weekDays, $weekKanban, $weekOutsideCount, $beforeWeekDate, $weekOffset] = $this->weekBoardData($request, $sprint);
 
         // Backlog disponível para adicionar (sem sprint, status backlog) — cliente
         // inativo some daqui também, mesma regra da Fila (não faz sentido puxar
@@ -128,7 +128,7 @@ class SprintController extends Controller
             'sprint', 'kanban', 'listTasks', 'listGrouped', 'listGroupBy',
             'backlogTasks', 'clients', 'users', 'projects', 'sprints', 'activeSprint',
             'sprintTasksByExecutor', 'statusVolumeByDay',
-            'weekDays', 'weekKanban', 'weekOutsideCount', 'beforeWeekDate'
+            'weekDays', 'weekKanban', 'weekOutsideCount', 'beforeWeekDate', 'weekOffset'
         ));
     }
 
@@ -292,10 +292,12 @@ class SprintController extends Controller
         return [$tasksByExecutor, $statusVolumeByDay];
     }
 
-    // Kanban semanal (aba "Semana") — colunas são "Atrasadas" (tudo com approval_date antes
-    // de segunda — precisa ser puxado pra uma data de produção) + os dias úteis (seg-sex) da
-    // semana ATUAL (não da janela da sprint). Cada card entra na coluna do dia da sua
-    // approval_date; tarefa com approval_date depois de sexta, ou sem approval_date, não
+    // Kanban semanal (aba "Semana") — colunas são "Semana anterior" (tudo com approval_date
+    // antes da segunda em exibição — precisa ser puxado pra uma data de produção) + os dias
+    // úteis (seg-sex) da semana em exibição, que por padrão é a semana ATUAL (não a janela da
+    // sprint) mas pode navegar pra frente/trás via week_offset (aba tem botões ‹ Semana
+    // anterior / Hoje / Próxima semana ›, estilo calendário). Cada card entra na coluna do dia
+    // da sua approval_date; tarefa com approval_date depois de sexta, ou sem approval_date, não
     // aparece em nenhuma coluna (só conta no aviso informativo).
     //
     // Filtro de Status é cumulativo (várias em simultâneo) e usa um valor sentinela ('todos')
@@ -306,8 +308,10 @@ class SprintController extends Controller
     // marcado".
     private function weekBoardData(Request $request, Sprint $sprint): array
     {
+        $weekOffset = (int) $request->get('week_offset', 0);
+
         $weekDays = collect();
-        $monday   = now()->startOfWeek(\Carbon\Carbon::MONDAY);
+        $monday   = now()->startOfWeek(\Carbon\Carbon::MONDAY)->addWeeks($weekOffset);
         for ($d = $monday->copy(); $d->lte($monday->copy()->addDays(4)); $d->addDay()) {
             $weekDays->push($d->copy());
         }
@@ -364,13 +368,14 @@ class SprintController extends Controller
             $weekKanban[$day->toDateString()] = $sortColumn($grouped->get($day->toDateString()) ?? collect());
         }
 
-        // Data usada no PATCH se alguém arrastar um card PRA DENTRO de "Atrasadas" (domingo
-        // anterior à segunda — só serve de âncora determinística, não é um caso de uso real).
+        // Data usada no PATCH se alguém arrastar um card PRA DENTRO de "Semana anterior"
+        // (domingo anterior à segunda em exibição — só serve de âncora determinística, não é
+        // um caso de uso real).
         $beforeWeekDate = $monday->copy()->subDay();
 
         $weekOutsideCount = $totalFiltered - $tasksInWeek->count() - $tasksBeforeWeek->count();
 
-        return [$weekDays, $weekKanban, $weekOutsideCount, $beforeWeekDate];
+        return [$weekDays, $weekKanban, $weekOutsideCount, $beforeWeekDate, $weekOffset];
     }
 
     // Fragmento da aba Semana — chamado via fetch por live-filter.js, mesmo padrão de listResults().
@@ -378,9 +383,9 @@ class SprintController extends Controller
     {
         $sprint->load(['tasks.executor', 'tasks.executors', 'tasks.client', 'tasks.project.macroPlan', 'tasks.macroPlan', 'tasks.meeting']);
 
-        [$weekDays, $weekKanban, $weekOutsideCount, $beforeWeekDate] = $this->weekBoardData($request, $sprint);
+        [$weekDays, $weekKanban, $weekOutsideCount, $beforeWeekDate, $weekOffset] = $this->weekBoardData($request, $sprint);
 
-        return view('sprints._week-results', compact('weekDays', 'weekKanban', 'weekOutsideCount', 'beforeWeekDate', 'sprint'));
+        return view('sprints._week-results', compact('weekDays', 'weekKanban', 'weekOutsideCount', 'beforeWeekDate', 'weekOffset', 'sprint'));
     }
 
     public function update(Request $request, Sprint $sprint)

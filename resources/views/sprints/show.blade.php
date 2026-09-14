@@ -356,11 +356,15 @@
             {{-- Filtro dedicado (não a partial _task-filter-bar: o select de Status dela usa
                  valor vazio pro "Todos", que conflita com o padrão sentinela usado aqui — ver
                  SprintController::weekBoardData()) --}}
-            <form method="GET" action="{{ route('sprints.show', $sprint) }}"
+            <form method="GET" action="{{ route('sprints.show', $sprint) }}" id="sprint-week-filter-form"
                   data-live-filter data-results-url="{{ route('sprints.week-results', $sprint) }}" data-target="#sprint-week-results"
                   class="card card-body mb-5 flex flex-wrap items-end gap-3">
 
                 <input type="hidden" name="view" value="week">
+                {{-- Semana em exibição (0 = atual). Os botões ‹ Semana anterior / Hoje / Próxima
+                     semana › ficam dentro do fragmento _week-results (pra continuar corretos
+                     depois de um refresh via live-filter) e só mexem neste campo. --}}
+                <input type="hidden" name="week_offset" id="week-offset-input" value="{{ $weekOffset }}">
 
                 <div class="flex-1 min-w-36">
                     <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Cliente</label>

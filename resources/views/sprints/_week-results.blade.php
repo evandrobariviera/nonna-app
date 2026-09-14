@@ -1,15 +1,18 @@
 {{-- Fragmento da aba Semana — chamado via fetch por live-filter.js conforme o usuário filtra
-     (ver SprintController::weekResults()). Kanban com uma coluna "Atrasadas" (approval_date
-     antes de segunda — precisa ser puxado pra uma data de produção) + os dias úteis (seg-sex)
-     da semana atual, preenchido pela approval_date da tarefa. Tarefa com approval_date depois
-     de sexta, ou sem approval_date, não aparece em nenhuma coluna (só entra na contagem
-     informativa abaixo). --}}
+     (ver SprintController::weekResults()). Kanban com uma coluna "Semana anterior"
+     (approval_date antes da segunda em exibição — precisa ser puxado pra uma data de
+     produção) + os dias úteis (seg-sex) da semana em exibição, preenchido pela approval_date
+     da tarefa. Tarefa com approval_date depois de sexta, ou sem approval_date, não aparece em
+     nenhuma coluna (só entra na contagem informativa abaixo). Chama-se "Semana anterior" e não
+     "Atrasadas" de propósito: se hoje é quarta, tarefa de segunda/terça também está atrasada
+     mas mora na própria coluna do dia, não aqui — esta coluna é só "antes da semana exibida". --}}
 @php
     $weekColumns = collect([[
         'key'        => 'atrasadas',
         'dataStatus' => $beforeWeekDate->toDateString(),
-        'label'      => 'Atrasadas',
+        'label'      => 'Semana anterior',
         'color'      => 'var(--red)',
+        'isToday'    => false,
         'tasks'      => $weekKanban['atrasadas'],
     ]]);
     foreach ($weekDays as $day) {
@@ -17,11 +20,35 @@
             'key'        => $day->toDateString(),
             'dataStatus' => $day->toDateString(),
             'label'      => ucfirst($day->translatedFormat('D')) . ' · ' . $day->format('d/m'),
-            'color'      => 'var(--purple)',
+            'color'      => $day->isToday() ? 'var(--green)' : 'var(--purple)',
+            'isToday'    => $day->isToday(),
             'tasks'      => $weekKanban[$day->toDateString()],
         ]);
     }
 @endphp
+
+{{-- Navegação semanal, estilo calendário — vive dentro do fragmento pra continuar correta a
+     cada refresh via live-filter (o form/input hidden #week-offset-input fica fora, em
+     show.blade.php, e não é substituído). --}}
+<div class="flex items-center gap-3 mb-4">
+    <button type="button"
+        onclick="document.getElementById('week-offset-input').value='{{ $weekOffset - 1 }}'; document.getElementById('sprint-week-filter-form')._liveFilterRefresh();"
+        class="btn btn-ghost btn-sm">‹ Semana anterior</button>
+
+    <span class="text-xs font-mono font-bold" style="color:var(--text)">
+        {{ $weekDays->first()->format('d/m') }} a {{ $weekDays->last()->format('d/m/Y') }}
+    </span>
+
+    @if($weekOffset !== 0)
+        <button type="button"
+            onclick="document.getElementById('week-offset-input').value='0'; document.getElementById('sprint-week-filter-form')._liveFilterRefresh();"
+            class="btn btn-ghost btn-sm">Hoje</button>
+    @endif
+
+    <button type="button"
+        onclick="document.getElementById('week-offset-input').value='{{ $weekOffset + 1 }}'; document.getElementById('sprint-week-filter-form')._liveFilterRefresh();"
+        class="btn btn-ghost btn-sm">Próxima semana ›</button>
+</div>
 
 @if($weekOutsideCount > 0)
     <p class="text-xs font-mono mb-4" style="color:var(--muted)">
@@ -36,12 +63,12 @@
 
     @foreach($weekColumns as $col)
         @php $dayKey = $col['key']; $colTasks = $col['tasks']; @endphp
-        <div class="flex flex-col gap-2 flex-shrink-0" style="width:270px"
+        <div class="flex flex-col gap-2 flex-shrink-0" style="width:270px{{ $col['isToday'] ? '; padding:6px; border-radius:10px; border:2px solid var(--green); background:rgba(52,211,153,.05)' : '' }}"
              data-kanban-column data-status="{{ $col['dataStatus'] }}">
             <div class="flex items-center justify-between px-3 py-2"
-                 style="background:var(--s2); border:1px solid var(--border2)">
+                 style="{{ $col['isToday'] ? 'background:rgba(52,211,153,.12); border:1px solid var(--green)' : 'background:var(--s2); border:1px solid var(--border2)' }}">
                 <span class="text-xs font-bold font-mono uppercase tracking-widest" style="color:{{ $col['color'] }}">
-                    {{ $col['label'] }}
+                    {{ $col['label'] }}{{ $col['isToday'] ? ' · Hoje' : '' }}
                 </span>
                 <span class="text-xs font-mono font-bold" data-kanban-count style="color:var(--muted)">{{ $colTasks->count() }}</span>
             </div>

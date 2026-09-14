@@ -78,7 +78,14 @@ function initLiveFilterForm(form) {
 }
 
 // Atualiza o resultado da tela (se ela tiver um form[data-live-filter]) sem recarregar nada —
-// no-op silencioso se a tela atual não usa live-filter.
+// no-op silencioso se a tela atual não usa live-filter. Só atualiza forms VISÍVEIS — uma
+// página pode ter mais de um form[data-live-filter] ao mesmo tempo (ex: abas Semana e Lista
+// da Sprint, escondidas via x-show mas presentes as duas no DOM), então pegar sempre "o
+// primeiro do documento" acertaria a aba errada quando a visível não é a primeira no HTML.
 export function refreshLiveFilter() {
-    document.querySelector('form[data-live-filter]')?._liveFilterRefresh?.();
+    document.querySelectorAll('form[data-live-filter]').forEach((form) => {
+        if (form.offsetParent !== null) {
+            form._liveFilterRefresh?.();
+        }
+    });
 }
