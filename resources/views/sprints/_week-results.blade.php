@@ -1,25 +1,47 @@
 {{-- Fragmento da aba Semana — chamado via fetch por live-filter.js conforme o usuário filtra
-     (ver SprintController::weekResults()). Kanban por dia útil (seg-sex) da semana atual,
-     preenchido pela approval_date da tarefa — quem não tem approval_date nesta janela não
-     aparece aqui (só entra na contagem informativa abaixo). --}}
+     (ver SprintController::weekResults()). Kanban com uma coluna "Atrasadas" (approval_date
+     antes de segunda — precisa ser puxado pra uma data de produção) + os dias úteis (seg-sex)
+     da semana atual, preenchido pela approval_date da tarefa. Tarefa com approval_date depois
+     de sexta, ou sem approval_date, não aparece em nenhuma coluna (só entra na contagem
+     informativa abaixo). --}}
+@php
+    $weekColumns = collect([[
+        'key'        => 'atrasadas',
+        'dataStatus' => $beforeWeekDate->toDateString(),
+        'label'      => 'Atrasadas',
+        'color'      => 'var(--red)',
+        'tasks'      => $weekKanban['atrasadas'],
+    ]]);
+    foreach ($weekDays as $day) {
+        $weekColumns->push([
+            'key'        => $day->toDateString(),
+            'dataStatus' => $day->toDateString(),
+            'label'      => ucfirst($day->translatedFormat('D')) . ' · ' . $day->format('d/m'),
+            'color'      => 'var(--purple)',
+            'tasks'      => $weekKanban[$day->toDateString()],
+        ]);
+    }
+@endphp
+
 @if($weekOutsideCount > 0)
     <p class="text-xs font-mono mb-4" style="color:var(--muted)">
         {{ $weekOutsideCount }} tarefa{{ $weekOutsideCount !== 1 ? 's' : '' }} com o filtro atual
-        sem data de aprovação dentro desta semana (não aparece{{ $weekOutsideCount !== 1 ? 'm' : '' }} no board abaixo).
+        com data de aprovação depois desta semana ou sem data definida
+        (não aparece{{ $weekOutsideCount !== 1 ? 'm' : '' }} no board abaixo).
     </p>
 @endif
 
 <div id="sprint-week-board" class="flex gap-4 overflow-x-auto pb-2" style="align-items: start;"
      data-kanban-board data-status-field="approval_date">
 
-    @foreach($weekDays as $day)
-        @php $dayKey = $day->toDateString(); $colTasks = $weekKanban[$dayKey]; @endphp
+    @foreach($weekColumns as $col)
+        @php $dayKey = $col['key']; $colTasks = $col['tasks']; @endphp
         <div class="flex flex-col gap-2 flex-shrink-0" style="width:270px"
-             data-kanban-column data-status="{{ $dayKey }}">
+             data-kanban-column data-status="{{ $col['dataStatus'] }}">
             <div class="flex items-center justify-between px-3 py-2"
                  style="background:var(--s2); border:1px solid var(--border2)">
-                <span class="text-xs font-bold font-mono uppercase tracking-widest" style="color:var(--purple)">
-                    {{ ucfirst($day->translatedFormat('D')) }} · {{ $day->format('d/m') }}
+                <span class="text-xs font-bold font-mono uppercase tracking-widest" style="color:{{ $col['color'] }}">
+                    {{ $col['label'] }}
                 </span>
                 <span class="text-xs font-mono font-bold" data-kanban-count style="color:var(--muted)">{{ $colTasks->count() }}</span>
             </div>
@@ -65,6 +87,9 @@
 
                         <div class="flex items-center gap-2 mb-2">
                             <span class="badge badge-{{ $task->statusColor() }}" style="font-size:10px">{{ $task->statusLabel() }}</span>
+                            @if($task->priority && $task->priority !== 'normal')
+                                <span class="badge badge-{{ $task->priorityColor() }}" style="font-size:10px">{{ $task->priorityLabel() }}</span>
+                            @endif
                         </div>
 
                         @if($respList->isNotEmpty() || $execList->isNotEmpty())

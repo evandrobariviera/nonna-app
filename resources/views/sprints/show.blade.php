@@ -382,16 +382,6 @@
                     </select>
                 </div>
 
-                <div class="min-w-40">
-                    <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Status</label>
-                    <select name="week_status" class="filter-select w-full">
-                        <option value="todos" {{ request('week_status') === 'todos' ? 'selected' : '' }}>Todos os status</option>
-                        @foreach(\App\Models\Task::$statuses as $key => $s)
-                            <option value="{{ $key }}" {{ request('week_status', 'backlog') === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
                 <div class="min-w-44">
                     <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Executor</label>
                     <select name="week_executor_id" class="filter-select w-full">
@@ -403,9 +393,38 @@
                 </div>
 
                 <div class="flex gap-2">
-                    @if(request()->hasAny(['week_client_id', 'week_task_type', 'week_executor_id']) || request('week_status') === 'todos')
+                    @if(request()->hasAny(['week_client_id', 'week_task_type', 'week_executor_id', 'week_status']))
                         <a href="{{ route('sprints.show', ['sprint' => $sprint, 'view' => 'week']) }}" class="btn btn-ghost btn-sm">✕ Limpar</a>
                     @endif
+                </div>
+
+                {{-- Status é cumulativo (várias marcadas ao mesmo tempo) — padrão ao abrir a
+                     aba é Backlog + Ajuste/Alteração. "Todos" é um checkbox próprio, não
+                     "nenhum marcado", pelo mesmo motivo sentinela explicado em
+                     SprintController::weekBoardData(). --}}
+                @php
+                    $weekSelectedStatuses = request()->has('week_status')
+                        ? array_filter((array) request('week_status'))
+                        : ['backlog', 'ajuste_alteracao'];
+                @endphp
+                <div class="w-full">
+                    <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Status (pode marcar mais de um)</label>
+                    <div class="flex flex-wrap gap-1.5">
+                        <label class="flex items-center gap-1.5 text-xs cursor-pointer px-2.5 py-1.5" style="border:1px solid var(--border2); border-radius:6px; color:var(--muted2)">
+                            <input type="checkbox" name="week_status[]" value="todos"
+                                {{ in_array('todos', $weekSelectedStatuses, true) ? 'checked' : '' }}
+                                style="accent-color:var(--purple)">
+                            Todos
+                        </label>
+                        @foreach(\App\Models\Task::$statuses as $key => $s)
+                            <label class="flex items-center gap-1.5 text-xs cursor-pointer px-2.5 py-1.5" style="border:1px solid var(--border2); border-radius:6px; color:var(--muted2)">
+                                <input type="checkbox" name="week_status[]" value="{{ $key }}"
+                                    {{ in_array($key, $weekSelectedStatuses, true) ? 'checked' : '' }}
+                                    style="accent-color:var(--purple)">
+                                {{ $s['label'] }}
+                            </label>
+                        @endforeach
+                    </div>
                 </div>
             </form>
 

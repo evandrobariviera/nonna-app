@@ -94,7 +94,7 @@ class SprintController extends Controller
         [$listTasks, $listGrouped, $listGroupBy] = $this->filteredListTasks($request, $sprint);
         $chartTasks = $this->applyCommonFilters($request, $sprint->tasks);
         [$sprintTasksByExecutor, $statusVolumeByDay] = $this->sprintLoadData($listTasks, $chartTasks, $sprint);
-        [$weekDays, $weekKanban, $weekOutsideCount] = $this->weekBoardData($request, $sprint);
+        [$weekDays, $weekKanban, $weekOutsideCount, $beforeWeekDate] = $this->weekBoardData($request, $sprint);
 
         // Backlog disponível para adicionar (sem sprint, status backlog) — cliente
         // inativo some daqui também, mesma regra da Fila (não faz sentido puxar
@@ -128,7 +128,7 @@ class SprintController extends Controller
             'sprint', 'kanban', 'listTasks', 'listGrouped', 'listGroupBy',
             'backlogTasks', 'clients', 'users', 'projects', 'sprints', 'activeSprint',
             'sprintTasksByExecutor', 'statusVolumeByDay',
-            'weekDays', 'weekKanban', 'weekOutsideCount'
+            'weekDays', 'weekKanban', 'weekOutsideCount', 'beforeWeekDate'
         ));
     }
 
@@ -292,14 +292,18 @@ class SprintController extends Controller
         return [$tasksByExecutor, $statusVolumeByDay];
     }
 
-    // Kanban semanal (aba "Semana") — colunas são os dias úteis (seg-sex) da semana ATUAL
-    // (não da janela da sprint), e cada card entra na coluna do dia da sua approval_date.
-    // Filtro de Status usa um valor sentinela ('todos') em vez de vazio pro "sem filtro":
-    // o live-filter.js remove campos vazios da query antes do fetch (ver
-    // resources/js/live-filter.js), então não dá pra distinguir "usuário ainda não mexeu"
-    // (deve cair no padrão Backlog) de "usuário escolheu Todos" (não deve filtrar) só pela
-    // ausência do parâmetro — com o sentinela, 'todos' chega explícito na query e sobrevive
-    // ao filtro de campos vazios.
+    // Kanban semanal (aba "Semana") — colunas são "Atrasadas" (tudo com approval_date antes
+    // de segunda — precisa ser puxado pra uma data de produção) + os dias úteis (seg-sex) da
+    // semana ATUAL (não da janela da sprint). Cada card entra na coluna do dia da sua
+    // approval_date; tarefa com approval_date depois de sexta, ou sem approval_date, não
+    // aparece em nenhuma coluna (só conta no aviso informativo).
+    //
+    // Filtro de Status é cumulativo (várias em simultâneo) e usa um valor sentinela ('todos')
+    // pro "sem filtro": o live-filter.js remove campos vazios/checkboxes desmarcados da query
+    // antes do fetch (ver resources/js/live-filter.js), então não dá pra distinguir "usuário
+    // ainda não mexeu" (deve cair no padrão Backlog + Ajuste/Alteração) de "usuário desmarcou
+    // tudo" só pela ausência do parâmetro — daí "Todos" ser um checkbox próprio, não "nenhum
+    // marcado".
     private function weekBoardData(Request $request, Sprint $sprint): array
     {
         $weekDays = collect();
@@ -310,9 +314,11 @@ class SprintController extends Controller
 
         $tasks = $sprint->tasks->filter(fn ($t) => $t->client?->status !== 'inactive');
 
-        $statusFilter = $request->get('week_status', 'backlog');
-        if ($statusFilter !== 'todos') {
-            $tasks = $tasks->where('status', $statusFilter);
+        $selectedStatuses = $request->has('week_status')
+            ? array_filter((array) $request->get('week_status'))
+            : ['backlog', 'ajuste_alteracao'];
+        if (!empty($selectedStatuses) && !in_array('todos', $selectedStatuses, true)) {
+            $tasks = $tasks->whereIn('status', $selectedStatuses);
         }
 
         if ($request->filled('week_client_id')) {
@@ -335,24 +341,36 @@ class SprintController extends Controller
         $totalFiltered = $tasks->count();
 
         $weekDateStrings = $weekDays->map->toDateString();
-        $tasksInWeek = $tasks->filter(fn ($t) => $t->approval_date && $weekDateStrings->contains($t->approval_date->toDateString()));
-        $grouped = $tasksInWeek->groupBy(fn ($t) => $t->approval_date->toDateString());
+        $tasksBeforeWeek = $tasks->filter(fn ($t) => $t->approval_date && $t->approval_date->lt($monday));
+        $tasksInWeek     = $tasks->filter(fn ($t) => $t->approval_date && $weekDateStrings->contains($t->approval_date->toDateString()));
+        $grouped         = $tasksInWeek->groupBy(fn ($t) => $t->approval_date->toDateString());
 
-        // Dentro de cada dia, mais urgente primeiro (Task::$priorities já está nessa ordem:
-        // urgente, medio, normal — tarefa sem priority cai em 'normal', mesmo default de
-        // Task::priorityLabel()/priorityColor()).
+        // Ordena cada coluna por prioridade (urgente > médio > normal — mesma ordem/default de
+        // Task::$priorities) e, dentro da mesma prioridade, Ajuste/Alteração antes de Backlog
+        // (pedido explícito); qualquer outro status entra depois, na ordem de Task::$statuses.
         $priorityOrder = array_flip(array_keys(Task::$priorities));
-
-        $weekKanban = [];
-        foreach ($weekDays as $day) {
-            $weekKanban[$day->toDateString()] = ($grouped->get($day->toDateString()) ?? collect())
-                ->sortBy(fn ($t) => $priorityOrder[$t->priority ?? 'normal'] ?? count($priorityOrder))
+        $statusOrder   = array_flip(array_unique(array_merge(['ajuste_alteracao', 'backlog'], array_keys(Task::$statuses))));
+        $sortColumn = function ($colTasks) use ($priorityOrder, $statusOrder) {
+            return $colTasks
+                ->sortBy(fn ($t) => ($priorityOrder[$t->priority ?? 'normal'] ?? count($priorityOrder)) * 100
+                    + ($statusOrder[$t->status] ?? count($statusOrder)))
                 ->values();
+        };
+
+        $weekKanban = [
+            'atrasadas' => $sortColumn($tasksBeforeWeek),
+        ];
+        foreach ($weekDays as $day) {
+            $weekKanban[$day->toDateString()] = $sortColumn($grouped->get($day->toDateString()) ?? collect());
         }
 
-        $weekOutsideCount = $totalFiltered - $tasksInWeek->count();
+        // Data usada no PATCH se alguém arrastar um card PRA DENTRO de "Atrasadas" (domingo
+        // anterior à segunda — só serve de âncora determinística, não é um caso de uso real).
+        $beforeWeekDate = $monday->copy()->subDay();
 
-        return [$weekDays, $weekKanban, $weekOutsideCount];
+        $weekOutsideCount = $totalFiltered - $tasksInWeek->count() - $tasksBeforeWeek->count();
+
+        return [$weekDays, $weekKanban, $weekOutsideCount, $beforeWeekDate];
     }
 
     // Fragmento da aba Semana — chamado via fetch por live-filter.js, mesmo padrão de listResults().
@@ -360,9 +378,9 @@ class SprintController extends Controller
     {
         $sprint->load(['tasks.executor', 'tasks.executors', 'tasks.client', 'tasks.project.macroPlan', 'tasks.macroPlan', 'tasks.meeting']);
 
-        [$weekDays, $weekKanban, $weekOutsideCount] = $this->weekBoardData($request, $sprint);
+        [$weekDays, $weekKanban, $weekOutsideCount, $beforeWeekDate] = $this->weekBoardData($request, $sprint);
 
-        return view('sprints._week-results', compact('weekDays', 'weekKanban', 'weekOutsideCount', 'sprint'));
+        return view('sprints._week-results', compact('weekDays', 'weekKanban', 'weekOutsideCount', 'beforeWeekDate', 'sprint'));
     }
 
     public function update(Request $request, Sprint $sprint)
