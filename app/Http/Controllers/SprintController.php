@@ -338,9 +338,16 @@ class SprintController extends Controller
         $tasksInWeek = $tasks->filter(fn ($t) => $t->approval_date && $weekDateStrings->contains($t->approval_date->toDateString()));
         $grouped = $tasksInWeek->groupBy(fn ($t) => $t->approval_date->toDateString());
 
+        // Dentro de cada dia, mais urgente primeiro (Task::$priorities já está nessa ordem:
+        // urgente, medio, normal — tarefa sem priority cai em 'normal', mesmo default de
+        // Task::priorityLabel()/priorityColor()).
+        $priorityOrder = array_flip(array_keys(Task::$priorities));
+
         $weekKanban = [];
         foreach ($weekDays as $day) {
-            $weekKanban[$day->toDateString()] = ($grouped->get($day->toDateString()) ?? collect())->values();
+            $weekKanban[$day->toDateString()] = ($grouped->get($day->toDateString()) ?? collect())
+                ->sortBy(fn ($t) => $priorityOrder[$t->priority ?? 'normal'] ?? count($priorityOrder))
+                ->values();
         }
 
         $weekOutsideCount = $totalFiltered - $tasksInWeek->count();
