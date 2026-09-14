@@ -583,6 +583,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('tasks.updateStatusStandalone');
     Route::patch('/tarefas/{task}/status', [TaskController::class, 'updateStatusDirect'])
         ->name('tasks.update-status-direct');
+    Route::patch('/tarefas/{task}/data-aprovacao', [TaskController::class, 'updateApprovalDateDirect'])
+        ->name('tasks.update-approval-date-direct');
     Route::patch('/tarefas/{task}/prioridade', [TaskController::class, 'updatePriority'])
         ->name('tasks.update-priority');
     Route::patch('/tarefas/{task}/situacao', [TaskController::class, 'updateSituation'])
@@ -622,6 +624,7 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::post('/sprints', [SprintController::class, 'store'])->name('sprints.store');
     Route::get('/sprints/{sprint}', [SprintController::class, 'show'])->name('sprints.show');
     Route::get('/sprints/{sprint}/lista/resultados', [SprintController::class, 'listResults'])->name('sprints.list-results');
+    Route::get('/sprints/{sprint}/semana/resultados', [SprintController::class, 'weekResults'])->name('sprints.week-results');
     Route::patch('/sprints/{sprint}', [SprintController::class, 'update'])->name('sprints.update');
     Route::post('/sprints/{sprint}/travar', [SprintController::class, 'lock'])->name('sprints.lock');
     Route::post('/sprints/{sprint}/reabrir', [SprintController::class, 'unlock'])->name('sprints.unlock');

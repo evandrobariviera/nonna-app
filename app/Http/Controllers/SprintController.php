@@ -94,6 +94,7 @@ class SprintController extends Controller
         [$listTasks, $listGrouped, $listGroupBy] = $this->filteredListTasks($request, $sprint);
         $chartTasks = $this->applyCommonFilters($request, $sprint->tasks);
         [$sprintTasksByExecutor, $statusVolumeByDay] = $this->sprintLoadData($listTasks, $chartTasks, $sprint);
+        [$weekDays, $weekKanban, $weekOutsideCount] = $this->weekBoardData($request, $sprint);
 
         // Backlog disponível para adicionar (sem sprint, status backlog) — cliente
         // inativo some daqui também, mesma regra da Fila (não faz sentido puxar
@@ -126,7 +127,8 @@ class SprintController extends Controller
         return view('sprints.show', compact(
             'sprint', 'kanban', 'listTasks', 'listGrouped', 'listGroupBy',
             'backlogTasks', 'clients', 'users', 'projects', 'sprints', 'activeSprint',
-            'sprintTasksByExecutor', 'statusVolumeByDay'
+            'sprintTasksByExecutor', 'statusVolumeByDay',
+            'weekDays', 'weekKanban', 'weekOutsideCount'
         ));
     }
 
@@ -288,6 +290,72 @@ class SprintController extends Controller
         });
 
         return [$tasksByExecutor, $statusVolumeByDay];
+    }
+
+    // Kanban semanal (aba "Semana") — colunas são os dias úteis (seg-sex) da semana ATUAL
+    // (não da janela da sprint), e cada card entra na coluna do dia da sua approval_date.
+    // Filtro de Status usa um valor sentinela ('todos') em vez de vazio pro "sem filtro":
+    // o live-filter.js remove campos vazios da query antes do fetch (ver
+    // resources/js/live-filter.js), então não dá pra distinguir "usuário ainda não mexeu"
+    // (deve cair no padrão Backlog) de "usuário escolheu Todos" (não deve filtrar) só pela
+    // ausência do parâmetro — com o sentinela, 'todos' chega explícito na query e sobrevive
+    // ao filtro de campos vazios.
+    private function weekBoardData(Request $request, Sprint $sprint): array
+    {
+        $weekDays = collect();
+        $monday   = now()->startOfWeek(\Carbon\Carbon::MONDAY);
+        for ($d = $monday->copy(); $d->lte($monday->copy()->addDays(4)); $d->addDay()) {
+            $weekDays->push($d->copy());
+        }
+
+        $tasks = $sprint->tasks->filter(fn ($t) => $t->client?->status !== 'inactive');
+
+        $statusFilter = $request->get('week_status', 'backlog');
+        if ($statusFilter !== 'todos') {
+            $tasks = $tasks->where('status', $statusFilter);
+        }
+
+        if ($request->filled('week_client_id')) {
+            $tasks = $tasks->where('client_id', $request->get('week_client_id'));
+        }
+        if ($request->filled('week_task_type')) {
+            $tasks = $tasks->where('task_type', $request->get('week_task_type'));
+        }
+        if ($request->filled('week_executor_id')) {
+            $id = $request->get('week_executor_id');
+            $tasks = $tasks->filter(function ($t) use ($id) {
+                $execList = $t->executors->filter(fn ($u) => $u->pivot->role === 'executor');
+                if ($execList->isEmpty() && $t->executor) {
+                    $execList = collect([$t->executor]);
+                }
+                return $execList->contains('id', $id);
+            });
+        }
+
+        $totalFiltered = $tasks->count();
+
+        $weekDateStrings = $weekDays->map->toDateString();
+        $tasksInWeek = $tasks->filter(fn ($t) => $t->approval_date && $weekDateStrings->contains($t->approval_date->toDateString()));
+        $grouped = $tasksInWeek->groupBy(fn ($t) => $t->approval_date->toDateString());
+
+        $weekKanban = [];
+        foreach ($weekDays as $day) {
+            $weekKanban[$day->toDateString()] = ($grouped->get($day->toDateString()) ?? collect())->values();
+        }
+
+        $weekOutsideCount = $totalFiltered - $tasksInWeek->count();
+
+        return [$weekDays, $weekKanban, $weekOutsideCount];
+    }
+
+    // Fragmento da aba Semana — chamado via fetch por live-filter.js, mesmo padrão de listResults().
+    public function weekResults(Request $request, Sprint $sprint)
+    {
+        $sprint->load(['tasks.executor', 'tasks.executors', 'tasks.client', 'tasks.project.macroPlan', 'tasks.macroPlan', 'tasks.meeting']);
+
+        [$weekDays, $weekKanban, $weekOutsideCount] = $this->weekBoardData($request, $sprint);
+
+        return view('sprints._week-results', compact('weekDays', 'weekKanban', 'weekOutsideCount', 'sprint'));
     }
 
     public function update(Request $request, Sprint $sprint)

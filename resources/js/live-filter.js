@@ -43,6 +43,9 @@ function initLiveFilterForm(form) {
                 target.innerHTML = html;
                 target.style.opacity = '';
                 history.replaceState(null, '', form.action + (qs ? '?' + qs : ''));
+                // Gancho pra scripts que precisam reagir a resultados novos (ex: reinicializar
+                // drag-and-drop do Kanban semanal da Sprint, cujos nós de DOM foram trocados).
+                target.dispatchEvent(new CustomEvent('live-filter:updated'));
             })
             .catch((error) => {
                 if (error.name !== 'AbortError') target.style.opacity = '';

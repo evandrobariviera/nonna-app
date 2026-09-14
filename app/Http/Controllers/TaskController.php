@@ -780,6 +780,21 @@ class TaskController extends Controller
         return redirect()->back()->with('success', 'Status atualizado.');
     }
 
+    // Usado pelo Kanban semanal da Sprint (aba "Semana") — arrastar o card pra outra
+    // coluna/dia PATCHa a data de aprovação direto, mesmo contrato de updateStatusDirect().
+    public function updateApprovalDateDirect(Request $request, Task $task)
+    {
+        $data = $request->validate(['approval_date' => 'required|date']);
+
+        $task->update($data);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->back()->with('success', 'Data de aprovação atualizada.');
+    }
+
     // Trava de carga (Task::wipBlockReason()) — só entra em jogo quando o status está
     // MUDANDO pra em_producao (não em toda gravação onde o status já era esse).
     private function wipBlockReasonForTransition(Task $task, string $newStatus): ?string
