@@ -162,6 +162,11 @@ class Client extends Model
         return $this->hasMany(ClientCredential::class);
     }
 
+    public function credentialRequests(): HasMany
+    {
+        return $this->hasMany(ClientCredentialRequest::class);
+    }
+
     public function links(): HasMany
     {
         return $this->hasMany(ClientLink::class);

@@ -15,6 +15,7 @@ class ClientCredential extends Model
 
     protected $fillable = [
         'client_id',
+        'credential_request_id',
         'platform',
         'platform_custom',
         'access_url',
@@ -72,5 +73,17 @@ class ClientCredential extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function credentialRequest(): BelongsTo
+    {
+        return $this->belongsTo(ClientCredentialRequest::class);
+    }
+
+    // Preenchida pelo próprio cliente via link público, em vez de cadastrada
+    // manualmente pelo time.
+    public function isFromClient(): bool
+    {
+        return ! is_null($this->credential_request_id);
     }
 }

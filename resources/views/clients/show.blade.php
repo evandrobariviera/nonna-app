@@ -396,18 +396,87 @@
         </div>
 
         {{-- TAB: SENHAS --}}
-        <div x-show="tab === 'senhas'" x-cloak x-data="{ showPasswords: {}, addForm: false, editId: null }">
+        <div x-show="tab === 'senhas'" x-cloak x-data="{ showPasswords: {}, addForm: false, requestForm: false, editId: null }">
 
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">
                     Credenciais de Acesso
                 </h3>
-                <button @click="addForm = !addForm"
-                        class="px-4 py-1.5 text-xs font-bold font-mono uppercase tracking-widest text-white"
-                        style="background: var(--purple);">
-                    + Adicionar
-                </button>
+                <div class="flex gap-2">
+                    <button @click="requestForm = !requestForm"
+                            class="px-4 py-1.5 text-xs font-bold font-mono uppercase tracking-widest btn btn-ghost btn-sm">
+                        Solicitar ao cliente
+                    </button>
+                    <button @click="addForm = !addForm"
+                            class="px-4 py-1.5 text-xs font-bold font-mono uppercase tracking-widest text-white"
+                            style="background: var(--purple);">
+                        + Adicionar
+                    </button>
+                </div>
             </div>
+
+            {{-- Solicitar por link — escolhe o(s) contato(s) que vão receber --}}
+            <div x-show="requestForm" x-cloak class="card p-5 mb-6">
+                <h4 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Solicitar senhas ao cliente</h4>
+                <p class="text-xs mb-4" style="color: var(--muted)">
+                    O contato escolhido recebe um link (WhatsApp/e-mail) pra preencher os acessos por conta própria — sem
+                    precisar de login. Ele pode voltar no mesmo link depois pra completar.
+                </p>
+                @if($client->contacts->isEmpty())
+                    <p class="text-xs" style="color: var(--muted)">Este cliente ainda não tem contatos cadastrados.</p>
+                @else
+                    <form method="POST" action="{{ route('clients.credential-requests.store', $client) }}" class="space-y-4">
+                        @csrf
+                        <div class="space-y-2">
+                            @foreach($client->contacts as $contact)
+                                <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                    <input type="checkbox" name="contact_ids[]" value="{{ $contact->id }}" class="accent-[var(--purple)]">
+                                    <span style="color: var(--text)">{{ $contact->name }}</span>
+                                    <span class="text-xs" style="color: var(--muted)">{{ $contact->email ?: 'sem e-mail cadastrado' }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        @error('contact_ids')
+                            <p class="text-xs" style="color: var(--red)">{{ $message }}</p>
+                        @enderror
+                        <div class="flex gap-3">
+                            <button type="submit" class="px-5 py-2 text-xs font-bold font-mono uppercase tracking-widest text-white" style="background: var(--purple);">
+                                Enviar link
+                            </button>
+                            <button type="button" @click="requestForm = false" class="btn btn-ghost btn-sm">Cancelar</button>
+                        </div>
+                    </form>
+                @endif
+            </div>
+
+            {{-- Solicitações ativas — pra acompanhar o preenchimento --}}
+            @php $activeRequests = $client->credentialRequests()->where('expires_at', '>', now())->with('contact')->latest()->get(); @endphp
+            @if($activeRequests->isNotEmpty())
+                <div class="space-y-2 mb-6">
+                    @foreach($activeRequests as $creq)
+                        <div class="card p-4 flex items-center justify-between gap-3 flex-wrap" x-data="{ copied: false }">
+                            <div class="text-xs">
+                                <span class="font-semibold" style="color: var(--text)">{{ $creq->contact->name }}</span>
+                                <span style="color: var(--muted)">
+                                    ·
+                                    @if($creq->submissions_count > 0)
+                                        {{ $creq->submissions_count }} credencial(is) recebida(s), última em {{ $creq->last_submitted_at->format('d/m/Y') }}
+                                    @else
+                                        aguardando preenchimento
+                                    @endif
+                                    · expira em {{ $creq->expires_at->format('d/m/Y') }}
+                                </span>
+                            </div>
+                            <button type="button"
+                                    @click="navigator.clipboard.writeText('{{ route('credential-request.show', $creq->token) }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                                    class="px-3 py-1.5 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)]">
+                                <span x-show="!copied">Copiar link</span>
+                                <span x-show="copied" x-cloak>Copiado!</span>
+                            </button>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
 
             {{-- Formulário de nova credencial --}}
             <div x-show="addForm" x-cloak class="card p-5 mb-6">
@@ -494,6 +563,9 @@
                                 <tr>
                                     <td class="font-semibold text-[var(--text)]">
                                         {{ $cred->platformLabel() }}
+                                        @if($cred->isFromClient())
+                                            <span class="badge badge-green ml-1" style="font-size:9px;" title="Enviado pelo cliente via link">cliente</span>
+                                        @endif
                                     </td>
                                     <td class="text-sm">
                                         @if($cred->access_url)
@@ -2489,6 +2561,11 @@
                                         <p class="text-xs" style="color: var(--muted)">{{ $portalContact->email }}</p>
                                     </div>
                                     <div class="flex items-center gap-3">
+                                        @if(!$portalContact->password)
+                                            <span class="badge" style="font-size:10px; background: rgba(238,121,25,.12); color: var(--orange)">
+                                                Aguardando definição de senha
+                                            </span>
+                                        @endif
                                         <a href="{{ route('portal.login') }}" target="_blank"
                                            class="text-xs font-semibold px-3 py-2 rounded-lg"
                                            style="background: rgba(100, 59, 142,.1); color: var(--purple)">
@@ -2512,7 +2589,7 @@
                 {{-- Novo acesso --}}
                 @if($availableContacts->isNotEmpty())
                     <form method="POST" action="{{ route('clients.portal-access.store', $client) }}"
-                          class="card p-5 space-y-4">
+                          class="card p-5 space-y-4" x-data="{ mode: '{{ old('password_mode', 'link') }}' }">
                         @csrf
                         <p class="text-xs font-bold uppercase tracking-wide" style="color: var(--muted)">Novo acesso</p>
                         <div>
@@ -2535,8 +2612,21 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold mb-1.5" style="color: var(--muted)">
-                                Senha inicial
+                                Senha de acesso
                             </label>
+                            <label class="flex items-start gap-2 text-sm mb-2 cursor-pointer">
+                                <input type="radio" name="password_mode" value="link" x-model="mode" class="mt-0.5 accent-[var(--purple)]">
+                                <span>
+                                    <span style="color: var(--text)">Enviar link pro cliente criar a senha</span>
+                                    <span class="block text-xs" style="color: var(--muted)">Se ele já tiver senha de outro cliente, o acesso é liberado direto, sem link.</span>
+                                </span>
+                            </label>
+                            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                <input type="radio" name="password_mode" value="manual" x-model="mode" class="accent-[var(--purple)]">
+                                <span style="color: var(--text)">Definir eu mesmo agora</span>
+                            </label>
+                        </div>
+                        <div x-show="mode === 'manual'" x-cloak>
                             <input type="text" name="password"
                                    placeholder="Mínimo 8 caracteres — deixe em branco se o contato já tem senha (de outro cliente)"
                                    class="w-full rounded-lg border px-3 py-2 text-sm font-mono"

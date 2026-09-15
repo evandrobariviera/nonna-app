@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ config('app.name', 'Nonna Agência Digital — Do posicionamento à conversão!') }}</title>
+    <link rel="icon" href="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/FAVICON-150x150.png" sizes="32x32">
+    <link rel="icon" href="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/FAVICON-300x300.png" sizes="192x192">
+    <link rel="apple-touch-icon" href="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/FAVICON-300x300.png">
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet"/>
+    @vite(['resources/css/app.css'])
+    <style>
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+        .mono { font-family:Arial,'Segoe UI',Tahoma,sans-serif; }
+    </style>
+</head>
+<body>
+
+    <header style="background:rgba(12,12,18,.95); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); height:56px; display:flex; align-items:center; padding:0 20px;">
+        <img src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png"
+             alt="Nonna" style="height:20px"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+        <span style="font-weight:800; font-size:15px; display:none">nonna</span>
+    </header>
+
+    <main style="flex:1; display:flex; align-items:center; justify-content:center; padding:40px 16px">
+        <div style="max-width:480px; width:100%; text-align:center">
+            <div style="margin-bottom:16px; display:flex; justify-content:center; color:var(--green)"><x-icon name="circle-check" size="44" /></div>
+            <h1 style="font-size:22px; font-weight:800; margin:0 0 10px">Recebido, obrigado!</h1>
+            <p style="font-size:14px; color:var(--muted); line-height:1.7; margin:0 0 24px">
+                As informações foram registradas com segurança. Se lembrar de mais alguma senha depois, pode voltar
+                neste mesmo link até {{ $credentialRequest->expires_at->format('d/m/Y') }}.
+            </p>
+            <a href="{{ route('credential-request.show', $credentialRequest->token) }}"
+               style="display:inline-block; padding:10px 20px; font-size:13px; font-weight:700; background:var(--purple); color:#fff; text-decoration:none;">
+                Enviar mais uma plataforma
+            </a>
+        </div>
+    </main>
+
+</body>
+</html>

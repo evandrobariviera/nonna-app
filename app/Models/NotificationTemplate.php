@@ -32,6 +32,8 @@ class NotificationTemplate extends Model
         'offboarding'            => 'Offboarding',
         'lead_capturado'         => 'Lead Capturado (Central de Leads)',
         'solicitante_aviso'      => 'Atualização pro Solicitante (terceiro do ticket)',
+        'credenciais_solicitadas' => 'Solicitação de Senhas/Acessos',
+        'portal_definir_senha'   => 'Portal — Cliente Cria a Própria Senha',
     ];
 
     public static array $channels = [
@@ -56,6 +58,8 @@ class NotificationTemplate extends Model
         'offboarding'            => ['{{cliente}}', '{{contato}}', '{{data_encerramento}}'],
         'lead_capturado'         => ['{{cliente}}', '{{contato}}', '{{lead_nome}}', '{{lead_telefone}}', '{{canal}}'],
         'solicitante_aviso'      => ['{{contato}}', '{{tarefa}}', '{{etapa}}', '{{mensagem}}'],
+        'credenciais_solicitadas' => ['{{cliente}}', '{{contato}}', '{{link_credenciais}}'],
+        'portal_definir_senha'   => ['{{cliente}}', '{{contato}}', '{{email}}', '{{link_definir_senha}}'],
     ];
 
     public function organization(): BelongsTo

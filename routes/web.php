@@ -16,6 +16,9 @@ use App\Http\Controllers\Portal\TaskCommentController as PortalTaskComments;
 use App\Http\Controllers\Portal\ProductionController as PortalProduction;
 use App\Http\Controllers\Portal\LeadController as PortalLeads;
 use App\Http\Controllers\Portal\Auth\AuthenticatedSessionController as PortalSession;
+use App\Http\Controllers\Portal\PortalPasswordSetupController as PortalPasswordSetup;
+use App\Http\Controllers\ClientCredentialRequestController;
+use App\Http\Controllers\CredentialRequestController;
 use App\Http\Controllers\Portal\ClientContextController as PortalClientContext;
 use App\Http\Controllers\ClientPortalAccessController;
 use App\Http\Controllers\ClientAdAccountController;
@@ -136,6 +139,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('clients.credentials.update');
     Route::delete('/clientes/{client}/credenciais/{credential}', [ClientCredentialController::class, 'destroy'])
         ->name('clients.credentials.destroy');
+    Route::post('/clientes/{client}/solicitar-senhas', [ClientCredentialRequestController::class, 'store'])
+        ->name('clients.credential-requests.store');
 
     // ── Números de Atendimento do cliente (client_integrations - uazapi/CRM) ──
     Route::post('/clientes/{client}/atendimento', [\App\Http\Controllers\ClientIntegrationController::class, 'store'])
@@ -850,6 +855,13 @@ Route::get('/aprovar/{token}', [ApprovalController::class, 'show'])
 Route::post('/aprovar/{token}', [ApprovalController::class, 'submit'])
     ->name('approval.submit');
 
+// ── Solicitação de senhas/acessos pública (sem autenticação — link tokenizado) ──
+Route::get('/credenciais/{token}', [CredentialRequestController::class, 'show'])
+    ->name('credential-request.show');
+
+Route::post('/credenciais/{token}', [CredentialRequestController::class, 'submit'])
+    ->name('credential-request.submit');
+
 // ── Perfil ──
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -866,6 +878,11 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::post('/login', [PortalSession::class, 'store'])->name('login.store');
     });
     Route::post('/logout', [PortalSession::class, 'destroy'])->middleware('portal')->name('logout');
+
+    // Auto-cadastro de senha via link tokenizado — sem autenticação, o token
+    // já identifica o Contact (ver ClientPortalAccessController::store()).
+    Route::get('/definir-senha/{token}', [PortalPasswordSetup::class, 'show'])->name('password-setup.show');
+    Route::post('/definir-senha/{token}', [PortalPasswordSetup::class, 'submit'])->name('password-setup.submit');
 });
 
 Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client'])->group(function () {

@@ -72,6 +72,22 @@ class SystemNotificationService
             'body'    => '{client_name} quer contratar o módulo "{module_label}".',
             'kind'    => 'modulo_solicitado',
         ],
+        'portal.senha_definida' => [
+            'group'   => 'Portal do Cliente',
+            'label'   => 'Cliente criou a própria senha do Portal',
+            'context' => 'client',
+            'title'   => 'Senha definida — {client_name}',
+            'body'    => '{contact_name} criou a senha e já pode acessar o Portal.',
+            'kind'    => 'portal_senha_definida',
+        ],
+        'credentials.recebidas' => [
+            'group'   => 'Onboarding',
+            'label'   => 'Cliente enviou senhas/acessos pelo link',
+            'context' => 'client',
+            'title'   => 'Senhas recebidas — {client_name}',
+            'body'    => '{contact_name} enviou credenciais de acesso — confira na aba Senhas.',
+            'kind'    => 'credentials_recebidas',
+        ],
     ];
 
     /**

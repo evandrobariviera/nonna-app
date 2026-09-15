@@ -6,9 +6,11 @@ use App\Models\Client;
 use App\Models\ClientContact;
 use App\Models\Contact;
 use App\Models\NotificationTemplate;
+use App\Models\PortalPasswordSetupToken;
 use App\Services\NotificationDispatchService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -27,11 +29,16 @@ class ClientPortalAccessController extends Controller
                 'required', 'uuid',
                 Rule::exists('client_contacts', 'contact_id')->where('client_id', $client->id),
             ],
-            // Só obrigatório no primeiro acesso do contato (ver checagem abaixo) — se
-            // ele já loga em outro cliente, conceder acesso aqui é só ligar o vínculo,
-            // não precisa (nem deve) resetar a senha que ele já usa.
+            // 'link' (padrão) manda o contato criar a própria senha; 'manual' mantém
+            // o time digitando a senha na hora, como sempre funcionou.
+            'password_mode' => ['nullable', 'in:link,manual'],
+            // Só obrigatório no primeiro acesso do contato E modo manual — se ele já
+            // loga em outro cliente, conceder acesso aqui é só ligar o vínculo, não
+            // precisa (nem deve) resetar a senha que ele já usa.
             'password' => ['nullable', 'string', 'min:8'],
         ]);
+
+        $passwordMode = $data['password_mode'] ?? 'link';
 
         $contact = Contact::findOrFail($data['contact_id']);
 
@@ -39,7 +46,7 @@ class ClientPortalAccessController extends Controller
             return back()->withErrors(['contact_id' => 'Este contato não tem e-mail cadastrado — adicione um e-mail antes de habilitar o acesso.']);
         }
 
-        if (!$contact->password && !$data['password']) {
+        if ($passwordMode === 'manual' && !$contact->password && !$data['password']) {
             return back()->withErrors(['password' => 'Este contato ainda não tem senha de acesso — defina uma para o primeiro acesso ao Portal.']);
         }
 
@@ -57,13 +64,35 @@ class ClientPortalAccessController extends Controller
             return back()->withErrors(['contact_id' => 'Já existe outro contato cadastrado com este e-mail e acesso ao Portal — provavelmente a mesma pessoa duplicada. Vincule o contato já existente a este cliente em vez de habilitar este.']);
         }
 
-        if ($data['password']) {
-            $contact->update(['password' => $data['password']]);
-        }
-
         ClientContact::where('client_id', $client->id)
             ->where('contact_id', $contact->id)
             ->update(['portal_access_enabled' => true]);
+
+        // Modo "link" e o contato ainda não tem senha nenhuma (nem foi digitada
+        // agora): em vez do time definir a senha do cliente, manda um link pro
+        // próprio contato criar — ninguém da agência fica sabendo a senha dele.
+        if ($passwordMode === 'link' && !$contact->password && !$data['password']) {
+            $setupToken = PortalPasswordSetupToken::create([
+                'client_id'    => $client->id,
+                'contact_id'   => $contact->id,
+                'token'        => (string) Str::uuid(),
+                'requested_by' => Auth::id(),
+                'expires_at'   => now()->addDays(7),
+            ]);
+
+            foreach (array_keys(NotificationTemplate::$channels) as $channel) {
+                $this->notifications->dispatch('portal_definir_senha', $channel, $client, $contact, [
+                    'email'              => $contact->email,
+                    'link_definir_senha' => route('portal.password-setup.show', $setupToken->token),
+                ]);
+            }
+
+            return back()->with('success', 'Acesso habilitado — enviamos um link pro contato criar a própria senha.');
+        }
+
+        if ($data['password']) {
+            $contact->update(['password' => $data['password']]);
+        }
 
         // Avisa o contato com e-mail/senha de acesso — dispara direto (não via
         // send()/assinatura, igual TaskApprovalService) porque é o próprio ato de
