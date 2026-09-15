@@ -113,7 +113,7 @@
             // Campo de texto/data — clica, edita, sai do campo (blur) já salva via PATCH,
             // sem reload. Usado pra Título, as 3 datas, Legenda e campos de Solicitante.
             // Registro global agora fica em resources/js/inline-field.js (reaproveitado
-            // também em Fila/Sprint via <x-inline-date-cell>).
+            // também em Fila/Sprint via o componente inline-date-cell).
 
             // <select> que salva sozinho ao trocar — sem form, sem reload. `field` usa o
             // endpoint genérico (tasks.update-field, campo simples sem regra própria);
