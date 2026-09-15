@@ -19,6 +19,7 @@ use App\Http\Controllers\Portal\Auth\AuthenticatedSessionController as PortalSes
 use App\Http\Controllers\Portal\PortalPasswordSetupController as PortalPasswordSetup;
 use App\Http\Controllers\ClientCredentialRequestController;
 use App\Http\Controllers\CredentialRequestController;
+use App\Http\Controllers\ClientModuleController;
 use App\Http\Controllers\Portal\ClientContextController as PortalClientContext;
 use App\Http\Controllers\ClientPortalAccessController;
 use App\Http\Controllers\ClientAdAccountController;
@@ -141,6 +142,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('clients.credentials.destroy');
     Route::post('/clientes/{client}/solicitar-senhas', [ClientCredentialRequestController::class, 'store'])
         ->name('clients.credential-requests.store');
+
+    // ── Módulos vendáveis do Portal (ex: Central de Leads) ──
+    Route::patch('/clientes/{client}/modulos/{moduleKey}/ativar', [ClientModuleController::class, 'enable'])
+        ->name('clients.modules.enable');
+    Route::patch('/clientes/{client}/modulos/{moduleKey}/desativar', [ClientModuleController::class, 'disable'])
+        ->name('clients.modules.disable');
 
     // ── Números de Atendimento do cliente (client_integrations - uazapi/CRM) ──
     Route::post('/clientes/{client}/atendimento', [\App\Http\Controllers\ClientIntegrationController::class, 'store'])
