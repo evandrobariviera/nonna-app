@@ -287,12 +287,9 @@
                                     @endif
 
                                     {{-- Data --}}
-                                    @if($task->due_date)
-                                        <p class="text-xs font-mono mb-2"
-                                           style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">
-                                            {{ $task->due_date->format('d/m') }}
-                                        </p>
-                                    @endif
+                                    <div class="mb-2">
+                                        <x-inline-date-cell :task="$task" field="due_date" :overdue="$task->isOverdue()" />
+                                    </div>
 
                                     {{-- Mover status + remover da sprint --}}
                                     <div class="flex items-center gap-1.5 pt-2 relative" style="border-top:1px solid var(--border2)" @click.stop>

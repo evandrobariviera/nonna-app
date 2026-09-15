@@ -7,6 +7,8 @@ export function registerTaskBulk() {
         bulkSituation: '',
         bulkProject: '',
         bulkSprint: '',
+        bulkDateField: '',
+        bulkDateValue: '',
         applying: false,
 
         // originEl = o próprio checkbox "selecionar todos" que disparou o clique — escopar

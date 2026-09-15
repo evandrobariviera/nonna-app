@@ -125,29 +125,14 @@
 
     {{-- Data de Aprovação (ou prazo como fallback) --}}
     <td style="width:100px">
-        @if($task->approval_date)
-            <span class="text-xs" style="color:var(--muted2); font-family:Arial,'Segoe UI',Tahoma,sans-serif">
-                {{ $task->approval_date->format('d/m/Y') }}
-            </span>
-        @elseif($task->due_date)
-            <span class="text-xs {{ $task->isOverdue() ? 'font-semibold' : '' }}"
-                  style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted2)' }}; font-family:Arial,'Segoe UI',Tahoma,sans-serif">
-                {{ $task->due_date->format('d/m/Y') }}
-            </span>
-        @else
-            <span class="text-xs" style="color:var(--muted)">—</span>
-        @endif
+        <x-inline-date-cell :task="$task"
+            :field="$task->approval_date ? 'approval_date' : 'due_date'"
+            :overdue="!$task->approval_date && $task->isOverdue()" />
     </td>
 
     {{-- Data de Publicação --}}
     <td style="width:100px">
-        @if($task->publish_date)
-            <span class="text-xs" style="color:var(--muted2); font-family:Arial,'Segoe UI',Tahoma,sans-serif">
-                {{ $task->publish_date->format('d/m/Y') }}
-            </span>
-        @else
-            <span class="text-xs" style="color:var(--muted)">—</span>
-        @endif
+        <x-inline-date-cell :task="$task" field="publish_date" />
     </td>
 
     {{-- Destino --}}

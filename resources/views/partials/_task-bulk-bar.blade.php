@@ -53,6 +53,15 @@
     </select>
     <button @click="apply('project', { project_id: bulkProject })" :disabled="!bulkProject || applying" class="btn btn-ghost btn-xs">Vincular</button>
 
+    <select x-model="bulkDateField" class="filter-select">
+        <option value="">Data…</option>
+        <option value="due_date">Vencimento</option>
+        <option value="approval_date">Aprovação</option>
+        <option value="publish_date">Publicação</option>
+    </select>
+    <input type="date" x-model="bulkDateValue" class="filter-select" style="max-width:150px" title="Deixe em branco pra remover a data das tarefas selecionadas">
+    <button @click="apply('date', { date_field: bulkDateField, date_value: bulkDateValue || null })" :disabled="!bulkDateField || applying" class="btn btn-ghost btn-xs">Aplicar</button>
+
     @isset($sprints)
         <select x-model="bulkSprint" class="filter-select">
             <option value="">Enviar p/ sprint…</option>

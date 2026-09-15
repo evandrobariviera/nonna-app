@@ -849,13 +849,15 @@ class TaskController extends Controller
         $data = $request->validate([
             'task_ids'    => 'required|array|min:1',
             'task_ids.*'  => 'uuid|exists:pgsql.tasks,id',
-            'action'      => 'required|in:status,executor,responsavel,situation,project,sprint,delete',
+            'action'      => 'required|in:status,executor,responsavel,situation,project,sprint,date,delete',
             'status'      => 'required_if:action,status|in:' . implode(',', array_keys(Task::$statuses)),
             'executor_id'     => 'nullable|exists:pgsql.users,id',
             'responsavel_id'  => 'nullable|exists:pgsql.users,id',
             'situation'   => 'nullable|in:' . implode(',', $situationKeys),
             'project_id'  => 'required_if:action,project|uuid|exists:pgsql.projects,id',
             'sprint_id'   => 'required_if:action,sprint|uuid|exists:pgsql.sprints,id',
+            'date_field'  => 'required_if:action,date|in:due_date,approval_date,publish_date',
+            'date_value'  => 'nullable|date',
         ]);
 
         $tasks = Task::whereIn('id', $data['task_ids'])->get();
@@ -981,6 +983,13 @@ class TaskController extends Controller
                     }
                     $task->update(['sprint_id' => $sprint->id]);
                 }
+                break;
+
+            case 'date':
+                // Sem regra de negócio pra checar (ao contrário de status/sprint) e datas
+                // não entram no TaskObserver hoje (ver TRACKED_ENUM_FIELDS) — igual ao PATCH
+                // pontual de tasks.update-field, não precisa de log de atividade nem loop.
+                Task::whereIn('id', $data['task_ids'])->update([$data['date_field'] => $data['date_value'] ?? null]);
                 break;
 
             case 'delete':
