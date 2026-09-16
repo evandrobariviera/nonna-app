@@ -1,0 +1,175 @@
+{
+  "name": "Insert Lead (Facebook Lead Ads) - Central de Leads v1",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1000000-0000-0000-0000-000000000001",
+              "name": "page_id",
+              "value": "869511879732680",
+              "type": "string"
+            },
+            {
+              "id": "a1000000-0000-0000-0000-000000000002",
+              "name": "form_id",
+              "value": "SUBSTITUIR_FORM_ID_NONNA",
+              "type": "string"
+            },
+            {
+              "id": "a1000000-0000-0000-0000-000000000003",
+              "name": "client_label",
+              "value": "Formulário {Nonna}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -64,
+        -160
+      ],
+      "id": "b1000000-0000-0000-0000-000000000001",
+      "name": "Identificar: Nonna",
+      "notes": "Conecte aqui a saída do SEU node real \"Facebook Lead Ads Trigger\" (Page 869511879732680 / Formulário {Nonna}) — o mesmo que você já configurou pela UI do n8n. Este node só carimba page_id/form_id/client_label (mantendo os campos do trigger, como field_data/created_time/id) antes de seguir pro processamento compartilhado."
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a2000000-0000-0000-0000-000000000001",
+              "name": "page_id",
+              "value": "SUBSTITUIR_PAGE_ID",
+              "type": "string"
+            },
+            {
+              "id": "a2000000-0000-0000-0000-000000000002",
+              "name": "form_id",
+              "value": "SUBSTITUIR_FORM_ID",
+              "type": "string"
+            },
+            {
+              "id": "a2000000-0000-0000-0000-000000000003",
+              "name": "client_label",
+              "value": "SUBSTITUIR_NOME_DO_CLIENTE",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -64,
+        16
+      ],
+      "id": "b2000000-0000-0000-0000-000000000002",
+      "name": "Identificar: (duplicar por formulário)",
+      "notes": "Modelo pra cada NOVO formulário/página: duplique este node, plugue nele a saída de um novo \"Facebook Lead Ads Trigger\" (um trigger por formulário — limitação da própria API do Meta/n8n) e preencha page_id/form_id/client_label. Todos os \"Identificar: ...\" convergem no mesmo \"Montar payload\" abaixo — não precisa duplicar o resto do fluxo."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Recebe o output de um node \"Identificar: <cliente>\" (que carimbou page_id/form_id/\n// client_label em cima do payload original do Facebook Lead Ads Trigger — field_data,\n// id (leadgen_id), created_time, ad_id, ad_name, campaign_name, etc) e monta o payload\n// do contrato POST /api/leads/captura (LeadCaptureController), no mesmo formato do\n// workflow \"Insert Lead (Site)\", só trocando source_channel/source_identifier e a\n// extração de nome/e-mail/telefone — no Facebook isso vem em field_data: [{name, values}]\n// em vez de campos soltos no payload.\n//\n// Contrato importante: source_channel FIXO 'facebook_lead_ad' (bate com\n// LeadChannel.kind, já seedado por organização) e source_identifier no formato\n// EXATO \"page_id:form_id\" — é o que precisa estar cadastrado em\n// client_lead_sources.external_id (aba \"Fontes de Lead\" da ficha do cliente) pra o\n// lead ser identificado (201). Sem match, o endpoint responde 202 e o lead cai em\n// triagem manual mesmo assim — nunca é descartado.\n\nconst item = $input.first().json;\n\n// field_data → mapa { chave: valor } (Meta usa chaves padronizadas pras perguntas\n// \"prontas\" do formulário; perguntas customizadas vêm com a chave que o anunciante\n// deu no form, então nome/email/telefone abaixo cobrem só as mais comuns).\nconst fieldMap = {};\nfor (const f of (item.field_data || [])) {\n  fieldMap[f.name] = (f.values && f.values[0]) || null;\n}\n\nconst name = fieldMap.full_name\n  || [fieldMap.first_name, fieldMap.last_name].filter(Boolean).join(' ')\n  || null;\n\nreturn {\n  json: {\n    source_channel:    'facebook_lead_ad',\n    source_identifier: `${item.page_id}:${item.form_id}`,\n    name:              name || null,\n    email:             fieldMap.email || null,\n    phone:             fieldMap.phone_number || null,\n    form_name:         item.client_label || null,\n    landing_page_url:  null,\n    utm_source:        'facebook',\n    utm_medium:        'lead_ad',\n    utm_campaign:      item.campaign_name || null,\n    utm_content:       item.ad_name || null,\n    utm_term:          null,\n    city:              fieldMap.city || null,\n    state:             fieldMap.state || null,\n    event_id:          item.id || null,\n    received_at:       item.created_time || new Date().toISOString(),\n    raw_payload:       item,\n  },\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -72
+      ],
+      "id": "c1000000-0000-0000-0000-000000000001",
+      "name": "Montar payload (Facebook Lead Ads)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://app.nonnaagenciadigital.com.br/api/leads/captura",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        384,
+        -72
+      ],
+      "id": "d1000000-0000-0000-0000-000000000001",
+      "name": "Captura Lead (App)",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LLdGuTMUswIGGv86",
+          "name": "App Nonna"
+        }
+      },
+      "notes": "Mesma credencial \"HTTP Header Auth\" (token n8n) já usada no workflow \"Insert Lead (Site)\" — o token é por Organização, não por endpoint/canal, então não precisa criar outra. 201 = cliente identificado (bateu client_lead_sources); 202 = sem match, lead cai em triagem manual mesmo assim."
+    }
+  ],
+  "connections": {
+    "Identificar: Nonna": {
+      "main": [
+        [
+          {
+            "node": "Montar payload (Facebook Lead Ads)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identificar: (duplicar por formulário)": {
+      "main": [
+        [
+          {
+            "node": "Montar payload (Facebook Lead Ads)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar payload (Facebook Lead Ads)": {
+      "main": [
+        [
+          {
+            "node": "Captura Lead (App)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}
