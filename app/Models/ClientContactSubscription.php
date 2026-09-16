@@ -21,16 +21,21 @@ class ClientContactSubscription extends Model
         'channels' => 'array',
     ];
 
-    // Tipos de comunicação que um contato do cliente pode receber. Só
-    // "aprovacao" tem lógica de envio real hoje (TaskApprovalService) — os
-    // demais ficam com o cadastro pronto pra quando essas funcionalidades
-    // existirem.
+    // Tipos de comunicação que um contato do cliente pode receber. Hoje disparam
+    // de verdade: "chamado_aberto"/"financeiro" (NotificationDispatchService::send(),
+    // fan-out por assinatura — dependem de alguém estar assinado aqui pra
+    // receber), "aprovacao" (TaskApprovalService, via dispatch() direto — não
+    // depende de assinatura, o contato é resolvido pelo TaskApprovalToken) e
+    // "lead_capturado" (LeadCaptureService::capture(), send() — mesmo caso de
+    // chamado_aberto/financeiro). Os demais ficam com o cadastro pronto pra
+    // quando essas funcionalidades existirem.
     public static array $types = [
         'onboarding_boas_vindas' => 'Onboarding — Boas-vindas',
         'chamado_aberto'         => 'Chamado Aberto',
         'chamado_concluido'      => 'Chamado Concluído',
         'reuniao_lembrete'       => 'Lembrete de Reunião',
         'aprovacao'              => 'Aprovação de Materiais',
+        'lead_capturado'         => 'Lead Capturado (Central de Leads)',
         'financeiro'             => 'Financeiro (Notas de Anúncios)',
         'cobranca'               => 'Cobrança / Faturamento',
         'cs_survey'              => 'Pesquisa de Satisfação (CS)',
