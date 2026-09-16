@@ -53,9 +53,10 @@ class LeadCaptureService
 
             if ($isNew && $client) {
                 $this->notifications->send('lead_capturado', $client, [
-                    'lead_nome'     => $lead->name ?? '(sem nome)',
-                    'lead_telefone' => $lead->phone ?? '—',
-                    'canal'         => $channel?->kindLabel() ?? $payload['source_channel'],
+                    'lead_nome'          => $lead->name ?? '(sem nome)',
+                    'lead_telefone'      => $lead->phone ?? '—',
+                    'canal'              => $channel?->kindLabel() ?? $payload['source_channel'],
+                    'link_central_leads' => route('portal.leads.index'),
                 ]);
             }
 

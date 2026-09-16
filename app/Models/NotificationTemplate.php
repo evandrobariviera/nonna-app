@@ -56,7 +56,7 @@ class NotificationTemplate extends Model
         'cobranca'               => ['{{cliente}}', '{{contato}}', '{{valor}}', '{{vencimento}}', '{{link_fatura}}'],
         'cs_survey'              => ['{{cliente}}', '{{contato}}', '{{link_pesquisa}}'],
         'offboarding'            => ['{{cliente}}', '{{contato}}', '{{data_encerramento}}'],
-        'lead_capturado'         => ['{{cliente}}', '{{contato}}', '{{lead_nome}}', '{{lead_telefone}}', '{{canal}}'],
+        'lead_capturado'         => ['{{cliente}}', '{{contato}}', '{{lead_nome}}', '{{lead_telefone}}', '{{canal}}', '{{link_central_leads}}'],
         'solicitante_aviso'      => ['{{contato}}', '{{tarefa}}', '{{etapa}}', '{{mensagem}}'],
         'credenciais_solicitadas' => ['{{cliente}}', '{{contato}}', '{{link_credenciais}}'],
         'portal_definir_senha'   => ['{{cliente}}', '{{contato}}', '{{email}}', '{{link_definir_senha}}'],

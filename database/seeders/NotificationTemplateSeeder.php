@@ -107,11 +107,11 @@ class NotificationTemplateSeeder extends Seeder
             ],
             'lead_capturado' => [
                 'whatsapp' => [
-                    'body' => "Oi {{contato}}! Chegou um lead novo pra {{cliente}} via {{canal}}: {{lead_nome}} ({{lead_telefone}}).",
+                    'body' => "Oi {{contato}}! Chegou um lead novo pra {{cliente}} via {{canal}}: {{lead_nome}} ({{lead_telefone}}).\n\nLembrando que todos os leads capturados ficam disponíveis em tempo real na Central de Leads do nosso Portal: {{link_central_leads}}",
                 ],
                 'email' => [
                     'subject' => 'Novo lead capturado — {{cliente}}',
-                    'body'    => "Olá {{contato}},\n\nUm novo lead foi capturado para {{cliente}} via {{canal}}.\n\nNome: {{lead_nome}}\nTelefone: {{lead_telefone}}\n\nEquipe Nonna",
+                    'body'    => "Olá {{contato}},\n\nUm novo lead foi capturado para {{cliente}} via {{canal}}.\n\nNome: {{lead_nome}}\nTelefone: {{lead_telefone}}\n\nLembrando que todos os leads capturados ficam disponíveis em tempo real na Central de Leads do nosso Portal, com histórico completo:\n{{link_central_leads}}\n\nEquipe Nonna",
                 ],
             ],
         ];
