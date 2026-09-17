@@ -77,6 +77,10 @@ class SprintController extends Controller
             'tasks.meeting',
             'tasks.attachments',
             'tasks.statusTransitions',
+            // Sem isso, _fila-task-tr.blade.php (aba Lista) dispara 1 query por
+            // tarefa só pra checar sprint->isLocked() — N+1 confirmado (222 das
+            // 251 queries de uma abertura real da tela).
+            'tasks.sprint',
         ]);
 
         // Board é a mesa de produção ativa — tarefa de cliente inativo nunca aparece
@@ -136,7 +140,7 @@ class SprintController extends Controller
     // usuário filtra, sem recarregar a página inteira (Board/Planejamento ficam intocados).
     public function listResults(Request $request, Sprint $sprint)
     {
-        $sprint->load(['tasks.executor', 'tasks.executors', 'tasks.client', 'tasks.project.macroPlan', 'tasks.macroPlan', 'tasks.meeting', 'tasks.attachments', 'tasks.statusTransitions']);
+        $sprint->load(['tasks.executor', 'tasks.executors', 'tasks.client', 'tasks.project.macroPlan', 'tasks.macroPlan', 'tasks.meeting', 'tasks.attachments', 'tasks.statusTransitions', 'tasks.sprint']);
 
         [$listTasks, $listGrouped, $listGroupBy] = $this->filteredListTasks($request, $sprint);
         $chartTasks = $this->applyCommonFilters($request, $sprint->tasks);
