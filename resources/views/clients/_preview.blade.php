@@ -117,7 +117,7 @@
         {{-- TAB: BRIEFING --}}
         <div x-show="tab === 'briefing'" x-cloak>
             @if($client->briefing)
-                <div class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.75">{{ $client->briefing }}</div>
+                <x-rich-content :value="$client->briefing" class="text-sm" style="color:var(--text); line-height:1.75" />
             @else
                 <p class="text-sm" style="color:var(--muted)">Nenhum briefing registrado ainda.</p>
             @endif

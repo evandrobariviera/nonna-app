@@ -2214,7 +2214,7 @@
 
                 <div x-show="!editingBriefing">
                     @if($client->briefing)
-                        <div class="text-sm whitespace-pre-wrap" style="color:var(--text); line-height:1.75">{{ $client->briefing }}</div>
+                        <x-rich-content :value="$client->briefing" class="text-sm" style="color:var(--text); line-height:1.75" />
                     @else
                         <p class="text-sm" style="color:var(--muted)">Nenhum briefing registrado ainda.</p>
                     @endif
@@ -2222,10 +2222,8 @@
 
                 <form method="POST" action="{{ route('clients.update-briefing', $client) }}" x-show="editingBriefing" x-cloak>
                     @csrf @method('PATCH')
-                    <textarea name="briefing" rows="10"
-                        placeholder="Quem é o cliente, posicionamento, personas, concorrentes, síntese estratégica..."
-                        class="w-full px-4 py-3 text-sm focus:outline-none resize-none leading-relaxed"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">{{ $client->briefing }}</textarea>
+                    <x-rich-editor name="briefing" :value="$client->briefing" min-height="320px"
+                                   :upload-url="route('clients.editor-image.store', $client)" />
                     <button type="submit" class="mt-3 px-4 py-2 text-sm font-semibold text-white" style="background:var(--purple)">
                         Salvar Briefing
                     </button>

@@ -116,6 +116,13 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::patch('/clientes/{client}/briefing', [ClientController::class, 'updateBriefing'])
         ->name('clients.update-briefing');
 
+    // Imagem colada/arrastada no editor rico do Briefing (mesmo padrão de tarefas/ajuda).
+    Route::post('/clientes/{client}/editor-imagem', [\App\Http\Controllers\ClientEditorImageController::class, 'store'])
+        ->name('clients.editor-image.store');
+    Route::get('/clientes/{client}/editor-imagem/{filename}', [\App\Http\Controllers\ClientEditorImageController::class, 'show'])
+        ->name('clients.editor-image.show')
+        ->where('filename', '[0-9a-f-]+\.[a-zA-Z0-9]+');
+
     Route::post('/clientes/{client}/gerar-link', [ClientController::class, 'generateToken'])
         ->name('clients.generate-token');
 

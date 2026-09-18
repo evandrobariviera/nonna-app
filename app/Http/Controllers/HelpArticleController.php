@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\HelpArticle;
+use App\Support\RichTextSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -56,6 +57,7 @@ class HelpArticleController extends Controller
         ]);
 
         $organizationId = app('currentOrganization')->id;
+        $data['body'] = RichTextSanitizer::clean($data['body'] ?? '') ?: null;
 
         $article = HelpArticle::create([
             ...$data,
@@ -92,6 +94,8 @@ class HelpArticleController extends Controller
         if ($data['title'] !== $article->title) {
             $data['slug'] = HelpArticle::uniqueSlugFor($data['title'], $article->organization_id, $article->id);
         }
+
+        $data['body'] = RichTextSanitizer::clean($data['body'] ?? '') ?: null;
 
         $article->update([...$data, 'updated_by' => Auth::id()]);
 

@@ -1338,18 +1338,7 @@
                                                 <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full" style="background:var(--s3); color:var(--muted)">Interno</span>
                                             @endif
                                         </div>
-                                        @php
-                                            // Comentário antigo (anterior ao editor rico) é texto puro, sem
-                                            // tag nenhuma — converte pra <p>/<br> só na exibição, sem precisar
-                                            // de migration/backfill (mesma lógica de tiptap-editor.js:normalizeContent).
-                                            $commentHtml = $comment->body;
-                                            if (!preg_match('/<[a-z][\s\S]*>/i', $commentHtml)) {
-                                                $commentHtml = collect(preg_split('/\n\n+/', $commentHtml))
-                                                    ->map(fn ($p) => '<p>' . nl2br(e($p)) . '</p>')
-                                                    ->implode('');
-                                            }
-                                        @endphp
-                                        <div class="ProseMirror" style="color:var(--text); line-height:1.65">{!! $commentHtml !!}</div>
+                                        <x-rich-content :value="$comment->body" style="color:var(--text); line-height:1.65" />
                                         <div class="flex items-center gap-3 mt-1.5">
                                             {{-- Item de ação — vira checklist atribuído a alguém (ver
                                                  TaskChecklistItemController). Disponível em qualquer

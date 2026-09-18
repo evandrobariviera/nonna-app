@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Support\RichTextSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -225,9 +226,12 @@ class ClientController extends Controller
     // momento (não é derivado de outra tela, é a síntese que a equipe mantém).
     public function updateBriefing(Request $request, Client $client)
     {
-        $client->update(['briefing' => $request->validate([
-            'briefing' => 'nullable|string',
-        ])['briefing']]);
+        $data = $request->validate(['briefing' => 'nullable|string']);
+
+        // Vem do editor rico — passa pela mesma allowlist dos comentários, senão
+        // qualquer HTML postado direto no endpoint seria gravado e depois exibido
+        // sem escape na aba Briefing (ver App\Support\RichTextSanitizer).
+        $client->update(['briefing' => RichTextSanitizer::clean($data['briefing'] ?? '') ?: null]);
 
         return redirect()->back()->with('success', 'Briefing atualizado.');
     }

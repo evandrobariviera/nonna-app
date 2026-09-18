@@ -33,7 +33,9 @@
         .comment-item + .comment-item { border-top: 1px solid var(--border); }
         .comment-author { font-size: 12px; font-weight: 700; color: var(--text); }
         .comment-date { font-size: 10px; color: var(--muted); margin-left: 6px; }
-        .comment-body { font-size: 13px; color: var(--text); line-height: 1.6; white-space: pre-wrap; margin: 4px 0 0; }
+        {{-- Sem white-space: pre-wrap — o conteúdo agora é sempre HTML (ver <x-rich-content>),
+             e pre-wrap dobraria o espaçamento dos parágrafos. --}}
+        .comment-body { font-size: 13px; color: var(--text); line-height: 1.6; margin: 4px 0 0; }
 
         .btn-decision { flex: 1; padding: 12px 10px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; border: 2px solid var(--border2); cursor: pointer; transition: all .15s; background: transparent; color: var(--muted2); }
         .btn-decision.sel-approve  { border-color: #22c55e; background: rgba(34,197,94,.12); color: #22c55e; }
@@ -230,21 +232,10 @@
                 <div class="piece-card" style="padding:18px">
                     <span class="label-sm">Comentários</span>
                     @foreach($visibleComments as $comment)
-                        @php
-                            // Comentário antigo (anterior ao editor rico) é texto puro, sem tag
-                            // nenhuma — converte pra <p>/<br> só na exibição (mesma lógica de
-                            // tasks/show.blade.php e tiptap-editor.js:normalizeContent).
-                            $commentHtml = $comment->body;
-                            if (!preg_match('/<[a-z][\s\S]*>/i', $commentHtml)) {
-                                $commentHtml = collect(preg_split('/\n\n+/', $commentHtml))
-                                    ->map(fn ($p) => '<p>' . nl2br(e($p)) . '</p>')
-                                    ->implode('');
-                            }
-                        @endphp
                         <div class="comment-item">
                             <span class="comment-author">{{ $comment->commenter()?->name ?? '—' }}</span>
                             <span class="comment-date">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
-                            <div class="comment-body">{!! $commentHtml !!}</div>
+                            <x-rich-content :value="$comment->body" class="comment-body" />
                         </div>
                     @endforeach
                 </div>
