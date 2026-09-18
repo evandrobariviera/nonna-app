@@ -357,9 +357,20 @@
         : ($userFunctionRoles ?? []);
     $_activeVision = request()->route('role') ?? null;
 @endphp
-@if(!empty($_myRoles))
 <div class="nav-group-label" style="margin-top:8px">Visões</div>
 
+{{-- Painel de Produção é a visão geral da agência — a mesma pra todo mundo, sem
+     depender de papel funcional. Por isso fica fora do grupo "Meus Dashboards". --}}
+<a href="{{ route('production-panel.index') }}"
+   class="nav-group-trigger {{ request()->routeIs('production-panel.*') ? 'open' : '' }}"
+   style="{{ request()->routeIs('production-panel.*') ? 'color:var(--purple);' : '' }}">
+    <span class="flex items-center gap-3">
+        <x-icon name="activity" size="16" class="flex-shrink-0" />
+        Painel de Produção
+    </span>
+</a>
+
+@if(!empty($_myRoles))
 <div x-data="{ open: {{ $_activeVision ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">

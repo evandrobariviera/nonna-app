@@ -110,6 +110,9 @@ class Client extends Model
     // Resultado de completeness() guardado por instância — ver o método.
     private ?array $completenessCache = null;
 
+    // Respostas de existência trazidas em lote por primeCompleteness().
+    private ?array $completenessHints = null;
+
     public static array $paymentMethods = [
         'pix'    => 'PIX',
         'cartao' => 'Cartão',
@@ -224,11 +227,11 @@ class Client extends Model
             'Contato' => [
                 ['E-mail',             filled($this->contact_email),       true, 'geral'],
                 ['Telefone',           filled($this->contact_phone),       true, 'geral'],
-                ['Contato vinculado',  $this->contacts()->exists(),        true, 'contatos'],
+                ['Contato vinculado',  $this->temVinculo('contato', fn () => $this->contacts()->exists()), true, 'contatos'],
             ],
             'Comercial' => [
                 ['Serviços contratados', filled($this->contracted_services), true, 'geral'],
-                ['Contrato ativo',       $this->contracts()->where('status', 'ativo')->exists(), true, 'contratos'],
+                ['Contrato ativo',       $this->temVinculo('contrato', fn () => $this->contracts()->where('status', 'ativo')->exists()), true, 'contratos'],
                 ['Verba de tráfego',     filled($this->monthly_ad_budget),  $temTrafego, 'geral'],
             ],
             'Operação' => [
@@ -239,8 +242,8 @@ class Client extends Model
                 ['Briefing',           filled($this->briefing),            true, 'briefing'],
             ],
             'Mídia' => [
-                ['Conta de anúncio',   $this->adAccounts()->exists(),      $temTrafego, 'contas'],
-                ['Fonte de lead',      $this->leadSources()->exists(),     $temTrafego, 'leads'],
+                ['Conta de anúncio',   $this->temVinculo('conta_anuncio', fn () => $this->adAccounts()->exists()),  $temTrafego, 'contas'],
+                ['Fonte de lead',      $this->temVinculo('fonte_lead',    fn () => $this->leadSources()->exists()), $temTrafego, 'leads'],
             ],
         ];
 
@@ -262,12 +265,57 @@ class Client extends Model
             }
         }
 
+        $this->completenessHints = null; // já consumidos; libera memória em lista grande
+
         return $this->completenessCache = [
             'score'  => $total > 0 ? (int) round($done / $total * 100) : 100,
             'done'   => $done,
             'total'  => $total,
             'groups' => $groups,
         ];
+    }
+
+    /**
+     * Existe vínculo desse tipo? Usa a resposta já trazida em lote por
+     * primeCompleteness() quando houver; senão pergunta ao banco na hora.
+     */
+    private function temVinculo(string $chave, \Closure $consulta): bool
+    {
+        return $this->completenessHints[$chave] ?? $consulta();
+    }
+
+    /**
+     * Responde de uma vez, pra uma carteira inteira, as quatro perguntas de existência
+     * que a nota faz — em vez de quatro consultas por cliente. Sem isso, uma tela que
+     * lista os 83 clientes dispara mais de 300 consultas só pra montar as notas.
+     *
+     * @param  \Illuminate\Support\Collection<int, self>  $clients
+     */
+    public static function primeCompleteness(\Illuminate\Support\Collection $clients): void
+    {
+        $ids = $clients->pluck('id')->all();
+
+        if (! $ids) {
+            return;
+        }
+
+        $comContato = \Illuminate\Support\Facades\DB::connection('pgsql')->table('client_contacts')
+            ->whereIn('client_id', $ids)->distinct()->pluck('client_id')->flip();
+        $comContrato = Contract::whereIn('client_id', $ids)
+            ->where('status', 'ativo')->distinct()->pluck('client_id')->flip();
+        $comConta = ClientAdAccount::whereIn('client_id', $ids)
+            ->distinct()->pluck('client_id')->flip();
+        $comFonte = ClientLeadSource::whereIn('client_id', $ids)
+            ->distinct()->pluck('client_id')->flip();
+
+        foreach ($clients as $client) {
+            $client->completenessHints = [
+                'contato'       => $comContato->has($client->id),
+                'contrato'      => $comContrato->has($client->id),
+                'conta_anuncio' => $comConta->has($client->id),
+                'fonte_lead'    => $comFonte->has($client->id),
+            ];
+        }
     }
 
     /**
