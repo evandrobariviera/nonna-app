@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\Tenantable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -32,6 +33,8 @@ class Client extends Model
         'status',
         'monthly_ad_budget',
         'contracted_services',
+        'creative_lead_id',
+        'production_quota',
         // Empresa — contato
         'contact_email',
         'contact_phone',
@@ -59,6 +62,7 @@ class Client extends Model
 
     protected $casts = [
         'contracted_services'       => 'array',
+        'production_quota'          => 'array',
         'registration_completed_at' => 'datetime',
         'responsible_birthdate'     => 'date',
         'billing_day'               => 'integer',
@@ -93,6 +97,14 @@ class Client extends Model
         'email'       => 'E-mail Marketing',
         'automacao'   => 'Automação',
         'consultoria' => 'Consultoria',
+    ];
+
+    // Tipos de tarefa que fazem sentido ter cota mensal — são os entregáveis que o
+    // cliente contrata. Ficam de fora os tipos internos de operação (estratégia,
+    // reuniões, administrativo): não são "material que dá pra pedir mais".
+    // Ordem = uso real na carteira (criação e web concentram quase tudo).
+    public static array $productionQuotaTypes = [
+        'criacao', 'web', 'trafego', 'social', 'setup', 'seo', 'email',
     ];
 
     public static array $paymentMethods = [
@@ -165,6 +177,60 @@ class Client extends Model
     public function credentialRequests(): HasMany
     {
         return $this->hasMany(ClientCredentialRequest::class);
+    }
+
+    // Pessoa da Nonna que organiza e distribui as tarefas deste cliente. Diferente
+    // de responsible_name (representante legal do cliente) e de
+    // client_ad_accounts.responsible_user_id (gestor daquela conta de anúncio).
+    public function creativeLead(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creative_lead_id');
+    }
+
+    /**
+     * Cota mensal × o que já foi planejado no mês, por tipo de tarefa — responde
+     * "quanto material ainda dá pra pedir". Conta pela data de aprovação (a data que
+     * define a produção; ver Task::sprintDateCheck()), caindo pra data de criação
+     * quando não houver, senão tarefa sem data sumiria da conta.
+     *
+     * Cancelada fica de fora; concluída conta, porque já consumiu a cota do mês.
+     *
+     * @return array<int, array{type:string, label:string, quota:int, used:int, left:int}>
+     */
+    public function productionUsage(?\Carbon\Carbon $month = null): array
+    {
+        $quota = $this->production_quota ?? [];
+        if (! $quota) {
+            return [];
+        }
+
+        $month ??= now();
+
+        $usados = Task::where('client_id', $this->id)
+            ->where('status', '!=', 'cancelado')
+            ->whereRaw('date_trunc(?, COALESCE(approval_date, created_at)) = date_trunc(?, ?::date)',
+                ['month', 'month', $month->toDateString()])
+            ->selectRaw('task_type, count(*) as total')
+            ->groupBy('task_type')
+            ->pluck('total', 'task_type');
+
+        $saida = [];
+        foreach ($quota as $type => $qtd) {
+            $qtd = (int) $qtd;
+            if ($qtd <= 0) {
+                continue;
+            }
+            $used = (int) ($usados[$type] ?? 0);
+            $saida[] = [
+                'type'  => $type,
+                'label' => Task::$types[$type] ?? $type,
+                'quota' => $qtd,
+                'used'  => $used,
+                'left'  => max(0, $qtd - $used),
+            ];
+        }
+
+        return $saida;
     }
 
     public function links(): HasMany

@@ -135,6 +135,34 @@ class ClientController extends Controller
         ]);
     }
 
+    // Direção criativa + cota mensal de produção por tipo. Editado num formulário
+    // à parte (não no cadastro geral) porque é configuração de operação, mexida por
+    // quem toca a produção, não por quem cadastra o cliente.
+    public function updateProduction(Request $request, Client $client)
+    {
+        abort_if($client->organization_id !== app('currentOrganization')->id, 403);
+
+        $data = $request->validate([
+            'creative_lead_id'   => 'nullable|exists:users,id',
+            'production_quota'   => 'nullable|array',
+            'production_quota.*' => 'nullable|integer|min:0|max:999',
+        ]);
+
+        // Campo vazio ou zero = "não se aplica", não cota zero — some do jsonb pra
+        // não poluir o resumo com linhas de 0/0.
+        $quota = collect($data['production_quota'] ?? [])
+            ->filter(fn ($qtd) => (int) $qtd > 0)
+            ->map(fn ($qtd) => (int) $qtd)
+            ->all();
+
+        $client->update([
+            'creative_lead_id' => $data['creative_lead_id'] ?? null,
+            'production_quota' => $quota ?: null,
+        ]);
+
+        return redirect()->back()->with('success', 'Configuração de produção atualizada.');
+    }
+
     // Fragmento da aba Produção — recarregado por live-filter.js quando o usuário
     // troca o agrupamento ou liga as concluídas, sem recarregar a ficha inteira.
     public function production(Request $request, Client $client)

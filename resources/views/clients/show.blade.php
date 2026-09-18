@@ -305,6 +305,76 @@
                 {{-- COLUNA LATERAL --}}
                 <div class="flex flex-col gap-4">
 
+                    {{-- RESUMO: direção criativa, produção do mês, verba e serviços --}}
+                    <x-client-summary :client="$client" />
+
+                    {{-- CONFIGURAÇÃO DE PRODUÇÃO --}}
+                    <div class="card" x-data="{ editando: false }">
+                        <div class="card-header flex items-center justify-between">
+                            <h3 class="text-sm font-bold" style="color:var(--text)">Configuração de Produção</h3>
+                            <button type="button" @click="editando = !editando" class="text-xs font-semibold" style="color:var(--purple)">
+                                <span x-text="editando ? 'Cancelar' : 'Configurar'"></span>
+                            </button>
+                        </div>
+
+                        <div class="p-5" x-show="!editando">
+                            <p class="text-xs" style="color:var(--muted)">
+                                Define quem organiza o cliente e quantas tarefas de cada tipo cabem no mês —
+                                é o que alimenta o resumo acima e a visão de carga dos heads.
+                            </p>
+                        </div>
+
+                        <form method="POST" action="{{ route('clients.update-production', $client) }}"
+                              class="p-5 flex flex-col gap-4" x-show="editando" x-cloak>
+                            @csrf @method('PATCH')
+
+                            <div>
+                                <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">
+                                    Direção criativa
+                                </label>
+                                <select name="creative_lead_id"
+                                        class="w-full px-3 py-2 text-sm focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    <option value="">Ninguém definido</option>
+                                    @foreach($users as $u)
+                                        <option value="{{ $u->id }}" @selected($client->creative_lead_id == $u->id)>{{ $u->name }}</option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs mt-1" style="color:var(--muted)">
+                                    Quem organiza e distribui as tarefas deste cliente. Informativo por enquanto.
+                                </p>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">
+                                    Volume mensal por tipo
+                                </label>
+                                <p class="text-xs mb-2.5" style="color:var(--muted)">
+                                    Deixe em branco o que não se aplica. Só os tipos preenchidos aparecem no resumo.
+                                </p>
+                                <div class="flex flex-col gap-2">
+                                    @foreach(\App\Models\Client::$productionQuotaTypes as $tipo)
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-xs flex-1" style="color:var(--muted2)">
+                                                {{ \App\Models\Task::$types[$tipo] }}
+                                            </span>
+                                            <input type="number" min="0" max="999"
+                                                   name="production_quota[{{ $tipo }}]"
+                                                   value="{{ $client->production_quota[$tipo] ?? '' }}"
+                                                   placeholder="—"
+                                                   class="px-2 py-1.5 text-sm text-center focus:outline-none"
+                                                   style="width:72px; background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text)">
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <button type="submit" class="px-4 py-2 text-sm font-semibold text-white self-start" style="background:var(--purple)">
+                                Salvar configuração
+                            </button>
+                        </form>
+                    </div>
+
                     {{-- SERVIÇOS --}}
                     <div class="card">
                         <div class="card-header">

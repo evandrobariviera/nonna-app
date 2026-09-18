@@ -21,6 +21,12 @@
             </div>
         </div>
 
+        {{-- Resumo antes das abas: é o que se quer de relance ao clicar no cliente
+             de dentro de uma tarefa — quem organiza, quanto ainda cabe, o que é contratado. --}}
+        <div class="mb-3">
+            <x-client-summary :client="$client" compact />
+        </div>
+
         <div class="tab-bar">
             <button class="tab-btn" :class="{ active: tab === 'geral' }" @click="tab = 'geral'">Geral</button>
             <button class="tab-btn" :class="{ active: tab === 'producao' }" @click="tab = 'producao'">

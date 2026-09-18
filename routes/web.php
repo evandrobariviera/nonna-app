@@ -114,6 +114,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::get('/clientes/{client}/producao', [ClientController::class, 'production'])
         ->name('clients.production');
 
+    // Direção criativa + cota mensal de produção por tipo.
+    Route::patch('/clientes/{client}/config-producao', [ClientController::class, 'updateProduction'])
+        ->name('clients.update-production');
+
     Route::patch('/clientes/{client}/status', [ClientController::class, 'updateStatus'])
         ->name('clients.update-status');
 
