@@ -10,9 +10,63 @@
     $servicos  = $client->contracted_services ?? [];
     $lead      = $client->creativeLead;
     $verba     = $client->monthly_ad_budget;
+    $preench   = $client->completeness();
+
+    // Verde só quando está completo de verdade — nota alta com item faltando ainda
+    // precisa chamar atenção, senão ninguém termina de preencher.
+    $notaCor = $preench['score'] >= 100 ? 'var(--green)'
+             : ($preench['score'] >= 70 ? 'var(--orange)' : 'var(--red)');
+    $circ    = 2 * M_PI * 20; // raio 20 do anel abaixo
 @endphp
 
 <div class="card px-5 py-4 flex flex-col gap-4">
+
+    {{-- Nota de preenchimento — mesma ideia da nota de otimização do Google Ads:
+         mostra o número e, ao clicar, exatamente o que falta e onde resolver. --}}
+    <div x-data="{ abertoPreenchimento: false }">
+        <button type="button" @click="abertoPreenchimento = !abertoPreenchimento"
+                class="w-full flex items-center gap-3 text-left">
+            <svg width="48" height="48" viewBox="0 0 48 48" class="flex-shrink-0" style="transform:rotate(-90deg)">
+                <circle cx="24" cy="24" r="20" fill="none" stroke="var(--s3)" stroke-width="4"></circle>
+                <circle cx="24" cy="24" r="20" fill="none" stroke="{{ $notaCor }}" stroke-width="4"
+                        stroke-linecap="round"
+                        stroke-dasharray="{{ $circ }}"
+                        stroke-dashoffset="{{ $circ - ($circ * $preench['score'] / 100) }}"></circle>
+            </svg>
+            <div class="min-w-0 flex-1">
+                <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Cadastro preenchido</p>
+                <p class="text-lg font-bold leading-tight" style="color:{{ $notaCor }}">{{ $preench['score'] }}%</p>
+                <p class="text-xs" style="color:var(--muted)">
+                    {{ $preench['done'] }} de {{ $preench['total'] }} itens
+                    @if($preench['score'] < 100)
+                        · <span style="color:{{ $notaCor }}">ver o que falta</span>
+                    @endif
+                </p>
+            </div>
+        </button>
+
+        <div x-show="abertoPreenchimento" x-cloak class="mt-3 flex flex-col gap-2.5">
+            @foreach($preench['groups'] as $grupo => $linhas)
+                <div>
+                    <p class="text-xs font-mono uppercase tracking-widest mb-1" style="color:var(--muted)">{{ $grupo }}</p>
+                    <div class="flex flex-col gap-1">
+                        @foreach($linhas as $item)
+                            <a href="{{ route('clients.show', ['client' => $client, 'tab' => $item['tab']]) }}"
+                               class="flex items-center gap-2 text-xs"
+                               style="color:{{ $item['ok'] ? 'var(--muted)' : 'var(--text)' }}">
+                                <span style="color:{{ $item['ok'] ? 'var(--green)' : 'var(--red)' }}">
+                                    {{ $item['ok'] ? '✓' : '○' }}
+                                </span>
+                                <span style="{{ $item['ok'] ? 'text-decoration:line-through' : '' }}">{{ $item['label'] }}</span>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+    <div style="border-top:1px solid var(--border2)"></div>
 
     {{-- Direção criativa --}}
     <div class="flex items-center justify-between gap-3">

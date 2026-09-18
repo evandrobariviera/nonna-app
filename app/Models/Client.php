@@ -107,6 +107,9 @@ class Client extends Model
         'criacao', 'web', 'trafego', 'social', 'setup', 'seo', 'email',
     ];
 
+    // Resultado de completeness() guardado por instância — ver o método.
+    private ?array $completenessCache = null;
+
     public static array $paymentMethods = [
         'pix'    => 'PIX',
         'cartao' => 'Cartão',
@@ -185,6 +188,86 @@ class Client extends Model
     public function creativeLead(): BelongsTo
     {
         return $this->belongsTo(User::class, 'creative_lead_id');
+    }
+
+    /**
+     * Nota de preenchimento do cadastro (0-100), no espírito da nota de otimização do
+     * Google Ads: mostra o quanto falta e o que exatamente falta.
+     *
+     * Regra que faz a nota ser levada a sério: item que não se aplica não conta. Cliente
+     * que não contratou tráfego não perde ponto por não ter conta de anúncio — do
+     * contrário ninguém atinge 100% e a nota vira ruído. Por isso o denominador é
+     * variável, só com o que faz sentido pra aquele cliente.
+     *
+     * Cada chamada custa ~4 consultas de existência, então o resultado fica guardado na
+     * instância — a tela do cliente chama mais de uma vez e a visão geral da produção
+     * percorre a carteira inteira.
+     *
+     * @return array{score:int, done:int, total:int, groups:array}
+     */
+    public function completeness(): array
+    {
+        if ($this->completenessCache !== null) {
+            return $this->completenessCache;
+        }
+
+        $temTrafego = in_array('trafego', $this->contracted_services ?? [], true);
+
+        // [rótulo, preenchido?, aplica-se?, onde resolver (aba da ficha)]
+        $itens = [
+            'Identificação' => [
+                ['Apelido',            filled($this->nickname),            true, 'geral'],
+                ['Segmento',           filled($this->segment),             true, 'geral'],
+                ['CNPJ/CPF',           filled($this->tax_id),              true, 'geral'],
+                ['Site',               filled($this->website),             true, 'geral'],
+            ],
+            'Contato' => [
+                ['E-mail',             filled($this->contact_email),       true, 'geral'],
+                ['Telefone',           filled($this->contact_phone),       true, 'geral'],
+                ['Contato vinculado',  $this->contacts()->exists(),        true, 'contatos'],
+            ],
+            'Comercial' => [
+                ['Serviços contratados', filled($this->contracted_services), true, 'geral'],
+                ['Contrato ativo',       $this->contracts()->where('status', 'ativo')->exists(), true, 'contratos'],
+                ['Verba de tráfego',     filled($this->monthly_ad_budget),  $temTrafego, 'geral'],
+            ],
+            'Operação' => [
+                ['Direção criativa',   filled($this->creative_lead_id),    true, 'geral'],
+                ['Volume de produção', filled($this->production_quota),    true, 'geral'],
+            ],
+            'Estratégia' => [
+                ['Briefing',           filled($this->briefing),            true, 'briefing'],
+            ],
+            'Mídia' => [
+                ['Conta de anúncio',   $this->adAccounts()->exists(),      $temTrafego, 'contas'],
+                ['Fonte de lead',      $this->leadSources()->exists(),     $temTrafego, 'leads'],
+            ],
+        ];
+
+        $done = $total = 0;
+        $groups = [];
+
+        foreach ($itens as $grupo => $linhas) {
+            $lista = [];
+            foreach ($linhas as [$label, $ok, $aplica, $aba]) {
+                if (! $aplica) {
+                    continue;
+                }
+                $total++;
+                $done += $ok ? 1 : 0;
+                $lista[] = ['label' => $label, 'ok' => (bool) $ok, 'tab' => $aba];
+            }
+            if ($lista) {
+                $groups[$grupo] = $lista;
+            }
+        }
+
+        return $this->completenessCache = [
+            'score'  => $total > 0 ? (int) round($done / $total * 100) : 100,
+            'done'   => $done,
+            'total'  => $total,
+            'groups' => $groups,
+        ];
     }
 
     /**
