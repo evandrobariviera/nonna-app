@@ -23,6 +23,10 @@
 
         <div class="tab-bar">
             <button class="tab-btn" :class="{ active: tab === 'geral' }" @click="tab = 'geral'">Geral</button>
+            <button class="tab-btn" :class="{ active: tab === 'producao' }" @click="tab = 'producao'">
+                Produção
+                @if($tasks->count())<span class="tab-count">{{ $tasks->count() }}</span>@endif
+            </button>
             <button class="tab-btn" :class="{ active: tab === 'briefing' }" @click="tab = 'briefing'">Briefing</button>
             <button class="tab-btn" :class="{ active: tab === 'contatos' }" @click="tab = 'contatos'">
                 Contatos
@@ -111,6 +115,20 @@
                onmouseover="this.style.borderColor='var(--purple)'; this.style.color='var(--purple)'"
                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--muted2)'">
                 Ver página completa do cliente →
+            </a>
+        </div>
+
+        {{-- TAB: PRODUÇÃO — só o que está aberto, em cards (painel é estreito) --}}
+        <div x-show="tab === 'producao'" x-cloak>
+            <p class="text-xs mb-3" style="color:var(--muted)">
+                Tudo o que está aberto — backlog, sprint e chamados — por data de aprovação.
+            </p>
+
+            @include('clients._production-results', ['compact' => true])
+
+            <a href="{{ route('clients.show', ['client' => $client, 'tab' => 'producao']) }}"
+               class="text-xs font-semibold mt-4 inline-block" style="color:var(--purple)">
+                Ver tudo na ficha, com concluídas e ações em massa →
             </a>
         </div>
 

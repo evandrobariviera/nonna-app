@@ -110,6 +110,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::get('/clientes/{client}/preview', [ClientController::class, 'preview'])
         ->name('clients.preview');
 
+    // Fragmento da aba Produção (live-filter: agrupamento e concluídas).
+    Route::get('/clientes/{client}/producao', [ClientController::class, 'production'])
+        ->name('clients.production');
+
     Route::patch('/clientes/{client}/status', [ClientController::class, 'updateStatus'])
         ->name('clients.update-status');
 

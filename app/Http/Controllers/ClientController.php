@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\Task;
 use App\Support\RichTextSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -126,7 +127,82 @@ class ClientController extends Controller
             ->get()
             ->keyBy('contact_id');
 
-        return view('clients.show', compact('client', 'availableContacts', 'subscriptionsByContact', 'aiAgents', 'leadChannels'));
+        $production = $this->productionData(request(), $client);
+
+        return view('clients.show', [
+            ...compact('client', 'availableContacts', 'subscriptionsByContact', 'aiAgents', 'leadChannels'),
+            ...$production,
+        ]);
+    }
+
+    // Fragmento da aba Produção — recarregado por live-filter.js quando o usuário
+    // troca o agrupamento ou liga as concluídas, sem recarregar a ficha inteira.
+    public function production(Request $request, Client $client)
+    {
+        abort_if($client->organization_id !== app('currentOrganization')->id, 403);
+
+        return view('clients._production-results', [
+            ...$this->productionData($request, $client),
+            'client' => $client,
+        ]);
+    }
+
+    /**
+     * Panorama de produção do cliente: junta Fila, Sprint e Chamado numa lista só.
+     * Todos são `tasks` por baixo, mas cada tela de origem exclui as outras por
+     * desenho (Fila filtra sprint_id null, Sprint filtra a sua, Chamados filtra
+     * is_ticket) — então nenhuma delas mostra o todo de um cliente.
+     */
+    private function productionData(Request $request, Client $client): array
+    {
+        $showDone = $request->boolean('concluidas');
+        $groupBy  = $request->get('group_by', 'status');
+
+        $query = Task::where('client_id', $client->id)
+            // 'sprint' entra aqui de propósito: a linha da tarefa checa
+            // sprint->isLocked() e sem eager load vira 1 query por linha.
+            ->with(['client', 'project.macroPlan', 'macroPlan', 'meeting', 'executor', 'executors', 'sprint'])
+            // Data de aprovação é a que a produção enxerga; sem ela cai pro
+            // vencimento — senão chamado, que quase nunca tem aprovação, afundaria
+            // no fim da lista justamente por ser o mais urgente.
+            ->orderByRaw('COALESCE(approval_date, due_date) ASC NULLS LAST')
+            ->orderBy('created_at');
+
+        if (! $showDone) {
+            $query->whereNotIn('status', ['concluido', 'cancelado']);
+        }
+
+        $tasks   = $query->get();
+        $grouped = Task::groupCollection($tasks, $groupBy);
+
+        // Agrupado por status sai na ordem do fluxo de trabalho (a ordem do enum),
+        // não por contagem — a lista precisa ler como uma esteira de produção.
+        if ($groupBy === 'status') {
+            $statusOrder = array_flip(array_keys(Task::$statuses));
+            $grouped = $grouped->sortBy(fn ($group, $key) => $statusOrder[$key] ?? 999);
+        } else {
+            $grouped = $grouped->sortByDesc->count();
+        }
+
+        $doneCount = Task::where('client_id', $client->id)
+            ->whereIn('status', ['concluido', 'cancelado'])
+            ->count();
+
+        $sprints = \App\Models\Sprint::whereIn('status', ['active', 'planning'])
+            ->orderByDesc('starts_at')
+            ->get(['id', 'title', 'status']);
+
+        return [
+            'tasks'         => $tasks,
+            'grouped'       => $grouped,
+            'groupBy'       => $groupBy,
+            'showDone'      => $showDone,
+            'doneCount'     => $doneCount,
+            'sprints'       => $sprints,
+            'activeSprint'  => $sprints->firstWhere('status', 'active'),
+            'users'         => \App\Models\User::orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']),
+            'projects'      => \App\Models\Project::where('client_id', $client->id)->orderBy('title')->get(['id', 'title', 'client_id']),
+        ];
     }
 
     /**
@@ -158,7 +234,15 @@ class ClientController extends Controller
 
         $contactRoles = \App\Http\Controllers\ClientContactController::$roles;
 
-        return view('clients._preview', compact('client', 'recentMacroplans', 'activeMacroplans', 'activeCampaigns', 'contactRoles'));
+        // Canvas mostra só o que está aberto, agrupado por status — consulta rápida
+        // pra painel lateral. Quem quiser trabalhar (ação em massa, concluídas,
+        // trocar agrupamento) clica em "ver tudo" e vai pra ficha.
+        $production = $this->productionData(new Request(), $client);
+
+        return view('clients._preview', [
+            ...compact('client', 'recentMacroplans', 'activeMacroplans', 'activeCampaigns', 'contactRoles'),
+            ...$production,
+        ]);
     }
 
     public function edit(Client $client)

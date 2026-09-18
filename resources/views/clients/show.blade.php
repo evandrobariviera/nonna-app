@@ -92,6 +92,12 @@
             <button class="tab-btn" :class="{ active: tab === 'dossies' }" @click="tab = 'dossies'">
                 Dossiê de Marca
             </button>
+            <button class="tab-btn" :class="{ active: tab === 'producao' }" @click="tab = 'producao'">
+                Produção
+                @if($tasks->count())
+                    <span class="tab-count">{{ $tasks->count() }}</span>
+                @endif
+            </button>
             <button class="tab-btn" :class="{ active: tab === 'reunioes' }" @click="tab = 'reunioes'">
                 Reuniões
             </button>
@@ -2199,6 +2205,44 @@
                     @endforeach
                 </div>
             @endif
+        </div>
+
+        {{-- TAB: PRODUÇÃO — Fila + Sprint + Chamado do cliente, numa lista só --}}
+        <div x-show="tab === 'producao'" x-cloak>
+            <form method="GET" action="{{ route('clients.show', [$client, 'tab' => 'producao']) }}"
+                  data-live-filter
+                  data-results-url="{{ route('clients.production', $client) }}"
+                  data-target="#client-production-results"
+                  class="flex items-end justify-between gap-3 mb-4 flex-wrap">
+                <input type="hidden" name="tab" value="producao">
+
+                <div class="flex items-end gap-3 flex-wrap">
+                    <div>
+                        <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Agrupar por</label>
+                        <select name="group_by" class="filter-select">
+                            <option value="status" @selected($groupBy === 'status')>Status</option>
+                            <option value="executor" @selected($groupBy === 'executor')>Executor</option>
+                            <option value="responsavel" @selected($groupBy === 'responsavel')>Responsável</option>
+                            <option value="situacao" @selected($groupBy === 'situacao')>Situação</option>
+                        </select>
+                    </div>
+
+                    {{-- Concluídas atrás de um número clicável, não de um filtro escondido —
+                         o pedido era justamente "as feitas com fácil acesso". --}}
+                    <label class="flex items-center gap-2 text-sm cursor-pointer pb-2" style="color:var(--muted2)">
+                        <input type="checkbox" name="concluidas" value="1" @checked($showDone) class="accent-[var(--purple)]">
+                        <span>Incluir <b style="color:var(--text)">{{ $doneCount }}</b> concluída{{ $doneCount === 1 ? '' : 's' }}</span>
+                    </label>
+                </div>
+
+                <p class="text-xs pb-2" style="color:var(--muted)">
+                    Tudo o que este cliente tem — backlog, sprint e chamados — ordenado por data de aprovação.
+                </p>
+            </form>
+
+            <div id="client-production-results">
+                @include('clients._production-results')
+            </div>
         </div>
 
         {{-- TAB: BRIEFING --}}
