@@ -340,6 +340,9 @@
                 </div>
             </div>
 
+            {{-- Divergência entre a data de aprovação e a sprint — some sozinho quando resolve. --}}
+            <x-sprint-date-alert :task="$task" />
+
             {{-- BARRA DE STATUS: fluxo em flecha (clip-path) com os 7 status que avançam pra
                  frente, acende na cor real do status ativo. "Cancelado" fica de fora da corrente
                  de propósito — é saída/exceção, não uma estação do fluxo — e vira um botão à

@@ -259,6 +259,63 @@ class Task extends Model
         return self::$situationColors[$this->situation ?? ''] ?? '#94a3b8';
     }
 
+    /**
+     * Confere se a data de aprovação combina com a sprint em que a tarefa está —
+     * é a data de aprovação que define a qual quinzena o trabalho pertence.
+     *
+     * Devolve null quando está tudo certo. Quando não está, o tipo importa mais que
+     * o fato: medido na base, 39 das 105 divergências eram tarefa ARRASTADA de sprint
+     * antiga (uma com data de maio na sprint de setembro). Nessas, sugerir "mover pra
+     * sprint da data" mandaria a tarefa pro passado — o que está velho é a data, não
+     * a sprint. Por isso cada caso tem uma sugestão diferente, e nenhum bloqueia.
+     *
+     * @return array{kind:string, sprint:?Sprint, current:?Sprint}|null
+     *   kind: 'mover'      → data caiu em sprint posterior; faz sentido mover a tarefa
+     *         'data_velha' → data caiu em sprint anterior; provável atraso, revisar a data
+     *         'sem_sprint' → nenhuma sprint cobre a data (calendário ainda não existe)
+     *         'orfa'       → tarefa fora de sprint cuja data já cai numa sprint existente
+     */
+    /** Calendário de sprints memoizado por request — ver sprintDateCheck(). */
+    private static ?\Illuminate\Support\Collection $sprintCalendar = null;
+
+    private static function sprintCalendar(): \Illuminate\Support\Collection
+    {
+        return static::$sprintCalendar ??= Sprint::orderBy('starts_at')
+            ->get(['id', 'title', 'starts_at', 'ends_at', 'status']);
+    }
+
+    public function sprintDateCheck(): ?array
+    {
+        if (! $this->approval_date || in_array($this->status, ['concluido', 'cancelado'], true)) {
+            return null;
+        }
+
+        $atual = $this->sprint;
+
+        // Sprints não se sobrepõem (confirmado na base), então no máximo uma cobre a data.
+        // Carrega o calendário inteiro uma vez por request e procura em memória: são ~15
+        // sprints, e consultar por tarefa transformaria qualquer listagem num N+1.
+        $daData = static::sprintCalendar()->first(
+            fn ($s) => $s->starts_at->lte($this->approval_date) && $s->ends_at->gte($this->approval_date)
+        );
+
+        if (! $atual) {
+            return $daData ? ['kind' => 'orfa', 'sprint' => $daData, 'current' => null] : null;
+        }
+
+        if ($daData && $daData->id === $atual->id) {
+            return null;
+        }
+
+        if (! $daData) {
+            return ['kind' => 'sem_sprint', 'sprint' => null, 'current' => $atual];
+        }
+
+        return $daData->starts_at->gt($atual->starts_at)
+            ? ['kind' => 'mover', 'sprint' => $daData, 'current' => $atual]
+            : ['kind' => 'data_velha', 'sprint' => $daData, 'current' => $atual];
+    }
+
     public function isOverdue(): bool
     {
         return $this->due_date && $this->due_date->isPast() && $this->status !== 'concluido';
