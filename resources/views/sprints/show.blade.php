@@ -76,13 +76,8 @@
         <template x-if="editing">
             <form method="POST" action="{{ route('sprints.update', $sprint) }}" class="card px-5 py-4 mt-3 flex items-end gap-3 flex-wrap">
                 @csrf @method('PATCH')
-                <div class="flex-1 min-w-48">
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Título</label>
-                    <input type="text" name="title" required value="{{ old('title', $sprint->title) }}"
-                        class="w-full px-3 py-2 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                    @error('title') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
-                </div>
+                {{-- Sem campo de título: o nome é derivado do número + período
+                     (ver Sprint::buildTitle) e se reajusta sozinho ao salvar. --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Início</label>
                     <input type="date" name="starts_at" required value="{{ old('starts_at', $sprint->starts_at->format('Y-m-d')) }}"

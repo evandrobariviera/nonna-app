@@ -47,19 +47,24 @@ class SprintController extends Controller
 
     public function create()
     {
-        return view('sprints.create');
+        return view('sprints.create', [
+            'suggested'  => Sprint::suggestNextPeriod(),
+            'nextNumber' => Sprint::nextNumber(),
+        ]);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'title'      => 'required|string|max:150',
             'starts_at'  => 'required|date',
             'ends_at'    => 'required|date|after_or_equal:starts_at',
             'status'     => 'required|in:planning,active,closed',
         ]);
 
         $this->assertSingleActiveSprint($data['status']);
+
+        // Título é sempre gerado, nunca digitado — o formulário nem oferece o campo.
+        $data['title'] = Sprint::buildTitle(Sprint::nextNumber(), $data['starts_at'], $data['ends_at']);
 
         Sprint::create([...$data, 'created_by' => Auth::id()]);
 
@@ -395,13 +400,20 @@ class SprintController extends Controller
     public function update(Request $request, Sprint $sprint)
     {
         $data = $request->validate([
-            'title'     => 'required|string|max:150',
             'starts_at' => 'required|date',
             'ends_at'   => 'required|date|after_or_equal:starts_at',
             'status'    => 'required|in:planning,active,closed',
         ]);
 
         $this->assertSingleActiveSprint($data['status'], $sprint->id);
+
+        // O título carrega o período, então acompanha a mudança de data — senão
+        // passaria a mentir. O número da sprint é preservado.
+        $data['title'] = Sprint::buildTitle(
+            $sprint->number() ?? Sprint::nextNumber(),
+            $data['starts_at'],
+            $data['ends_at'],
+        );
 
         $sprint->update($data);
 
