@@ -18,18 +18,73 @@
         ];
     @endphp
 
-    <div class="flex items-start justify-between mb-5 flex-wrap gap-3">
-        <p class="text-sm" style="color:var(--muted)">
-            Toda a produção aberta da agência: onde está, com quem está e o que já passou do prazo.
-        </p>
-        <a href="{{ route('production-panel.index', ['inativos' => $incluirInativos ? null : 1]) }}"
-           class="px-3 py-1.5 text-xs font-semibold transition-colors"
-           style="background:{{ $incluirInativos ? 'var(--purple)' : 'var(--s3)' }};
-                  color:{{ $incluirInativos ? '#fff' : 'var(--muted)' }};
-                  border:1px solid {{ $incluirInativos ? 'var(--purple)' : 'var(--border2)' }}">
+    @php
+        // Os filtros viajam em todo link da tela — senão clicar em qualquer coisa perde o recorte.
+        $filtrosAtuais = array_filter([
+            'cliente'  => $clienteSel?->id,
+            'executor' => $executorSel?->id,
+            'inativos' => $incluirInativos ? 1 : null,
+            'cal_mes'  => request('cal_mes'),
+            'cal_data' => request('cal_data'),
+        ]);
+        $comFiltro = $clienteSel || $executorSel;
+    @endphp
+
+    <p class="text-sm mb-3" style="color:var(--muted)">
+        Toda a produção aberta da agência: onde está, com quem está e o que já passou do prazo.
+    </p>
+
+    {{-- ── Filtro global: molda a tela inteira, não só a tabela ── --}}
+    <form method="GET" action="{{ route('production-panel.index') }}"
+          class="card card-body mb-4 flex items-end gap-3 flex-wrap">
+        @foreach(['cal_mes', 'cal_data'] as $manter)
+            @if(request($manter))
+                <input type="hidden" name="{{ $manter }}" value="{{ request($manter) }}">
+            @endif
+        @endforeach
+
+        <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Cliente</label>
+            <select name="cliente" onchange="this.form.submit()"
+                    class="text-sm px-3 py-1.5" style="background:var(--s3); border:1px solid var(--border2); color:var(--text); min-width:220px">
+                <option value="">Todos os clientes</option>
+                @foreach($opcoesClientes as $op)
+                    <option value="{{ $op->id }}" @selected($clienteSel?->id === $op->id)>{{ $op->displayName() }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Executor</label>
+            <select name="executor" onchange="this.form.submit()"
+                    class="text-sm px-3 py-1.5" style="background:var(--s3); border:1px solid var(--border2); color:var(--text); min-width:200px">
+                <option value="">Todo o time</option>
+                @foreach($opcoesExecutores as $op)
+                    <option value="{{ $op->id }}" @selected($executorSel?->id === $op->id)>{{ $op->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <label class="flex items-center gap-2 text-xs font-semibold pb-1.5" style="color:var(--muted)">
+            <input type="checkbox" name="inativos" value="1" @checked($incluirInativos) onchange="this.form.submit()">
             Incluir clientes inativos
-        </a>
-    </div>
+        </label>
+
+        @if($comFiltro)
+            <a href="{{ route('production-panel.index') }}" class="text-xs font-semibold pb-1.5" style="color:var(--purple)">
+                Limpar filtros
+            </a>
+        @endif
+    </form>
+
+    @if($comFiltro)
+        <p class="text-xs mb-4" style="color:var(--muted2)">
+            Todos os blocos abaixo estão recortados
+            @if($clienteSel) pelo cliente <strong style="color:var(--text)">{{ $clienteSel->displayName() }}</strong>@endif
+            @if($clienteSel && $executorSel) e @endif
+            @if($executorSel) pelo executor <strong style="color:var(--text)">{{ $executorSel->name }}</strong>@endif.
+        </p>
+    @endif
 
     {{-- ── Termômetro ── --}}
     <div class="auto-grid-sm mb-4">
@@ -40,6 +95,109 @@
                 <p class="text-xs mt-1" style="color:var(--muted2)">{{ $ajuda }}</p>
             </div>
         @endforeach
+    </div>
+
+    {{-- ── Volume do mês: o que foi combinado × o que já está de pé ── --}}
+    <div class="card card-body-lg mb-4">
+        <div class="flex items-start justify-between gap-3 mb-4 flex-wrap">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
+                    Volume de {{ now()->locale('pt_BR')->translatedFormat('F') }}
+                    @if($volume['cliente'])
+                        · {{ $volume['cliente']->displayName() }}
+                    @endif
+                </p>
+                <p class="text-xs mt-1" style="color:var(--muted2)">
+                    @if($volume['cliente'])
+                        Quanto foi combinado com o cliente no mês e quanto já está de pé.
+                    @else
+                        Soma do volume combinado com todos os clientes que têm volume configurado.
+                    @endif
+                </p>
+            </div>
+            @if($volume['configurado'])
+                <p class="text-xs" style="color:var(--muted2)">
+                    faltam {{ $volume['dias_restantes'] }} dia(s) pro fim do mês
+                </p>
+            @endif
+        </div>
+
+        @if(! $volume['configurado'])
+            {{-- Sem cota cadastrada não há o que comparar — a tela diz onde se resolve. --}}
+            <div class="flex items-start gap-3">
+                <x-icon name="package" size="20" style="color:var(--orange)" class="flex-shrink-0 mt-0.5" />
+                <div>
+                    <p class="text-sm font-semibold" style="color:var(--text)">Nenhum volume de produção configurado ainda</p>
+                    <p class="text-xs mt-1" style="color:var(--muted2)">
+                        {{ $volume['sem_cota'] }} cliente(s) sem volume mensal definido. Enquanto ninguém preencher
+                        quanto cada cliente contratou por mês, não dá pra dizer se a agência está entregando o combinado.
+                        Configura-se na ficha do cliente, aba Geral.
+                        @if($volume['cliente'])
+                            <br><a href="{{ route('clients.show', $volume['cliente']) }}" style="color:var(--purple)" class="font-semibold">
+                                Configurar agora o volume de {{ $volume['cliente']->displayName() }} →
+                            </a>
+                        @endif
+                    </p>
+                </div>
+            </div>
+        @else
+            @php
+                $pctFalta = $volume['cota'] > 0 ? round($volume['falta'] / $volume['cota'] * 100) : 0;
+            @endphp
+
+            {{-- Barra única: entregue (verde) + planejado ainda em produção (roxo) + o que
+                 nem foi pedido (vazio). O vazio é a leitura que interessa ao head. --}}
+            <div class="mb-2" style="height:12px; background:var(--s3); border-radius:6px; overflow:hidden; display:flex">
+                <div style="width:{{ $volume['pct_entr'] }}%; background:var(--green)"></div>
+                <div style="width:{{ max(0, $volume['pct_plan'] - $volume['pct_entr']) }}%; background:var(--purple)"></div>
+            </div>
+            <div class="flex items-baseline gap-4 flex-wrap mb-5 text-xs">
+                <span style="color:var(--green)"><strong class="text-sm">{{ $volume['entregue'] }}</strong> entregues</span>
+                <span style="color:var(--purple)"><strong class="text-sm">{{ $volume['planejado'] - $volume['entregue'] }}</strong> em produção</span>
+                <span style="color:{{ $volume['falta'] > 0 ? 'var(--orange)' : 'var(--muted2)' }}">
+                    <strong class="text-sm">{{ $volume['falta'] }}</strong> ainda nem foram pedidos
+                </span>
+                <span style="color:var(--muted)">de <strong class="text-sm" style="color:var(--text)">{{ $volume['cota'] }}</strong> combinados no mês</span>
+                @if($volume['excedente'] > 0)
+                    <span style="color:var(--red)">· {{ $volume['excedente'] }} além do combinado em outros tipos</span>
+                @endif
+                @if(! $volume['cliente'] && $volume['sem_cota'] > 0)
+                    <span style="color:var(--muted2)">· {{ $volume['sem_cota'] }} cliente(s) ainda sem volume configurado, fora desta conta</span>
+                @endif
+            </div>
+
+            <div class="auto-grid-sm">
+                @foreach($volume['linhas'] as $l)
+                    @php
+                        $pctE = $l['cota'] > 0 ? min(100, round($l['entregue'] / $l['cota'] * 100)) : 0;
+                        $pctP = $l['cota'] > 0 ? min(100, round($l['planejado'] / $l['cota'] * 100)) : 0;
+                    @endphp
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <x-icon name="{{ $l['icone'] }}" size="14" class="flex-shrink-0" style="color:var(--muted)" />
+                            <span class="text-xs font-semibold truncate flex-1 min-w-0" style="color:var(--muted2)">{{ $l['label'] }}</span>
+                            <span class="text-xs font-mono flex-shrink-0" style="color:var(--text)">{{ $l['planejado'] }}/{{ $l['cota'] }}</span>
+                        </div>
+                        <div style="height:6px; background:var(--s3); border-radius:3px; overflow:hidden; display:flex">
+                            <div style="width:{{ $pctE }}%; background:var(--green)"></div>
+                            <div style="width:{{ max(0, $pctP - $pctE) }}%; background:var(--purple)"></div>
+                        </div>
+                        <p class="text-xs mt-1" style="color:var(--muted2)">
+                            @if($l['falta'] > 0)
+                                <span style="color:var(--orange)">faltam {{ $l['falta'] }} pra fechar o mês</span>
+                            @elseif($l['excedente'] > 0)
+                                <span style="color:var(--red)">{{ $l['excedente'] }} além do combinado</span>
+                            @else
+                                volume do mês completo
+                            @endif
+                            @if(! $volume['cliente'])
+                                · {{ $l['clientes'] }} cliente(s)
+                            @endif
+                        </p>
+                    </div>
+                @endforeach
+            </div>
+        @endif
     </div>
 
     <div class="grid md:grid-cols-2 gap-4 mb-4">
@@ -176,6 +334,103 @@
     </div>
 
     {{-- ── Carteira: uma linha por cliente ── --}}
+    {{-- ── Calendário do mês ── --}}
+    <div class="card card-body-lg mb-4">
+        <div class="flex items-start justify-between gap-3 mb-4 flex-wrap">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
+                    Calendário · {{ $calendario['mes']->locale('pt_BR')->translatedFormat('F \d\e Y') }}
+                </p>
+                <p class="text-xs mt-1" style="color:var(--muted2)">
+                    {{ $calendario['total'] }} tarefas no mês, posicionadas pela data de
+                    {{ $calendario['campo'] === 'entrega' ? 'entrega' : 'aprovação' }}.
+                </p>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+                {{-- Entrega x aprovação são perguntas diferentes: "quando tem que estar pronto"
+                     e "de que quinzena/volume essa tarefa é". --}}
+                <div class="flex">
+                    @foreach(['entrega' => 'Por entrega', 'aprovacao' => 'Por aprovação'] as $chave => $label)
+                        <a href="{{ route('production-panel.index', array_merge($filtrosAtuais, ['cal_data' => $chave, 'cal_mes' => $calendario['mes']->format('Y-m')])) }}"
+                           class="px-3 py-1.5 text-xs font-semibold"
+                           style="background:{{ $calendario['campo'] === $chave ? 'var(--purple)' : 'var(--s3)' }};
+                                  color:{{ $calendario['campo'] === $chave ? '#fff' : 'var(--muted)' }};
+                                  border:1px solid {{ $calendario['campo'] === $chave ? 'var(--purple)' : 'var(--border2)' }}">
+                            {{ $label }}
+                        </a>
+                    @endforeach
+                </div>
+                <div class="flex items-center gap-1">
+                    <a href="{{ route('production-panel.index', array_merge($filtrosAtuais, ['cal_mes' => $calendario['anterior']])) }}"
+                       class="px-2 py-1.5" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted)" title="Mês anterior">‹</a>
+                    <a href="{{ route('production-panel.index', array_merge($filtrosAtuais, ['cal_mes' => now()->format('Y-m')])) }}"
+                       class="px-3 py-1.5 text-xs font-semibold" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted)">Hoje</a>
+                    <a href="{{ route('production-panel.index', array_merge($filtrosAtuais, ['cal_mes' => $calendario['proximo']])) }}"
+                       class="px-2 py-1.5" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted)" title="Próximo mês">›</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <div style="min-width:760px">
+                <div class="grid grid-cols-7 gap-1 mb-1">
+                    @foreach(['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'] as $dia)
+                        <p class="text-xs font-semibold uppercase tracking-widest text-center py-1" style="color:var(--muted)">{{ $dia }}</p>
+                    @endforeach
+                </div>
+
+                <div class="grid grid-cols-7 gap-1">
+                    @foreach($calendario['dias'] as $dia)
+                        @php
+                            $tarefas = $dia['tarefas'];
+                            $atrasadas = $dia['data']->isPast() && ! $dia['hoje']
+                                ? $tarefas->filter(fn ($t) => ! in_array($t->status, ['concluido', 'cancelado'], true))->count()
+                                : 0;
+                        @endphp
+                        <div style="min-height:104px; padding:6px;
+                                    background:{{ $dia['hoje'] ? 'rgba(100, 59, 142,.10)' : ($dia['do_mes'] ? 'var(--s2)' : 'transparent') }};
+                                    border:1px solid {{ $dia['hoje'] ? 'var(--purple)' : 'var(--border2)' }};
+                                    opacity:{{ $dia['do_mes'] ? '1' : '.45' }}">
+                            <div class="flex items-center justify-between gap-1 mb-1">
+                                <span class="text-xs font-bold" style="color:{{ $dia['hoje'] ? 'var(--purple)' : 'var(--muted)' }}">
+                                    {{ $dia['data']->day }}
+                                </span>
+                                @if($atrasadas > 0)
+                                    <span class="text-xs font-mono" style="color:var(--red)" title="{{ $atrasadas }} ainda em aberto com a data já passada">{{ $atrasadas }}⚠</span>
+                                @elseif($tarefas->count() > 0)
+                                    <span class="text-xs font-mono" style="color:var(--muted2)">{{ $tarefas->count() }}</span>
+                                @endif
+                            </div>
+
+                            @foreach($tarefas->take(3) as $tarefa)
+                                @php
+                                    $fechada = $tarefa->status === 'concluido';
+                                    $corBarra = $fechada ? 'var(--green)'
+                                        : ($dia['data']->isPast() && ! $dia['hoje'] ? 'var(--red)' : 'var(--purple)');
+                                @endphp
+                                <a href="{{ route('tasks.show', $tarefa) }}" class="block mb-1"
+                                   title="{{ $tarefa->client?->displayName() }} — {{ $tarefa->title }}"
+                                   style="border-left:2px solid {{ $corBarra }}; padding-left:4px">
+                                    <span class="block text-xs truncate" style="color:var(--muted2); font-size:10px">
+                                        {{ $tarefa->client?->displayName() ?? 'Interno' }}
+                                    </span>
+                                    <span class="block text-xs truncate" style="color:var(--text); {{ $fechada ? 'text-decoration:line-through; opacity:.6' : '' }}">
+                                        {{ $tarefa->title }}
+                                    </span>
+                                </a>
+                            @endforeach
+
+                            @if($tarefas->count() > 3)
+                                <span class="text-xs" style="color:var(--muted2); font-size:10px">+ {{ $tarefas->count() - 3 }} no dia</span>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+
     @php $semCarga = collect($clientes)->where('abertas', 0)->count(); @endphp
     <div class="card card-body-lg" x-data="{ busca: '', soAtrasados: false, mostrarSemCarga: false }">
         <div class="flex items-start justify-between gap-3 mb-4 flex-wrap">
