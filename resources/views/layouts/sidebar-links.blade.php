@@ -329,6 +329,28 @@
     </span>
 </a>
 
+{{-- Novidades do App — linha do tempo do que muda no sistema. O ponto avisa que tem
+     coisa nova SEM passar pelo sino: o Evandro quis os dois canais separados. --}}
+@php
+    $_novidadesNovas = once(fn () => \App\Models\AppUpdate::naoVistasPor(auth()->user()));
+@endphp
+<a href="{{ route('app-updates.index') }}"
+   class="nav-group-trigger {{ request()->routeIs('app-updates.*') ? 'open' : '' }}"
+   style="{{ request()->routeIs('app-updates.*') ? 'color:var(--purple);' : '' }}">
+    <span class="flex items-center gap-3">
+        <x-icon name="sparkles" size="16" class="flex-shrink-0" />
+        <span class="flex items-center justify-between w-full gap-2">
+            <span>Novidades</span>
+            @if($_novidadesNovas > 0)
+                <span class="text-xs px-1.5 py-px rounded-full font-semibold"
+                      style="background:rgba(100, 59, 142,.15); color:var(--purple); border:1px solid rgba(100, 59, 142,.3)">
+                    {{ $_novidadesNovas }}
+                </span>
+            @endif
+        </span>
+    </span>
+</a>
+
 {{-- Central de Ajuda (wiki interno de processos) --}}
 <a href="{{ route('help.index') }}"
    class="nav-group-trigger {{ request()->routeIs('help.*') ? 'open' : '' }}"

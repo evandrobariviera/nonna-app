@@ -34,9 +34,10 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'is_super_admin'    => 'boolean',
+            'email_verified_at'   => 'datetime',
+            'password'            => 'hashed',
+            'is_super_admin'      => 'boolean',
+            'app_updates_seen_at' => 'datetime', // até onde leu as Novidades do App
         ];
     }
 

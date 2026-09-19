@@ -692,6 +692,20 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::get('/produtividade', [\App\Http\Controllers\ProductivityDashboardController::class, 'index'])
         ->name('productivity.index');
 
+    // ── Novidades do App (linha do tempo do que muda no sistema) ──
+    Route::get('/novidades', [\App\Http\Controllers\AppUpdateController::class, 'index'])
+        ->name('app-updates.index');
+    Route::get('/novidades/nova', [\App\Http\Controllers\AppUpdateController::class, 'create'])
+        ->name('app-updates.create');
+    Route::post('/novidades', [\App\Http\Controllers\AppUpdateController::class, 'store'])
+        ->name('app-updates.store');
+    Route::get('/novidades/{update}/editar', [\App\Http\Controllers\AppUpdateController::class, 'edit'])
+        ->name('app-updates.edit');
+    Route::patch('/novidades/{update}', [\App\Http\Controllers\AppUpdateController::class, 'update'])
+        ->name('app-updates.update');
+    Route::delete('/novidades/{update}', [\App\Http\Controllers\AppUpdateController::class, 'destroy'])
+        ->name('app-updates.destroy');
+
     // ── Sugestões de melhoria do App (checklist da equipe) ──
     Route::get('/sugestoes', [\App\Http\Controllers\FeatureSuggestionController::class, 'index'])
         ->name('feature-suggestions.index');
