@@ -117,6 +117,15 @@
                         {{ $task->title }}
                     </p>
 
+                    <div class="flex items-center gap-1 mt-1 flex-wrap">
+                        <span class="badge badge-{{ $task->statusColor() }}" style="font-size:9px">{{ $task->statusLabel() }}</span>
+                        @if($task->situation)
+                            <span class="badge" style="font-size:9px; background:{{ $task->situationColor() }}; color:#fff; border-color:transparent">
+                                {{ $task->situationLabel() }}
+                            </span>
+                        @endif
+                    </div>
+
                     <div class="flex items-center justify-between gap-1 mt-1.5">
                         <div class="flex items-center gap-1">
                             @forelse($respList as $resp)
