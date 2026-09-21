@@ -32,8 +32,48 @@ class ProductionPanelController extends Controller
 
     public function index(Request $request): View
     {
-        $this->incluirInativos = $request->boolean('inativos');
+        [$clienteSel, $executorSel] = $this->resolverFiltrosGlobais($request);
         $incluirInativos = $this->incluirInativos;
+
+        $termometro = $this->termometro();
+        $sprints    = $this->porSprint();
+        $pessoas    = $this->porExecutor();
+        $clientes   = $this->porCliente();
+        $tipos      = $this->porTipo();
+        $volume     = $this->volumeDoMes($clienteSel);
+        $semana     = $this->semanaKanban($request);
+
+        // Listas dos selects do topo — só quem realmente aparece na produção.
+        $opcoesClientes = Client::query()
+            ->when(! $this->incluirInativos, fn ($q) => $q->where('status', '!=', 'inactive'))
+            ->orderBy('company_name')->get(['id', 'nickname', 'company_name']);
+        $opcoesExecutores = User::whereIn('id', $this->idsDeExecutores())
+            ->orderBy('name')->get(['id', 'name']);
+
+        return view('producao.index', compact(
+            'termometro', 'sprints', 'pessoas', 'clientes', 'tipos', 'volume', 'semana',
+            'incluirInativos', 'clienteSel', 'executorSel', 'opcoesClientes', 'opcoesExecutores'
+        ));
+    }
+
+    /** Fragmento AJAX da semana — mesmo padrão de results() (live-filter.js). */
+    public function weekResults(Request $request): View
+    {
+        $this->resolverFiltrosGlobais($request);
+        $semana = $this->semanaKanban($request);
+
+        return view('producao._week-results', $semana);
+    }
+
+    /**
+     * Lê cliente/executor/inativos da querystring pra dentro das propriedades da instância.
+     * Chamado tanto por index() (primeira carga) quanto por weekResults() (refresh AJAX da
+     * semana) — os dois precisam do MESMO recorte, senão arrastar um card na semana afetaria
+     * um conjunto de tarefas diferente do que a tabela/termômetro estão mostrando.
+     */
+    private function resolverFiltrosGlobais(Request $request): array
+    {
+        $this->incluirInativos = $request->boolean('inativos');
 
         // Um link torto (id com formato errado) tem que virar "sem filtro", não erro de
         // tipo do Postgres na cara do usuário — daí o rescue em vez de confiar no valor.
@@ -46,25 +86,7 @@ class ProductionPanelController extends Controller
         $this->clienteId  = $clienteSel?->id;
         $this->executorId = $executorSel?->id;
 
-        $termometro = $this->termometro();
-        $sprints    = $this->porSprint();
-        $pessoas    = $this->porExecutor();
-        $clientes   = $this->porCliente();
-        $tipos      = $this->porTipo();
-        $volume     = $this->volumeDoMes($clienteSel);
-        $calendario = $this->calendario($request);
-
-        // Listas dos selects do topo — só quem realmente aparece na produção.
-        $opcoesClientes = Client::query()
-            ->when(! $this->incluirInativos, fn ($q) => $q->where('status', '!=', 'inactive'))
-            ->orderBy('company_name')->get(['id', 'nickname', 'company_name']);
-        $opcoesExecutores = User::whereIn('id', $this->idsDeExecutores())
-            ->orderBy('name')->get(['id', 'name']);
-
-        return view('producao.index', compact(
-            'termometro', 'sprints', 'pessoas', 'clientes', 'tipos', 'volume', 'calendario',
-            'incluirInativos', 'clienteSel', 'executorSel', 'opcoesClientes', 'opcoesExecutores'
-        ));
+        return [$clienteSel, $executorSel];
     }
 
     /**
@@ -438,50 +460,68 @@ class ProductionPanelController extends Controller
     }
 
     /**
-     * Calendário do mês — o que cai em cada dia. A data usada é escolhida na tela: entrega
-     * (due_date, "quando tem que estar pronto") ou aprovação (approval_date, a data que
-     * define a sprint e o volume do mês). São perguntas diferentes e o time usa as duas.
+     * Semana de produção: kanban com uma coluna por dia útil (segunda a sexta), cada card na
+     * coluna da sua data de APROVAÇÃO — a mesma data que define sprint e volume do mês, e o
+     * mesmo recorte da aba "Semana" da Sprint (que o Evandro pediu explicitamente pra
+     * reaproveitar aqui). Arrastar um card muda a data de aprovação na hora.
+     *
+     * Ao contrário do antigo calendário mensal (que cortava em 3 cards por dia + "+N no
+     * dia"), aqui TODA tarefa aberta aparece — é justamente o problema que essa tela resolve.
+     * Isso é viável porque a janela é uma semana, não um mês inteiro: mesmo com a agência
+     * inteira aberta (~390 tarefas), o total continua pequeno pra carregar como model.
+     *
+     * "Semana anterior" reúne toda tarefa aberta com aprovação antes da segunda em exibição —
+     * é o que precisa de decisão (empurrar pra uma data real). Tarefa sem data de aprovação,
+     * ou com data muito à frente, fica de fora do quadro e só entra na contagem informativa.
      */
-    private function calendario(Request $request): array
+    private function semanaKanban(Request $request): array
     {
-        $campo = $request->get('cal_data') === 'aprovacao' ? 'approval_date' : 'due_date';
+        $weekOffset = (int) $request->get('week_offset', 0);
+        $monday = now()->startOfWeek(\Carbon\CarbonInterface::MONDAY)->addWeeks($weekOffset);
 
-        // Sem o formato exato aaaa-mm o Carbon aceita quase qualquer coisa e devolve uma
-        // data sem sentido (um "-01" sozinho vira 1969) — melhor cair no mês corrente.
-        $pedido = (string) $request->get('cal_mes');
-        $mes    = preg_match('/^\d{4}-\d{2}$/', $pedido)
-            ? \Carbon\Carbon::createFromFormat('Y-m-d', $pedido . '-01')->startOfMonth()
-            : now()->startOfMonth();
-
-        $inicio = $mes->copy()->startOfMonth()->startOfWeek(\Carbon\CarbonInterface::SUNDAY);
-        $fim    = $mes->copy()->endOfMonth()->endOfWeek(\Carbon\CarbonInterface::SATURDAY);
-
-        $tarefas = $this->comFiltros(Task::query())
-            ->where('status', '!=', 'cancelado')
-            ->whereBetween($campo, [$inicio->toDateString(), $fim->toDateString()])
-            ->with(['client:id,nickname,company_name'])
-            ->orderBy($campo)
-            ->get(['id', 'title', 'status', 'task_type', 'client_id', 'due_date', 'approval_date'])
-            ->groupBy(fn ($t) => $t->{$campo}->toDateString());
-
-        $dias = [];
-        for ($d = $inicio->copy(); $d->lte($fim); $d->addDay()) {
-            $chave = $d->toDateString();
-            $dias[] = [
-                'data'    => $d->copy(),
-                'do_mes'  => $d->month === $mes->month,
-                'hoje'    => $d->isToday(),
-                'tarefas' => $tarefas->get($chave) ?? collect(),
-            ];
+        $weekDays = collect();
+        for ($d = $monday->copy(); $d->lte($monday->copy()->addDays(4)); $d->addDay()) {
+            $weekDays->push($d->copy());
         }
 
+        // 'attachments' precisa vir junto: firstImageAttachmentUrl() consulta o banco toda
+        // vez que a relação não está carregada — sem isso, 400+ tarefas viram 400+ consultas
+        // extras só pra descobrir se tem miniatura. Ao contrário da Sprint, o card aqui não
+        // mostra Projeto/Planejamento/Reunião (só Sprint × Fila), então essas relações nem
+        // entram no eager load.
+        $tasks = $this->abertas()
+            ->with(['client', 'executor', 'executors', 'attachments'])
+            ->get();
+
+        $weekDateStrings = $weekDays->map->toDateString();
+        $tasksBeforeWeek = $tasks->filter(fn ($t) => $t->approval_date && $t->approval_date->lt($monday));
+        $tasksInWeek     = $tasks->filter(fn ($t) => $t->approval_date && $weekDateStrings->contains($t->approval_date->toDateString()));
+        $grouped         = $tasksInWeek->groupBy(fn ($t) => $t->approval_date->toDateString());
+
+        // Mesma ordem da aba Semana da Sprint: prioridade primeiro, Ajuste/Alteração antes de
+        // Backlog dentro da mesma prioridade, resto na ordem de Task::$statuses.
+        $priorityOrder = array_flip(array_keys(Task::$priorities));
+        $statusOrder   = array_flip(array_unique(array_merge(['ajuste_alteracao', 'backlog'], array_keys(Task::$statuses))));
+        $sortColumn = fn ($colTasks) => $colTasks
+            ->sortBy(fn ($t) => ($priorityOrder[$t->priority ?? 'normal'] ?? count($priorityOrder)) * 100
+                + ($statusOrder[$t->status] ?? count($statusOrder)))
+            ->values();
+
+        $weekKanban = ['atrasadas' => $sortColumn($tasksBeforeWeek)];
+        foreach ($weekDays as $day) {
+            $weekKanban[$day->toDateString()] = $sortColumn($grouped->get($day->toDateString()) ?? collect());
+        }
+
+        $semData = $tasks->filter(fn ($t) => ! $t->approval_date)->count();
+        $depois  = $tasks->count() - $tasksInWeek->count() - $tasksBeforeWeek->count() - $semData;
+
         return [
-            'campo'    => $campo === 'approval_date' ? 'aprovacao' : 'entrega',
-            'mes'      => $mes,
-            'anterior' => $mes->copy()->subMonth()->format('Y-m'),
-            'proximo'  => $mes->copy()->addMonth()->format('Y-m'),
-            'dias'     => $dias,
-            'total'    => $tarefas->flatten()->count(),
+            'weekDays'       => $weekDays,
+            'weekKanban'     => $weekKanban,
+            'beforeWeekDate' => $monday->copy()->subDay(),
+            'weekOffset'     => $weekOffset,
+            'semDataCount'   => $semData,
+            'depoisCount'    => $depois,
         ];
     }
 }

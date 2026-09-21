@@ -687,6 +687,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Painel de Produção (visão geral da agência, igual pra todo mundo) ──
     Route::get('/producao', [\App\Http\Controllers\ProductionPanelController::class, 'index'])
         ->name('production-panel.index');
+    Route::get('/producao/semana', [\App\Http\Controllers\ProductionPanelController::class, 'weekResults'])
+        ->name('production-panel.week-results');
 
     // ── Painel de Produtividade ──
     Route::get('/produtividade', [\App\Http\Controllers\ProductivityDashboardController::class, 'index'])

@@ -19,14 +19,6 @@
     @endphp
 
     @php
-        // Os filtros viajam em todo link da tela — senão clicar em qualquer coisa perde o recorte.
-        $filtrosAtuais = array_filter([
-            'cliente'  => $clienteSel?->id,
-            'executor' => $executorSel?->id,
-            'inativos' => $incluirInativos ? 1 : null,
-            'cal_mes'  => request('cal_mes'),
-            'cal_data' => request('cal_data'),
-        ]);
         $comFiltro = $clienteSel || $executorSel;
     @endphp
 
@@ -37,12 +29,6 @@
     {{-- ── Filtro global: molda a tela inteira, não só a tabela ── --}}
     <form method="GET" action="{{ route('production-panel.index') }}"
           class="card card-body mb-4 flex items-end gap-3 flex-wrap">
-        @foreach(['cal_mes', 'cal_data'] as $manter)
-            @if(request($manter))
-                <input type="hidden" name="{{ $manter }}" value="{{ request($manter) }}">
-            @endif
-        @endforeach
-
         <div class="flex flex-col gap-1">
             <label class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Cliente</label>
             <select name="cliente" onchange="this.form.submit()"
@@ -333,103 +319,45 @@
         </div>
     </div>
 
-    {{-- ── Carteira: uma linha por cliente ── --}}
-    {{-- ── Calendário do mês ── --}}
+    {{-- ── Semana de Produção: todas as tarefas abertas, arrastáveis entre dias ── --}}
     <div class="card card-body-lg mb-4">
-        <div class="flex items-start justify-between gap-3 mb-4 flex-wrap">
-            <div>
-                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
-                    Calendário · {{ $calendario['mes']->locale('pt_BR')->translatedFormat('F \d\e Y') }}
-                </p>
-                <p class="text-xs mt-1" style="color:var(--muted2)">
-                    {{ $calendario['total'] }} tarefas no mês, posicionadas pela data de
-                    {{ $calendario['campo'] === 'entrega' ? 'entrega' : 'aprovação' }}.
-                </p>
-            </div>
+        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.1em">
+            Semana de Produção
+        </p>
+        <p class="text-xs mb-4" style="color:var(--muted2)">
+            Toda tarefa aberta, na coluna do dia da sua data de aprovação. Arraste um card pra outro dia — ou
+            use o botão "Mover" — pra mudar a data direto, sem abrir a tarefa.
+        </p>
 
-            <div class="flex items-center gap-2 flex-wrap">
-                {{-- Entrega x aprovação são perguntas diferentes: "quando tem que estar pronto"
-                     e "de que quinzena/volume essa tarefa é". --}}
-                <div class="flex">
-                    @foreach(['entrega' => 'Por entrega', 'aprovacao' => 'Por aprovação'] as $chave => $label)
-                        <a href="{{ route('production-panel.index', array_merge($filtrosAtuais, ['cal_data' => $chave, 'cal_mes' => $calendario['mes']->format('Y-m')])) }}"
-                           class="px-3 py-1.5 text-xs font-semibold"
-                           style="background:{{ $calendario['campo'] === $chave ? 'var(--purple)' : 'var(--s3)' }};
-                                  color:{{ $calendario['campo'] === $chave ? '#fff' : 'var(--muted)' }};
-                                  border:1px solid {{ $calendario['campo'] === $chave ? 'var(--purple)' : 'var(--border2)' }}">
-                            {{ $label }}
-                        </a>
-                    @endforeach
-                </div>
-                <div class="flex items-center gap-1">
-                    <a href="{{ route('production-panel.index', array_merge($filtrosAtuais, ['cal_mes' => $calendario['anterior']])) }}"
-                       class="px-2 py-1.5" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted)" title="Mês anterior">‹</a>
-                    <a href="{{ route('production-panel.index', array_merge($filtrosAtuais, ['cal_mes' => now()->format('Y-m')])) }}"
-                       class="px-3 py-1.5 text-xs font-semibold" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted)">Hoje</a>
-                    <a href="{{ route('production-panel.index', array_merge($filtrosAtuais, ['cal_mes' => $calendario['proximo']])) }}"
-                       class="px-2 py-1.5" style="background:var(--s3); border:1px solid var(--border2); color:var(--muted)" title="Próximo mês">›</a>
-                </div>
-            </div>
-        </div>
+        {{-- Formulário oculto: só carrega os filtros globais e a semana em exibição pro fetch
+             AJAX do fragmento abaixo (mesmo padrão da aba Semana da Sprint). --}}
+        <form method="GET" action="{{ route('production-panel.index') }}" id="producao-week-filter-form"
+              data-live-filter data-results-url="{{ route('production-panel.week-results') }}" data-target="#producao-week-results"
+              style="display:none">
+            <input type="hidden" name="cliente" value="{{ $clienteSel?->id }}">
+            <input type="hidden" name="executor" value="{{ $executorSel?->id }}">
+            <input type="hidden" name="inativos" value="{{ $incluirInativos ? 1 : '' }}">
+            <input type="hidden" name="week_offset" id="producao-week-offset-input" value="{{ $semana['weekOffset'] }}">
+        </form>
 
-        <div class="overflow-x-auto">
-            <div style="min-width:760px">
-                <div class="grid grid-cols-7 gap-1 mb-1">
-                    @foreach(['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'] as $dia)
-                        <p class="text-xs font-semibold uppercase tracking-widest text-center py-1" style="color:var(--muted)">{{ $dia }}</p>
-                    @endforeach
-                </div>
-
-                <div class="grid grid-cols-7 gap-1">
-                    @foreach($calendario['dias'] as $dia)
-                        @php
-                            $tarefas = $dia['tarefas'];
-                            $atrasadas = $dia['data']->isPast() && ! $dia['hoje']
-                                ? $tarefas->filter(fn ($t) => ! in_array($t->status, ['concluido', 'cancelado'], true))->count()
-                                : 0;
-                        @endphp
-                        <div style="min-height:104px; padding:6px;
-                                    background:{{ $dia['hoje'] ? 'rgba(100, 59, 142,.10)' : ($dia['do_mes'] ? 'var(--s2)' : 'transparent') }};
-                                    border:1px solid {{ $dia['hoje'] ? 'var(--purple)' : 'var(--border2)' }};
-                                    opacity:{{ $dia['do_mes'] ? '1' : '.45' }}">
-                            <div class="flex items-center justify-between gap-1 mb-1">
-                                <span class="text-xs font-bold" style="color:{{ $dia['hoje'] ? 'var(--purple)' : 'var(--muted)' }}">
-                                    {{ $dia['data']->day }}
-                                </span>
-                                @if($atrasadas > 0)
-                                    <span class="text-xs font-mono" style="color:var(--red)" title="{{ $atrasadas }} ainda em aberto com a data já passada">{{ $atrasadas }}⚠</span>
-                                @elseif($tarefas->count() > 0)
-                                    <span class="text-xs font-mono" style="color:var(--muted2)">{{ $tarefas->count() }}</span>
-                                @endif
-                            </div>
-
-                            @foreach($tarefas->take(3) as $tarefa)
-                                @php
-                                    $fechada = $tarefa->status === 'concluido';
-                                    $corBarra = $fechada ? 'var(--green)'
-                                        : ($dia['data']->isPast() && ! $dia['hoje'] ? 'var(--red)' : 'var(--purple)');
-                                @endphp
-                                <a href="{{ route('tasks.show', $tarefa) }}" class="block mb-1"
-                                   title="{{ $tarefa->client?->displayName() }} — {{ $tarefa->title }}"
-                                   style="border-left:2px solid {{ $corBarra }}; padding-left:4px">
-                                    <span class="block text-xs truncate" style="color:var(--muted2); font-size:10px">
-                                        {{ $tarefa->client?->displayName() ?? 'Interno' }}
-                                    </span>
-                                    <span class="block text-xs truncate" style="color:var(--text); {{ $fechada ? 'text-decoration:line-through; opacity:.6' : '' }}">
-                                        {{ $tarefa->title }}
-                                    </span>
-                                </a>
-                            @endforeach
-
-                            @if($tarefas->count() > 3)
-                                <span class="text-xs" style="color:var(--muted2); font-size:10px">+ {{ $tarefas->count() - 3 }} no dia</span>
-                            @endif
-                        </div>
-                    @endforeach
-                </div>
-            </div>
+        <div id="producao-week-results">
+            @include('producao._week-results', $semana)
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            function initWeekBoard() {
+                if (document.getElementById('producao-week-board')) {
+                    initKanbanDnd('#producao-week-board');
+                }
+            }
+            initWeekBoard();
+            document.getElementById('producao-week-results').addEventListener('live-filter:updated', initWeekBoard);
+        });
+    </script>
+    @endpush
 
     @php $semCarga = collect($clientes)->where('abertas', 0)->count(); @endphp
     <div class="card card-body-lg" x-data="{ busca: '', soAtrasados: false, mostrarSemCarga: false }">
