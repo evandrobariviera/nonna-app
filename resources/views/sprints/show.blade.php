@@ -170,11 +170,6 @@
                 :style="tab === 'board' ? 'color:var(--purple); border-bottom:2px solid var(--purple)' : 'color:var(--muted)'">
                 Board
             </button>
-            <button @click="tab = 'week'"
-                class="px-4 py-2 text-xs font-mono uppercase tracking-widest transition-colors"
-                :style="tab === 'week' ? 'color:var(--purple); border-bottom:2px solid var(--purple)' : 'color:var(--muted)'">
-                Semana
-            </button>
             <button @click="tab = 'list'"
                 class="px-4 py-2 text-xs font-mono uppercase tracking-widest transition-colors"
                 :style="tab === 'list' ? 'color:var(--purple); border-bottom:2px solid var(--purple)' : 'color:var(--muted)'">
@@ -342,93 +337,6 @@
             </div>
         </div>
 
-        {{-- ── TAB SEMANA ── --}}
-        <div x-show="tab === 'week'" x-cloak>
-
-            {{-- Filtro dedicado (não a partial _task-filter-bar: o select de Status dela usa
-                 valor vazio pro "Todos", que conflita com o padrão sentinela usado aqui — ver
-                 SprintController::weekBoardData()) --}}
-            <form method="GET" action="{{ route('sprints.show', $sprint) }}" id="sprint-week-filter-form"
-                  data-live-filter data-results-url="{{ route('sprints.week-results', $sprint) }}" data-target="#sprint-week-results"
-                  class="card card-body mb-5 flex flex-wrap items-end gap-3">
-
-                <input type="hidden" name="view" value="week">
-                {{-- Semana em exibição (0 = atual). Os botões ‹ Semana anterior / Hoje / Próxima
-                     semana › ficam dentro do fragmento _week-results (pra continuar corretos
-                     depois de um refresh via live-filter) e só mexem neste campo. --}}
-                <input type="hidden" name="week_offset" id="week-offset-input" value="{{ $weekOffset }}">
-
-                <div class="flex-1 min-w-36">
-                    <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Cliente</label>
-                    <select name="week_client_id" class="filter-select w-full">
-                        <option value="">Todos os clientes</option>
-                        @foreach($clients as $c)
-                            <option value="{{ $c->id }}" {{ request('week_client_id') === $c->id ? 'selected' : '' }}>{{ $c->displayName() }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="min-w-44">
-                    <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Tipo</label>
-                    <select name="week_task_type" class="filter-select w-full">
-                        <option value="">Todos os tipos</option>
-                        @foreach(\App\Models\Task::$types as $key => $label)
-                            <option value="{{ $key }}" {{ request('week_task_type') === $key ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="min-w-44">
-                    <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Executor</label>
-                    <select name="week_executor_id" class="filter-select w-full">
-                        <option value="">Todos os executores</option>
-                        @foreach($users as $u)
-                            <option value="{{ $u->id }}" {{ (string) request('week_executor_id') === (string) $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="flex gap-2">
-                    @if(request()->hasAny(['week_client_id', 'week_task_type', 'week_executor_id', 'week_status']))
-                        <a href="{{ route('sprints.show', ['sprint' => $sprint, 'view' => 'week']) }}" class="btn btn-ghost btn-sm">✕ Limpar</a>
-                    @endif
-                </div>
-
-                {{-- Status é cumulativo (várias marcadas ao mesmo tempo) — padrão ao abrir a
-                     aba é Backlog + Ajuste/Alteração. "Todos" é um checkbox próprio, não
-                     "nenhum marcado", pelo mesmo motivo sentinela explicado em
-                     SprintController::weekBoardData(). --}}
-                @php
-                    $weekSelectedStatuses = request()->has('week_status')
-                        ? array_filter((array) request('week_status'))
-                        : ['backlog', 'ajuste_alteracao'];
-                @endphp
-                <div class="w-full">
-                    <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Status (pode marcar mais de um)</label>
-                    <div class="flex flex-wrap gap-1.5">
-                        <label class="flex items-center gap-1.5 text-xs cursor-pointer px-2.5 py-1.5" style="border:1px solid var(--border2); border-radius:6px; color:var(--muted2)">
-                            <input type="checkbox" name="week_status[]" value="todos"
-                                {{ in_array('todos', $weekSelectedStatuses, true) ? 'checked' : '' }}
-                                style="accent-color:var(--purple)">
-                            Todos
-                        </label>
-                        @foreach(\App\Models\Task::$statuses as $key => $s)
-                            <label class="flex items-center gap-1.5 text-xs cursor-pointer px-2.5 py-1.5" style="border:1px solid var(--border2); border-radius:6px; color:var(--muted2)">
-                                <input type="checkbox" name="week_status[]" value="{{ $key }}"
-                                    {{ in_array($key, $weekSelectedStatuses, true) ? 'checked' : '' }}
-                                    style="accent-color:var(--purple)">
-                                {{ $s['label'] }}
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-            </form>
-
-            <div id="sprint-week-results">
-                @include('sprints._week-results')
-            </div>
-        </div>
-
         {{-- ── TAB LISTA ── --}}
         <div x-show="tab === 'list'" x-cloak>
 
@@ -532,14 +440,6 @@
             if (!board) return;
 
             initKanbanDnd('#sprint-board');
-
-            function initWeekBoard() {
-                if (document.getElementById('sprint-week-board')) {
-                    initKanbanDnd('#sprint-week-board');
-                }
-            }
-            initWeekBoard();
-            document.getElementById('sprint-week-results').addEventListener('live-filter:updated', initWeekBoard);
 
             board.addEventListener('kanban:moved', function (evt) {
                 var fromStatus = evt.detail.fromColumn.dataset.status;

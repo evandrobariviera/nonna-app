@@ -30,6 +30,15 @@ class ProductionPanelController extends Controller
     private ?string $clienteId = null;
     private int|string|null $executorId = null; // usuário é id inteiro; cliente é uuid
     private int|string|null $direcaoCriativaId = null; // idem — filtra por Client::creative_lead_id
+    private array $statusesSelecionados = []; // vazio = sem restrição extra (todos os abertos)
+    private string $sprintFila = ''; // '' = tudo | 'sprint' | 'fila'
+
+    // Status oferecidos no filtro — só os "abertos": a tela inteira já parte do princípio de
+    // "produção aberta" (abertas() exclui concluído/cancelado), então oferecer esses dois like
+    // checkbox só geraria filtro contraditório (marcado, mas nunca aparece nada).
+    public static array $statusAbertosParaFiltro = [
+        'backlog', 'em_producao', 'revisao_interna', 'ajuste_alteracao', 'aprovacao', 'despacho_agendamento',
+    ];
 
     public function index(Request $request): View
     {
@@ -54,9 +63,14 @@ class ProductionPanelController extends Controller
             ->distinct()->pluck('creative_lead_id'))
             ->orderBy('name')->get(['id', 'name']);
 
+        $statusSelecionadosRaw = (array) $request->get('status', []); // pra marcar os checkboxes certos
+        $statusFiltroAtivo = (bool) $this->statusesSelecionados; // pra saber SE filtra de verdade
+        $sprintFila = $this->sprintFila;
+
         return view('producao.index', compact(
             'termometro', 'sprints', 'pessoas', 'clientes', 'tipos', 'volume', 'semana',
             'incluirInativos', 'clienteSel', 'executorSel', 'direcaoSel',
+            'statusSelecionadosRaw', 'statusFiltroAtivo', 'sprintFila',
             'opcoesClientes', 'opcoesExecutores', 'opcoesDirecaoCriativa'
         ));
     }
@@ -92,6 +106,15 @@ class ProductionPanelController extends Controller
         $this->clienteId         = $clienteSel?->id;
         $this->executorId        = $executorSel?->id;
         $this->direcaoCriativaId = $direcaoSel?->id;
+
+        // Status é cumulativo (várias marcadas ao mesmo tempo) e usa sentinela 'todos' pro
+        // "sem filtro" — mesmo padrão que a Sprint já usava: sem isso não dá pra distinguir
+        // "usuário não mexeu" de "usuário desmarcou tudo" só pela ausência do parâmetro.
+        $status = array_intersect((array) $request->get('status', []), self::$statusAbertosParaFiltro);
+        $this->statusesSelecionados = in_array('todos', (array) $request->get('status', []), true) ? [] : $status;
+
+        $this->sprintFila = in_array($request->get('sprint_fila'), ['sprint', 'fila'], true)
+            ? $request->get('sprint_fila') : '';
 
         return [$clienteSel, $executorSel, $direcaoSel];
     }
@@ -135,6 +158,16 @@ class ProductionPanelController extends Controller
                 ->orWhere(fn ($o) => $o
                     ->where('executor_id', $this->executorId)
                     ->whereDoesntHave('executors', fn ($e) => $e->where('task_executors.role', 'executor'))));
+        }
+
+        if ($this->statusesSelecionados) {
+            $query->whereIn('status', $this->statusesSelecionados);
+        }
+
+        if ($this->sprintFila === 'sprint') {
+            $query->whereNotNull('sprint_id');
+        } elseif ($this->sprintFila === 'fila') {
+            $query->whereNull('sprint_id');
         }
 
         return $query;

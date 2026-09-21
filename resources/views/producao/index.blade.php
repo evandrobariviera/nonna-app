@@ -19,76 +19,33 @@
     @endphp
 
     @php
-        $comFiltro = $clienteSel || $executorSel || $direcaoSel;
+        $comFiltro = $clienteSel || $executorSel || $direcaoSel || $statusFiltroAtivo || $sprintFila;
     @endphp
 
     <p class="text-sm mb-3" style="color:var(--muted)">
         Toda a produção aberta da agência: onde está, com quem está e o que já passou do prazo.
     </p>
 
-    {{-- ── Filtro global: molda a tela inteira, não só a tabela ── --}}
-    <form method="GET" action="{{ route('production-panel.index') }}"
-          class="card card-body mb-4 flex items-end gap-3 flex-wrap">
-        <div class="flex flex-col gap-1">
-            <label class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Cliente</label>
-            <select name="cliente" onchange="this.form.submit()"
-                    class="text-sm px-3 py-1.5" style="background:var(--s3); border:1px solid var(--border2); color:var(--text); min-width:220px">
-                <option value="">Todos os clientes</option>
-                @foreach($opcoesClientes as $op)
-                    <option value="{{ $op->id }}" @selected($clienteSel?->id === $op->id)>{{ $op->displayName() }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="flex flex-col gap-1">
-            <label class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Executor</label>
-            <select name="executor" onchange="this.form.submit()"
-                    class="text-sm px-3 py-1.5" style="background:var(--s3); border:1px solid var(--border2); color:var(--text); min-width:200px">
-                <option value="">Todo o time</option>
-                @foreach($opcoesExecutores as $op)
-                    <option value="{{ $op->id }}" @selected($executorSel?->id === $op->id)>{{ $op->name }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="flex flex-col gap-1">
-            <label class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Direção criativa</label>
-            <select name="direcao_criativa" onchange="this.form.submit()"
-                    class="text-sm px-3 py-1.5" style="background:var(--s3); border:1px solid var(--border2); color:var(--text); min-width:200px">
-                <option value="">Todas</option>
-                @foreach($opcoesDirecaoCriativa as $op)
-                    <option value="{{ $op->id }}" @selected($direcaoSel?->id === $op->id)>{{ $op->name }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <label class="flex items-center gap-2 text-xs font-semibold pb-1.5" style="color:var(--muted)">
-            <input type="checkbox" name="inativos" value="1" @checked($incluirInativos) onchange="this.form.submit()">
-            Incluir clientes inativos
-        </label>
-
-        @if($comFiltro)
-            <a href="{{ route('production-panel.index') }}" class="text-xs font-semibold pb-1.5" style="color:var(--purple)">
-                Limpar filtros
-            </a>
-        @endif
-    </form>
-
     @if($comFiltro)
         @php
             // Monta "pelo cliente X, pelo executor Y e pela direção criativa Z" com vírgula
-            // entre os itens do meio e "e" só antes do último — sem isso, com os 3 filtros
+            // entre os itens do meio e "e" só antes do último — sem isso, com vários filtros
             // ativos ao mesmo tempo, a frase ficava ambígua sobre quantos "e" cabiam.
             $partes = array_filter([
                 $clienteSel ? 'pelo cliente <strong style="color:var(--text)">' . e($clienteSel->displayName()) . '</strong>' : null,
                 $executorSel ? 'pelo executor <strong style="color:var(--text)">' . e($executorSel->name) . '</strong>' : null,
                 $direcaoSel ? 'pela direção criativa <strong style="color:var(--text)">' . e($direcaoSel->name) . '</strong>' : null,
+                $sprintFila ? 'só o que está ' . ($sprintFila === 'sprint' ? 'em sprint' : 'na fila') : null,
+                $statusFiltroAtivo
+                    ? 'nos status <strong style="color:var(--text)">' . e(collect($statusSelecionadosRaw)
+                        ->map(fn ($s) => \App\Models\Task::$statuses[$s]['label'] ?? $s)->implode(', ')) . '</strong>'
+                    : null,
             ]);
             $ultima = array_pop($partes);
             $frase = $partes ? implode(', ', $partes) . ' e ' . $ultima : $ultima;
         @endphp
         <p class="text-xs mb-4" style="color:var(--muted2)">
-            Todos os blocos abaixo estão recortados {!! $frase !!}.
+            Toda a tela está recortada {!! $frase !!}.
         </p>
     @endif
 
@@ -339,6 +296,87 @@
         </div>
     </div>
 
+    {{-- ── Filtro global: molda a tela inteira (tudo acima também), não só a Semana abaixo.
+         Fica aqui — igual ao filtro dedicado da aba Semana da Sprint — porque é onde ele mais
+         se usa: recortar por cliente/status pra organizar a produção da semana. ── --}}
+    <form method="GET" action="{{ route('production-panel.index') }}"
+          class="card card-body mb-4 flex flex-wrap items-end gap-3">
+        <div class="flex-1 min-w-36">
+            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Cliente</label>
+            <select name="cliente" onchange="this.form.submit()"
+                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                <option value="">Todos os clientes</option>
+                @foreach($opcoesClientes as $op)
+                    <option value="{{ $op->id }}" @selected($clienteSel?->id === $op->id)>{{ $op->displayName() }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="min-w-44">
+            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Executor</label>
+            <select name="executor" onchange="this.form.submit()"
+                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                <option value="">Todo o time</option>
+                @foreach($opcoesExecutores as $op)
+                    <option value="{{ $op->id }}" @selected($executorSel?->id === $op->id)>{{ $op->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="min-w-44">
+            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Direção criativa</label>
+            <select name="direcao_criativa" onchange="this.form.submit()"
+                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                <option value="">Todas</option>
+                @foreach($opcoesDirecaoCriativa as $op)
+                    <option value="{{ $op->id }}" @selected($direcaoSel?->id === $op->id)>{{ $op->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="min-w-40">
+            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Sprint ou Fila</label>
+            <select name="sprint_fila" onchange="this.form.submit()"
+                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                <option value="" @selected($sprintFila === '')>Tudo</option>
+                <option value="sprint" @selected($sprintFila === 'sprint')>Só em sprint</option>
+                <option value="fila" @selected($sprintFila === 'fila')>Só na fila</option>
+            </select>
+        </div>
+
+        <label class="flex items-center gap-2 text-xs font-semibold pb-1.5" style="color:var(--muted)">
+            <input type="checkbox" name="inativos" value="1" @checked($incluirInativos) onchange="this.form.submit()">
+            Incluir clientes inativos
+        </label>
+
+        @if($comFiltro)
+            <a href="{{ route('production-panel.index') }}" class="text-xs font-semibold pb-1.5" style="color:var(--purple)">
+                ✕ Limpar filtros
+            </a>
+        @endif
+
+        {{-- Status é cumulativo (pode marcar mais de um) — "Todos" é um checkbox próprio, não
+             "nenhum marcado", senão não dá pra saber se o usuário desmarcou tudo de propósito
+             ou simplesmente nunca mexeu (ver ProductionPanelController::resolverFiltrosGlobais()). --}}
+        <div class="w-full">
+            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Status (pode marcar mais de um)</label>
+            <div class="flex flex-wrap gap-1.5">
+                <label class="flex items-center gap-1.5 text-xs cursor-pointer px-2.5 py-1.5" style="border:1px solid var(--border2); border-radius:6px; color:var(--muted2)">
+                    <input type="checkbox" name="status[]" value="todos" onchange="this.form.submit()"
+                        {{ ! $statusFiltroAtivo ? 'checked' : '' }} style="accent-color:var(--purple)">
+                    Todos
+                </label>
+                @foreach(\App\Http\Controllers\ProductionPanelController::$statusAbertosParaFiltro as $key)
+                    <label class="flex items-center gap-1.5 text-xs cursor-pointer px-2.5 py-1.5" style="border:1px solid var(--border2); border-radius:6px; color:var(--muted2)">
+                        <input type="checkbox" name="status[]" value="{{ $key }}" onchange="this.form.submit()"
+                            {{ in_array($key, $statusSelecionadosRaw, true) ? 'checked' : '' }} style="accent-color:var(--purple)">
+                        {{ \App\Models\Task::$statuses[$key]['label'] }}
+                    </label>
+                @endforeach
+            </div>
+        </div>
+    </form>
+
     {{-- ── Semana de Produção: todas as tarefas abertas, arrastáveis entre dias ── --}}
     <div class="card card-body-lg mb-4">
         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.1em">
@@ -349,8 +387,9 @@
             use o botão "Mover" — pra mudar a data direto, sem abrir a tarefa.
         </p>
 
-        {{-- Formulário oculto: só carrega os filtros globais e a semana em exibição pro fetch
-             AJAX do fragmento abaixo (mesmo padrão da aba Semana da Sprint). --}}
+        {{-- Formulário oculto: carrega o filtro acima + a semana em exibição pro fetch AJAX do
+             fragmento abaixo (só a navegação de semana passa por aqui; mudar qualquer filtro
+             recarrega a página inteira, porque ele afeta os blocos acima também). --}}
         <form method="GET" action="{{ route('production-panel.index') }}" id="producao-week-filter-form"
               data-live-filter data-results-url="{{ route('production-panel.week-results') }}" data-target="#producao-week-results"
               style="display:none">
@@ -358,6 +397,10 @@
             <input type="hidden" name="executor" value="{{ $executorSel?->id }}">
             <input type="hidden" name="direcao_criativa" value="{{ $direcaoSel?->id }}">
             <input type="hidden" name="inativos" value="{{ $incluirInativos ? 1 : '' }}">
+            <input type="hidden" name="sprint_fila" value="{{ $sprintFila }}">
+            @foreach($statusSelecionadosRaw as $s)
+                <input type="hidden" name="status[]" value="{{ $s }}">
+            @endforeach
             <input type="hidden" name="week_offset" id="producao-week-offset-input" value="{{ $semana['weekOffset'] }}">
         </form>
 
