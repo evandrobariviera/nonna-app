@@ -251,8 +251,8 @@
         </p>
         <p class="text-xs mb-4" style="color:var(--muted2)">
             Toda tarefa aberta, na coluna do dia da sua data de aprovação. Arraste um card pra outro dia
-            pra mudar a data direto, sem abrir a tarefa. Use as setas nas pontas do quadro pra ver mais um
-            dia pra frente ou pra trás.
+            pra mudar a data direto, sem abrir a tarefa. As setas nas pontas do quadro andam um dia por vez,
+            sempre mantendo 5 dias na tela.
         </p>
 
         {{-- Formulário oculto: carrega o filtro acima + a semana em exibição pro fetch AJAX do

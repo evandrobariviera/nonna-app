@@ -3,10 +3,10 @@
      a agência inteira (com os filtros do topo) em vez de uma sprint só.
 
      "Antes desta semana" não é mais coluna, é só uma contagem (ver opinião do Evandro): dá pra
-     ver essas tarefas navegando a régua pro passado, seja pelos botões de semana seja
-     estendendo dia a dia pela borda esquerda (ver producao-week-scroll.js). Tarefa sem data de
-     aprovação, ou com data muito à frente, não aparece em nenhuma coluna — só entra na linha
-     informativa abaixo da navegação. --}}
+     ver essas tarefas navegando a régua pro passado, seja pelos botões de semana seja andando
+     dia a dia pelas setas (carrossel de 5 dias fixos — ver producao-week-scroll.js). Tarefa sem
+     data de aprovação, ou com data muito à frente, não aparece em nenhuma coluna — só entra na
+     linha informativa abaixo da navegação. --}}
 @php
     $foraDoQuadro = collect([
         $semDataCount > 0 ? $semDataCount . ' tarefa' . ($semDataCount !== 1 ? 's' : '') . ' sem data de aprovação' : null,
@@ -61,12 +61,12 @@
     @endphp
 
     <button type="button" id="producao-week-extend-before" style="{{ $btnStyle }}; display:none"
-            title="Ver mais um dia pra trás">‹</button>
+            title="Andar um dia pra trás">‹</button>
 
     @foreach($dias as $dia)
         @include('producao._week-day-column', ['dia' => $dia])
     @endforeach
 
     <button type="button" id="producao-week-extend-after" style="{{ $btnStyle }}"
-            title="Ver mais um dia pra frente">›</button>
+            title="Andar um dia pra frente">›</button>
 </div>

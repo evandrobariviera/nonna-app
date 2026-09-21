@@ -1,9 +1,9 @@
-// Extensão dia-a-dia da Semana de Produção: os botões ‹ › nas pontas do quadro buscam UM dia
-// a mais via AJAX (não a semana inteira) e inserem a coluna sem recarregar nada — pensado pro
-// custo de servidor: cada clique é uma consulta leve (ver ProductionPanelController::
-// diaKanban()), não o board inteiro de novo. Limitado a ±7 dias de hoje; pra ir mais longe,
-// os botões "‹ Semana anterior / Próxima semana ›" (que também são AJAX, só que buscam 5 dias
-// de uma vez) continuam ali em cima.
+// Carrossel dia-a-dia da Semana de Produção: sempre 5 dias na tela. Os botões ‹ › nas pontas
+// deslocam a janela um dia por vez — soma um dia novo de um lado e tira o mais distante do
+// outro, buscando via AJAX só o dia que entra (não a semana toda de novo, ver
+// ProductionPanelController::diaKanban()). Limitado a ±7 dias de hoje; pra ir mais longe, os
+// botões "‹ Semana anterior / Próxima semana ›" (também AJAX, só que trocam os 5 de uma vez)
+// continuam ali em cima.
 // Registrado em window (não export puro) igual initKanbanDnd — a página chama isso de um
 // <script> comum no blade, não de um módulo ES.
 export function registerProducaoWeekScroll() {
@@ -47,7 +47,7 @@ function initProducaoWeekScroll() {
         btnAfter.style.display = Math.abs(diasDeHoje(proximoDiaUtil(ultima, 1))) > LIMITE_DIAS ? 'none' : '';
     }
 
-    function estender(direcao) {
+    function deslocar(direcao) {
         const cols = colunas();
         if (!cols.length) return;
 
@@ -71,9 +71,11 @@ function initProducaoWeekScroll() {
                 if (direcao < 0) {
                     btnBefore.insertAdjacentHTML('afterend', html);
                     novaColuna = btnBefore.nextElementSibling;
+                    cols[cols.length - 1].remove(); // sai o dia mais distante do lado de cá
                 } else {
                     btnAfter.insertAdjacentHTML('beforebegin', html);
                     novaColuna = btnAfter.previousElementSibling;
+                    cols[0].remove(); // sai o dia mais distante do outro lado
                 }
                 // Conteúdo inserido via insertAdjacentHTML não passa pelo scan automático do
                 // Alpine — sem isso, o @click de abrir o popup e o x-show de "mostrar mais"
@@ -86,7 +88,7 @@ function initProducaoWeekScroll() {
             .finally(() => { btn.disabled = false; });
     }
 
-    btnBefore.onclick = () => estender(-1);
-    btnAfter.onclick = () => estender(1);
+    btnBefore.onclick = () => deslocar(-1);
+    btnAfter.onclick = () => deslocar(1);
     atualizarLimites();
 }
