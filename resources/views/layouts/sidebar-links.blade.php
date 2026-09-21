@@ -4,9 +4,9 @@
      memoiza pelo local da chamada (mesmo arquivo+linha), então a 2ª inclusão
      reaproveita o resultado da 1ª em vez de rodar tudo de novo. --}}
 @php
-    {{-- Ordem crescente de período = ordem de numeração das sprints (a numeração segue a
-         quinzena). Descendente trazia as 5 sprints MAIS DISTANTES, que é justamente o que
-         ninguém usa — o atalho serve pra sprint corrente e as próximas. --}}
+    // Ordem crescente de período = ordem de numeração das sprints (a numeração segue a
+    // quinzena). Descendente trazia as 5 sprints MAIS DISTANTES, que é justamente o que
+    // ninguém usa — o atalho serve pra sprint corrente e as próximas.
     $_sidebarSprints = once(fn () => \App\Models\Sprint::whereIn('status', ['active', 'planning'])
         ->orderByRaw("CASE status WHEN 'active' THEN 0 ELSE 1 END")
         ->orderBy('starts_at')
