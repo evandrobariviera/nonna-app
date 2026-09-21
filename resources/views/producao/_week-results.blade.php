@@ -95,58 +95,45 @@
                     }
                     $respList = $task->executors->filter(fn($u) => $u->pivot->role === 'responsavel');
                     $approvalUrl = route('tasks.update-approval-date-direct', $task);
-                    $thumbUrl = $task->firstImageAttachmentUrl();
                 @endphp
-                <div class="card px-0 py-0 relative overflow-hidden" x-data="{ moveOpen: false, moveStyle: '' }"
+                {{-- Card reduzido de propósito: sem miniatura nem ícone de tipo. Com a "Semana
+                     anterior" facilmente passando de 150 tarefas, cada imagem carregada
+                     distorcia a coluna inteira — o essencial pra decidir "pra quando mover
+                     isso" é título, cliente e quem cuida, não a peça em si. --}}
+                <div class="px-2.5 py-2 relative" x-data="{ moveOpen: false, moveStyle: '' }"
                      @if($i >= $capa) x-show="mostrarMais" x-cloak @endif
                      data-kanban-card data-id="{{ $task->id }}" data-update-url="{{ $approvalUrl }}"
-                     style="{{ $task->isOverdue() ? 'border-left:3px solid var(--red)' : '' }}; cursor:pointer"
+                     style="background:var(--s1); border:1px solid var(--border2);
+                            {{ $task->isOverdue() ? 'border-left:3px solid var(--red)' : '' }}; cursor:pointer"
                      @click="window.location = '{{ route('tasks.show', $task) }}'">
 
-                    @if($thumbUrl)
-                        <img src="{{ $thumbUrl }}" alt="" class="w-full object-cover" style="height:80px">
-                    @endif
+                    <p class="text-xs font-mono truncate" style="color:var(--purple)">
+                        {{ $task->client?->displayName() ?? '—' }}
+                        <span style="color:var(--border2)">·</span>
+                        <span style="color:{{ $task->sprint_id ? 'var(--muted)' : 'var(--orange)' }}">{{ $task->sprint_id ? 'Sprint' : 'Fila' }}</span>
+                    </p>
 
-                    <div class="px-4 py-3">
-                        <p class="text-xs font-mono mb-1" style="color:var(--purple)">
-                            {{ $task->client?->displayName() ?? '—' }}
-                            @if($task->sprint_id)
-                                <span style="color:var(--border2)"> / </span>
-                                <span style="color:var(--muted)">Sprint</span>
-                            @else
-                                <span style="color:var(--border2)"> / </span>
-                                <span style="color:var(--orange)">Fila</span>
-                            @endif
-                        </p>
+                    <p class="text-xs font-semibold leading-snug mt-0.5" style="color:var(--text)">
+                        {{ $task->title }}
+                    </p>
 
-                        <div class="flex items-center gap-2 mb-2">
-                            <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="30" />
-                            <p class="text-xs font-semibold leading-snug min-w-0" style="color:var(--text)">
-                                {{ $task->title }}
-                            </p>
+                    <div class="flex items-center justify-between gap-1 mt-1.5">
+                        <div class="flex items-center gap-1">
+                            @forelse($respList as $resp)
+                                <x-user-avatar :user="$resp" size="5" color="var(--orange)" title="{{ $resp->name }} (Responsável)" />
+                            @empty
+                                @if($execList->isEmpty())
+                                    <span class="text-xs" style="color:var(--muted2)">—</span>
+                                @endif
+                            @endforelse
+                            @foreach($execList as $exec)
+                                <x-user-avatar :user="$exec" size="5" color="var(--purple)" title="{{ $exec->name }} (Executor)" />
+                            @endforeach
                         </div>
 
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="badge badge-{{ $task->statusColor() }}" style="font-size:10px">{{ $task->statusLabel() }}</span>
-                            @if($task->priority && $task->priority !== 'normal')
-                                <span class="badge badge-{{ $task->priorityColor() }}" style="font-size:10px">{{ $task->priorityLabel() }}</span>
-                            @endif
-                        </div>
-
-                        @if($respList->isNotEmpty() || $execList->isNotEmpty())
-                            <div class="flex items-center gap-1 mb-2">
-                                @foreach($respList as $resp)
-                                    <x-user-avatar :user="$resp" size="6" color="var(--orange)" title="{{ $resp->name }} (Responsável)" />
-                                @endforeach
-                                @foreach($execList as $exec)
-                                    <x-user-avatar :user="$exec" size="6" color="var(--purple)" title="{{ $exec->name }} (Executor)" />
-                                @endforeach
-                            </div>
-                        @endif
-
-                        <div class="flex items-center gap-1.5 pt-2 relative" style="border-top:1px solid var(--border2)" @click.stop>
+                        <div @click.stop>
                             <button @click="moveOpen = !moveOpen; moveStyle = dropdownStyle($el, 'top-left')" @click.stop type="button"
-                                class="text-xs px-2 py-0.5 font-mono flex items-center gap-1"
+                                class="text-xs px-1.5 py-0.5 font-mono flex items-center gap-0.5"
                                 style="border:1px solid var(--border2); color:var(--muted)">
                                 Mover <span style="opacity:.7">▾</span>
                             </button>

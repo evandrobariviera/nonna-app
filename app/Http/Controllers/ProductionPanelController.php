@@ -484,13 +484,13 @@ class ProductionPanelController extends Controller
             $weekDays->push($d->copy());
         }
 
-        // 'attachments' precisa vir junto: firstImageAttachmentUrl() consulta o banco toda
-        // vez que a relação não está carregada — sem isso, 400+ tarefas viram 400+ consultas
-        // extras só pra descobrir se tem miniatura. Ao contrário da Sprint, o card aqui não
-        // mostra Projeto/Planejamento/Reunião (só Sprint × Fila), então essas relações nem
-        // entram no eager load.
+        // Card reduzido de propósito (sem miniatura, sem ícone de tipo — ver a view): com
+        // ~400+ tarefas na tela, carregar imagem por card é o que mais pesava o navegador.
+        // Só o essencial pra decidir "pra quando mover isso" entra aqui, então o eager load
+        // também fica mais magro — nem 'attachments' nem relações de Projeto/Planejamento
+        // entram, já que o card não mostra nenhum dos dois (só Sprint × Fila).
         $tasks = $this->abertas()
-            ->with(['client', 'executor', 'executors', 'attachments'])
+            ->with(['client', 'executor', 'executors'])
             ->get();
 
         $weekDateStrings = $weekDays->map->toDateString();
