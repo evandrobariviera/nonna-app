@@ -77,8 +77,17 @@
                 <span class="text-xs font-mono font-bold" data-kanban-count style="color:var(--muted)">{{ $colTasks->count() }}</span>
             </div>
 
-            <div class="flex flex-col gap-2" style="min-height:40px; max-height:70vh; overflow-y:auto" data-kanban-list>
-            @forelse($colTasks as $task)
+            @php
+                // Coluna com muito card (a "Semana anterior" facilmente passa de 100) trava o
+                // navegador se renderizar tudo de cara: cada card tem imagem, avatares e um
+                // dropdown teleportado, e o Alpine tem que hidratar cada um. Mostra só os
+                // primeiros e revela o resto sob pedido — sem isso a coluna cheia aparece
+                // visualmente quebrada (linhas espremidas), não é só lentidão.
+                $capa = 30;
+            @endphp
+            <div class="flex flex-col gap-2" style="min-height:40px; max-height:70vh; overflow-y:auto"
+                 data-kanban-list @if($colTasks->count() > $capa) x-data="{ mostrarMais: false }" @endif>
+            @forelse($colTasks as $i => $task)
                 @php
                     $execList = $task->executors->filter(fn($u) => $u->pivot->role === 'executor');
                     if ($execList->isEmpty() && $task->executor) {
@@ -89,6 +98,7 @@
                     $thumbUrl = $task->firstImageAttachmentUrl();
                 @endphp
                 <div class="card px-0 py-0 relative overflow-hidden" x-data="{ moveOpen: false, moveStyle: '' }"
+                     @if($i >= $capa) x-show="mostrarMais" x-cloak @endif
                      data-kanban-card data-id="{{ $task->id }}" data-update-url="{{ $approvalUrl }}"
                      style="{{ $task->isOverdue() ? 'border-left:3px solid var(--red)' : '' }}; cursor:pointer"
                      @click="window.location = '{{ route('tasks.show', $task) }}'">
@@ -170,6 +180,14 @@
                     Sem tarefas
                 </div>
             @endforelse
+
+            @if($colTasks->count() > $capa)
+                <button type="button" x-show="!mostrarMais" @click="mostrarMais = true" x-cloak
+                        class="text-xs font-semibold py-2 text-center"
+                        style="color:var(--purple); border:1px dashed var(--border2); background:var(--s2)">
+                    + mostrar mais {{ $colTasks->count() - $capa }} tarefa{{ ($colTasks->count() - $capa) !== 1 ? 's' : '' }}
+                </button>
+            @endif
             </div>
         </div>
     @endforeach
