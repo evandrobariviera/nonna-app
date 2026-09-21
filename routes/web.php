@@ -688,6 +688,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('production-panel.index');
     Route::get('/producao/semana', [\App\Http\Controllers\ProductionPanelController::class, 'weekResults'])
         ->name('production-panel.week-results');
+    Route::get('/producao/semana/dia', [\App\Http\Controllers\ProductionPanelController::class, 'diaResultados'])
+        ->name('production-panel.dia-results');
 
     // ── Painel de Produtividade ──
     Route::get('/produtividade', [\App\Http\Controllers\ProductivityDashboardController::class, 'index'])

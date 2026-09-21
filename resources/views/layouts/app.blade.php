@@ -46,9 +46,16 @@
     </style>
     @endisset
 </head>
+@php
+    // Modo enxuto pra quando a página é aberta dentro do popup de tarefa (ver
+    // task-popup.js): sem sidebar nem topbar, só o conteúdo — evita mostrar o app
+    // inteiro aninhado dentro de si mesmo num iframe pequeno.
+    $embed = request()->boolean('embed');
+@endphp
 <body class="h-screen overflow-hidden">
 
     {{-- ── MOBILE DRAWER ── --}}
+    @unless($embed)
     <div x-show="sidebarOpen" class="fixed inset-0 z-50 flex md:hidden" x-cloak>
         <div class="fixed inset-0 bg-black/60" @click="sidebarOpen = false"
              x-transition:enter="transition-opacity duration-200"
@@ -76,11 +83,13 @@
             </nav>
         </div>
     </div>
+    @endunless
 
     {{-- ── LAYOUT PRINCIPAL ── --}}
     <div class="flex h-screen">
 
         {{-- ── SIDEBAR DESKTOP ── --}}
+        @unless($embed)
         <aside class="hidden md:flex md:w-64 md:flex-col sidebar-nav flex-shrink-0">
             {{-- Logo --}}
             <a href="{{ route('dashboard') }}" class="flex h-16 items-center px-6 border-b transition-opacity hover:opacity-80" style="border-color:var(--border); flex-shrink:0">
@@ -123,11 +132,13 @@
                 </form>
             </div>
         </aside>
+        @endunless
 
         {{-- ── CONTEÚDO PRINCIPAL ── --}}
         <div class="flex flex-1 flex-col min-w-0">
 
             {{-- TOPBAR --}}
+            @unless($embed)
             <header class="topbar flex h-16 flex-shrink-0 items-center gap-2 md:gap-4 px-3 md:px-6">
                 {{-- Botão mobile --}}
                 <button type="button" class="md:hidden -ml-1 p-1.5" style="color:var(--muted)" @click="sidebarOpen = true">
@@ -331,6 +342,7 @@
                     Nonna OS
                 </span>
             </header>
+            @endunless
 
             {{-- PÁGINA --}}
             <main class="app-page flex-1 overflow-y-auto p-4 pb-24 md:p-6 md:pb-6" style="background:var(--bg)">
@@ -348,7 +360,9 @@
 
     {{-- ── BARRA DE NAVEGAÇÃO INFERIOR (só mobile) ── --}}
     @auth
-        @include('layouts.bottom-nav')
+        @unless($embed)
+            @include('layouts.bottom-nav')
+        @endunless
     @endauth
 
     {{-- ── PAINEL LATERAL (canvas) ── carrega detalhe de Cliente/Projeto sem sair da página atual ── --}}
@@ -394,6 +408,39 @@
                 Não foi possível carregar os detalhes.
             </div>
             <div x-show="!$store.sidePanel.loading && !$store.sidePanel.error" x-html="$store.sidePanel.html"></div>
+        </div>
+    </div>
+
+    {{-- ── POPUP DE TAREFA ── carrega a tela real da tarefa num iframe, por cima da página
+         atual — a tela de baixo (Painel de Produção, Sprint, etc.) nunca navega. ── --}}
+    <div x-show="$store.taskPopup.visible" x-cloak
+         @keydown.escape.window="$store.taskPopup.close()"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
+         style="background:rgba(0,0,0,.55)">
+        <div @click.outside="$store.taskPopup.close()"
+             class="relative flex flex-col w-full h-full rounded-lg overflow-hidden shadow-2xl"
+             style="max-width:1200px; background:var(--bg)">
+            <div class="flex items-center justify-end gap-1.5 h-11 px-3 flex-shrink-0" style="background:var(--s2); border-bottom:1px solid var(--border2)">
+                <a :href="$store.taskPopup.url ? $store.taskPopup.url.replace(/[?&]embed=1/, '') : '#'"
+                   target="_blank" rel="noopener"
+                   class="flex items-center justify-center w-7 h-7 rounded-lg transition-colors"
+                   style="color:var(--muted)"
+                   onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
+                   onmouseout="this.style.background=''; this.style.color='var(--muted)'"
+                   title="Abrir a tarefa numa aba própria">
+                    <x-icon name="external-link" size="14" />
+                </a>
+                <button @click="$store.taskPopup.close()"
+                    class="flex items-center justify-center w-7 h-7 rounded-lg transition-colors"
+                    style="color:var(--muted)"
+                    onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
+                    onmouseout="this.style.background=''; this.style.color='var(--muted)'"
+                    title="Fechar (Esc)">
+                    <x-icon name="x" size="15" />
+                </button>
+            </div>
+            <iframe x-show="$store.taskPopup.visible" :src="$store.taskPopup.url || 'about:blank'"
+                    class="flex-1 w-full" style="border:0"></iframe>
         </div>
     </div>
 

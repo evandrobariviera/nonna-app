@@ -14,9 +14,14 @@ export function registerKanbanDnd() {
     window.initKanbanDnd = function (boardSelector) {
         document.querySelectorAll(boardSelector).forEach((board) => {
             const statusField = board.dataset.statusField || 'status';
-            const groupName = 'kanban-' + Math.random().toString(36).slice(2);
+            // Nome do grupo persiste no próprio board (dataset) — permite chamar de novo mais
+            // tarde, com segurança, quando uma coluna nova entra via AJAX (ex: extensão dia-a-
+            // dia da Semana de Produção) sem recriar Sortable nas colunas que já tinham.
+            const groupName = board.dataset.kanbanGroup || ('kanban-' + Math.random().toString(36).slice(2));
+            board.dataset.kanbanGroup = groupName;
 
-            board.querySelectorAll('[data-kanban-list]').forEach((list) => {
+            board.querySelectorAll('[data-kanban-list]:not([data-kanban-ready])').forEach((list) => {
+                list.dataset.kanbanReady = '1';
                 new Sortable(list, {
                     group: groupName,
                     sort: false,

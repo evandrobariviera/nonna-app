@@ -163,6 +163,136 @@
         @endif
     </div>
 
+    {{-- ── Filtro global: molda a tela inteira, não só a Semana logo abaixo. Fica aqui — igual
+         ao filtro dedicado que a aba Semana da Sprint tinha — porque é onde ele mais se usa:
+         recortar por cliente/status pra organizar a produção da semana. ── --}}
+    <form method="GET" action="{{ route('production-panel.index') }}"
+          class="card card-body mb-4 flex flex-wrap items-end gap-3">
+        <div class="flex-1 min-w-36">
+            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Cliente</label>
+            <select name="cliente" onchange="this.form.submit()"
+                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                <option value="">Todos os clientes</option>
+                @foreach($opcoesClientes as $op)
+                    <option value="{{ $op->id }}" @selected($clienteSel?->id === $op->id)>{{ $op->displayName() }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="min-w-44">
+            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Executor</label>
+            <select name="executor" onchange="this.form.submit()"
+                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                <option value="">Todo o time</option>
+                @foreach($opcoesExecutores as $op)
+                    <option value="{{ $op->id }}" @selected($executorSel?->id === $op->id)>{{ $op->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="min-w-44">
+            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Direção criativa</label>
+            <select name="direcao_criativa" onchange="this.form.submit()"
+                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                <option value="">Todas</option>
+                @foreach($opcoesDirecaoCriativa as $op)
+                    <option value="{{ $op->id }}" @selected($direcaoSel?->id === $op->id)>{{ $op->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="min-w-40">
+            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Sprint ou Fila</label>
+            <select name="sprint_fila" onchange="this.form.submit()"
+                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                <option value="" @selected($sprintFila === '')>Tudo</option>
+                <option value="sprint" @selected($sprintFila === 'sprint')>Só em sprint</option>
+                <option value="fila" @selected($sprintFila === 'fila')>Só na fila</option>
+            </select>
+        </div>
+
+        <label class="flex items-center gap-2 text-xs font-semibold pb-1.5" style="color:var(--muted)">
+            <input type="checkbox" name="inativos" value="1" @checked($incluirInativos) onchange="this.form.submit()">
+            Incluir clientes inativos
+        </label>
+
+        @if($comFiltro)
+            <a href="{{ route('production-panel.index') }}" class="text-xs font-semibold pb-1.5" style="color:var(--purple)">
+                ✕ Limpar filtros
+            </a>
+        @endif
+
+        {{-- Status é cumulativo (pode marcar mais de um) — "Todos" é um checkbox próprio, não
+             "nenhum marcado", senão não dá pra saber se o usuário desmarcou tudo de propósito
+             ou simplesmente nunca mexeu (ver ProductionPanelController::resolverFiltrosGlobais()). --}}
+        <div class="w-full">
+            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Status (pode marcar mais de um)</label>
+            <div class="flex flex-wrap gap-1.5">
+                <label class="flex items-center gap-1.5 text-xs cursor-pointer px-2.5 py-1.5" style="border:1px solid var(--border2); border-radius:6px; color:var(--muted2)">
+                    <input type="checkbox" name="status[]" value="todos" onchange="this.form.submit()"
+                        {{ ! $statusFiltroAtivo ? 'checked' : '' }} style="accent-color:var(--purple)">
+                    Todos
+                </label>
+                @foreach(\App\Http\Controllers\ProductionPanelController::$statusAbertosParaFiltro as $key)
+                    <label class="flex items-center gap-1.5 text-xs cursor-pointer px-2.5 py-1.5" style="border:1px solid var(--border2); border-radius:6px; color:var(--muted2)">
+                        <input type="checkbox" name="status[]" value="{{ $key }}" onchange="this.form.submit()"
+                            {{ in_array($key, $statusSelecionadosRaw, true) ? 'checked' : '' }} style="accent-color:var(--purple)">
+                        {{ \App\Models\Task::$statuses[$key]['label'] }}
+                    </label>
+                @endforeach
+            </div>
+        </div>
+    </form>
+
+    {{-- ── Semana de Produção: todas as tarefas abertas, arrastáveis entre dias ── --}}
+    <div class="card card-body-lg mb-4">
+        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.1em">
+            Semana de Produção
+        </p>
+        <p class="text-xs mb-4" style="color:var(--muted2)">
+            Toda tarefa aberta, na coluna do dia da sua data de aprovação. Arraste um card pra outro dia
+            pra mudar a data direto, sem abrir a tarefa. Use as setas nas pontas do quadro pra ver mais um
+            dia pra frente ou pra trás.
+        </p>
+
+        {{-- Formulário oculto: carrega o filtro acima + a semana em exibição pro fetch AJAX do
+             fragmento abaixo (só a navegação de semana/dia passa por aqui; mudar qualquer
+             filtro recarrega a página inteira, porque ele afeta os blocos acima também). --}}
+        <form method="GET" action="{{ route('production-panel.index') }}" id="producao-week-filter-form"
+              data-live-filter data-results-url="{{ route('production-panel.week-results') }}" data-target="#producao-week-results"
+              data-day-results-url="{{ route('production-panel.dia-results') }}"
+              style="display:none">
+            <input type="hidden" name="cliente" value="{{ $clienteSel?->id }}">
+            <input type="hidden" name="executor" value="{{ $executorSel?->id }}">
+            <input type="hidden" name="direcao_criativa" value="{{ $direcaoSel?->id }}">
+            <input type="hidden" name="inativos" value="{{ $incluirInativos ? 1 : '' }}">
+            <input type="hidden" name="sprint_fila" value="{{ $sprintFila }}">
+            @foreach($statusSelecionadosRaw as $s)
+                <input type="hidden" name="status[]" value="{{ $s }}">
+            @endforeach
+            <input type="hidden" name="week_offset" id="producao-week-offset-input" value="{{ $semana['weekOffset'] }}">
+        </form>
+
+        <div id="producao-week-results">
+            @include('producao._week-results', $semana)
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            function initWeekBoard() {
+                if (document.getElementById('producao-week-board')) {
+                    initKanbanDnd('#producao-week-board');
+                    initProducaoWeekScroll();
+                }
+            }
+            initWeekBoard();
+            document.getElementById('producao-week-results').addEventListener('live-filter:updated', initWeekBoard);
+        });
+    </script>
+    @endpush
+
     <div class="grid md:grid-cols-2 gap-4 mb-4">
 
         {{-- ── Distribuição entre as sprints ── --}}
@@ -295,133 +425,6 @@
             @endforeach
         </div>
     </div>
-
-    {{-- ── Filtro global: molda a tela inteira (tudo acima também), não só a Semana abaixo.
-         Fica aqui — igual ao filtro dedicado da aba Semana da Sprint — porque é onde ele mais
-         se usa: recortar por cliente/status pra organizar a produção da semana. ── --}}
-    <form method="GET" action="{{ route('production-panel.index') }}"
-          class="card card-body mb-4 flex flex-wrap items-end gap-3">
-        <div class="flex-1 min-w-36">
-            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Cliente</label>
-            <select name="cliente" onchange="this.form.submit()"
-                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                <option value="">Todos os clientes</option>
-                @foreach($opcoesClientes as $op)
-                    <option value="{{ $op->id }}" @selected($clienteSel?->id === $op->id)>{{ $op->displayName() }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="min-w-44">
-            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Executor</label>
-            <select name="executor" onchange="this.form.submit()"
-                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                <option value="">Todo o time</option>
-                @foreach($opcoesExecutores as $op)
-                    <option value="{{ $op->id }}" @selected($executorSel?->id === $op->id)>{{ $op->name }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="min-w-44">
-            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Direção criativa</label>
-            <select name="direcao_criativa" onchange="this.form.submit()"
-                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                <option value="">Todas</option>
-                @foreach($opcoesDirecaoCriativa as $op)
-                    <option value="{{ $op->id }}" @selected($direcaoSel?->id === $op->id)>{{ $op->name }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="min-w-40">
-            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Sprint ou Fila</label>
-            <select name="sprint_fila" onchange="this.form.submit()"
-                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
-                <option value="" @selected($sprintFila === '')>Tudo</option>
-                <option value="sprint" @selected($sprintFila === 'sprint')>Só em sprint</option>
-                <option value="fila" @selected($sprintFila === 'fila')>Só na fila</option>
-            </select>
-        </div>
-
-        <label class="flex items-center gap-2 text-xs font-semibold pb-1.5" style="color:var(--muted)">
-            <input type="checkbox" name="inativos" value="1" @checked($incluirInativos) onchange="this.form.submit()">
-            Incluir clientes inativos
-        </label>
-
-        @if($comFiltro)
-            <a href="{{ route('production-panel.index') }}" class="text-xs font-semibold pb-1.5" style="color:var(--purple)">
-                ✕ Limpar filtros
-            </a>
-        @endif
-
-        {{-- Status é cumulativo (pode marcar mais de um) — "Todos" é um checkbox próprio, não
-             "nenhum marcado", senão não dá pra saber se o usuário desmarcou tudo de propósito
-             ou simplesmente nunca mexeu (ver ProductionPanelController::resolverFiltrosGlobais()). --}}
-        <div class="w-full">
-            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Status (pode marcar mais de um)</label>
-            <div class="flex flex-wrap gap-1.5">
-                <label class="flex items-center gap-1.5 text-xs cursor-pointer px-2.5 py-1.5" style="border:1px solid var(--border2); border-radius:6px; color:var(--muted2)">
-                    <input type="checkbox" name="status[]" value="todos" onchange="this.form.submit()"
-                        {{ ! $statusFiltroAtivo ? 'checked' : '' }} style="accent-color:var(--purple)">
-                    Todos
-                </label>
-                @foreach(\App\Http\Controllers\ProductionPanelController::$statusAbertosParaFiltro as $key)
-                    <label class="flex items-center gap-1.5 text-xs cursor-pointer px-2.5 py-1.5" style="border:1px solid var(--border2); border-radius:6px; color:var(--muted2)">
-                        <input type="checkbox" name="status[]" value="{{ $key }}" onchange="this.form.submit()"
-                            {{ in_array($key, $statusSelecionadosRaw, true) ? 'checked' : '' }} style="accent-color:var(--purple)">
-                        {{ \App\Models\Task::$statuses[$key]['label'] }}
-                    </label>
-                @endforeach
-            </div>
-        </div>
-    </form>
-
-    {{-- ── Semana de Produção: todas as tarefas abertas, arrastáveis entre dias ── --}}
-    <div class="card card-body-lg mb-4">
-        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.1em">
-            Semana de Produção
-        </p>
-        <p class="text-xs mb-4" style="color:var(--muted2)">
-            Toda tarefa aberta, na coluna do dia da sua data de aprovação. Arraste um card pra outro dia — ou
-            use o botão "Mover" — pra mudar a data direto, sem abrir a tarefa.
-        </p>
-
-        {{-- Formulário oculto: carrega o filtro acima + a semana em exibição pro fetch AJAX do
-             fragmento abaixo (só a navegação de semana passa por aqui; mudar qualquer filtro
-             recarrega a página inteira, porque ele afeta os blocos acima também). --}}
-        <form method="GET" action="{{ route('production-panel.index') }}" id="producao-week-filter-form"
-              data-live-filter data-results-url="{{ route('production-panel.week-results') }}" data-target="#producao-week-results"
-              style="display:none">
-            <input type="hidden" name="cliente" value="{{ $clienteSel?->id }}">
-            <input type="hidden" name="executor" value="{{ $executorSel?->id }}">
-            <input type="hidden" name="direcao_criativa" value="{{ $direcaoSel?->id }}">
-            <input type="hidden" name="inativos" value="{{ $incluirInativos ? 1 : '' }}">
-            <input type="hidden" name="sprint_fila" value="{{ $sprintFila }}">
-            @foreach($statusSelecionadosRaw as $s)
-                <input type="hidden" name="status[]" value="{{ $s }}">
-            @endforeach
-            <input type="hidden" name="week_offset" id="producao-week-offset-input" value="{{ $semana['weekOffset'] }}">
-        </form>
-
-        <div id="producao-week-results">
-            @include('producao._week-results', $semana)
-        </div>
-    </div>
-
-    @push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            function initWeekBoard() {
-                if (document.getElementById('producao-week-board')) {
-                    initKanbanDnd('#producao-week-board');
-                }
-            }
-            initWeekBoard();
-            document.getElementById('producao-week-results').addEventListener('live-filter:updated', initWeekBoard);
-        });
-    </script>
-    @endpush
 
     @php $semCarga = collect($clientes)->where('abertas', 0)->count(); @endphp
     <div class="card card-body-lg" x-data="{ busca: '', soAtrasados: false, mostrarSemCarga: false }">

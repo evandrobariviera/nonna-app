@@ -515,66 +515,91 @@ class ProductionPanelController extends Controller
     /**
      * Semana de produção: kanban com uma coluna por dia útil (segunda a sexta), cada card na
      * coluna da sua data de APROVAÇÃO — a mesma data que define sprint e volume do mês, e o
-     * mesmo recorte da aba "Semana" da Sprint (que o Evandro pediu explicitamente pra
-     * reaproveitar aqui). Arrastar um card muda a data de aprovação na hora.
+     * mesmo recorte da aba "Semana" que a Sprint tinha (removida de lá; ver diaKanban() pra
+     * reaproveitar coluna a coluna). Arrastar um card muda a data de aprovação na hora.
      *
      * Ao contrário do antigo calendário mensal (que cortava em 3 cards por dia + "+N no
      * dia"), aqui TODA tarefa aberta aparece — é justamente o problema que essa tela resolve.
-     * Isso é viável porque a janela é uma semana, não um mês inteiro: mesmo com a agência
-     * inteira aberta (~390 tarefas), o total continua pequeno pra carregar como model.
+     * Isso é viável porque cada coluna é um dia só, não um mês inteiro.
      *
-     * "Semana anterior" reúne toda tarefa aberta com aprovação antes da segunda em exibição —
-     * é o que precisa de decisão (empurrar pra uma data real). Tarefa sem data de aprovação,
-     * ou com data muito à frente, fica de fora do quadro e só entra na contagem informativa.
+     * "Antes desta semana" não vira coluna (só uma contagem, ver diaResultados() pra estender
+     * dia a dia): com a navegação horizontal já indo pro passado, empilhar uma coluna gigante
+     * com toda tarefa atrasada acumulada era redundante e pesado (chegou a passar de 150).
      */
     private function semanaKanban(Request $request): array
     {
         $weekOffset = (int) $request->get('week_offset', 0);
         $monday = now()->startOfWeek(\Carbon\CarbonInterface::MONDAY)->addWeeks($weekOffset);
+        $friday = $monday->copy()->addDays(4);
 
-        $weekDays = collect();
-        for ($d = $monday->copy(); $d->lte($monday->copy()->addDays(4)); $d->addDay()) {
-            $weekDays->push($d->copy());
-        }
-
-        // Card reduzido de propósito (sem miniatura, sem ícone de tipo — ver a view): com
-        // ~400+ tarefas na tela, carregar imagem por card é o que mais pesava o navegador.
-        // Só o essencial pra decidir "pra quando mover isso" entra aqui, então o eager load
-        // também fica mais magro — nem 'attachments' nem relações de Projeto/Planejamento
-        // entram, já que o card não mostra nenhum dos dois (só Sprint × Fila).
+        // Os 5 dias da semana num round-trip só (não 5), agrupados em PHP — diaKanban() faz
+        // uma consulta por dia e existe só pra extensão AJAX (1 dia por vez, ver
+        // diaResultados()); repeti-la aqui pagaria 5 idas ao banco pra carga inicial à toa.
         $tasks = $this->abertas()
+            ->whereDate('approval_date', '>=', $monday)
+            ->whereDate('approval_date', '<=', $friday)
             ->with(['client', 'executor', 'executors'])
             ->get();
 
-        $weekDateStrings = $weekDays->map->toDateString();
-        $tasksBeforeWeek = $tasks->filter(fn ($t) => $t->approval_date && $t->approval_date->lt($monday));
-        $tasksInWeek     = $tasks->filter(fn ($t) => $t->approval_date && $weekDateStrings->contains($t->approval_date->toDateString()));
-        $grouped         = $tasksInWeek->groupBy(fn ($t) => $t->approval_date->toDateString());
+        $porDia = $this->ordenarColuna($tasks)->groupBy(fn ($t) => $t->approval_date->toDateString());
 
-        // Mesma ordem da aba Semana da Sprint: prioridade primeiro, Ajuste/Alteração antes de
-        // Backlog dentro da mesma prioridade, resto na ordem de Task::$statuses.
-        $priorityOrder = array_flip(array_keys(Task::$priorities));
-        $statusOrder   = array_flip(array_unique(array_merge(['ajuste_alteracao', 'backlog'], array_keys(Task::$statuses))));
-        $sortColumn = fn ($colTasks) => $colTasks
-            ->sortBy(fn ($t) => ($priorityOrder[$t->priority ?? 'normal'] ?? count($priorityOrder)) * 100
-                + ($statusOrder[$t->status] ?? count($statusOrder)))
-            ->values();
-
-        $weekKanban = ['atrasadas' => $sortColumn($tasksBeforeWeek)];
-        foreach ($weekDays as $day) {
-            $weekKanban[$day->toDateString()] = $sortColumn($grouped->get($day->toDateString()) ?? collect());
+        $dias = [];
+        for ($d = $monday->copy(); $d->lte($friday); $d->addDay()) {
+            $dias[] = ['data' => $d->copy(), 'tasks' => $porDia->get($d->toDateString()) ?? collect()];
         }
 
-        $semData = $tasks->filter(fn ($t) => ! $t->approval_date)->count();
-        $depois  = $tasks->count() - $tasksInWeek->count() - $tasksBeforeWeek->count() - $semData;
-
         return [
-            'weekDays'       => $weekDays,
-            'weekKanban'     => $weekKanban,
-            'beforeWeekDate' => $monday->copy()->subDay(),
+            'dias'           => $dias,
             'weekOffset'     => $weekOffset,
-            'semDataCount'   => $semData,
-            'depoisCount'    => $depois,
+            'semDataCount'   => $this->abertas()->whereNull('approval_date')->count(),
+            'depoisCount'    => $this->abertas()->whereDate('approval_date', '>', $friday)->count(),
+            'atrasadasCount' => $this->abertas()->whereNotNull('approval_date')->whereDate('approval_date', '<', $monday)->count(),
         ];
+    }
+
+    /** Mesma ordem que a aba Semana da Sprint usava: prioridade primeiro, Ajuste/Alteração
+     *  antes de Backlog dentro da mesma prioridade, resto na ordem de Task::$statuses. */
+    private function ordenarColuna(\Illuminate\Support\Collection $tasks): \Illuminate\Support\Collection
+    {
+        $priorityOrder = array_flip(array_keys(Task::$priorities));
+        $statusOrder   = array_flip(array_unique(array_merge(['ajuste_alteracao', 'backlog'], array_keys(Task::$statuses))));
+
+        return $tasks->sortBy(fn ($t) => ($priorityOrder[$t->priority ?? 'normal'] ?? count($priorityOrder)) * 100
+            + ($statusOrder[$t->status] ?? count($statusOrder)))->values();
+    }
+
+    /**
+     * Uma coluna do quadro (um dia). Isolado do resto de semanaKanban() porque também serve
+     * ao endpoint de extensão dia-a-dia (diaResultados()) — arrastar a régua pra um dia extra
+     * busca só ESSE dia, não a semana toda de novo.
+     */
+    private function diaKanban(string $data): array
+    {
+        $dia = \Carbon\Carbon::parse($data)->startOfDay();
+
+        // Card reduzido de propósito (sem miniatura, sem ícone de tipo — ver a view): com
+        // ~400+ tarefas na tela, carregar imagem por card é o que mais pesava o navegador.
+        $tasks = $this->abertas()
+            ->whereDate('approval_date', $dia)
+            ->with(['client', 'executor', 'executors'])
+            ->get();
+
+        return ['data' => $dia, 'tasks' => $this->ordenarColuna($tasks)];
+    }
+
+    /** Fragmento de UM dia — a régua horizontal busca isso ao chegar na borda (ver
+     *  producao-week-scroll.js), pra estender sem recarregar a semana inteira. */
+    public function diaResultados(Request $request): View
+    {
+        $this->resolverFiltrosGlobais($request);
+
+        $data = (string) $request->get('data');
+        abort_unless(preg_match('/^\d{4}-\d{2}-\d{2}$/', $data), 422);
+
+        // A régua no front já trava em ±7 dias de hoje; esta é só uma segunda trava, generosa,
+        // contra uso indevido do endpoint (ex: alguém automatizando requisições direto).
+        abort_if(abs(\Carbon\Carbon::parse($data)->diffInDays(now())) > 60, 422);
+
+        return view('producao._week-day-column', ['dia' => $this->diaKanban($data)]);
     }
 }
