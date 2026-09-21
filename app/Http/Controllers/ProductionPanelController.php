@@ -29,10 +29,11 @@ class ProductionPanelController extends Controller
     private bool $incluirInativos = false;
     private ?string $clienteId = null;
     private int|string|null $executorId = null; // usuário é id inteiro; cliente é uuid
+    private int|string|null $direcaoCriativaId = null; // idem — filtra por Client::creative_lead_id
 
     public function index(Request $request): View
     {
-        [$clienteSel, $executorSel] = $this->resolverFiltrosGlobais($request);
+        [$clienteSel, $executorSel, $direcaoSel] = $this->resolverFiltrosGlobais($request);
         $incluirInativos = $this->incluirInativos;
 
         $termometro = $this->termometro();
@@ -49,10 +50,14 @@ class ProductionPanelController extends Controller
             ->orderBy('company_name')->get(['id', 'nickname', 'company_name']);
         $opcoesExecutores = User::whereIn('id', $this->idsDeExecutores())
             ->orderBy('name')->get(['id', 'name']);
+        $opcoesDirecaoCriativa = User::whereIn('id', Client::whereNotNull('creative_lead_id')
+            ->distinct()->pluck('creative_lead_id'))
+            ->orderBy('name')->get(['id', 'name']);
 
         return view('producao.index', compact(
             'termometro', 'sprints', 'pessoas', 'clientes', 'tipos', 'volume', 'semana',
-            'incluirInativos', 'clienteSel', 'executorSel', 'opcoesClientes', 'opcoesExecutores'
+            'incluirInativos', 'clienteSel', 'executorSel', 'direcaoSel',
+            'opcoesClientes', 'opcoesExecutores', 'opcoesDirecaoCriativa'
         ));
     }
 
@@ -80,13 +85,15 @@ class ProductionPanelController extends Controller
         // Cliente é uuid e usuário é inteiro, então nenhuma checagem de formato única serve.
         $clienteSel  = rescue(fn () => Client::find($request->get('cliente')), null, false);
         $executorSel = rescue(fn () => User::find($request->get('executor')), null, false);
+        $direcaoSel  = rescue(fn () => User::find($request->get('direcao_criativa')), null, false);
 
         // Filtro que não resolve pra ninguém vira filtro nenhum, senão a tela zera inteira
         // sem explicar por quê.
-        $this->clienteId  = $clienteSel?->id;
-        $this->executorId = $executorSel?->id;
+        $this->clienteId         = $clienteSel?->id;
+        $this->executorId        = $executorSel?->id;
+        $this->direcaoCriativaId = $direcaoSel?->id;
 
-        return [$clienteSel, $executorSel];
+        return [$clienteSel, $executorSel, $direcaoSel];
     }
 
     /**
@@ -112,6 +119,12 @@ class ProductionPanelController extends Controller
             $query->where('client_id', $this->clienteId);
         }
 
+        if ($this->direcaoCriativaId) {
+            // Direção criativa é do cliente, não da tarefa — tarefa interna (sem client_id)
+            // não pertence a ninguém aqui, então some do recorte quando esse filtro está ativo.
+            $query->whereHas('client', fn ($c) => $c->where('creative_lead_id', $this->direcaoCriativaId));
+        }
+
         if ($this->executorId) {
             // Executor mora em dois lugares: o pivot (papel "executor") e, como herança,
             // tasks.executor_id — que só vale quando não há pivot de executor.
@@ -125,6 +138,15 @@ class ProductionPanelController extends Controller
         }
 
         return $query;
+    }
+
+    /** Os mesmos filtros de cliente/direção criativa, mas pra consultas que partem do
+     *  próprio Client (porCliente(), volumeDoMes()) em vez de Task. */
+    private function comFiltrosDeCliente(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query
+            ->when($this->clienteId, fn ($q) => $q->where('id', $this->clienteId))
+            ->when($this->direcaoCriativaId, fn ($q) => $q->where('creative_lead_id', $this->direcaoCriativaId));
     }
 
     /** Quem tem tarefa aberta hoje — alimenta o select de executor. */
@@ -309,9 +331,8 @@ class ProductionPanelController extends Controller
             ->groupBy('client_id')
             ->map(fn ($linhas) => $linhas->pluck('total', 'task_type'));
 
-        $clientes = Client::query()
-            ->when(! $this->incluirInativos, fn ($q) => $q->where('status', '!=', 'inactive'))
-            ->when($this->clienteId, fn ($q) => $q->where('id', $this->clienteId))
+        $clientes = $this->comFiltrosDeCliente(Client::query()
+            ->when(! $this->incluirInativos, fn ($q) => $q->where('status', '!=', 'inactive')))
             ->with('creativeLead:id,name,avatar_path,avatar_disk')
             ->orderBy('company_name')
             ->get();
@@ -376,9 +397,8 @@ class ProductionPanelController extends Controller
      */
     private function volumeDoMes(?Client $clienteSel): array
     {
-        $clientes = Client::query()
-            ->when(! $this->incluirInativos, fn ($q) => $q->where('status', '!=', 'inactive'))
-            ->when($this->clienteId, fn ($q) => $q->where('id', $this->clienteId))
+        $clientes = $this->comFiltrosDeCliente(Client::query()
+            ->when(! $this->incluirInativos, fn ($q) => $q->where('status', '!=', 'inactive')))
             ->get(['id', 'nickname', 'company_name', 'production_quota']);
 
         // [tipo => cota] somado, e quais clientes têm cota de cada tipo

@@ -19,7 +19,7 @@
     @endphp
 
     @php
-        $comFiltro = $clienteSel || $executorSel;
+        $comFiltro = $clienteSel || $executorSel || $direcaoSel;
     @endphp
 
     <p class="text-sm mb-3" style="color:var(--muted)">
@@ -51,6 +51,17 @@
             </select>
         </div>
 
+        <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Direção criativa</label>
+            <select name="direcao_criativa" onchange="this.form.submit()"
+                    class="text-sm px-3 py-1.5" style="background:var(--s3); border:1px solid var(--border2); color:var(--text); min-width:200px">
+                <option value="">Todas</option>
+                @foreach($opcoesDirecaoCriativa as $op)
+                    <option value="{{ $op->id }}" @selected($direcaoSel?->id === $op->id)>{{ $op->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
         <label class="flex items-center gap-2 text-xs font-semibold pb-1.5" style="color:var(--muted)">
             <input type="checkbox" name="inativos" value="1" @checked($incluirInativos) onchange="this.form.submit()">
             Incluir clientes inativos
@@ -64,11 +75,20 @@
     </form>
 
     @if($comFiltro)
+        @php
+            // Monta "pelo cliente X, pelo executor Y e pela direção criativa Z" com vírgula
+            // entre os itens do meio e "e" só antes do último — sem isso, com os 3 filtros
+            // ativos ao mesmo tempo, a frase ficava ambígua sobre quantos "e" cabiam.
+            $partes = array_filter([
+                $clienteSel ? 'pelo cliente <strong style="color:var(--text)">' . e($clienteSel->displayName()) . '</strong>' : null,
+                $executorSel ? 'pelo executor <strong style="color:var(--text)">' . e($executorSel->name) . '</strong>' : null,
+                $direcaoSel ? 'pela direção criativa <strong style="color:var(--text)">' . e($direcaoSel->name) . '</strong>' : null,
+            ]);
+            $ultima = array_pop($partes);
+            $frase = $partes ? implode(', ', $partes) . ' e ' . $ultima : $ultima;
+        @endphp
         <p class="text-xs mb-4" style="color:var(--muted2)">
-            Todos os blocos abaixo estão recortados
-            @if($clienteSel) pelo cliente <strong style="color:var(--text)">{{ $clienteSel->displayName() }}</strong>@endif
-            @if($clienteSel && $executorSel) e @endif
-            @if($executorSel) pelo executor <strong style="color:var(--text)">{{ $executorSel->name }}</strong>@endif.
+            Todos os blocos abaixo estão recortados {!! $frase !!}.
         </p>
     @endif
 
@@ -336,6 +356,7 @@
               style="display:none">
             <input type="hidden" name="cliente" value="{{ $clienteSel?->id }}">
             <input type="hidden" name="executor" value="{{ $executorSel?->id }}">
+            <input type="hidden" name="direcao_criativa" value="{{ $direcaoSel?->id }}">
             <input type="hidden" name="inativos" value="{{ $incluirInativos ? 1 : '' }}">
             <input type="hidden" name="week_offset" id="producao-week-offset-input" value="{{ $semana['weekOffset'] }}">
         </form>
