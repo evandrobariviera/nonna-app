@@ -437,6 +437,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
 
     Route::post('/agenda/{meeting}/anexos', [MeetingAttachmentController::class, 'store'])
         ->name('meeting-attachments.store');
+    Route::get('/agenda/{meeting}/anexos/{attachment}/download', [MeetingAttachmentController::class, 'download'])
+        ->name('meeting-attachments.download');
     Route::post('/agenda/{meeting}/anexos/{attachment}/transcrever', [MeetingAttachmentController::class, 'transcribe'])
         ->name('meeting-attachments.transcribe');
     Route::delete('/agenda/{meeting}/anexos/{attachment}', [MeetingAttachmentController::class, 'destroy'])

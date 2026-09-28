@@ -41,6 +41,13 @@ class MeetingAttachmentController extends Controller
         return redirect()->route('meetings.show', $meeting)->with('success', $label);
     }
 
+    public function download(Meeting $meeting, MeetingAttachment $attachment)
+    {
+        abort_unless($attachment->meeting_id === $meeting->id, 403);
+
+        return Storage::disk($attachment->disk)->download($attachment->disk_path, $attachment->filename);
+    }
+
     public function transcribe(Meeting $meeting, MeetingAttachment $attachment)
     {
         abort_unless($attachment->meeting_id === $meeting->id, 403);

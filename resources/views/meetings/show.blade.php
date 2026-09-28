@@ -488,6 +488,8 @@
                                                 <button type="submit" class="btn btn-ghost btn-xs" title="Transcrever via IA">🎙️ Transcrever</button>
                                             </form>
                                         @endif
+                                        <a href="{{ route('meeting-attachments.download', [$meeting, $attachment]) }}"
+                                           class="btn btn-ghost btn-xs" title="Baixar arquivo">⬇</a>
                                         <form method="POST" action="{{ route('meeting-attachments.destroy', [$meeting, $attachment]) }}"
                                               @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
                                             @csrf @method('DELETE')
