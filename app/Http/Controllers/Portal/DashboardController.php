@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Meeting;
 use App\Models\Task;
 use App\Models\TaskApprovalRound;
+use Carbon\Carbon;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -59,6 +60,14 @@ class DashboardController extends Controller
             ->where('status', 'pending')
             ->count();
 
-        return view('portal.dashboard', compact('client', 'activePlan', 'stats', 'activePlanStats', 'nextMeeting', 'openTicketsCount', 'pendingApprovalsCount'));
+        // Volume do mês: limite combinado × pedido × entregue (Client::productionUsage).
+        // ?mes=AAAA-MM navega pros meses anteriores; nunca passa do mês atual.
+        $mesVolume = rescue(fn () => Carbon::createFromFormat('Y-m', (string) request('mes'))->startOfMonth(), null, false);
+        if (! $mesVolume || $mesVolume->gt(now()->startOfMonth())) {
+            $mesVolume = now()->startOfMonth();
+        }
+        $volume = $client->productionUsage($mesVolume);
+
+        return view('portal.dashboard', compact('client', 'activePlan', 'stats', 'activePlanStats', 'nextMeeting', 'openTicketsCount', 'pendingApprovalsCount', 'volume', 'mesVolume'));
     }
 }

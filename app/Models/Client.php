@@ -326,7 +326,11 @@ class Client extends Model
      *
      * Cancelada fica de fora; concluída conta, porque já consumiu a cota do mês.
      *
-     * @return array<int, array{type:string, label:string, quota:int, used:int, left:int}>
+     * "done" é outra régua: o que foi ENTREGUE no mês, pela data real da conclusão
+     * (última transição pra concluido) — pode incluir tarefa pedida no mês anterior.
+     * Mesma conta da Carga de Produção; usado no portal do cliente.
+     *
+     * @return array<int, array{type:string, label:string, quota:int, used:int, left:int, over:int, done:int}>
      */
     public function productionUsage(?\Carbon\Carbon $month = null): array
     {
@@ -345,6 +349,18 @@ class Client extends Model
             ->groupBy('task_type')
             ->pluck('total', 'task_type');
 
+        $conclusoes = \Illuminate\Support\Facades\DB::connection('pgsql')->table('task_status_transitions')
+            ->select('task_id', \Illuminate\Support\Facades\DB::raw('max(changed_at) as concluida_em'))
+            ->where('to_status', 'concluido')
+            ->groupBy('task_id');
+        $entregues = Task::where('tasks.client_id', $this->id)
+            ->where('tasks.status', 'concluido')
+            ->joinSub($conclusoes, 'c', 'c.task_id', '=', 'tasks.id')
+            ->whereBetween('c.concluida_em', [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()])
+            ->selectRaw('tasks.task_type, count(*) as total')
+            ->groupBy('tasks.task_type')
+            ->pluck('total', 'task_type');
+
         $saida = [];
         foreach ($quota as $type => $qtd) {
             $qtd = (int) $qtd;
@@ -358,6 +374,8 @@ class Client extends Model
                 'quota' => $qtd,
                 'used'  => $used,
                 'left'  => max(0, $qtd - $used),
+                'over'  => max(0, $used - $qtd),
+                'done'  => (int) ($entregues[$type] ?? 0),
             ];
         }
 

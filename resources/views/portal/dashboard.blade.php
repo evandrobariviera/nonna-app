@@ -17,6 +17,83 @@
         </span>
     </div>
 
+    {{-- Volume do mês — o combinado com a Nonna × o que já foi pedido × o que já foi
+         entregue. Primeira coisa que o cliente vê: deixa claro quanto ainda cabe no mês.
+         Só aparece se o cliente tem limite mensal configurado (ficha do cliente). --}}
+    @if(! empty($volume))
+        @php
+            $anterior = $mesVolume->copy()->subMonthNoOverflow();
+            $proximo  = $mesVolume->copy()->addMonthNoOverflow();
+            $ehAtual  = $mesVolume->isSameMonth(now());
+            $totCombinado = array_sum(array_column($volume, 'quota'));
+            $totPedido    = array_sum(array_column($volume, 'used'));
+            $totEntregue  = array_sum(array_column($volume, 'done'));
+        @endphp
+        <div class="card p-6 mb-8">
+            <div class="flex items-start justify-between gap-3 flex-wrap mb-1">
+                <h2 class="text-sm font-bold uppercase tracking-wide" style="color: var(--muted)">Seu volume de produção</h2>
+                <div class="flex items-center gap-2 text-xs">
+                    <a href="{{ route('portal.dashboard', ['mes' => $anterior->format('Y-m')]) }}" class="px-2 py-1 rounded" style="color: var(--muted); border:1px solid var(--border2)">‹</a>
+                    <span class="font-semibold capitalize" style="color: var(--text); min-width:110px; text-align:center">{{ $mesVolume->locale('pt_BR')->translatedFormat('F \d\e Y') }}</span>
+                    @if(! $ehAtual)
+                        <a href="{{ route('portal.dashboard', $proximo->isSameMonth(now()) ? [] : ['mes' => $proximo->format('Y-m')]) }}" class="px-2 py-1 rounded" style="color: var(--muted); border:1px solid var(--border2)">›</a>
+                    @else
+                        <span class="px-2 py-1" style="color: var(--border2)">›</span>
+                    @endif
+                </div>
+            </div>
+            <p class="text-sm mb-5" style="color: var(--muted)">
+                {{ $ehAtual ? 'Neste mês' : 'Naquele mês' }}, {{ $ehAtual ? 'já estão programadas' : 'foram programadas' }}
+                <strong style="color: var(--text)">{{ $totPedido }}</strong> de <strong style="color: var(--text)">{{ $totCombinado }}</strong>
+                entregas combinadas, e a Nonna {{ $ehAtual ? 'já concluiu' : 'concluiu' }} <strong style="color: var(--green)">{{ $totEntregue }}</strong>.
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach($volume as $linha)
+                    @php
+                        $cor = $linha['over'] > 0 ? 'var(--red)' : ($linha['left'] === 0 ? 'var(--orange)' : 'var(--purple)');
+                        $pctPedido   = min(100, round($linha['used'] / max(1, $linha['quota']) * 100));
+                        $pctEntregue = min(100, round($linha['done'] / max(1, $linha['quota']) * 100));
+                    @endphp
+                    <div class="p-4 rounded-lg" style="background: var(--s2); border:1px solid var(--border)">
+                        <div class="flex items-center gap-2 mb-2">
+                            <x-icon name="{{ \App\Models\Task::$typeIcons[$linha['type']] ?? 'package' }}" size="16" style="color: var(--muted)" />
+                            <span class="text-sm font-bold" style="color: var(--text)">{{ $linha['label'] }}</span>
+                        </div>
+                        <p class="text-3xl font-black leading-none" style="color: {{ $cor }}">
+                            {{ $linha['used'] }}<span class="text-base font-semibold" style="color: var(--muted)"> / {{ $linha['quota'] }}</span>
+                        </p>
+                        <p class="text-xs mt-1" style="color: var(--muted)">programadas no mês / combinado</p>
+
+                        <div class="relative h-2 rounded-full overflow-hidden mt-3" style="background: var(--s3)">
+                            <div class="absolute inset-y-0 left-0" style="width: {{ $pctPedido }}%; background: {{ $cor }}; opacity:.35"></div>
+                            <div class="absolute inset-y-0 left-0" style="width: {{ $pctEntregue }}%; background: var(--green)"></div>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-2 mt-2 text-xs">
+                            <span style="color: var(--green)"><strong>{{ $linha['done'] }}</strong> entregue{{ $linha['done'] !== 1 ? 's' : '' }}</span>
+                            @if($linha['over'] > 0)
+                                <span class="font-semibold" style="color: var(--red)">{{ $linha['over'] }} além do combinado</span>
+                            @elseif($linha['left'] === 0)
+                                <span class="font-semibold" style="color: var(--orange)">limite do mês atingido</span>
+                            @else
+                                <span style="color: var(--muted)">ainda cabe{{ $linha['left'] !== 1 ? 'm' : '' }} <strong style="color: var(--text)">{{ $linha['left'] }}</strong></span>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="flex items-center justify-between gap-3 flex-wrap mt-4">
+                <p class="text-xs" style="color: var(--muted)">
+                    "Programadas" são as entregas previstas para o mês; "entregues" são as concluídas no mês — pode incluir algo programado no mês anterior.
+                    Dúvidas sobre o volume? Fale com seu atendimento.
+                </p>
+                <a href="{{ route('portal.production.index') }}" class="text-xs font-semibold" style="color: var(--purple)">Ver o que está em produção →</a>
+            </div>
+        </div>
+    @endif
+
     {{-- Próxima reunião + chamados abertos + aprovações pendentes --}}
     @if($nextMeeting || $openTicketsCount > 0 || $pendingApprovalsCount > 0)
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
