@@ -24,7 +24,7 @@
                 <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Macro em Revisão Interna</p>
                 <span class="text-lg font-black" style="color:{{ count($radar['em_revisao']) ? 'var(--purple)' : 'var(--muted2)' }}">{{ count($radar['em_revisao']) }}</span>
             </div>
-            <p class="text-xs mb-3" style="color:var(--muted2)">Reuniões de Macro e Kick-off com a ATA sendo revisada. Depois da revisão, viram trabalho a lançar.</p>
+            <p class="text-xs mb-3" style="color:var(--muted2)">Reuniões de Macro e Kick-off com a ATA sendo revisada. Depois da revisão, vão pro Despacho.</p>
             @forelse($radar['em_revisao'] as $m)
                 <a href="{{ $m['url'] }}" class="flex items-center justify-between gap-3 py-2" style="border-top:1px solid var(--border)">
                     <span class="min-w-0">
@@ -42,34 +42,54 @@
 
         <div class="card card-body min-w-0">
             <div class="flex items-center justify-between mb-1">
-                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Realizada · falta lançar</p>
-                <span class="text-lg font-black" style="color:{{ count($radar['falta_lancar']) ? 'var(--orange)' : 'var(--muted2)' }}">{{ count($radar['falta_lancar']) }}</span>
+                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Macro em Despacho</p>
+                <span class="text-lg font-black" style="color:{{ count($radar['em_despacho']) ? 'var(--orange)' : 'var(--muted2)' }}">{{ count($radar['em_despacho']) }}</span>
             </div>
-            <p class="text-xs mb-3" style="color:var(--muted2)">Planejamentos de reuniões já realizadas com projetos ou campanhas que ainda não têm nenhuma tarefa.</p>
-            @forelse($radar['falta_lancar'] as $m)
+            <p class="text-xs mb-3" style="color:var(--muted2)">ATA e planejamento prontos pra distribuir. Lance as tarefas de cada projeto/campanha e marque a reunião como Finalizada.</p>
+            @forelse($radar['em_despacho'] as $m)
+                @php $falta = $m['total_itens'] - $m['lancados']; @endphp
                 <div x-data="{ aberto: false }" class="py-2" style="border-top:1px solid var(--border)">
                     <button type="button" @click="aberto = !aberto" class="w-full flex items-center justify-between gap-3 text-left">
                         <span class="min-w-0">
                             <span class="block text-sm font-semibold truncate" style="color:var(--text)">{{ $m['client'] }}</span>
                             <span class="block text-xs truncate" style="color:var(--muted)">
-                                @if($m['projetos']){{ $m['projetos'] }} projeto(s)@endif{{ $m['projetos'] && $m['campanhas'] ? ' · ' : '' }}@if($m['campanhas']){{ $m['campanhas'] }} campanha(s)@endif
-                                aguardando lançamento{{ ($m['dias'] ?? 0) > 0 ? ' · reunião há ' . $m['dias'] . ' dia(s)' : '' }}
+                                @if(! $m['planejamento'])
+                                    <span style="color:var(--orange)">sem planejamento vinculado</span>
+                                @elseif($m['total_itens'] === 0)
+                                    planejamento sem projetos
+                                @else
+                                    {{ $m['lancados'] }} de {{ $m['total_itens'] }} projeto(s)/campanha(s) com tarefas
+                                @endif
+                                {{ ($m['dias'] ?? 0) > 0 ? ' · reunião há ' . $m['dias'] . ' dia(s)' : '' }}
                             </span>
                         </span>
-                        <x-icon name="chevron-right" size="14" class="flex-shrink-0 transition-transform" x-bind:class="aberto ? 'rotate-90' : ''" style="color:var(--muted)" />
+                        <span class="flex items-center gap-2 flex-shrink-0">
+                            @if($m['total_itens'] > 0)
+                                <span class="text-[11px] font-semibold px-1.5 rounded" style="{{ $falta ? 'background:rgba(238,121,25,.12); color:var(--orange)' : 'background:rgba(34,197,94,.12); color:var(--green)' }}">
+                                    {{ $falta ? "faltam {$falta}" : 'tudo lançado' }}
+                                </span>
+                            @endif
+                            <x-icon name="chevron-right" size="14" class="transition-transform" x-bind:class="aberto ? 'rotate-90' : ''" style="color:var(--muted)" />
+                        </span>
                     </button>
                     <div x-show="aberto" x-cloak class="mt-2 space-y-1 pl-2">
                         @foreach($m['itens'] as $item)
                             <a href="{{ $item['url'] }}" class="flex items-center gap-2 text-xs" style="color:var(--muted)">
                                 <x-icon name="{{ $item['type'] === 'campanha' ? 'megaphone' : 'folder-kanban' }}" size="12" class="flex-shrink-0" />
-                                <span class="truncate" style="color:var(--text)">{{ $item['title'] }}</span>
+                                <span class="truncate flex-1" style="color:var(--text)">{{ $item['title'] }}</span>
+                                <span class="flex-shrink-0" style="color:{{ $item['tarefas'] ? 'var(--green)' : 'var(--orange)' }}">{{ $item['tarefas'] ? $item['tarefas'] . ' tarefa(s)' : 'sem tarefa' }}</span>
                             </a>
                         @endforeach
-                        <a href="{{ $m['url'] }}" class="inline-block text-xs font-semibold mt-1" style="color:var(--purple)">Abrir planejamento →</a>
+                        <div class="flex items-center gap-3 mt-1">
+                            @if($m['plano_url'])
+                                <a href="{{ $m['plano_url'] }}" class="text-xs font-semibold" style="color:var(--purple)">Abrir planejamento →</a>
+                            @endif
+                            <a href="{{ $m['url'] }}" class="text-xs font-semibold" style="color:var(--muted)">Abrir reunião →</a>
+                        </div>
                     </div>
                 </div>
             @empty
-                <p class="text-xs py-2" style="color:var(--muted2); border-top:1px solid var(--border)">Tudo que saiu das reuniões de Macro já foi lançado.</p>
+                <p class="text-xs py-2" style="color:var(--muted2); border-top:1px solid var(--border)">Nenhuma reunião de Macro aguardando despacho.</p>
             @endforelse
         </div>
     </div>

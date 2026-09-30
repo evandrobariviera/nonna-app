@@ -71,7 +71,12 @@ class Meeting extends Model
         'agendada'     => ['label' => 'Agendada',        'color' => 'green'],
         'pos_reuniao'  => ['label' => 'Pós-Reunião',     'color' => 'red'],
         'revisao_ata'  => ['label' => 'Revisão Interna', 'color' => 'purple'],
-        'realizada'    => ['label' => 'Realizada',       'color' => 'green'],
+        // Despacho: ATA e planejamento prontos, com o Gestor de Projetos distribuindo o
+        // trabalho (mesma nomenclatura do status de Tarefa). Só depois vira Finalizada.
+        'despacho'     => ['label' => 'Despacho',        'color' => 'orange'],
+        // Chave continua "realizada" (46+ reuniões e automações gravadas com ela);
+        // só o rótulo mudou pra "Finalizada" (2026-09-30).
+        'realizada'    => ['label' => 'Finalizada',      'color' => 'green'],
         'cancelada'    => ['label' => 'Cancelada',       'color' => 'red'],
     ];
 

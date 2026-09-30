@@ -365,9 +365,10 @@ class ProjectMapService
     }
 
     /**
-     * Radar de Macroplanejamento: reuniões de Macro/Kick-off que ainda vão gerar trabalho.
-     * (1) ATA em revisão interna; (2) já realizadas cujo planejamento tem projetos e
-     * campanhas sem nenhuma tarefa — é o que o gestor precisa lançar.
+     * Radar de Macroplanejamento — as duas etapas da reunião de Macro/Kick-off que
+     * interessam ao gestor de projetos: (1) Revisão Interna (vem trabalho aí) e
+     * (2) Despacho (ATA + planejamento prontos, ele distribui). Em Despacho mostra o
+     * que do planejamento ainda não tem tarefa. Quando ele termina, marca Finalizada.
      */
     private function radar(): array
     {
@@ -378,50 +379,51 @@ class ProjectMapService
             ->where('status', 'revisao_ata')
             ->orderBy('scheduled_at')
             ->get()
-            ->map(fn (Meeting $m) => [
-                'title' => $m->title,
-                'client' => $m->client?->displayName() ?? '—',
-                'tipo' => Meeting::$types[$m->type] ?? $m->type,
-                'quando' => $m->scheduled_at ? Carbon::parse($m->scheduled_at)->format('d/m') : null,
-                'dias' => $m->scheduled_at ? (int) Carbon::parse($m->scheduled_at)->startOfDay()->diffInDays($this->hoje) : null,
-                'url' => route('meetings.show', $m->id),
-            ]);
+            ->map(fn (Meeting $m) => $this->reuniaoResumo($m));
 
-        $realizadas = Meeting::with(['client:id,company_name,nickname', 'macroPlan:id,title'])
+        $despacho = Meeting::with(['client:id,company_name,nickname', 'macroPlan:id,title'])
             ->whereIn('type', $tipos)
-            ->where('status', 'realizada')
-            ->whereNotNull('macro_plan_id')
-            ->where('scheduled_at', '>=', $this->hoje->copy()->subDays(120))
-            ->orderByDesc('scheduled_at')
-            ->get()
-            ->unique('macro_plan_id');
+            ->where('status', 'despacho')
+            ->orderBy('scheduled_at')
+            ->get();
 
-        $aLancar = Project::withCount('tasks')
-            ->whereIn('macro_plan_id', $realizadas->pluck('macro_plan_id'))
-            ->whereIn('status', ['em_planejamento', 'aprovacao', 'em_execucao'])
+        $projetos = Project::withCount('tasks')
+            ->whereIn('macro_plan_id', $despacho->pluck('macro_plan_id')->filter())
+            ->whereNotIn('status', ['concluido', 'cancelado'])
             ->get(['id', 'title', 'type', 'macro_plan_id'])
-            ->where('tasks_count', 0)
             ->groupBy('macro_plan_id');
 
-        $faltaLancar = $realizadas
-            ->filter(fn (Meeting $m) => $aLancar->has($m->macro_plan_id))
-            ->map(fn (Meeting $m) => [
-                'title' => $m->macroPlan?->title ?? $m->title,
-                'client' => $m->client?->displayName() ?? '—',
-                'quando' => $m->scheduled_at ? Carbon::parse($m->scheduled_at)->format('d/m') : null,
-                'dias' => $m->scheduled_at ? (int) Carbon::parse($m->scheduled_at)->startOfDay()->diffInDays($this->hoje) : null,
-                'url' => route('macroplans.edit', [$m->macro_plan_id, 'bloco' => 'bloco3']),
-                'projetos' => $aLancar[$m->macro_plan_id]->where('type', '!=', 'campanha')->count(),
-                'campanhas' => $aLancar[$m->macro_plan_id]->where('type', 'campanha')->count(),
-                'itens' => $aLancar[$m->macro_plan_id]->map(fn ($p) => [
+        $emDespacho = $despacho->map(function (Meeting $m) use ($projetos) {
+            $doPlano = $m->macro_plan_id ? $projetos->get($m->macro_plan_id, collect()) : collect();
+            $semTarefa = $doPlano->where('tasks_count', 0);
+
+            return $this->reuniaoResumo($m) + [
+                'planejamento' => $m->macroPlan?->title,
+                'plano_url' => $m->macro_plan_id ? route('macroplans.edit', [$m->macro_plan_id, 'bloco' => 'bloco3']) : null,
+                'total_itens' => $doPlano->count(),
+                'lancados' => $doPlano->count() - $semTarefa->count(),
+                'itens' => $doPlano->sortBy('tasks_count')->map(fn ($p) => [
                     'title' => $p->title,
                     'type' => $p->type,
+                    'tarefas' => $p->tasks_count,
                     'url' => route('projects.showDirect', $p->id),
                 ])->values(),
-            ])
-            ->values();
+            ];
+        });
 
-        return ['em_revisao' => $emRevisao->values(), 'falta_lancar' => $faltaLancar];
+        return ['em_revisao' => $emRevisao->values(), 'em_despacho' => $emDespacho->values()];
+    }
+
+    private function reuniaoResumo(Meeting $m): array
+    {
+        return [
+            'title' => $m->title,
+            'client' => $m->client?->displayName() ?? '—',
+            'tipo' => Meeting::$types[$m->type] ?? $m->type,
+            'quando' => $m->scheduled_at ? Carbon::parse($m->scheduled_at)->format('d/m') : null,
+            'dias' => $m->scheduled_at ? (int) Carbon::parse($m->scheduled_at)->startOfDay()->diffInDays($this->hoje) : null,
+            'url' => route('meetings.show', $m->id),
+        ];
     }
 
     private function dias(int|float $n): string

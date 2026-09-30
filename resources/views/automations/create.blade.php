@@ -509,7 +509,7 @@
                             Cria um Macroplanejamento vinculado à Reunião que disparou (responsável = primeiro
                             usuário do papel funcional abaixo) e já cria a Tarefa de checklist "Criar
                             macroplanejamento" vinculada ao Macro, atribuída ao organizador da reunião, com prazo
-                            no próximo dia útil. Pensado pro gatilho "Status mudou" → Realizada numa Reunião do
+                            no próximo dia útil. Pensado pro gatilho "Status mudou" → Finalizada numa Reunião do
                             tipo Macroplanejamento ou Kickoff Estratégico.
                         </p>
                         <div>
@@ -536,7 +536,7 @@
                         <p class="text-sm" style="color:var(--muted)">
                             Cria um Macroplanejamento vinculado à Reunião que disparou, agenda automaticamente uma
                             Reunião de Revisão Interna pro próximo dia útil (já linkada ao mesmo Macro) e notifica
-                            o papel funcional abaixo. Pensado pro gatilho "Status mudou" de Pós-Reunião → Realizada
+                            o papel funcional abaixo. Pensado pro gatilho "Status mudou" de Pós-Reunião → Finalizada
                             numa Reunião do tipo Macroplanejamento.
                         </p>
                         <div>
@@ -558,7 +558,7 @@
                             Lê a ATA da Reunião que disparou, chama o agente de IA abaixo pra gerar a pauta da
                             Reunião Interna, e já cria essa Reunião Interna pro próximo dia útil com a pauta
                             preenchida. Exige que a Reunião já tenha ATA — pensado pro gatilho "Status mudou" →
-                            Realizada numa Reunião do tipo Kickoff Estratégico ou Macroplanejamento.
+                            Finalizada numa Reunião do tipo Kickoff Estratégico ou Macroplanejamento.
                         </p>
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">AGENTE DE IA *</label>

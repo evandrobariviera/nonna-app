@@ -114,10 +114,10 @@
     {{-- Reuniões Realizadas --}}
     <div class="card px-5 py-4">
         <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
-            ✔ Realizadas recentemente ({{ $meetingsRealizadas->count() }})
+            ✔ Finalizadas recentemente ({{ $meetingsRealizadas->count() }})
         </h4>
         @if($meetingsRealizadas->isEmpty())
-            <p class="text-xs" style="color:var(--muted)">Nenhuma reunião realizada recentemente.</p>
+            <p class="text-xs" style="color:var(--muted)">Nenhuma reunião finalizada recentemente.</p>
         @else
             <div class="flex flex-col gap-2">
                 @foreach($meetingsRealizadas as $meeting)
