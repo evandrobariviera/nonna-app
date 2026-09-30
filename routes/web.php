@@ -697,6 +697,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::get('/mapa-projetos', [\App\Http\Controllers\ProjectMapController::class, 'index'])
         ->name('project-map.index');
 
+    // ── Carga de Produção (executado por cliente/período/pessoa/tipo) ──
+    Route::get('/carga-producao', [\App\Http\Controllers\ProductionLoadController::class, 'index'])
+        ->name('production-load.index');
+    Route::get('/carga-producao/exportar', [\App\Http\Controllers\ProductionLoadController::class, 'export'])
+        ->name('production-load.export');
+
     // ── Painel de Produtividade ──
     Route::get('/produtividade', [\App\Http\Controllers\ProductivityDashboardController::class, 'index'])
         ->name('productivity.index');

@@ -406,6 +406,17 @@
     </span>
 </a>
 
+{{-- Carga de Produção — o "histórico com período": quanto foi executado por cliente,
+     executor, responsável e tipo. O Painel de Produção é o "retrato de agora". --}}
+<a href="{{ route('production-load.index') }}"
+   class="nav-group-trigger {{ request()->routeIs('production-load.*') ? 'open' : '' }}"
+   style="{{ request()->routeIs('production-load.*') ? 'color:var(--purple);' : '' }}">
+    <span class="flex items-center gap-3">
+        <x-icon name="package" size="16" class="flex-shrink-0" />
+        Carga de Produção
+    </span>
+</a>
+
 @if(!empty($_myRoles))
 <div x-data="{ open: {{ $_activeVision ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
