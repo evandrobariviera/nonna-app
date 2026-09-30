@@ -25,6 +25,9 @@ class ProductionLoadController extends Controller
             'inicio' => $service->inicio,
             'fim' => $service->fim,
             'historicoDesde' => ProductionLoadService::HISTORICO_DESDE,
+            // Cliente filtrado inteiro — o form de limites precisa do creative_lead_id atual
+            // (clients.update-production grava os dois campos juntos).
+            'clienteSel' => $service->filtros['cliente'] ? Client::find($service->filtros['cliente']) : null,
             'opcoesClientes' => Client::query()
                 ->when(! $service->filtros['inativos'], fn ($q) => $q->where('status', '!=', 'inactive'))
                 ->orderBy('company_name')->get(['id', 'nickname', 'company_name']),

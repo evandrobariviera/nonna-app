@@ -115,6 +115,122 @@
         @endforeach
     </div>
 
+    {{-- ── Limites mensais (controle de produção da ficha do cliente) ── --}}
+    @php
+        $mesLimite = $limites['mes']->locale('pt_BR')->translatedFormat('F/Y');
+        $notaMes = $limites['mes_do_periodo'] ? '' : ' (o período escolhido não é um mês inteiro, então vale o mês atual)';
+    @endphp
+    @if($clienteSel)
+        @php $lc = $limites['clientes']->first(); @endphp
+        <div class="card mb-4" x-data="{ editando: {{ $lc ? 'false' : 'true' }} }">
+            <div class="px-5 pt-4 pb-3 flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
+                        Controle de produção · {{ $clienteSel->displayName() }} · {{ $mesLimite }}
+                    </p>
+                    <p class="text-xs mt-1" style="color:var(--muted2)">
+                        Limite combinado × quanto já foi pedido no mês (mesma conta da ficha do cliente) e quanto disso já foi executado{{ $notaMes }}.
+                    </p>
+                </div>
+                <button type="button" @click="editando = !editando" class="btn btn-ghost btn-sm" x-text="editando ? 'Cancelar' : 'Editar limites'"></button>
+            </div>
+
+            @if($lc)
+                <div class="px-5 pb-4 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3" x-show="!editando">
+                    @foreach($lc['tipos'] as $t)
+                        @php
+                            $cor = $t['acima'] > 0 ? 'var(--red)' : ($t['pedido'] >= $t['limite'] ? 'var(--orange)' : 'var(--purple)');
+                            $pctPed = min(100, round($t['pedido'] / max(1, $t['limite']) * 100));
+                            $pctExe = min(100, round($t['executado'] / max(1, $t['limite']) * 100));
+                        @endphp
+                        <div>
+                            <div class="flex items-baseline justify-between gap-2 mb-1">
+                                <span class="text-sm font-semibold" style="color:var(--text)">{{ $t['label'] }}</span>
+                                <span class="text-xs font-mono" style="color:{{ $cor }}">
+                                    <strong class="text-sm">{{ $t['pedido'] }}</strong> de {{ $t['limite'] }} pedidos
+                                </span>
+                            </div>
+                            {{-- executado (verde) por cima do pedido (cor do estado) --}}
+                            <div class="relative h-2 rounded-full overflow-hidden" style="background:var(--s3)">
+                                <div class="absolute inset-y-0 left-0" style="width:{{ $pctPed }}%; background:{{ $cor }}; opacity:.45"></div>
+                                <div class="absolute inset-y-0 left-0" style="width:{{ $pctExe }}%; background:var(--green)"></div>
+                            </div>
+                            <p class="text-xs mt-1" style="color:var(--muted2)">
+                                <span style="color:var(--green)">{{ $t['executado'] }} executada(s)</span> ·
+                                @if($t['acima'] > 0)
+                                    <span style="color:var(--red); font-weight:600">{{ $t['acima'] }} acima do limite</span>
+                                @elseif($t['resta'] === 0)
+                                    <span style="color:var(--orange)">limite atingido</span>
+                                @else
+                                    ainda cabem <strong style="color:var(--text)">{{ $t['resta'] }}</strong>
+                                @endif
+                            </p>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <p class="px-5 pb-4 text-sm" style="color:var(--muted2)" x-show="!editando">
+                    Este cliente ainda não tem limite mensal definido.
+                </p>
+            @endif
+
+            {{-- Mesmo endpoint da ficha do cliente. creative_lead_id vai junto porque a
+                 rota grava os dois — sem ele, editar limite aqui apagaria a Direção criativa. --}}
+            <form method="POST" action="{{ route('clients.update-production', $clienteSel) }}" x-show="editando" x-cloak class="px-5 pb-5">
+                @csrf @method('PATCH')
+                <input type="hidden" name="creative_lead_id" value="{{ $clienteSel->creative_lead_id }}">
+                <p class="text-xs mb-3" style="color:var(--muted)">Quantas tarefas de cada tipo cabem no mês. Em branco = não se aplica. Altera a ficha do cliente.</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                    @foreach(\App\Models\Client::$productionQuotaTypes as $tipo)
+                        <label class="flex flex-col gap-1">
+                            <span class="text-xs" style="color:var(--muted2)">{{ \App\Models\Task::$types[$tipo] }}</span>
+                            <input type="number" min="0" max="999" name="production_quota[{{ $tipo }}]"
+                                   value="{{ $clienteSel->production_quota[$tipo] ?? '' }}" placeholder="—"
+                                   class="px-2 py-1.5 text-sm text-center focus:outline-none"
+                                   style="background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text)">
+                        </label>
+                    @endforeach
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Salvar limites</button>
+            </form>
+        </div>
+    @elseif($limites['clientes']->isNotEmpty())
+        @php
+            $acima = $limites['clientes']->where('acima', '>', 0);
+            $resto = $limites['clientes']->where('acima', 0);
+        @endphp
+        <div class="card mb-4" x-data="{ todos: false }">
+            <div class="px-5 pt-4 pb-3">
+                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Limites de produção · {{ $mesLimite }}</p>
+                <p class="text-xs mt-1" style="color:var(--muted2)">
+                    Pedido no mês × limite combinado de cada cliente{{ $notaMes }}.
+                    <strong style="color:{{ $acima->count() ? 'var(--red)' : 'var(--green)' }}">{{ $acima->count() }} de {{ $limites['clientes']->count() }}</strong> passaram do limite em algum tipo.
+                    Filtre um cliente pra ver o detalhe e editar os limites.
+                </p>
+            </div>
+            <div class="px-5 pb-4 space-y-2">
+                @foreach($limites['clientes'] as $lc)
+                    <div class="flex items-center gap-3 flex-wrap" @if($lc['acima'] === 0) x-show="todos" x-cloak @endif>
+                        <a href="{{ route('production-load.index', array_merge($qs, ['cliente' => $lc['id']])) }}"
+                           class="text-sm font-semibold truncate hover:underline" style="color:var(--text); width:220px">{{ $lc['nome'] }}</a>
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            @foreach($lc['tipos'] as $t)
+                                <span class="text-[11px] font-mono px-1.5 py-0.5 rounded"
+                                      style="background:{{ $t['acima'] ? 'rgba(239,68,68,.12)' : 'var(--s2)' }}; color:{{ $t['acima'] ? 'var(--red)' : ($t['pedido'] >= $t['limite'] ? 'var(--orange)' : 'var(--muted)') }}">
+                                    {{ \Illuminate\Support\Str::before($t['label'], ' /') }} {{ $t['pedido'] }}/{{ $t['limite'] }}
+                                </span>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+                @if($resto->count())
+                    <button type="button" @click="todos = !todos" class="text-xs font-semibold" style="color:var(--purple)"
+                            x-text="todos ? 'Mostrar só quem passou do limite' : 'Ver também os {{ $resto->count() }} dentro do limite'"></button>
+                @endif
+            </div>
+        </div>
+    @endif
+
     {{-- ── Cliente × tipo ── --}}
     <div class="card mb-4 overflow-hidden">
         <div class="px-5 pt-4 pb-3">

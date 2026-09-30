@@ -183,6 +183,7 @@ class ProductionLoadService
             ],
             'matriz' => $this->matriz($executadas, $abertas, $pedidas),
             'pessoas' => $this->pessoas($executadas, $abertas),
+            'limites' => $this->limites(),
             'executadas' => $executadas,
             'abertas' => $abertas,
         ];
@@ -230,6 +231,85 @@ class ProductionLoadService
         }
 
         return ['colunas' => $colunas, 'linhas' => $linhas, 'mes_inteiro' => $mesInteiro];
+    }
+
+    /**
+     * Limites mensais de produção (clients.production_quota — o "controle de produção"
+     * da ficha do cliente). Mesma régua de Client::productionUsage(): "pedido" conta pelo
+     * mês da data de aprovação (ou criação), concluída conta, cancelada não. Soma o
+     * executado no mês (pela data real da conclusão) pra mostrar os dois lados.
+     *
+     * O mês é o do período quando ele é um mês inteiro; senão, o mês atual. Filtros de
+     * pessoa/tipo NÃO se aplicam aqui — o limite é do cliente inteiro.
+     */
+    public function limites(): array
+    {
+        $mes = ($this->mesInteiro() ? $this->inicio : now())->copy()->startOfMonth();
+        $fimMes = $mes->copy()->endOfMonth();
+
+        $clientes = Client::query()
+            ->whereNotNull('production_quota')
+            ->when($this->filtros['cliente'], fn ($q, $id) => $q->where('id', $id))
+            ->when(! $this->filtros['inativos'] && ! $this->filtros['cliente'], fn ($q) => $q->where('status', '!=', 'inactive'))
+            ->get(['id', 'company_name', 'nickname', 'production_quota'])
+            ->filter(fn ($c) => array_filter($c->production_quota ?? [], fn ($v) => (int) $v > 0));
+        $ids = $clientes->pluck('id')->all();
+
+        $pedidos = Task::whereIn('client_id', $ids)
+            ->where('status', '!=', 'cancelado')
+            ->whereRaw('date_trunc(?, COALESCE(approval_date, created_at)) = date_trunc(?, ?::date)', ['month', 'month', $mes->toDateString()])
+            ->selectRaw('client_id, task_type, count(*) as n')
+            ->groupBy('client_id', 'task_type')
+            ->toBase()->get();
+
+        $conclusoes = DB::connection('pgsql')->table('task_status_transitions')
+            ->select('task_id', DB::raw('max(changed_at) as concluida_em'))
+            ->where('to_status', 'concluido')
+            ->groupBy('task_id');
+        $executados = Task::whereIn('client_id', $ids)
+            ->where('tasks.status', 'concluido')
+            ->joinSub($conclusoes, 'c', 'c.task_id', '=', 'tasks.id')
+            ->whereBetween('c.concluida_em', [$mes, $fimMes])
+            ->selectRaw('tasks.client_id, tasks.task_type, count(*) as n')
+            ->groupBy('tasks.client_id', 'tasks.task_type')
+            ->toBase()->get();
+
+        $linhas = $clientes->map(function (Client $c) use ($pedidos, $executados) {
+            $tipos = collect($c->production_quota)
+                ->filter(fn ($v) => (int) $v > 0)
+                ->map(function ($limite, $tipo) use ($c, $pedidos, $executados) {
+                    $pedido = (int) ($pedidos->where('client_id', $c->id)->where('task_type', $tipo)->first()->n ?? 0);
+
+                    return [
+                        'tipo' => $tipo,
+                        'label' => Task::$types[$tipo] ?? $tipo,
+                        'limite' => (int) $limite,
+                        'pedido' => $pedido,
+                        'executado' => (int) ($executados->where('client_id', $c->id)->where('task_type', $tipo)->first()->n ?? 0),
+                        'resta' => max(0, (int) $limite - $pedido),
+                        'acima' => max(0, $pedido - (int) $limite),
+                    ];
+                })
+                ->sortByDesc('limite')->values();
+
+            return [
+                'id' => $c->id,
+                'nome' => $c->displayName(),
+                'tipos' => $tipos,
+                'limite' => $tipos->sum('limite'),
+                'pedido' => $tipos->sum('pedido'),
+                'executado' => $tipos->sum('executado'),
+                'acima' => $tipos->sum('acima'),
+                'uso_pct' => (int) round($tipos->sum('pedido') / max(1, $tipos->sum('limite')) * 100),
+            ];
+        })->sortByDesc(fn ($l) => [$l['acima'], $l['uso_pct']])->values();
+
+        return [
+            'mes' => $mes,
+            'mes_do_periodo' => $this->mesInteiro(),
+            'clientes' => $linhas,
+            'sem_limite' => $this->filtros['cliente'] && $linhas->isEmpty(),
+        ];
     }
 
     /**
