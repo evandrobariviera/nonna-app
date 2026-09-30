@@ -39,6 +39,7 @@ class Project extends Model
         'content_ideas',
         'traffic_phases',
         'start_date',
+        'pieces_due_date',
         'end_date',
         'budget',
         'clickup_task_id',
@@ -109,6 +110,7 @@ class Project extends Model
         'content_ideas' => 'array',
         'traffic_phases'=> 'array',
         'start_date'    => 'date',
+        'pieces_due_date' => 'date', // campanha: entrega das peças (start_date = vai ao ar)
         'end_date'      => 'date',
         'budget'              => 'decimal:2',
         'launched_at'         => 'datetime',

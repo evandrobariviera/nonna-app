@@ -365,6 +365,7 @@ class ProjectController extends Controller
             'content_ideas'     => 'nullable|array',
             'traffic_phases'    => 'nullable|array',
             'start_date'        => 'nullable|date',
+            'pieces_due_date'   => 'nullable|date',
             'end_date'          => 'nullable|date',
             'budget'            => 'nullable|numeric|min:0',
             // Brief criativo de campanha

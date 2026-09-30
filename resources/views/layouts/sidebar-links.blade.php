@@ -395,6 +395,17 @@
     </span>
 </a>
 
+{{-- Mapa de Projetos — visão do gestor de projetos: prazo, andamento e estagnação de
+     cada projeto/campanha, mais o que está vindo das reuniões de Macro pra lançar. --}}
+<a href="{{ route('project-map.index') }}"
+   class="nav-group-trigger {{ request()->routeIs('project-map.*') ? 'open' : '' }}"
+   style="{{ request()->routeIs('project-map.*') ? 'color:var(--purple);' : '' }}">
+    <span class="flex items-center gap-3">
+        <x-icon name="calendar-range" size="16" class="flex-shrink-0" />
+        Mapa de Projetos
+    </span>
+</a>
+
 @if(!empty($_myRoles))
 <div x-data="{ open: {{ $_activeVision ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">

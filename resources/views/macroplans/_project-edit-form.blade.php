@@ -20,6 +20,7 @@
     phases: {{ json_encode($project->traffic_phases ?? []) }},
     addPhase() { this.phases.push({ fase: '', titulo: '', periodo: '', objetivo: '', localizacao: '', publico: '', criativos: '', verba: '' }); },
     removePhase(i) { this.phases.splice(i, 1); },
+    tipo: '{{ $project->type ?? 'projeto' }}',
     briefDetalhado: {{ $project->brief_status === 'detalhado' ? 'true' : 'false' }},
     tomChips: {{ json_encode($project->tom_comunicacao ?? []) }},
     newTom: '',
@@ -55,7 +56,7 @@
         </div>
         <div>
             <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Tipo</label>
-            <select name="type"
+            <select name="type" x-model="tipo"
                 class="w-full px-3 py-2 text-sm focus:outline-none"
                 style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                 @foreach(\App\Models\Project::$types as $key => $t)
@@ -84,17 +85,25 @@
             style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">{{ $project->objective }}</textarea>
     </div>
 
-    {{-- Datas + Budget --}}
-    <div class="grid grid-cols-3 gap-3">
+    {{-- Datas + Budget. Campanha tem dois marcos (Mapa de Projetos): entrega das peças
+         e ir ao ar — "Início" vira "Vai ao ar" e ganha o campo das peças. --}}
+    <div class="grid grid-cols-2 gap-3" :class="tipo === 'campanha' ? 'md:grid-cols-4' : 'md:grid-cols-3'">
+        <div x-show="tipo === 'campanha'" x-cloak>
+            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">📦 Entrega das peças</label>
+            <input type="date" name="pieces_due_date"
+                value="{{ $project->pieces_due_date?->format('Y-m-d') }}"
+                class="w-full px-3 py-2 text-sm focus:outline-none"
+                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+        </div>
         <div>
-            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Início</label>
+            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)" x-text="tipo === 'campanha' ? '🚀 Vai ao ar' : 'Início'">Início</label>
             <input type="date" name="start_date"
                 value="{{ $project->start_date?->format('Y-m-d') }}"
                 class="w-full px-3 py-2 text-sm focus:outline-none"
                 style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
         </div>
         <div>
-            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Término</label>
+            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)" x-text="tipo === 'campanha' ? 'Fim da campanha' : 'Término'">Término</label>
             <input type="date" name="end_date"
                 value="{{ $project->end_date?->format('Y-m-d') }}"
                 class="w-full px-3 py-2 text-sm focus:outline-none"

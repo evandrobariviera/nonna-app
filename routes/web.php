@@ -693,6 +693,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::get('/producao/semana/dia', [\App\Http\Controllers\ProductionPanelController::class, 'diaResultados'])
         ->name('production-panel.dia-results');
 
+    // ── Mapa de Projetos (visão do gestor de projetos) ──
+    Route::get('/mapa-projetos', [\App\Http\Controllers\ProjectMapController::class, 'index'])
+        ->name('project-map.index');
+
     // ── Painel de Produtividade ──
     Route::get('/produtividade', [\App\Http\Controllers\ProductivityDashboardController::class, 'index'])
         ->name('productivity.index');
