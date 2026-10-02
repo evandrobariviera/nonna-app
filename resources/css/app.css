@@ -830,6 +830,7 @@
     font-size: 10px; font-weight: 700; line-height: 18px; text-align: center;
     flex-shrink: 0;
 }
+.chat-badge-muted { background: var(--slate); }
 .chat-day {
     padding: 2px 10px;
     font-size: 11px; font-weight: 600;
@@ -895,3 +896,48 @@
     transition: opacity .12s;
 }
 .chat-send:disabled { opacity: .35; cursor: default; }
+
+/* Citação no chat (atalho "/") — chip na mensagem + menu de escolha */
+.chat-ref {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 0 6px;
+    border-radius: 6px;
+    font-weight: 600;
+    text-decoration: none !important;
+    background: rgba(100, 59, 142, .10);
+    color: var(--purple) !important;
+    border: 1px solid rgba(100, 59, 142, .22);
+}
+.chat-ref::before {
+    font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em;
+    opacity: .75;
+}
+.chat-ref-tarefa::before   { content: 'Tarefa'; }
+.chat-ref-projeto::before  { content: 'Projeto'; }
+.chat-ref-campanha::before { content: 'Campanha'; }
+.chat-ref-cliente::before  { content: 'Cliente'; }
+.chat-ref:hover { background: rgba(100, 59, 142, .18); }
+.chat-bubble-mine .chat-ref { background: rgba(255, 255, 255, .18); color: #fff !important; border-color: rgba(255, 255, 255, .35); }
+.chat-ref-menu {
+    z-index: 5;
+    background: var(--s1);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, .14);
+    overflow: hidden;
+}
+.chat-ref-menu-title { padding: 8px 12px 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.chat-ref-menu-foot { padding: 5px 12px; font-size: 10px; color: var(--muted); border-top: 1px solid var(--border2); }
+.chat-ref-option { width: 100%; display: flex; align-items: center; gap: 8px; padding: 7px 12px; text-align: left; }
+.chat-ref-option-active { background: var(--s3); }
+.chat-ref-tag {
+    flex-shrink: 0;
+    padding: 1px 7px;
+    border-radius: 5px;
+    font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em;
+    color: #fff;
+}
+.chat-ref-tag-tarefa   { background: var(--purple); }
+.chat-ref-tag-projeto  { background: var(--blue); }
+.chat-ref-tag-campanha { background: var(--orange); }
+.chat-ref-tag-cliente  { background: var(--green); }

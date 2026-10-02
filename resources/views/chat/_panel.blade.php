@@ -128,8 +128,10 @@
                                         <p class="text-xs truncate flex-1" style="color:var(--muted2)"
                                            x-text="c.last_preview ?? (c.type === 'direct' ? 'Diga olá 👋' : 'Canal do setor')"></p>
                                         <span x-show="c.muted" x-cloak style="color:var(--muted)"><x-icon name="bell-off" size="12" /></span>
+                                        {{-- :class, nunca :style em string aqui: :style="'...'" sobrescreve o
+                                             display:none do x-show e o "0" aparecia sempre. --}}
                                         <span x-show="c.unread > 0" x-cloak class="chat-badge"
-                                              :style="c.muted ? 'background:var(--slate)' : ''"
+                                              :class="c.muted ? 'chat-badge-muted' : ''"
                                               x-text="c.unread > 99 ? '99+' : c.unread"></span>
                                     </div>
                                 </div>
@@ -169,7 +171,7 @@
     {{-- ══ CONVERSA ══ --}}
     <template x-if="{{ $showConv }}">
         <div class="flex flex-col flex-1 min-h-0 relative">
-            <div x-ref="messages" @scroll.debounce.100ms="onScroll()" class="flex-1 overflow-y-auto min-h-0 px-3 py-3" style="background:var(--bg)">
+            <div x-ref="messages" @scroll.debounce.100ms="onScroll()" @click="onMessageClick($event)" class="flex-1 overflow-y-auto min-h-0 px-3 py-3" style="background:var(--bg)">
                 <div x-show="loadingOlder" class="flex justify-center py-2" style="color:var(--muted)">
                     <x-icon name="loader-circle" size="14" class="animate-spin" />
                 </div>
@@ -237,15 +239,59 @@
             <p x-show="error" x-cloak class="px-3 py-1.5 text-xs flex-shrink-0" style="color:var(--red); background:var(--s1)" x-text="error"></p>
 
             {{-- Caixa de envio --}}
-            <form @submit.prevent="send()" class="flex items-end gap-1.5 p-2 flex-shrink-0" style="background:var(--s1); border-top:1px solid var(--border2)">
+            <form @submit.prevent="send()" class="relative flex items-end gap-1.5 p-2 flex-shrink-0" style="background:var(--s1); border-top:1px solid var(--border2)">
+
+                {{-- Menu do atalho "/" — passo 1: tipo; passo 2: busca --}}
+                <div x-show="refPicker && (refPicker.step === 'search' || refTypeOptions.length)" x-cloak
+                     @click.outside="if (refPicker?.step === 'search') closeRefPicker()"
+                     class="absolute left-2 right-2 bottom-full mb-1 chat-ref-menu">
+                    <template x-if="refPicker?.step === 'type'">
+                        <div>
+                            <p class="chat-ref-menu-title">Citar na conversa</p>
+                            <template x-for="(t, i) in refTypeOptions" :key="t.key">
+                                <button type="button" @mousedown.prevent="chooseRefType(t.key)" @mouseenter="refPicker.index = i"
+                                        class="chat-ref-option" :class="refPicker.index === i ? 'chat-ref-option-active' : ''">
+                                    <span class="chat-ref-tag" :class="'chat-ref-tag-' + t.key" x-text="t.label"></span>
+                                    <span class="text-xs truncate" style="color:var(--muted2)" x-text="t.hint"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+                    <template x-if="refPicker?.step === 'search'">
+                        <div>
+                            <div class="flex items-center gap-2 px-2 pt-2 pb-1">
+                                <span class="chat-ref-tag" :class="'chat-ref-tag-' + refPicker.type" x-text="refTypeLabel(refPicker.type)"></span>
+                                <input type="text" x-ref="refSearch" x-model="refPicker.search"
+                                       @input="refPicker.loading = true; fetchRefs()" @keydown="onRefSearchKeydown($event)"
+                                       class="chat-search" style="padding-left:10px" placeholder="Pesquisar…">
+                            </div>
+                            <div class="max-h-56 overflow-y-auto pb-1">
+                                <template x-for="(item, i) in refPicker.results" :key="item.id">
+                                    <button type="button" @mousedown.prevent="pickRef(item)" @mouseenter="refPicker.index = i"
+                                            class="chat-ref-option" :class="refPicker.index === i ? 'chat-ref-option-active' : ''">
+                                        <span class="min-w-0 text-left">
+                                            <span class="block text-sm truncate" style="color:var(--text)" x-text="item.label"></span>
+                                            <span class="block text-[11px] truncate" style="color:var(--muted)" x-text="item.sub"></span>
+                                        </span>
+                                    </button>
+                                </template>
+                                <p x-show="refPicker.loading" class="px-3 py-2 text-xs" style="color:var(--muted)">Buscando…</p>
+                                <p x-show="!refPicker.loading && !refPicker.results.length" class="px-3 py-2 text-xs" style="color:var(--muted)">Nada encontrado.</p>
+                            </div>
+                        </div>
+                    </template>
+                    <p class="chat-ref-menu-foot">↑↓ navegar · Enter escolher · Esc fechar</p>
+                </div>
+
                 <label class="chat-icon-btn cursor-pointer" title="Anexar arquivo ou imagem">
                     <x-icon name="paperclip" size="16" />
                     <input type="file" multiple class="hidden" @change="addFiles($event.target.files); $event.target.value = ''">
                 </label>
                 <textarea x-ref="input" x-model="draft" rows="1"
-                          @keydown.enter="onEnter($event)" @paste="onPaste($event)"
+                          @keydown="onInputKeydown($event)" @input="onInput($event)" @paste="onPaste($event)"
+                          @blur="setTimeout(() => { if (refPicker?.step === 'type') refPicker = null }, 150)"
                           x-effect="draft; $el.style.height = 'auto'; $el.style.height = Math.min($el.scrollHeight, 120) + 'px'"
-                          placeholder="Escreva uma mensagem…" class="chat-input"></textarea>
+                          placeholder="Mensagem… ( / cita tarefa, projeto, campanha ou cliente)" class="chat-input"></textarea>
                 <button type="submit" class="chat-send" :disabled="sending || (!draft.trim() && !files.length)" title="Enviar (Enter)">
                     <span x-show="!sending"><x-icon name="send" size="15" /></span>
                     <span x-show="sending" x-cloak><x-icon name="loader-circle" size="15" class="animate-spin" /></span>

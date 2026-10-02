@@ -2,11 +2,15 @@
 
 namespace App\Services\Chat;
 
+use App\Models\AdCampaign;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\ChatMessageAttachment;
 use App\Models\ChatParticipant;
+use App\Models\Client;
+use App\Models\Project;
 use App\Models\Sector;
+use App\Models\Task;
 use App\Models\User;
 use App\Support\UploadOptions;
 use Illuminate\Http\UploadedFile;
@@ -295,9 +299,65 @@ class ChatService
         ];
     }
 
+    // ── Citações (atalho "/") ────────────────────────────────────────────────
+
+    // Busca pra citar na conversa. Sem termo, devolve os mais recentes. Task, Project e
+    // Client já são filtrados pela organização (Tenantable); AdCampaign não é, então filtra aqui.
+    public function searchReferences(string $type, string $term): array
+    {
+        $like = '%' . addcslashes(trim($term), '%_\\') . '%';
+        $orgId = app('currentOrganization')->id;
+
+        $items = match ($type) {
+            'tarefa' => Task::with('client:id,company_name,nickname')
+                ->where('title', 'ilike', $like)
+                ->where('status', '!=', 'cancelado')
+                ->orderByDesc('updated_at')->limit(8)
+                ->get(['id', 'title', 'client_id', 'is_ticket'])
+                ->map(fn (Task $t) => [
+                    'id'    => $t->id,
+                    'label' => $t->title,
+                    'sub'   => trim(($t->is_ticket ? 'Chamado' : 'Tarefa') . ' · ' . ($t->client?->displayName() ?? 'Sem cliente')),
+                ]),
+
+            'projeto' => Project::with('client:id,company_name,nickname')
+                ->where('title', 'ilike', $like)
+                ->orderByDesc('updated_at')->limit(8)
+                ->get(['id', 'title', 'client_id'])
+                ->map(fn (Project $p) => [
+                    'id'    => $p->id,
+                    'label' => $p->title,
+                    'sub'   => $p->client?->displayName() ?? 'Sem cliente',
+                ]),
+
+            'campanha' => AdCampaign::with('adAccount.client:id,company_name,nickname')
+                ->where('organization_id', $orgId)
+                ->where('name', 'ilike', $like)
+                ->orderByDesc('updated_at')->limit(8)
+                ->get(['id', 'name', 'platform', 'client_ad_account_id'])
+                ->map(fn (AdCampaign $c) => [
+                    'id'    => $c->id,
+                    'label' => $c->name,
+                    'sub'   => trim(ucfirst((string) $c->platform) . ' · ' . ($c->adAccount?->client?->displayName() ?? '')),
+                ]),
+
+            'cliente' => Client::where('status', '!=', 'inactive')
+                ->where(fn ($q) => $q->where('company_name', 'ilike', $like)->orWhere('nickname', 'ilike', $like))
+                ->orderBy('company_name')->limit(8)
+                ->get(['id', 'company_name', 'nickname'])
+                ->map(fn (Client $c) => [
+                    'id'    => $c->id,
+                    'label' => $c->displayName(),
+                    'sub'   => $c->nickname ? $c->company_name : 'Cliente',
+                ]),
+        };
+
+        return $items->values()->all();
+    }
+
     private function preview(ChatMessage $m, User $viewer): string
     {
-        $text = trim((string) $m->body);
+        $text = trim(ChatMessage::plainText($m->body));
         if ($text === '' && $m->attachments->isNotEmpty()) {
             $text = '📎 ' . $m->attachments->first()->filename;
         }

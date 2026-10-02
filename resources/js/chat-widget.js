@@ -15,6 +15,20 @@ const STATUS_HIDDEN_MS = 30000;
 const MESSAGES_MS = 3000;
 const MAX_FILE_MB = 50;
 
+// Atalho "/" na caixa de mensagem: cita tarefa/projeto/campanha/cliente. No texto
+// digitado aparece "@Título"; ao enviar vira [[tipo:uuid|Título]] (ver
+// ChatMessage::REFERENCE_PATTERN), que o servidor desenha como chip clicável.
+const REF_TYPES = [
+    { key: 'tarefa',   label: 'Tarefa',   hint: 'Tarefas e chamados' },
+    { key: 'projeto',  label: 'Projeto',  hint: 'Projetos dos planejamentos' },
+    { key: 'campanha', label: 'Campanha', hint: 'Campanhas de mídia paga' },
+    { key: 'cliente',  label: 'Cliente',  hint: 'Clientes ativos' },
+];
+
+function normalize(text) {
+    return text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
 function csrf() {
     return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 }
@@ -69,6 +83,9 @@ export function registerChatWidget(Alpine) {
         sending: false,
         draft: '',
         drafts: {},
+        draftRefs: {},                 // conversa → [{ label: '@Título', token: '[[tipo:id|Título]]' }]
+        refPicker: null,               // { step: 'type'|'search', start, end, query, index, type, search, results, loading }
+        _refTimer: null,
         files: [],
         error: '',
         toast: null,
@@ -83,6 +100,7 @@ export function registerChatWidget(Alpine) {
         init() {
             const saved = loadState();
             this.drafts = saved.drafts ?? {};
+            this.draftRefs = saved.draftRefs ?? {};
 
             if (this.mode === 'page') {
                 this.open = true;
@@ -129,6 +147,7 @@ export function registerChatWidget(Alpine) {
                     view: this.view === 'people' ? 'list' : this.view,
                     active: this.view === 'conversation' ? this.active : null,
                     drafts: this.drafts,
+                    draftRefs: this.draftRefs,
                 }));
             } catch (e) {
                 // Aba anônima/armazenamento bloqueado: o chat funciona, só não lembra o estado.
@@ -226,6 +245,7 @@ export function registerChatWidget(Alpine) {
             this.messages = [];
             this.files = [];
             this.error = '';
+            this.refPicker = null;
             this.draft = this.drafts[conversation.id] ?? '';
             this.loadingMessages = !restoring;
             this.persist();
@@ -319,10 +339,145 @@ export function registerChatWidget(Alpine) {
 
         // ── Envio ────────────────────────────────────────────────────────
 
-        onEnter(event) {
-            if (event.shiftKey || event.isComposing) return;
-            event.preventDefault();
-            this.send();
+        // Teclas da caixa de mensagem: com o menu "/" aberto, setas/Enter/Tab/Esc navegam
+        // nele; senão Enter envia e Shift+Enter quebra linha.
+        onInputKeydown(event) {
+            if (this.refPicker?.step === 'type' && this.refTypeOptions.length) {
+                if (this.navigatePicker(event, this.refTypeOptions.length)) return;
+                if (event.key === 'Enter' || event.key === 'Tab') {
+                    event.preventDefault();
+                    this.chooseRefType(this.refTypeOptions[this.refPicker.index].key);
+                    return;
+                }
+            }
+            if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+                event.preventDefault();
+                this.send();
+            }
+        },
+
+        // ── Citação com "/" ──────────────────────────────────────────────
+
+        onInput(event) {
+            const pos = event.target.selectionStart;
+            const match = this.draft.slice(0, pos).match(/(^|\s)\/([^\s\/]*)$/);
+            if (match) {
+                this.refPicker = { step: 'type', start: pos - match[2].length - 1, end: pos, query: match[2], index: 0 };
+            } else if (this.refPicker?.step === 'type') {
+                this.refPicker = null;
+            }
+        },
+
+        get refTypeOptions() {
+            if (!this.refPicker || this.refPicker.step !== 'type') return [];
+            const q = normalize(this.refPicker.query);
+            return REF_TYPES.filter(t => normalize(t.label).startsWith(q));
+        },
+
+        // Setas e Esc compartilhados pelos dois passos do menu. Devolve true se tratou a tecla.
+        navigatePicker(event, count) {
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                const step = event.key === 'ArrowDown' ? 1 : -1;
+                this.refPicker.index = (this.refPicker.index + step + count) % count;
+                return true;
+            }
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                this.closeRefPicker();
+                return true;
+            }
+            return false;
+        },
+
+        chooseRefType(type) {
+            this.refPicker = { ...this.refPicker, step: 'search', type, search: '', results: [], index: 0, loading: true };
+            this.fetchRefs();
+            this.$nextTick(() => this.$refs.refSearch?.focus());
+        },
+
+        refTypeLabel(type) {
+            return REF_TYPES.find(t => t.key === type)?.label ?? '';
+        },
+
+        fetchRefs() {
+            clearTimeout(this._refTimer);
+            this._refTimer = setTimeout(async () => {
+                const picker = this.refPicker;
+                if (!picker || picker.step !== 'search') return;
+                const search = picker.search;
+                try {
+                    const data = await api(`/chat/referencias?type=${picker.type}&q=${encodeURIComponent(search)}`);
+                    if (this.refPicker === picker && picker.search === search) {
+                        picker.results = data.items;
+                        picker.index = 0;
+                    }
+                } catch (e) {
+                    picker.results = [];
+                } finally {
+                    picker.loading = false;
+                }
+            }, 200);
+        },
+
+        onRefSearchKeydown(event) {
+            const results = this.refPicker?.results ?? [];
+            if (this.navigatePicker(event, Math.max(results.length, 1))) return;
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                if (results[this.refPicker.index]) this.pickRef(results[this.refPicker.index]);
+            } else if (event.key === 'Backspace' && this.refPicker.search === '') {
+                // Apagar com a busca vazia volta pra escolha do tipo.
+                event.preventDefault();
+                this.refPicker = { ...this.refPicker, step: 'type', index: 0 };
+                this.$nextTick(() => this.$refs.input?.focus());
+            }
+        },
+
+        closeRefPicker() {
+            this.refPicker = null;
+            this.$nextTick(() => this.$refs.input?.focus());
+        },
+
+        pickRef(item) {
+            const { start, end, type } = this.refPicker;
+            const clean = item.label.replace(/[\[\]|\n\r]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 150);
+            const visible = '@' + clean;
+
+            this.draft = this.draft.slice(0, start) + visible + ' ' + this.draft.slice(end);
+            const refs = this.draftRefs[this.active.id] ?? [];
+            refs.push({ label: visible, token: `[[${type}:${item.id}|${clean}]]` });
+            this.draftRefs[this.active.id] = refs;
+            this.persist();
+
+            this.refPicker = null;
+            this.$nextTick(() => {
+                const input = this.$refs.input;
+                if (!input) return;
+                input.focus();
+                const caret = start + visible.length + 1;
+                input.setSelectionRange(caret, caret);
+            });
+        },
+
+        // "@Título" → [[tipo:id|Título]] na hora de enviar. Se a pessoa editou/apagou o
+        // "@Título" no texto, aquela citação simplesmente não vai (fica texto comum).
+        applyRefs(text) {
+            for (const ref of this.draftRefs[this.active.id] ?? []) {
+                const i = text.indexOf(ref.label);
+                if (i >= 0) text = text.slice(0, i) + ref.token + text.slice(i + ref.label.length);
+            }
+            return text;
+        },
+
+        // Citação de tarefa abre no popup da tarefa, sem sair da tela atual.
+        onMessageClick(event) {
+            const link = event.target.closest('a[data-chat-ref="tarefa"]');
+            if (link) {
+                event.preventDefault();
+                Alpine.store('taskPopup').open(link.getAttribute('href'));
+            }
         },
 
         addFiles(fileList) {
@@ -364,7 +519,7 @@ export function registerChatWidget(Alpine) {
             if (!text && !this.files.length) return;
 
             const form = new FormData();
-            form.append('body', text);
+            form.append('body', this.applyRefs(text));
             this.files.forEach(f => form.append('files[]', f));
 
             this.sending = true;
@@ -372,6 +527,7 @@ export function registerChatWidget(Alpine) {
             try {
                 const data = await api(`/chat/conversas/${this.active.id}/mensagens`, { method: 'POST', body: form });
                 this.appendMessages([data.message]);
+                delete this.draftRefs[this.active.id];
                 this.draft = '';
                 this.files.forEach(f => f.previewUrl && URL.revokeObjectURL(f.previewUrl));
                 this.files = [];
@@ -390,7 +546,7 @@ export function registerChatWidget(Alpine) {
 
         appendMessages(list) {
             const known = new Set(this.messages.map(m => m.id));
-            const fresh = list.filter(m => !known.has(m.id));
+            const fresh = (list ?? []).filter(m => m && m.id && !known.has(m.id));
             if (fresh.length) this.messages.push(...fresh);
             return fresh.length;
         },

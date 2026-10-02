@@ -329,6 +329,7 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         Route::get('/estado', 'status')->name('status');
         Route::get('/conversas', 'conversations')->name('conversations');
         Route::get('/pessoas', 'people')->name('people');
+        Route::get('/referencias', 'references')->middleware('throttle:120,1')->name('references');
         Route::post('/conversas/direta', 'openDirect')->middleware('throttle:30,1')->name('direct');
         Route::get('/conversas/{conversation}/mensagens', 'messages')->name('messages');
         Route::post('/conversas/{conversation}/mensagens', 'send')->middleware('throttle:40,1')->name('send');

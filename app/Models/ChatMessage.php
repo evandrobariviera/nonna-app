@@ -40,8 +40,26 @@ class ChatMessage extends Model
         return $this->hasMany(ChatMessageAttachment::class, 'message_id');
     }
 
+    // Citação de tarefa/projeto/campanha/cliente (atalho "/" no chat) fica no texto como
+    // [[tipo:uuid|Rótulo]]. Rótulo é só o que foi escolhido na hora — o link leva pra
+    // tela de verdade, que aplica as permissões normais dela.
+    public const REFERENCE_PATTERN = '/\[\[(tarefa|projeto|campanha|cliente):([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\|([^\]\|\n]{1,200})\]\]/';
+
+    public const REFERENCE_ROUTES = [
+        'tarefa'   => 'tasks.show',
+        'projeto'  => 'projects.showDirect',
+        'campanha' => 'campaigns.show',
+        'cliente'  => 'clients.show',
+    ];
+
+    // Versão texto (prévia na lista/aviso): citação vira "@Rótulo".
+    public static function plainText(?string $body): string
+    {
+        return preg_replace(self::REFERENCE_PATTERN, '@$3', (string) $body);
+    }
+
     // Texto puro → HTML seguro pra exibir: escapa TUDO primeiro e só depois transforma
-    // link em <a> e quebra de linha em <br>. Nunca confiar em HTML vindo do usuário.
+    // link em <a>, citação em chip e quebra de linha em <br>. Nunca confiar em HTML vindo do usuário.
     public function bodyHtml(): string
     {
         $escaped = e((string) $this->body);
@@ -57,6 +75,14 @@ class ChatMessage extends Model
             $escaped
         );
 
-        return nl2br($linked, false);
+        // Depois do linkify de propósito: o href da citação não pode ser reprocessado como URL.
+        // Rótulo ($m[3]) já está escapado (veio de $escaped); tipo e uuid são validados pela regex.
+        $withReferences = preg_replace_callback(
+            self::REFERENCE_PATTERN,
+            fn ($m) => '<a href="' . route(self::REFERENCE_ROUTES[$m[1]], $m[2], false) . '" class="chat-ref chat-ref-' . $m[1] . '" data-chat-ref="' . $m[1] . '">' . $m[3] . '</a>',
+            $linked
+        );
+
+        return nl2br($withReferences, false);
     }
 }
