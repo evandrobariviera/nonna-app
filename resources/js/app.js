@@ -15,6 +15,7 @@ import { registerMondayFill } from './monday-fill.js';
 import { registerGroupCollapse } from './group-collapse.js';
 import { registerBrowserNotify } from './browser-notify.js';
 import { registerAiChatDrawer } from './ai-chat-drawer.js';
+import { registerChatWidget } from './chat-widget.js';
 
 window.Alpine = Alpine;
 
@@ -35,5 +36,6 @@ registerMondayFill(Alpine);
 registerGroupCollapse(Alpine);
 registerBrowserNotify(Alpine);
 registerAiChatDrawer(Alpine);
+registerChatWidget(Alpine);
 
 Alpine.start();

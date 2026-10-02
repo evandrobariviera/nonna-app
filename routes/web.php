@@ -322,6 +322,21 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::get('/notificacoes/novas', [\App\Http\Controllers\NotificationController::class, 'poll'])
         ->name('notifications.poll');
 
+    // ── Chat interno (widget flutuante + tela cheia) — ver .claude/docs/internal-chat-plan.md.
+    // Acesso a conversa só por participação (ChatConversationPolicy), sem exceção pra admin.
+    Route::prefix('chat')->name('chat.')->controller(\App\Http\Controllers\ChatController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/estado', 'status')->name('status');
+        Route::get('/conversas', 'conversations')->name('conversations');
+        Route::get('/pessoas', 'people')->name('people');
+        Route::post('/conversas/direta', 'openDirect')->middleware('throttle:30,1')->name('direct');
+        Route::get('/conversas/{conversation}/mensagens', 'messages')->name('messages');
+        Route::post('/conversas/{conversation}/mensagens', 'send')->middleware('throttle:40,1')->name('send');
+        Route::post('/conversas/{conversation}/lida', 'markRead')->name('read');
+        Route::patch('/conversas/{conversation}/silenciar', 'toggleMute')->name('mute');
+        Route::get('/anexos/{attachment}', 'attachment')->name('attachments.show');
+    });
+
     // ── Contratos do cliente ──
     Route::post('/clientes/{client}/contratos', [ContractController::class, 'store'])
         ->name('clients.contracts.store');

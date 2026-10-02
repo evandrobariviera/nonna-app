@@ -363,6 +363,12 @@
         @unless($embed)
             @include('layouts.bottom-nav')
         @endunless
+
+        {{-- ── CHAT DA EQUIPE (widget flutuante) — só equipe interna; some no modo embed
+             (popup de tarefa) e na própria tela cheia /chat ── --}}
+        @unless($embed || request()->routeIs('chat.index') || auth()->user()->isClient())
+            @include('chat._widget')
+        @endunless
     @endauth
 
     {{-- ── PAINEL LATERAL (canvas) ── carrega detalhe de Cliente/Projeto sem sair da página atual ── --}}

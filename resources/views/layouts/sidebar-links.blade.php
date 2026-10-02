@@ -33,6 +33,18 @@
         ->count());
 @endphp
 
+{{-- Chat da equipe — contador vem do widget (Alpine store "chat"), sem query aqui --}}
+<a href="{{ route('chat.index') }}"
+   class="nav-group-trigger {{ request()->routeIs('chat.*') ? 'open' : '' }}"
+   style="{{ request()->routeIs('chat.*') ? 'color:var(--purple);' : '' }}">
+    <span class="flex items-center gap-3">
+        <x-icon name="message-circle" size="16" class="flex-shrink-0" />
+        Chat
+    </span>
+    <span x-show="$store.chat.unreadTotal > 0" x-cloak class="chat-badge"
+          x-text="$store.chat.unreadTotal > 99 ? '99+' : $store.chat.unreadTotal"></span>
+</a>
+
 {{-- ══ CRM ══ --}}
 <div class="nav-group-label">CRM</div>
 
