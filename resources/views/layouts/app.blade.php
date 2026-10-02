@@ -181,7 +181,7 @@
                      de /tarefas). Atalho "/" abre quando nada mais está focado. --}}
                 @auth
                     <div class="relative" x-data="{ open:false, q:'', results:[], loading:false, timer:null }"
-                         @keydown.slash.window.prevent="if (!open && document.activeElement === document.body) { open = true; $nextTick(() => $refs.globalSearchInput.focus()) }"
+                         @keydown.slash.window="if (!open && document.activeElement === document.body) { $event.preventDefault(); open = true; $nextTick(() => $refs.globalSearchInput.focus()) }"
                          @nonna-open-search.window="open = true; $nextTick(() => $refs.globalSearchInput.focus())">
                         <button @click="open = !open; if (open) $nextTick(() => $refs.globalSearchInput.focus())"
                             class="flex items-center justify-center w-8 h-8 rounded-lg transition-colors flex-shrink-0"
