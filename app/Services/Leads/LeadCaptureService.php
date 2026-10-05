@@ -128,8 +128,26 @@ class LeadCaptureService
             ->orderByDesc('created_at')
             ->first();
 
+        $answers = FormAnswers::normalize($payload['form_answers'] ?? null)
+            ?: FormAnswers::fromRawPayload($payload['raw_payload'] ?? null);
+
         if ($reopenable) {
+            // O novo envio vira o conteúdo principal; o anterior vai pro histórico
+            // em vez de ser sobrescrito (ex: a pessoa manda uma 2ª mensagem diferente).
+            $previousAnswers = $reopenable->answers();
+            if ($answers && $previousAnswers) {
+                $history = $reopenable->previous_submissions ?? [];
+                $history[] = [
+                    'received_at' => ($reopenable->received_at ?? $reopenable->created_at)?->toIso8601String(),
+                    'form_name'   => $reopenable->form_name,
+                    'answers'     => $previousAnswers,
+                ];
+                $reopenable->previous_submissions = $history;
+            }
+
             $reopenable->fill([
+                'form_answers'     => $answers ?: $reopenable->form_answers,
+                'form_name'        => $payload['form_name'] ?? $reopenable->form_name,
                 'utm_source'       => $reopenable->utm_source ?: ($payload['utm_source'] ?? null),
                 'utm_medium'       => $reopenable->utm_medium ?: ($payload['utm_medium'] ?? null),
                 'utm_campaign'     => $reopenable->utm_campaign ?: ($payload['utm_campaign'] ?? null),
@@ -165,6 +183,7 @@ class LeadCaptureService
             'form_name'              => $payload['form_name'] ?? null,
             'received_at'            => $receivedAt,
             'raw_payload'            => $payload['raw_payload'] ?? null,
+            'form_answers'           => $answers ?: null,
         ]);
 
         return [$opportunity, true];

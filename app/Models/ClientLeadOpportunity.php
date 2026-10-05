@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Services\Leads\FormAnswers;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class ClientLeadOpportunity extends Model
 {
@@ -31,6 +33,8 @@ class ClientLeadOpportunity extends Model
         'form_name',
         'received_at',
         'raw_payload',
+        'form_answers',
+        'previous_submissions',
         'lost_reason',
         'won_at',
         'lost_at',
@@ -40,7 +44,9 @@ class ClientLeadOpportunity extends Model
 
     protected $casts = [
         'raw_payload'  => 'array',
-        'won_at'       => 'datetime',
+        'form_answers' => 'array',
+        'previous_submissions' => 'array',
+        'won_at'     => 'datetime',
         'lost_at'      => 'datetime',
         'received_at'  => 'datetime',
     ];
@@ -68,6 +74,23 @@ class ClientLeadOpportunity extends Model
     public function isOpen(): bool
     {
         return !in_array($this->stage, ['ganho', 'perdido']);
+    }
+
+    // Leads anteriores ao campo form_answers caem no que der pra extrair do raw_payload.
+    public function answers(): array
+    {
+        return $this->form_answers
+            ? FormAnswers::withoutIdentity($this->form_answers)
+            : FormAnswers::fromRawPayload($this->raw_payload);
+    }
+
+    public function messagePreview(int $limit = 120): ?string
+    {
+        $candidates = array_filter($this->answers(), fn ($a) => FormAnswers::isMessage($a['label']));
+        $best = collect($candidates)->first(fn ($a) => preg_match('/mensag|message/i', $a['label']))
+            ?? reset($candidates) ?: null;
+
+        return $best ? Str::limit($best['value'], $limit) : null;
     }
 
     public function lead(): BelongsTo

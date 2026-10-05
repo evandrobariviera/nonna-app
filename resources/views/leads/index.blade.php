@@ -66,6 +66,10 @@
                                         {{ $opp->lead->phone ?: $opp->lead->email ?: '—' }}
                                     </div>
 
+                                    @if($preview = $opp->messagePreview(90))
+                                        <div class="text-xs italic mb-2 line-clamp-2" style="color: var(--muted2)">“{{ $preview }}”</div>
+                                    @endif
+
                                     @if($opp->lead->client)
                                         <div class="text-xs font-semibold mb-1" style="color:var(--purple)">
                                             {{ $opp->lead->client->displayName() }}

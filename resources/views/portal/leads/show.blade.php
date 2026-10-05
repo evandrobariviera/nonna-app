@@ -48,6 +48,8 @@
                 </div>
             </div>
 
+            @include('leads._answers', ['opportunity' => $opportunity])
+
             @include('leads._notes', ['opportunity' => $opportunity, 'notesStoreRoute' => route('portal.leads.notes.store', $opportunity)])
 
         </div>

@@ -35,6 +35,7 @@ class LeadCaptureController extends Controller
             'state'             => ['nullable', 'string', 'max:2'],
             'received_at'       => ['nullable', 'date'],
             'raw_payload'       => ['nullable', 'array'],
+            'form_answers'      => ['nullable', 'array', 'max:100'],
         ]);
 
         $org = app('currentOrganization');

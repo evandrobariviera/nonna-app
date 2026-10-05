@@ -57,6 +57,8 @@
                 </div>
             </div>
 
+            @include('leads._answers', ['opportunity' => $opportunity])
+
             {{-- Attribution --}}
             <div class="card p-5">
                 <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-3">Atribuição</h3>
@@ -67,6 +69,13 @@
                     <div><span class="text-[var(--muted)]">UTM Source:</span> <span class="text-[var(--text)]">{{ $opportunity->utm_source ?? '—' }}</span></div>
                     <div><span class="text-[var(--muted)]">UTM Medium:</span> <span class="text-[var(--text)]">{{ $opportunity->utm_medium ?? '—' }}</span></div>
                     <div><span class="text-[var(--muted)]">UTM Campaign:</span> <span class="text-[var(--text)]">{{ $opportunity->utm_campaign ?? '—' }}</span></div>
+                    <div><span class="text-[var(--muted)]">UTM Content:</span> <span class="text-[var(--text)]">{{ $opportunity->utm_content ?? '—' }}</span></div>
+                    <div><span class="text-[var(--muted)]">UTM Term:</span> <span class="text-[var(--text)]">{{ $opportunity->utm_term ?? '—' }}</span></div>
+                    @foreach(['fbclid' => 'FBCLID', 'gclid' => 'GCLID', 'ctwa_clid' => 'CTWA CLID', 'event_id' => 'Event ID'] as $field => $label)
+                        @if($opportunity->$field)
+                            <div class="col-span-2 break-all"><span class="text-[var(--muted)]">{{ $label }}:</span> <span class="text-[var(--text)]">{{ $opportunity->$field }}</span></div>
+                        @endif
+                    @endforeach
                     @if($opportunity->landing_page_url)
                         <div class="col-span-2">
                             <span class="text-[var(--muted)]">Landing page:</span>
@@ -74,6 +83,12 @@
                         </div>
                     @endif
                 </div>
+                @if($opportunity->raw_payload)
+                    <details class="mt-4">
+                        <summary class="text-xs cursor-pointer text-[var(--purple)]">Ver dados brutos recebidos</summary>
+                        <pre class="mt-2 p-3 text-xs overflow-auto max-h-96 whitespace-pre-wrap break-all" style="background: var(--s2); border: 1px solid var(--border2); color: var(--muted2)">{{ json_encode($opportunity->raw_payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</pre>
+                    </details>
+                @endif
             </div>
 
             {{-- Assign / Lost reason --}}

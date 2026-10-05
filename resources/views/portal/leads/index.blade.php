@@ -66,6 +66,10 @@
                                     {{ $opp->lead->phone ?: $opp->lead->email ?: '—' }}
                                 </div>
 
+                                @if($preview = $opp->messagePreview(90))
+                                    <div class="text-xs italic mb-2 line-clamp-2" style="color: var(--muted2)">“{{ $preview }}”</div>
+                                @endif
+
                                 <div class="flex items-center justify-between mt-2">
                                     <span class="text-xs" style="color:var(--muted)">{{ $opp->channel?->kindLabel() ?? '—' }}</span>
                                     <span class="text-xs" style="color:var(--muted)">{{ $opp->created_at->diffForHumans() }}</span>

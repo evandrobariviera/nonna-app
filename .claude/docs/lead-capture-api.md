@@ -33,6 +33,11 @@ Endpoint único que o n8n chama pra registrar um lead capturado em qualquer cana
   "city": "Canoinhas",
   "state": "SC",
   "received_at": "2026-09-15T12:00:00-03:00",
+  "form_answers": [
+    { "label": "Assunto", "value": "Orçamento de reserva" },
+    { "label": "Mensagem", "value": "Quero reservar a cabana pro feriado..." },
+    { "label": "Qual seu interesse?", "value": "Cabana" }
+  ],
   "raw_payload": { "...": "payload cru original, pra auditoria" }
 }
 ```
@@ -43,6 +48,8 @@ Validação (`LeadCaptureController::store()`):
 - `email` OU `phone` — pelo menos um dos dois é obrigatório (`required_without` cruzado).
 - `name`, `form_name`, `landing_page_url`, `utm_*`, `city`, `state`, `received_at`, `raw_payload` — todos opcionais.
 - `fbclid`, `gclid`, `ctwa_clid`, `event_id` — opcionais, existem desde o desenho do schema pensando em dedup com Meta CAPI/Google Ads.
+- `form_answers` — opcional: **todo o conteúdo do formulário** (assunto, mensagem, perguntas customizadas do Lead Ad). Aceita lista `[{label, value}]` (preferido, mantém a ordem e o texto original da pergunta) ou objeto `{pergunta: resposta}`. Se não vier, o App tenta extrair do `raw_payload` (`data` do trigger do Facebook, `body` de webhook, ou achatando o objeto e ignorando chaves técnicas/UTM/identidade — `App\Services\Leads\FormAnswers`). Campos com rótulo tipo assunto/mensagem/observação/dúvida aparecem em destaque na ficha do lead e como trecho no cartão do Kanban.
+- Se a mesma pessoa enviar de novo dentro da janela de 72h (cartão reaberto), o conteúdo anterior vai pra `previous_submissions` em vez de ser sobrescrito.
 
 ## Canais (`source_channel`) e formato de `source_identifier`
 

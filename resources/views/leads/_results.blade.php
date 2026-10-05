@@ -31,6 +31,9 @@
                         <div class="text-xs" style="color:var(--muted)">
                             {{ $opp->lead->phone ?: $opp->lead->email ?: '—' }}
                         </div>
+                        @if($preview = $opp->messagePreview(80))
+                            <div class="text-xs italic mt-0.5" style="color:var(--muted2)">“{{ $preview }}”</div>
+                        @endif
                     </td>
                     @if($showClient)
                         <td class="text-sm" style="color:var(--text)">
