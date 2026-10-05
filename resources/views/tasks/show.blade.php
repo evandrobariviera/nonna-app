@@ -1432,45 +1432,7 @@
             {{-- ══ HISTÓRICO — só ações (criação, mudança de status/situação/prioridade/
                  destino/tipo/cliente/projeto/sprint, atribuição de responsável/executor),
                  nunca conteúdo de texto (ver TaskActivity, TaskObserver). ══ --}}
-            @if($task->activities->isNotEmpty())
-                <div class="card card-body">
-                    <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
-                        <span class="icon-badge">
-                            <x-icon name="history" size="16" />
-                        </span>
-                        Histórico
-                    </p>
-                    <div class="flex flex-col" style="max-height:360px; overflow-y:auto">
-                        @foreach($task->activities as $activity)
-                            <div class="flex gap-3">
-                                {{-- Trilha: ponto + linha conectando ao próximo (o próprio ponto
-                                     mais recente vem preenchido em roxo, os demais só contorno). --}}
-                                <div class="flex flex-col items-center flex-shrink-0">
-                                    <span class="h-2.5 w-2.5 rounded-full flex-shrink-0"
-                                          style="{{ $loop->first ? 'background:var(--purple)' : 'background:var(--s1); border:2px solid var(--border2)' }}"></span>
-                                    @if(!$loop->last)
-                                        <span class="flex-1" style="width:1px; min-height:10px; background:var(--border2)"></span>
-                                    @endif
-                                </div>
-                                <div class="text-xs {{ !$loop->last ? 'pb-4' : '' }}">
-                                    <p style="color:var(--text); font-weight:500; line-height:1.4">
-                                        {{ $activity->actionLabel() }}
-                                        @if($activity->from_label && $activity->to_label)
-                                            <span style="color:var(--muted2)">— {{ $activity->from_label }} → {{ $activity->to_label }}</span>
-                                        @elseif($activity->to_label)
-                                            <span style="color:var(--muted2)">— {{ $activity->to_label }}</span>
-                                        @endif
-                                    </p>
-                                    <p class="mt-0.5" style="color:var(--muted)">
-                                        {{ $activity->user?->name ? explode(' ', $activity->user->name)[0] : 'Sistema' }}
-                                        · {{ $activity->created_at->format('d/m/Y H:i') }}
-                                    </p>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
+            <x-activity-history :activities="$task->activities" class="card-body" />
 
         </div>{{-- /sidebar --}}
     </div>

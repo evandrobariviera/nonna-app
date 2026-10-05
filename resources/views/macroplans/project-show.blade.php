@@ -888,6 +888,10 @@
         </div>
     @endif
 
+    {{-- HISTÓRICO — só ações (status, datas, planejamento, "briefing editado"),
+         nunca o conteúdo (ver ProjectObserver). --}}
+    <x-activity-history :activities="$project->activities" class="card-body mt-6" />
+
     {{-- @push precisa ficar dentro do <x-app-layout> — fora dele, o slot já foi
          renderizado e o @stack('scripts') do layout já rodou, então o script nunca
          aparece na página (Alpine perde a função, e o kanban-dnd do board também). --}}

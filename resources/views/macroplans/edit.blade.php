@@ -145,6 +145,10 @@
                 @endforeach
             </div>
 
+            {{-- Histórico — só ações (status, responsável, período, bloco editado,
+                 projeto adicionado/removido), nunca o conteúdo (ver MacroPlanObserver). --}}
+            <x-activity-history :activities="$macroplan->activities" class="mt-3 p-3" max-height="320px" />
+
             {{-- Remover --}}
             <div class="mt-3">
                 <form method="POST" action="{{ route('macroplans.destroy', $macroplan) }}"

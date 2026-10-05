@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\MacroPlan;
 use App\Models\Meeting;
 use App\Models\Opportunity;
+use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\UserLogin;
@@ -13,6 +14,7 @@ use App\Observers\ClientObserver;
 use App\Observers\MacroPlanObserver;
 use App\Observers\MeetingObserver;
 use App\Observers\OpportunityObserver;
+use App\Observers\ProjectObserver;
 use App\Observers\TaskObserver;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Carbon;
@@ -30,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
         Opportunity::observe(OpportunityObserver::class);
         Meeting::observe(MeetingObserver::class);
         MacroPlan::observe(MacroPlanObserver::class);
+        Project::observe(ProjectObserver::class);
 
         // diffForHumans()/translatedFormat() usam o locale do Carbon, que não
         // segue sozinho o locale do Laravel (config('app.locale')) — sem isso,

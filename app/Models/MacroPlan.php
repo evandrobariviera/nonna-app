@@ -162,6 +162,11 @@ class MacroPlan extends Model
         return $this->hasMany(MacroPlanAttachment::class)->latest();
     }
 
+    public function activities(): HasMany
+    {
+        return $this->hasMany(MacroPlanActivity::class)->orderByDesc('created_at');
+    }
+
     public function meetings(): HasMany
     {
         return $this->hasMany(Meeting::class)->orderBy('scheduled_at');

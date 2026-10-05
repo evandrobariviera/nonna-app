@@ -98,7 +98,7 @@ class MacroPlanController extends Controller
     public function edit(MacroPlan $macroplan, Request $request)
     {
         $macroplan->load([
-            'client', 'responsible', 'projects.tasks', 'attachments.uploadedBy', 'meetings',
+            'client', 'responsible', 'projects.tasks', 'attachments.uploadedBy', 'meetings', 'activities.user',
             'tasks' => fn ($q) => $q->whereNull('project_id')->orderByDesc('created_at'),
         ]);
         $users          = User::orderBy('name')->get(['id', 'name']);

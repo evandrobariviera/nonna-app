@@ -193,6 +193,11 @@ class Project extends Model
         return $this->hasMany(ProjectAttachment::class)->orderBy('created_at');
     }
 
+    public function activities(): HasMany
+    {
+        return $this->hasMany(ProjectActivity::class)->orderByDesc('created_at');
+    }
+
     public function progressPercent(): int
     {
         if ($this->relationLoaded('tasks')) {
