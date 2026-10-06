@@ -116,6 +116,21 @@ class DashboardController extends Controller
         $myProductionTasks = collect();
         $myReadyForProductionTasks = collect();
 
+        // Revisão interna esperando EU revisar (sou o Responsável — quem responde pela
+        // qualidade, não quem produz). Vira uma coluna a mais no quadro da Execução, entre
+        // Ajuste e Em Produção, que só aparece quando tem algo (antes era um card solto na
+        // seção Heads da Distribuição — revisar é executar, não distribuir). Sem filtro de
+        // sprint: revisão parada é gargalo em qualquer sprint.
+        $myReviewTasks = $show('kanban')
+            ? Task::where('status', 'revisao_interna')
+                ->whereHas('responsibles', fn ($q) => $q->where('users.id', $userId))
+                // cliente inativo some (mesma regra de leitura do resto do app); interna fica
+                ->where(fn ($q) => $q->whereNull('client_id')->orWhereHas('client', fn ($c) => $c->where('status', '!=', 'inactive')))
+                ->with(['client', 'executor', 'executors'])
+                ->orderBy('approval_date')
+                ->get()
+            : collect();
+
         if ($activeSprint && $show('kanban')) {
             $myAdjustmentTasks =$this->executorTasksQuery($userId)
                 ->where('sprint_id', $activeSprint->id)
@@ -238,7 +253,7 @@ class DashboardController extends Controller
         $meetingsPosReuniao = $meetingsRealizadas = $clientsWithoutActivePlan = $plansExpiringSoon = $activePlans = collect();
         $openTickets = $roundsPending = $roundsApproved = $roundsChangesRequested = collect();
         $roundsAwaitingSendCount = 0;
-        $headsTickets = $headsRevisaoInterna = collect();
+        $headsTickets = collect();
         $pendingTasksCount = 0;
         $creativosProntos = $creativosProntosTasks = $budgetsNeedingAddition = $campaignsNeedingOptimization = collect();
 
@@ -322,13 +337,6 @@ class DashboardController extends Controller
                 ->orderBy('due_date')
                 ->limit(8)
                 ->get();
-
-            $headsRevisaoInterna = Task::where('status', 'revisao_interna')
-                ->whereHas('responsibles', fn ($q) => $q->where('users.id', $userId))
-                ->with('client')
-                ->orderBy('due_date')
-                ->limit(8)
-                ->get();
         }
 
         // ── Pendências de cadastro (transversal, não é seção por papel) ──
@@ -396,7 +404,7 @@ class DashboardController extends Controller
             'clientsWithoutActivePlan', 'plansExpiringSoon', 'activePlans',
             'openTickets',
             'roundsPending', 'roundsAwaitingSendCount', 'roundsApproved', 'roundsChangesRequested',
-            'headsTickets', 'headsRevisaoInterna',
+            'headsTickets', 'myReviewTasks',
             'pendingTasksCount',
             'creativosProntos', 'creativosProntosTasks', 'budgetsNeedingAddition', 'campaignsNeedingOptimization',
             'myNotifications',

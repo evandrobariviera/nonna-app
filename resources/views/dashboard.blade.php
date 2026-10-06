@@ -439,9 +439,16 @@
     @php
         $quadros = [
             ['icon' => 'wrench',         'label' => 'Ajuste / Alteração',   'tasks' => $myAdjustmentTasks,         'status' => 'ajuste_alteracao', 'extra' => null],
+        ];
+        // Revisão Interna esperando MEU olhar (sou o Responsável) — coluna dinâmica: só aparece
+        // quando tem revisão pra fazer (ver $myReviewTasks no DashboardController).
+        if ($myReviewTasks->isNotEmpty()) {
+            $quadros[] = ['icon' => 'search', 'label' => 'Revisão Interna', 'tasks' => $myReviewTasks, 'status' => 'revisao_interna', 'extra' => null, 'review' => true];
+        }
+        $quadros = array_merge($quadros, [
             ['icon' => 'settings',       'label' => 'Em Produção',           'tasks' => $myProductionTasks,         'status' => 'em_producao',      'extra' => null],
             ['icon' => 'clipboard-list', 'label' => 'Pronto para Produção',  'tasks' => $myReadyForProductionTasks, 'status' => 'backlog',           'extra' => ['situation' => 'Pronto para produção']],
-        ];
+        ]);
     @endphp
     <div id="dashboard-board" class="auto-grid mb-6"
          data-kanban-board data-status-field="status">
@@ -472,6 +479,10 @@
                                 <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $task->title }}</p>
                                 <div class="flex items-center gap-2 mt-1">
                                     <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->displayName() ?? '—' }}</span>
+                                    @if(! empty($q['review']))
+                                        @php $autor = $task->executors->firstWhere('pivot.role', 'executor')?->name ?? $task->executor?->name; @endphp
+                                        @if($autor)<span class="text-xs font-mono" style="color:var(--purple)">por {{ explode(' ', $autor)[0] }}</span>@endif
+                                    @endif
                                     @if($task->approval_date)
                                         <span class="text-xs font-mono" style="color:{{ $isApprovalOverdue ? 'var(--red)' : 'var(--muted)' }}">
                                             {{ $task->approval_date->format('d/m') }}
