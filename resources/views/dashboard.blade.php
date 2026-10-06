@@ -392,17 +392,17 @@
                     <div class="px-3 py-3 text-center" style="background:var(--s2); border-top:3px solid var(--purple)">
                         <p class="text-3xl font-black" style="color:var(--text)">{{ $myExecutorSprintTotal }}</p>
                         <p class="text-xs font-mono mt-0.5" style="color:var(--muted)">Tarefas na Sprint</p>
-                        <p class="text-xs font-mono font-bold" style="color:var(--purple)">{{ $myPointsTotal }} pts</p>
+                        <p class="text-xs font-mono" style="color:var(--muted)">{{ $myPointsTotal }} pts</p>
                     </div>
                     <div class="px-3 py-3 text-center" style="background:var(--s2); border-top:3px solid var(--green)">
                         <p class="text-3xl font-black" style="color:var(--green)">{{ $myExecutorSprintDone }}</p>
                         <p class="text-xs font-mono mt-0.5" style="color:var(--muted)">Concluídas · {{ $myDonePct }}%</p>
-                        <p class="text-xs font-mono font-bold" style="color:var(--green)">{{ $myPointsDone }} pts</p>
+                        <p class="text-xs font-mono" style="color:var(--muted)">{{ $myPointsDone }} pts</p>
                     </div>
                     <div class="px-3 py-3 text-center" style="background:var(--s2); border-top:3px solid var(--orange)">
                         <p class="text-3xl font-black" style="color:{{ $myRemaining > 0 ? 'var(--orange)' : 'var(--muted)' }}">{{ $myRemaining }}</p>
                         <p class="text-xs font-mono mt-0.5" style="color:var(--muted)">Faltam</p>
-                        <p class="text-xs font-mono font-bold" style="color:var(--orange)">{{ $myPointsTotal - $myPointsDone }} pts</p>
+                        <p class="text-xs font-mono" style="color:var(--muted)">{{ $myPointsTotal - $myPointsDone }} pts</p>
                     </div>
                     <div class="px-3 py-3 text-center" style="background:var(--s2); border-top:3px solid var(--red)">
                         <p class="text-3xl font-black" style="color:{{ $myOverdueTasks->isNotEmpty() ? 'var(--red)' : 'var(--muted)' }}">{{ $myOverdueTasks->count() }}</p>
@@ -554,7 +554,7 @@
                             <span class="text-xs font-bold font-mono uppercase tracking-widest" style="color:{{ $hoje ? 'var(--green)' : 'var(--purple)' }}">
                                 {{ ucfirst($dia['data']->translatedFormat('D')) }} · {{ $dia['data']->format('d/m') }}{{ $hoje ? ' · Hoje' : '' }}
                             </span>
-                            <span class="text-xs font-mono font-bold" style="color:var(--muted)">{{ $dia['tasks']->count() }} · <span style="color:var(--purple)">{{ $dia['tasks']->sum(fn ($t) => $t->sprint_points ?? 1) }} pts</span></span>
+                            <span class="text-xs font-mono font-bold" style="color:var(--muted)">{{ $dia['tasks']->count() }} · <span style="color:var(--muted); font-weight:400">{{ $dia['tasks']->sum(fn ($t) => $t->sprint_points ?? 1) }} pts</span></span>
                         </div>
                         <div class="flex flex-col gap-2" style="max-height:420px; overflow-y:auto">
                             @forelse($dia['tasks'] as $task)
@@ -572,7 +572,7 @@
                                     <p class="text-sm font-semibold leading-snug mt-1" style="color:var(--text); {{ $done ? 'text-decoration:line-through' : '' }}">{{ $task->title }}</p>
                                     <div class="flex items-center gap-1 mt-1.5 flex-wrap">
                                         <span class="badge badge-{{ $task->statusColor() }}" style="font-size:8px; padding:1px 5px">{{ $task->statusLabel() }}</span>
-                                        <span class="text-xs font-mono font-bold" style="color:var(--purple)">{{ $task->sprint_points ?? 1 }} pts</span>
+                                        <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->sprint_points ?? 1 }} pts</span>
                                         @if($task->situation && ! $done)
                                             <span class="badge" style="font-size:8px; padding:1px 5px; background:{{ $task->situationColor() }}; color:#fff; border-color:transparent">{{ $task->situationLabel() }}</span>
                                         @endif

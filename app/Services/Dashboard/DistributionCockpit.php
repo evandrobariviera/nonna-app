@@ -106,7 +106,7 @@ class DistributionCockpit
             foreach ($days as $day) {
                 $dayTasks = $weekTasks->filter(fn ($t) => $t->approval_date->isSameDay($day));
                 $cell = $this->cell($dayTasks, $person->id, $userId);
-                $maxCell = max($maxCell, $cell['points']); // cor da célula pela carga em pontos
+                $maxCell = max($maxCell, $cell['total']); // cor pela quantidade de tarefas — ênfase do momento (pontos aparecem discretos)
                 $row['days'][$day->toDateString()] = $cell;
             }
             $row['week_total']  = array_sum(array_map(fn ($c) => $c['total'], $row['days']));
