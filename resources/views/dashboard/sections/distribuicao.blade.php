@@ -178,6 +178,46 @@
                 @endif
             </p>
 
+            {{-- AJUSTAR TIME — quem aparece na grade (DistributionCockpit::team()). A própria
+                 pessoa ajusta; admin também ajusta o de alguém pelo "Ver como" (configuração de
+                 visão, não ação sobre tarefas). --}}
+            @php $canEditTeam = $canAct || in_array(app('currentOrgRole'), ['owner', 'admin'], true); @endphp
+            @if($canEditTeam)
+                @php
+                    $allMembers = app('currentOrganization')->users()->orderBy('name')->get(['users.id', 'users.name']);
+                    $teamIdsNow = $d['team']->pluck('id')->all();
+                @endphp
+                <div x-data="{ open: false }" class="mb-3">
+                    <button type="button" class="text-xs font-semibold flex items-center gap-1" style="color:var(--purple)" @click="open = !open">
+                        <x-icon name="users" size="12" />
+                        Ajustar time ({{ $d['team']->count() }} pessoa(s) · {{ $d['teamCustom'] ? 'escolhido' : 'automático' }})
+                        <span x-text="open ? '▾' : '▸'"></span>
+                    </button>
+                    <form x-show="open" x-cloak method="POST" action="{{ route('dashboard.distribution-team') }}" class="mt-2 p-3" style="background:var(--s2); border:1px solid var(--border2)">
+                        @csrf @method('PATCH')
+                        <input type="hidden" name="for_user" value="{{ $subjectUserId }}">
+                        <p class="text-xs mb-2" style="color:var(--muted2)">
+                            Marque quem {{ $viewingAs ? explode(' ', $viewingAs->name)[0].' acompanha' : 'você acompanha' }} na grade.
+                            No automático, entram as pessoas dos seus setores e quem executa tarefas suas.
+                        </p>
+                        <div class="flex flex-wrap gap-1.5 mb-3">
+                            @foreach($allMembers as $member)
+                                <label class="flex items-center gap-1.5 text-xs cursor-pointer px-2 py-1" style="border:1px solid var(--border2); border-radius:6px; background:var(--s1); color:var(--text)">
+                                    <input type="checkbox" name="user_ids[]" value="{{ $member->id }}" @checked(in_array($member->id, $teamIdsNow)) style="accent-color:var(--purple)">
+                                    {{ $member->name }}
+                                </label>
+                            @endforeach
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="submit" class="btn btn-primary btn-xs">Salvar time</button>
+                            @if($d['teamCustom'])
+                                <button type="submit" name="automatic" value="1" class="btn btn-ghost btn-xs">Voltar ao automático</button>
+                            @endif
+                        </div>
+                    </form>
+                </div>
+            @endif
+
             @if($d['team']->isEmpty())
                 <p class="text-xs py-3" style="color:var(--muted)">
                     Ninguém no seu time ainda. O time vem dos seus <strong>Setores</strong> (Configurações → Setores)
@@ -293,6 +333,17 @@
                         </tbody>
                     </table>
                 </div>
+            @endif
+
+            {{-- Quem executa tarefas suas mas ficou fora do time escolhido — a escolha não pode
+                 esconder trabalho seu sem avisar. --}}
+            @if($d['outsiders']->isNotEmpty())
+                <p class="text-xs mt-3" style="color:var(--orange)">
+                    Fora do seu time, mas executando tarefas suas:
+                    @foreach($d['outsiders'] as $o)
+                        <strong>{{ explode(' ', $o['user']->name)[0] }}</strong> ({{ $o['count'] }}){{ $loop->last ? '' : ',' }}
+                    @endforeach
+                </p>
             @endif
 
             <div class="flex items-center justify-between mt-3 flex-wrap gap-2">

@@ -17,6 +17,7 @@ use App\Models\TaskApprovalRound;
 use App\Models\User;
 use App\Services\Dashboard\DistributionCockpit;
 use App\Services\Dashboard\PlanningCockpit;
+use App\Services\Dashboard\SprintScoreboard;
 use App\Support\DashboardModes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -29,12 +30,12 @@ class DashboardController extends Controller
     // fixa (pendências pessoais + "Hoje") aparece em qualquer modo, fora desta lista.
     // Visão geral = a Dashboard completa, como era antes dos modos.
     private const MODE_BLOCKS = [
-        'execucao'     => ['meus_numeros', 'kanban', 'minha_semana'],
+        'execucao'     => ['meus_numeros', 'placar', 'kanban', 'minha_semana'],
         'distribuicao' => ['distribuicao', 'heads'],
         'planejamento' => ['planejamento'],
         'atendimento'  => ['agenda', 'atendimento'],
         'midia_paga'   => ['midia_paga'],
-        'visao_geral'  => ['sprint', 'cadastro', 'agenda', 'atendimento', 'heads', 'midia_paga', 'meus_numeros', 'kanban', 'estrategia', 'outros_papeis'],
+        'visao_geral'  => ['sprint', 'cadastro', 'agenda', 'atendimento', 'heads', 'midia_paga', 'meus_numeros', 'placar', 'kanban', 'estrategia', 'outros_papeis'],
     ];
 
     public function index(Request $request)
@@ -245,6 +246,9 @@ class DashboardController extends Controller
             $weekNoDateCount = $abertas()->whereNull('approval_date')->count();
         }
 
+        // ── Placar de pontos de sprint (Execução) — ver SprintScoreboard ──
+        $scoreboard = $show('placar') ? app(SprintScoreboard::class)->build((int) $userId) : null;
+
         // ── Cockpit de Planejamento (modo Planejamento) — ver PlanningCockpit ──
         $planning = $show('planejamento') ? app(PlanningCockpit::class)->build() : null;
 
@@ -416,7 +420,7 @@ class DashboardController extends Controller
             'availableModes', 'subjectRoles', 'subjectIsAdmin', 'viewingAs', 'teamMembers',
             'myExecutorSprintDone', 'myPointsTotal', 'myPointsDone',
             'weekDays', 'weekOffset', 'weekBeforeCount', 'weekAfterCount', 'weekNoDateCount',
-            'distribution', 'subjectUserId', 'planning'
+            'distribution', 'subjectUserId', 'planning', 'scoreboard'
         ));
     }
 
@@ -441,6 +445,33 @@ class DashboardController extends Controller
         }
 
         return [User::find($pivot->user_id), $pivot];
+    }
+
+    // Quem a pessoa acompanha na grade da Distribuição (DistributionCockpit::team()). A própria
+    // pessoa ajusta o dela; admin/dono também pode ajustar o de alguém pelo "Ver como" — é
+    // configuração de visão, não ação sobre tarefas, então não fere o "só leitura".
+    public function setDistributionTeam(Request $request)
+    {
+        $org = app('currentOrganization');
+        $data = $request->validate([
+            'for_user'   => ['nullable', 'integer'],
+            'user_ids'   => ['nullable', 'array'],
+            'user_ids.*' => ['integer'],
+            'automatic'  => ['nullable', 'boolean'],
+        ]);
+
+        $target = (int) ($data['for_user'] ?? Auth::id());
+        abort_unless($target === Auth::id() || in_array(app('currentOrgRole'), ['owner', 'admin'], true), 403);
+
+        $members = OrganizationUser::where('organization_id', $org->id)->pluck('user_id')->all();
+        $team = $request->boolean('automatic')
+            ? null
+            : array_values(array_intersect(array_map('intval', $data['user_ids'] ?? []), $members));
+
+        OrganizationUser::where('organization_id', $org->id)->where('user_id', $target)
+            ->update(['distribution_team' => $team === null ? null : json_encode($team)]);
+
+        return back()->with('success', $team === null ? 'Time da Distribuição voltou ao automático.' : 'Time da Distribuição atualizado.');
     }
 
     // Troca de modo pelo seletor do topo — salva como "último usado" (a pessoa volta

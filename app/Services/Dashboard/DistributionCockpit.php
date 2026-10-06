@@ -2,6 +2,7 @@
 
 namespace App\Services\Dashboard;
 
+use App\Models\OrganizationUser;
 use App\Models\Sector;
 use App\Models\Task;
 use App\Models\User;
@@ -41,7 +42,7 @@ class DistributionCockpit
         $monday = now()->startOfWeek(CarbonInterface::MONDAY)->addWeeks($weekOffset)->startOfDay();
         $friday = $monday->copy()->addDays(4);
 
-        $team = $this->team($userId);
+        [$team, $teamCustom, $outsiders] = $this->team($userId);
         $teamIds = $team->pluck('id')->all();
 
         // ── Meus números como Responsável ──
@@ -121,6 +122,8 @@ class DistributionCockpit
             'toDistributeCount' => $toDistributeCount,
             'noResponsible'     => $noResponsible,
             'team'              => $team,
+            'teamCustom'        => $teamCustom, // true = a pessoa escolheu quem acompanha
+            'outsiders'         => $outsiders,  // executam tarefas dela mas estão fora do time escolhido
             'days'              => $days,
             'grid'              => $grid,
             'maxCell'           => $maxCell,
@@ -229,23 +232,48 @@ class DistributionCockpit
     }
 
     /** Pessoas dos setores do Head + quem executa alguma tarefa aberta dele. */
-    private function team(int $userId): Collection
+    /**
+     * Quem aparece na grade. Se a pessoa escolheu (organization_users.distribution_team),
+     * vale exatamente a escolha dela — pedido do usuário: cada Head acompanha quem quiser
+     * (Alessandra/Vitor/Patrick não precisam ver a pauta do Evandro, Marlon, Alisson).
+     * Sem escolha: automático = setores dela + quem executa tarefas em que ela é Responsável.
+     *
+     * Também devolve os "de fora": quem executa tarefa aberta dela mas não está no time
+     * escolhido — pra escolha não esconder trabalho dela sem avisar.
+     *
+     * @return array{0: Collection, 1: bool, 2: Collection}
+     */
+    private function team(int $userId): array
     {
-        $sectorPeers = Sector::whereHas('users', fn ($q) => $q->where('users.id', $userId))
-            ->with('users:id,name')
-            ->get()
-            ->flatMap(fn ($s) => $s->users->pluck('id'));
-
         $myTasks = $this->open()
             ->whereHas('responsibles', fn ($q) => $q->where('users.id', $userId))
             ->with('executors')
             ->get(['id', 'executor_id']);
+        $myExecutorCounts = $myTasks->flatMap(fn ($t) => $this->executorIds($t))->countBy();
 
-        $myExecutors = $myTasks->flatMap(fn ($t) => $this->executorIds($t));
+        $chosen = app()->has('currentOrganization')
+            ? OrganizationUser::where('organization_id', app('currentOrganization')->id)
+                ->where('user_id', $userId)->value('distribution_team')
+            : null;
+        $chosen = is_string($chosen) ? json_decode($chosen, true) : $chosen;
 
-        return User::whereIn('id', $sectorPeers->merge($myExecutors)->unique()->filter()->all())
-            ->orderBy('name')
-            ->get(['id', 'name', 'avatar_path', 'avatar_disk']);
+        if (is_array($chosen)) {
+            $ids = array_map('intval', $chosen);
+        } else {
+            $sectorPeers = Sector::whereHas('users', fn ($q) => $q->where('users.id', $userId))
+                ->with('users:id,name')
+                ->get()
+                ->flatMap(fn ($s) => $s->users->pluck('id'));
+            $ids = $sectorPeers->merge($myExecutorCounts->keys())->unique()->filter()->all();
+        }
+
+        $team = User::whereIn('id', $ids)->orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']);
+
+        $outsiderIds = $myExecutorCounts->keys()->diff($team->pluck('id'));
+        $outsiders = User::whereIn('id', $outsiderIds)->orderBy('name')->get(['id', 'name'])
+            ->map(fn ($u) => ['user' => $u, 'count' => $myExecutorCounts[$u->id]]);
+
+        return [$team, is_array($chosen), $outsiders];
     }
 
     /** Uma célula da grade: total da pessoa + quantas dessas são do Head logado. */

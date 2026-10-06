@@ -443,6 +443,11 @@
         </div>
     @endif
 
+    {{-- ── PLACAR DE PONTOS (Execução) — competição saudável: meus pontos, ranking, agência ── --}}
+    @if($show('placar') && $scoreboard)
+        @include('dashboard.sections.placar')
+    @endif
+
     @if($show('kanban'))
     @php
         $quadros = [

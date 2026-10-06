@@ -15,10 +15,11 @@ class OrganizationUser extends Pivot
 
     public $incrementing = false;
 
-    protected $fillable = ['organization_id', 'user_id', 'role', 'dashboard_modes', 'dashboard_mode'];
+    protected $fillable = ['organization_id', 'user_id', 'role', 'dashboard_modes', 'dashboard_mode', 'distribution_team'];
 
     protected $casts = [
-        'dashboard_modes' => 'array', // ver App\Support\DashboardModes
+        'dashboard_modes'   => 'array', // ver App\Support\DashboardModes
+        'distribution_team' => 'array', // quem a pessoa acompanha na Distribuição (null = automático)
     ];
 
     public static array $roles = [
