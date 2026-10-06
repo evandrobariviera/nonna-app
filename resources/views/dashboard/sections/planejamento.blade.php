@@ -1,7 +1,8 @@
 {{-- Modo Planejamento — dados em App\Services\Dashboard\PlanningCockpit. Três blocos:
      1) esteira (em que etapa do ciclo cada cliente está — clique filtra a linha do tempo),
-     2) linha do tempo dos ciclos (barra do início ao fim do ciclo, enchendo conforme o tempo
-        passa, com a linha de hoje), 3) agenda das reuniões de Macro/Kick-off da agência. --}}
+     2) agenda das reuniões de Macro/Kick-off da agência (acima do gráfico, pedido do usuário),
+     3) linha do tempo dos ciclos (barra do início ao fim do ciclo, enchendo conforme o tempo
+        passa, com a linha de hoje). --}}
 @php
     $p = $planning;
     $stages = \App\Services\Dashboard\PlanningCockpit::STAGES;
@@ -30,7 +31,43 @@
         @endforeach
     </div>
 
-    {{-- ── 2. LINHA DO TEMPO DOS CICLOS ── --}}
+    {{-- ── 2. AGENDA DAS REUNIÕES DE MACRO / KICK-OFF (agência toda) ── --}}
+    <div class="card px-4 py-4 mb-4">
+        <h3 class="text-sm font-bold flex items-center gap-1.5 mb-3" style="color:var(--text)">
+            <x-icon name="calendar" size="14" /> Reuniões de Macroplanejamento e Kick-off
+        </h3>
+        <div class="grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))">
+            @foreach(['para_agendar', 'agendada', 'pos_reuniao', 'revisao_ata', 'despacho'] as $status)
+                @php $list = $p['agenda']->get($status, collect()); $meta = \App\Models\Meeting::$statuses[$status]; @endphp
+                <div>
+                    <div class="flex items-center justify-between px-3 py-2 mb-2" style="background:var(--s2); border-top:3px solid {{ $hex[$meta['color']] ?? 'var(--border2)' }}">
+                        <span class="text-xs font-bold uppercase tracking-widest" style="color:var(--text)">{{ $meta['label'] }}</span>
+                        <span class="text-xs font-mono font-bold" style="color:var(--muted)">{{ $list->count() }}</span>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        @forelse($list as $m)
+                            @php $isToday = $m->scheduled_at?->isToday(); $late = $m->status === 'agendada' && $m->scheduled_at?->isPast() && ! $isToday; @endphp
+                            <a href="{{ route('meetings.show', $m) }}" class="px-3 py-2 transition-colors"
+                               style="background:{{ $isToday ? 'rgba(52,211,153,.10)' : 'var(--s1)' }}; border:1px solid var(--border2); {{ $late ? 'border-left:3px solid var(--red)' : '' }}"
+                               onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='{{ $isToday ? 'rgba(52,211,153,.10)' : 'var(--s1)' }}'">
+                                <p class="text-xs font-mono truncate" style="color:var(--purple)">{{ $m->client?->displayName() ?? '—' }}</p>
+                                <p class="text-xs font-semibold leading-snug mt-0.5" style="color:var(--text)">{{ $m->title }}</p>
+                                <p class="text-xs font-mono mt-1" style="color:var(--muted)">
+                                    {{ $m->typeLabel() === 'Kick-off Estratégico' ? 'Kick-off' : 'Macro' }}
+                                    @if($m->scheduled_at) · <span style="color:{{ $late ? 'var(--red)' : 'var(--muted)' }}">{{ $m->scheduled_at->format('d/m H:i') }}</span>@endif
+                                    @if($m->organizer) · {{ explode(' ', $m->organizer->name)[0] }}@endif
+                                </p>
+                            </a>
+                        @empty
+                            <p class="text-xs px-1" style="color:var(--muted)">Nada aqui.</p>
+                        @endforelse
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- ── 3. LINHA DO TEMPO DOS CICLOS ── --}}
     <div class="card px-4 py-4 mb-4">
         <div class="flex items-center justify-between mb-1 flex-wrap gap-2">
             <h3 class="text-sm font-bold flex items-center gap-1.5" style="color:var(--text)">
@@ -149,39 +186,4 @@
         @endif
     </div>
 
-    {{-- ── 3. AGENDA DAS REUNIÕES DE MACRO / KICK-OFF (agência toda) ── --}}
-    <div class="card px-4 py-4">
-        <h3 class="text-sm font-bold flex items-center gap-1.5 mb-3" style="color:var(--text)">
-            <x-icon name="calendar" size="14" /> Reuniões de Macroplanejamento e Kick-off
-        </h3>
-        <div class="grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))">
-            @foreach(['para_agendar', 'agendada', 'pos_reuniao', 'revisao_ata', 'despacho'] as $status)
-                @php $list = $p['agenda']->get($status, collect()); $meta = \App\Models\Meeting::$statuses[$status]; @endphp
-                <div>
-                    <div class="flex items-center justify-between px-3 py-2 mb-2" style="background:var(--s2); border-top:3px solid {{ $hex[$meta['color']] ?? 'var(--border2)' }}">
-                        <span class="text-xs font-bold uppercase tracking-widest" style="color:var(--text)">{{ $meta['label'] }}</span>
-                        <span class="text-xs font-mono font-bold" style="color:var(--muted)">{{ $list->count() }}</span>
-                    </div>
-                    <div class="flex flex-col gap-1.5">
-                        @forelse($list as $m)
-                            @php $isToday = $m->scheduled_at?->isToday(); $late = $m->status === 'agendada' && $m->scheduled_at?->isPast() && ! $isToday; @endphp
-                            <a href="{{ route('meetings.show', $m) }}" class="px-3 py-2 transition-colors"
-                               style="background:{{ $isToday ? 'rgba(52,211,153,.10)' : 'var(--s1)' }}; border:1px solid var(--border2); {{ $late ? 'border-left:3px solid var(--red)' : '' }}"
-                               onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='{{ $isToday ? 'rgba(52,211,153,.10)' : 'var(--s1)' }}'">
-                                <p class="text-xs font-mono truncate" style="color:var(--purple)">{{ $m->client?->displayName() ?? '—' }}</p>
-                                <p class="text-xs font-semibold leading-snug mt-0.5" style="color:var(--text)">{{ $m->title }}</p>
-                                <p class="text-xs font-mono mt-1" style="color:var(--muted)">
-                                    {{ $m->typeLabel() === 'Kick-off Estratégico' ? 'Kick-off' : 'Macro' }}
-                                    @if($m->scheduled_at) · <span style="color:{{ $late ? 'var(--red)' : 'var(--muted)' }}">{{ $m->scheduled_at->format('d/m H:i') }}</span>@endif
-                                    @if($m->organizer) · {{ explode(' ', $m->organizer->name)[0] }}@endif
-                                </p>
-                            </a>
-                        @empty
-                            <p class="text-xs px-1" style="color:var(--muted)">Nada aqui.</p>
-                        @endforelse
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    </div>
 </div>
