@@ -107,6 +107,7 @@ class DistributionCockpit
         }
 
         return [
+            'clientBalance'     => $this->clientBalance($userId),
             'numbers'           => $numbers,
             'toDistribute'      => $toDistribute,
             'toDistributeCount' => $toDistributeCount,
@@ -116,6 +117,105 @@ class DistributionCockpit
             'grid'              => $grid,
             'maxCell'           => $maxCell,
             'weekOffset'        => $weekOffset,
+        ];
+    }
+
+    /**
+     * Equilíbrio de produção entre os clientes do Head, no mês corrente — uma barra por
+     * cliente, por status (igual à barra da Sprint), pra ver quem está andando e quem ficou
+     * pra trás. Mesma régua do "Volume do mês" do Painel de Produção / Client::productionUsage():
+     * tarefa do mês = não cancelada com COALESCE(approval_date, created_at) no mês. Cliente com
+     * volume combinado (production_quota) só conta os tipos combinados e ganha o trecho
+     * "faltam pedir" (combinado − já pedido, tipo a tipo); sem volume, conta tudo do mês.
+     *
+     * Clientes do Head = têm tarefa do mês em que ele é Responsável, ou ele é a Direção
+     * Criativa do cliente (clients.creative_lead_id).
+     */
+    private function clientBalance(int $userId): array
+    {
+        $monthStart = now()->startOfMonth();
+        $inMonth = fn ($q) => $q->whereRaw("date_trunc('month', coalesce(approval_date, created_at)) = date_trunc('month', ?::date)", [$monthStart->toDateString()]);
+
+        $clientIds = $inMonth(Task::where('status', '!=', 'cancelado')->whereNotNull('client_id'))
+            ->whereHas('responsibles', fn ($q) => $q->where('users.id', $userId))
+            ->distinct()->pluck('client_id')
+            ->merge(\App\Models\Client::where('creative_lead_id', $userId)->pluck('id'))
+            ->unique()->values();
+
+        $clients = \App\Models\Client::whereIn('id', $clientIds)->where('status', '!=', 'inactive')
+            ->get(['id', 'nickname', 'company_name', 'production_quota']);
+
+        // Tipos que o Head cuida — os que somam ≥ 10% das tarefas em que ele foi Responsável
+        // nos últimos 90 dias. Sem isso o Head de Tecnologia (175 web × 10 criação) via
+        // "faltam pedir 8" de Criação de um cliente só porque tinha um site dele lá; o corte
+        // de 10% tira as exceções esporádicas. Sem histórico nenhum, não recorta.
+        $typeCounts = Task::whereHas('responsibles', fn ($q) => $q->where('users.id', $userId))
+            ->where('created_at', '>=', now()->subDays(90))
+            ->whereNotNull('task_type')
+            ->selectRaw('task_type, count(*) as total')
+            ->groupBy('task_type')
+            ->pluck('total', 'task_type');
+        $myTypes = $typeCounts->filter(fn ($n) => $n >= 0.10 * $typeCounts->sum())->keys()->all();
+
+        $rows = $inMonth(Task::where('status', '!=', 'cancelado')->whereIn('client_id', $clients->pluck('id')))
+            ->when($myTypes, fn ($q) => $q->whereIn('task_type', $myTypes))
+            ->selectRaw('client_id, task_type, status, count(*) as total')
+            ->groupBy('client_id', 'task_type', 'status')
+            ->toBase()->get()
+            ->groupBy('client_id');
+
+        $statusOrder = array_keys(Task::$statuses);
+        $out = [];
+        foreach ($clients as $client) {
+            $quota = array_filter($client->production_quota ?? [], fn ($v) => (int) $v > 0);
+            if ($myTypes) {
+                $quota = array_intersect_key($quota, array_flip($myTypes));
+            }
+            $clientRows = collect($rows->get($client->id, []))
+                ->when($quota, fn ($c) => $c->filter(fn ($r) => isset($quota[$r->task_type])));
+
+            $byStatus = [];
+            foreach ($statusOrder as $s) {
+                $n = (int) $clientRows->where('status', $s)->sum('total');
+                if ($n > 0) {
+                    $byStatus[$s] = $n;
+                }
+            }
+            $planned = array_sum($byStatus);
+
+            // "Faltam pedir" tipo a tipo — sobra de um tipo não cobre falta de outro.
+            $toRequest = 0;
+            foreach ($quota as $type => $qtd) {
+                $toRequest += max(0, (int) $qtd - (int) $clientRows->where('task_type', $type)->sum('total'));
+            }
+
+            $quotaTotal = array_sum(array_map('intval', $quota));
+            $scale = max($planned + $toRequest, 1);
+            $done = $byStatus['concluido'] ?? 0;
+
+            if ($planned === 0 && $quotaTotal === 0) {
+                continue;
+            }
+
+            $out[] = [
+                'client'     => $client,
+                'byStatus'   => $byStatus,
+                'planned'    => $planned,
+                'done'       => $done,
+                'open'       => $planned - $done,
+                'toRequest'  => $toRequest,
+                'quota'      => $quotaTotal,
+                'scale'      => $scale,
+                'progress'   => $done / $scale,
+            ];
+        }
+
+        usort($out, fn ($a, $b) => $a['progress'] <=> $b['progress'] ?: $b['scale'] <=> $a['scale']);
+
+        return [
+            'rows'      => $out,
+            'daysLeft'  => now()->daysInMonth - now()->day,
+            'monthName' => now()->locale('pt_BR')->translatedFormat('F'),
         ];
     }
 

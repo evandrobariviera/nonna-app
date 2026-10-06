@@ -280,6 +280,63 @@
     </div>
 </div>
 
+{{-- ── EQUILÍBRIO POR CLIENTE — uma barra por cliente no mês, por status (igual à da Sprint),
+     com o trecho tracejado do que ainda nem foi pedido do volume combinado. Mais atrasados no
+     topo. Régua e escopo em DistributionCockpit::clientBalance(). ── --}}
+@php $cb = $d['clientBalance']; @endphp
+@if(! empty($cb['rows']))
+    <div class="card px-4 py-4 mb-6">
+        <div class="flex items-center justify-between mb-1 flex-wrap gap-2">
+            <h3 class="text-sm font-bold flex items-center gap-1.5" style="color:var(--text)">
+                <x-icon name="bar-chart-3" size="14" /> Equilíbrio por cliente
+                <span class="text-xs font-mono font-normal" style="color:var(--muted)">— {{ $cb['monthName'] }} · seus clientes</span>
+            </h3>
+            <span class="text-xs font-mono" style="color:var(--muted)">faltam {{ $cb['daysLeft'] }} dia(s) pro fim do mês</span>
+        </div>
+        <p class="text-xs mb-3" style="color:var(--muted2)">
+            Tarefas do mês de cada cliente por status. O trecho <span style="color:var(--orange)">tracejado</span> é o que
+            ainda falta pedir do volume combinado. Quem está mais atrás aparece primeiro.
+        </p>
+
+        {{-- Legenda das cores (só os status que aparecem em alguma barra) --}}
+        @php $usedStatuses = collect($cb['rows'])->flatMap(fn ($r) => array_keys($r['byStatus']))->unique(); @endphp
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3">
+            @foreach(\App\Models\Task::$statuses as $s => $meta)
+                @continue(! $usedStatuses->contains($s))
+                <span class="flex items-center gap-1 text-xs font-mono" style="color:var(--muted2)">
+                    <span class="h-2 w-2 rounded-full" style="background:{{ \App\Models\Task::colorHex($meta['color']) }}"></span>{{ $meta['label'] }}
+                </span>
+            @endforeach
+            <span class="flex items-center gap-1 text-xs font-mono" style="color:var(--muted2)">
+                <span class="h-2 w-3" style="background:repeating-linear-gradient(45deg, rgba(238,121,25,.55) 0 3px, transparent 3px 6px); border:1px solid rgba(238,121,25,.5)"></span>Falta pedir
+            </span>
+        </div>
+
+        <div class="flex flex-col gap-2" style="max-height:520px; overflow-y:auto">
+            @foreach($cb['rows'] as $r)
+                <div class="grid items-center gap-x-3 gap-y-1 grid-cols-1 sm:grid-cols-[200px_1fr_190px]">
+                    <span class="text-xs font-semibold truncate" style="color:var(--text)" title="{{ $r['client']->displayName() }}">{{ $r['client']->displayName() }}</span>
+                    <div class="flex h-3 rounded-full overflow-hidden gap-0.5" style="background:var(--border2)">
+                        @foreach($r['byStatus'] as $s => $n)
+                            <div style="width:{{ round($n / $r['scale'] * 100, 2) }}%; background:{{ \App\Models\Task::colorHex(\App\Models\Task::$statuses[$s]['color']) }}"
+                                 title="{{ \App\Models\Task::$statuses[$s]['label'] }}: {{ $n }}"></div>
+                        @endforeach
+                        @if($r['toRequest'] > 0)
+                            <div style="width:{{ round($r['toRequest'] / $r['scale'] * 100, 2) }}%; background:repeating-linear-gradient(45deg, rgba(238,121,25,.55) 0 3px, transparent 3px 6px)"
+                                 title="Falta pedir: {{ $r['toRequest'] }}"></div>
+                        @endif
+                    </div>
+                    <span class="text-xs font-mono sm:text-right" style="color:var(--muted)">
+                        <strong style="color:var(--green)">{{ $r['done'] }}</strong>/{{ $r['scale'] }} concluídas
+                        @if($r['open'])· <span style="color:var(--text)">{{ $r['open'] }} abertas</span>@endif
+                        @if($r['toRequest'])· <span style="color:var(--orange)">{{ $r['toRequest'] }} pedir</span>@endif
+                    </span>
+                </div>
+            @endforeach
+        </div>
+    </div>
+@endif
+
 @if($canAct && $hasInbox)
     @push('scripts')
     <script>
