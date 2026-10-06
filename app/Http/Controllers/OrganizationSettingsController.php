@@ -19,7 +19,7 @@ class OrganizationSettingsController extends Controller
     {
         $org          = app('currentOrganization');
         $integrations = $org->integrations()->orderBy('provider')->orderBy('label')->get();
-        $members      = $org->users()->withPivot(['role'])->with('functionalRoles')->orderBy('name')->get();
+        $members      = $org->users()->withPivot(['role', 'dashboard_modes'])->with('functionalRoles')->orderBy('name')->get();
         $apiTokens    = $org->tokens()->orderByDesc('created_at')->get();
         $aiAgents     = AiAgent::where('is_active', true)->orderBy('name')->get();
         $sectors      = Sector::with('users:id,name')->orderBy('name')->get();

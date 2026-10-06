@@ -9,18 +9,35 @@ use App\Models\InternalNotification;
 use App\Models\LiteraryQuote;
 use App\Models\MacroPlan;
 use App\Models\Meeting;
+use App\Models\OrganizationUser;
 use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\TaskApprovalRound;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    // Blocos da Dashboard que cada modo mostra (ver AppSupportDashboardModes). A faixa
+    // fixa (pendências pessoais + "Hoje") aparece em qualquer modo, fora desta lista.
+    // Visão geral = a Dashboard completa, como era antes dos modos.
+    private const MODE_BLOCKS = [
+        'execucao'     => ['meus_numeros', 'kanban'],
+        'distribuicao' => ['sprint', 'cadastro', 'heads'],
+        'planejamento' => ['agenda', 'estrategia'],
+        'atendimento'  => ['agenda', 'atendimento'],
+        'midia_paga'   => ['midia_paga'],
+        'visao_geral'  => ['sprint', 'cadastro', 'agenda', 'atendimento', 'heads', 'midia_paga', 'meus_numeros', 'kanban', 'estrategia', 'outros_papeis'],
+    ];
+
     public function index()
     {
         $userId = Auth::id();
+        $mode   = app('dashboardMode') ?? 'execucao';
+        $blocks = self::MODE_BLOCKS[$mode] ?? self::MODE_BLOCKS['execucao'];
+        $show   = fn (string $block) => in_array($block, $blocks, true);
 
         // Citação literária do dia — fixa (a mesma pra toda a Organização, o
         // dia inteiro), não sorteada a cada carregamento de página. Rotaciona
@@ -44,7 +61,7 @@ class DashboardController extends Controller
 
         $activeSprint = Sprint::where('status', 'active')->first();
         $sprintByStatus = collect();
-        if ($activeSprint) {
+        if ($activeSprint && $show('sprint')) {
             $activeSprint->load('tasks');
             $sprintTotal = $activeSprint->tasks->whereNotIn('status', ['cancelado'])->count();
             $sprintDone  = $activeSprint->tasks->where('status', 'concluido')->count();
@@ -66,8 +83,8 @@ class DashboardController extends Controller
         $myProductionTasks = collect();
         $myReadyForProductionTasks = collect();
 
-        if ($activeSprint) {
-            $myAdjustmentTasks = $this->executorTasksQuery($userId)
+        if ($activeSprint && $show('kanban')) {
+            $myAdjustmentTasks =$this->executorTasksQuery($userId)
                 ->where('sprint_id', $activeSprint->id)
                 ->where('status', 'ajuste_alteracao')
                 ->with('client')->orderBy('approval_date')->get();
@@ -92,8 +109,8 @@ class DashboardController extends Controller
         $myExecutorSprintByStatus = collect();
         $myExecutorSprintTotal = 0;
 
-        if ($activeSprint) {
-            $counts = $this->executorTasksQuery($userId)
+        if ($activeSprint && $show('meus_numeros')) {
+            $counts =$this->executorTasksQuery($userId)
                 ->where('sprint_id', $activeSprint->id)
                 ->where('status', '!=', 'cancelado')
                 ->select('status', DB::raw('count(*) as total'))
@@ -128,141 +145,170 @@ class DashboardController extends Controller
 
         $myMeetingsByStatus = $myMeetingsAgenda->groupBy('status');
 
-        // ── Seção "Estratégia" ──
+        // ── Faixa "Hoje" (fixa, aparece em qualquer modo) ──
+        // Minhas reuniões de hoje + o que está atrasado comigo na sprint (mesma régua do
+        // quadro de Operação: sou executor, etapa minha, data de aprovação já passou).
+        $myMeetingsToday = $myMeetingsAgenda->filter(fn ($m) => $m->scheduled_at->isToday())->values();
+
+        $myOverdueTasks = $activeSprint
+            ? $this->executorTasksQuery($userId)
+                ->where('sprint_id', $activeSprint->id)
+                ->whereIn('status', ['backlog', 'em_producao', 'ajuste_alteracao'])
+                ->whereDate('approval_date', '<', today())
+                ->with('client')->orderBy('approval_date')->get()
+            : collect();
+
         $today = today();
+        $meetingsPosReuniao = $meetingsRealizadas = $clientsWithoutActivePlan = $plansExpiringSoon = $activePlans = collect();
+        $openTickets = $roundsPending = $roundsApproved = $roundsChangesRequested = collect();
+        $roundsAwaitingSendCount = 0;
+        $headsTickets = $headsRevisaoInterna = collect();
+        $pendingTasksCount = 0;
+        $creativosProntos = $creativosProntosTasks = $budgetsNeedingAddition = $campaignsNeedingOptimization = collect();
 
-        $meetingsPosReuniao = Meeting::where('status', 'pos_reuniao')
-            ->with('client')->orderBy('scheduled_at')->limit(8)->get();
+        // ── Seção "Estratégia" ──
+        if ($show('estrategia')) {
+            $meetingsPosReuniao = Meeting::where('status', 'pos_reuniao')
+                ->with('client')->orderBy('scheduled_at')->limit(8)->get();
 
-        $meetingsRealizadas = Meeting::where('status', 'realizada')
-            ->with('client')->orderByDesc('scheduled_at')->limit(8)->get();
+            $meetingsRealizadas = Meeting::where('status', 'realizada')
+                ->with('client')->orderByDesc('scheduled_at')->limit(8)->get();
 
-        // Cliente ativo, com Tráfego Pago ou Consultoria Estratégica contratado, cujo
-        // macroplanejamento mais recente não está "em execução" (nunca teve um, ou o
-        // último ciclo já foi encerrado/ainda não começou).
-        $clientsWithoutActivePlan = Client::where('status', 'active')
-            ->where(function ($q) {
-                $q->whereJsonContains('contracted_services', 'trafego')
-                  ->orWhereJsonContains('contracted_services', 'consultoria');
-            })
-            ->whereDoesntHave('macroplans', fn ($q) => $q->where('status', 'em_execucao'))
-            ->orderBy('company_name')
-            ->get();
+            // Cliente ativo, com Tráfego Pago ou Consultoria Estratégica contratado, cujo
+            // macroplanejamento mais recente não está "em execução" (nunca teve um, ou o
+            // último ciclo já foi encerrado/ainda não começou).
+            $clientsWithoutActivePlan = Client::where('status', 'active')
+                ->where(function ($q) {
+                    $q->whereJsonContains('contracted_services', 'trafego')
+                      ->orWhereJsonContains('contracted_services', 'consultoria');
+                })
+                ->whereDoesntHave('macroplans', fn ($q) => $q->where('status', 'em_execucao'))
+                ->orderBy('company_name')
+                ->get();
 
-        $plansExpiringSoon = MacroPlan::where('status', '!=', 'concluido')
-            ->whereBetween('period_end', [$today, $today->copy()->addDays(30)])
-            ->with('client')
-            ->orderBy('period_end')
-            ->get();
+            $plansExpiringSoon = MacroPlan::where('status', '!=', 'concluido')
+                ->whereBetween('period_end', [$today, $today->copy()->addDays(30)])
+                ->with('client')
+                ->orderBy('period_end')
+                ->get();
 
-        $activePlans = MacroPlan::where('status', 'em_execucao')
-            ->with('client')
-            ->orderBy('period_end')
-            ->get();
+            $activePlans = MacroPlan::where('status', 'em_execucao')
+                ->with('client')
+                ->orderBy('period_end')
+                ->get();
+        }
 
-        // ── Seção "Operação" (papel Atendimento) ──
-        $openTickets = Task::where('is_ticket', true)
-            ->whereNotIn('status', ['concluido', 'cancelado'])
-            ->whereNull('sprint_id') // já triado pra uma Sprint = aparece só lá, não duplica aqui
-            ->with('client')
-            ->orderBy('due_date')
-            ->limit(8)
-            ->get();
+        // ── Seção "Atendimento" ──
+        if ($show('atendimento')) {
+            $openTickets = Task::where('is_ticket', true)
+                ->whereNotIn('status', ['concluido', 'cancelado'])
+                ->whereNull('sprint_id') // já triado pra uma Sprint = aparece só lá, não duplica aqui
+                ->with('client')
+                ->orderBy('due_date')
+                ->limit(8)
+                ->get();
 
-        $roundsPending = TaskApprovalRound::where('status', 'pending')
-            ->whereNotNull('sent_at')
-            ->with('task.client')
-            ->orderByDesc('submitted_at')
-            ->limit(8)
-            ->get();
+            $roundsPending = TaskApprovalRound::where('status', 'pending')
+                ->whereNotNull('sent_at')
+                ->with('task.client')
+                ->orderByDesc('submitted_at')
+                ->limit(8)
+                ->get();
 
-        $roundsAwaitingSendCount = TaskApprovalRound::where('status', 'pending')
-            ->whereNull('sent_at')
-            ->count();
+            $roundsAwaitingSendCount = TaskApprovalRound::where('status', 'pending')
+                ->whereNull('sent_at')
+                ->count();
 
-        $roundsApproved = TaskApprovalRound::where('status', 'approved')
-            ->with('task.client')
-            ->orderByDesc('resolved_at')
-            ->limit(8)
-            ->get();
+            $roundsApproved = TaskApprovalRound::where('status', 'approved')
+                ->with('task.client')
+                ->orderByDesc('resolved_at')
+                ->limit(8)
+                ->get();
 
-        $roundsChangesRequested = TaskApprovalRound::where('status', 'changes_requested')
-            ->whereNull('handled_at') // já tratada (roteada de volta pra Sprint) — não é mais "pendente de olhar"
-            ->with('task.client')
-            ->orderByDesc('resolved_at')
-            ->limit(8)
-            ->get();
+            $roundsChangesRequested = TaskApprovalRound::where('status', 'changes_requested')
+                ->whereNull('handled_at') // já tratada (roteada de volta pra Sprint) — não é mais "pendente de olhar"
+                ->with('task.client')
+                ->orderByDesc('resolved_at')
+                ->limit(8)
+                ->get();
+        }
 
         // ── Seção "Heads" (Criativa & Tech, mesma seção pros dois) ──
         // "Responsável" aqui é o papel dedicado na task_executors (pivot role =
         // 'responsavel'), diferente de "executor" — é quem responde pela qualidade,
         // não quem produz.
-        $headsTickets = Task::where('is_ticket', true)
-            ->whereNotIn('status', ['concluido', 'cancelado'])
-            ->whereNull('sprint_id') // já triado pra uma Sprint = aparece só lá, não duplica aqui
-            ->whereHas('responsibles', fn ($q) => $q->where('users.id', $userId))
-            ->with('client')
-            ->orderBy('due_date')
-            ->limit(8)
-            ->get();
+        if ($show('heads')) {
+            $headsTickets = Task::where('is_ticket', true)
+                ->whereNotIn('status', ['concluido', 'cancelado'])
+                ->whereNull('sprint_id') // já triado pra uma Sprint = aparece só lá, não duplica aqui
+                ->whereHas('responsibles', fn ($q) => $q->where('users.id', $userId))
+                ->with('client')
+                ->orderBy('due_date')
+                ->limit(8)
+                ->get();
 
-        $headsRevisaoInterna = Task::where('status', 'revisao_interna')
-            ->whereHas('responsibles', fn ($q) => $q->where('users.id', $userId))
-            ->with('client')
-            ->orderBy('due_date')
-            ->limit(8)
-            ->get();
+            $headsRevisaoInterna = Task::where('status', 'revisao_interna')
+                ->whereHas('responsibles', fn ($q) => $q->where('users.id', $userId))
+                ->with('client')
+                ->orderBy('due_date')
+                ->limit(8)
+                ->get();
+        }
 
         // ── Pendências de cadastro (transversal, não é seção por papel) ──
         // Restrito a whereNull('sprint_id') de propósito, pra bater exatamente
         // com o que aparece na Fila quando o usuário clicar no link. Só o total
         // é exibido no dashboard (cardo com o número), sem listagem de amostra.
-        $pendingTasksCount = Task::pendente()->whereNull('sprint_id')->count();
+        if ($show('cadastro')) {
+            $pendingTasksCount = Task::pendente()->whereNull('sprint_id')->count();
+        }
 
         // ── Seção "Mídia Paga" (papel Tráfego) ──
         // Coluna 1: fila compartilhada — gerada pela automação "Notificar Tráfego" (ver
         // /automacoes) sempre que uma tarefa de Campanhas Patrocinadas chega em Despacho ou
         // Concluído. unique('source_id') porque o fan-out cria 1 linha por destinatário do
         // papel Tráfego — aqui é 1 card por tarefa, não por pessoa.
-        $creativosProntos = InternalNotification::where('kind', 'criativo_pronto_campanha')
-            ->whereIn('status', ['novo', 'lido'])
-            ->orderBy('generated_at')
-            ->get()
-            ->unique('source_id')
-            ->values();
+        if ($show('midia_paga')) {
+            $creativosProntos = InternalNotification::where('kind', 'criativo_pronto_campanha')
+                ->whereIn('status', ['novo', 'lido'])
+                ->orderBy('generated_at')
+                ->get()
+                ->unique('source_id')
+                ->values();
 
-        $creativosProntosTasks = Task::whereIn('id', $creativosProntos->pluck('source_id'))
-            ->with('client')
-            ->get()
-            ->keyBy('id');
+            $creativosProntosTasks = Task::whereIn('id', $creativosProntos->pluck('source_id'))
+                ->with('client')
+                ->get()
+                ->keyBy('id');
 
-        $budgetsNeedingAddition = ClientAdAccount::where('budget_status', 'adicao_necessaria')
-            ->whereHas('client', fn ($q) => $q->where('status', '!=', 'inactive'))
-            ->with('client')
-            ->orderBy('created_at')
-            ->get();
+            $budgetsNeedingAddition = ClientAdAccount::where('budget_status', 'adicao_necessaria')
+                ->whereHas('client', fn ($q) => $q->where('status', '!=', 'inactive'))
+                ->with('client')
+                ->orderBy('created_at')
+                ->get();
 
-        // `status` só reflete se o anunciante desligou a campanha manualmente na Meta/Google —
-        // não pega campanhas que expiraram sozinhas por stop_time (a API não atualiza `status`
-        // nesse caso, só o `effective_status`, que não sincronizamos hoje). Por isso, mesmo
-        // filtro que Campanhas Patrocinadas já usa: só entra quem teve gasto ou impressão de
-        // verdade nos últimos 7 dias — sinal real de que ainda está veiculando.
-        $campaignsNeedingOptimization = AdCampaign::where('status', 'active')
-            ->whereHas('adAccount.client', fn ($q) => $q->where('status', '!=', 'inactive'))
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('ad_daily_snapshots')
-                    ->whereColumn('ad_daily_snapshots.client_ad_account_id', 'ad_campaigns.client_ad_account_id')
-                    ->whereColumn('ad_daily_snapshots.entity_id', 'ad_campaigns.external_id')
-                    ->where('ad_daily_snapshots.entity_level', 'campaign')
-                    ->where('ad_daily_snapshots.snapshot_date', '>=', today()->subDays(7))
-                    ->where(fn ($q) => $q->where('ad_daily_snapshots.spend', '>', 0)->orWhere('ad_daily_snapshots.impressions', '>', 0));
-            })
-            ->with('adAccount.client')
-            ->orderByRaw('last_optimized_at ASC NULLS FIRST')
-            ->get()
-            ->filter(fn ($c) => $c->isOptimizationOverdue())
-            ->values();
+            // `status` só reflete se o anunciante desligou a campanha manualmente na Meta/Google —
+            // não pega campanhas que expiraram sozinhas por stop_time (a API não atualiza `status`
+            // nesse caso, só o `effective_status`, que não sincronizamos hoje). Por isso, mesmo
+            // filtro que Campanhas Patrocinadas já usa: só entra quem teve gasto ou impressão de
+            // verdade nos últimos 7 dias — sinal real de que ainda está veiculando.
+            $campaignsNeedingOptimization = AdCampaign::where('status', 'active')
+                ->whereHas('adAccount.client', fn ($q) => $q->where('status', '!=', 'inactive'))
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('ad_daily_snapshots')
+                        ->whereColumn('ad_daily_snapshots.client_ad_account_id', 'ad_campaigns.client_ad_account_id')
+                        ->whereColumn('ad_daily_snapshots.entity_id', 'ad_campaigns.external_id')
+                        ->where('ad_daily_snapshots.entity_level', 'campaign')
+                        ->where('ad_daily_snapshots.snapshot_date', '>=', today()->subDays(7))
+                        ->where(fn ($q) => $q->where('ad_daily_snapshots.spend', '>', 0)->orWhere('ad_daily_snapshots.impressions', '>', 0));
+                })
+                ->with('adAccount.client')
+                ->orderByRaw('last_optimized_at ASC NULLS FIRST')
+                ->get()
+                ->filter(fn ($c) => $c->isOptimizationOverdue())
+                ->values();
+        }
 
         return view('dashboard', compact(
             'literaryQuote',
@@ -277,8 +323,24 @@ class DashboardController extends Controller
             'headsTickets', 'headsRevisaoInterna',
             'pendingTasksCount',
             'creativosProntos', 'creativosProntosTasks', 'budgetsNeedingAddition', 'campaignsNeedingOptimization',
-            'myNotifications'
+            'myNotifications',
+            'mode', 'show', 'myMeetingsToday', 'myOverdueTasks'
         ));
+    }
+
+    // Troca de modo pelo seletor do topo — salva como "último usado" (a pessoa volta
+    // nele no próximo acesso) e leva pra Dashboard já no modo novo.
+    public function setMode(Request $request)
+    {
+        $data = $request->validate([
+            'mode' => ['required', 'in:' . implode(',', app('dashboardModes'))],
+        ]);
+
+        OrganizationUser::where('organization_id', app('currentOrganization')->id)
+            ->where('user_id', Auth::id())
+            ->update(['dashboard_mode' => $data['mode']]);
+
+        return redirect()->route('dashboard');
     }
 
     // Resolve todas as cópias da notificação (uma por destinatário do papel Tráfego, fan-out)

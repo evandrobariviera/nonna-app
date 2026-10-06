@@ -527,14 +527,14 @@
              x-data="{
                 modal: false,
                 editing: null,
-                form: { name: '', email: '', password: '', role: 'member', function_roles: [], avatar_url: null, remove_avatar: false },
+                form: { name: '', email: '', password: '', role: 'member', function_roles: [], dashboard_modes: [], avatar_url: null, remove_avatar: false },
                 open(member) {
                     if (member) {
                         this.editing = member;
-                        this.form = { name: member.name, email: member.email, password: '', role: member.role, function_roles: member.function_roles || [], avatar_url: member.avatar_url || null, remove_avatar: false };
+                        this.form = { name: member.name, email: member.email, password: '', role: member.role, function_roles: member.function_roles || [], dashboard_modes: member.dashboard_modes || [], avatar_url: member.avatar_url || null, remove_avatar: false };
                     } else {
                         this.editing = null;
-                        this.form = { name: '', email: '', password: '', role: 'member', function_roles: [], avatar_url: null, remove_avatar: false };
+                        this.form = { name: '', email: '', password: '', role: 'member', function_roles: [], dashboard_modes: [], avatar_url: null, remove_avatar: false };
                     }
                     this.modal = true;
                 },
@@ -605,7 +605,7 @@
                                              nenhuma ação, inclusive impossibilitado de ajustar os próprios
                                              papéis funcionais. --}}
                                         <button type="button"
-                                                @click="open({{ json_encode(['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'role' => $role, 'function_roles' => $member->functionalRoles->pluck('key')->all(), 'avatar_url' => $member->avatarUrl()]) }})"
+                                                @click="open({{ json_encode(['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'role' => $role, 'function_roles' => $member->functionalRoles->pluck('key')->all(), 'dashboard_modes' => \App\Support\DashboardModes::availableFor($member->pivot->dashboard_modes, $member->functionalRoles->pluck('key')->all(), false), 'avatar_url' => $member->avatarUrl()]) }})"
                                                 class="btn btn-ghost btn-xs">
                                             Editar
                                         </button>
@@ -778,6 +778,37 @@
                                                 : 'background:var(--s3); border-color:var(--border2); color:var(--muted);'"
                                               style="display:inline-block; padding:4px 12px; border-radius:100px; font-size:11px; font-weight:600; border:1px solid; transition:all .12s; user-select:none">
                                             {{ $fr->name }}
+                                        </span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        {{-- Modos da Dashboard (App\Support\DashboardModes) — só na edição: pessoa
+                             nova começa com os modos sugeridos pelos papéis funcionais. --}}
+                        <div x-show="editing">
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Modos da Dashboard</label>
+                            <p x-show="form.role === 'admin'" class="text-xs mb-2" style="color:var(--muted2)">
+                                Administrador tem todos os modos (incluindo Visão geral), independente do que estiver marcado.
+                            </p>
+                            <p x-show="form.role !== 'admin'" class="text-xs mb-2" style="color:var(--muted2)">
+                                O que a pessoa pode escolher no seletor do topo. Sem nenhum marcado, fica só Execução.
+                            </p>
+                            <input type="hidden" name="dashboard_modes_present" value="1">
+                            <div style="display:flex; flex-wrap:wrap; gap:6px">
+                                @foreach(\App\Support\DashboardModes::configurable() as $modeKey => $modeMeta)
+                                    <label style="cursor:pointer; position:relative" title="{{ $modeMeta['hint'] }}">
+                                        <input type="checkbox"
+                                               name="dashboard_modes[]"
+                                               value="{{ $modeKey }}"
+                                               x-model="form.dashboard_modes"
+                                               style="position:absolute; opacity:0; width:0; height:0; pointer-events:none">
+                                        <span :style="form.dashboard_modes.includes('{{ $modeKey }}')
+                                                ? 'background:rgba(100, 59, 142,.12); border-color:rgba(100, 59, 142,.4); color:var(--purple);'
+                                                : 'background:var(--s3); border-color:var(--border2); color:var(--muted);'"
+                                              style="display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:100px; font-size:11px; font-weight:600; border:1px solid; transition:all .12s; user-select:none">
+                                            <x-icon :name="$modeMeta['icon']" size="12" />
+                                            {{ $modeMeta['label'] }}
                                         </span>
                                     </label>
                                 @endforeach

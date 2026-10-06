@@ -4,6 +4,8 @@ namespace App\Http\Middleware;
 
 use App\Models\FunctionalRole;
 use App\Models\Organization;
+use App\Models\OrganizationUser;
+use App\Support\DashboardModes;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -39,18 +41,30 @@ class SetTenant
 
             $role          = null;
             $functionRoles = [];
+            $dashboardModes = [];
+            $dashboardMode  = null;
 
             if (auth()->check()) {
-                $pivot = $organization->users()
+                $pivot = OrganizationUser::where('organization_id', $organization->id)
                     ->where('user_id', auth()->id())
-                    ->first()?->pivot;
+                    ->first();
 
                 $role = $pivot?->role;
                 $functionRoles = FunctionalRole::where('organization_id', $organization->id)
                     ->whereHas('users', fn ($q) => $q->where('users.id', auth()->id()))
                     ->pluck('key')
                     ->all();
+
+                // Modos da Dashboard — seletor no topo de toda tela (layouts/app).
+                $isAdmin = in_array($role, ['owner', 'admin']);
+                $dashboardModes = DashboardModes::availableFor($pivot?->dashboard_modes, $functionRoles, $isAdmin);
+                $dashboardMode  = DashboardModes::resolveCurrent($pivot?->dashboard_mode, $dashboardModes, $isAdmin);
             }
+
+            app()->instance('dashboardModes', $dashboardModes);
+            app()->instance('dashboardMode', $dashboardMode);
+            view()->share('dashboardModes', $dashboardModes);
+            view()->share('dashboardMode', $dashboardMode);
 
             app()->instance('currentOrgRole', $role);
             app()->instance('userFunctionRoles', $functionRoles);
@@ -69,6 +83,8 @@ class SetTenant
             view()->share('isOrgAdmin', false);
             view()->share('isOrgManager', false);
             view()->share('userFunctionRoles', []);
+            view()->share('dashboardModes', []);
+            view()->share('dashboardMode', null);
         }
 
         return $next($request);

@@ -162,6 +162,50 @@
                     @endisset
                 </div>
 
+                {{-- Seletor de MODO (ver App\Support\DashboardModes) — o que a pessoa está
+                     fazendo agora; trocar salva como último modo e abre a Dashboard nele.
+                     Só aparece pra quem tem mais de um modo. --}}
+                @auth
+                    @if(count($dashboardModes ?? []) > 1)
+                        @php $currentModeMeta = \App\Support\DashboardModes::ALL[$dashboardMode]; @endphp
+                        <div class="relative flex-shrink-0" x-data="{ open: false }">
+                            <button type="button" @click="open = !open"
+                                class="btn btn-ghost btn-sm flex items-center gap-1.5"
+                                title="Modo: {{ $currentModeMeta['label'] }}">
+                                <x-icon :name="$currentModeMeta['icon']" size="14" style="color:var(--purple)" />
+                                <span class="hidden sm:inline">{{ $currentModeMeta['label'] }}</span>
+                                <x-icon name="chevron-down" size="12" />
+                            </button>
+                            <div x-show="open" @click.outside="open = false" x-cloak
+                                 class="absolute right-0 mt-1 z-30 w-64 max-md:fixed max-md:inset-x-3 max-md:top-16 max-md:w-auto py-1"
+                                 style="background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.15)">
+                                <p class="px-3 pt-1.5 pb-1 text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Modo</p>
+                                @foreach($dashboardModes as $modeKey)
+                                    @php $meta = \App\Support\DashboardModes::ALL[$modeKey]; $isCurrent = $modeKey === $dashboardMode; @endphp
+                                    <form method="POST" action="{{ route('dashboard.mode') }}">
+                                        @csrf @method('PATCH')
+                                        <input type="hidden" name="mode" value="{{ $modeKey }}">
+                                        <button type="submit"
+                                            class="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors"
+                                            style="{{ $isCurrent ? 'background:rgba(100, 59, 142,.10)' : '' }}"
+                                            onmouseover="this.style.background='var(--s3)'"
+                                            onmouseout="this.style.background='{{ $isCurrent ? 'rgba(100, 59, 142,.10)' : '' }}'">
+                                            <x-icon :name="$meta['icon']" size="15" style="color:{{ $isCurrent ? 'var(--purple)' : 'var(--muted)' }}" />
+                                            <span class="min-w-0">
+                                                <span class="block text-sm font-semibold" style="color:{{ $isCurrent ? 'var(--purple)' : 'var(--text)' }}">{{ $meta['label'] }}</span>
+                                                <span class="block text-xs" style="color:var(--muted)">{{ $meta['hint'] }}</span>
+                                            </span>
+                                            @if($isCurrent)
+                                                <x-icon name="check" size="14" class="ml-auto" style="color:var(--purple)" />
+                                            @endif
+                                        </button>
+                                    </form>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                @endauth
+
                 {{-- Criar rápido — sempre visível, sem precisar navegar até Tickets/Agenda primeiro --}}
                 @auth
                     <a href="{{ route('meetings.create') }}"

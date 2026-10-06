@@ -6,30 +6,37 @@
         $greeting = $hour < 12 ? 'Bom dia' : ($hour < 18 ? 'Boa tarde' : 'Boa noite');
         $firstName = explode(' ', Auth::user()->name)[0];
 
-        // Administrador vê todas as funções, não só as que tem atribuídas — mesma
-        // regra já usada em /visoes/{role}. Calculado aqui em cima porque a seção
-        // "Atendimento" é destacada logo abaixo da Agenda, fora do loop por função
-        // mais abaixo — precisa saber se o usuário tem o papel antes disso.
+        // Papéis sem painel próprio — listados só na Visão geral, no fim da página.
+        // Administrador vê todas as funções (mesma regra de /visoes/{role}).
         $orgFunctionalRoles = \App\Models\FunctionalRole::where('organization_id', $currentOrg?->id)
             ->orderBy('name')
             ->get();
         $dashboardRoles = ($isOrgAdmin ?? false)
             ? $orgFunctionalRoles->pluck('key')->all()
             : ($userFunctionRoles ?? []);
-        // Direção Criativa e Head de Tecnologia compartilham uma única seção
-        // "Heads"; Atendimento vira uma seção destacada — nenhum dos dois passa
-        // pelo loop genérico por função mais abaixo.
+        // Heads/Atendimento/Tráfego/Estratégia têm seção própria (ligada a um modo) —
+        // ficam fora do loop genérico de papéis lá embaixo.
         $headsRoles = ['head_criativa', 'head_tech'];
-        $showHeadsSection = !empty(array_intersect($dashboardRoles, $headsRoles));
-        $showAtendimentoSection = in_array('atendimento', $dashboardRoles);
-        $showTrafegoSection = in_array('trafego', $dashboardRoles);
         $functionRoleLabels = $orgFunctionalRoles->pluck('name', 'key');
+        // Qual seção aparece agora depende do MODO (DashboardController::MODE_BLOCKS,
+        // $show('bloco')), não mais direto do papel — o papel só decide quais modos a
+        // pessoa tem (App\Support\DashboardModes).
+        $modeMeta = \App\Support\DashboardModes::ALL[$mode];
     @endphp
 
     {{-- ── LINHA 1: boas-vindas (full width) + sprint (principal) | pendências de cadastro (cardo) ── --}}
     <div class="mb-4">
         <h1 class="text-xl font-black flex items-center gap-2" style="color:var(--text)">{{ $greeting }}, {{ $firstName }} <x-icon name="hand" size="20" /></h1>
-        <p class="text-sm mt-1" style="color:var(--muted)">Aqui está o resumo do que precisa da sua atenção hoje.</p>
+        <p class="text-sm mt-1 flex items-center gap-1.5 flex-wrap" style="color:var(--muted)">
+            @if(count($dashboardModes) > 1)
+                <span class="inline-flex items-center gap-1 font-semibold" style="color:var(--purple)">
+                    <x-icon :name="$modeMeta['icon']" size="14" /> Modo {{ $modeMeta['label'] }}
+                </span>
+                <span>· {{ $modeMeta['hint'] }}. Troque de modo no seletor lá em cima.</span>
+            @else
+                Aqui está o resumo do que precisa da sua atenção hoje.
+            @endif
+        </p>
     </div>
 
     {{-- ── CITAÇÃO LITERÁRIA DO DIA — fixa pra Organização inteira o dia todo
@@ -54,6 +61,7 @@
         </div>
     @endif
 
+    @if($show('sprint') || $show('cadastro'))
     <div class="grid gap-4 mb-6 md:grid-cols-[7fr_3fr] items-stretch">
 
         {{-- Coluna 1: Sprint --}}
@@ -108,6 +116,7 @@
             </span>
         </a>
     </div>
+    @endif
 
     {{-- ── PENDÊNCIAS PESSOAIS — só as SUAS notificações (não a fila do papel, como
          Mídia Paga abaixo). Some completamente sem nada pendente (ver
@@ -151,11 +160,55 @@
         </div>
     @endif
 
+    {{-- ── FAIXA "HOJE" — fixa em qualquer modo: minhas reuniões de hoje + o que está
+         atrasado comigo na sprint. Some quando não há nada (o modo cuida do resto). ── --}}
+    @if($myMeetingsToday->isNotEmpty() || $myOverdueTasks->isNotEmpty())
+        <div class="card px-5 py-4 mb-6">
+            <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                    <h3 class="text-sm font-bold flex items-center gap-1.5 mb-2" style="color:var(--text)">
+                        <x-icon name="calendar" size="14" /> Reuniões de hoje ({{ $myMeetingsToday->count() }})
+                    </h3>
+                    <div class="flex flex-col gap-1.5">
+                        @forelse($myMeetingsToday as $meeting)
+                            <a href="{{ route('meetings.show', $meeting) }}" class="flex items-center gap-2 px-3 py-1.5 text-xs transition-colors"
+                               style="background:var(--s2)" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+                                <span class="font-mono flex-shrink-0" style="color:var(--purple)">{{ $meeting->scheduled_at->format('H:i') }}</span>
+                                <span class="font-semibold truncate" style="color:var(--text)">{{ $meeting->title }}</span>
+                                <span class="truncate" style="color:var(--muted)">{{ $meeting->client?->displayName() }}</span>
+                            </a>
+                        @empty
+                            <p class="text-xs" style="color:var(--muted)">Nenhuma reunião hoje.</p>
+                        @endforelse
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold flex items-center gap-1.5 mb-2" style="color:{{ $myOverdueTasks->isNotEmpty() ? 'var(--red)' : 'var(--text)' }}">
+                        <x-icon name="alarm-clock" size="14" /> Atrasadas comigo ({{ $myOverdueTasks->count() }})
+                    </h3>
+                    <div class="flex flex-col gap-1.5" style="max-height:180px; overflow-y:auto">
+                        @forelse($myOverdueTasks as $task)
+                            <a href="{{ route('tasks.show', $task) }}" class="flex items-center gap-2 px-3 py-1.5 text-xs transition-colors"
+                               style="background:var(--s2); border-left:2px solid var(--red)" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+                                <span class="font-mono flex-shrink-0" style="color:var(--red)">{{ $task->approval_date->format('d/m') }}</span>
+                                <span class="font-semibold truncate" style="color:var(--text)">{{ $task->title }}</span>
+                                <span class="truncate" style="color:var(--muted)">{{ $task->client?->displayName() }}</span>
+                            </a>
+                        @empty
+                            <p class="text-xs" style="color:var(--muted)">Nada atrasado com você na sprint.</p>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- ── LINHA 1.5: Agenda — quadro por status (para_agendar/agendada/pos_reuniao/revisao_ata) ──
          Estático (sem drag-and-drop) — mudar status é só na própria página da reunião. --}}
     @php
         $agendaStatuses = ['para_agendar', 'agendada', 'pos_reuniao', 'revisao_ata'];
     @endphp
+    @if($show('agenda'))
     <div class="mb-6" x-data="{ filterType: '' }">
         <div class="flex items-center justify-between mb-3">
             <h3 class="text-sm font-bold flex items-center gap-1.5" style="color:var(--text)">
@@ -213,9 +266,10 @@
             @endforeach
         </div>
     </div>
+    @endif
 
     {{-- ── Atendimento (seção destacada logo abaixo da Agenda) ── --}}
-    @if($showAtendimentoSection)
+    @if($show('atendimento'))
         <div class="mb-6">
             <h2 class="text-base font-bold mb-3" style="color:var(--text)">Atendimento</h2>
             @include('dashboard.sections.atendimento')
@@ -223,7 +277,7 @@
     @endif
 
     {{-- ── Heads (entre Atendimento e Operação) ── --}}
-    @if($showHeadsSection)
+    @if($show('heads'))
         <div class="mb-6">
             <h2 class="text-base font-bold mb-3" style="color:var(--text)">Heads</h2>
             @include('dashboard.sections.heads')
@@ -231,7 +285,7 @@
     @endif
 
     {{-- ── Mídia Paga (papel Tráfego) ── --}}
-    @if($showTrafegoSection)
+    @if($show('midia_paga'))
         <div class="mb-6">
             <h2 class="text-base font-bold mb-3 flex items-center gap-2" style="color:var(--text)">
                 <x-icon name="megaphone" size="17" />
@@ -245,12 +299,14 @@
          Kanban de verdade (arrastar-e-soltar entre colunas, ver resources/js/kanban-dnd.js).
          "Pronto para Produção" não é um status próprio no modelo — é status=backlog com
          situation="Pronto para produção" — por isso carrega data-extra além de data-status. --}}
+    @if($show('meus_numeros') || $show('kanban'))
     <h2 class="text-base font-bold mb-3" style="color:var(--text)">Operação</h2>
+    @endif
 
     {{-- MEUS NÚMEROS NA SPRINT — recorte pessoal (executor) dentro da sprint ativa,
          antes dos 3 quadros abaixo. Cores reaproveitam a paleta de status já usada
          em badges/dropdowns em todo o App (Task::colorHex), sem inventar cor nova. --}}
-    @if($activeSprint)
+    @if($activeSprint && $show('meus_numeros'))
         <div class="card px-5 py-4 mb-4">
             <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
                 <span class="text-sm font-bold flex items-center gap-2" style="color:var(--text)">
@@ -293,6 +349,7 @@
         </div>
     @endif
 
+    @if($show('kanban'))
     @php
         $quadros = [
             ['icon' => 'wrench',         'label' => 'Ajuste / Alteração',   'tasks' => $myAdjustmentTasks,         'status' => 'ajuste_alteracao', 'extra' => null],
@@ -359,29 +416,31 @@
         });
     </script>
     @endpush
+    @endif
 
-    {{-- ── SEÇÕES POR FUNÇÃO ── --}}
-    {{-- $dashboardRoles/$headsRoles/$showHeadsSection/$showAtendimentoSection/$showTrafegoSection
-         calculados lá em cima (perto da saudação) porque Atendimento, Heads e Mídia Paga já
-         foram destacados antes daqui, fora deste loop. --}}
-    @if(!empty($dashboardRoles))
+    {{-- ── Estratégia (modo Planejamento) ── --}}
+    @if($show('estrategia'))
+        <div class="mb-6">
+            <h2 class="text-base font-bold mb-3" style="color:var(--text)">Estratégia</h2>
+            @include('dashboard.sections.estrategia')
+        </div>
+    @endif
+
+    {{-- ── Demais papéis sem painel próprio ainda (só na Visão geral) ── --}}
+    @if($show('outros_papeis') && !empty($dashboardRoles))
         <div class="flex flex-col gap-6">
             @foreach($dashboardRoles as $role)
-                @continue(in_array($role, $headsRoles) || $role === 'atendimento' || $role === 'trafego')
+                @continue(in_array($role, $headsRoles) || in_array($role, ['atendimento', 'trafego', 'estrategia']))
                 @if($functionRoleLabels->has($role))
                     <div>
                         <h2 class="text-base font-bold mb-3" style="color:var(--text)">
                             {{ $functionRoleLabels[$role] }}
                         </h2>
-                        @if($role === 'estrategia')
-                            @include('dashboard.sections.estrategia')
-                        @else
-                            <div class="card px-5 py-4">
-                                <p class="text-xs" style="color:var(--muted)">
-                                    Painel de <strong>{{ $functionRoleLabels[$role] }}</strong> em construção — em breve.
-                                </p>
-                            </div>
-                        @endif
+                        <div class="card px-5 py-4">
+                            <p class="text-xs" style="color:var(--muted)">
+                                Painel de <strong>{{ $functionRoleLabels[$role] }}</strong> em construção — em breve.
+                            </p>
+                        </div>
                     </div>
                 @endif
             @endforeach

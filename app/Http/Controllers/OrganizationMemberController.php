@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\FunctionalRole;
+use App\Models\OrganizationUser;
 use App\Models\User;
+use App\Support\DashboardModes;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -68,6 +70,8 @@ class OrganizationMemberController extends Controller
             'function_roles.*' => ['in:' . implode(',', $validFunctionRoles)],
             'avatar'           => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:3072'],
             'remove_avatar'    => ['nullable', 'boolean'],
+            'dashboard_modes'   => ['nullable', 'array'],
+            'dashboard_modes.*' => ['in:' . implode(',', array_keys(DashboardModes::configurable()))],
         ]);
 
         $updateData = ['name' => $data['name'], 'email' => $data['email']];
@@ -93,6 +97,14 @@ class OrganizationMemberController extends Controller
         $org->users()->updateExistingPivot($user->id, [
             'role' => $data['role'],
         ]);
+
+        // Modos da Dashboard — a partir do primeiro save fica explícito (deixa de seguir
+        // a sugestão automática pelos papéis). Vazio = só Execução.
+        if ($request->boolean('dashboard_modes_present')) {
+            OrganizationUser::where('organization_id', $org->id)
+                ->where('user_id', $user->id)
+                ->update(['dashboard_modes' => json_encode(array_values($data['dashboard_modes'] ?? []))]);
+        }
 
         $this->syncFunctionalRoles($org->id, $user, $data['function_roles'] ?? []);
 
