@@ -31,8 +31,13 @@ class DistributionCockpit
 {
     private const CLOSED = ['concluido', 'cancelado'];
 
-    public function build(int $userId, int $weekOffset): array
+    // Status que contam como carga na grade quando ninguém mexeu no filtro.
+    public const DEFAULT_LOAD_STATUSES = ['backlog', 'ajuste_alteracao'];
+
+    public function build(int $userId, int $weekOffset, array $loadStatuses = self::DEFAULT_LOAD_STATUSES): array
     {
+        $loadStatuses = array_values(array_intersect($loadStatuses, array_keys(Task::$statuses))) ?: self::DEFAULT_LOAD_STATUSES;
+
         $monday = now()->startOfWeek(CarbonInterface::MONDAY)->addWeeks($weekOffset)->startOfDay();
         $friday = $monday->copy()->addDays(4);
 
@@ -73,15 +78,17 @@ class DistributionCockpit
             ->get();
 
         // ── Grade Pessoa × Dia ──
-        // Toda tarefa não cancelada do time na semana (inclui concluída: o dia já "gastou"
-        // aquela capacidade). Atrasadas abertas de antes da semana viram uma coluna à parte.
-        $weekTasks = $this->forExecutors(Task::where('status', '!=', 'cancelado'), $teamIds)
+        // Só os status escolhidos no filtro da grade — padrão Backlog + Ajuste/Alteração (o
+        // que ainda vai ocupar o executor): tarefa em revisão, aprovação ou despacho já saiu da
+        // mão dele e inflava a carga (decisão do usuário). Atrasadas de antes da semana, nos
+        // mesmos status, viram uma coluna à parte.
+        $weekTasks = $this->forExecutors(Task::whereIn('status', $loadStatuses), $teamIds)
             ->whereDate('approval_date', '>=', $monday)
             ->whereDate('approval_date', '<=', $friday)
             ->with(['client', 'executor', 'executors', 'responsibles'])
             ->get();
 
-        $overdueTasks = $this->forExecutors($this->open(), $teamIds)
+        $overdueTasks = $this->forExecutors($this->open()->whereIn('status', $loadStatuses), $teamIds)
             ->whereDate('approval_date', '<', $monday)
             ->with(['client', 'executor', 'executors', 'responsibles'])
             ->orderBy('approval_date')
@@ -117,6 +124,7 @@ class DistributionCockpit
             'grid'              => $grid,
             'maxCell'           => $maxCell,
             'weekOffset'        => $weekOffset,
+            'loadStatuses'      => $loadStatuses,
         ];
     }
 

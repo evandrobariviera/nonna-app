@@ -227,7 +227,7 @@ class DashboardController extends Controller
 
         // ── Cockpit de Distribuição (modo Distribuição) — ver DistributionCockpit ──
         $distribution = $show('distribuicao')
-            ? app(DistributionCockpit::class)->build((int) $userId, $weekOffset)
+            ? app(DistributionCockpit::class)->build((int) $userId, $weekOffset, (array) $request->get('carga', DistributionCockpit::DEFAULT_LOAD_STATUSES))
             : null;
 
         $today = today();

@@ -128,15 +128,45 @@
                     <x-icon name="users" size="14" /> Carga do time
                     <span class="text-xs font-mono font-normal" style="color:var(--muted)">— total real de cada pessoa · <span style="color:var(--purple)">roxo = suas</span></span>
                 </h3>
+                @php
+                    // Filtro de status só vai pra URL quando sai do padrão — link limpo no dia a dia.
+                    $customLoad = $d['loadStatuses'] != \App\Services\Dashboard\DistributionCockpit::DEFAULT_LOAD_STATUSES;
+                    $loadParam = $customLoad ? ['carga' => $d['loadStatuses']] : [];
+                @endphp
                 <div class="flex items-center gap-1.5">
-                    <a href="{{ $dashUrl(['semana' => $d['weekOffset'] - 1]) }}" class="btn btn-ghost btn-xs">‹ Anterior</a>
+                    <a href="{{ $dashUrl(['semana' => $d['weekOffset'] - 1] + $loadParam) }}" class="btn btn-ghost btn-xs">‹ Anterior</a>
                     <span class="text-xs font-mono px-1" style="color:var(--text)">{{ $d['days'][0]->format('d/m') }} a {{ $d['days'][4]->format('d/m') }}</span>
-                    <a href="{{ $dashUrl(['semana' => $d['weekOffset'] + 1]) }}" class="btn btn-ghost btn-xs">Próxima ›</a>
+                    <a href="{{ $dashUrl(['semana' => $d['weekOffset'] + 1] + $loadParam) }}" class="btn btn-ghost btn-xs">Próxima ›</a>
                     @if($d['weekOffset'] !== 0)
-                        <a href="{{ $dashUrl() }}" class="btn btn-ghost btn-xs">Hoje</a>
+                        <a href="{{ $dashUrl($loadParam) }}" class="btn btn-ghost btn-xs">Hoje</a>
                     @endif
                 </div>
             </div>
+
+            {{-- Status que contam como carga — padrão Backlog + Ajuste/Alteração (o que ainda vai
+                 ocupar o executor). Revisão, aprovação e despacho já saíram da mão dele. --}}
+            <form method="GET" action="{{ route('dashboard') }}" class="flex flex-wrap items-center gap-1.5 mb-2">
+                @if($viewingAs)
+                    <input type="hidden" name="ver_como" value="{{ $viewingAs->id }}">
+                    <input type="hidden" name="modo" value="{{ $mode }}">
+                @endif
+                @if($d['weekOffset'] !== 0)
+                    <input type="hidden" name="semana" value="{{ $d['weekOffset'] }}">
+                @endif
+                <span class="text-xs font-mono uppercase tracking-widest mr-1" style="color:var(--muted)">Contar como carga:</span>
+                @foreach(\App\Models\Task::$statuses as $s => $meta)
+                    @continue($s === 'cancelado')
+                    @php $on = in_array($s, $d['loadStatuses'], true); @endphp
+                    <label class="flex items-center gap-1.5 text-xs cursor-pointer px-2 py-1"
+                           style="border:1px solid {{ $on ? 'rgba(100,59,142,.4)' : 'var(--border2)' }}; border-radius:6px; background:{{ $on ? 'rgba(100,59,142,.08)' : 'transparent' }}; color:{{ $on ? 'var(--purple)' : 'var(--muted2)' }}">
+                        <input type="checkbox" name="carga[]" value="{{ $s }}" @checked($on) onchange="this.form.submit()" style="accent-color:var(--purple)">
+                        {{ $meta['label'] }}
+                    </label>
+                @endforeach
+                @if($customLoad)
+                    <a href="{{ $dashUrl($d['weekOffset'] !== 0 ? ['semana' => $d['weekOffset']] : []) }}" class="text-xs font-semibold ml-1" style="color:var(--purple)">voltar ao padrão</a>
+                @endif
+            </form>
             <p class="text-xs mb-3" style="color:var(--muted2)">
                 @if(! $hasInbox)
                     <span style="color:var(--green)">✓ Nada seu pra distribuir.</span>
