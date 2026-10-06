@@ -531,6 +531,16 @@ class AiService
 
         $this->logUsage($agent, $usage, $userId, $clientId, $trigger);
 
+        // Modelo de raciocínio (gpt-5.x, o-series) gasta parte do max_tokens "pensando" —
+        // se o raciocínio come o limite inteiro, a resposta volta vazia e o erro de "JSON
+        // inválido" não diz nada. Avisa a causa real e onde ajustar.
+        if (trim($responseText) === '' && ($usage['completion_tokens'] ?? 0) >= $agent->max_tokens) {
+            throw new \RuntimeException(
+                "Agente '{$agent->name}': a IA atingiu o limite de {$agent->max_tokens} tokens antes de escrever a resposta. " .
+                'Aumente o "Max tokens" do agente em Agentes & IA.'
+            );
+        }
+
         return $this->parseJsonResponse($responseText, $agent);
     }
 
