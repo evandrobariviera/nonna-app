@@ -16,6 +16,7 @@ use App\Models\Task;
 use App\Models\TaskApprovalRound;
 use App\Models\User;
 use App\Services\Dashboard\DistributionCockpit;
+use App\Services\Dashboard\PlanningCockpit;
 use App\Support\DashboardModes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -30,7 +31,7 @@ class DashboardController extends Controller
     private const MODE_BLOCKS = [
         'execucao'     => ['meus_numeros', 'kanban', 'minha_semana'],
         'distribuicao' => ['distribuicao', 'heads'],
-        'planejamento' => ['agenda', 'estrategia'],
+        'planejamento' => ['planejamento'],
         'atendimento'  => ['agenda', 'atendimento'],
         'midia_paga'   => ['midia_paga'],
         'visao_geral'  => ['sprint', 'cadastro', 'agenda', 'atendimento', 'heads', 'midia_paga', 'meus_numeros', 'kanban', 'estrategia', 'outros_papeis'],
@@ -244,6 +245,9 @@ class DashboardController extends Controller
             $weekNoDateCount = $abertas()->whereNull('approval_date')->count();
         }
 
+        // ── Cockpit de Planejamento (modo Planejamento) — ver PlanningCockpit ──
+        $planning = $show('planejamento') ? app(PlanningCockpit::class)->build() : null;
+
         // ── Cockpit de Distribuição (modo Distribuição) — ver DistributionCockpit ──
         $distribution = $show('distribuicao')
             ? app(DistributionCockpit::class)->build((int) $userId, $weekOffset, (array) $request->get('carga', DistributionCockpit::DEFAULT_LOAD_STATUSES))
@@ -412,7 +416,7 @@ class DashboardController extends Controller
             'availableModes', 'subjectRoles', 'subjectIsAdmin', 'viewingAs', 'teamMembers',
             'myExecutorSprintDone', 'myPointsTotal', 'myPointsDone',
             'weekDays', 'weekOffset', 'weekBeforeCount', 'weekAfterCount', 'weekNoDateCount',
-            'distribution', 'subjectUserId'
+            'distribution', 'subjectUserId', 'planning'
         ));
     }
 

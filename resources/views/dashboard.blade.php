@@ -328,6 +328,14 @@
     @endif
 
     {{-- ── Heads (entre Atendimento e Operação) ── --}}
+    {{-- ── Planejamento (modo Planejamento) — esteira, ciclos e reuniões de macro ── --}}
+    @if($show('planejamento'))
+        <div class="mb-2">
+            <h2 class="text-base font-bold mb-3" style="color:var(--text)">Planejamento</h2>
+            @include('dashboard.sections.planejamento')
+        </div>
+    @endif
+
     {{-- ── Distribuição (modo Distribuição) — cockpit do Head ── --}}
     @if($show('distribuicao'))
         <div class="mb-2">
