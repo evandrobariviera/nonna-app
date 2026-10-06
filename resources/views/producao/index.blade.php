@@ -19,7 +19,7 @@
     @endphp
 
     @php
-        $comFiltro = $clienteSel || $executorSel || $direcaoSel || $statusFiltroAtivo || $sprintFila;
+        $comFiltro = $clienteSel || $executorSel || $direcaoSel || $responsavelSel || $statusFiltroAtivo || $sprintFila;
     @endphp
 
     <p class="text-sm mb-3" style="color:var(--muted)">
@@ -35,6 +35,7 @@
                 $clienteSel ? 'pelo cliente <strong style="color:var(--text)">' . e($clienteSel->displayName()) . '</strong>' : null,
                 $executorSel ? 'pelo executor <strong style="color:var(--text)">' . e($executorSel->name) . '</strong>' : null,
                 $direcaoSel ? 'pela direção criativa <strong style="color:var(--text)">' . e($direcaoSel->name) . '</strong>' : null,
+                $responsavelSel ? 'pelo responsável <strong style="color:var(--text)">' . e($responsavelSel->name) . '</strong>' : null,
                 $sprintFila ? 'só o que está ' . ($sprintFila === 'sprint' ? 'em sprint' : 'na fila') : null,
                 $statusFiltroAtivo
                     ? 'nos status <strong style="color:var(--text)">' . e(collect($statusSelecionadosRaw)
@@ -201,6 +202,17 @@
             </select>
         </div>
 
+        <div class="min-w-44">
+            <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Responsável</label>
+            <select name="responsavel" onchange="this.form.submit()"
+                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                <option value="">Todos</option>
+                @foreach($opcoesResponsaveis as $op)
+                    <option value="{{ $op->id }}" @selected($responsavelSel?->id === $op->id)>{{ $op->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
         <div class="min-w-40">
             <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Sprint ou Fila</label>
             <select name="sprint_fila" onchange="this.form.submit()"
@@ -265,6 +277,7 @@
             <input type="hidden" name="cliente" value="{{ $clienteSel?->id }}">
             <input type="hidden" name="executor" value="{{ $executorSel?->id }}">
             <input type="hidden" name="direcao_criativa" value="{{ $direcaoSel?->id }}">
+            <input type="hidden" name="responsavel" value="{{ $responsavelSel?->id }}">
             <input type="hidden" name="inativos" value="{{ $incluirInativos ? 1 : '' }}">
             <input type="hidden" name="sprint_fila" value="{{ $sprintFila }}">
             @foreach($statusSelecionadosRaw as $s)

@@ -29,6 +29,7 @@ class ProductionPanelController extends Controller
     private bool $incluirInativos = false;
     private ?string $clienteId = null;
     private int|string|null $executorId = null; // usuário é id inteiro; cliente é uuid
+    private ?int $responsavelId = null; // "Responsável" da tarefa (task_executors.role = responsavel) — o Head
     private int|string|null $direcaoCriativaId = null; // idem — filtra por Client::creative_lead_id
     private array $statusesSelecionados = []; // vazio = sem restrição extra (todos os abertos)
     private string $sprintFila = ''; // '' = tudo | 'sprint' | 'fila'
@@ -42,7 +43,7 @@ class ProductionPanelController extends Controller
 
     public function index(Request $request): View
     {
-        [$clienteSel, $executorSel, $direcaoSel] = $this->resolverFiltrosGlobais($request);
+        [$clienteSel, $executorSel, $direcaoSel, $responsavelSel] = $this->resolverFiltrosGlobais($request);
         $incluirInativos = $this->incluirInativos;
 
         $termometro = $this->termometro();
@@ -59,6 +60,10 @@ class ProductionPanelController extends Controller
             ->orderBy('company_name')->get(['id', 'nickname', 'company_name']);
         $opcoesExecutores = User::whereIn('id', $this->idsDeExecutores())
             ->orderBy('name')->get(['id', 'name']);
+        $opcoesResponsaveis = User::whereIn('id', \App\Models\TaskExecutor::where('role', 'responsavel')
+            ->whereHas('task', fn ($t) => $t->whereNotIn('status', self::FECHADOS))
+            ->distinct()->pluck('user_id'))
+            ->orderBy('name')->get(['id', 'name']);
         $opcoesDirecaoCriativa = User::whereIn('id', Client::whereNotNull('creative_lead_id')
             ->distinct()->pluck('creative_lead_id'))
             ->orderBy('name')->get(['id', 'name']);
@@ -69,9 +74,9 @@ class ProductionPanelController extends Controller
 
         return view('producao.index', compact(
             'termometro', 'sprints', 'pessoas', 'clientes', 'tipos', 'volume', 'semana',
-            'incluirInativos', 'clienteSel', 'executorSel', 'direcaoSel',
+            'incluirInativos', 'clienteSel', 'executorSel', 'direcaoSel', 'responsavelSel',
             'statusSelecionadosRaw', 'statusFiltroAtivo', 'sprintFila',
-            'opcoesClientes', 'opcoesExecutores', 'opcoesDirecaoCriativa'
+            'opcoesClientes', 'opcoesExecutores', 'opcoesDirecaoCriativa', 'opcoesResponsaveis'
         ));
     }
 
@@ -100,12 +105,14 @@ class ProductionPanelController extends Controller
         $clienteSel  = rescue(fn () => Client::find($request->get('cliente')), null, false);
         $executorSel = rescue(fn () => User::find($request->get('executor')), null, false);
         $direcaoSel  = rescue(fn () => User::find($request->get('direcao_criativa')), null, false);
+        $responsavelSel = rescue(fn () => User::find($request->get('responsavel')), null, false);
 
         // Filtro que não resolve pra ninguém vira filtro nenhum, senão a tela zera inteira
         // sem explicar por quê.
         $this->clienteId         = $clienteSel?->id;
         $this->executorId        = $executorSel?->id;
         $this->direcaoCriativaId = $direcaoSel?->id;
+        $this->responsavelId     = $responsavelSel?->id;
 
         // Status é cumulativo (várias marcadas ao mesmo tempo) e usa sentinela 'todos' pro
         // "sem filtro" — mesmo padrão que a Sprint já usava: sem isso não dá pra distinguir
@@ -116,7 +123,7 @@ class ProductionPanelController extends Controller
         $this->sprintFila = in_array($request->get('sprint_fila'), ['sprint', 'fila'], true)
             ? $request->get('sprint_fila') : '';
 
-        return [$clienteSel, $executorSel, $direcaoSel];
+        return [$clienteSel, $executorSel, $direcaoSel, $responsavelSel];
     }
 
     /**
@@ -158,6 +165,11 @@ class ProductionPanelController extends Controller
                 ->orWhere(fn ($o) => $o
                     ->where('executor_id', $this->executorId)
                     ->whereDoesntHave('executors', fn ($e) => $e->where('task_executors.role', 'executor'))));
+        }
+
+        if ($this->responsavelId) {
+            // Recorte do Head (link "Abrir no Painel" do modo Distribuição da Dashboard).
+            $query->whereHas('responsibles', fn ($r) => $r->where('users.id', $this->responsavelId));
         }
 
         if ($this->statusesSelecionados) {

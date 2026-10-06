@@ -328,6 +328,14 @@
     @endif
 
     {{-- ── Heads (entre Atendimento e Operação) ── --}}
+    {{-- ── Distribuição (modo Distribuição) — cockpit do Head ── --}}
+    @if($show('distribuicao'))
+        <div class="mb-2">
+            <h2 class="text-base font-bold mb-3" style="color:var(--text)">Distribuição</h2>
+            @include('dashboard.sections.distribuicao')
+        </div>
+    @endif
+
     @if($show('heads'))
         <div class="mb-6">
             <h2 class="text-base font-bold mb-3" style="color:var(--text)">Heads</h2>

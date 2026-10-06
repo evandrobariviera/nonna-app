@@ -15,6 +15,7 @@ use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\TaskApprovalRound;
 use App\Models\User;
+use App\Services\Dashboard\DistributionCockpit;
 use App\Support\DashboardModes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -28,7 +29,7 @@ class DashboardController extends Controller
     // Visão geral = a Dashboard completa, como era antes dos modos.
     private const MODE_BLOCKS = [
         'execucao'     => ['meus_numeros', 'kanban', 'minha_semana'],
-        'distribuicao' => ['sprint', 'cadastro', 'heads'],
+        'distribuicao' => ['distribuicao', 'heads'],
         'planejamento' => ['agenda', 'estrategia'],
         'atendimento'  => ['agenda', 'atendimento'],
         'midia_paga'   => ['midia_paga'],
@@ -65,6 +66,8 @@ class DashboardController extends Controller
         $teamMembers = in_array(app('currentOrgRole'), ['owner', 'admin'], true)
             ? app('currentOrganization')->users()->where('users.id', '!=', Auth::id())->orderBy('name')->get(['users.id', 'users.name'])
             : collect();
+
+        $subjectUserId = (int) $userId;
 
         $blocks = self::MODE_BLOCKS[$mode] ?? self::MODE_BLOCKS['execucao'];
         $show   = fn (string $block) => in_array($block, $blocks, true);
@@ -221,6 +224,11 @@ class DashboardController extends Controller
             $weekAfterCount  = $abertas()->whereDate('approval_date', '>', $friday)->count();
             $weekNoDateCount = $abertas()->whereNull('approval_date')->count();
         }
+
+        // ── Cockpit de Distribuição (modo Distribuição) — ver DistributionCockpit ──
+        $distribution = $show('distribuicao')
+            ? app(DistributionCockpit::class)->build((int) $userId, $weekOffset)
+            : null;
 
         $today = today();
         $meetingsPosReuniao = $meetingsRealizadas = $clientsWithoutActivePlan = $plansExpiringSoon = $activePlans = collect();
@@ -391,7 +399,8 @@ class DashboardController extends Controller
             'mode', 'show', 'myMeetingsToday', 'myOverdueTasks',
             'availableModes', 'subjectRoles', 'subjectIsAdmin', 'viewingAs', 'teamMembers',
             'myExecutorSprintDone',
-            'weekDays', 'weekOffset', 'weekBeforeCount', 'weekAfterCount', 'weekNoDateCount'
+            'weekDays', 'weekOffset', 'weekBeforeCount', 'weekAfterCount', 'weekNoDateCount',
+            'distribution', 'subjectUserId'
         ));
     }
 
