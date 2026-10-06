@@ -15,8 +15,11 @@ use Illuminate\Support\Collection;
  * quê e quando. Regra central (combinada com o usuário em 2026-10-06):
  *
  *  - O que DISTRIBUIR é recortado pelo Head logado: tarefas em que ele é Responsável
- *    (task_executors.role = responsavel), mais as que estão sem Responsável nenhum — essas
- *    não são de ninguém e cairiam no vão se cada Head só enxergasse as próprias.
+ *    (task_executors.role = responsavel). As sem Responsável nenhum aparecem só numa
+ *    linha discreta (não são de ninguém, mas hoje são quase todas de Estratégia).
+ *  - O trabalho principal do Head é REBALANCEAR (tarefas já nascem com executor e data
+ *    no lançamento): mover da célula cheia/atrasada pra outra pessoa ou dia — por isso
+ *    cada tarefa da grade carrega o que precisa pra ser movida (ver a view).
  *  - A CARGA de cada pessoa é sempre o total real dela, de qualquer Head. Contar só as
  *    tarefas do Head logado faria ele jogar trabalho em quem já está cheio com outro Head.
  *  - Time do Head = pessoas dos setores dele + quem já executa tarefas dele.
@@ -46,21 +49,27 @@ class DistributionCockpit
             'revisao'       => $mine()->where('status', 'revisao_interna')->count(),
         ];
 
-        // ── A distribuir: minhas (ou sem Responsável) que ainda não têm executor ou data ──
-        $toDistributeQuery = $this->open()
-            ->where(fn ($q) => $q
-                ->whereHas('responsibles', fn ($r) => $r->where('users.id', $userId))
-                ->orWhereDoesntHave('responsibles'))
-            ->where(fn ($q) => $q
-                ->whereNull('approval_date')
-                ->orWhere(fn ($w) => $this->withoutExecutor($w)));
+        // ── A distribuir: minhas (Responsável = eu) que ainda não têm executor ou data ──
+        // As sem Responsável ficam à parte, discretas: na prática são tarefas de Estratégia
+        // geradas pela automação de reuniões (Agendar/Revisar Macroplanejamento), não
+        // produção — misturadas aqui elas tomavam a caixa inteira do Head.
+        $pending = fn (Builder $q) => $q->where(fn ($w) => $w
+            ->whereNull('approval_date')
+            ->orWhere(fn ($x) => $this->withoutExecutor($x)));
 
+        $toDistributeQuery = $pending($this->open()->whereHas('responsibles', fn ($r) => $r->where('users.id', $userId)));
         $toDistributeCount = (clone $toDistributeQuery)->count();
         $toDistribute = $toDistributeQuery
             ->with(['client', 'executor', 'executors', 'responsibles'])
             ->orderByRaw('approval_date asc nulls last')
             ->orderBy('created_at')
             ->limit(60)
+            ->get();
+
+        $noResponsible = $pending($this->open()->whereDoesntHave('responsibles'))
+            ->with('client')
+            ->orderBy('created_at')
+            ->limit(30)
             ->get();
 
         // ── Grade Pessoa × Dia ──
@@ -101,6 +110,7 @@ class DistributionCockpit
             'numbers'           => $numbers,
             'toDistribute'      => $toDistribute,
             'toDistributeCount' => $toDistributeCount,
+            'noResponsible'     => $noResponsible,
             'team'              => $team,
             'days'              => $days,
             'grid'              => $grid,

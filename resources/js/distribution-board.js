@@ -29,14 +29,16 @@ export function registerDistributionBoard() {
         }
     }
 
-    // Usado pelo arrastar e pelo botão "Atribuir" (celular / pessoa fora da grade).
+    // Usado pelo "clique pra mover" (recebe o objeto da tarefa) e pelo arrastar (recebe o card;
+    // o dataset tem as mesmas chaves: executorUrl, dateUrl, currentExecutor).
     // Executor primeiro: se a trava de WIP barrar, a data nem chega a mudar.
-    window.distAssign = async function (taskEl, userId, date) {
+    window.distAssign = async function (task, userId, date) {
+        const t = task instanceof HTMLElement ? task.dataset : task;
         try {
-            if (String(taskEl.dataset.currentExecutor || '') !== String(userId)) {
-                await patch(taskEl.dataset.executorUrl, { executor_id: Number(userId) });
+            if (String(t.currentExecutor || '') !== String(userId)) {
+                await patch(t.executorUrl, { executor_id: Number(userId) });
             }
-            await patch(taskEl.dataset.dateUrl, { approval_date: date });
+            await patch(t.dateUrl, { approval_date: date });
             window.location.reload();
         } catch (err) {
             alert(err.message);
