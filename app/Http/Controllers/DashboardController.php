@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AdCampaign;
 use App\Models\Client;
 use App\Models\ClientAdAccount;
+use App\Models\FunctionalRole;
 use App\Models\InternalNotification;
 use App\Models\LiteraryQuote;
 use App\Models\MacroPlan;
@@ -13,6 +14,8 @@ use App\Models\OrganizationUser;
 use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\TaskApprovalRound;
+use App\Models\User;
+use App\Support\DashboardModes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,11 +23,11 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    // Blocos da Dashboard que cada modo mostra (ver AppSupportDashboardModes). A faixa
+    // Blocos da Dashboard que cada modo mostra (ver App\Support\DashboardModes). A faixa
     // fixa (pendências pessoais + "Hoje") aparece em qualquer modo, fora desta lista.
     // Visão geral = a Dashboard completa, como era antes dos modos.
     private const MODE_BLOCKS = [
-        'execucao'     => ['meus_numeros', 'kanban'],
+        'execucao'     => ['meus_numeros', 'kanban', 'minha_semana'],
         'distribuicao' => ['sprint', 'cadastro', 'heads'],
         'planejamento' => ['agenda', 'estrategia'],
         'atendimento'  => ['agenda', 'atendimento'],
@@ -32,10 +35,37 @@ class DashboardController extends Controller
         'visao_geral'  => ['sprint', 'cadastro', 'agenda', 'atendimento', 'heads', 'midia_paga', 'meus_numeros', 'kanban', 'estrategia', 'outros_papeis'],
     ];
 
-    public function index()
+    public function index(Request $request)
     {
-        $userId = Auth::id();
-        $mode   = app('dashboardMode') ?? 'execucao';
+        // "Ver como" — admin/dono enxerga a Dashboard exatamente como outra pessoa vê:
+        // mesmos modos, mesmos dados (tudo abaixo usa $userId). Só leitura: a view esconde
+        // o que mudaria algo em nome da pessoa (resolver pendência, arrastar card).
+        // Nunca abre conversas do chat — a Dashboard não mostra chat.
+        [$viewingAs, $subjectPivot] = $this->resolveViewingAs($request);
+
+        if ($viewingAs) {
+            $userId         = $viewingAs->id;
+            $subjectRoles   = FunctionalRole::where('organization_id', $subjectPivot->organization_id)
+                ->whereHas('users', fn ($q) => $q->where('users.id', $viewingAs->id))
+                ->pluck('key')->all();
+            $subjectIsAdmin = in_array($subjectPivot->role, ['owner', 'admin'], true);
+            $availableModes = DashboardModes::availableFor($subjectPivot->dashboard_modes, $subjectRoles, $subjectIsAdmin);
+            $mode           = in_array($request->get('modo'), $availableModes, true)
+                ? $request->get('modo')
+                : DashboardModes::resolveCurrent($subjectPivot->dashboard_mode, $availableModes, $subjectIsAdmin);
+        } else {
+            $userId         = Auth::id();
+            $subjectRoles   = app('userFunctionRoles');
+            $subjectIsAdmin = in_array(app('currentOrgRole'), ['owner', 'admin'], true);
+            $availableModes = app('dashboardModes');
+            $mode           = app('dashboardMode') ?? 'execucao';
+        }
+
+        // Quem o admin pode "ver como" — o seletor fica na própria Dashboard.
+        $teamMembers = in_array(app('currentOrgRole'), ['owner', 'admin'], true)
+            ? app('currentOrganization')->users()->where('users.id', '!=', Auth::id())->orderBy('name')->get(['users.id', 'users.name'])
+            : collect();
+
         $blocks = self::MODE_BLOCKS[$mode] ?? self::MODE_BLOCKS['execucao'];
         $show   = fn (string $block) => in_array($block, $blocks, true);
 
@@ -108,6 +138,7 @@ class DashboardController extends Controller
         // realmente tem — sem card zerado poluindo a tela.
         $myExecutorSprintByStatus = collect();
         $myExecutorSprintTotal = 0;
+        $myExecutorSprintDone  = 0;
 
         if ($activeSprint && $show('meus_numeros')) {
             $counts =$this->executorTasksQuery($userId)
@@ -118,6 +149,7 @@ class DashboardController extends Controller
                 ->pluck('total', 'status');
 
             $myExecutorSprintTotal = (int) $counts->sum();
+            $myExecutorSprintDone  = (int) ($counts['concluido'] ?? 0);
 
             $myExecutorSprintByStatus = collect(Task::$statuses)
                 ->except(['cancelado'])
@@ -157,6 +189,38 @@ class DashboardController extends Controller
                 ->whereDate('approval_date', '<', today())
                 ->with('client')->orderBy('approval_date')->get()
             : collect();
+
+        // ── "Minha semana" (modo Execução) ──
+        // Segunda a sexta, cada tarefa minha (executor) na coluna da data de APROVAÇÃO — a
+        // mesma régua da Semana de Produção do Painel, só que filtrada em mim e incluindo o
+        // que já concluí na semana (pra pessoa ver o que já entregou, não só o que falta).
+        // Sem arrastar: data de aprovação é decisão de quem distribui, não do executor.
+        $weekOffset = max(-8, min(8, (int) $request->get('semana', 0)));
+        $weekDays = [];
+        $weekBeforeCount = $weekAfterCount = $weekNoDateCount = 0;
+        if ($show('minha_semana')) {
+            $monday = now()->startOfWeek(\Carbon\CarbonInterface::MONDAY)->addWeeks($weekOffset)->startOfDay();
+            $friday = $monday->copy()->addDays(4);
+            $statusOrder = array_flip(array_unique(array_merge(['ajuste_alteracao'], array_keys(Task::$statuses))));
+
+            $weekTasks = $this->executorTasksQuery($userId)
+                ->where('status', '!=', 'cancelado')
+                ->whereDate('approval_date', '>=', $monday)
+                ->whereDate('approval_date', '<=', $friday)
+                ->with('client')
+                ->get()
+                ->sortBy(fn ($t) => ($t->status === 'concluido' ? 1000 : 0) + ($statusOrder[$t->status] ?? 99))
+                ->groupBy(fn ($t) => $t->approval_date->toDateString());
+
+            for ($d = $monday->copy(); $d->lte($friday); $d->addDay()) {
+                $weekDays[] = ['data' => $d->copy(), 'tasks' => $weekTasks->get($d->toDateString(), collect())->values()];
+            }
+
+            $abertas = fn () => $this->executorTasksQuery($userId)->whereNotIn('status', ['concluido', 'cancelado']);
+            $weekBeforeCount = $abertas()->whereDate('approval_date', '<', $monday)->count();
+            $weekAfterCount  = $abertas()->whereDate('approval_date', '>', $friday)->count();
+            $weekNoDateCount = $abertas()->whereNull('approval_date')->count();
+        }
 
         $today = today();
         $meetingsPosReuniao = $meetingsRealizadas = $clientsWithoutActivePlan = $plansExpiringSoon = $activePlans = collect();
@@ -324,8 +388,34 @@ class DashboardController extends Controller
             'pendingTasksCount',
             'creativosProntos', 'creativosProntosTasks', 'budgetsNeedingAddition', 'campaignsNeedingOptimization',
             'myNotifications',
-            'mode', 'show', 'myMeetingsToday', 'myOverdueTasks'
+            'mode', 'show', 'myMeetingsToday', 'myOverdueTasks',
+            'availableModes', 'subjectRoles', 'subjectIsAdmin', 'viewingAs', 'teamMembers',
+            'myExecutorSprintDone',
+            'weekDays', 'weekOffset', 'weekBeforeCount', 'weekAfterCount', 'weekNoDateCount'
         ));
+    }
+
+    /**
+     * ?ver_como={userId} — só admin/dono, só gente da própria organização, nunca a si mesmo.
+     * Qualquer coisa fora disso cai silenciosamente na Dashboard normal de quem está logado.
+     *
+     * @return array{0: ?User, 1: ?OrganizationUser}
+     */
+    private function resolveViewingAs(Request $request): array
+    {
+        if (! $request->filled('ver_como') || ! in_array(app('currentOrgRole'), ['owner', 'admin'], true)) {
+            return [null, null];
+        }
+
+        $pivot = rescue(fn () => OrganizationUser::where('organization_id', app('currentOrganization')->id)
+            ->where('user_id', (int) $request->get('ver_como'))
+            ->first(), null, false);
+
+        if (! $pivot || $pivot->user_id === Auth::id()) {
+            return [null, null];
+        }
+
+        return [User::find($pivot->user_id), $pivot];
     }
 
     // Troca de modo pelo seletor do topo — salva como "último usado" (a pessoa volta
