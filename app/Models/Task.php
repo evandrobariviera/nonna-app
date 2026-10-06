@@ -26,6 +26,7 @@ class Task extends Model
         'approval_location', 'approval_method', 'internal_approval',
         'requester_name', 'requester_whatsapp', 'requester_channel',
         'origin', 'is_ticket', 'queued_at', 'clickup_task_id', 'launched_at', 'custom_fields', 'clickup_attachments',
+        'task_format_id', 'sprint_points', 'sprint_points_manual', // pontos de sprint (App\Services\Tasks\SprintPoints)
     ];
 
     protected $casts = [
@@ -38,6 +39,8 @@ class Task extends Model
         'internal_approval' => 'boolean',
         'custom_fields'          => 'array',
         'clickup_attachments'    => 'array',
+        'sprint_points'          => 'integer',
+        'sprint_points_manual'   => 'boolean',
     ];
 
     // ── Status: espelha 1:1 os status reais da lista de Produção/Sprint no ClickUp ──
@@ -439,6 +442,12 @@ class Task extends Model
     public function statusTransitions(): HasMany
     {
         return $this->hasMany(TaskStatusTransition::class)->orderBy('changed_at');
+    }
+
+    // Formato escolhido à mão (Post, Reels...) — vazio = detectado pelo título. Ver SprintPoints.
+    public function format(): BelongsTo
+    {
+        return $this->belongsTo(TaskFormat::class, 'task_format_id');
     }
 
     public function activities(): HasMany

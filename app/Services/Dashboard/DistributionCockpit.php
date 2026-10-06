@@ -106,10 +106,11 @@ class DistributionCockpit
             foreach ($days as $day) {
                 $dayTasks = $weekTasks->filter(fn ($t) => $t->approval_date->isSameDay($day));
                 $cell = $this->cell($dayTasks, $person->id, $userId);
-                $maxCell = max($maxCell, $cell['total']);
+                $maxCell = max($maxCell, $cell['points']); // cor da célula pela carga em pontos
                 $row['days'][$day->toDateString()] = $cell;
             }
-            $row['week_total'] = array_sum(array_map(fn ($c) => $c['total'], $row['days']));
+            $row['week_total']  = array_sum(array_map(fn ($c) => $c['total'], $row['days']));
+            $row['week_points'] = array_sum(array_map(fn ($c) => $c['points'], $row['days']));
             $grid[] = $row;
         }
 
@@ -254,6 +255,8 @@ class DistributionCockpit
 
         return [
             'total' => $theirs->count(),
+            // Pontos de sprint (SprintPoints) — métrica híbrida: a tela mostra pontos E quantidade.
+            'points' => (int) $theirs->sum(fn ($t) => $t->sprint_points ?? 1),
             'mine'  => $theirs->filter(fn ($t) => $t->responsibles->contains('id', $headId))->count(),
             'done'  => $theirs->where('status', 'concluido')->count(),
             'tasks' => $theirs,

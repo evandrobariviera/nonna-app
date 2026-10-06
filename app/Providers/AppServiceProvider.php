@@ -23,7 +23,12 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+        // Um por request: guarda o catálogo de pontos em memória (vários saves de tarefa
+        // seguidos não reconsultam o banco).
+        $this->app->singleton(\App\Services\Tasks\SprintPoints::class);
+    }
 
     public function boot(): void
     {

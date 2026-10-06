@@ -12,6 +12,7 @@ use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\TaskActivity;
 use App\Models\TaskAttachment;
+use App\Models\TaskFormat;
 use App\Models\TaskExecutor;
 use App\Models\TaskStatusTransition;
 use App\Models\User;
@@ -469,6 +470,50 @@ class TaskController extends Controller
         }
 
         return redirect()->back()->with('success', 'Prioridade atualizada.');
+    }
+
+    // Pontos de sprint da tarefa (App\Services\Tasks\SprintPoints): escolher o formato,
+    // ajustar os pontos à mão (vira manual — o catálogo não sobrescreve mais) ou voltar ao
+    // automático. Devolve o resultado pra lateral da tarefa se atualizar sem recarregar.
+    public function updatePoints(Request $request, Task $task)
+    {
+        $data = $request->validate([
+            'task_format_id' => 'nullable|uuid',
+            'sprint_points'  => 'nullable|integer|min:0|max:100',
+            'automatic'      => 'nullable|boolean',
+        ]);
+
+        $old = $task->sprint_points;
+
+        if ($request->has('task_format_id')) {
+            $format = $data['task_format_id'] ? TaskFormat::find($data['task_format_id']) : null;
+            abort_if($data['task_format_id'] && ! $format, 422, 'Formato inválido.');
+            $task->task_format_id = $format?->id;
+            // Escolher formato é pedir os pontos dele — desfaz ajuste manual anterior.
+            $task->sprint_points_manual = false;
+        }
+
+        if ($request->boolean('automatic')) {
+            $task->sprint_points_manual = false;
+        } elseif (isset($data['sprint_points'])) {
+            $task->sprint_points_manual = true;
+            $task->sprint_points = $data['sprint_points'];
+        }
+
+        if (! $task->sprint_points_manual) {
+            $task->sprint_points = null; // recalculado no save (TaskObserver::saving)
+        }
+        $task->save();
+
+        if ($old !== $task->sprint_points) {
+            TaskActivity::log($task, 'points_changed', $old === null ? null : "{$old} pts", "{$task->sprint_points} pts");
+        }
+
+        return response()->json([
+            'sprint_points' => $task->sprint_points,
+            'manual'        => $task->sprint_points_manual,
+            'format_id'     => $task->task_format_id,
+        ]);
     }
 
     public function updateSituation(Request $request, Task $task)

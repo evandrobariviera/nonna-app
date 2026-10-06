@@ -27,7 +27,7 @@
 
         {{-- Tabs --}}
         <div class="flex gap-1 mb-6 border-b" style="border-color:var(--border)">
-            @foreach(['geral' => 'Geral', 'integracoes' => 'Integrações', 'equipe' => 'Equipe', 'setores' => 'Setores', 'papeis' => 'Papéis Funcionais', 'mensagens' => 'Mensagens Padrão', 'notificacoes-internas' => 'Notificações Internas', 'api' => 'API & Tokens'] as $key => $label)
+            @foreach(['geral' => 'Geral', 'integracoes' => 'Integrações', 'equipe' => 'Equipe', 'setores' => 'Setores', 'papeis' => 'Papéis Funcionais', 'mensagens' => 'Mensagens Padrão', 'notificacoes-internas' => 'Notificações Internas', 'pontos' => 'Pontos de Sprint', 'api' => 'API & Tokens'] as $key => $label)
                 <button @click="tab = '{{ $key }}'"
                         class="tab-btn px-4 py-2.5 text-sm font-semibold transition-colors"
                         :class="tab === '{{ $key }}'
@@ -1267,6 +1267,11 @@
                     Salvar Notificações
                 </button>
             </form>
+        </div>
+
+        {{-- ══ TAB PONTOS DE SPRINT ══ --}}
+        <div x-show="tab === 'pontos'" x-cloak>
+            @include('settings._sprint-points')
         </div>
 
         {{-- ══ TAB API & TOKENS ══ --}}

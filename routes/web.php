@@ -634,6 +634,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('tasks.update-approval-date-direct');
     Route::patch('/tarefas/{task}/prioridade', [TaskController::class, 'updatePriority'])
         ->name('tasks.update-priority');
+    Route::patch('/tarefas/{task}/pontos', [TaskController::class, 'updatePoints'])
+        ->name('tasks.update-points');
     Route::patch('/tarefas/{task}/situacao', [TaskController::class, 'updateSituation'])
         ->name('tasks.update-situation');
     Route::patch('/tarefas/{task}/legenda', [TaskController::class, 'updateCaption'])
@@ -876,6 +878,20 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
             ->name('settings.members.update');
         Route::delete('/configuracoes/equipe/{user}', [OrganizationMemberController::class, 'destroy'])
             ->name('settings.members.destroy');
+        // Pontos de sprint (App\Services\Tasks\SprintPoints)
+        Route::put('/configuracoes/pontos/tipos', [\App\Http\Controllers\SprintPointsSettingsController::class, 'updateTypes'])
+            ->name('settings.points.types');
+        Route::post('/configuracoes/pontos/formatos', [\App\Http\Controllers\SprintPointsSettingsController::class, 'storeFormat'])
+            ->name('settings.points.formats.store');
+        Route::patch('/configuracoes/pontos/formatos/{format}', [\App\Http\Controllers\SprintPointsSettingsController::class, 'updateFormat'])
+            ->name('settings.points.formats.update');
+        Route::delete('/configuracoes/pontos/formatos/{format}', [\App\Http\Controllers\SprintPointsSettingsController::class, 'destroyFormat'])
+            ->name('settings.points.formats.destroy');
+        Route::patch('/configuracoes/pontos/formatos/{format}/mover/{direction}', [\App\Http\Controllers\SprintPointsSettingsController::class, 'moveFormat'])
+            ->whereIn('direction', ['up', 'down'])->name('settings.points.formats.move');
+        Route::post('/configuracoes/pontos/recalcular', [\App\Http\Controllers\SprintPointsSettingsController::class, 'recalculate'])
+            ->name('settings.points.recalculate');
+
         Route::post('/configuracoes/usuarios-orfaos/{user}/vincular', [OrganizationMemberController::class, 'attach'])
             ->name('settings.orphan-users.attach');
         Route::delete('/configuracoes/usuarios-orfaos/{user}', [OrganizationMemberController::class, 'destroyOrphan'])

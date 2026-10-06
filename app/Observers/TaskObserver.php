@@ -9,6 +9,7 @@ use App\Models\Task;
 use App\Models\TaskActivity;
 use App\Models\TaskStatusTransition;
 use App\Services\AutomationEngine;
+use App\Services\Tasks\SprintPoints;
 use App\Services\TaskApprovalService;
 use Illuminate\Support\Facades\Auth;
 
@@ -25,6 +26,12 @@ class TaskObserver
         'destination' => 'destination_changed',
         'task_type'   => 'task_type_changed',
     ];
+
+    // Pontos de sprint sempre em dia (formato detectado pelo título / tipo / ajuste manual).
+    public function saving(Task $task): void
+    {
+        app(SprintPoints::class)->apply($task);
+    }
 
     public function updated(Task $task): void
     {

@@ -126,7 +126,7 @@
             <div class="flex items-center justify-between mb-1 flex-wrap gap-2">
                 <h3 class="text-sm font-bold flex items-center gap-1.5" style="color:var(--text)">
                     <x-icon name="users" size="14" /> Carga do time
-                    <span class="text-xs font-mono font-normal" style="color:var(--muted)">— total real de cada pessoa · <span style="color:var(--purple)">roxo = suas</span></span>
+                    <span class="text-xs font-mono font-normal" style="color:var(--muted)">— pontos e tarefas reais de cada pessoa · <span style="color:var(--purple)">roxo = suas</span></span>
                 </h3>
                 @php
                     // Filtro de status só vai pra URL quando sai do padrão — link limpo no dia a dia.
@@ -209,28 +209,40 @@
                                     <td class="text-center py-2" style="background:{{ $c['total'] ? 'rgba(220,38,38,.10)' : 'var(--s2)' }}; {{ $c['total'] ? 'cursor:pointer' : '' }}"
                                         :style="moving ? { opacity: .35 } : (openCell === '{{ $key }}' ? { boxShadow: 'inset 0 0 0 2px var(--red)' } : {})"
                                         @if($c['total']) @click="moving ? null : toggle('{{ $key }}')" @endif>
-                                        <span class="text-base font-black" style="color:{{ $c['total'] ? 'var(--red)' : 'var(--muted)' }}">{{ $c['total'] ?: '·' }}</span>
+                                        @if($c['total'])
+                                            <span class="text-base font-black" style="color:var(--red)">{{ $c['points'] }}<span class="text-xs font-semibold"> pts</span></span>
+                                            <span class="block font-mono" style="color:var(--red); font-size:10px">{{ $c['total'] }} tarefa(s)</span>
+                                        @else
+                                            <span class="text-base font-black" style="color:var(--muted)">·</span>
+                                        @endif
                                     </td>
 
                                     @foreach($row['days'] as $date => $c)
                                         @php
                                             $key = "{$uid}-{$date}";
-                                            $alpha = $c['total'] ? round(0.08 + 0.42 * $c['total'] / $d['maxCell'], 2) : 0;
+                                            $alpha = $c['total'] ? round(0.08 + 0.42 * $c['points'] / $d['maxCell'], 2) : 0; // cor pela carga em PONTOS
                                         @endphp
                                         <td class="text-center py-2 align-middle" style="min-width:70px; background:{{ $c['total'] ? "rgba(100,59,142,{$alpha})" : 'var(--s2)' }}; {{ $date === $todayStr ? 'outline:2px solid var(--green); outline-offset:-2px;' : '' }} cursor:pointer"
                                             :style="moving ? { boxShadow: 'inset 0 0 0 2px var(--purple)', cursor: 'copy' } : (openCell === '{{ $key }}' ? { boxShadow: 'inset 0 0 0 2px var(--purple)' } : {})"
                                             @click="moving ? place({{ $uid }}, '{{ $date }}') : {{ $c['total'] ? "toggle('{$key}')" : 'null' }}"
                                             @if($canAct) data-dist-cell data-user-id="{{ $uid }}" data-date="{{ $date }}" @endif>
-                                            <span class="text-base font-black" style="color:{{ $c['total'] ? 'var(--text)' : 'var(--muted)' }}">{{ $c['total'] ?: '·' }}</span>
-                                            @if($c['mine'] && $c['mine'] < $c['total'])
-                                                <span class="block font-mono" style="color:var(--purple); font-size:10px">{{ $c['mine'] }} suas</span>
-                                            @elseif($c['mine'])
-                                                <span class="block font-mono" style="color:var(--purple); font-size:10px">todas suas</span>
+                                            {{-- Híbrido: pontos em destaque, quantidade e quantas são suas embaixo --}}
+                                            @if($c['total'])
+                                                <span class="text-base font-black" style="color:var(--text)">{{ $c['points'] }}<span class="text-xs font-semibold"> pts</span></span>
+                                                <span class="block font-mono" style="color:var(--muted2); font-size:10px">{{ $c['total'] }} tarefa(s)</span>
+                                                @if($c['mine'])
+                                                    <span class="block font-mono" style="color:var(--purple); font-size:10px">{{ $c['mine'] < $c['total'] ? $c['mine'].' suas' : 'todas suas' }}</span>
+                                                @endif
+                                            @else
+                                                <span class="text-base font-black" style="color:var(--muted)">·</span>
                                             @endif
                                         </td>
                                     @endforeach
 
-                                    <td class="text-center py-2 font-mono font-bold" style="color:var(--muted2)">{{ $row['week_total'] }}</td>
+                                    <td class="text-center py-2 font-mono" style="color:var(--muted2)">
+                                        <span class="font-bold" style="color:var(--text)">{{ $row['week_points'] }} pts</span>
+                                        <span class="block" style="font-size:10px">{{ $row['week_total'] }} tarefa(s)</span>
+                                    </td>
                                 </tr>
 
                                 {{-- Tarefas da célula aberta — cada uma pode ser escolhida pra mover --}}
@@ -240,7 +252,7 @@
                                         <td colspan="{{ count($d['days']) + 3 }}" class="px-2 pb-2">
                                             <div class="flex flex-col gap-1.5 p-2" style="background:var(--s1); border:1px solid var(--border2)">
                                                 <p class="text-xs font-mono" style="color:var(--muted)">
-                                                    {{ $row['user']->name }} · {{ $date === 'overdue' ? 'atrasadas' : \Carbon\Carbon::parse($date)->translatedFormat('D d/m') }} · {{ $c['total'] }} tarefa(s)
+                                                    {{ $row['user']->name }} · {{ $date === 'overdue' ? 'atrasadas' : \Carbon\Carbon::parse($date)->translatedFormat('D d/m') }} · {{ $c['points'] }} pts · {{ $c['total'] }} tarefa(s)
                                                     @if($canAct) — <span style="color:var(--purple)">clique numa tarefa pra mover</span> @endif
                                                 </p>
                                                 @foreach($c['tasks'] as $task)
@@ -254,6 +266,7 @@
                                                          :style="moving && moving.id === '{{ $task->id }}' ? { outline: '2px solid var(--purple)', background: 'rgba(100,59,142,.12)' } : {}"
                                                          @if($canAct && ! $done) @click="pick(@js($p))" @endif>
                                                         <span class="badge badge-{{ $task->statusColor() }}" style="font-size:8px; padding:1px 5px">{{ $task->statusLabel() }}</span>
+                                                        <span class="font-mono font-bold flex-shrink-0" style="color:var(--purple)">{{ $task->sprint_points ?? 1 }}pt</span>
                                                         <span class="font-semibold truncate" style="color:var(--text)">{{ $task->title }}</span>
                                                         <span class="truncate" style="color:var(--muted)">{{ $task->client?->displayName() }}</span>
                                                         @if($date === 'overdue')

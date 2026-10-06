@@ -142,17 +142,21 @@ class DashboardController extends Controller
         $myExecutorSprintByStatus = collect();
         $myExecutorSprintTotal = 0;
         $myExecutorSprintDone  = 0;
+        $myPointsTotal = $myPointsDone = 0; // pontos de sprint (métrica híbrida, ao lado da quantidade)
 
         if ($activeSprint && $show('meus_numeros')) {
-            $counts =$this->executorTasksQuery($userId)
+            $rows = $this->executorTasksQuery($userId)
                 ->where('sprint_id', $activeSprint->id)
                 ->where('status', '!=', 'cancelado')
-                ->select('status', DB::raw('count(*) as total'))
+                ->select('status', DB::raw('count(*) as total'), DB::raw('sum(coalesce(sprint_points, 1)) as points'))
                 ->groupBy('status')
-                ->pluck('total', 'status');
+                ->toBase()->get()->keyBy('status');
+            $counts = $rows->map(fn ($r) => (int) $r->total);
 
             $myExecutorSprintTotal = (int) $counts->sum();
             $myExecutorSprintDone  = (int) ($counts['concluido'] ?? 0);
+            $myPointsTotal = (int) $rows->sum('points');
+            $myPointsDone  = (int) ($rows['concluido']->points ?? 0);
 
             $myExecutorSprintByStatus = collect(Task::$statuses)
                 ->except(['cancelado'])
@@ -398,7 +402,7 @@ class DashboardController extends Controller
             'myNotifications',
             'mode', 'show', 'myMeetingsToday', 'myOverdueTasks',
             'availableModes', 'subjectRoles', 'subjectIsAdmin', 'viewingAs', 'teamMembers',
-            'myExecutorSprintDone',
+            'myExecutorSprintDone', 'myPointsTotal', 'myPointsDone',
             'weekDays', 'weekOffset', 'weekBeforeCount', 'weekAfterCount', 'weekNoDateCount',
             'distribution', 'subjectUserId'
         ));

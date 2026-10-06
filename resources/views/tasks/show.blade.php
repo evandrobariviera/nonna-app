@@ -1039,6 +1039,58 @@
         ══════════════════════════════════════════════════════════ --}}
         <div class="flex flex-col gap-4" style="width:320px; flex-shrink:0">
 
+            {{-- PONTOS DE SPRINT (App\Services\Tasks\SprintPoints) — o peso da tarefa. Vem do
+                 formato (escolhido aqui ou detectado pelo título) ou do padrão do tipo; dá pra
+                 ajustar à mão (aí o catálogo não mexe mais) e voltar ao automático. --}}
+            @php
+                $pointFormats = \App\Models\TaskFormat::where('task_type', $task->task_type)->orderBy('position')->get(['id', 'name', 'points']);
+                $detectedFormat = app(\App\Services\Tasks\SprintPoints::class)->detectFormat($task);
+            @endphp
+            <div class="card card-body"
+                 x-data="{
+                     points: @js($task->sprint_points),
+                     manual: @js((bool) $task->sprint_points_manual),
+                     formatId: @js($task->task_format_id ?? ''),
+                     editing: false,
+                     draft: @js($task->sprint_points),
+                     saving: false,
+                     async send(payload) {
+                         if (this.saving) return;
+                         this.saving = true;
+                         const { ok, message, data } = await window.inlinePatch('{{ route('tasks.update-points', $task) }}', payload);
+                         this.saving = false;
+                         if (!ok) { alert(message || 'Não foi possível atualizar os pontos.'); return; }
+                         this.points = data.sprint_points; this.manual = data.manual; this.formatId = data.format_id ?? ''; this.editing = false;
+                     },
+                 }">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-3 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                    <span class="icon-badge"><x-icon name="gauge" size="16" /></span>
+                    Pontos de sprint
+                </p>
+                <div class="flex items-baseline gap-2 mb-3">
+                    <p x-show="!editing" class="text-3xl font-black cursor-text" style="color:var(--purple)" @click="editing = true; draft = points" title="Clique para ajustar à mão">
+                        <span x-text="points ?? '—'"></span> <span class="text-sm font-semibold">pts</span>
+                    </p>
+                    <div x-show="editing" x-cloak class="flex items-center gap-1.5">
+                        <input type="number" min="0" max="100" x-model.number="draft" class="w-20 text-lg font-bold px-2 py-1"
+                               style="background:var(--s3); border:1px solid var(--purple); color:var(--text)"
+                               @keydown.enter="send({ sprint_points: draft })" @keydown.escape="editing = false">
+                        <button type="button" class="btn btn-primary btn-xs" @click="send({ sprint_points: draft })">Salvar</button>
+                    </div>
+                    <span x-show="manual" x-cloak class="text-xs font-mono" style="color:var(--orange)">ajustado à mão</span>
+                </div>
+                <label class="block text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Formato</label>
+                <select x-model="formatId" @change="send({ task_format_id: formatId || null })"
+                        class="w-full text-sm px-2 py-1.5" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    <option value="">Automático{{ $detectedFormat ? ' — '.$detectedFormat->name.' ('.$detectedFormat->points.')' : ' — padrão do tipo' }}</option>
+                    @foreach($pointFormats as $f)
+                        <option value="{{ $f->id }}">{{ $f->name }} ({{ $f->points }})</option>
+                    @endforeach
+                </select>
+                <button type="button" x-show="manual" x-cloak class="text-xs font-semibold mt-2" style="color:var(--purple)"
+                        @click="send({ automatic: true })">Voltar ao automático</button>
+            </div>
+
             {{-- DATAS: Prioridade / Aprovação / Publicação / Vencimento — vira o card de "visão
                  rápida" da lateral. Prioridade entrou aqui como primeiro item (antes ficava
                  solta em cima da Situação, sem contexto); Vencimento já tinha saído da barra de

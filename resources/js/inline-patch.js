@@ -22,7 +22,13 @@ export function registerInlinePatch() {
                 },
                 body: JSON.stringify(data),
             });
-            if (res.ok) return { ok: true, message: null };
+            // data = corpo JSON da resposta (quando há), pra quem precisa do valor recalculado
+            // pelo servidor (ex: pontos de sprint da tarefa).
+            if (res.ok) {
+                let data = null;
+                try { data = await res.json(); } catch (e) { /* sem corpo JSON */ }
+                return { ok: true, message: null, data };
+            }
             let message = null;
             try { message = (await res.json()).message; } catch (e) { /* resposta não era JSON */ }
             return { ok: false, message };
