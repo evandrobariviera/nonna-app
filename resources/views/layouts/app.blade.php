@@ -495,6 +495,7 @@
     </div>
 
     <x-confirm-dialog-modal />
+    <x-task-delivery-modal />
 
     @stack('scripts')
 </body>

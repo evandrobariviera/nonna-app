@@ -373,9 +373,9 @@
                      async set(key) {
                          if (this.statusKey === key || this.saving) return;
                          this.saving = true;
-                         const { ok, message } = await window.inlinePatch('{{ route('tasks.update-status-direct', $task) }}', { status: key });
+                         const { ok, message, cancelled } = await window.inlinePatch('{{ route('tasks.update-status-direct', $task) }}', { status: key });
                          this.saving = false;
-                         if (ok) { this.statusKey = key; } else { alert(message || 'Não foi possível mudar o status.'); }
+                         if (ok) { this.statusKey = key; } else if (!cancelled) { alert(message || 'Não foi possível mudar o status.'); }
                      },
                  }">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Status</p>
@@ -800,6 +800,50 @@
                     </div>
                 @endif
             </div>
+
+            {{-- RETORNO DE ENTREGA — o que quem produziu contou ao mandar pra Revisão Interna
+                 (TaskDeliveryService). Card próprio e visível: é o que o revisor lê primeiro.
+                 Mais recente em cima; reentrega depois de Ajuste vira um item novo. --}}
+            @php $deliveries = $task->deliveries()->with('user:id,name')->get(); @endphp
+            @if($deliveries->isNotEmpty())
+                <div class="card card-body-lg">
+                    <p class="text-xs font-semibold uppercase tracking-widest mb-1 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                        <span class="icon-badge">
+                            <x-icon name="send" size="16" />
+                        </span>
+                        Retorno de entrega
+                        @if($deliveries->count() > 1)
+                            <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $deliveries->count() }} entregas</span>
+                        @endif
+                    </p>
+                    <p class="text-xs mb-4" style="color:var(--muted2)">O que foi feito e por quê — escrito por quem produziu ao mandar pra Revisão Interna.</p>
+
+                    <div class="flex flex-col gap-3">
+                        @foreach($deliveries as $delivery)
+                            <div class="px-4 py-3" style="background:var(--s2); border:1px solid {{ $loop->first ? 'var(--purple)' : 'var(--border)' }}; border-radius:10px; {{ $loop->first ? '' : 'opacity:.75' }}">
+                                <div class="flex items-center gap-2 flex-wrap mb-2">
+                                    <span class="text-sm font-semibold" style="color:var(--text)">{{ $delivery->user?->name ?? 'Usuário removido' }}</span>
+                                    <span class="text-xs" style="color:var(--muted)">{{ $delivery->created_at->format('d/m/Y \à\s H:i') }}</span>
+                                    @if($delivery->fully_done)
+                                        <span class="px-2 py-0.5 text-xs font-semibold" style="border-radius:999px; background:rgba(16,185,129,.12); color:var(--green)">Executada por completo</span>
+                                    @else
+                                        <span class="px-2 py-0.5 text-xs font-semibold" style="border-radius:999px; background:rgba(238,121,25,.12); color:var(--orange)">Parcial</span>
+                                    @endif
+                                    @if($delivery->from_status === 'ajuste_alteracao')
+                                        <span class="text-xs" style="color:var(--muted)">· reentrega após ajuste</span>
+                                    @endif
+                                </div>
+                                @if(!$delivery->fully_done && $delivery->missing)
+                                    <p class="text-sm mb-2 px-3 py-2" style="background:rgba(238,121,25,.08); border-radius:8px; color:var(--text); line-height:1.6">
+                                        <span class="font-semibold" style="color:var(--orange)">O que faltou:</span> {{ $delivery->missing }}
+                                    </p>
+                                @endif
+                                <p class="text-sm whitespace-pre-line" style="color:var(--text); line-height:1.65">{{ $delivery->body }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             {{-- ENTREGÁVEIS --}}
             @php $entregaveis = $task->attachments->where('kind', 'entregavel'); @endphp

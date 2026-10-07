@@ -53,8 +53,17 @@ export function registerKanbanDnd() {
                                 'Accept': 'application/json',
                             },
                             body: JSON.stringify({ [statusField]: newStatus, ...extra }),
-                        }).then((res) => {
-                            if (!res.ok) throw res;
+                        }).then(async (res) => {
+                            if (!res.ok) {
+                                // Trava de entrega (Revisão Interna): o card fica na coluna nova
+                                // enquanto a janela de retorno está aberta; entregou = sucesso
+                                // (o servidor já mudou o status), desistiu = volta pro lugar.
+                                let json = null;
+                                try { json = await res.clone().json(); } catch (e) { /* não era JSON */ }
+                                const delivered = await window.handleDeliveryRequired?.(json);
+                                if (delivered === false) throw 'cancelled';
+                                if (delivered !== true) throw res;
+                            }
 
                             updateCount(fromColumn, -1);
                             updateCount(toColumn, 1);
@@ -65,6 +74,7 @@ export function registerKanbanDnd() {
                         }).catch(async (err) => {
                             const ref = evt.from.children[evt.oldIndex] || null;
                             evt.from.insertBefore(card, ref);
+                            if (err === 'cancelled') return;
 
                             let msg = 'Não foi possível mover o card. Tente novamente.';
                             if (err instanceof Response) {

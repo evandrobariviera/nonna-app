@@ -29,9 +29,17 @@ export function registerInlinePatch() {
                 try { data = await res.json(); } catch (e) { /* sem corpo JSON */ }
                 return { ok: true, message: null, data };
             }
-            let message = null;
-            try { message = (await res.json()).message; } catch (e) { /* resposta não era JSON */ }
-            return { ok: false, message };
+            let json = null;
+            try { json = await res.json(); } catch (e) { /* resposta não era JSON */ }
+
+            // Trava de entrega (Revisão Interna): abre a janela de retorno. Entregou = o
+            // servidor já mudou o status, então pra quem chamou é sucesso; desistiu =
+            // cancelled, sem alerta (a pessoa sabe que cancelou).
+            const delivered = await window.handleDeliveryRequired?.(json);
+            if (delivered === true) return { ok: true, message: null, data: null };
+            if (delivered === false) return { ok: false, message: null, cancelled: true };
+
+            return { ok: false, message: json?.message ?? null };
         } catch (e) {
             return { ok: false, message: null };
         }
@@ -46,10 +54,10 @@ export function registerInlinePatch() {
     // (e com isso fechar/piscar a tabela inteira) quando o campo alterado é justamente o
     // agrupamento atual da tela; do contrário a atualização local já basta.
     window.applyFill = function (url, data, onSuccess) {
-        window.inlinePatch(url, data).then(({ ok, message }) => {
+        window.inlinePatch(url, data).then(({ ok, message, cancelled }) => {
             if (ok) {
                 onSuccess();
-            } else {
+            } else if (!cancelled) {
                 alert(message || 'Falha ao salvar. Atualize a página e tente novamente.');
             }
         });

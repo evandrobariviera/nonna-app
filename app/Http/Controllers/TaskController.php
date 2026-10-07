@@ -17,6 +17,7 @@ use App\Models\TaskExecutor;
 use App\Models\TaskStatusTransition;
 use App\Models\User;
 use App\Services\AutomationEngine;
+use App\Services\TaskDeliveryService;
 use App\Services\TaskExecutorSync;
 use App\Support\UploadOptions;
 use Illuminate\Http\Request;
@@ -377,6 +378,7 @@ class TaskController extends Controller
         abort_unless($task->project_id === $project->id, 403);
 
         $data = $request->validate($this->updateRules());
+        TaskDeliveryService::guard($request, $task, $data['status']);
 
         if ($reason = $this->wipBlockReasonForSave($task, $data['status'], $this->firstExecutorId($data))) {
             throw ValidationException::withMessages(['status' => $reason]);
@@ -394,6 +396,7 @@ class TaskController extends Controller
         abort_unless($task->project_id === $project->id, 403);
 
         $data = $request->validate($this->updateRules());
+        TaskDeliveryService::guard($request, $task, $data['status']);
 
         if ($reason = $this->wipBlockReasonForSave($task, $data['status'], $this->firstExecutorId($data))) {
             throw ValidationException::withMessages(['status' => $reason]);
@@ -759,6 +762,8 @@ class TaskController extends Controller
             'status' => 'required|in:' . implode(',', array_keys(Task::$statuses)),
         ])['status'];
 
+        TaskDeliveryService::guard($request, $task, $newStatus);
+
         if ($reason = $this->wipBlockReasonForTransition($task, $newStatus)) {
             if ($request->wantsJson()) {
                 return response()->json(['message' => $reason], 422);
@@ -782,6 +787,8 @@ class TaskController extends Controller
         $newStatus = $request->validate([
             'status' => 'required|in:' . implode(',', array_keys(Task::$statuses)),
         ])['status'];
+
+        TaskDeliveryService::guard($request, $task, $newStatus);
 
         if ($reason = $this->wipBlockReasonForTransition($task, $newStatus)) {
             if ($request->wantsJson()) {
@@ -808,6 +815,8 @@ class TaskController extends Controller
             'status'    => 'required|in:' . implode(',', array_keys(Task::$statuses)),
             'situation' => 'sometimes|in:' . implode(',', $situationKeys),
         ]);
+
+        TaskDeliveryService::guard($request, $task, $data['status']);
 
         if ($reason = $this->wipBlockReasonForTransition($task, $data['status'])) {
             if ($request->wantsJson()) {
@@ -924,6 +933,12 @@ class TaskController extends Controller
                 $wipTally = [];
                 $applyIds = [];
                 foreach ($tasks as $task) {
+                    // Revisão Interna exige retorno de entrega por tarefa — em lote não tem
+                    // como pedir, então pula e avisa (ver TaskDeliveryService).
+                    if (TaskDeliveryService::requiresDelivery($task, $data['status'])) {
+                        $skipped[] = ['id' => $task->id, 'title' => $task->title, 'reason' => 'Revisão Interna pede o retorno de entrega — mova essa tarefa individualmente'];
+                        continue;
+                    }
                     if ($data['status'] === 'em_producao' && $task->status !== 'em_producao') {
                         $execId = TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->value('user_id')
                             ?? $task->executor_id;

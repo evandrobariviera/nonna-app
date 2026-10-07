@@ -7,6 +7,7 @@ use App\Models\Task;
 use App\Models\TaskApprovalRound;
 use App\Models\TaskApprovalToken;
 use App\Services\TaskApprovalService;
+use App\Services\TaskDeliveryService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -276,6 +277,8 @@ class ApprovalDashboardController extends Controller
         if (empty($data)) {
             return back()->with('warning', 'Nada pra atualizar.');
         }
+
+        TaskDeliveryService::guard($request, $round->task, $data['status'] ?? null);
 
         $round->task->update($data);
 

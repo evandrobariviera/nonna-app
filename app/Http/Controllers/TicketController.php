@@ -10,6 +10,7 @@ use App\Models\Task;
 use App\Models\TaskAttachment;
 use App\Models\TaskExecutor;
 use App\Models\User;
+use App\Services\TaskDeliveryService;
 use App\Services\TaskExecutorSync;
 use App\Support\UploadOptions;
 use Illuminate\Http\Request;
@@ -203,6 +204,8 @@ class TicketController extends Controller
             'status'    => 'required|in:' . implode(',', array_keys(Task::$statuses)),
             'situation' => 'sometimes|in:' . implode(',', $situationKeys),
         ]);
+
+        TaskDeliveryService::guard($request, $task, $data['status']);
 
         if ($data['status'] === 'em_producao' && $task->status !== 'em_producao') {
             $execId = TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->value('user_id')

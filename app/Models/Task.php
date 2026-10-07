@@ -455,6 +455,12 @@ class Task extends Model
         return $this->hasMany(TaskActivity::class)->orderByDesc('created_at');
     }
 
+    // Retornos de entrega (cada ida pra Revisão Interna), mais recente primeiro.
+    public function deliveries(): HasMany
+    {
+        return $this->hasMany(TaskDelivery::class)->orderByDesc('created_at');
+    }
+
     // Itens de ação — checklist nascido de um comentário virado tarefa pra alguém
     // (ver TaskChecklistItemController). Pendentes primeiro, mais recentes primeiro
     // dentro de cada grupo — feito vira "arquivado visualmente" no fim da lista.

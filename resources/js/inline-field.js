@@ -19,10 +19,10 @@ export function registerInlineField(Alpine) {
             if (this.value === this.original) return;
             this.saving = true;
             const payload = field ? { field, value: this.value } : { [payloadKey]: this.value };
-            const { ok, message } = await window.inlinePatch(url, payload);
+            const { ok, message, cancelled } = await window.inlinePatch(url, payload);
             this.saving = false;
             if (!ok) {
-                alert(message || 'Falha ao salvar. Tente de novo.');
+                if (!cancelled) alert(message || 'Falha ao salvar. Tente de novo.');
                 this.value = this.original;
             } else {
                 this.original = this.value;

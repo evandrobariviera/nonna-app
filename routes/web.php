@@ -64,6 +64,7 @@ use App\Http\Controllers\TaskEditorImageController;
 use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskDeliveryController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\VisionController;
 use App\Http\Controllers\ProfileController;
@@ -632,6 +633,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('tasks.updateStatusStandalone');
     Route::patch('/tarefas/{task}/status', [TaskController::class, 'updateStatusDirect'])
         ->name('tasks.update-status-direct');
+    // Entrega pra Revisão Interna (retorno obrigatório) — ver TaskDeliveryService.
+    Route::post('/tarefas/{task}/entrega', [TaskDeliveryController::class, 'store'])
+        ->name('tasks.deliver');
     Route::patch('/tarefas/{task}/data-aprovacao', [TaskController::class, 'updateApprovalDateDirect'])
         ->name('tasks.update-approval-date-direct');
     Route::patch('/tarefas/{task}/prioridade', [TaskController::class, 'updatePriority'])
