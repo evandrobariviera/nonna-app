@@ -94,6 +94,8 @@ export function registerChatWidget(Alpine) {
         latestId: null,
         _statusTimer: null,
         _messagesTimer: null,
+        _stickBottom: true,            // conversa acompanha o fim (ver onMediaLoad)
+        _autoScrollAt: 0,
         _toastTimer: null,
 
         // ── Ciclo de vida ────────────────────────────────────────────────
@@ -297,7 +299,18 @@ export function registerChatWidget(Alpine) {
         },
 
         onScroll() {
+            // Quem rolou pra cima pra ler o histórico solta o "grude" no fim; voltar
+            // pro fim gruda de novo.
+            // Scroll disparado pelo próprio scrollBottom() não conta: o debounce chega
+            // depois, e se uma imagem cresceu nesse meio-tempo pareceria "rolou pra cima".
+            if (Date.now() - this._autoScrollAt > 400) this._stickBottom = this.isNearBottom();
             if (this.$refs.messages.scrollTop < 60) this.loadOlder();
+        },
+
+        // Imagem termina de carregar DEPOIS do scroll inicial e empurra o conteúdo — sem
+        // isso a conversa abria parada no meio. Enquanto grudado no fim, acompanha.
+        onMediaLoad() {
+            if (this._stickBottom) this.scrollBottom();
         },
 
         isNearBottom() {
@@ -308,6 +321,8 @@ export function registerChatWidget(Alpine) {
         scrollBottom() {
             const box = this.$refs.messages;
             if (box) box.scrollTop = box.scrollHeight;
+            this._stickBottom = true;
+            this._autoScrollAt = Date.now();
         },
 
         // A pessoa está de fato vendo a conversa aberta?
