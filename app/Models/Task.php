@@ -485,7 +485,12 @@ class Task extends Model
                     ->orWhereNull('approval_date')
                     ->orWhereNull('origin')
                     ->orWhere(fn (Builder $q2) => $q2->whereNull('description')->orWhere('description', ''))
-                    ->orWhereDoesntHave('executors', fn (Builder $q2) => $q2->where('task_executors.role', 'executor'))
+                    // Executor: pivot "executor" OU, como herança, tasks.executor_id — mesma
+                    // regra do Painel de Produção/Placar/Distribuição. Só o pivot deixava
+                    // tarefa com Executor visível na tela (que lê executor_id) travada como
+                    // "pendente" quando a linha do pivot faltava.
+                    ->orWhere(fn (Builder $q2) => $q2->whereNull('executor_id')
+                        ->whereDoesntHave('executors', fn (Builder $q3) => $q3->where('task_executors.role', 'executor')))
                     ->orWhereDoesntHave('responsibles');
             });
     }
