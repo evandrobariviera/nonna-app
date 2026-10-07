@@ -94,7 +94,8 @@ export function registerChatWidget(Alpine) {
         latestId: null,
         _statusTimer: null,
         _messagesTimer: null,
-        _stickBottom: true,            // conversa acompanha o fim (ver onMediaLoad)
+        _stickBottom: true,            // conversa acompanha o fim (ver watchMessagesHeight)
+        _heightObserver: null,
         _autoScrollAt: 0,
         _toastTimer: null,
 
@@ -247,6 +248,7 @@ export function registerChatWidget(Alpine) {
             this.view = 'conversation';
             this.messages = [];
             this.readUpTo = 0;
+            this._stickBottom = true;
             this.files = [];
             this.error = '';
             this.refPicker = null;
@@ -307,10 +309,16 @@ export function registerChatWidget(Alpine) {
             if (this.$refs.messages.scrollTop < 60) this.loadOlder();
         },
 
-        // Imagem termina de carregar DEPOIS do scroll inicial e empurra o conteúdo — sem
-        // isso a conversa abria parada no meio. Enquanto grudado no fim, acompanha.
-        onMediaLoad() {
-            if (this._stickBottom) this.scrollBottom();
+        // Imagem que termina de carregar, aviso "Lida às", fonte... tudo isso muda a altura
+        // DEPOIS do scroll inicial e deixava a conversa parada no meio. Observa a altura do
+        // conteúdo e, enquanto grudado no fim, acompanha. O bloco da conversa é recriado a
+        // cada abertura (x-if), por isso troca o observador em vez de criar mais um.
+        watchMessagesHeight(el) {
+            this._heightObserver?.disconnect();
+            this._heightObserver = new ResizeObserver(() => {
+                if (this._stickBottom) this.scrollBottom();
+            });
+            this._heightObserver.observe(el);
         },
 
         isNearBottom() {

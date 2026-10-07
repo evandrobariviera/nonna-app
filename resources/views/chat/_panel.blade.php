@@ -171,7 +171,9 @@
     {{-- ══ CONVERSA ══ --}}
     <template x-if="{{ $showConv }}">
         <div class="flex flex-col flex-1 min-h-0 relative">
-            <div x-ref="messages" @scroll.debounce.100ms="onScroll()" @load.capture="onMediaLoad()" @click="onMessageClick($event)" class="flex-1 overflow-y-auto min-h-0 px-3 py-3" style="background:var(--bg)">
+            <div x-ref="messages" @scroll.debounce.100ms="onScroll()" @click="onMessageClick($event)" class="flex-1 overflow-y-auto min-h-0 px-3 py-3" style="background:var(--bg)">
+                {{-- Tudo que muda a altura da conversa (imagem carregando, aviso "Lida", fonte) passa por aqui — ver watchMessagesHeight(). --}}
+                <div x-init="watchMessagesHeight($el)">
                 <div x-show="loadingOlder" class="flex justify-center py-2" style="color:var(--muted)">
                     <x-icon name="loader-circle" size="14" class="animate-spin" />
                 </div>
@@ -226,6 +228,7 @@
                         <p x-show="isLastReadMine(i)" x-cloak class="chat-read-label" x-text="receiptTitle(m)"></p>
                     </div>
                 </template>
+                </div>
             </div>
 
             {{-- Arraste de arquivo --}}
