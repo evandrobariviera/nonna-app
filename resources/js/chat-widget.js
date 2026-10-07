@@ -90,6 +90,7 @@ export function registerChatWidget(Alpine) {
         error: '',
         toast: null,
         dragging: false,
+        readUpTo: 0,                   // conversa individual: até qual mensagem minha o outro leu (✓✓)
         latestId: null,
         _statusTimer: null,
         _messagesTimer: null,
@@ -243,6 +244,7 @@ export function registerChatWidget(Alpine) {
             this.active = conversation;
             this.view = 'conversation';
             this.messages = [];
+            this.readUpTo = 0;
             this.files = [];
             this.error = '';
             this.refPicker = null;
@@ -255,6 +257,7 @@ export function registerChatWidget(Alpine) {
                 this.active = data.conversation;
                 this.messages = data.messages;
                 this.hasMore = data.has_more;
+                this.readUpTo = data.receipts?.read_up_to ?? 0;
                 this.$nextTick(() => {
                     this.scrollBottom();
                     this.$refs.input?.focus();
@@ -551,6 +554,43 @@ export function registerChatWidget(Alpine) {
             return fresh.length;
         },
 
+        // ── Confirmação de leitura (só conversa individual) ──────────────
+
+        applyReceipts(receipts) {
+            if (!receipts) return;
+            for (const [id, readAt] of Object.entries(receipts.times ?? {})) {
+                const m = this.messages.find(x => x.id === Number(id));
+                if (m) m.read_at = readAt;
+            }
+            this.readUpTo = Math.max(this.readUpTo, receipts.read_up_to ?? 0);
+        },
+
+        showReceipt(m) {
+            return m.mine && this.active?.type === 'direct';
+        },
+
+        isRead(m) {
+            return m.id <= this.readUpTo;
+        },
+
+        receiptTitle(m) {
+            if (!this.isRead(m)) return 'Enviada';
+            if (!m.read_at) return 'Lida';
+            const d = new Date(m.read_at);
+            const day = d.toDateString() === new Date().toDateString()
+                ? 'hoje'
+                : 'em ' + d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+            return `Lida ${day} às ${this.time(m.read_at)}`;
+        },
+
+        // "Lida às 14:32" escrito embaixo só da ÚLTIMA mensagem minha já lida — nas
+        // outras, a hora fica no passar do mouse (igual "Visto" do Instagram/WhatsApp).
+        isLastReadMine(index) {
+            const m = this.messages[index];
+            if (!this.showReceipt(m) || !this.isRead(m) || !m.read_at) return false;
+            return !this.messages.slice(index + 1).some(x => x.mine && this.isRead(x));
+        },
+
         // ── Polling ──────────────────────────────────────────────────────
 
         startMessagesLoop() {
@@ -559,8 +599,9 @@ export function registerChatWidget(Alpine) {
                 const after = this.messages.length ? this.messages[this.messages.length - 1].id : 0;
                 const conversationId = this.active.id;
                 try {
-                    const data = await api(`/chat/conversas/${conversationId}/mensagens?after=${after}`);
+                    const data = await api(`/chat/conversas/${conversationId}/mensagens?after=${after}&receipts_since=${this.readUpTo}`);
                     if (!this.active || this.active.id !== conversationId) return;
+                    this.applyReceipts(data.receipts);
                     const stick = this.isNearBottom();
                     if (this.appendMessages(data.messages)) {
                         if (stick) this.$nextTick(() => this.scrollBottom());

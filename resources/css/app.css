@@ -852,6 +852,13 @@
 .chat-text a { text-decoration: underline; }
 .chat-bubble-theirs .chat-text a { color: var(--purple); }
 .chat-time { font-size: 10px; text-align: right; opacity: .6; margin-top: 1px; }
+/* ✓ enviada / ✓✓ lida — balão "meu" é roxo, então o "lida" ganha destaque com azul-claro
+   (padrão WhatsApp) e opacidade cheia, e o "enviada" fica no apagado do horário. */
+.chat-bubble-mine .chat-time { display: flex; align-items: center; justify-content: flex-end; gap: 3px; }
+.chat-receipt { display: inline-flex; }
+.chat-bubble-mine .chat-time:has(.chat-receipt-read) { opacity: .85; }
+.chat-receipt-read { color: #8fdcff; }
+.chat-read-label { font-size: 10px; text-align: right; color: var(--muted); margin: -1px 2px 4px; }
 .chat-image { max-width: 100%; max-height: 220px; border-radius: 8px; display: block; }
 .chat-file {
     display: flex; align-items: center; gap: 8px;

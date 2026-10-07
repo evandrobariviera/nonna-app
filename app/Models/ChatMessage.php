@@ -23,6 +23,7 @@ class ChatMessage extends Model
 
     protected $casts = [
         'edited_at' => 'datetime',
+        'read_at'   => 'datetime',
     ];
 
     public function conversation(): BelongsTo

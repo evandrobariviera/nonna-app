@@ -14,6 +14,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Support\UploadOptions;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -136,6 +137,7 @@ class ChatService
             ChatParticipant::where('conversation_id', $conversation->id)
                 ->where('user_id', $sender->id)
                 ->update(['last_read_message_id' => $message->id]);
+            $this->stampReadAt($conversation, $sender, $message->id);
 
             return $message->load(['attachments', 'user']);
         });
@@ -150,6 +152,53 @@ class ChatService
             ->where('user_id', $user->id)
             ->where('last_read_message_id', '<', $messageId)
             ->update(['last_read_message_id' => $messageId]);
+        $this->stampReadAt($conversation, $user, $messageId);
+    }
+
+    // Hora da leitura (o "Lida em..." de quem enviou) — só na conversa individual, onde
+    // cada mensagem tem 1 leitor possível. Grava 1x só: reabrir a conversa não muda a hora.
+    private function stampReadAt(ChatConversation $conversation, User $reader, int $upToId): void
+    {
+        if ($conversation->type !== 'direct') {
+            return;
+        }
+
+        ChatMessage::where('conversation_id', $conversation->id)
+            ->where('id', '<=', $upToId)
+            ->where('user_id', '!=', $reader->id)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+    }
+
+    /**
+     * Confirmação de leitura pra quem enviou (✓ enviada / ✓✓ lida) — só conversa
+     * individual. read_up_to = até qual mensagem o OUTRO leu; times = hora exata das
+     * minhas mensagens lidas com id acima de $sinceId (o widget manda o read_up_to que
+     * já conhece, então o polling só traz o que mudou). $sinceId null = sem times.
+     */
+    public function readReceipts(ChatConversation $conversation, User $viewer, ?int $sinceId = null): ?array
+    {
+        if ($conversation->type !== 'direct') {
+            return null;
+        }
+
+        $readUpTo = (int) ChatParticipant::where('conversation_id', $conversation->id)
+            ->where('user_id', '!=', $viewer->id)
+            ->value('last_read_message_id');
+
+        $times = [];
+        if ($sinceId !== null && $readUpTo > $sinceId) {
+            $times = ChatMessage::where('conversation_id', $conversation->id)
+                ->where('user_id', $viewer->id)
+                ->where('id', '>', $sinceId)
+                ->where('id', '<=', $readUpTo)
+                ->whereNotNull('read_at')
+                ->pluck('read_at', 'id')
+                ->map(fn ($t) => Carbon::parse($t)->toIso8601String())
+                ->all();
+        }
+
+        return ['read_up_to' => $readUpTo, 'times' => (object) $times];
     }
 
     // ── Leitura / payloads JSON pro widget ───────────────────────────────────
@@ -288,6 +337,8 @@ class ChatService
             'mine'        => $m->user_id === $viewer->id,
             'body_html'   => $m->bodyHtml(),
             'created_at'  => $m->created_at->toIso8601String(),
+            // Só pra quem enviou — quem recebe não precisa saber quando ele mesmo leu.
+            'read_at'     => $m->user_id === $viewer->id ? $m->read_at?->toIso8601String() : null,
             'attachments' => $m->attachments->map(fn (ChatMessageAttachment $a) => [
                 'id'           => $a->id,
                 'filename'     => $a->filename,

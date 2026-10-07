@@ -119,6 +119,14 @@ class ChatController extends Controller
             ),
             'messages' => $messages->map(fn ($m) => $this->chat->messagePayload($m, $request->user()))->values(),
             'has_more' => $messages->count() === 30,
+            // ✓/✓✓ das minhas mensagens (só conversa individual; null em Setor). Na abertura
+            // a hora já vem em cada mensagem (read_at); no polling vêm as que viraram lidas
+            // desde o receipts_since que o widget conhece.
+            'receipts' => $this->chat->readReceipts(
+                $conversation,
+                $request->user(),
+                is_numeric($request->query('receipts_since')) ? (int) $request->query('receipts_since') : null
+            ),
         ]);
     }
 

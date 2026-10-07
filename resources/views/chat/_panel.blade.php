@@ -212,9 +212,18 @@
                                 </template>
 
                                 <div x-show="m.body_html" class="chat-text" x-html="m.body_html"></div>
-                                <p class="chat-time" x-text="time(m.created_at)"></p>
+                                <p class="chat-time" :title="showReceipt(m) ? receiptTitle(m) : null">
+                                    <span x-text="time(m.created_at)"></span>
+                                    <template x-if="showReceipt(m)">
+                                        <span class="chat-receipt" :class="isRead(m) && 'chat-receipt-read'">
+                                            <x-icon name="check" size="13" stroke="2.5" x-show="!isRead(m)" />
+                                            <x-icon name="check-check" size="13" stroke="2.5" x-show="isRead(m)" />
+                                        </span>
+                                    </template>
+                                </p>
                             </div>
                         </div>
+                        <p x-show="isLastReadMine(i)" x-cloak class="chat-read-label" x-text="receiptTitle(m)"></p>
                     </div>
                 </template>
             </div>
