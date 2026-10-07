@@ -29,10 +29,11 @@ use Illuminate\Support\Str;
  */
 class SprintPoints
 {
-    // Catálogo inicial — montado a partir dos títulos reais das tarefas (out/2026). Escala
-    // 1 ponto ≈ 15 min de trabalho (2026-10-07): calibrada pelo tempo útil em "Em Produção"
-    // por formato e pela otimização de campanha (~12 min = 1 ponto). Landing/site são ponto
-    // de partida (dados de web exageram) — o time ajusta em Configurações.
+    // Catálogo inicial — montado a partir dos títulos reais das tarefas (out/2026). Pesos
+    // recalibrados em 2026-10-07 pela proporção do tempo útil em "Em Produção" entre formatos
+    // (a conta usou "1 ponto ≈ 15 min" só como ESTIMATIVA pra chegar nos números — o usuário
+    // pediu pra não tratar isso como regra: ponto é peso relativo, não relógio). Landing/site
+    // são ponto de partida (dados de web exageram) — o time ajusta em Configurações.
     public const DEFAULT_FORMATS = [
         'criacao' => [
             ['Logo / identidade visual',     24, 'logo, identidade, manual de marca, branding'],

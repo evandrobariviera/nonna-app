@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Schema;
  *  - Cada tipo escolhe EM QUAL STATUS a tarefa pontua (task_type_points.score_status) —
  *    Criação pontua ao chegar em Revisão Interna (fim do trabalho de quem executou), o resto
  *    na conclusão. Ver SprintPoints::scoreStatuses().
- *  - Escala nova: 1 ponto ≈ 15 min de trabalho, calibrada pela análise do tempo em "Em
+ *  - Pesos novos, proporcionais entre formatos (a conta usou "1 ponto ≈ 15 min" só como
+ *    estimativa — não é regra), calibrados pela análise do tempo em "Em
  *    Produção" (horas úteis) por formato e pela otimização de campanha (~12 min = 1 ponto).
  *    Landing page e site ficaram com ponto de partida (40/80) — os dados de web exageram
  *    porque a tarefa fica dias "em produção" junto com outras.
