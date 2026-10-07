@@ -14,7 +14,7 @@ class TaskTypePoint extends Model
 
     protected $connection = 'pgsql';
 
-    protected $fillable = ['organization_id', 'task_type', 'points'];
+    protected $fillable = ['organization_id', 'task_type', 'points', 'score_status'];
 
     protected $casts = ['points' => 'integer'];
 }

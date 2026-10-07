@@ -1,7 +1,8 @@
 {{-- Placar de pontos de sprint (modo Execução) — dados em App\Services\Dashboard\SprintScoreboard.
      Pedido do usuário: "competitividade" com as pontuações — cada um vê os próprios pontos
      (semana / sprint / mês), a posição no ranking e o andamento da agência na sprint.
-     Ponto feito = tarefa concluída (data da última conclusão); vai pro executor. --}}
+     Regras de quando a tarefa pontua (status por tipo, só se passou por Em Produção) e das
+     otimizações de campanha: ver SprintScoreboard. Pontos de tarefa vão pro executor. --}}
 @php
     $sb = $scoreboard;
     $ag = $sb['agency'];
@@ -35,7 +36,9 @@
                      class="px-4 py-4 text-center" style="background:linear-gradient(135deg, rgba(100,59,142,.10), rgba(238,121,25,.08)); border:1px solid rgba(100,59,142,.2)">
                     <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">{{ $viewingAs ? 'Pontos de '.$subjectName : 'Seus pontos' }} · {{ $sb['labels'][$key] }}</p>
                     <p class="text-5xl font-black mt-1" style="color:var(--purple)">{{ $pd['mine']['points'] }}</p>
-                    <p class="text-xs font-mono" style="color:var(--muted2)">{{ $pd['mine']['tasks'] }} tarefa(s) concluída(s)</p>
+                    <p class="text-xs font-mono" style="color:var(--muted2)">
+                        {{ $pd['mine']['tasks'] }} tarefa(s) entregue(s) @if($pd['mine']['opts'])· {{ $pd['mine']['opts'] }} otimização(ões)@endif
+                    </p>
                     @if($pd['myRank'])
                         <p class="text-sm font-bold mt-2" style="color:{{ $medals[$pd['myRank']] ?? 'var(--text)' }}">
                             {{ $pd['myRank'] }}º lugar <span class="text-xs font-normal" style="color:var(--muted)">de {{ $pd['rows']->count() }}</span>
@@ -49,7 +52,7 @@
                             <p class="text-xs mt-0.5" style="color:var(--green)">liderando 🏆</p>
                         @endif
                     @else
-                        <p class="text-xs mt-2" style="color:var(--muted2)">Ainda sem pontos {{ $key === 'semana' ? 'nesta semana' : ($key === 'mes' ? 'neste mês' : 'nesta sprint') }} — a primeira conclusão já entra no ranking.</p>
+                        <p class="text-xs mt-2" style="color:var(--muted2)">Ainda sem pontos {{ $key === 'semana' ? 'nesta semana' : ($key === 'mes' ? 'neste mês' : 'nesta sprint') }} — a primeira tarefa entregue já entra no ranking.</p>
                     @endif
                 </div>
             @endforeach
@@ -107,7 +110,7 @@
                                         <div class="h-full rounded-full" style="width:{{ round($r['points'] / $leader * 100, 1) }}%; background:{{ $medals[$pos] ?? ($isMe ? 'var(--purple)' : 'rgba(100,59,142,.45)') }}"></div>
                                     </div>
                                     <span class="text-xs font-mono text-right" style="color:var(--muted2)">
-                                        <strong style="color:var(--text)">{{ $r['points'] }}</strong> pts · {{ $r['tasks'] }}
+                                        <strong style="color:var(--text)">{{ $r['points'] }}</strong> pts · <span title="{{ $r['tasks'] }} tarefa(s){{ $r['opts'] ? ' + '.$r['opts'].' otimização(ões)' : '' }}">{{ $r['tasks'] + $r['opts'] }}</span>
                                     </span>
                                 </div>
                             @endforeach

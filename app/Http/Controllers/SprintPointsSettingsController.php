@@ -16,21 +16,38 @@ class SprintPointsSettingsController extends Controller
     public function updateTypes(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'points'   => ['required', 'array'],
-            'points.*' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'points'              => ['required', 'array'],
+            'points.*'            => ['nullable', 'integer', 'min:0', 'max:500'],
+            'score_status'        => ['nullable', 'array'],
+            'score_status.*'      => ['in:revisao_interna,aprovacao,despacho_agendamento,concluido'],
+            'optimization_points' => ['nullable', 'integer', 'min:0', 'max:100'],
         ]);
 
-        foreach (array_intersect_key($data['points'], Task::$types) as $type => $points) {
-            if ($points === null) {
+        $org = app('currentOrganization');
+
+        foreach (array_keys(Task::$types) as $type) {
+            $values = [];
+            if (($data['points'][$type] ?? null) !== null) {
+                $values['points'] = $data['points'][$type];
+            }
+            if (isset($data['score_status'][$type])) {
+                $values['score_status'] = $data['score_status'][$type];
+            }
+            if ($values === []) {
                 continue;
             }
-            TaskTypePoint::updateOrCreate(
-                ['organization_id' => app('currentOrganization')->id, 'task_type' => $type],
-                ['points' => $points]
-            );
+            $row = TaskTypePoint::firstOrNew(['organization_id' => $org->id, 'task_type' => $type]);
+            $row->points ??= SprintPoints::DEFAULT_TYPE_POINTS[$type] ?? 1; // linha nova sem ponto informado
+            $row->fill($values)->save();
         }
 
-        return back()->with('success', 'Pontos padrão por tipo salvos. Use "Recalcular" pra aplicar nas tarefas existentes.')->with('tab', 'pontos');
+        if (array_key_exists('optimization_points', $data) && $data['optimization_points'] !== null) {
+            $settings = $org->settings ?? [];
+            data_set($settings, 'sprint_points.optimization_points', (int) $data['optimization_points']);
+            $org->update(['settings' => $settings]);
+        }
+
+        return back()->with('success', 'Pontos por tipo salvos. Mudou ponto padrão? Use "Recalcular" pra aplicar nas tarefas existentes. "Pontua em" vale na hora.')->with('tab', 'pontos');
     }
 
     public function storeFormat(Request $request): RedirectResponse
@@ -86,7 +103,7 @@ class SprintPointsSettingsController extends Controller
         return $request->validate([
             'task_type' => ['required', 'in:' . implode(',', array_keys(Task::$types))],
             'name'      => ['required', 'string', 'max:120'],
-            'points'    => ['required', 'integer', 'min:0', 'max:100'],
+            'points'    => ['required', 'integer', 'min:0', 'max:500'],
             'keywords'  => ['nullable', 'string', 'max:1000'],
         ]);
     }

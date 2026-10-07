@@ -482,7 +482,7 @@ class TaskController extends Controller
     {
         $data = $request->validate([
             'task_format_id' => 'nullable|uuid',
-            'sprint_points'  => 'nullable|integer|min:0|max:100',
+            'sprint_points'  => 'nullable|integer|min:0|max:500',
             'automatic'      => 'nullable|boolean',
         ]);
 

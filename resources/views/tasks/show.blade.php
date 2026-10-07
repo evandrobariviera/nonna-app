@@ -1116,7 +1116,7 @@
                         <span x-text="points ?? '—'"></span> <span class="text-sm font-semibold">pts</span>
                     </p>
                     <div x-show="editing" x-cloak class="flex items-center gap-1.5">
-                        <input type="number" min="0" max="100" x-model.number="draft" class="w-20 text-lg font-bold px-2 py-1"
+                        <input type="number" min="0" max="500" x-model.number="draft" class="w-20 text-lg font-bold px-2 py-1"
                                style="background:var(--s3); border:1px solid var(--purple); color:var(--text)"
                                @keydown.enter="send({ sprint_points: draft })" @keydown.escape="editing = false">
                         <button type="button" class="btn btn-primary btn-xs" @click="send({ sprint_points: draft })">Salvar</button>
