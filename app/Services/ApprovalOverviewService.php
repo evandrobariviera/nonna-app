@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\Client;
 use App\Models\Project;
-use App\Models\TaskApprovalRound;
+use App\Models\Task;
 use Illuminate\Support\Collection;
 
 /**
@@ -26,31 +26,40 @@ class ApprovalOverviewService
      */
     public function byClient(): Collection
     {
-        $openClientIds = TaskApprovalRound::query()
-            ->where('type', 'aprovacao')
-            ->where(fn ($q) => $q->where('status', 'pending')
-                ->orWhere(fn ($q) => $q->where('status', 'changes_requested')->whereNull('handled_at')))
-            ->whereHas('task')
-            ->with('task:id,client_id')
-            ->get()
-            ->pluck('task.client_id')
-            ->filter()
-            ->unique();
+        // Join com tasks em vez de whereHas + with('task'): a escopo de organização
+        // vem do Task (Tenantable) e cada passo é uma consulta só.
+        $openClientIds = Task::query()
+            ->join('task_approval_rounds as r', 'r.task_id', '=', 'tasks.id')
+            ->where('r.type', 'aprovacao')
+            ->where(fn ($q) => $q->where('r.status', 'pending')
+                ->orWhere(fn ($q) => $q->where('r.status', 'changes_requested')->whereNull('r.handled_at')))
+            ->whereNotNull('tasks.client_id')
+            ->distinct()
+            ->pluck('tasks.client_id');
 
         if ($openClientIds->isEmpty()) {
             return collect();
         }
 
-        $rounds = TaskApprovalRound::query()
-            ->where('type', 'aprovacao')
-            ->where('status', '!=', 'cancelled')
-            ->whereHas('task', fn ($q) => $q->whereIn('client_id', $openClientIds))
-            ->with('task:id,client_id,project_id,title,created_at')
-            ->orderByDesc('round_number')
-            ->get()
-            ->unique('task_id');
+        // Uma linha por rodada, já com o que precisa da tarefa; a mais recente
+        // de cada tarefa fica (unique depois do orderByDesc).
+        $rounds = Task::query()
+            ->join('task_approval_rounds as r', 'r.task_id', '=', 'tasks.id')
+            ->whereIn('tasks.client_id', $openClientIds)
+            ->where('r.type', 'aprovacao')
+            ->where('r.status', '!=', 'cancelled')
+            ->orderByDesc('r.round_number')
+            ->get(['tasks.id as task_id', 'tasks.client_id', 'tasks.project_id', 'r.status', 'r.sent_at', 'r.handled_at'])
+            ->unique('task_id')
+            ->map(fn ($row) => (object) [
+                'client_id'  => $row->client_id,
+                'project_id' => $row->project_id,
+                'status'     => $row->status,
+                'sent_at'    => $row->sent_at ? \Illuminate\Support\Carbon::parse($row->sent_at) : null,
+                'handled_at' => $row->handled_at,
+            ]);
 
-        $projects = Project::whereIn('id', $rounds->pluck('task.project_id')->filter()->unique())
+        $projects = Project::whereIn('id', $rounds->pluck('project_id')->filter()->unique())
             ->get(['id', 'title', 'type', 'macro_plan_id'])
             ->keyBy('id');
 
@@ -59,10 +68,10 @@ class ApprovalOverviewService
             ->keyBy('id');
 
         return $rounds
-            ->groupBy('task.client_id')
+            ->groupBy('client_id')
             ->map(function (Collection $clientRounds, string $clientId) use ($projects, $clients) {
                 $groups = $clientRounds
-                    ->groupBy(fn ($r) => $projects->has($r->task->project_id) ? $r->task->project_id : 'avulsas')
+                    ->groupBy(fn ($r) => $projects->has($r->project_id) ? $r->project_id : 'avulsas')
                     ->map(fn (Collection $rs, string $key) => $this->group($rs, $projects->get($key), $clientId))
                     ->filter(fn ($g) => $g['open'])
                     ->sortByDesc(fn ($g) => [$g['oldest_days'] ?? -1, $g['pending']])

@@ -45,6 +45,10 @@
                             @if($c['totals']['changes'])
                                 <span class="px-2 py-1" style="border-radius:999px; background:rgba(238,121,25,.1); color:var(--orange)">{{ $c['totals']['changes'] }} em ajuste</span>
                             @endif
+                            <a href="{{ route('approvals.preview.central', $c['client']) }}" target="_blank" rel="noopener"
+                               class="btn btn-ghost btn-xs flex items-center gap-1" title="Abrir a Central de Aprovações como o cliente vê (só consulta)">
+                                <x-icon name="eye" size="12" /> Ver como o cliente vê
+                            </a>
                             {{-- Lembrete único: uma mensagem por contato com o link da Central
                                  dele, em vez de reenviar peça por peça (ApprovalReminderService). --}}
                             @if($c['totals']['pending'])

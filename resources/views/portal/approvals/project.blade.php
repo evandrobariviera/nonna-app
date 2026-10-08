@@ -10,7 +10,7 @@
     @endphp
 
     <div class="mb-6 flex items-center gap-2 flex-wrap text-xs font-semibold">
-        <a href="{{ route('portal.approvals.index') }}" style="color: var(--muted)">← Central de Aprovações</a>
+        <a href="{{ $centralUrl ?? route('portal.approvals.index') }}" style="color: var(--muted)">← Central de Aprovações</a>
         <span style="color: var(--muted)">›</span>
         <span style="color: var(--text)">{{ $pageTitle }}</span>
     </div>

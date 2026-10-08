@@ -19,6 +19,25 @@
     {{-- Sessão do link de aprovação (login mágico): esconde atalhos pra telas que pedem senha. --}}
     @php $_magic = app(\App\Services\PortalMagicAccess::class)->active(); @endphp
 
+    @if(app()->bound('portal.preview'))
+    {{-- "Ver como o cliente vê" (ApprovalPreviewController): equipe olhando a página
+         do Portal do cliente. Sem lateral do Portal — só a faixa e o conteúdo. --}}
+    <div class="flex h-screen flex-col">
+        <header class="flex flex-shrink-0 items-center justify-between gap-3 px-6 py-3 flex-wrap"
+                style="background:var(--purple); color:#fff">
+            <span class="text-sm font-semibold">
+                Pré-visualização — é assim que <strong>{{ app('portal.preview')['client']->company_name }}</strong> vê a Central de Aprovações
+            </span>
+            <a href="{{ route('approvals.index') }}" class="text-xs font-bold px-3 py-1.5" style="background:rgba(255,255,255,.15); color:#fff; border-radius:6px">
+                ← Voltar pra nossa Central
+            </a>
+        </header>
+        <main class="portal-page flex-1 overflow-y-auto p-6" style="background:var(--bg)">
+            {{ $slot }}
+        </main>
+    </div>
+    @else
+
     {{-- ── MOBILE DRAWER ── --}}
     <div x-show="sidebarOpen" class="fixed inset-0 z-50 flex md:hidden" x-cloak>
         <div class="fixed inset-0 bg-black/60" @click="sidebarOpen = false"
@@ -166,6 +185,8 @@
             </main>
         </div>
     </div>
+
+    @endif
 
     <x-confirm-dialog-modal />
 

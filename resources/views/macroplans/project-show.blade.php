@@ -161,7 +161,11 @@
                 </select>
                 <p class="text-xs mt-1" style="color:var(--muted)">Ex.: o conceito da campanha ou o layout da home. Aparece em destaque no topo, depois que passar pela aprovação.</p>
             </div>
-            <div class="flex justify-end">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+                <a href="{{ route('approvals.preview.project', $project) }}" target="_blank" rel="noopener"
+                   class="btn btn-ghost btn-xs flex items-center gap-1" title="Abrir a página deste projeto como o cliente vê no Portal (só consulta)">
+                    <x-icon name="eye" size="12" /> Ver como o cliente vê
+                </a>
                 <button type="submit" class="btn btn-primary btn-xs">Salvar</button>
             </div>
         </form>

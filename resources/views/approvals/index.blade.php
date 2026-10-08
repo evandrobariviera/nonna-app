@@ -63,7 +63,7 @@
 
         @foreach($statCards as $card)
             @if($card['filter'])
-                <a href="{{ route('approvals.index', ['status' => $card['filter']]) }}"
+                <a href="{{ route('approvals.index', ['status' => $card['filter'], 'view' => 'list']) }}"
                    class="card card-body transition-all"
                    style="border-color:{{ request('status') === $card['filter'] ? $card['border'] : 'var(--border2)' }}; text-decoration:none"
                    onmouseover="this.style.borderColor='{{ $card['border'] }}'" onmouseout="this.style.borderColor='{{ request('status') === $card['filter'] ? $card['border'] : 'var(--border2)' }}'">
@@ -80,7 +80,11 @@
         @endforeach
     </div>
 
-    <div x-data="{ tab: '{{ request('view', 'list') }}' }" x-cloak>
+    {{-- "Por cliente" é a aba padrão. Quadros/Lista só carregam (fetch do fragmento,
+         via live-filter) na primeira vez que alguém abre uma delas. --}}
+    <div x-data="{ tab: '{{ $activeTab }}', loaded: {{ $rounds ? 'true' : 'false' }} }"
+         x-init="$watch('tab', v => { if (v !== 'clientes' && !loaded) { loaded = true; $nextTick(() => window.refreshLiveFilter()) } })"
+         x-cloak>
 
         {{-- ══ TOGGLE QUADROS / LISTA ══ --}}
         <div class="flex items-center gap-1 mb-5" style="border-bottom:1px solid var(--border2)">
@@ -148,12 +152,12 @@
             @endif
 
             @if(request()->hasAny(['status','client_id','type','mostrar_aprovados']))
-                <a href="{{ route('approvals.index') }}" class="px-4 py-2 text-sm"
+                <a href="{{ route('approvals.index', ['view' => 'list']) }}" class="px-4 py-2 text-sm"
                    style="color:var(--muted); border:1px solid var(--border2)">Limpar</a>
             @endif
 
             @php
-                $toggleAprovadosParams = request()->except('mostrar_aprovados', 'page');
+                $toggleAprovadosParams = request()->except('mostrar_aprovados', 'page') + ['view' => 'list'];
                 if (!request()->boolean('mostrar_aprovados')) $toggleAprovadosParams['mostrar_aprovados'] = '1';
             @endphp
             <a href="{{ route('approvals.index', $toggleAprovadosParams) }}"
@@ -164,7 +168,11 @@
         </form>
 
         <div id="approvals-results">
-            @include('approvals._results')
+            @if($rounds)
+                @include('approvals._results')
+            @else
+                <div x-show="tab !== 'clientes'" class="card card-body text-sm text-center" style="color:var(--muted)">Carregando…</div>
+            @endif
         </div>
     </div>{{-- /x-data --}}
 

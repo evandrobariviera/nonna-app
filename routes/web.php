@@ -593,6 +593,13 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('approvals.cancel');
     Route::post('/aprovacoes/clientes/{client}/lembrar', [\App\Http\Controllers\ApprovalDashboardController::class, 'remindClient'])
         ->name('approvals.remind-client');
+    // "Ver como o cliente vê" — Central/Projeto/Avulsas do Portal, só consulta.
+    Route::get('/aprovacoes/visao-cliente/projeto/{project}', [\App\Http\Controllers\ApprovalPreviewController::class, 'project'])
+        ->name('approvals.preview.project');
+    Route::get('/aprovacoes/visao-cliente/{client}', [\App\Http\Controllers\ApprovalPreviewController::class, 'central'])
+        ->name('approvals.preview.central');
+    Route::get('/aprovacoes/visao-cliente/{client}/avulsas', [\App\Http\Controllers\ApprovalPreviewController::class, 'loose'])
+        ->name('approvals.preview.loose');
 
     // ── Dashboard global de projetos ──
     Route::get('/projetos', [ProjectController::class, 'dashboard'])

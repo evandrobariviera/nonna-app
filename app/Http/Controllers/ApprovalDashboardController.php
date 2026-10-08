@@ -9,29 +9,40 @@ use App\Models\TaskApprovalToken;
 use App\Services\TaskApprovalService;
 use App\Services\TaskDeliveryService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ApprovalDashboardController extends Controller
 {
     public function index(Request $request)
     {
-        [$rounds, $board] = $this->roundsAndBoard($request);
+        // "Por cliente" é a aba padrão — Quadros e Lista só são montados quando
+        // a pessoa abre uma delas (a view busca o fragmento em approvals.results).
+        // Link com filtro de Lista (ex: "Ver todas as aprovações" do Dashboard,
+        // ?status=pending) continua abrindo direto na Lista.
+        $activeTab = $request->input('view', $request->hasAny(['status', 'client_id', 'type', 'mostrar_aprovados']) ? 'list' : 'clientes');
+        [$rounds, $board] = $activeTab === 'clientes' ? [null, null] : $this->roundsAndBoard($request);
 
-        $stats = [
-            'awaiting_send'  => TaskApprovalRound::where('status', 'pending')->whereNull('sent_at')->count(),
-            'pending'        => TaskApprovalRound::where('status', 'pending')->whereNotNull('sent_at')->count(),
-            'changes'        => TaskApprovalRound::where('status', 'changes_requested')->whereNull('handled_at')->count(),
-            'approved_today' => TaskApprovalRound::where('status', 'approved')
-                ->whereDate('resolved_at', today())->count(),
-            'approved_total' => TaskApprovalRound::where('status', 'approved')->count(),
-        ];
+        // Os 5 números do topo numa consulta só (antes: 5 counts, sem filtrar a organização).
+        $s = DB::table('task_approval_rounds as r')
+            ->join('tasks as t', 't.id', '=', 'r.task_id')
+            ->where('t.organization_id', app('currentOrganization')->id)
+            ->selectRaw("
+                count(*) filter (where r.status = 'pending' and r.sent_at is null)              as awaiting_send,
+                count(*) filter (where r.status = 'pending' and r.sent_at is not null)          as pending,
+                count(*) filter (where r.status = 'changes_requested' and r.handled_at is null) as changes,
+                count(*) filter (where r.status = 'approved' and r.resolved_at::date = ?)       as approved_today,
+                count(*) filter (where r.status = 'approved')                                    as approved_total
+            ", [today()->toDateString()])
+            ->first();
+        $stats = array_map('intval', (array) $s);
 
-        $clientIds = TaskApprovalRound::whereHas('task')
-            ->with('task:id,client_id')
-            ->get()
-            ->pluck('task.client_id')
-            ->filter()
-            ->unique();
+        // Clientes do filtro: só os ids distintos (antes carregava todas as rodadas já feitas).
+        $clientIds = Task::query()
+            ->join('task_approval_rounds as r', 'r.task_id', '=', 'tasks.id')
+            ->whereNotNull('tasks.client_id')
+            ->distinct()
+            ->pluck('tasks.client_id');
 
         // nickname carregado (senão displayName() cai na razão social) e ordenação
         // pelo mesmo texto que aparece na opção — sem isso, um cliente cujo apelido
@@ -45,7 +56,7 @@ class ApprovalDashboardController extends Controller
         // Aba "Por cliente": o recorte que o cliente vê na Central dele.
         $byClient = app(\App\Services\ApprovalOverviewService::class)->byClient();
 
-        return view('approvals.index', compact('rounds', 'stats', 'clients', 'board', 'byClient'));
+        return view('approvals.index', compact('rounds', 'stats', 'clients', 'board', 'byClient', 'activeTab'));
     }
 
     // Lembrete único (aba "Por cliente"): uma mensagem por contato com tudo que
