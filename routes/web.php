@@ -609,6 +609,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('projects.update-macroplan');
     Route::delete('/projetos/{project}', [ProjectController::class, 'destroyDirect'])
         ->name('projects.destroyDirect');
+    Route::patch('/projetos/{project}/pagina-cliente', [ProjectController::class, 'updateClientPage'])
+        ->name('projects.client-page.update');
     Route::patch('/projetos/{project}/editar', [ProjectController::class, 'updateDirect'])
         ->name('projects.updateDirect');
     Route::post('/projetos/{project}/anexos', [ProjectAttachmentController::class, 'store'])
@@ -994,6 +996,7 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
     Route::get('/reunioes', [PortalMeetings::class, 'index'])->name('meetings.index');
     Route::get('/reunioes/{meeting}', [PortalMeetings::class, 'show'])->name('meetings.show');
     Route::get('/aprovacoes', [PortalApprovals::class, 'index'])->name('approvals.index');
+    Route::get('/aprovacoes/projeto/{project}', [PortalApprovals::class, 'project'])->name('approvals.project');
     Route::get('/aprovacoes/{round}', [PortalApprovals::class, 'show'])->name('approvals.show');
     Route::post('/aprovacoes/{round}/decidir', [PortalApprovals::class, 'decide'])->name('approvals.decide');
     Route::get('/materiais-aprovados', [PortalMaterials::class, 'index'])->name('materials.index');

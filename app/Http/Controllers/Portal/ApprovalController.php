@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Project;
 use App\Models\TaskApprovalRound;
+use App\Services\ProjectApprovalPageService;
 use App\Services\TaskApprovalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,11 +30,36 @@ class ApprovalController extends Controller
         return view('portal.approvals.index', compact('client', 'pending', 'decided'));
     }
 
-    public function show(TaskApprovalRound $round): View
+    // Página do Projeto: o projeto inteiro (destaque + cards de tudo que passou
+    // por aprovação). Cada card leva pra aprovação da própria tarefa (show()).
+    public function project(Project $project, ProjectApprovalPageService $pages): View
+    {
+        $client = app('currentPortalClient');
+
+        abort_if($project->resolvedClientId() !== $client->id, 403);
+
+        $items = $pages->items($project);
+        abort_if($items->isEmpty(), 404);
+
+        $highlight = $items->firstWhere('is_highlight', true);
+        $pieces    = $items->reject(fn ($i) => $i['is_highlight'])->values();
+        $summary   = $pages->summary($items);
+
+        return view('portal.approvals.project', compact('client', 'project', 'highlight', 'pieces', 'summary'));
+    }
+
+    public function show(TaskApprovalRound $round, ProjectApprovalPageService $pages): View
     {
         $client = app('currentPortalClient');
 
         abort_if($round->task->client_id !== $client->id, 403);
+
+        // "Ver projeto completo" só quando a tarefa é de um projeto com página
+        // (pelo menos uma tarefa dele já passou por aprovação — essa, no mínimo).
+        $project = $round->task->project;
+        if ($project && $pages->items($project)->isEmpty()) {
+            $project = null;
+        }
 
         // Quem mais precisa aprovar/já aprovou nesta rodada + histórico de rodadas
         // anteriores da mesma tarefa (com o que foi pedido de ajuste em cada uma).
@@ -44,7 +71,7 @@ class ApprovalController extends Controller
 
         $deliverables = $round->deliverables();
 
-        return view('portal.approvals.show', compact('client', 'round', 'deliverables'));
+        return view('portal.approvals.show', compact('client', 'round', 'deliverables', 'project'));
     }
 
     public function decide(Request $request, TaskApprovalRound $round)

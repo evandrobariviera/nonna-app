@@ -59,6 +59,9 @@ class Project extends Model
         'mecanica',
         'referencias_visuais',
         'pecas',
+        // Página do Projeto no Portal (Central de Aprovações)
+        'client_description',
+        'highlight_task_id',
     ];
 
     public static array $types = [
@@ -230,6 +233,19 @@ class Project extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    // Tarefa em destaque na Página do Projeto do Portal (conceito da campanha,
+    // layout da home...). Opcional — sem ela a página mostra só os cards.
+    public function highlightTask(): BelongsTo
+    {
+        return $this->belongsTo(Task::class, 'highlight_task_id');
+    }
+
+    // Projeto pode ter client_id direto ou herdar do Macroplanejamento.
+    public function resolvedClientId(): ?string
+    {
+        return $this->client_id ?? $this->macroPlan?->client_id;
     }
 
     // Playbook que originou este projeto (ver TaskDraftService::applyPlaybook())

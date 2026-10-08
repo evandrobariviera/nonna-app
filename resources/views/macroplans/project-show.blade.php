@@ -123,6 +123,50 @@
         @endif
     </div>
 
+    {{-- PÁGINA DO CLIENTE — o que aparece no topo da Página do Projeto no
+         Portal (Central de Aprovações). Texto separado do objetivo/briefings,
+         que são internos. Destaque é opcional. --}}
+    <div class="card px-5 py-4 mb-5" x-data="{ open: false }">
+        <button type="button" @click="open = !open" class="w-full flex items-center justify-between gap-3 text-left">
+            <span class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
+                Página do cliente (Portal)
+            </span>
+            <span class="text-xs" style="color:var(--muted2)">
+                @if($project->client_description || $project->highlight_task_id)
+                    Configurada
+                @else
+                    Sem descrição
+                @endif
+                <span x-text="open ? '▴' : '▾'"></span>
+            </span>
+        </button>
+        <form x-show="open" x-cloak method="POST" action="{{ route('projects.client-page.update', $project) }}" class="mt-4 flex flex-col gap-4">
+            @csrf @method('PATCH')
+            <div>
+                <label class="block text-xs font-semibold mb-1.5" style="color:var(--text)">Descrição para o cliente</label>
+                <textarea name="client_description" rows="3" maxlength="2000"
+                    placeholder="Texto curto explicando a ideia do projeto, na linguagem do cliente."
+                    class="w-full px-3 py-2 text-sm focus:outline-none"
+                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); resize:vertical">{{ old('client_description', $project->client_description) }}</textarea>
+                <p class="text-xs mt-1" style="color:var(--muted)">O cliente lê isso no topo da página do projeto. Objetivo e briefings continuam só internos.</p>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1.5" style="color:var(--text)">Tarefa em destaque</label>
+                <select name="highlight_task_id" class="w-full px-3 py-2 text-sm focus:outline-none"
+                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                    <option value="">— nenhuma —</option>
+                    @foreach($project->tasks->where('status', '!=', 'cancelado') as $t)
+                        <option value="{{ $t->id }}" @selected($project->highlight_task_id === $t->id)>{{ $t->title }}</option>
+                    @endforeach
+                </select>
+                <p class="text-xs mt-1" style="color:var(--muted)">Ex.: o conceito da campanha ou o layout da home. Aparece em destaque no topo, depois que passar pela aprovação.</p>
+            </div>
+            <div class="flex justify-end">
+                <button type="submit" class="btn btn-primary btn-xs">Salvar</button>
+            </div>
+        </form>
+    </div>
+
     {{-- ANEXOS --}}
     <div class="card px-5 py-4 mb-5">
         <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">

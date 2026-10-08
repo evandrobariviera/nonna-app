@@ -11,9 +11,20 @@
         $sc = $statusColors[$round->status] ?? $statusColors['pending'];
     @endphp
 
-    <div class="mb-6">
-        <a href="{{ route('portal.approvals.index') }}" class="text-xs font-semibold" style="color: var(--muted)">← Aprovações</a>
+    <div class="mb-6 flex items-center gap-2 flex-wrap text-xs font-semibold">
+        <a href="{{ route('portal.approvals.index') }}" style="color: var(--muted)">← Aprovações</a>
+        @if($project)
+            <span style="color: var(--muted)">›</span>
+            <a href="{{ route('portal.approvals.project', $project) }}" style="color: var(--purple)">{{ $project->title }}</a>
+        @endif
     </div>
+
+    @if($project)
+        <a href="{{ route('portal.approvals.project', $project) }}" class="card p-4 mb-6 flex items-center justify-between gap-3" style="text-decoration:none">
+            <span class="text-sm" style="color: var(--text)">Esta peça faz parte do projeto <strong>{{ $project->title }}</strong>.</span>
+            <span class="text-xs font-semibold px-3 py-2 rounded-lg flex-shrink-0" style="background: var(--purple); color: #fff">Ver projeto completo →</span>
+        </a>
+    @endif
 
     <div class="card p-6 mb-6">
         <div class="flex items-start justify-between mb-4">

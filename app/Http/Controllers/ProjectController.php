@@ -418,6 +418,28 @@ class ProjectController extends Controller
             ->with('success', 'Projeto e tarefas vinculadas removidos.');
     }
 
+    // Card "Página do cliente" — o que o cliente vê no topo da Página do Projeto
+    // no Portal (Central de Aprovações). Separado de applyUpdate() porque aquele
+    // valida o formulário inteiro do projeto (title obrigatório etc).
+    public function updateClientPage(Request $request, Project $project)
+    {
+        $data = $request->validate([
+            'client_description' => 'nullable|string|max:2000',
+            'highlight_task_id'  => 'nullable|uuid',
+        ]);
+
+        if (!empty($data['highlight_task_id'])) {
+            abort_unless($project->tasks()->whereKey($data['highlight_task_id'])->exists(), 422);
+        }
+
+        $project->update([
+            'client_description' => $data['client_description'] ?? null,
+            'highlight_task_id'  => $data['highlight_task_id'] ?? null,
+        ]);
+
+        return back()->with('success', 'Página do cliente atualizada.');
+    }
+
     public function quickUpdate(Request $request, Project $project): \Illuminate\Http\JsonResponse
     {
         $data = $request->validate([
