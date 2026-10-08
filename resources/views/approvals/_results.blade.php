@@ -183,6 +183,18 @@
                                                       style="color:{{ $token->status === 'approved' ? 'var(--green)' : ($token->status === 'changes_requested' ? 'var(--orange)' : 'var(--muted)') }}">
                                                     {{ $token->status === 'approved' ? '✓' : ($token->status === 'changes_requested' ? '✎' : '·') }}
                                                 </span>
+                                                {{-- Abriu o link? (task_approval_tokens.first_opened_at) — "nem abriu"
+                                                     costuma ser número/e-mail errado; "abriu e não respondeu" é dúvida. --}}
+                                                @if($round->sent_at && $token->isPending())
+                                                    @if($token->first_opened_at)
+                                                        <span class="flex items-center gap-0.5 text-xs" style="color:var(--purple)"
+                                                              title="{{ explode(' ', $token->contact->name)[0] }} abriu o link em {{ $token->first_opened_at->format('d/m \à\s H:i') }}, mas ainda não respondeu">
+                                                            <x-icon name="eye" size="12" /> {{ $token->first_opened_at->format('d/m') }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-xs" style="color:var(--muted)" title="{{ explode(' ', $token->contact->name)[0] }} ainda não abriu o link (conte só a partir de 08/10/2026)">não abriu</span>
+                                                    @endif
+                                                @endif
                                                 @if($round->sent_at && $token->isPending())
                                                     <form method="POST" action="{{ route('approvals.resend-token', $token) }}">
                                                         @csrf

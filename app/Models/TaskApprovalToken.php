@@ -18,7 +18,7 @@ class TaskApprovalToken extends Model
 
     protected $fillable = [
         'round_id', 'contact_id', 'token', 'status', 'channels', 'will_notify',
-        'overall_comment', 'notified_at', 'reviewed_at', 'expires_at', 'manually_decided_by',
+        'overall_comment', 'notified_at', 'reviewed_at', 'expires_at', 'manually_decided_by', 'first_opened_at',
     ];
 
     protected $casts = [
@@ -27,6 +27,7 @@ class TaskApprovalToken extends Model
         'notified_at' => 'datetime',
         'reviewed_at' => 'datetime',
         'expires_at'  => 'datetime',
+        'first_opened_at' => 'datetime',
     ];
 
     public function round(): BelongsTo

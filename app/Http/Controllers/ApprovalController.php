@@ -28,7 +28,9 @@ class ApprovalController extends Controller
      */
     private function enterCentral(Request $request, TaskApprovalToken $approvalToken): ?array
     {
-        if ($approvalToken->isExpired()) {
+        // Gente da equipe abrindo o link pra conferir (botão "Link" da Central):
+        // abre normal, mas sem logar como o cliente nem contar como aberto.
+        if ($approvalToken->isExpired() || Auth::guard('web')->check()) {
             return null;
         }
 
@@ -48,6 +50,27 @@ class ApprovalController extends Controller
         }
 
         return ['group' => $group];
+    }
+
+    /**
+     * Primeira abertura do link pelo contato (atendimento: "nem abriu" vs
+     * "abriu e não respondeu"). Ignora a pré-visualização que o WhatsApp e
+     * outros apps geram sozinhos ao receber o link, e gente da equipe.
+     */
+    private function markOpened(Request $request, TaskApprovalToken $approvalToken): void
+    {
+        if ($approvalToken->first_opened_at || Auth::guard('web')->check()) {
+            return;
+        }
+
+        $ua = strtolower((string) $request->userAgent());
+        foreach (['whatsapp', 'facebookexternalhit', 'facebot', 'bot', 'crawler', 'spider', 'preview', 'telegram', 'slack', 'discord', 'skype'] as $needle) {
+            if ($ua === '' || str_contains($ua, $needle)) {
+                return;
+            }
+        }
+
+        $approvalToken->forceFill(['first_opened_at' => now()])->saveQuietly();
     }
 
     public function show(Request $request, string $token)
@@ -75,6 +98,7 @@ class ApprovalController extends Controller
         $isAviso = $approvalToken->round->isAviso();
         $deliverables = $approvalToken->round->deliverables();
         $centralNav = $this->enterCentral($request, $approvalToken);
+        $this->markOpened($request, $approvalToken);
 
         if (! $isAviso && ! $approvalToken->isValid()) {
             return view('approval.expired', compact('approvalToken', 'deliverables', 'centralNav'));
