@@ -114,6 +114,19 @@
         <form x-show="tab !== 'clientes'" method="GET" action="{{ route('approvals.index') }}" class="flex gap-3 mb-5 flex-wrap items-end"
               data-live-filter data-results-url="{{ route('approvals.results') }}" data-target="#approvals-results">
             <input type="hidden" name="mostrar_aprovados" value="{{ request('mostrar_aprovados') }}">
+            <input type="hidden" name="project_id" value="{{ request('project_id') }}">
+
+            @if($projectFilterLabel)
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Projeto</label>
+                    <a href="{{ route('approvals.index', request()->except('project_id', 'page') + ['view' => 'list']) }}"
+                       class="inline-flex items-center gap-2 px-3 py-2 text-sm"
+                       style="background:rgba(100,59,142,.08); border:1px solid rgba(100,59,142,.25); color:var(--purple)"
+                       title="Tirar o filtro de projeto">
+                        {{ $projectFilterLabel }} <span aria-hidden="true">✕</span>
+                    </a>
+                </div>
+            @endif
 
             <div>
                 <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Status</label>
@@ -151,7 +164,7 @@
                 </div>
             @endif
 
-            @if(request()->hasAny(['status','client_id','type','mostrar_aprovados']))
+            @if(request()->hasAny(['status','client_id','project_id','type','mostrar_aprovados']))
                 <a href="{{ route('approvals.index', ['view' => 'list']) }}" class="px-4 py-2 text-sm"
                    style="color:var(--muted); border:1px solid var(--border2)">Limpar</a>
             @endif

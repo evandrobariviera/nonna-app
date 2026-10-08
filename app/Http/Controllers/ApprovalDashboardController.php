@@ -20,7 +20,7 @@ class ApprovalDashboardController extends Controller
         // a pessoa abre uma delas (a view busca o fragmento em approvals.results).
         // Link com filtro de Lista (ex: "Ver todas as aprovações" do Dashboard,
         // ?status=pending) continua abrindo direto na Lista.
-        $activeTab = $request->input('view', $request->hasAny(['status', 'client_id', 'type', 'mostrar_aprovados']) ? 'list' : 'clientes');
+        $activeTab = $request->input('view', $request->hasAny(['status', 'client_id', 'project_id', 'type', 'mostrar_aprovados']) ? 'list' : 'clientes');
         [$rounds, $board] = $activeTab === 'clientes' ? [null, null] : $this->roundsAndBoard($request);
 
         // Os 5 números do topo numa consulta só (antes: 5 counts, sem filtrar a organização).
@@ -56,7 +56,14 @@ class ApprovalDashboardController extends Controller
         // Aba "Por cliente": o recorte que o cliente vê na Central dele.
         $byClient = app(\App\Services\ApprovalOverviewService::class)->byClient();
 
-        return view('approvals.index', compact('rounds', 'stats', 'clients', 'board', 'byClient', 'activeTab'));
+        // Nome do projeto filtrado (vindo da aba "Por cliente") pro aviso acima da Lista.
+        $projectFilterLabel = match (true) {
+            $request->input('project_id') === 'avulsas' => 'Peças avulsas',
+            $request->filled('project_id')              => \App\Models\Project::find($request->input('project_id'))?->title,
+            default                                     => null,
+        };
+
+        return view('approvals.index', compact('rounds', 'stats', 'clients', 'board', 'byClient', 'activeTab', 'projectFilterLabel'));
     }
 
     // Lembrete único (aba "Por cliente"): uma mensagem por contato com tudo que
@@ -117,6 +124,10 @@ class ApprovalDashboardController extends Controller
             $query->whereHas('task', fn ($q) => $q->where('client_id', $request->client_id));
         }
 
+        // Projeto (vem da aba "Por cliente"): um projeto específico ou "avulsas"
+        // (tarefas sem projeto).
+        $this->applyProjectFilter($query, $request->input('project_id'));
+
         if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
@@ -130,9 +141,18 @@ class ApprovalDashboardController extends Controller
 
         $rounds = $query->paginate(30)->withQueryString();
 
-        $board = $this->buildBoard($request->input('client_id'));
+        $board = $this->buildBoard($request->input('client_id'), $request->input('project_id'));
 
         return [$rounds, $board];
+    }
+
+    private function applyProjectFilter($query, ?string $projectId): void
+    {
+        if ($projectId === 'avulsas') {
+            $query->whereHas('task', fn ($q) => $q->whereNull('project_id'));
+        } elseif ($projectId) {
+            $query->whereHas('task', fn ($q) => $q->where('project_id', $projectId));
+        }
     }
 
     /**
@@ -143,13 +163,14 @@ class ApprovalDashboardController extends Controller
      *
      * @return array<string, \Illuminate\Support\Collection<int, TaskApprovalRound>>
      */
-    private function buildBoard(?string $clientId): array
+    private function buildBoard(?string $clientId, ?string $projectId = null): array
     {
-        $base = function () use ($clientId) {
+        $base = function () use ($clientId, $projectId) {
             $q = TaskApprovalRound::with(['task.client', 'tokens'])->whereHas('task');
             if ($clientId) {
                 $q->whereHas('task', fn ($t) => $t->where('client_id', $clientId));
             }
+            $this->applyProjectFilter($q, $projectId);
             return $q;
         };
 

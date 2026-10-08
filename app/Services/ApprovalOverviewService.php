@@ -108,11 +108,12 @@ class ApprovalOverviewService
             'project'       => $project,
             'title'         => $project?->title ?? 'Peças avulsas',
             'type_label'    => $project?->typeLabel() ?? 'Avulsas',
-            'url'           => match (true) {
-                $project && $project->macro_plan_id => route('macroplans.projects.show', [$project->macro_plan_id, $project->id]),
-                (bool) $project                     => route('projects.showDirect', $project),
-                default                             => route('approvals.index', ['client_id' => $clientId, 'view' => 'list']),
-            },
+            // Sempre a Lista de aprovações, filtrada por cliente + projeto (ou avulsas).
+            'url'           => route('approvals.index', [
+                'client_id'  => $clientId,
+                'project_id' => $project?->id ?? 'avulsas',
+                'view'       => 'list',
+            ]),
             'total'         => $rounds->count(),
             'approved'      => $rounds->where('status', 'approved')->count(),
             'pending'       => $pending->count(),
