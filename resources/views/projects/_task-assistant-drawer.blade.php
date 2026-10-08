@@ -4,13 +4,13 @@
      ver resources/js/ai-chat-drawer.js). Diferenças: (a) seção "Aplicar
      Playbook" (determinístico, sem IA); (b) cards de rascunho editáveis
      antes de confirmar a criação em lote.
-     Espera no escopo: $project, $agents, $playbooks, $chatMessages, $functionalRoles. --}}
+     Espera no escopo: $project, $assistantAgent (pode ser null), $playbooks, $chatMessages, $functionalRoles. --}}
 <script>
     window._taskAssistant = {
         chatEndpoint:    '{{ route('projects.chat', $project) }}',
         confirmEndpoint: '{{ route('projects.tasks.confirm-batch', $project) }}',
         clearEndpoint:   '{{ route('projects.chat.clear', $project) }}',
-        agents:          @json($agents->map(fn ($a) => ['id' => $a->id, 'name' => $a->name])),
+        agentName:       @json($assistantAgent?->name),
         messages:        @json($chatMessages),
         functionalRoles: @json($functionalRoles->map(fn ($r) => ['id' => $r->id, 'name' => $r->name])),
         currentUserName: '{{ auth()->user()->name }}',
@@ -80,26 +80,13 @@
             @include('projects._apply-playbook-picker', ['project' => $project, 'playbooks' => $playbooks, 'compact' => false])
         </div>
 
-        {{-- Seletor de especialista --}}
-        <div class="px-4 py-3.5 flex-shrink-0" style="border-bottom:1px solid var(--border2); background:var(--s2)">
-            <label class="block text-xs font-semibold uppercase tracking-widest mb-2"
-                   style="color:var(--muted); letter-spacing:.08em">Especialista</label>
-            <select x-model="selectedAgent"
-                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                <option value="">Selecione um especialista...</option>
-                <template x-for="agent in agents" :key="agent.id">
-                    <option :value="agent.id" x-text="agent.name"></option>
-                </template>
-            </select>
-            <p x-show="agents.length === 0" x-cloak class="text-xs mt-2" style="color:var(--muted)">
-                Nenhum agente ativo.
-                <a href="{{ route('ai.agents.create') }}" style="color:var(--purple)">Criar agente →</a>
-            </p>
-            <p x-show="agents.length > 0 && !selectedAgent" x-cloak class="text-xs mt-1.5" style="color:var(--muted2)">
-                O contexto deste projeto (cliente, macroplanejamento, tarefas já existentes) é enviado automaticamente.
-            </p>
-        </div>
+        {{-- Agente fixo (slug task-assistant) — sem seletor, os outros agentes não
+             respondem no formato de rascunho de tarefas --}}
+        @unless($assistantAgent)
+            <div class="px-4 py-3 flex-shrink-0 text-xs" style="border-bottom:1px solid var(--border2); background:var(--s2); color:var(--red)">
+                O agente "Assistente de Lançamento de Tarefas" não está configurado ou está inativo — o chat fica desligado até alguém ativá-lo em Agentes de IA.
+            </div>
+        @endunless
 
         {{-- Mensagens --}}
         <div x-ref="msgContainer" class="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3" style="scroll-behavior:smooth">
@@ -108,6 +95,7 @@
                     <x-icon name="message-circle" size="36" stroke="1" class="mb-3" style="color:var(--border2)" />
                     <p class="text-sm font-medium" style="color:var(--muted2)">Descreva as tarefas que quer criar</p>
                     <p class="text-xs mt-1" style="color:var(--muted)">Ex: "cria uma tarefa de briefing pra sexta e uma de wireframe pra próxima terça".</p>
+                    <p class="text-xs mt-3 px-6" style="color:var(--muted2)">O contexto deste projeto (cliente, macroplanejamento, tarefas já existentes) vai junto automaticamente. Nada é criado antes de você revisar e confirmar.</p>
                 </div>
             </template>
 
@@ -129,7 +117,7 @@
             <template x-if="thinking">
                 <div class="flex flex-col items-start gap-1">
                     <span class="text-xs" style="color:var(--muted); font-size:.68rem"
-                          x-text="agents.find(a => a.id === selectedAgent)?.name ?? 'IA'"></span>
+                          x-text="agentName ?? 'IA'"></span>
                     <div class="px-4 py-2.5 text-sm" style="background:var(--s3); border:1px solid var(--border); border-radius:2px 14px 14px 14px">
                         <span class="animate-pulse" style="color:var(--muted)">pensando...</span>
                     </div>
@@ -146,8 +134,13 @@
                         <div class="px-3 py-3 rounded relative" style="background:var(--s2); border:1px solid var(--border2)">
                             <button type="button" @click="removeDraft(i)" class="absolute top-2 right-2 text-xs" style="color:var(--muted)">✕</button>
                             <input type="text" x-model="d.title"
-                                   class="w-full px-2 py-1.5 text-xs font-semibold rounded mb-2 focus:outline-none"
-                                   style="background:var(--s3); border:1px solid var(--border); color:var(--text)">
+                                   class="px-2 py-1.5 text-xs font-semibold rounded mb-2 focus:outline-none"
+                                   style="width:calc(100% - 22px); background:var(--s3); border:1px solid var(--border); color:var(--text)">
+                            {{-- Descrição visível e editável — antes a IA escrevia e ela era
+                                 gravada sem ninguém ter lido --}}
+                            <textarea x-model="d.description" rows="3" placeholder="Descrição (opcional)"
+                                      class="w-full px-2 py-1.5 text-xs rounded mb-2 focus:outline-none resize-y"
+                                      style="background:var(--s3); border:1px solid var(--border); color:var(--text); line-height:1.5"></textarea>
                             <div class="grid grid-cols-2 gap-2 mb-2">
                                 <select x-model="d.task_type" class="px-2 py-1.5 text-xs rounded focus:outline-none"
                                         :style="!d.task_type
@@ -166,12 +159,15 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="number" min="0" max="3650" x-model="d.due_offset_days"
-                                       placeholder="Prazo (dias)"
-                                       class="px-2 py-1.5 text-xs rounded focus:outline-none"
-                                       style="background:var(--s3); border:1px solid var(--border); color:var(--text)">
-                                <select x-model="d.functional_role_id" class="px-2 py-1.5 text-xs rounded focus:outline-none"
+                            <div class="grid grid-cols-2 gap-2 mb-2">
+                                <div>
+                                    <input type="date" x-model="d.due_date" title="Prazo"
+                                           class="w-full px-2 py-1.5 text-xs rounded focus:outline-none"
+                                           style="background:var(--s3); border:1px solid var(--border); color:var(--text)">
+                                    <p class="mt-0.5" style="color:var(--muted); font-size:.68rem"
+                                       x-text="d.due_date ? weekdayLabel(d.due_date) : 'Sem prazo'"></p>
+                                </div>
+                                <select x-model="d.functional_role_id" class="self-start px-2 py-1.5 text-xs rounded focus:outline-none"
                                         style="background:var(--s3); border:1px solid var(--border); color:var(--text)">
                                     <option value="">Responsável —</option>
                                     <template x-for="role in functionalRoles" :key="role.id">
@@ -179,6 +175,13 @@
                                     </template>
                                 </select>
                             </div>
+                            <select x-model="d.destination" class="w-full px-2 py-1.5 text-xs rounded focus:outline-none"
+                                    style="background:var(--s3); border:1px solid var(--border); color:var(--text)">
+                                <option value="">Destino —</option>
+                                @foreach(\App\Models\Task::$destinations as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </template>
                 </div>
@@ -196,7 +199,7 @@
             <textarea x-model="input"
                       @keydown.meta.enter.prevent="send()"
                       @keydown.ctrl.enter.prevent="send()"
-                      :disabled="!selectedAgent || thinking"
+                      :disabled="!agentName || thinking"
                       rows="3"
                       placeholder="Descreva as tarefas que quer lançar..."
                       class="w-full px-4 py-3 text-sm focus:outline-none resize-none"
@@ -204,9 +207,9 @@
             <div class="flex items-center justify-between mt-3">
                 <span class="text-xs" style="color:var(--muted2)">⌘+Enter envia</span>
                 <button @click="send()"
-                        :disabled="!selectedAgent || !input.trim() || thinking"
+                        :disabled="!agentName || !input.trim() || thinking"
                         class="px-5 py-2 text-sm font-semibold text-white transition-opacity"
-                        :style="(!selectedAgent || !input.trim() || thinking)
+                        :style="(!agentName || !input.trim() || thinking)
                             ? 'background:var(--purple); opacity:.35; cursor:not-allowed'
                             : 'background:var(--purple)'">
                     Enviar

@@ -9,10 +9,9 @@ export function registerAiChatDrawer(Alpine) {
         endpoint:        window._taskAssistant?.chatEndpoint    ?? '',
         confirmEndpoint: window._taskAssistant?.confirmEndpoint ?? '',
         clearEndpoint:   window._taskAssistant?.clearEndpoint   ?? '',
-        agents:          window._taskAssistant?.agents          ?? [],
+        agentName:       window._taskAssistant?.agentName       ?? null,
         messages:        window._taskAssistant?.messages        ?? [],
         functionalRoles: window._taskAssistant?.functionalRoles ?? [],
-        selectedAgent:   '',
         input:           '',
         thinking:        false,
         confirming:      false,
@@ -30,11 +29,19 @@ export function registerAiChatDrawer(Alpine) {
             this.drafts.splice(i, 1);
         },
 
+        // "2026-10-09" → "sexta-feira, 09/10" — pra conferir de bate-olho se a IA
+        // entendeu o "pra sexta" certo. T12:00 evita a data voltar 1 dia pelo fuso.
+        weekdayLabel(ymd) {
+            const d = new Date(ymd + 'T12:00:00');
+            if (isNaN(d)) return '';
+            return d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' });
+        },
+
         // Botão "Nova conversa" — apaga o histórico deste projeto no servidor
         // e limpa o estado local (sem reload, a conversa some na hora).
         async newConversation() {
             if (this.messages.length === 0 && this.drafts.length === 0) return;
-            if (!confirm('Apagar o histórico desta conversa e começar do zero?')) return;
+            if (!(await Alpine.store('confirmDialog').ask('Apagar o histórico desta conversa e começar do zero?'))) return;
 
             try {
                 await fetch(this.clearEndpoint, {
@@ -55,7 +62,7 @@ export function registerAiChatDrawer(Alpine) {
         },
 
         async send() {
-            if (!this.selectedAgent || !this.input.trim() || this.thinking) return;
+            if (!this.agentName || !this.input.trim() || this.thinking) return;
 
             const text = this.input.trim();
             this.input    = '';
@@ -80,7 +87,7 @@ export function registerAiChatDrawer(Alpine) {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         'Accept':       'application/json',
                     },
-                    body: JSON.stringify({ agent_id: this.selectedAgent, message: text }),
+                    body: JSON.stringify({ message: text }),
                 });
 
                 const data = await res.json();

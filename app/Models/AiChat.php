@@ -12,7 +12,7 @@ class AiChat extends Model
 
     protected $connection = 'pgsql';
 
-    protected $fillable = ['entity_type', 'entity_id'];
+    protected $fillable = ['entity_type', 'entity_id', 'user_id'];
 
     public function messages(): HasMany
     {

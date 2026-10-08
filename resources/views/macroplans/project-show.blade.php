@@ -1021,7 +1021,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     @include('projects._task-assistant-drawer', [
         'project'         => $project,
-        'agents'          => $agents,
+        'assistantAgent'  => $assistantAgent,
         'playbooks'       => $playbooks,
         'chatMessages'    => $chatMessages,
         'functionalRoles' => $functionalRoles,

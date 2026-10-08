@@ -20,6 +20,15 @@ class AiAgent extends Model
         'context_scope', 'is_active', 'created_by',
     ];
 
+    // Agentes "de sistema" que o código precisa achar sem depender do nome
+    // (editável na tela) — slug fica fora do $fillable de propósito.
+    public const SLUG_TASK_ASSISTANT = 'task-assistant';
+
+    public static function bySlug(string $slug): ?self
+    {
+        return static::with('provider')->where('slug', $slug)->where('is_active', true)->first();
+    }
+
     protected $casts = [
         'temperature' => 'float',
         'max_tokens'  => 'integer',

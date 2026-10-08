@@ -130,6 +130,8 @@ class ContextResolver
         $project->loadMissing(['client', 'macroPlan']);
 
         $context = [
+            // Sem isso a IA não tem como transformar "pra sexta" numa data.
+            'today'              => now()->locale('pt_BR')->isoFormat('dddd, DD/MM/YYYY'),
             'project_id'         => $project->id,
             'project_title'      => $project->title ?? '',
             'project_objective'  => $project->objective ?? '',

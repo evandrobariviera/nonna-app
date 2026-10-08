@@ -198,6 +198,7 @@ class AiService
         }
 
         $labelMap = [
+            'today'               => 'Hoje',
             'task_title'          => 'Tarefa',
             'task_description'    => 'Descrição',
             'task_type'           => 'Tipo',

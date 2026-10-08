@@ -198,10 +198,13 @@ class ProjectController extends Controller
     // shape de chatMessages usado por TaskController::show() (ver tasks/show.blade.php).
     private function chatDrawerData(Project $project): array
     {
-        $chat = AiChat::where('entity_type', 'project')->where('entity_id', $project->id)->first();
+        $chat = AiChat::where('entity_type', 'project')
+            ->where('entity_id', $project->id)
+            ->where('user_id', auth()->id())
+            ->first();
 
         return [
-            'agents'          => AiAgent::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'assistantAgent'  => AiAgent::where('slug', AiAgent::SLUG_TASK_ASSISTANT)->where('is_active', true)->first(['id', 'name']),
             'playbooks'       => ProjectPlaybook::where('is_active', true)->orderBy('name')->get(),
             'functionalRoles' => \App\Models\FunctionalRole::orderBy('name')->get(['id', 'name']),
             'chatMessages'    => $chat
