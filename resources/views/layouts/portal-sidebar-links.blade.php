@@ -6,9 +6,8 @@
         ->whereNotIn('status', ['concluido', 'cancelado'])
         ->count();
 
-    $_portalApprovalsCount = \App\Models\TaskApprovalRound::whereHas('task', fn ($q) => $q->where('client_id', $_portalClient->id))
-        ->where('status', 'pending')
-        ->count();
+    // Mesmo critério dos cards da Central (sem "Aguardando Envio" nem aviso).
+    $_portalApprovalsCount = app(\App\Services\ProjectApprovalPageService::class)->pendingCount($_portalClient);
 
     $_portalActivePlan = \App\Models\MacroPlan::where('client_id', $_portalClient->id)
         ->where('status', 'em_execucao')
@@ -130,7 +129,7 @@
     <span class="flex items-center gap-3">
         <x-icon name="circle-check" size="16" class="flex-shrink-0" />
         <span class="flex items-center justify-between w-full">
-            <span>Aprovações</span>
+            <span>Central de Aprovações</span>
             @if($_portalApprovalsCount > 0)
                 <span class="text-xs px-1.5 py-px rounded-full font-semibold"
                       style="background:rgba(238, 121, 25,.15); color:var(--orange); border:1px solid rgba(238, 121, 25,.3)">

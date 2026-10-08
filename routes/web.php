@@ -997,6 +997,7 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
     Route::get('/reunioes/{meeting}', [PortalMeetings::class, 'show'])->name('meetings.show');
     Route::get('/aprovacoes', [PortalApprovals::class, 'index'])->name('approvals.index');
     Route::get('/aprovacoes/projeto/{project}', [PortalApprovals::class, 'project'])->name('approvals.project');
+    Route::get('/aprovacoes/avulsas', [PortalApprovals::class, 'loose'])->name('approvals.loose');
     Route::get('/aprovacoes/{round}', [PortalApprovals::class, 'show'])->name('approvals.show');
     Route::post('/aprovacoes/{round}/decidir', [PortalApprovals::class, 'decide'])->name('approvals.decide');
     Route::get('/materiais-aprovados', [PortalMaterials::class, 'index'])->name('materials.index');

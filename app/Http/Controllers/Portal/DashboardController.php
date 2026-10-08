@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Controller;
 use App\Models\Meeting;
 use App\Models\Task;
-use App\Models\TaskApprovalRound;
 use Carbon\Carbon;
 use Illuminate\View\View;
 
@@ -56,9 +55,8 @@ class DashboardController extends Controller
             ->whereNotIn('status', ['concluido', 'cancelado'])
             ->count();
 
-        $pendingApprovalsCount = TaskApprovalRound::whereHas('task', fn ($q) => $q->where('client_id', $client->id))
-            ->where('status', 'pending')
-            ->count();
+        // Mesmo critério da Central de Aprovações (sem "Aguardando Envio" nem aviso).
+        $pendingApprovalsCount = app(\App\Services\ProjectApprovalPageService::class)->pendingCount($client);
 
         // Volume do mês: limite combinado × pedido × entregue (Client::productionUsage).
         // ?mes=AAAA-MM navega pros meses anteriores; nunca passa do mês atual.

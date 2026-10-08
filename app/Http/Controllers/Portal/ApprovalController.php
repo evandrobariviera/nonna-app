@@ -15,19 +15,21 @@ class ApprovalController extends Controller
 {
     public function __construct(private TaskApprovalService $service) {}
 
-    public function index(): View
+    // Central de Aprovações: um card por projeto (+ "Peças avulsas"), abas
+    // Em andamento / Concluídos. Central → Projeto → Peça.
+    public function index(ProjectApprovalPageService $pages): View
     {
         $client = app('currentPortalClient');
 
-        $rounds = TaskApprovalRound::whereHas('task', fn ($q) => $q->where('client_id', $client->id))
-            ->with('task')
-            ->orderByDesc('submitted_at')
-            ->get();
+        $groups       = $pages->central($client);
+        $openGroups   = $groups->reject(fn ($g) => $g['finished'])->values();
+        $doneGroups   = $groups->filter(fn ($g) => $g['finished'])->values();
+        $totalPending = $groups->sum(fn ($g) => $g['summary']['pending']);
+        $groupsWithPending = $groups->filter(fn ($g) => $g['summary']['pending'] > 0)->count();
 
-        $pending = $rounds->where('status', 'pending');
-        $decided = $rounds->whereIn('status', ['approved', 'changes_requested', 'cancelled']);
-
-        return view('portal.approvals.index', compact('client', 'pending', 'decided'));
+        return view('portal.approvals.index', compact(
+            'client', 'openGroups', 'doneGroups', 'totalPending', 'groupsWithPending'
+        ));
     }
 
     // Página do Projeto: o projeto inteiro (destaque + cards de tudo que passou
@@ -41,11 +43,34 @@ class ApprovalController extends Controller
         $items = $pages->items($project);
         abort_if($items->isEmpty(), 404);
 
-        $highlight = $items->firstWhere('is_highlight', true);
-        $pieces    = $items->reject(fn ($i) => $i['is_highlight'])->values();
-        $summary   = $pages->summary($items);
+        return view('portal.approvals.project', [
+            'client'      => $client,
+            'pageTitle'   => $project->title,
+            'pageType'    => $project->typeLabel(),
+            'description' => $project->client_description,
+            'highlight'   => $items->firstWhere('is_highlight', true),
+            'pieces'      => $items->reject(fn ($i) => $i['is_highlight'])->values(),
+            'summary'     => $pages->summary($items),
+        ]);
+    }
 
-        return view('portal.approvals.project', compact('client', 'project', 'highlight', 'pieces', 'summary'));
+    // Mesma página do projeto, pras tarefas sem projeto (posts soltos, chamados).
+    public function loose(ProjectApprovalPageService $pages): View
+    {
+        $client = app('currentPortalClient');
+
+        $items = $pages->looseItems($client);
+        abort_if($items->isEmpty(), 404);
+
+        return view('portal.approvals.project', [
+            'client'      => $client,
+            'pageTitle'   => 'Peças avulsas',
+            'pageType'    => 'Avulsas',
+            'description' => 'Materiais que não fazem parte de um projeto.',
+            'highlight'   => null,
+            'pieces'      => $items,
+            'summary'     => $pages->summary($items),
+        ]);
     }
 
     public function show(TaskApprovalRound $round, ProjectApprovalPageService $pages): View
@@ -60,6 +85,8 @@ class ApprovalController extends Controller
         if ($project && $pages->items($project)->isEmpty()) {
             $project = null;
         }
+        // Sem projeto → a trilha leva pra "Peças avulsas" na Central.
+        $isLoose = !$round->task->project_id;
 
         // Quem mais precisa aprovar/já aprovou nesta rodada + histórico de rodadas
         // anteriores da mesma tarefa (com o que foi pedido de ajuste em cada uma).
@@ -71,7 +98,7 @@ class ApprovalController extends Controller
 
         $deliverables = $round->deliverables();
 
-        return view('portal.approvals.show', compact('client', 'round', 'deliverables', 'project'));
+        return view('portal.approvals.show', compact('client', 'round', 'deliverables', 'project', 'isLoose'));
     }
 
     public function decide(Request $request, TaskApprovalRound $round)

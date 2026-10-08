@@ -1,5 +1,5 @@
 <x-portal-layout>
-    <x-slot name="title">{{ $project->title }} — Aprovações</x-slot>
+    <x-slot name="title">{{ $pageTitle }} — Central de Aprovações</x-slot>
 
     @php
         $statusColors = [
@@ -10,17 +10,17 @@
     @endphp
 
     <div class="mb-6 flex items-center gap-2 flex-wrap text-xs font-semibold">
-        <a href="{{ route('portal.approvals.index') }}" style="color: var(--muted)">← Aprovações</a>
+        <a href="{{ route('portal.approvals.index') }}" style="color: var(--muted)">← Central de Aprovações</a>
         <span style="color: var(--muted)">›</span>
-        <span style="color: var(--text)">{{ $project->title }}</span>
+        <span style="color: var(--text)">{{ $pageTitle }}</span>
     </div>
 
     {{-- TOPO: título + descrição para o cliente (nunca objective/briefings, que são internos) --}}
     <div class="mb-6">
-        <p class="text-xs font-bold uppercase tracking-widest mb-2" style="color: var(--purple)">Projeto · {{ $project->typeLabel() }}</p>
-        <h1 class="text-3xl font-black" style="color: var(--text)">{{ $project->title }}</h1>
-        @if($project->client_description)
-            <p class="text-base mt-3 whitespace-pre-line" style="color: var(--muted2); line-height: 1.6; max-width: 680px">{{ $project->client_description }}</p>
+        <p class="text-xs font-bold uppercase tracking-widest mb-2" style="color: var(--purple)">{{ $pageType === 'Avulsas' ? 'Avulsas' : 'Projeto · ' . $pageType }}</p>
+        <h1 class="text-3xl font-black" style="color: var(--text)">{{ $pageTitle }}</h1>
+        @if($description)
+            <p class="text-base mt-3 whitespace-pre-line" style="color: var(--muted2); line-height: 1.6; max-width: 680px">{{ $description }}</p>
         @endif
     </div>
 

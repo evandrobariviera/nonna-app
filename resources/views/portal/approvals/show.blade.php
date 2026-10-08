@@ -12,10 +12,13 @@
     @endphp
 
     <div class="mb-6 flex items-center gap-2 flex-wrap text-xs font-semibold">
-        <a href="{{ route('portal.approvals.index') }}" style="color: var(--muted)">← Aprovações</a>
+        <a href="{{ route('portal.approvals.index') }}" style="color: var(--muted)">← Central de Aprovações</a>
         @if($project)
             <span style="color: var(--muted)">›</span>
             <a href="{{ route('portal.approvals.project', $project) }}" style="color: var(--purple)">{{ $project->title }}</a>
+        @elseif($isLoose)
+            <span style="color: var(--muted)">›</span>
+            <a href="{{ route('portal.approvals.loose') }}" style="color: var(--purple)">Peças avulsas</a>
         @endif
     </div>
 
