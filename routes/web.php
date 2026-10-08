@@ -591,6 +591,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('approvals.update-task-status');
     Route::post('/aprovacoes/{round}/cancelar', [\App\Http\Controllers\ApprovalDashboardController::class, 'cancel'])
         ->name('approvals.cancel');
+    Route::post('/aprovacoes/clientes/{client}/lembrar', [\App\Http\Controllers\ApprovalDashboardController::class, 'remindClient'])
+        ->name('approvals.remind-client');
 
     // ── Dashboard global de projetos ──
     Route::get('/projetos', [ProjectController::class, 'dashboard'])
@@ -953,6 +955,10 @@ Route::get('/aprovar/{token}', [ApprovalController::class, 'show'])
 
 Route::post('/aprovar/{token}', [ApprovalController::class, 'submit'])
     ->name('approval.submit');
+
+// Link do lembrete único — abre a Central de Aprovações do contato (login mágico).
+Route::get('/aprovar/{token}/central', [ApprovalController::class, 'central'])
+    ->name('approval.central');
 
 // ── Solicitação de senhas/acessos pública (sem autenticação — link tokenizado) ──
 Route::get('/credenciais/{token}', [CredentialRequestController::class, 'show'])

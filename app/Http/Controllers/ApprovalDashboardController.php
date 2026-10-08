@@ -48,6 +48,30 @@ class ApprovalDashboardController extends Controller
         return view('approvals.index', compact('rounds', 'stats', 'clients', 'board', 'byClient'));
     }
 
+    // Lembrete único (aba "Por cliente"): uma mensagem por contato com tudo que
+    // espera a resposta dele + link da Central — em vez de reenviar peça por peça.
+    public function remindClient(Client $client, \App\Services\ApprovalReminderService $reminders)
+    {
+        $back = redirect()->route('approvals.index', ['view' => 'clientes']);
+
+        // Sem modelo cadastrado o disparo não manda nada — avisa em vez de fingir que enviou.
+        $hasTemplate = \App\Models\NotificationTemplate::where('organization_id', $client->organization_id)
+            ->where('type', 'aprovacao_lembrete')->exists();
+        if (!$hasTemplate) {
+            return $back->with('warning', 'Lembrete não enviado: cadastre a mensagem "Lembrete — Peças esperando na Central de Aprovações" em Mensagens Padrão.');
+        }
+
+        $count = $reminders->remindClient($client);
+
+        return $back->with(
+            $count ? 'success' : 'warning',
+            match (true) {
+                $count === 0 => 'Nenhum contato de ' . $client->displayName() . ' tem peça esperando resposta.',
+                default      => "Lembrete enviado pra {$count} " . ($count === 1 ? 'contato' : 'contatos') . ' de ' . $client->displayName() . '.',
+            }
+        );
+    }
+
     // Fragmento (Quadros + Lista) — chamado via fetch por live-filter.js conforme o
     // usuário filtra, sem recarregar a página inteira (cards de stats ficam intocados).
     public function results(Request $request)

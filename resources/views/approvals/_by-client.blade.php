@@ -45,6 +45,17 @@
                             @if($c['totals']['changes'])
                                 <span class="px-2 py-1" style="border-radius:999px; background:rgba(238,121,25,.1); color:var(--orange)">{{ $c['totals']['changes'] }} em ajuste</span>
                             @endif
+                            {{-- Lembrete único: uma mensagem por contato com o link da Central
+                                 dele, em vez de reenviar peça por peça (ApprovalReminderService). --}}
+                            @if($c['totals']['pending'])
+                                <form method="POST" action="{{ route('approvals.remind-client', $c['client']) }}"
+                                      @submit.prevent="if (await $store.confirmDialog.ask('Mandar UMA mensagem pra cada contato de {{ addslashes($c['client']->displayName()) }} com as peças que esperam a resposta dele e o link da Central de Aprovações?')) $el.submit()">
+                                    @csrf
+                                    <button type="submit" class="btn btn-primary btn-xs flex items-center gap-1">
+                                        <x-icon name="send" size="12" /> Lembrar cliente
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     </div>
 

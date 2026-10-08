@@ -73,6 +73,21 @@ class ApprovalController extends Controller
         $approvalToken->forceFill(['first_opened_at' => now()])->saveQuietly();
     }
 
+    // Link do lembrete único (ApprovalReminderService): entra direto na Central.
+    // Sem acesso (link vencido, equipe, contato desligado) → página da peça.
+    public function central(Request $request, string $token)
+    {
+        $approvalToken = TaskApprovalToken::where('token', $token)->with('round.task.project')->firstOrFail();
+
+        if (!$this->enterCentral($request, $approvalToken)) {
+            return redirect()->route('approval.show', $token);
+        }
+
+        $this->markOpened($request, $approvalToken);
+
+        return redirect()->route('portal.approvals.index');
+    }
+
     public function show(Request $request, string $token)
     {
         $approvalToken = TaskApprovalToken::where('token', $token)
