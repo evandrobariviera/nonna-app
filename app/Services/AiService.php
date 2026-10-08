@@ -223,6 +223,8 @@ class AiService
             'existing_tasks_summary'    => 'Tarefas já existentes neste projeto',
             'playbooks_catalog'         => 'Playbooks disponíveis',
             'functional_roles_catalog'  => 'Papéis funcionais disponíveis',
+            'team_catalog'              => 'Equipe (id: Nome (papéis)) — executor_user_id/responsavel_user_id só podem usar esses ids',
+            'current_drafts'            => 'RASCUNHO ATUAL NA TELA (JSON — já inclui edições manuais da pessoa; parta dele ao ajustar)',
             'task_types_catalog'        => 'Tipos de tarefa válidos (chave: rótulo) — task_type só pode usar uma dessas chaves',
             'task_destinations_catalog' => 'Destinos de tarefa válidos (chave: rótulo) — destination só pode usar uma dessas chaves',
             'task_priorities_catalog'   => 'Prioridades de tarefa válidas (chave: rótulo) — priority só pode usar uma dessas chaves',

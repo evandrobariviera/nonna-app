@@ -206,7 +206,8 @@ class ProjectController extends Controller
         return [
             'assistantAgent'  => AiAgent::where('slug', AiAgent::SLUG_TASK_ASSISTANT)->where('is_active', true)->first(['id', 'name']),
             'playbooks'       => ProjectPlaybook::where('is_active', true)->orderBy('name')->get(),
-            'functionalRoles' => \App\Models\FunctionalRole::orderBy('name')->get(['id', 'name']),
+            // Equipe interna (sem usuários de cliente) — Executor/Responsável do cartão.
+            'team'            => User::whereNull('client_id')->orderBy('name')->get(['id', 'name']),
             'chatMessages'    => $chat
                 ? $chat->messages()
                     ->with('user:id,name', 'agent:id,name')

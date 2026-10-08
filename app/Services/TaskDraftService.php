@@ -117,7 +117,14 @@ class TaskDraftService
      */
     private function createTask(Project $project, array $data, string $origin, ?int $userId): array
     {
-        [$responsavelId, $warning] = $this->resolveResponsible($data['functional_role_id'] ?? null, $data['title'] ?? '');
+        // Rascunho do Assistente já chega com a pessoa escolhida no cartão
+        // (responsavel_user_id); Playbook só tem Papel Funcional.
+        if (!empty($data['responsavel_user_id'])) {
+            [$responsavelId, $warning] = [(int) $data['responsavel_user_id'], null];
+        } else {
+            [$responsavelId, $warning] = $this->resolveResponsible($data['functional_role_id'] ?? null, $data['title'] ?? '');
+        }
+        $executorId = !empty($data['executor_user_id']) ? (int) $data['executor_user_id'] : null;
 
         $attributes = [
             'macro_plan_id' => $project->macro_plan_id,
@@ -142,8 +149,12 @@ class TaskDraftService
 
         $task = $project->tasks()->create($attributes);
 
-        if ($responsavelId) {
-            TaskExecutorSync::sync($task, ['responsavel_id' => $responsavelId]);
+        if ($responsavelId || $executorId) {
+            TaskExecutorSync::sync($task, [
+                'executor_ids'   => $executorId ? [$executorId] : [],
+                'executor_roles' => $executorId ? [$executorId => 'executor'] : [],
+                'responsavel_id' => $responsavelId,
+            ]);
         }
 
         return [$task, $warning];
@@ -173,25 +184,28 @@ class TaskDraftService
      *
      * @return array{0: ?int, 1: ?string} [user_id do responsável, aviso opcional]
      */
-    private function resolveResponsible(?string $functionalRoleId, string $taskTitle): array
+    public function resolveResponsible(?string $functionalRoleId, string $taskTitle): array
     {
+        // Sem título = aviso genérico (Assistente resolve o papel 1x pra várias tarefas).
+        $alvo = $taskTitle !== "" ? "tarefa \"{$taskTitle}\"" : "tarefa(s) desse papel";
+
         if (!$functionalRoleId) {
             return [null, null];
         }
 
         $role = FunctionalRole::find($functionalRoleId);
         if (!$role) {
-            return [null, "Papel funcional não encontrado — tarefa \"{$taskTitle}\" criada sem responsável."];
+            return [null, "Papel funcional não encontrado — {$alvo} criada(s) sem responsável."];
         }
 
         $users = $role->users;
         if ($users->isEmpty()) {
-            return [null, "Papel \"{$role->name}\" sem usuário vinculado — tarefa \"{$taskTitle}\" ficou sem responsável."];
+            return [null, "Papel \"{$role->name}\" sem usuário vinculado — {$alvo} ficou sem responsável."];
         }
 
         if ($users->count() > 1) {
             $first = $users->first();
-            return [$first->id, "Papel \"{$role->name}\" tem {$users->count()} usuários vinculados — responsável de \"{$taskTitle}\" definido como {$first->name} (primeiro encontrado). Revise se necessário."];
+            return [$first->id, "Papel \"{$role->name}\" tem {$users->count()} usuários vinculados — responsável de {$alvo} definido como {$first->name} (primeiro encontrado). Revise se necessário."];
         }
 
         return [$users->first()->id, null];

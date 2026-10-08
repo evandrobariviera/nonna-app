@@ -4,7 +4,7 @@
      ver resources/js/ai-chat-drawer.js). Diferenças: (a) seção "Aplicar
      Playbook" (determinístico, sem IA); (b) cards de rascunho editáveis
      antes de confirmar a criação em lote.
-     Espera no escopo: $project, $assistantAgent (pode ser null), $playbooks, $chatMessages, $functionalRoles. --}}
+     Espera no escopo: $project, $assistantAgent (pode ser null), $playbooks, $chatMessages, $team. --}}
 <script>
     window._taskAssistant = {
         chatEndpoint:    '{{ route('projects.chat', $project) }}',
@@ -12,7 +12,7 @@
         clearEndpoint:   '{{ route('projects.chat.clear', $project) }}',
         agentName:       @json($assistantAgent?->name),
         messages:        @json($chatMessages),
-        functionalRoles: @json($functionalRoles->map(fn ($r) => ['id' => $r->id, 'name' => $r->name])),
+        team:            @json($team->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])),
         currentUserName: '{{ auth()->user()->name }}',
     };
 
@@ -167,21 +167,32 @@
                                     <p class="mt-0.5" style="color:var(--muted); font-size:.68rem"
                                        x-text="d.due_date ? weekdayLabel(d.due_date) : 'Sem prazo'"></p>
                                 </div>
-                                <select x-model="d.functional_role_id" class="self-start px-2 py-1.5 text-xs rounded focus:outline-none"
+                                <select x-model="d.executor_user_id" title="Executor (quem faz)"
+                                        class="self-start px-2 py-1.5 text-xs rounded focus:outline-none"
                                         style="background:var(--s3); border:1px solid var(--border); color:var(--text)">
-                                    <option value="">Responsável —</option>
-                                    <template x-for="role in functionalRoles" :key="role.id">
-                                        <option :value="role.id" x-text="role.name"></option>
+                                    <option value="">Executor —</option>
+                                    <template x-for="u in team" :key="u.id">
+                                        <option :value="u.id" x-text="u.name" :selected="u.id == d.executor_user_id"></option>
                                     </template>
                                 </select>
                             </div>
-                            <select x-model="d.destination" class="w-full px-2 py-1.5 text-xs rounded focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); color:var(--text)">
-                                <option value="">Destino —</option>
-                                @foreach(\App\Models\Task::$destinations as $key => $label)
-                                    <option value="{{ $key }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
+                            <div class="grid grid-cols-2 gap-2">
+                                <select x-model="d.responsavel_user_id" title="Responsável"
+                                        class="px-2 py-1.5 text-xs rounded focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border); color:var(--text)">
+                                    <option value="">Responsável —</option>
+                                    <template x-for="u in team" :key="u.id">
+                                        <option :value="u.id" x-text="u.name" :selected="u.id == d.responsavel_user_id"></option>
+                                    </template>
+                                </select>
+                                <select x-model="d.destination" class="px-2 py-1.5 text-xs rounded focus:outline-none"
+                                        style="background:var(--s3); border:1px solid var(--border); color:var(--text)">
+                                    <option value="">Destino —</option>
+                                    @foreach(\App\Models\Task::$destinations as $key => $label)
+                                        <option value="{{ $key }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                     </template>
                 </div>

@@ -1024,6 +1024,6 @@ document.addEventListener('DOMContentLoaded', function () {
         'assistantAgent'  => $assistantAgent,
         'playbooks'       => $playbooks,
         'chatMessages'    => $chatMessages,
-        'functionalRoles' => $functionalRoles,
+        'team'            => $team,
     ])
 </x-app-layout>

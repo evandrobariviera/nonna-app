@@ -7,6 +7,7 @@ use App\Models\AiChat;
 use App\Models\FunctionalRole;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\User;
 use App\Services\AiService;
 use App\Services\ContextResolver;
 use App\Services\TaskDraftService;
@@ -21,8 +22,10 @@ class ProjectTaskAssistantController extends Controller
 {
     public function chat(Request $request, Project $project)
     {
+        // 20 mil caracteres = cabe uma lista grande colada (tabela do Word/Planilha).
         $request->validate([
-            'message' => 'required|string|max:5000',
+            'message'        => 'required|string|max:20000',
+            'current_drafts' => 'nullable|array|max:100',
         ]);
 
         // Agente fixo (não dá pra escolher outro na tela) — os demais agentes não
@@ -54,6 +57,14 @@ class ProjectTaskAssistantController extends Controller
 
         try {
             $context = ContextResolver::forProject($project);
+
+            // Estado atual dos cartões (com as edições manuais) — sem isso, um
+            // ajuste tipo "a 3 é Reels" faria a IA remontar o rascunho de memória
+            // e desfazer o que a pessoa mudou à mão.
+            if ($current = $this->currentDraftsForAi($request->input('current_drafts', []))) {
+                $context['current_drafts'] = $current;
+            }
+
             $output  = app(AiService::class)->chatStructured(
                 agent:    $agent,
                 history:  $history,
@@ -63,7 +74,11 @@ class ProjectTaskAssistantController extends Controller
             );
 
             $message = is_string($output['message'] ?? null) ? $output['message'] : '';
-            [$drafts, $warnings] = $this->sanitizeDrafts($project, $output['draft_tasks'] ?? []);
+            // draft_tasks null = "não mexi no rascunho" (a tela mantém os cartões);
+            // lista = rascunho completo, substitui os cartões.
+            [$drafts, $warnings] = is_array($output['draft_tasks'] ?? null)
+                ? $this->sanitizeDrafts($project, $output['draft_tasks'])
+                : [null, []];
 
             // draft_tasks NÃO é persistido no histórico (AiChatMessage.content é texto
             // livre) — só o texto humano da resposta. Ao recarregar a página os cards
@@ -100,8 +115,9 @@ class ProjectTaskAssistantController extends Controller
             'tasks.*.task_type'          => 'required|in:' . implode(',', array_keys(Task::$types)),
             'tasks.*.destination'        => 'nullable|in:' . implode(',', array_keys(Task::$destinations)),
             'tasks.*.priority'           => 'nullable|in:' . implode(',', array_keys(Task::$priorities)),
-            'tasks.*.due_date'           => 'nullable|date_format:Y-m-d',
-            'tasks.*.functional_role_id' => 'nullable|uuid|exists:pgsql.functional_roles,id',
+            'tasks.*.due_date'            => 'nullable|date_format:Y-m-d',
+            'tasks.*.executor_user_id'    => 'nullable|integer|exists:pgsql.users,id',
+            'tasks.*.responsavel_user_id' => 'nullable|integer|exists:pgsql.users,id',
         ]);
 
         $result = $service->createFromDrafts($project, $data['tasks'], auth()->id(), 'ai_assistant');
@@ -138,6 +154,29 @@ class ProjectTaskAssistantController extends Controller
     }
 
     /**
+     * Cartões que estão na tela agora → JSON enxuto pro contexto da IA, só com
+     * os campos que ela conhece (mesmo shape que ela devolve em draft_tasks).
+     * Descrição vai inteira, sem cortar: a IA devolve a lista completa a cada
+     * resposta, então o que ela não receber inteiro voltaria cortado.
+     */
+    private function currentDraftsForAi(mixed $drafts): ?string
+    {
+        if (!is_array($drafts) || empty($drafts)) {
+            return null;
+        }
+
+        $fields = ['title', 'description', 'task_type', 'destination', 'priority', 'due_date', 'executor_user_id', 'responsavel_user_id'];
+
+        $clean = collect($drafts)
+            ->filter(fn ($d) => is_array($d))
+            ->map(fn ($d) => collect($fields)->mapWithKeys(fn ($f) => [$f => $d[$f] ?? null])->all())
+            ->values()
+            ->all();
+
+        return $clean ? json_encode($clean, JSON_UNESCAPED_UNICODE) : null;
+    }
+
+    /**
      * Valida cada item de draft_tasks vindo da IA contra os enums reais de
      * Task. Só descarta o item quando falta até o título — sem ele não dá
      * nem pra mostrar um cartão. task_type/destination/priority inválidos ou
@@ -146,9 +185,11 @@ class ProjectTaskAssistantController extends Controller
      * de CONFIRMAR (confirmDrafts() revalida), não na hora de gerar o
      * rascunho — o cartão aparece com o campo em branco pro usuário escolher
      * (ver resources/views/projects/_task-assistant-drawer.blade.php).
-     * Também resolve functional_role_key (como a IA referencia um
-     * responsável, ver ContextResolver::functionalRolesCatalog()) pro
-     * functional_role_id que o front-end precisa pra pré-selecionar o campo.
+     * Pessoas: executor_user_id/responsavel_user_id só passam se forem da
+     * equipe (ver ContextResolver::teamCatalog()); id inventado vira null.
+     * Quando a IA manda só functional_role_key (papel, não pessoa), o papel é
+     * resolvido pra pessoa AQUI (mesma regra de TaskDraftService) — o cartão
+     * mostra quem vai ser, em vez de descobrir só depois de criar.
      * Prazo sai sempre como data (due_date AAAA-MM-DD) — se a IA ainda mandar
      * due_offset_days (formato antigo do prompt), converte a partir do início
      * do projeto, mesma regra de TaskDraftService::resolveDueDate().
@@ -160,6 +201,10 @@ class ProjectTaskAssistantController extends Controller
         $valid    = [];
         $warnings = [];
         $roles    = FunctionalRole::get(['id', 'key', 'name'])->keyBy('key');
+        $teamIds  = User::whereNull('client_id')->pluck('id')->flip();
+        $service  = app(TaskDraftService::class);
+        $roleUser = []; // papel → [user_id, aviso], resolvido 1x por papel
+        $pickUser = fn ($id) => is_numeric($id) && $teamIds->has((int) $id) ? (int) $id : null;
 
         foreach ($rawDrafts as $i => $item) {
             if (!is_array($item) || empty($item['title'])) {
@@ -193,17 +238,27 @@ class ProjectTaskAssistantController extends Controller
                 $dueDate = $base->copy()->addDays((int) $item['due_offset_days'])->format('Y-m-d');
             }
 
+            $executorId    = $pickUser($item['executor_user_id'] ?? null);
+            $responsavelId = $pickUser($item['responsavel_user_id'] ?? null);
+
             $role = !empty($item['functional_role_key']) ? $roles->get($item['functional_role_key']) : null;
+            if (!$responsavelId && $role) {
+                $roleUser[$role->id] ??= $service->resolveResponsible($role->id, '');
+                [$responsavelId, $roleWarning] = $roleUser[$role->id];
+                if ($roleWarning && !in_array($roleWarning, $warnings, true)) {
+                    $warnings[] = $roleWarning;
+                }
+            }
 
             $valid[] = [
-                'title'                => (string) $item['title'],
-                'description'          => is_string($item['description'] ?? null) ? $item['description'] : null,
-                'task_type'            => $taskType,
-                'destination'          => $destination,
-                'priority'             => $priority,
-                'due_date'             => $dueDate,
-                'functional_role_id'   => $role?->id,
-                'functional_role_name' => $role?->name,
+                'title'               => (string) $item['title'],
+                'description'         => is_string($item['description'] ?? null) ? $item['description'] : null,
+                'task_type'           => $taskType,
+                'destination'         => $destination,
+                'priority'            => $priority,
+                'due_date'            => $dueDate,
+                'executor_user_id'    => $executorId,
+                'responsavel_user_id' => $responsavelId,
             ];
         }
 

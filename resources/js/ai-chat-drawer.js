@@ -11,7 +11,7 @@ export function registerAiChatDrawer(Alpine) {
         clearEndpoint:   window._taskAssistant?.clearEndpoint   ?? '',
         agentName:       window._taskAssistant?.agentName       ?? null,
         messages:        window._taskAssistant?.messages        ?? [],
-        functionalRoles: window._taskAssistant?.functionalRoles ?? [],
+        team:            window._taskAssistant?.team            ?? [],
         input:           '',
         thinking:        false,
         confirming:      false,
@@ -87,23 +87,33 @@ export function registerAiChatDrawer(Alpine) {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         'Accept':       'application/json',
                     },
-                    body: JSON.stringify({ message: text }),
+                    // Cartões como estão agora (com edições manuais) — a IA parte
+                    // deles ao ajustar ("a 3 é Reels"), em vez de remontar de memória.
+                    body: JSON.stringify({ message: text, current_drafts: this.drafts }),
                 });
 
                 const data = await res.json();
 
                 if (!res.ok) {
-                    this.error = data.error || 'Erro ao processar.';
+                    this.error = data.error || data.message || 'Erro ao processar.';
                     this.messages.pop();
+                    this.input = text; // não perde uma lista grande colada
                     return;
                 }
 
+                if (data.warnings && data.warnings.length > 0) {
+                    data.content += '\n\n⚠ ' + data.warnings.join('\n⚠ ');
+                }
                 this.messages.push(data);
-                this.drafts = data.draft_tasks ?? [];
+                // null = a IA não mexeu no rascunho (só conversou) → mantém os cartões.
+                if (Array.isArray(data.draft_tasks)) {
+                    this.drafts = data.draft_tasks;
+                }
                 this.scrollBottom();
             } catch (e) {
                 this.error = 'Erro de conexão.';
                 this.messages.pop();
+                this.input = text;
             } finally {
                 this.thinking = false;
             }

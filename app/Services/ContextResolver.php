@@ -165,6 +165,7 @@ class ContextResolver
         $context['existing_tasks_summary']  = self::existingTasksSummary($project);
         $context['playbooks_catalog']       = self::playbooksCatalog();
         $context['functional_roles_catalog']= self::functionalRolesCatalog();
+        $context['team_catalog']            = self::teamCatalog();
 
         // Chaves válidas de task_type/destination/priority — sem isso a IA não tem
         // como saber quais valores usar em draft_tasks (project_disciplines é uma
@@ -190,6 +191,28 @@ class ContextResolver
         }
 
         return $roles->map(fn ($r) => "{$r->key}: {$r->name}")->implode('; ');
+    }
+
+    /**
+     * Equipe interna (sem usuários de cliente), formatada como "id: Nome
+     * (papéis)" — é assim que a IA transforma "pro Tiago" em
+     * executor_user_id. Os papéis ajudam a desempatar e a sugerir quem faz.
+     */
+    private static function teamCatalog(): string
+    {
+        $users = \App\Models\User::whereNull('client_id')
+            ->with('functionalRoles:id,name')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        if ($users->isEmpty()) {
+            return 'Nenhuma pessoa cadastrada.';
+        }
+
+        return $users->map(function ($u) {
+            $roles = $u->functionalRoles->pluck('name')->implode(', ');
+            return "{$u->id}: {$u->name}" . ($roles ? " ({$roles})" : '');
+        })->implode('; ');
     }
 
     /**
