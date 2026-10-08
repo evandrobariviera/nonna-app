@@ -998,6 +998,11 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
     Route::get('/aprovacoes', [PortalApprovals::class, 'index'])->name('approvals.index');
     Route::get('/aprovacoes/projeto/{project}', [PortalApprovals::class, 'project'])->name('approvals.project');
     Route::get('/aprovacoes/avulsas', [PortalApprovals::class, 'loose'])->name('approvals.loose');
+    Route::get('/aprovacoes/revisar/sair', [PortalApprovals::class, 'reviewExit'])->name('approvals.review-exit');
+    Route::get('/aprovacoes/revisar/{scope}/{project?}',[PortalApprovals::class, 'review'])
+        ->whereIn('scope', ['tudo', 'avulsas', 'projeto'])->name('approvals.review');
+    Route::post('/aprovacoes/aprovar-todas/{scope}/{project?}', [PortalApprovals::class, 'approveAll'])
+        ->whereIn('scope', ['tudo', 'avulsas', 'projeto'])->name('approvals.approve-all');
     Route::get('/aprovacoes/{round}', [PortalApprovals::class, 'show'])->name('approvals.show');
     Route::post('/aprovacoes/{round}/decidir', [PortalApprovals::class, 'decide'])->name('approvals.decide');
     Route::get('/materiais-aprovados', [PortalMaterials::class, 'index'])->name('materials.index');

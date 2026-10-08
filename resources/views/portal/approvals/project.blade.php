@@ -38,6 +38,7 @@
         <div class="w-full h-2 rounded-full overflow-hidden" style="background: var(--s3)">
             <div class="h-2 rounded-full" style="width: {{ $summary['percent'] }}%; background: var(--purple)"></div>
         </div>
+        @include('portal.approvals._review-actions', ['scopeArgs' => $scopeArgs, 'myPending' => $myPending])
     </div>
 
     {{-- DESTAQUE --}}

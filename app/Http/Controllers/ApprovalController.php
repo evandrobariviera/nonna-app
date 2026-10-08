@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\TaskApprovalToken;
+use App\Services\ApprovalReviewQueue;
 use App\Services\PortalMagicAccess;
 use App\Services\ProjectApprovalPageService;
 use App\Services\TaskApprovalService;
@@ -15,6 +16,7 @@ class ApprovalController extends Controller
         private TaskApprovalService $service,
         private PortalMagicAccess $magic,
         private ProjectApprovalPageService $pages,
+        private ApprovalReviewQueue $queue,
     ) {}
 
     /**
@@ -86,7 +88,10 @@ class ApprovalController extends Controller
             ->where('visible_to_client', true)
             ->sortBy('created_at');
 
-        return view('approval.show', compact('approvalToken', 'deliverables', 'batch', 'visibleComments', 'centralNav'));
+        // "Revisar pendentes" em andamento — barra "peça X de N" no topo.
+        $review = $centralNav ? $this->queue->state($request, $approvalToken) : null;
+
+        return view('approval.show', compact('approvalToken', 'deliverables', 'batch', 'visibleComments', 'centralNav', 'review'));
     }
 
     /**
@@ -131,6 +136,19 @@ class ApprovalController extends Controller
         ]);
 
         $this->service->submitDecision($approvalToken, $data['decision'], $data['comment'] ?? null);
+
+        // Dentro do "Revisar pendentes": vai direto pra próxima peça; na última,
+        // volta pra Central/Projeto de onde a revisão começou.
+        if ($step = $this->queue->advance($request, $approvalToken)) {
+            if ($step['next']) {
+                return redirect()->route('approval.show', $step['next'])
+                    ->with('review_msg', 'Resposta registrada. Esta é a próxima peça.');
+            }
+
+            return redirect($step['back'])->with('success', $step['done'] === 1
+                ? 'Revisão concluída! Você respondeu 1 peça. Obrigado.'
+                : "Revisão concluída! Você respondeu {$step['done']} peças. Obrigado.");
+        }
 
         $approvalToken->refresh();
         $approvalToken->load('round.task');

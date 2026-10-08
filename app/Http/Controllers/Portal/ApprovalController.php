@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\TaskApprovalRound;
 use App\Models\TaskApprovalToken;
+use App\Services\ApprovalReviewQueue;
 use App\Services\PortalMagicAccess;
 use App\Services\ProjectApprovalPageService;
 use Illuminate\Support\Collection;
@@ -29,10 +30,70 @@ class ApprovalController extends Controller
         $doneGroups   = $groups->filter(fn ($g) => $g['finished'])->values();
         $totalPending = $groups->sum(fn ($g) => $g['summary']['pending']);
         $groupsWithPending = $groups->filter(fn ($g) => $g['summary']['pending'] > 0)->count();
+        $myPending    = $this->myPendingTokens($pages->allItems($client))->count();
 
         return view('portal.approvals.index', compact(
-            'client', 'openGroups', 'doneGroups', 'totalPending', 'groupsWithPending'
+            'client', 'openGroups', 'doneGroups', 'totalPending', 'groupsWithPending', 'myPending'
         ));
+    }
+
+    // "Revisar pendentes": abre a 1ª peça que espera a resposta do contato e,
+    // a cada resposta, vai sozinho pra próxima (ver ApprovalReviewQueue).
+    public function review(Request $request, ProjectApprovalPageService $pages, ApprovalReviewQueue $queue, string $scope, ?Project $project = null)
+    {
+        [$items, $backUrl] = $this->scopeItems($pages, $scope, $project);
+
+        $first = $queue->start($request, $this->myPendingTokens($items), $backUrl);
+
+        return $first
+            ? redirect()->route('approval.show', $first)
+            : redirect($backUrl)->with('success', 'Nada esperando a sua resposta aqui.');
+    }
+
+    // "Sair da revisão" — encerra a fila e volta pra onde ela começou.
+    public function reviewExit(Request $request, ApprovalReviewQueue $queue)
+    {
+        $back = $request->session()->get('approval_review.back', route('portal.approvals.index'));
+        $queue->stop($request);
+
+        return redirect($back);
+    }
+
+    // "Aprovar todas": aprova, uma a uma, as peças que esperam a resposta do contato.
+    public function approveAll(ProjectApprovalPageService $pages, ApprovalReviewQueue $queue, string $scope, ?Project $project = null)
+    {
+        [$items, $backUrl] = $this->scopeItems($pages, $scope, $project);
+
+        $count = $queue->approveAll($this->myPendingTokens($items));
+
+        return redirect($backUrl)->with('success', $count === 1
+            ? '1 peça aprovada.'
+            : "{$count} peças aprovadas.");
+    }
+
+    /**
+     * @return array{0: Collection, 1: string}  cards do escopo + pra onde voltar
+     */
+    private function scopeItems(ProjectApprovalPageService $pages, string $scope, ?Project $project): array
+    {
+        $client = app('currentPortalClient');
+
+        return match ($scope) {
+            'tudo'    => [$pages->allItems($client), route('portal.approvals.index')],
+            'avulsas' => [$pages->looseItems($client), route('portal.approvals.loose')],
+            'projeto' => (function () use ($pages, $project, $client) {
+                abort_unless($project && $project->resolvedClientId() === $client->id, 404);
+
+                return [$pages->items($project), route('portal.approvals.project', $project)];
+            })(),
+            default   => abort(404),
+        };
+    }
+
+    // Links do contato logado que ainda esperam a resposta dele, na ordem dos cards.
+    private function myPendingTokens(Collection $items): Collection
+    {
+        return app(ApprovalReviewQueue::class)->pendingTokens(Auth::guard('portal')->user(), $items);
     }
 
     // Página do Projeto: o projeto inteiro (destaque + cards de tudo que passou
@@ -54,6 +115,8 @@ class ApprovalController extends Controller
             'highlight'   => $items->firstWhere('is_highlight', true),
             'pieces'      => $items->reject(fn ($i) => $i['is_highlight'])->values(),
             'summary'     => $pages->summary($items),
+            'myPending'   => $this->myPendingTokens($items)->count(),
+            'scopeArgs'   => ['projeto', $project],
         ]);
     }
 
@@ -101,6 +164,8 @@ class ApprovalController extends Controller
             'highlight'   => null,
             'pieces'      => $this->withUrls($items),
             'summary'     => $pages->summary($items),
+            'myPending'   => $this->myPendingTokens($items)->count(),
+            'scopeArgs'   => ['avulsas'],
         ]);
     }
 

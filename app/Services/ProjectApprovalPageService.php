@@ -44,6 +44,17 @@ class ProjectApprovalPageService
     }
 
     /**
+     * Todas as peças do cliente (projetos + avulsas) — base do "Revisar tudo".
+     */
+    public function allItems(Client $client): Collection
+    {
+        return $this->buildItems(
+            $this->latestRounds(Task::where('client_id', $client->id)->select('id')),
+            null,
+        );
+    }
+
+    /**
      * Cards da Central: um por projeto com algo em aprovação + um grupo de
      * peças avulsas. Quem tem peça aguardando o cliente vem primeiro.
      *
@@ -51,10 +62,7 @@ class ProjectApprovalPageService
      */
     public function central(Client $client): Collection
     {
-        $items = $this->buildItems(
-            $this->latestRounds(Task::where('client_id', $client->id)->select('id')),
-            null,
-        );
+        $items = $this->allItems($client);
 
         $projects = Project::whereIn('id', $items->pluck('task.project_id')->filter()->unique())
             ->get()

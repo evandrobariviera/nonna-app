@@ -32,6 +32,9 @@ class PortalMagicAccess
         'portal.approvals.project',
         'portal.approvals.loose',
         'portal.approvals.show',
+        'portal.approvals.review',
+        'portal.approvals.review-exit',
+        'portal.approvals.approve-all',
         'portal.client-context.switch',
         'portal.logout',
     ];

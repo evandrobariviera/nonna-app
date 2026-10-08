@@ -13,6 +13,11 @@
                 Nada aguardando você no momento · {{ $client->company_name }}
             @endif
         </p>
+        @if($myPending > 0)
+            <a href="{{ route('portal.approvals.review', ['tudo']) }}" class="btn btn-primary btn-sm mt-4 inline-flex">
+                Revisar tudo que espera a sua resposta ({{ $myPending }})
+            </a>
+        @endif
     </div>
 
     <div x-data="{ tab: 'andamento' }">

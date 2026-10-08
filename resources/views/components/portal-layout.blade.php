@@ -167,5 +167,7 @@
         </div>
     </div>
 
+    <x-confirm-dialog-modal />
+
 </body>
 </html>

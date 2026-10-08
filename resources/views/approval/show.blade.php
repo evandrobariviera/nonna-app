@@ -80,9 +80,11 @@
     </header>
 
     @include('approval._central-nav')
+    @include('approval._review-bar')
 
-    {{-- OUTROS JOBS DO MESMO CLIENTE NESTE MÊS — navegação, cada um com decisão própria --}}
-    @if($batch->count() > 1)
+    {{-- OUTROS JOBS DO MESMO CLIENTE NESTE MÊS — navegação, cada um com decisão própria.
+         Some durante o "Revisar pendentes", que já tem a própria barra. --}}
+    @if($batch->count() > 1 && empty($review))
     <div style="background:var(--s1); border-bottom:1px solid var(--border); padding:16px 20px">
         <div style="max-width:680px; margin:0 auto">
             <span class="label-sm" style="margin-bottom:10px">
@@ -293,7 +295,7 @@
                 </div>
 
                 <button type="submit" class="submit-btn" :disabled="decision === null">
-                    Enviar Avaliação
+                    {{ !empty($review) ? 'Enviar e seguir para a próxima' : 'Enviar Avaliação' }}
                 </button>
             </form>
         </div>
