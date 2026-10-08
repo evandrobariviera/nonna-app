@@ -20,6 +20,12 @@
         @endif
     </div>
 
+    @if(app(\App\Services\PortalMagicAccess::class)->active())
+        <div class="mb-6">
+            @include('approval._welcome', ['maxWidth' => 'none', 'margin' => '0', 'padding' => '0', 'onCentral' => true])
+        </div>
+    @endif
+
     <div x-data="{ tab: 'andamento' }">
         <div class="flex gap-2 mb-6" role="tablist" style="border-bottom: 1px solid var(--border2)">
             <button type="button" role="tab" @click="tab = 'andamento'"

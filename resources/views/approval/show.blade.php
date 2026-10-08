@@ -81,6 +81,9 @@
 
     @include('approval._central-nav')
     @include('approval._review-bar')
+    @if(!empty($centralNav) && empty($review))
+        @include('approval._welcome')
+    @endif
 
     {{-- OUTROS JOBS DO MESMO CLIENTE NESTE MÊS — navegação, cada um com decisão própria.
          Some durante o "Revisar pendentes", que já tem a própria barra. --}}
