@@ -42,7 +42,10 @@ class ApprovalDashboardController extends Controller
             ->sortBy(fn ($c) => mb_strtolower($c->displayName()), SORT_NATURAL)
             ->values();
 
-        return view('approvals.index', compact('rounds', 'stats', 'clients', 'board'));
+        // Aba "Por cliente": o recorte que o cliente vê na Central dele.
+        $byClient = app(\App\Services\ApprovalOverviewService::class)->byClient();
+
+        return view('approvals.index', compact('rounds', 'stats', 'clients', 'board', 'byClient'));
     }
 
     // Fragmento (Quadros + Lista) — chamado via fetch por live-filter.js conforme o

@@ -94,10 +94,20 @@
                 :style="tab === 'list' ? 'color:var(--purple); border-bottom:2px solid var(--purple)' : 'color:var(--muted)'">
                 Lista
             </button>
+            <button @click="tab = 'clientes'"
+                class="px-4 py-2 text-xs font-mono uppercase tracking-widest transition-colors"
+                :style="tab === 'clientes' ? 'color:var(--purple); border-bottom:2px solid var(--purple)' : 'color:var(--muted)'">
+                Por cliente
+                @if($byClient->isNotEmpty())
+                    <span class="ml-1">({{ $byClient->count() }})</span>
+                @endif
+            </button>
         </div>
 
+        @include('approvals._by-client')
+
         {{-- ══ FILTROS (afetam Quadros e Lista — client_id filtra os dois; status só filtra a Lista) ══ --}}
-        <form method="GET" action="{{ route('approvals.index') }}" class="flex gap-3 mb-5 flex-wrap items-end"
+        <form x-show="tab !== 'clientes'" method="GET" action="{{ route('approvals.index') }}" class="flex gap-3 mb-5 flex-wrap items-end"
               data-live-filter data-results-url="{{ route('approvals.results') }}" data-target="#approvals-results">
             <input type="hidden" name="mostrar_aprovados" value="{{ request('mostrar_aprovados') }}">
 

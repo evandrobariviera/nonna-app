@@ -235,7 +235,7 @@
    style="{{ request()->routeIs('approvals.*') ? 'color:var(--orange);' : '' }}">
     <span class="flex items-center gap-3">
         <x-icon name="circle-check" size="16" class="flex-shrink-0" />
-        Aprovações
+        Central de Aprovações
     </span>
     @if($_approvalPending > 0)
         <span class="text-xs px-1.5 py-px rounded-full font-semibold"
