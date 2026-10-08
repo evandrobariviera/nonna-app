@@ -431,6 +431,11 @@ class Task extends Model
             ->withTimestamps();
     }
 
+    public function isResponsible(?User $user): bool
+    {
+        return $user !== null && $this->responsibles()->whereKey($user->id)->exists();
+    }
+
     public function observers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'task_executors', 'task_id', 'user_id')

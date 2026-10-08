@@ -804,7 +804,11 @@
             {{-- RETORNO DE ENTREGA — o que quem produziu contou ao mandar pra Revisão Interna
                  (TaskDeliveryService). Card próprio e visível: é o que o revisor lê primeiro.
                  Mais recente em cima; reentrega depois de Ajuste vira um item novo. --}}
-            @php $deliveries = $task->deliveries()->with('user:id,name')->get(); @endphp
+            @php
+                $deliveries = $task->deliveries()->with('user:id,name')->get();
+                // Só o Responsável da tarefa corrige o texto (TaskDeliveryController::update).
+                $canEditDeliveries = $task->isResponsible(auth()->user());
+            @endphp
             @if($deliveries->isNotEmpty())
                 <div class="card card-body-lg">
                     <p class="text-xs font-semibold uppercase tracking-widest mb-1 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
@@ -820,7 +824,7 @@
 
                     <div class="flex flex-col gap-3">
                         @foreach($deliveries as $delivery)
-                            <div class="px-4 py-3" style="background:var(--s2); border:1px solid {{ $loop->first ? 'var(--purple)' : 'var(--border)' }}; border-radius:10px; {{ $loop->first ? '' : 'opacity:.75' }}">
+                            <div x-data="{ editing: false }" class="px-4 py-3" style="background:var(--s2); border:1px solid {{ $loop->first ? 'var(--purple)' : 'var(--border)' }}; border-radius:10px; {{ $loop->first ? '' : 'opacity:.75' }}">
                                 <div class="flex items-center gap-2 flex-wrap mb-2">
                                     <span class="text-sm font-semibold" style="color:var(--text)">{{ $delivery->user?->name ?? 'Usuário removido' }}</span>
                                     <span class="text-xs" style="color:var(--muted)">{{ $delivery->created_at->format('d/m/Y \à\s H:i') }}</span>
@@ -832,13 +836,45 @@
                                     @if($delivery->from_status === 'ajuste_alteracao')
                                         <span class="text-xs" style="color:var(--muted)">· reentrega após ajuste</span>
                                     @endif
+                                    @if($delivery->updated_at && $delivery->updated_at->gt($delivery->created_at->copy()->addSeconds(5)))
+                                        <span class="text-xs" style="color:var(--muted)">· editado em {{ $delivery->updated_at->format('d/m H:i') }}</span>
+                                    @endif
+                                    @if($canEditDeliveries)
+                                        <button type="button" x-show="!editing" @click="editing = true"
+                                                class="btn btn-ghost btn-xs ml-auto">Editar</button>
+                                    @endif
                                 </div>
-                                @if(!$delivery->fully_done && $delivery->missing)
-                                    <p class="text-sm mb-2 px-3 py-2" style="background:rgba(238,121,25,.08); border-radius:8px; color:var(--text); line-height:1.6">
-                                        <span class="font-semibold" style="color:var(--orange)">O que faltou:</span> {{ $delivery->missing }}
-                                    </p>
+                                <div x-show="!editing">
+                                    @if(!$delivery->fully_done && $delivery->missing)
+                                        <p class="text-sm mb-2 px-3 py-2" style="background:rgba(238,121,25,.08); border-radius:8px; color:var(--text); line-height:1.6">
+                                            <span class="font-semibold" style="color:var(--orange)">O que faltou:</span> {{ $delivery->missing }}
+                                        </p>
+                                    @endif
+                                    <p class="text-sm whitespace-pre-line" style="color:var(--text); line-height:1.65">{{ $delivery->body }}</p>
+                                </div>
+                                @if($canEditDeliveries)
+                                    <form x-show="editing" x-cloak method="POST" action="{{ route('tasks.deliveries.update', [$task, $delivery]) }}" class="flex flex-col gap-3">
+                                        @csrf @method('PATCH')
+                                        @unless($delivery->fully_done)
+                                            <label class="flex flex-col gap-1 text-xs font-semibold" style="color:var(--orange)">
+                                                O que faltou
+                                                <textarea name="missing" rows="2" required minlength="10" maxlength="2000"
+                                                    class="w-full px-3 py-2 text-sm font-normal focus:outline-none"
+                                                    style="background:var(--s1); border:1px solid var(--border); border-radius:8px; color:var(--text); resize:vertical">{{ $delivery->missing }}</textarea>
+                                            </label>
+                                        @endunless
+                                        <label class="flex flex-col gap-1 text-xs font-semibold" style="color:var(--muted2)">
+                                            Retorno
+                                            <textarea name="body" rows="6" required minlength="40" maxlength="5000"
+                                                class="w-full px-3 py-2 text-sm font-normal focus:outline-none"
+                                                style="background:var(--s1); border:1px solid var(--border); border-radius:8px; color:var(--text); resize:vertical; line-height:1.6">{{ $delivery->body }}</textarea>
+                                        </label>
+                                        <div class="flex justify-end gap-2">
+                                            <button type="button" @click="editing = false" class="btn btn-ghost btn-xs">Cancelar</button>
+                                            <button type="submit" class="btn btn-primary btn-xs">Salvar</button>
+                                        </div>
+                                    </form>
                                 @endif
-                                <p class="text-sm whitespace-pre-line" style="color:var(--text); line-height:1.65">{{ $delivery->body }}</p>
                             </div>
                         @endforeach
                     </div>

@@ -638,6 +638,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // Entrega pra Revisão Interna (retorno obrigatório) — ver TaskDeliveryService.
     Route::post('/tarefas/{task}/entrega', [TaskDeliveryController::class, 'store'])
         ->name('tasks.deliver');
+    Route::patch('/tarefas/{task}/entregas/{delivery}', [TaskDeliveryController::class, 'update'])
+        ->name('tasks.deliveries.update');
     Route::patch('/tarefas/{task}/data-aprovacao', [TaskController::class, 'updateApprovalDateDirect'])
         ->name('tasks.update-approval-date-direct');
     Route::patch('/tarefas/{task}/prioridade', [TaskController::class, 'updatePriority'])

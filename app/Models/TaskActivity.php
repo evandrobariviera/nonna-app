@@ -39,6 +39,7 @@ class TaskActivity extends Model
         'executor_changed'          => 'Executor alterado',
         'approval_manual_decision'  => 'Aprovação manual',
         'points_changed'            => 'Pontos de sprint alterados',
+        'delivery_edited'           => 'Retorno de entrega editado',
     ];
 
     public function task(): BelongsTo
