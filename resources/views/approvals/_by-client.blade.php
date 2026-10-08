@@ -40,7 +40,13 @@
                                 </span>
                             @endif
                             @if($c['totals']['awaiting_send'])
-                                <span class="px-2 py-1" style="border-radius:999px; background:var(--s3); color:var(--muted2)">{{ $c['totals']['awaiting_send'] }} aguardando envio</span>
+                                <span class="px-2 py-1" style="border-radius:999px; background:var(--s3); color:var(--muted2)"
+                                      title="Rodada criada, mas ninguém clicou em “Enviar pro Cliente” — o cliente ainda não vê">
+                                    {{ $c['totals']['awaiting_send'] }} aguardando envio (nosso)
+                                    @if($c['queued_days'] !== null)
+                                        · <span style="color:{{ $waitColor($c['queued_days']) }}">{{ $waitLabel($c['queued_days']) }}</span>
+                                    @endif
+                                </span>
                             @endif
                             @if($c['totals']['changes'])
                                 <span class="px-2 py-1" style="border-radius:999px; background:rgba(238,121,25,.1); color:var(--orange)">{{ $c['totals']['changes'] }} em ajuste</span>
@@ -70,9 +76,9 @@
                                 <tr class="text-xs uppercase tracking-widest" style="color:var(--muted)">
                                     <th class="text-left font-semibold px-5 py-2">Projeto</th>
                                     <th class="text-left font-semibold px-3 py-2" style="width:150px">Aprovados</th>
-                                    <th class="text-left font-semibold px-3 py-2">Aguardando cliente</th>
-                                    <th class="text-left font-semibold px-3 py-2">Envio</th>
-                                    <th class="text-left font-semibold px-3 py-2">Ajuste</th>
+                                    <th class="text-left font-semibold px-3 py-2" style="width:200px">Aguardando cliente</th>
+                                    <th class="text-left font-semibold px-3 py-2" style="width:200px" title="Rodada criada, mas ainda não enviada — o cliente não vê">Aguardando envio (nosso)</th>
+                                    <th class="text-left font-semibold px-3 py-2" style="width:90px">Ajuste</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -97,7 +103,14 @@
                                                 <span style="color:var(--muted)">—</span>
                                             @endif
                                         </td>
-                                        <td class="px-3 py-3" style="color:{{ $g['awaiting_send'] ? 'var(--text)' : 'var(--muted)' }}">{{ $g['awaiting_send'] ?: '—' }}</td>
+                                        <td class="px-3 py-3">
+                                            @if($g['awaiting_send'])
+                                                <span class="font-semibold" style="color:var(--text)">{{ $g['awaiting_send'] }}</span>
+                                                <span class="text-xs" style="color:{{ $waitColor($g['queued_days']) }}">· {{ $waitLabel($g['queued_days']) }}</span>
+                                            @else
+                                                <span style="color:var(--muted)">—</span>
+                                            @endif
+                                        </td>
                                         <td class="px-3 py-3" style="color:{{ $g['changes'] ? 'var(--orange)' : 'var(--muted)' }}">{{ $g['changes'] ?: '—' }}</td>
                                     </tr>
                                 @endforeach

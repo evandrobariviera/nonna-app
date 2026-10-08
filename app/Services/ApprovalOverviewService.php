@@ -49,14 +49,15 @@ class ApprovalOverviewService
             ->where('r.type', 'aprovacao')
             ->where('r.status', '!=', 'cancelled')
             ->orderByDesc('r.round_number')
-            ->get(['tasks.id as task_id', 'tasks.client_id', 'tasks.project_id', 'r.status', 'r.sent_at', 'r.handled_at'])
+            ->get(['tasks.id as task_id', 'tasks.client_id', 'tasks.project_id', 'r.status', 'r.sent_at', 'r.handled_at', 'r.submitted_at'])
             ->unique('task_id')
             ->map(fn ($row) => (object) [
                 'client_id'  => $row->client_id,
                 'project_id' => $row->project_id,
                 'status'     => $row->status,
                 'sent_at'    => $row->sent_at ? \Illuminate\Support\Carbon::parse($row->sent_at) : null,
-                'handled_at' => $row->handled_at,
+                'handled_at'   => $row->handled_at,
+                'submitted_at' => $row->submitted_at ? \Illuminate\Support\Carbon::parse($row->submitted_at) : null,
             ]);
 
         $projects = Project::whereIn('id', $rounds->pluck('project_id')->filter()->unique())
@@ -74,7 +75,7 @@ class ApprovalOverviewService
                     ->groupBy(fn ($r) => $projects->has($r->project_id) ? $r->project_id : 'avulsas')
                     ->map(fn (Collection $rs, string $key) => $this->group($rs, $projects->get($key), $clientId))
                     ->filter(fn ($g) => $g['open'])
-                    ->sortByDesc(fn ($g) => [$g['oldest_days'] ?? -1, $g['pending']])
+                    ->sortByDesc(fn ($g) => [max($g['oldest_days'] ?? -1, $g['queued_days'] ?? -1), $g['pending']])
                     ->values();
 
                 return [
@@ -86,10 +87,12 @@ class ApprovalOverviewService
                         'changes'       => $groups->sum('changes'),
                     ],
                     'oldest_days' => $groups->max('oldest_days'),
+                    'queued_days' => $groups->max('queued_days'),
                 ];
             })
             ->filter(fn ($c) => $c['client'] && $c['groups']->isNotEmpty())
-            ->sortByDesc(fn ($c) => [$c['oldest_days'] ?? -1, $c['totals']['pending']])
+            // Mais parado primeiro — esperando o cliente OU esperando a gente enviar.
+            ->sortByDesc(fn ($c) => [max($c['oldest_days'] ?? -1, $c['queued_days'] ?? -1), $c['totals']['pending']])
             ->values();
     }
 
@@ -99,6 +102,7 @@ class ApprovalOverviewService
         $awaitingSend = $rounds->filter(fn ($r) => $r->status === 'pending' && !$r->sent_at);
         $changes      = $rounds->filter(fn ($r) => $r->status === 'changes_requested' && !$r->handled_at);
         $oldestSent   = $pending->min('sent_at');
+        $oldestQueued = $awaitingSend->min('submitted_at');
 
         return [
             'project'       => $project,
@@ -115,6 +119,8 @@ class ApprovalOverviewService
             'awaiting_send' => $awaitingSend->count(),
             'changes'       => $changes->count(),
             'oldest_days'   => $oldestSent ? (int) $oldestSent->diffInDays(now()) : null,
+            // Há quanto tempo a rodada mais antiga espera A GENTE clicar "Enviar pro Cliente".
+            'queued_days'   => $oldestQueued ? (int) $oldestQueued->diffInDays(now()) : null,
             'open'          => $pending->isNotEmpty() || $awaitingSend->isNotEmpty() || $changes->isNotEmpty(),
         ];
     }
