@@ -16,9 +16,9 @@
         </a>
     </div>
 
-    <div class="card px-6 py-5" style="max-width:860px">
+    <div class="card px-6 py-6 md:px-10 md:py-8" style="max-width:860px">
         <div class="flex items-start justify-between gap-4 mb-1">
-            <h1 class="text-xl font-bold" style="color:var(--text)">{{ $article->title }}</h1>
+            <h1 class="text-2xl font-extrabold" style="color:var(--text); letter-spacing:-.01em">{{ $article->title }}</h1>
             <div class="flex items-center gap-2 flex-none">
                 <a href="{{ route('help.edit', $article) }}" class="btn btn-ghost btn-xs">Editar</a>
                 <form method="POST" action="{{ route('help.destroy', $article) }}"
@@ -42,7 +42,7 @@
         </div>
 
         @if($article->body)
-            <div class="ProseMirror" style="color:var(--text); line-height:1.65">{!! $article->body !!}</div>
+            <div class="help-article">{!! $article->body !!}</div>
         @else
             <p class="text-sm" style="color:var(--muted)">Artigo ainda sem conteúdo — <a href="{{ route('help.edit', $article) }}" style="color:var(--purple)">editar</a>.</p>
         @endif

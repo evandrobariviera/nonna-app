@@ -661,6 +661,49 @@
     display: block;
     border-radius: 2px;
 }
+/* Leitura de artigo da Central de Ajuda (help/show) — o HTML é o mesmo do editor, mas os
+   estilos acima só valem DENTRO do editor (.rich-editor). Aqui é modo leitura: texto maior,
+   respiro entre seções, títulos com hierarquia clara e aviso (blockquote) em destaque. */
+.help-article { color: var(--text); font-size: 14.5px; line-height: 1.75; }
+.help-article > :first-child { margin-top: 0; }
+.help-article p { margin: 0 0 .85em; }
+.help-article h2 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 2.2em 0 .7em;
+    padding-top: 1.1em;
+    border-top: 1px solid var(--border2);
+    letter-spacing: -.01em;
+}
+.help-article h3 {
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--purple);
+    margin: 1.5em 0 .5em;
+}
+.help-article h2 + h3 { margin-top: .4em; }
+.help-article strong { font-weight: 700; }
+.help-article em { font-style: italic; }
+.help-article ul, .help-article ol { padding-left: 1.5em; margin: 0 0 1em; }
+.help-article ul { list-style: disc; }
+.help-article ol { list-style: decimal; }
+.help-article li { margin: .35em 0; padding-left: .2em; }
+.help-article li::marker { color: var(--purple); font-weight: 700; }
+.help-article blockquote {
+    margin: 1.2em 0;
+    padding: .8em 1em;
+    background: rgba(100, 59, 142, .07);
+    border-left: 3px solid var(--purple);
+    border-radius: 0 8px 8px 0;
+    color: var(--text);
+    font-size: .92em;
+}
+.help-article blockquote > :last-child { margin-bottom: 0; }
+.help-article a { color: var(--purple); text-decoration: underline; text-underline-offset: 2px; }
+.help-article hr { border: none; border-top: 1px solid var(--border2); margin: 2em 0; }
+.help-article img { max-width: 100%; height: auto; display: block; border-radius: 6px; margin: 1em 0; }
+
 .rich-editor .ProseMirror.is-editor-empty:first-child::before {
     content: attr(data-placeholder);
     color: var(--muted);
