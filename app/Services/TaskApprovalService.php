@@ -16,6 +16,15 @@ use Illuminate\Support\Str;
 
 class TaskApprovalService
 {
+    // Validade do link de aprovação (e do login mágico na Central que ele dá —
+    // ver PortalMagicAccess). Renovada a cada notificação que leva o link.
+    public const LINK_DAYS = 30;
+
+    private function renewLink(TaskApprovalToken $token): void
+    {
+        $token->update(['expires_at' => now()->addDays(self::LINK_DAYS)]);
+    }
+
     /**
      * Reavalia se a tarefa já reúne as condições pra entrar em aprovação
      * sozinha — status "Aprovação" + situação "Enviar para o cliente". Com
@@ -136,7 +145,7 @@ class TaskApprovalService
                 'channels'   => $clientContact->subscriptions->first()->channels ?? [],
                 'token'      => Str::uuid()->toString(),
                 'status'     => 'pending',
-                'expires_at' => now()->addDays(7),
+                'expires_at' => now()->addDays(self::LINK_DAYS),
             ]);
         }
 
@@ -161,6 +170,7 @@ class TaskApprovalService
         // mantém o token (histórico/link continuam existindo), só não recebe
         // a notificação nem entra na exigência de unanimidade (tryResolveRound).
         foreach ($round->tokens->where('will_notify', true) as $token) {
+            $this->renewLink($token);
             $this->dispatchWebhook($round, $token, $token->contact);
         }
 
@@ -204,6 +214,7 @@ class TaskApprovalService
         $pending = $round->tokens->where('status', 'pending')->where('will_notify', true);
 
         foreach ($pending as $token) {
+            $this->renewLink($token);
             $this->dispatchWebhook($round, $token, $token->contact);
         }
 
@@ -218,6 +229,7 @@ class TaskApprovalService
     public function resendToken(TaskApprovalToken $token): void
     {
         $token->loadMissing('contact', 'round');
+        $this->renewLink($token);
 
         $this->dispatchWebhook($token->round, $token, $token->contact);
     }
@@ -280,7 +292,7 @@ class TaskApprovalService
                 'token'       => Str::uuid()->toString(),
                 'status'      => 'approved',
                 'reviewed_at' => now(),
-                'expires_at'  => now()->addDays(7),
+                'expires_at'  => now()->addDays(self::LINK_DAYS),
             ]);
 
             $this->dispatchWebhook($round, $token, $clientContact->contact, 'aviso_tarefa', ['mensagem' => $message]);
@@ -459,6 +471,7 @@ class TaskApprovalService
         $round->loadMissing('tokens.contact');
 
         foreach ($round->tokens->where('will_notify', true) as $token) {
+            $this->renewLink($token);
             $this->dispatchWebhook($round, $token, $token->contact, 'aprovacao_concluida');
         }
 

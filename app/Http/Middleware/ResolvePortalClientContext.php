@@ -20,7 +20,23 @@ class ResolvePortalClientContext
     public function handle(Request $request, Closure $next): Response
     {
         $contact = Auth::guard('portal')->user();
-        $clients = $contact->clients()->wherePivot('portal_access_enabled', true)->get();
+        $magic   = app(\App\Services\PortalMagicAccess::class);
+
+        // Sessão do link de aprovação: só os clientes em que ele (ainda) é
+        // aprovador — não depende de portal_access_enabled.
+        if ($magic->active()) {
+            $clients = $magic->allowedClients($contact);
+
+            if ($clients->isEmpty()) {
+                Auth::guard('portal')->logout();
+                $magic->forget($request);
+
+                return redirect()->route('portal.login')
+                    ->with('status', 'Seu acesso pelo link de aprovação não está mais ativo. Fale com o time da Nonna.');
+            }
+        } else {
+            $clients = $contact->clients()->wherePivot('portal_access_enabled', true)->get();
+        }
 
         if ($clients->isEmpty()) {
             Auth::guard('portal')->logout();

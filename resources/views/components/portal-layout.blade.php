@@ -16,6 +16,8 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="h-screen overflow-hidden">
+    {{-- Sessão do link de aprovação (login mágico): esconde atalhos pra telas que pedem senha. --}}
+    @php $_magic = app(\App\Services\PortalMagicAccess::class)->active(); @endphp
 
     {{-- ── MOBILE DRAWER ── --}}
     <div x-show="sidebarOpen" class="fixed inset-0 z-50 flex md:hidden" x-cloak>
@@ -43,9 +45,11 @@
             <nav class="flex-1 overflow-y-auto py-4">
                 @include('layouts.portal-sidebar-links')
             </nav>
+            @unless($_magic)
             <div class="border-t px-5 py-3" style="border-color:var(--border2)">
                 <a href="{{ route('portal.account') }}" class="text-xs font-semibold" style="color: var(--muted)">Minha Conta</a>
             </div>
+            @endunless
         </div>
     </div>
 
@@ -95,12 +99,16 @@
 
             {{-- Footer --}}
             <div class="border-t px-5 py-3 flex items-center justify-between" style="border-color:var(--border2)">
+                @if($_magic)
+                <span></span>
+                @else
                 <a href="{{ route('portal.account') }}"
                    class="text-xs font-semibold transition-colors {{ request()->routeIs('portal.account') ? '' : '' }}"
                    style="color: {{ request()->routeIs('portal.account') ? 'var(--purple)' : 'var(--muted)' }}"
                    onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='{{ request()->routeIs('portal.account') ? 'var(--purple)' : 'var(--muted)' }}'">
                     Minha Conta
                 </a>
+                @endif
                 <form method="POST" action="{{ route('portal.logout') }}">
                     @csrf
                     <button type="submit" class="btn btn-ghost btn-xs">
@@ -121,7 +129,7 @@
                 </button>
 
                 {{-- Início --}}
-                <a href="{{ route('portal.dashboard') }}"
+                <a href="{{ $_magic ? route('portal.approvals.index') : route('portal.dashboard') }}"
                     class="flex items-center justify-center w-8 h-8 rounded-lg transition-colors flex-shrink-0"
                     style="color:{{ request()->routeIs('portal.dashboard') ? 'var(--purple)' : 'var(--muted)' }}"
                     onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
@@ -135,10 +143,12 @@
                     <h1 class="text-sm font-bold" style="color:var(--text)">{{ $title ?? '' }}</h1>
                 </div>
 
+                @unless($_magic)
                 <a href="{{ route('portal.tickets.create') }}" class="btn btn-primary btn-sm flex items-center gap-1.5 flex-shrink-0">
                     <x-icon name="ticket" size="14" />
                     <span class="hidden sm:inline">Novo Ticket</span>
                 </a>
+                @endunless
 
                 <span class="badge badge-purple">Portal do Cliente</span>
             </header>

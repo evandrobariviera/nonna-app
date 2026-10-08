@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\TaskApprovalRound;
+use App\Models\TaskApprovalToken;
+use App\Services\PortalMagicAccess;
 use App\Services\ProjectApprovalPageService;
+use Illuminate\Support\Collection;
 use App\Services\TaskApprovalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -40,7 +43,7 @@ class ApprovalController extends Controller
 
         abort_if($project->resolvedClientId() !== $client->id, 403);
 
-        $items = $pages->items($project);
+        $items = $this->withUrls($pages->items($project));
         abort_if($items->isEmpty(), 404);
 
         return view('portal.approvals.project', [
@@ -52,6 +55,34 @@ class ApprovalController extends Controller
             'pieces'      => $items->reject(fn ($i) => $i['is_highlight'])->values(),
             'summary'     => $pages->summary($items),
         ]);
+    }
+
+    /**
+     * Pra onde cada card leva. Na sessão do link de aprovação, se o contato
+     * tem um link válido daquela rodada, vai pra página do link (a mesma que
+     * ele já conhece, com a regra de todos os aprovadores). Senão, pra tela
+     * da peça no Portal.
+     */
+    private function withUrls(Collection $items): Collection
+    {
+        $tokens = collect();
+
+        if (app(PortalMagicAccess::class)->active()) {
+            $tokens = TaskApprovalToken::where('contact_id', Auth::guard('portal')->id())
+                ->whereIn('round_id', $items->pluck('round.id'))
+                ->get()
+                ->filter(fn ($t) => $t->isValid())
+                ->keyBy('round_id');
+        }
+
+        return $items->map(function ($i) use ($tokens) {
+            $token = $tokens->get($i['round']->id);
+            $i['url'] = $token
+                ? route('approval.show', $token->token)
+                : route('portal.approvals.show', $i['round']);
+
+            return $i;
+        });
     }
 
     // Mesma página do projeto, pras tarefas sem projeto (posts soltos, chamados).
@@ -68,16 +99,28 @@ class ApprovalController extends Controller
             'pageType'    => 'Avulsas',
             'description' => 'Materiais que não fazem parte de um projeto.',
             'highlight'   => null,
-            'pieces'      => $items,
+            'pieces'      => $this->withUrls($items),
             'summary'     => $pages->summary($items),
         ]);
     }
 
-    public function show(TaskApprovalRound $round, ProjectApprovalPageService $pages): View
+    public function show(TaskApprovalRound $round, ProjectApprovalPageService $pages)
     {
         $client = app('currentPortalClient');
 
         abort_if($round->task->client_id !== $client->id, 403);
+
+        // Sessão do link de aprovação: só olha. Decidir é pela página do link
+        // do próprio contato (token), que mantém a regra de todos os aprovadores.
+        $readOnly = app(PortalMagicAccess::class)->active();
+        if ($readOnly) {
+            $token = TaskApprovalToken::where('round_id', $round->id)
+                ->where('contact_id', Auth::guard('portal')->id())
+                ->first();
+            if ($token?->isValid()) {
+                return redirect()->route('approval.show', $token->token);
+            }
+        }
 
         // "Ver projeto completo" só quando a tarefa é de um projeto com página
         // (pelo menos uma tarefa dele já passou por aprovação — essa, no mínimo).
@@ -98,7 +141,7 @@ class ApprovalController extends Controller
 
         $deliverables = $round->deliverables();
 
-        return view('portal.approvals.show', compact('client', 'round', 'deliverables', 'project', 'isLoose'));
+        return view('portal.approvals.show', compact('client', 'round', 'deliverables', 'project', 'isLoose', 'readOnly'));
     }
 
     public function decide(Request $request, TaskApprovalRound $round)

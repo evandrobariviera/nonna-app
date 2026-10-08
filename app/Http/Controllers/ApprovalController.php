@@ -3,14 +3,52 @@
 namespace App\Http\Controllers;
 
 use App\Models\TaskApprovalToken;
+use App\Services\PortalMagicAccess;
+use App\Services\ProjectApprovalPageService;
 use App\Services\TaskApprovalService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ApprovalController extends Controller
 {
-    public function __construct(private TaskApprovalService $service) {}
+    public function __construct(
+        private TaskApprovalService $service,
+        private PortalMagicAccess $magic,
+        private ProjectApprovalPageService $pages,
+    ) {}
 
-    public function show(string $token)
+    /**
+     * Abrir o link entra na Central de Aprovações do Portal sem senha (login
+     * mágico) — e a página ganha o caminho de volta: Central › Projeto/Avulsas.
+     * Link vencido não dá acesso a nada.
+     *
+     * @return array{group: ?array{title: string, url: string}}|null
+     */
+    private function enterCentral(Request $request, TaskApprovalToken $approvalToken): ?array
+    {
+        if ($approvalToken->isExpired()) {
+            return null;
+        }
+
+        $this->magic->enterFromToken($request, $approvalToken);
+
+        $contact = Auth::guard('portal')->user();
+        $task    = $approvalToken->round->task;
+        if (!$contact || $contact->id !== $approvalToken->contact_id) {
+            return null;
+        }
+
+        $group = null;
+        if ($task->project_id && $task->project && $this->pages->items($task->project)->isNotEmpty()) {
+            $group = ['title' => $task->project->title, 'url' => route('portal.approvals.project', $task->project)];
+        } elseif (!$task->project_id) {
+            $group = ['title' => 'Peças avulsas', 'url' => route('portal.approvals.loose')];
+        }
+
+        return ['group' => $group];
+    }
+
+    public function show(Request $request, string $token)
     {
         $approvalToken = TaskApprovalToken::where('token', $token)
             ->with([
@@ -34,20 +72,21 @@ class ApprovalController extends Controller
         // se aplicam; só a expiração importa pro link continuar acessível.
         $isAviso = $approvalToken->round->isAviso();
         $deliverables = $approvalToken->round->deliverables();
+        $centralNav = $this->enterCentral($request, $approvalToken);
 
         if (! $isAviso && ! $approvalToken->isValid()) {
-            return view('approval.expired', compact('approvalToken', 'deliverables'));
+            return view('approval.expired', compact('approvalToken', 'deliverables', 'centralNav'));
         }
 
         if ($isAviso && $approvalToken->isExpired()) {
-            return view('approval.expired', compact('approvalToken', 'deliverables'));
+            return view('approval.expired', compact('approvalToken', 'deliverables', 'centralNav'));
         }
         $batch = $this->batchForContact($approvalToken);
         $visibleComments = $approvalToken->round->task->comments
             ->where('visible_to_client', true)
             ->sortBy('created_at');
 
-        return view('approval.show', compact('approvalToken', 'deliverables', 'batch', 'visibleComments'));
+        return view('approval.show', compact('approvalToken', 'deliverables', 'batch', 'visibleComments', 'centralNav'));
     }
 
     /**
@@ -102,6 +141,8 @@ class ApprovalController extends Controller
             ? $approvalToken->round->deliverables()
             : collect();
 
-        return view('approval.thanks', compact('approvalToken', 'deliverables'));
+        $centralNav = $this->enterCentral($request, $approvalToken);
+
+        return view('approval.thanks', compact('approvalToken', 'deliverables', 'centralNav'));
     }
 }

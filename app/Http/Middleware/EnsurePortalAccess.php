@@ -26,6 +26,18 @@ class EnsurePortalAccess
             return redirect()->guest(route('portal.login'));
         }
 
+        // Entrou pelo link de aprovação (login mágico): só a Central. Qualquer
+        // outra tela do Portal pede senha — sai da sessão mágica e manda pro login,
+        // que devolve pra tela pedida depois de entrar.
+        $magic = app(\App\Services\PortalMagicAccess::class);
+        if ($magic->active() && !$request->routeIs(...\App\Services\PortalMagicAccess::ALLOWED_ROUTES)) {
+            Auth::guard('portal')->logout();
+            $magic->forget($request);
+
+            return redirect()->guest(route('portal.login'))
+                ->with('status', 'Para ver o restante do Portal, entre com seu e-mail e senha.');
+        }
+
         return $next($request);
     }
 }

@@ -79,6 +79,8 @@
         <span class="mono" style="font-size:10px; color:var(--muted)">Rodada #{{ $approvalToken->round->round_number }}</span>
     </header>
 
+    @include('approval._central-nav')
+
     {{-- OUTROS JOBS DO MESMO CLIENTE NESTE MÊS — navegação, cada um com decisão própria --}}
     @if($batch->count() > 1)
     <div style="background:var(--s1); border-bottom:1px solid var(--border); padding:16px 20px">

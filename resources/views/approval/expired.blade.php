@@ -27,6 +27,8 @@
         <span style="font-weight:800; font-size:15px; display:none">nonna</span>
     </header>
 
+    @include('approval._central-nav')
+
     <main style="flex:1; display:flex; align-items:center; justify-content:center; padding:40px 16px">
         <div style="max-width:480px; width:100%; text-align:center">
 

@@ -17,6 +17,30 @@
     $_leadsModuleActive = $_portalClient->moduleStatus('central_leads') === 'ativo';
 @endphp
 
+@if(app(\App\Services\PortalMagicAccess::class)->active())
+{{-- Entrou pelo link de aprovação (login mágico): só a Central. O resto do
+     Portal pede senha (EnsurePortalAccess). --}}
+<a href="{{ route('portal.approvals.index') }}"
+   class="nav-group-trigger open" style="color:var(--orange);">
+    <span class="flex items-center gap-3">
+        <x-icon name="circle-check" size="16" class="flex-shrink-0" />
+        <span class="flex items-center justify-between w-full">
+            <span>Central de Aprovações</span>
+            @if($_portalApprovalsCount > 0)
+                <span class="text-xs px-1.5 py-px rounded-full font-semibold"
+                      style="background:rgba(238, 121, 25,.15); color:var(--orange); border:1px solid rgba(238, 121, 25,.3)">
+                    {{ $_portalApprovalsCount }}
+                </span>
+            @endif
+        </span>
+    </span>
+</a>
+<p class="px-5 mt-4 text-xs" style="color:var(--muted); line-height:1.5">
+    Você entrou pelo link de aprovação.
+    <a href="{{ route('portal.dashboard') }}" style="color:var(--purple); font-weight:600">Entrar com senha</a>
+    para ver o restante do Portal.
+</p>
+@else
 {{-- ══ ATENDIMENTO ══ --}}
 <div class="nav-group-label">Atendimento</div>
 
@@ -188,3 +212,4 @@
         Boletos
     </span>
 </a>
+@endif

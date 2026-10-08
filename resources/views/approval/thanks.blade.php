@@ -27,6 +27,8 @@
         <span style="font-weight:800; font-size:15px; display:none">nonna</span>
     </header>
 
+    @include('approval._central-nav')
+
     <main style="flex:1; display:flex; align-items:center; justify-content:center; padding:40px 16px">
         <div style="max-width:480px; width:100%; text-align:center">
 
@@ -61,6 +63,19 @@
                             <span style="margin-left:auto; font-size:10px; color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif">⬇ baixar</span>
                         </a>
                     @endforeach
+                </div>
+            @endif
+
+            @if(!empty($centralNav))
+                <div style="margin-top:24px; display:flex; flex-direction:column; gap:10px">
+                    @if($centralNav['group'])
+                        <a href="{{ $centralNav['group']['url'] }}" style="display:block; text-decoration:none; text-align:center; padding:14px; background:var(--purple); color:#fff; font-weight:800">
+                            Voltar para {{ $centralNav['group']['title'] }}
+                        </a>
+                    @endif
+                    <a href="{{ route('portal.approvals.index') }}" style="display:block; text-align:center; padding:12px; border:2px solid var(--border2); color:var(--text); font-weight:700; font-size:14px; text-decoration:none">
+                        Ver a Central de Aprovações
+                    </a>
                 </div>
             @endif
 

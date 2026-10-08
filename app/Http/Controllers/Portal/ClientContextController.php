@@ -18,6 +18,9 @@ class ClientContextController extends Controller
 
         $request->session()->put('portal_current_client_id', $client->id);
 
-        return redirect()->route('portal.dashboard');
+        // Sessão do link de aprovação só enxerga a Central — o painel pediria senha.
+        return app(\App\Services\PortalMagicAccess::class)->active()
+            ? redirect()->route('portal.approvals.index')
+            : redirect()->route('portal.dashboard');
     }
 }

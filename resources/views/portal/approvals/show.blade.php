@@ -149,7 +149,11 @@
         </div>
     @endif
 
-    @if($round->status === 'pending')
+    @if($round->status === 'pending' && $readOnly)
+        <div class="card p-5 text-sm" style="color: var(--muted2)">
+            Esta peça foi enviada para outra pessoa da sua equipe aprovar. Você pode acompanhar por aqui.
+        </div>
+    @elseif($round->status === 'pending')
         <div class="card p-6" x-data="{ decision: null }">
             <h2 class="text-sm font-bold uppercase tracking-wide mb-4" style="color: var(--muted)">Sua Decisão</h2>
 

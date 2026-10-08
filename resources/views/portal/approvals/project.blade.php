@@ -44,7 +44,7 @@
     @if($highlight)
         @php $hsc = $statusColors[$highlight['status']] ?? $statusColors['pending']; @endphp
         <p class="text-xs font-bold uppercase tracking-widest mb-3" style="color: var(--muted)">Destaque</p>
-        <a href="{{ route('portal.approvals.show', $highlight['round']) }}" class="card mb-8 flex flex-wrap overflow-hidden" style="text-decoration:none; padding:0">
+        <a href="{{ $highlight['url'] }}" class="card mb-8 flex flex-wrap overflow-hidden" style="text-decoration:none; padding:0">
             <div class="flex items-center justify-center" style="flex: 1 1 280px; min-height: 200px; background: #2a1a3d">
                 @if($highlight['thumb'])
                     <img src="{{ $highlight['thumb']->url() }}" alt="" class="w-full h-full object-cover" style="max-height: 280px">
@@ -72,7 +72,7 @@
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr))">
             @foreach($pieces as $item)
                 @php $sc = $statusColors[$item['status']] ?? $statusColors['pending']; @endphp
-                <a href="{{ route('portal.approvals.show', $item['round']) }}" class="card flex flex-col overflow-hidden" style="text-decoration:none; padding:0">
+                <a href="{{ $item['url'] }}" class="card flex flex-col overflow-hidden" style="text-decoration:none; padding:0">
                     <div class="flex items-center justify-center" style="aspect-ratio: 4 / 3; background: var(--s3)">
                         @if($item['thumb'])
                             <img src="{{ $item['thumb']->url() }}" alt="" class="w-full h-full object-cover" loading="lazy">
