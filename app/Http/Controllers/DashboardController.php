@@ -38,6 +38,8 @@ class DashboardController extends Controller
         'visao_geral'  => ['sprint', 'cadastro', 'agenda', 'atendimento', 'heads', 'midia_paga', 'meus_numeros', 'placar', 'kanban', 'estrategia', 'outros_papeis'],
     ];
 
+    private const SHOW_LITERARY_QUOTE = false;
+
     public function index(Request $request)
     {
         // "Ver como" — admin/dono enxerga a Dashboard exatamente como outra pessoa vê:
@@ -79,8 +81,10 @@ class DashboardController extends Controller
         // deterministicamente pelo acervo (dias corridos desde uma data fixa,
         // módulo a quantidade de citações ativas) — sem precisar de job
         // agendado nem de coluna pra marcar "já mostrada".
+        // ESCONDIDA a pedido do usuário (2026-10-09) — "vou pensar em algo diferente".
+        // Pra voltar: SHOW_LITERARY_QUOTE = true. Desligada nem consulta o acervo.
         $literaryQuote = null;
-        $quotes = LiteraryQuote::where('is_active', true)->orderBy('created_at')->get();
+        $quotes = self::SHOW_LITERARY_QUOTE ? LiteraryQuote::where('is_active', true)->orderBy('created_at')->get() : collect();
         if ($quotes->isNotEmpty()) {
             $daysSinceEpoch = \Carbon\Carbon::parse('2026-01-01')->diffInDays(today());
             $literaryQuote = $quotes[$daysSinceEpoch % $quotes->count()];
