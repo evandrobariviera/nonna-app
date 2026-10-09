@@ -232,12 +232,29 @@
         ══════════════════════════════════════════════════════════ --}}
         <div class="flex-1 min-w-0 flex flex-col gap-4">
 
-            {{-- CABEÇALHO --}}
-            <div class="card card-body-lg">
+            {{-- CABEÇALHO — "Trava" (liga/desliga, só aviso) mora aqui: x-data no card pra
+                 o selo da linha de badges e o botão da direita andarem juntos. --}}
+            <div class="card card-body-lg"
+                 x-data="{
+                     blocker: @js((bool) $task->blocker_at),
+                     savingBlocker: false,
+                     async toggleBlocker() {
+                         if (this.savingBlocker) return;
+                         this.savingBlocker = true;
+                         const { ok, message } = await window.inlinePatch('{{ route('tasks.toggle-blocker', $task) }}', { on: !this.blocker });
+                         this.savingBlocker = false;
+                         if (ok) { this.blocker = !this.blocker; } else { alert(message || 'Não foi possível mudar a Trava.'); }
+                     },
+                 }">
                 <div class="flex items-start justify-between gap-4 mb-3">
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 mb-2 flex-wrap">
                             <span class="badge badge-{{ $task->statusColor() }}">{{ $task->statusLabel() }}</span>
+                            <span x-show="blocker" x-cloak class="badge flex items-center gap-1" style="background:rgba(239,68,68,.1); color:var(--red); border-color:rgba(239,68,68,.35)"
+                                  title="Outras pessoas estão esperando esta tarefa sair">
+                                <x-icon name="octagon-alert" size="11" /> Trava
+                                @if($task->blocker_at)<span class="font-normal">· desde {{ $task->blocker_at->format('d/m') }}</span>@endif
+                            </span>
                             @if($task->is_ticket)
                                 <span class="badge badge-orange">Ticket</span>
                             @endif
@@ -253,6 +270,14 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2 flex-shrink-0">
+                        <button type="button" @click="toggleBlocker()" :disabled="savingBlocker"
+                                class="btn btn-xs flex items-center gap-1.5"
+                                :class="blocker ? '' : 'btn-ghost'"
+                                :style="blocker ? 'background:var(--red); color:#fff; border-color:var(--red)' : ''"
+                                :title="blocker ? 'Desligar a Trava' : 'Marcar como Trava: outras pessoas dependem desta tarefa'">
+                            <x-icon name="octagon-alert" size="12" />
+                            <span x-text="blocker ? 'Trava ligada' : 'Trava'"></span>
+                        </button>
                         <form method="POST" action="{{ route('tasks.duplicate', $task) }}">
                             @csrf
                             <button type="submit" class="btn btn-ghost btn-xs flex items-center gap-1.5" title="Duplicar tarefa">

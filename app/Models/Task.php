@@ -35,6 +35,7 @@ class Task extends Model
         'publish_date'      => 'date',
         'launched_at'       => 'datetime',
         'queued_at'         => 'datetime',
+        'blocker_at'        => 'datetime', // "Trava": null = desligada (ver TaskController::toggleBlocker)
         'is_ticket'         => 'boolean',
         'internal_approval' => 'boolean',
         'custom_fields'          => 'array',

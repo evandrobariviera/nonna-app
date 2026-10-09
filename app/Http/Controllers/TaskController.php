@@ -475,6 +475,20 @@ class TaskController extends Controller
         return redirect()->back()->with('success', 'Prioridade atualizada.');
     }
 
+    // "Trava" — liga/desliga. Só um aviso (não bloqueia nada): a tarefa sobe pro topo da
+    // Dashboard de quem executa/responde por ela, com "travando há X". Qualquer um marca.
+    public function toggleBlocker(Request $request, Task $task)
+    {
+        $on = (bool) $request->validate(['on' => 'required|boolean'])['on'];
+
+        if ($on !== (bool) $task->blocker_at) {
+            $task->forceFill(['blocker_at' => $on ? now() : null])->save();
+            TaskActivity::log($task, 'blocker_changed', $on ? 'Desligada' : 'Ligada', $on ? 'Ligada' : 'Desligada');
+        }
+
+        return response()->json(['success' => true, 'on' => $on]);
+    }
+
     // Pontos de sprint da tarefa (App\Services\Tasks\SprintPoints): escolher o formato,
     // ajustar os pontos à mão (vira manual — o catálogo não sobrescreve mais) ou voltar ao
     // automático. Devolve o resultado pra lateral da tarefa se atualizar sem recarregar.

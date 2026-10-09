@@ -211,6 +211,35 @@
         </div>
     @endif
 
+    {{-- ── TRAVAS — fixa em qualquer modo, acima do "Hoje": tarefas marcadas como Trava
+         (outras pessoas esperando) em que executo ou sou Responsável. Some sem nada. ── --}}
+    @if($myBlockers->isNotEmpty())
+        <div class="mb-6 px-5 py-4" style="background:rgba(239,68,68,.05); border:1px solid rgba(239,68,68,.3); border-left:4px solid var(--red)">
+            <h3 class="text-sm font-bold flex items-center gap-1.5 mb-1" style="color:var(--red)">
+                <x-icon name="octagon-alert" size="14" /> Travando o time ({{ $myBlockers->count() }})
+            </h3>
+            <p class="text-xs mb-3" style="color:var(--muted2)">Outras pessoas estão esperando estas tarefas saírem. Comece por aqui.</p>
+            <div class="flex flex-col gap-1.5">
+                @foreach($myBlockers as $task)
+                    @php
+                        $days = (int) $task->blocker_at->copy()->startOfDay()->diffInDays(today());
+                        $since = $days === 0 ? 'desde hoje' : ($days === 1 ? 'há 1 dia' : "há {$days} dias");
+                        $iAmExecutor = (string) $task->executor_id === (string) $subjectUserId;
+                    @endphp
+                    <a href="{{ route('tasks.show', $task) }}" class="flex items-center gap-2 px-3 py-2 text-xs transition-colors"
+                       style="background:var(--s1)" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s1)'">
+                        <span class="font-mono flex-shrink-0 font-semibold" style="color:var(--red); min-width:70px">{{ $since }}</span>
+                        <span class="font-semibold truncate" style="color:var(--text)">{{ $task->title }}</span>
+                        <span class="truncate" style="color:var(--muted)">{{ $task->client?->displayName() }}</span>
+                        @if(! $iAmExecutor && $task->executor)
+                            <span class="ml-auto flex-shrink-0" style="color:var(--muted)">com {{ $task->executor->name }}</span>
+                        @endif
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     {{-- ── FAIXA "HOJE" — fixa em qualquer modo: minhas reuniões de hoje + o que está
          atrasado comigo na sprint. Some quando não há nada (o modo cuida do resto). ── --}}
     @if($myMeetingsToday->isNotEmpty() || $myOverdueTasks->isNotEmpty())

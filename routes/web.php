@@ -653,7 +653,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('tasks.update-approval-date-direct');
     Route::patch('/tarefas/{task}/prioridade', [TaskController::class, 'updatePriority'])
         ->name('tasks.update-priority');
-    Route::patch('/tarefas/{task}/pontos', [TaskController::class, 'updatePoints'])
+    Route::patch('/tarefas/{task}/trava', [TaskController::class, 'toggleBlocker'])
+        ->name('tasks.toggle-blocker');
+    Route::patch('/tarefas/{task}/pontos',[TaskController::class, 'updatePoints'])
         ->name('tasks.update-points');
     Route::patch('/tarefas/{task}/situacao', [TaskController::class, 'updateSituation'])
         ->name('tasks.update-situation');

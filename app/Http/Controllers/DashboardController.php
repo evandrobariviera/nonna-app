@@ -214,6 +214,20 @@ class DashboardController extends Controller
                 ->with('client')->orderBy('approval_date')->get()
             : collect();
 
+        // ── Travas (fixa, aparece em qualquer modo, acima do "Hoje") ──
+        // Tarefas marcadas como Trava (TaskController::toggleBlocker) em que eu executo OU
+        // sou Responsável — o Head também precisa ver o que está segurando o time. Sem
+        // filtro de sprint: trava é trava em qualquer sprint. Mais antiga primeiro.
+        $myBlockers = Task::whereNotNull('blocker_at')
+            ->whereNotIn('status', ['concluido', 'cancelado'])
+            ->where(fn ($q) => $q
+                ->where('executor_id', $userId)
+                ->orWhereHas('executors', fn ($q2) => $q2->where('users.id', $userId)->whereIn('task_executors.role', ['executor', 'responsavel'])))
+            ->where(fn ($q) => $q->whereNull('client_id')->orWhereHas('client', fn ($c) => $c->where('status', '!=', 'inactive')))
+            ->with(['client', 'executor'])
+            ->orderBy('blocker_at')
+            ->get();
+
         // ── "Minha semana" (modo Execução) ──
         // Segunda a sexta, cada tarefa minha (executor) na coluna da data de APROVAÇÃO — a
         // mesma régua da Semana de Produção do Painel, só que filtrada em mim e incluindo o
@@ -416,7 +430,7 @@ class DashboardController extends Controller
             'pendingTasksCount',
             'creativosProntos', 'creativosProntosTasks', 'budgetsNeedingAddition', 'campaignsNeedingOptimization',
             'myNotifications',
-            'mode', 'show', 'myMeetingsToday', 'myOverdueTasks',
+            'mode', 'show', 'myMeetingsToday', 'myOverdueTasks', 'myBlockers',
             'availableModes', 'subjectRoles', 'subjectIsAdmin', 'viewingAs', 'teamMembers',
             'myExecutorSprintDone', 'myPointsTotal', 'myPointsDone',
             'weekDays', 'weekOffset', 'weekBeforeCount', 'weekAfterCount', 'weekNoDateCount',
