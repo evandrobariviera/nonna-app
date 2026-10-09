@@ -106,7 +106,7 @@
 
                         <div>
                             <span class="label-sm">Observações</span>
-                            <input type="text" class="field-input" placeholder="ex: quem mais tem acesso, dica de segurança..." :name="'entries['+i+'][notes]'" x-model="entry.notes">
+                            <textarea class="field-input" rows="3" style="font-family:ui-monospace,monospace; white-space:pre; resize:vertical" placeholder="ex: quem mais tem acesso, códigos de verificação em 2 etapas..." :name="'entries['+i+'][notes]'" x-model="entry.notes"></textarea>
                         </div>
                     </div>
                 </template>

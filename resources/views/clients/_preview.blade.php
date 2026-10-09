@@ -226,7 +226,7 @@
                                 </div>
                             </div>
                             @if($cred->notes)
-                                <p class="text-xs mt-2" style="color:var(--muted)">{{ $cred->notes }}</p>
+                                <p class="text-xs mt-2 font-mono" style="color:var(--muted); white-space:pre; overflow-x:auto">{{ $cred->notes }}</p>
                             @endif
                         </div>
                     @endforeach

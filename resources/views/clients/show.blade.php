@@ -596,8 +596,9 @@
                         </div>
                         <div class="col-span-2">
                             <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Observações</label>
-                            <input type="text" name="notes" placeholder="Ex: conta da empresa, não confundir com pessoal..."
-                                   class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                            <textarea name="notes" rows="4" placeholder="Ex: conta da empresa, códigos de 2 fatores..."
+                                      style="white-space:pre; resize:vertical"
+                                      class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)] font-mono"></textarea>
                         </div>
                     </div>
                     <div class="flex gap-3">
@@ -670,9 +671,8 @@
                                             </button>
                                         </div>
                                     </td>
-                                    <td class="text-xs text-[var(--muted)] max-w-[150px] truncate">
-                                        {{ $cred->notes ?: '—' }}
-                                    </td>
+                                    <td class="text-xs text-[var(--muted)] font-mono align-top"
+                                        style="white-space:pre; max-width:260px; overflow-x:auto">{{ $cred->notes ?: '—' }}</td>
                                     <td class="text-right">
                                         <div class="flex items-center justify-end gap-2">
                                             <button type="button"
@@ -734,8 +734,9 @@
                                                 </div>
                                                 <div class="col-span-2">
                                                     <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Observações</label>
-                                                    <input type="text" name="notes" value="{{ $cred->notes }}" placeholder="Ex: conta da empresa, não confundir com pessoal..."
-                                                           class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
+                                                    <textarea name="notes" rows="4" placeholder="Ex: conta da empresa, códigos de 2 fatores..."
+                                                              style="white-space:pre; resize:vertical"
+                                                              class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)] font-mono">{{ $cred->notes }}</textarea>
                                                 </div>
                                             </div>
                                             <div class="flex gap-3">
