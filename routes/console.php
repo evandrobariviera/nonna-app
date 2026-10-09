@@ -12,3 +12,6 @@ Schedule::command('campaigns:sync-ad-platforms')->dailyAt('05:30');
 Schedule::command('campaigns:generate-insights')->dailyAt('08:00');
 Schedule::command('financial:generate-contract-transactions')->dailyAt('06:00');
 Schedule::command('automations:check-date-triggers')->dailyAt('07:00');
+// "Seu foco" da Dashboard — cedo pra planejar o dia, meio-dia pra ajustar a tarde.
+Schedule::command('attention:generate-digests')->weekdays()->at('07:30')->withoutOverlapping();
+Schedule::command('attention:generate-digests')->weekdays()->at('12:00')->withoutOverlapping();

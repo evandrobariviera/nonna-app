@@ -215,18 +215,12 @@ class DashboardController extends Controller
             : collect();
 
         // ── Travas (fixa, aparece em qualquer modo, acima do "Hoje") ──
-        // Tarefas marcadas como Trava (TaskController::toggleBlocker) em que eu executo OU
-        // sou Responsável — o Head também precisa ver o que está segurando o time. Sem
-        // filtro de sprint: trava é trava em qualquer sprint. Mais antiga primeiro.
-        $myBlockers = Task::whereNotNull('blocker_at')
-            ->whereNotIn('status', ['concluido', 'cancelado'])
-            ->where(fn ($q) => $q
-                ->where('executor_id', $userId)
-                ->orWhereHas('executors', fn ($q2) => $q2->where('users.id', $userId)->whereIn('task_executors.role', ['executor', 'responsavel'])))
-            ->where(fn ($q) => $q->whereNull('client_id')->orWhereHas('client', fn ($c) => $c->where('status', '!=', 'inactive')))
-            ->with(['client', 'executor'])
-            ->orderBy('blocker_at')
-            ->get();
+        // Tarefas marcadas como Trava (TaskController::toggleBlocker) — ver Task::scopeBlockersFor.
+        $myBlockers = Task::blockersFor((int) $userId)->with(['client', 'executor'])->get();
+
+        // "Seu foco" — último resumo de atenção já gerado (AttentionDigestService, 2x/dia
+        // pelo Scheduler). Só leitura: a Dashboard nunca chama a IA.
+        $attentionDigest = \App\Models\AttentionDigest::latestFor((int) $userId);
 
         // ── "Minha semana" (modo Execução) ──
         // Segunda a sexta, cada tarefa minha (executor) na coluna da data de APROVAÇÃO — a
@@ -430,7 +424,7 @@ class DashboardController extends Controller
             'pendingTasksCount',
             'creativosProntos', 'creativosProntosTasks', 'budgetsNeedingAddition', 'campaignsNeedingOptimization',
             'myNotifications',
-            'mode', 'show', 'myMeetingsToday', 'myOverdueTasks', 'myBlockers',
+            'mode', 'show', 'myMeetingsToday', 'myOverdueTasks', 'myBlockers', 'attentionDigest',
             'availableModes', 'subjectRoles', 'subjectIsAdmin', 'viewingAs', 'teamMembers',
             'myExecutorSprintDone', 'myPointsTotal', 'myPointsDone',
             'weekDays', 'weekOffset', 'weekBeforeCount', 'weekAfterCount', 'weekNoDateCount',
@@ -518,6 +512,28 @@ class DashboardController extends Controller
             ->update(['status' => 'resolvido']);
 
         return redirect()->route('dashboard')->with('success', 'Notificação resolvida.');
+    }
+
+    // "Seu foco" na hora — põe na fila (a IA leva alguns segundos; a tela consulta
+    // focusStatus até o novo aparecer). Trava de 10 min por pessoa pra não virar
+    // botão de gastar IA à toa: o normal é o automático das 07:30 e 12:00.
+    public function refreshFocus()
+    {
+        $latest = \App\Models\AttentionDigest::latestFor((int) Auth::id());
+        if ($latest && $latest->generated_at->gt(now()->subMinutes(10))) {
+            return response()->json(['message' => 'Seu foco foi atualizado há menos de 10 minutos.'], 429);
+        }
+
+        \App\Jobs\GenerateAttentionDigestJob::dispatch((int) Auth::id(), app('currentOrganization')->id);
+
+        return response()->json(['since' => $latest?->generated_at?->toISOString()]);
+    }
+
+    public function focusStatus()
+    {
+        return response()->json([
+            'generated_at' => \App\Models\AttentionDigest::latestFor((int) Auth::id())?->generated_at?->toISOString(),
+        ]);
     }
 
     private function executorTasksQuery(string $userId): Builder

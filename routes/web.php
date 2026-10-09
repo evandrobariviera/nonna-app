@@ -83,6 +83,11 @@ Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'ind
     ->middleware(['auth', 'verified'])->name('dashboard');
 Route::patch('/dashboard/modo', [\App\Http\Controllers\DashboardController::class, 'setMode'])
     ->middleware(['auth', 'verified'])->name('dashboard.mode');
+// "Seu foco" — gerar de novo na hora (fila) e consultar se o novo já ficou pronto.
+Route::post('/dashboard/foco', [\App\Http\Controllers\DashboardController::class, 'refreshFocus'])
+    ->middleware(['auth', 'verified'])->name('dashboard.focus.refresh');
+Route::get('/dashboard/foco/status', [\App\Http\Controllers\DashboardController::class, 'focusStatus'])
+    ->middleware(['auth', 'verified'])->name('dashboard.focus.status');
 Route::patch('/dashboard/distribuicao/time', [\App\Http\Controllers\DashboardController::class, 'setDistributionTeam'])
     ->middleware(['auth', 'verified'])->name('dashboard.distribution-team');
 Route::patch('/dashboard/midia-paga/criativos/{task}/resolver', [\App\Http\Controllers\DashboardController::class, 'resolveCriativoAlert'])

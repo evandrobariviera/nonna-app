@@ -484,6 +484,23 @@ class Task extends Model
      * critérios tirados por pedido explícito do usuário (2026-08-05): rígido demais, travava
      * tarefa completa só por causa do tipo/origem.
      */
+    /**
+     * Travas abertas (blocker_at) em que a pessoa executa OU é Responsável — o Head
+     * também precisa ver o que está segurando o time. Sem filtro de sprint; cliente
+     * inativo some (mesma regra de leitura do resto do app). Mais antiga primeiro.
+     * Usado pela faixa "Travando o time" da Dashboard e pelo "Seu foco" (AttentionDigestService).
+     */
+    public function scopeBlockersFor(Builder $query, int $userId): Builder
+    {
+        return $query->whereNotNull('blocker_at')
+            ->whereNotIn('status', ['concluido', 'cancelado'])
+            ->where(fn ($q) => $q
+                ->where('executor_id', $userId)
+                ->orWhereHas('executors', fn ($q2) => $q2->where('users.id', $userId)->whereIn('task_executors.role', ['executor', 'responsavel'])))
+            ->where(fn ($q) => $q->whereNull('client_id')->orWhereHas('client', fn ($c) => $c->where('status', '!=', 'inactive')))
+            ->orderBy('blocker_at');
+    }
+
     public function scopePendente(Builder $query): Builder
     {
         // Tarefa encerrada (concluída/cancelada) não precisa de dado completo —

@@ -89,6 +89,94 @@
         @endif
     </div>
 
+    {{-- ── SEU FOCO — resumo de atenção (AttentionDigestService), fixo em todo modo.
+         Gerado 07:30 e 12:00 em dia útil; a tela só lê o último. As REGRAS escolhem o
+         que entra, a IA só ordena e explica; link vem do servidor, nunca da IA. ── --}}
+    @php
+        $focusKinds = [
+            'trava'     => ['label' => 'Trava',           'color' => 'var(--red)'],
+            'ata'       => ['label' => 'Ler ATA',         'color' => 'var(--purple)'],
+            'revisao'   => ['label' => 'Revisar',         'color' => 'var(--purple)'],
+            'atrasada'  => ['label' => 'Atrasada',        'color' => 'var(--red)'],
+            'hoje'      => ['label' => 'Hoje',            'color' => 'var(--orange)'],
+            'reuniao'   => ['label' => 'Reunião',         'color' => '#2E90FA'],
+            'pendencia' => ['label' => 'Pendência',       'color' => 'var(--muted)'],
+        ];
+    @endphp
+    <div class="card px-5 py-4 mb-4" style="border-left:4px solid var(--purple)"
+         x-data="{
+             loading: false,
+             error: '',
+             async refresh() {
+                 if (this.loading) return;
+                 this.loading = true; this.error = '';
+                 const headers = { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content };
+                 const res = await fetch('{{ route('dashboard.focus.refresh') }}', { method: 'POST', headers });
+                 const data = await res.json().catch(() => ({}));
+                 if (!res.ok) { this.loading = false; this.error = data.message || 'Não foi possível atualizar agora.'; return; }
+                 for (let i = 0; i < 30; i++) {
+                     await new Promise(r => setTimeout(r, 3000));
+                     const s = await fetch('{{ route('dashboard.focus.status') }}', { headers }).then(r => r.json()).catch(() => ({}));
+                     if (s.generated_at && s.generated_at !== data.since) { window.location.reload(); return; }
+                 }
+                 this.loading = false; this.error = 'Está demorando mais que o normal. Recarregue a página daqui a pouco.';
+             },
+         }">
+        <div class="flex items-center justify-between gap-3 mb-2">
+            <h2 class="text-sm font-bold flex items-center gap-1.5" style="color:var(--purple)">
+                <x-icon name="target" size="15" /> Seu foco
+                @if($attentionDigest)
+                    <span class="text-xs font-normal font-mono" style="color:var(--muted)">
+                        · {{ $attentionDigest->generated_at->isToday() ? 'atualizado às ' . $attentionDigest->generated_at->format('H:i') : 'de ' . $attentionDigest->generated_at->format('d/m \à\s H:i') }}
+                    </span>
+                @endif
+            </h2>
+            @unless($viewingAs)
+                <button type="button" @click="refresh()" :disabled="loading" class="btn btn-ghost btn-xs flex items-center gap-1.5" title="Gerar o resumo de novo com o que está valendo agora">
+                    <x-icon name="refresh-cw" size="12" x-bind:class="loading && 'animate-spin'" />
+                    <span x-text="loading ? 'Atualizando…' : 'Atualizar'"></span>
+                </button>
+            @endunless
+        </div>
+        <p x-show="error" x-cloak x-text="error" class="text-xs mb-2" style="color:var(--red)"></p>
+
+        @if(! $attentionDigest)
+            <p class="text-sm" style="color:var(--muted2)">Aqui aparece, toda manhã e de novo ao meio-dia, onde vale pôr sua atenção. Clique em <strong>Atualizar</strong> pra ver o de agora.</p>
+        @else
+            @if($attentionDigest->opening)
+                <p class="text-sm mb-3" style="color:var(--text)">{{ $attentionDigest->opening }}</p>
+            @endif
+            @if(! empty($attentionDigest->focus))
+                <ol class="flex flex-col gap-1.5">
+                    @foreach($attentionDigest->focus as $i => $f)
+                        @php $k = $focusKinds[$f['kind'] ?? ''] ?? $focusKinds['pendencia']; @endphp
+                        <li>
+                            <a href="{{ $f['url'] }}" class="flex items-start gap-3 px-3 py-2 transition-colors"
+                               style="background:var(--s2)" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+                                <span class="text-sm font-black flex-shrink-0" style="color:var(--purple); min-width:14px">{{ $i + 1 }}</span>
+                                <span class="min-w-0 flex-1">
+                                    <span class="flex items-center gap-2 flex-wrap">
+                                        <span class="text-sm font-semibold" style="color:var(--text)">{{ $f['title'] }}</span>
+                                        <span class="text-xs font-semibold px-1.5" style="color:{{ $k['color'] }}; border:1px solid {{ $k['color'] }}; border-radius:4px; opacity:.85">{{ $k['label'] }}</span>
+                                    </span>
+                                    @if(! empty($f['why']))
+                                        <span class="block text-xs mt-0.5" style="color:var(--muted2)">{{ $f['why'] }}</span>
+                                    @endif
+                                </span>
+                            </a>
+                        </li>
+                    @endforeach
+                </ol>
+            @endif
+            @if($attentionDigest->can_wait)
+                <p class="text-xs mt-3" style="color:var(--muted)">{{ $attentionDigest->can_wait }}</p>
+            @endif
+            @if($attentionDigest->source === 'rules')
+                <p class="text-xs mt-2 font-mono" style="color:var(--muted)">Resumo automático pelas regras (a IA não respondeu desta vez).</p>
+            @endif
+        @endif
+    </div>
+
     {{-- ── CITAÇÃO LITERÁRIA DO DIA — fixa pra Organização inteira o dia todo
          (ver DashboardController::index(), rotação determinística pelo acervo
          literary_quotes). Ideia: estimular cultura/leitura na agência, com o

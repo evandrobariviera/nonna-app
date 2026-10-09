@@ -23,6 +23,7 @@ class AiAgent extends Model
     // Agentes "de sistema" que o código precisa achar sem depender do nome
     // (editável na tela) — slug fica fora do $fillable de propósito.
     public const SLUG_TASK_ASSISTANT = 'task-assistant';
+    public const SLUG_ATTENTION_DIGEST = 'attention-digest'; // "Seu foco" da Dashboard
 
     public static function bySlug(string $slug): ?self
     {
