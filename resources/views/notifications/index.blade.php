@@ -32,7 +32,9 @@
                             @endif
                         </div>
                         <div class="flex items-center gap-2 flex-shrink-0">
-                            @if($n->status === 'novo')
+                            @if(! $n->canDiscard())
+                                {{-- aviso de ATA: sem lido/não lido — só sai com "Li a ATA" --}}
+                            @elseif($n->status === 'novo')
                                 <form method="POST" action="{{ route('notifications.update-status', $n) }}">
                                     @csrf @method('PATCH')
                                     <input type="hidden" name="status" value="lido">
@@ -54,11 +56,11 @@
                                     @csrf @method('PATCH')
                                     <input type="hidden" name="status" value="resolvido">
                                     <button type="submit" class="btn btn-success btn-xs">
-                                        Resolver
+                                        {{ $n->resolveLabel() }}
                                     </button>
                                 </form>
                             @endif
-                            @if($n->status !== 'descartado')
+                            @if($n->status !== 'descartado' && $n->canDiscard())
                                 <form method="POST" action="{{ route('notifications.update-status', $n) }}">
                                     @csrf @method('PATCH')
                                     <input type="hidden" name="status" value="descartado">

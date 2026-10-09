@@ -24,6 +24,11 @@ class NotificationController extends Controller
             'status' => 'required|in:novo,lido,resolvido,descartado',
         ]);
 
+        // Aviso de ATA: "lido" também tiraria da Dashboard (que só mostra "novo") sem confirmar.
+        if (in_array($data['status'], ['descartado', 'lido'], true) && ! $notification->canDiscard()) {
+            return back()->with('error', 'Este aviso só sai depois de confirmar "Li a ATA".');
+        }
+
         $notification->update($data);
 
         return back()->with('success', 'Notificação atualizada.');

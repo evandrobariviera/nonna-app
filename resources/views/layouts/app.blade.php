@@ -350,18 +350,20 @@
                                             <p class="text-xs" style="color:var(--muted2); line-height:1.5">{{ $n->body }}</p>
                                         @endif
                                         <div class="flex items-center gap-3 mt-0.5">
-                                            <form method="POST" action="{{ route('notifications.update-status', $n) }}">
-                                                @csrf @method('PATCH')
-                                                <input type="hidden" name="status" value="lido">
-                                                <button type="submit" class="btn btn-ghost btn-xs">
-                                                    Marcar como lido
-                                                </button>
-                                            </form>
+                                            @if($n->canDiscard())
+                                                <form method="POST" action="{{ route('notifications.update-status', $n) }}">
+                                                    @csrf @method('PATCH')
+                                                    <input type="hidden" name="status" value="lido">
+                                                    <button type="submit" class="btn btn-ghost btn-xs">
+                                                        Marcar como lido
+                                                    </button>
+                                                </form>
+                                            @endif
                                             <form method="POST" action="{{ route('notifications.update-status', $n) }}">
                                                 @csrf @method('PATCH')
                                                 <input type="hidden" name="status" value="resolvido">
                                                 <button type="submit" class="btn btn-success btn-xs">
-                                                    Resolver
+                                                    {{ $n->resolveLabel() }}
                                                 </button>
                                             </form>
                                         </div>

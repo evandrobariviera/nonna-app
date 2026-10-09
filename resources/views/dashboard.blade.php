@@ -195,15 +195,17 @@
                     @endif
                     {{-- No "Ver como" a pendência é da outra pessoa — resolver aqui sumiria com ela da tela dela. --}}
                     <div class="flex items-center gap-2 flex-shrink-0" @if($viewingAs) style="display:none" @endif>
-                        <form method="POST" action="{{ route('notifications.update-status', $notification) }}">
-                            @csrf @method('PATCH')
-                            <input type="hidden" name="status" value="descartado">
-                            <button type="submit" class="btn btn-ghost btn-xs">Descartar</button>
-                        </form>
+                        @if($notification->canDiscard())
+                            <form method="POST" action="{{ route('notifications.update-status', $notification) }}">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="status" value="descartado">
+                                <button type="submit" class="btn btn-ghost btn-xs">Descartar</button>
+                            </form>
+                        @endif
                         <form method="POST" action="{{ route('notifications.update-status', $notification) }}">
                             @csrf @method('PATCH')
                             <input type="hidden" name="status" value="resolvido">
-                            <button type="submit" class="btn btn-primary btn-xs">✓ Resolver</button>
+                            <button type="submit" class="btn btn-primary btn-xs">✓ {{ $notification->resolveLabel() }}</button>
                         </form>
                     </div>
                 </div>

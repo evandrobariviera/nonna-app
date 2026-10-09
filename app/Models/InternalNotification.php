@@ -51,10 +51,36 @@ class InternalNotification extends Model
         'modulo_solicitado'        => 'megaphone',
         'meeting_transcribed'      => 'mic',
         'meeting_transcribe_failed' => 'mic',
+        self::KIND_ATA             => 'book-open',
     ];
+
+    // "Leia a ATA" — identificador posto na automação que avisa os participantes quando a
+    // reunião entra em Revisão Interna. Resolver = "Li a ATA" (é a confirmação de leitura
+    // que a página da reunião mostra) e não pode ser descartada: sumir com o aviso sem
+    // confirmar escondia quem chega sem ler na Revisão Interna.
+    public const KIND_ATA = 'ata_leitura';
+
+    public function isAtaReading(): bool
+    {
+        return $this->kind === self::KIND_ATA;
+    }
+
+    public function canDiscard(): bool
+    {
+        return ! $this->isAtaReading();
+    }
+
+    public function resolveLabel(): string
+    {
+        return $this->isAtaReading() ? 'Li a ATA' : 'Resolver';
+    }
 
     public function statusLabel(): string
     {
+        if ($this->isAtaReading() && $this->status === 'resolvido') {
+            return 'Leu a ATA';
+        }
+
         return self::$statuses[$this->status]['label'] ?? $this->status;
     }
 
