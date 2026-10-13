@@ -561,12 +561,9 @@ class DashboardController extends Controller
         return ExecutorQueue::executedBy(Task::query(), (int) $userId);
     }
 
-    /** A fila do executor na sprint (ExecutorQueue), na ordem do quadro: data de aprovação. */
+    /** A fila do executor na sprint (ExecutorQueue), na ordem de prioridade: Trava, depois data. */
     private function executorQueue(string|int $userId, Sprint $sprint): Builder
     {
-        return ExecutorQueue::query((int) $userId, $sprint)
-            ->with('client')
-            ->orderByRaw('approval_date asc nulls last')
-            ->orderBy('title');
+        return ExecutorQueue::prioritized(ExecutorQueue::query((int) $userId, $sprint)->with('client'));
     }
 }

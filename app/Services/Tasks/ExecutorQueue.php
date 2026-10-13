@@ -78,6 +78,20 @@ class ExecutorQueue
         );
     }
 
+    /**
+     * Ordem de prioridade da fila: Trava primeiro (sempre urgência — tem gente esperando; a
+     * travada há mais tempo na frente), depois data de aprovação. Mesma ordem na Execução e
+     * na grade da Distribuição.
+     */
+    public static function prioritized(Builder $query): Builder
+    {
+        return $query
+            ->orderByRaw('blocker_at is null')
+            ->orderBy('blocker_at')
+            ->orderByRaw('approval_date asc nulls last')
+            ->orderBy('title');
+    }
+
     /** Atrasada: data de aprovação antes de hoje (hoje ainda não é atraso). */
     public static function isOverdue(Task $task): bool
     {

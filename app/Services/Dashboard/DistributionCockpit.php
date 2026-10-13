@@ -103,12 +103,12 @@ class DistributionCockpit
             ->whereDate('approval_date', '>=', $monday)
             ->whereDate('approval_date', '<=', $friday)
             ->where(fn ($q) => $q->where('status', 'concluido')->orWhereDate('approval_date', '>=', today()))
-            ->orderBy('approval_date')->orderBy('title')
+            ->tap(fn ($q) => ExecutorQueue::prioritized($q)) // Trava primeiro, igual à Execução
             ->get();
 
         $overdueTasks = $gridBase(array_values(array_diff($loadStatuses, self::CLOSED)))
             ->whereDate('approval_date', '<', today())
-            ->orderBy('approval_date')->orderBy('title')
+            ->tap(fn ($q) => ExecutorQueue::prioritized($q)) // Trava primeiro, igual à Execução
             ->get();
 
         // Tarefas com data até o fim da semana que o executor NÃO vê, porque estão fora da

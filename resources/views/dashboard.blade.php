@@ -609,7 +609,13 @@
                              onclick="window.location='{{ route('tasks.show', $task) }}'">
                             <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="32" />
                             <div class="min-w-0">
-                                <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $task->title }}</p>
+                                <p class="text-xs font-semibold leading-snug" style="color:var(--text)">
+                                    @if($task->blocker_at)
+                                        {{-- Trava = urgência (tem gente esperando) — sobe pro topo da coluna (ExecutorQueue::prioritized). --}}
+                                        <span class="font-mono font-bold mr-1 px-1" style="font-size:9px; color:#fff; background:var(--red); border-radius:4px; vertical-align:1px">TRAVA</span>
+                                    @endif
+                                    {{ $task->title }}
+                                </p>
                                 <div class="flex items-center gap-2 mt-1">
                                     <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->displayName() ?? '—' }}</span>
                                     @if(! empty($q['review']))

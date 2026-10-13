@@ -325,6 +325,9 @@
                                                          style="background:var(--s2); border-left:3px solid {{ $isMine ? 'var(--purple)' : 'var(--border2)' }}; {{ $done ? 'opacity:.55' : '' }} {{ $canAct && ! $done ? 'cursor:pointer' : '' }}"
                                                          :style="moving && moving.id === '{{ $task->id }}' ? { outline: '2px solid var(--purple)', background: 'rgba(100,59,142,.12)' } : {}"
                                                          @if($canAct && ! $done) @click="pick(@js($p))" @endif>
+                                                        @if($task->blocker_at)
+                                                            <span class="font-mono font-bold flex-shrink-0 px-1" style="font-size:9px; color:#fff; background:var(--red); border-radius:4px" title="Trava — tem gente esperando">TRAVA</span>
+                                                        @endif
                                                         @if($foco = $d['focusRank'][$uid][$task->id] ?? null)
                                                             <span class="font-mono font-bold flex-shrink-0 px-1" style="font-size:9px; color:#fff; background:var(--purple); border-radius:4px" title="Posição no Seu foco de {{ $row['user']->name }}">Foco {{ $foco }}</span>
                                                         @endif
