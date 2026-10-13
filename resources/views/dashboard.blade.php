@@ -599,7 +599,8 @@
                         @php
                             $statusUrl = $task->is_ticket ? route('tickets.update-status', $task) : route('tasks.update-status-direct', $task);
                             // Data de aprovação, não vencimento — é o prazo relevante nesta etapa.
-                            $isApprovalOverdue = $task->approval_date && $task->approval_date->isPast() && $task->status !== 'concluido';
+                            // Atrasada = antes de HOJE (isPast() pegava o próprio dia — vence hoje aparecia como atrasada).
+                            $isApprovalOverdue = \App\Services\Tasks\ExecutorQueue::isOverdue($task);
                         @endphp
                         <div data-kanban-card data-id="{{ $task->id }}" data-update-url="{{ $statusUrl }}"
                              class="flex items-center gap-2.5 px-3 py-2 transition-colors" style="cursor:pointer;

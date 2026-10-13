@@ -10,7 +10,7 @@ use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\User;
 use App\Services\AiService;
-use Illuminate\Database\Eloquent\Builder;
+use App\Services\Tasks\ExecutorQueue;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -116,7 +116,6 @@ class AttentionDigestService
             return $key;
         };
         $client = fn ($model) => $model->client?->displayName();
-        $openStatuses = ['backlog', 'em_producao', 'ajuste_alteracao'];
         $activeSprint = Sprint::where('status', 'active')->first();
 
         // 1. Travas — outras pessoas esperando
@@ -159,11 +158,10 @@ class AttentionDigestService
             'data_aprovacao' => $t->approval_date?->format('d/m'),
         ])->all();
 
-        // 4/5. Atrasadas e que vencem hoje (sou executor; data de aprovação; sprint ativa)
-        $mine = fn () => $this->executedBy($userId)
-            ->whereIn('status', $openStatuses)
-            ->whereNull('blocker_at') // trava já entrou em cima
-            ->when($activeSprint, fn ($q) => $q->where('sprint_id', $activeSprint->id));
+        // 4/5. Atrasadas e que vencem hoje — a fila do executor (ExecutorQueue), a MESMA do
+        // quadro da Execução e da grade da Distribuição: o Head vê a mesma prioridade.
+        $mine = fn () => ExecutorQueue::query($userId, $activeSprint)
+            ->whereNull('blocker_at'); // trava já entrou em cima
         $overdue = $mine()->whereDate('approval_date', '<', today())->with('client')->orderBy('approval_date')->get();
         $dueToday = $mine()->whereDate('approval_date', today())->with('client')->orderBy('title')->get();
         $taskRow = fn (string $prefix, string $kind) => fn ($t, $i) => [
@@ -220,14 +218,6 @@ class AttentionDigestService
         ];
 
         return [$items, $links];
-    }
-
-    private function executedBy(int $userId): Builder
-    {
-        // Mesma régua do DashboardController::executorTasksQuery — só papel "executor".
-        return Task::where(fn ($q) => $q
-            ->where('executor_id', $userId)
-            ->orWhereHas('executors', fn ($q2) => $q2->where('users.id', $userId)->where('task_executors.role', 'executor')));
     }
 
     private function isEmpty(array $items): bool

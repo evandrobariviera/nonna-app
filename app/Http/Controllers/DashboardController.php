@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Services\Dashboard\DistributionCockpit;
 use App\Services\Dashboard\PlanningCockpit;
 use App\Services\Dashboard\SprintScoreboard;
+use App\Services\Tasks\ExecutorQueue;
 use App\Support\DashboardModes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -135,22 +136,15 @@ class DashboardController extends Controller
                 ->get()
             : collect();
 
+        // As 3 colunas são a fila do executor (ExecutorQueue) — a mesma que a grade da
+        // Distribuição mostra pro Head e que o "Seu foco" usa. "Pronto para Produção" = Backlog
+        // que não está esperando insumo (copy / informação do cliente).
         if ($activeSprint && $show('kanban')) {
-            $myAdjustmentTasks =$this->executorTasksQuery($userId)
-                ->where('sprint_id', $activeSprint->id)
-                ->where('status', 'ajuste_alteracao')
-                ->with('client')->orderBy('approval_date')->get();
+            $queue = $this->executorQueue($userId, $activeSprint)->get();
 
-            $myProductionTasks = $this->executorTasksQuery($userId)
-                ->where('sprint_id', $activeSprint->id)
-                ->where('status', 'em_producao')
-                ->with('client')->orderBy('approval_date')->get();
-
-            $myReadyForProductionTasks = $this->executorTasksQuery($userId)
-                ->where('sprint_id', $activeSprint->id)
-                ->where('status', 'backlog')
-                ->where('situation', 'Pronto para produção')
-                ->with('client')->orderBy('approval_date')->get();
+            $myAdjustmentTasks         = $queue->where('status', 'ajuste_alteracao')->values();
+            $myProductionTasks         = $queue->where('status', 'em_producao')->values();
+            $myReadyForProductionTasks = $queue->where('status', 'backlog')->values();
         }
 
         // "Meus Números na Sprint" — recorte pessoal acima dos 3 quadros de Operação:
@@ -204,16 +198,14 @@ class DashboardController extends Controller
         $myMeetingsByStatus = $myMeetingsAgenda->groupBy('status');
 
         // ── Faixa "Hoje" (fixa, aparece em qualquer modo) ──
-        // Minhas reuniões de hoje + o que está atrasado comigo na sprint (mesma régua do
-        // quadro de Operação: sou executor, etapa minha, data de aprovação já passou).
+        // Minhas reuniões de hoje + o que está atrasado comigo na sprint (mesma fila do
+        // quadro de Operação — ExecutorQueue — com data de aprovação antes de hoje).
         $myMeetingsToday = $myMeetingsAgenda->filter(fn ($m) => $m->scheduled_at->isToday())->values();
 
         $myOverdueTasks = $activeSprint
-            ? $this->executorTasksQuery($userId)
-                ->where('sprint_id', $activeSprint->id)
-                ->whereIn('status', ['backlog', 'em_producao', 'ajuste_alteracao'])
+            ? $this->executorQueue($userId, $activeSprint)
                 ->whereDate('approval_date', '<', today())
-                ->with('client')->orderBy('approval_date')->get()
+                ->get()
             : collect();
 
         // ── Travas (fixa, aparece em qualquer modo, acima do "Hoje") ──
@@ -564,12 +556,17 @@ class DashboardController extends Controller
 
     private function executorTasksQuery(string $userId): Builder
     {
-        // whereHas('executors', ...) sem filtrar role pegava QUALQUER papel da tabela
-        // pivot (responsável/observador inclusos) — "Operação" no Dashboard é
-        // exclusivamente sobre o que a pessoa executa, não sobre onde ela é responsável.
-        return Task::where(function ($q) use ($userId) {
-            $q->where('executor_id', $userId)
-              ->orWhereHas('executors', fn ($q2) => $q2->where('users.id', $userId)->where('task_executors.role', 'executor'));
-        });
+        // "Operação" no Dashboard é exclusivamente sobre o que a pessoa executa, não sobre
+        // onde ela é responsável — mesma regra de executor da Distribuição (ExecutorQueue).
+        return ExecutorQueue::executedBy(Task::query(), (int) $userId);
+    }
+
+    /** A fila do executor na sprint (ExecutorQueue), na ordem do quadro: data de aprovação. */
+    private function executorQueue(string|int $userId, Sprint $sprint): Builder
+    {
+        return ExecutorQueue::query((int) $userId, $sprint)
+            ->with('client')
+            ->orderByRaw('approval_date asc nulls last')
+            ->orderBy('title');
     }
 }

@@ -2,10 +2,12 @@
 
 namespace App\Services\Dashboard;
 
+use App\Models\AttentionDigest;
 use App\Models\OrganizationUser;
 use App\Models\Sector;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\Tasks\ExecutorQueue;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -32,12 +34,20 @@ class DistributionCockpit
 {
     private const CLOSED = ['concluido', 'cancelado'];
 
-    // Status que contam como carga na grade quando ninguém mexeu no filtro.
-    public const DEFAULT_LOAD_STATUSES = ['backlog', 'ajuste_alteracao'];
+    // Status que contam como carga na grade quando ninguém mexeu no filtro = a fila do executor
+    // (ExecutorQueue): o Head abre a grade e vê exatamente o que cada pessoa vê na Execução.
+    // Os outros status (revisão, aprovação...) e o Backlog esperando insumo são contexto que o
+    // Head liga quando quiser.
+    public const DEFAULT_LOAD_STATUSES = ExecutorQueue::STATUSES;
+
+    // Opção extra do filtro (não é status): inclui o Backlog esperando copy/informação.
+    public const WAITING_INPUT_OPTION = 'aguardando_insumo';
 
     public function build(int $userId, int $weekOffset, array $loadStatuses = self::DEFAULT_LOAD_STATUSES): array
     {
+        $withWaiting  = in_array(self::WAITING_INPUT_OPTION, $loadStatuses, true);
         $loadStatuses = array_values(array_intersect($loadStatuses, array_keys(Task::$statuses))) ?: self::DEFAULT_LOAD_STATUSES;
+        $sprint       = ExecutorQueue::activeSprint();
 
         $monday = now()->startOfWeek(CarbonInterface::MONDAY)->addWeeks($weekOffset)->startOfDay();
         $friday = $monday->copy()->addDays(4);
@@ -79,21 +89,42 @@ class DistributionCockpit
             ->get();
 
         // ── Grade Pessoa × Dia ──
-        // Só os status escolhidos no filtro da grade — padrão Backlog + Ajuste/Alteração (o
-        // que ainda vai ocupar o executor): tarefa em revisão, aprovação ou despacho já saiu da
-        // mão dele e inflava a carga (decisão do usuário). Atrasadas de antes da semana, nos
-        // mesmos status, viram uma coluna à parte.
-        $weekTasks = $this->forExecutors(Task::whereIn('status', $loadStatuses), $teamIds)
+        // Mesma base da fila do executor (ExecutorQueue: sprint ativa, cliente ativo, sem o
+        // Backlog esperando insumo) nos status escolhidos no filtro — padrão = a fila inteira.
+        // Atrasada = data de aprovação antes de HOJE (a mesma régua da Execução e do "Seu
+        // foco"): o que venceu ontem sai da coluna do dia e vai pra "Atrasadas".
+        $gridBase = fn (array $statuses) => ExecutorQueue::activeClients(
+                ExecutorQueue::executedBy(Task::whereIn('status', $statuses), $teamIds))
+            ->when($sprint, fn ($q) => $q->where('sprint_id', $sprint->id))
+            ->when(! $withWaiting, fn ($q) => ExecutorQueue::withoutWaitingInput($q))
+            ->with(['client', 'executor', 'executors', 'responsibles']);
+
+        $weekTasks = $gridBase($loadStatuses)
             ->whereDate('approval_date', '>=', $monday)
             ->whereDate('approval_date', '<=', $friday)
-            ->with(['client', 'executor', 'executors', 'responsibles'])
+            ->where(fn ($q) => $q->where('status', 'concluido')->orWhereDate('approval_date', '>=', today()))
+            ->orderBy('approval_date')->orderBy('title')
             ->get();
 
-        $overdueTasks = $this->forExecutors($this->open()->whereIn('status', $loadStatuses), $teamIds)
-            ->whereDate('approval_date', '<', $monday)
-            ->with(['client', 'executor', 'executors', 'responsibles'])
-            ->orderBy('approval_date')
+        $overdueTasks = $gridBase(array_values(array_diff($loadStatuses, self::CLOSED)))
+            ->whereDate('approval_date', '<', today())
+            ->orderBy('approval_date')->orderBy('title')
             ->get();
+
+        // Tarefas com data até o fim da semana que o executor NÃO vê, porque estão fora da
+        // sprint ativa (sprint futura ou nenhuma) — contexto pro Head mover pra sprint.
+        $outsideSprint = $sprint
+            ? ExecutorQueue::activeClients(ExecutorQueue::executedBy(Task::whereIn('status', ExecutorQueue::STATUSES), $teamIds))
+                ->where(fn ($q) => $q->whereNull('sprint_id')->orWhere('sprint_id', '!=', $sprint->id))
+                ->whereDate('approval_date', '<=', $friday)
+                ->with(['client', 'executor', 'executors', 'sprint'])
+                ->orderBy('approval_date')
+                ->get()
+            : collect();
+
+        // "Seu foco" de cada pessoa do time (último resumo gerado) → tarefa => posição, pra
+        // grade mostrar ao Head o que o executor foi orientado a atacar primeiro.
+        $focusRank = $this->focusRank($team->pluck('id')->all());
 
         $days = [];
         for ($d = $monday->copy(); $d->lte($friday); $d->addDay()) {
@@ -129,7 +160,39 @@ class DistributionCockpit
             'maxCell'           => $maxCell,
             'weekOffset'        => $weekOffset,
             'loadStatuses'      => $loadStatuses,
+            'withWaiting'       => $withWaiting,
+            'outsideSprint'     => $outsideSprint,
+            'focusRank'         => $focusRank,
+            'sprint'            => $sprint,
         ];
+    }
+
+    /**
+     * Posição de cada tarefa no "Seu foco" atual de cada pessoa: [userId => [taskId => n]].
+     * O foco guarda o link da tarefa (tasks.show), não o id — o id é o último trecho da URL.
+     */
+    private function focusRank(array $userIds): array
+    {
+        if (! $userIds) {
+            return [];
+        }
+
+        $latest = AttentionDigest::whereIn('user_id', $userIds)
+            ->whereIn('id', AttentionDigest::selectRaw('distinct on (user_id) id')
+                ->whereIn('user_id', $userIds)
+                ->orderBy('user_id')->orderByDesc('generated_at'))
+            ->get(['id', 'user_id', 'focus']);
+
+        $rank = [];
+        foreach ($latest as $digest) {
+            foreach (array_values($digest->focus ?? []) as $i => $item) {
+                if (preg_match('~/tarefas/([0-9a-f-]{36})~i', (string) ($item['url'] ?? ''), $m)) {
+                    $rank[$digest->user_id][$m[1]] = $i + 1;
+                }
+            }
+        }
+
+        return $rank;
     }
 
     /**
@@ -309,11 +372,7 @@ class DistributionCockpit
 
     private function forExecutors(Builder $query, array $userIds): Builder
     {
-        return $query->where(fn ($q) => $q
-            ->whereHas('executors', fn ($e) => $e->whereIn('users.id', $userIds)->where('task_executors.role', 'executor'))
-            ->orWhere(fn ($o) => $o
-                ->whereIn('executor_id', $userIds)
-                ->whereDoesntHave('executors', fn ($e) => $e->where('task_executors.role', 'executor'))));
+        return ExecutorQueue::executedBy($query, $userIds);
     }
 
     private function withoutExecutor(Builder $query): Builder

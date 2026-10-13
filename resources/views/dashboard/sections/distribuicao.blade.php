@@ -130,8 +130,9 @@
                 </h3>
                 @php
                     // Filtro de status só vai pra URL quando sai do padrão — link limpo no dia a dia.
-                    $customLoad = $d['loadStatuses'] != \App\Services\Dashboard\DistributionCockpit::DEFAULT_LOAD_STATUSES;
-                    $loadParam = $customLoad ? ['carga' => $d['loadStatuses']] : [];
+                    $waitOpt = \App\Services\Dashboard\DistributionCockpit::WAITING_INPUT_OPTION;
+                    $customLoad = $d['loadStatuses'] != \App\Services\Dashboard\DistributionCockpit::DEFAULT_LOAD_STATUSES || $d['withWaiting'];
+                    $loadParam = $customLoad ? ['carga' => array_merge($d['loadStatuses'], $d['withWaiting'] ? [$waitOpt] : [])] : [];
                 @endphp
                 <div class="flex items-center gap-1.5">
                     <a href="{{ $dashUrl(['semana' => $d['weekOffset'] - 1] + $loadParam) }}" class="btn btn-ghost btn-xs">‹ Anterior</a>
@@ -143,8 +144,9 @@
                 </div>
             </div>
 
-            {{-- Status que contam como carga — padrão Backlog + Ajuste/Alteração (o que ainda vai
-                 ocupar o executor). Revisão, aprovação e despacho já saíram da mão dele. --}}
+            {{-- Status que contam como carga — padrão = a fila do executor (ExecutorQueue: Backlog
+                 pronto + Em Produção + Ajuste, sprint ativa): o Head vê o mesmo que cada pessoa vê
+                 na Execução. O resto (revisão, aprovação, Backlog esperando insumo) é contexto. --}}
             <form method="GET" action="{{ route('dashboard') }}" class="flex flex-wrap items-center gap-1.5 mb-2">
                 @if($viewingAs)
                     <input type="hidden" name="ver_como" value="{{ $viewingAs->id }}">
@@ -162,12 +164,23 @@
                         <input type="checkbox" name="carga[]" value="{{ $s }}" @checked($on) onchange="this.form.submit()" style="accent-color:var(--purple)">
                         {{ $meta['label'] }}
                     </label>
+                    @if($s === 'backlog')
+                        {{-- Backlog esperando copy/informação: não está na fila do executor (ele não vê). --}}
+                        <label class="flex items-center gap-1.5 text-xs cursor-pointer px-2 py-1" title="Backlog em Pendente de Informações / Aguardando Copy — o executor não vê essas na Execução"
+                               style="border:1px dashed {{ $d['withWaiting'] ? 'rgba(238,121,25,.5)' : 'var(--border2)' }}; border-radius:6px; background:{{ $d['withWaiting'] ? 'rgba(238,121,25,.08)' : 'transparent' }}; color:{{ $d['withWaiting'] ? 'var(--orange)' : 'var(--muted2)' }}">
+                            <input type="checkbox" name="carga[]" value="{{ $waitOpt }}" @checked($d['withWaiting']) onchange="this.form.submit()" style="accent-color:var(--orange)">
+                            Aguardando insumo
+                        </label>
+                    @endif
                 @endforeach
                 @if($customLoad)
                     <a href="{{ $dashUrl($d['weekOffset'] !== 0 ? ['semana' => $d['weekOffset']] : []) }}" class="text-xs font-semibold ml-1" style="color:var(--purple)">voltar ao padrão</a>
                 @endif
             </form>
             <p class="text-xs mb-3" style="color:var(--muted2)">
+                @if(! $customLoad)
+                    Mostrando exatamente o que cada pessoa vê na Execução{{ $d['sprint'] ? ' (sprint ativa)' : '' }}. <span style="color:var(--purple)">Foco n</span> = posição no "Seu foco" dela.
+                @endif
                 @if(! $hasInbox)
                     <span style="color:var(--green)">✓ Nada seu pra distribuir.</span>
                 @endif
@@ -229,7 +242,7 @@
                         <thead>
                             <tr>
                                 <th class="text-left font-mono uppercase tracking-widest px-2" style="color:var(--muted); font-weight:600">Pessoa</th>
-                                <th class="font-mono uppercase tracking-widest px-1" style="color:var(--red); font-weight:600" title="Abertas com data de aprovação antes desta semana">Atrasadas</th>
+                                <th class="font-mono uppercase tracking-widest px-1" style="color:var(--red); font-weight:600" title="Abertas com data de aprovação antes de hoje — a mesma régua da Execução e do Seu foco">Atrasadas</th>
                                 @foreach($d['days'] as $day)
                                     <th class="font-mono uppercase tracking-widest px-1" style="color:{{ $day->isToday() ? 'var(--green)' : 'var(--purple)' }}; font-weight:700">
                                         {{ ucfirst($day->translatedFormat('D')) }} {{ $day->format('d/m') }}
@@ -242,7 +255,14 @@
                             @foreach($d['grid'] as $row)
                                 @php $uid = $row['user']->id; @endphp
                                 <tr>
-                                    <td class="px-2 py-1 font-semibold whitespace-nowrap" style="color:var(--text)">{{ $row['user']->name }}</td>
+                                    <td class="px-2 py-1 font-semibold whitespace-nowrap" style="color:var(--text)">
+                                        {{-- Nome leva pro "Ver como" da Execução da pessoa (quando quem olha pode). --}}
+                                        @if($teamMembers->contains('id', $uid))
+                                            <a href="{{ route('dashboard', ['ver_como' => $uid, 'modo' => 'execucao']) }}" class="hover:underline" title="Ver a Execução como {{ $row['user']->name }}" style="color:var(--text)">{{ $row['user']->name }}</a>
+                                        @else
+                                            {{ $row['user']->name }}
+                                        @endif
+                                    </td>
 
                                     {{-- Atrasadas: só origem (não dá pra mover PRA data no passado) --}}
                                     @php $c = $row['overdue']; $key = "{$uid}-overdue"; @endphp
@@ -305,7 +325,13 @@
                                                          style="background:var(--s2); border-left:3px solid {{ $isMine ? 'var(--purple)' : 'var(--border2)' }}; {{ $done ? 'opacity:.55' : '' }} {{ $canAct && ! $done ? 'cursor:pointer' : '' }}"
                                                          :style="moving && moving.id === '{{ $task->id }}' ? { outline: '2px solid var(--purple)', background: 'rgba(100,59,142,.12)' } : {}"
                                                          @if($canAct && ! $done) @click="pick(@js($p))" @endif>
+                                                        @if($foco = $d['focusRank'][$uid][$task->id] ?? null)
+                                                            <span class="font-mono font-bold flex-shrink-0 px-1" style="font-size:9px; color:#fff; background:var(--purple); border-radius:4px" title="Posição no Seu foco de {{ $row['user']->name }}">Foco {{ $foco }}</span>
+                                                        @endif
                                                         <span class="badge badge-{{ $task->statusColor() }}" style="font-size:8px; padding:1px 5px">{{ $task->statusLabel() }}</span>
+                                                        @if($task->status === 'backlog' && in_array($task->situation, \App\Services\Tasks\ExecutorQueue::WAITING_INPUT, true))
+                                                            <span class="font-mono flex-shrink-0" style="font-size:9px; color:var(--orange)" title="Executor não vê — esperando insumo">{{ $task->situation }}</span>
+                                                        @endif
                                                         <span class="font-mono flex-shrink-0" style="color:var(--muted)">{{ $task->sprint_points ?? 1 }}pt</span>
                                                         <span class="font-semibold truncate" style="color:var(--text)">{{ $task->title }}</span>
                                                         <span class="truncate" style="color:var(--muted)">{{ $task->client?->displayName() }}</span>
@@ -332,6 +358,28 @@
                             @endforeach
                         </tbody>
                     </table>
+                </div>
+            @endif
+
+            {{-- Fora da sprint ativa, com data até o fim da semana — o executor NÃO vê na Execução.
+                 Contexto pro Head trazer pra sprint (ou mudar a data). --}}
+            @if($d['outsideSprint']->isNotEmpty())
+                <div x-data="{ open: false }" class="text-xs mt-3">
+                    <button type="button" class="font-semibold" style="color:var(--orange)" @click="open = !open">
+                        <span x-text="open ? '▾' : '▸'"></span>
+                        {{ $d['outsideSprint']->count() }} tarefa(s) do time com data até {{ $d['days'][4]->format('d/m') }} fora da sprint ativa — o executor não vê
+                    </button>
+                    <div x-show="open" x-cloak class="flex flex-col gap-1 mt-1.5">
+                        @foreach($d['outsideSprint'] as $task)
+                            @php $exec = $task->executors->firstWhere('pivot.role', 'executor') ?? $task->executor; @endphp
+                            <button type="button" class="text-left px-2 py-1 flex items-center gap-2" style="background:var(--s2); color:var(--text)"
+                                    @click="$store.taskPopup.open('{{ route('tasks.show', $task) }}')">
+                                <span class="font-mono flex-shrink-0" style="color:{{ $task->approval_date->lt(today()) ? 'var(--red)' : 'var(--muted)' }}">{{ $task->approval_date->format('d/m') }}</span>
+                                <span class="truncate">{{ $task->title }}</span>
+                                <span class="truncate" style="color:var(--muted)">· {{ $exec ? explode(' ', $exec->name)[0] : '—' }} · {{ $task->sprint ? \Illuminate\Support\Str::before($task->sprint->title, ' (') : 'sem sprint' }}</span>
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
             @endif
 
