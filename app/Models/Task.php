@@ -57,7 +57,10 @@ class Task extends Model
     ];
 
     public static array $types = [
-        'criacao'        => 'Criação / Audiovisual',
+        // 'criacao' manteve a chave (limites dos clientes, pontos e formatos já gravados nela)
+        // e passou a ser só peça gráfica; vídeo/reels/captação ganharam tipo próprio (2026-10-13).
+        'criacao'        => 'Material Gráfico',
+        'video'          => 'Vídeo / Audiovisual',
         'web'            => 'Web / Dev',
         'trafego'        => 'Tráfego / Performance',
         'setup'          => 'Setup / Tracking',
@@ -73,7 +76,8 @@ class Task extends Model
     // via $statuses — ver "Lei das Cores" em business-context.md). Nomes batem
     // com resources/icons/lucide/*.svg (ver App\View\Components\Icon).
     public static array $typeIcons = [
-        'criacao'        => 'image-play',
+        'criacao'        => 'palette',
+        'video'          => 'clapperboard',
         'web'            => 'code',
         'trafego'        => 'trending-up',
         'setup'          => 'settings-2',

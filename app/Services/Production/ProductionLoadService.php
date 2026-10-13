@@ -206,8 +206,10 @@ class ProductionLoadService
             $doCliente = $executadas->where('client_id', $clientId);
             $cota = $mesInteiro ? ($cliente?->production_quota ?? []) : [];
 
+            // "n_cota" = o que conta pro limite desse tipo (o de criação soma gráfico + vídeo).
             $celulas = $tipos->mapWithKeys(fn ($tipo) => [$tipo => [
                 'n' => $doCliente->where('task_type', $tipo)->count(),
+                'n_cota' => $doCliente->whereIn('task_type', Client::taskTypesForQuota($tipo))->count(),
                 'cota' => (int) ($cota[$tipo] ?? 0) ?: null,
             ]])->all();
             if ($semTipo) {
@@ -258,8 +260,8 @@ class ProductionLoadService
         $pedidos = Task::whereIn('client_id', $ids)
             ->where('status', '!=', 'cancelado')
             ->whereRaw('date_trunc(?, COALESCE(approval_date, created_at)) = date_trunc(?, ?::date)', ['month', 'month', $mes->toDateString()])
-            ->selectRaw('client_id, task_type, count(*) as n')
-            ->groupBy('client_id', 'task_type')
+            ->selectRaw('client_id, ' . Client::quotaTypeSql() . ' as task_type, count(*) as n')
+            ->groupByRaw('client_id, ' . Client::quotaTypeSql())
             ->toBase()->get();
 
         $conclusoes = DB::connection('pgsql')->table('task_status_transitions')
@@ -270,8 +272,8 @@ class ProductionLoadService
             ->where('tasks.status', 'concluido')
             ->joinSub($conclusoes, 'c', 'c.task_id', '=', 'tasks.id')
             ->whereBetween('c.concluida_em', [$mes, $fimMes])
-            ->selectRaw('tasks.client_id, tasks.task_type, count(*) as n')
-            ->groupBy('tasks.client_id', 'tasks.task_type')
+            ->selectRaw('tasks.client_id, ' . Client::quotaTypeSql('tasks.task_type') . ' as task_type, count(*) as n')
+            ->groupByRaw('tasks.client_id, ' . Client::quotaTypeSql('tasks.task_type'))
             ->toBase()->get();
 
         $linhas = $clientes->map(function (Client $c) use ($pedidos, $executados) {
@@ -282,7 +284,7 @@ class ProductionLoadService
 
                     return [
                         'tipo' => $tipo,
-                        'label' => Task::$types[$tipo] ?? $tipo,
+                        'label' => Client::quotaTypeLabel($tipo),
                         'limite' => (int) $limite,
                         'pedido' => $pedido,
                         'executado' => (int) ($executados->where('client_id', $c->id)->where('task_type', $tipo)->first()->n ?? 0),

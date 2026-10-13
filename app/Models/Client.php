@@ -107,6 +107,32 @@ class Client extends Model
         'criacao', 'web', 'trafego', 'social', 'setup', 'seo', 'email',
     ];
 
+    // Tipos de tarefa que consomem o limite de outro tipo. Vídeo saiu de "Criação" como tipo
+    // próprio (2026-10-13), mas o limite combinado com o cliente continua um só, somando
+    // peça gráfica + vídeo — decisão do Evandro até separar por contrato.
+    public const QUOTA_TYPE_ALIASES = ['video' => 'criacao'];
+
+    /** Nome do limite na tela (o de criação soma gráfico + vídeo, então não usa o rótulo do tipo). */
+    public static function quotaTypeLabel(string $type): string
+    {
+        return $type === 'criacao' ? 'Criação (gráfico + vídeo)' : (Task::$types[$type] ?? $type);
+    }
+
+    /** Expressão SQL que devolve o tipo de LIMITE da tarefa (vídeo → criacao) — usar com "as task_type". */
+    public static function quotaTypeSql(string $column = 'task_type'): string
+    {
+        $cases = collect(self::QUOTA_TYPE_ALIASES)
+            ->map(fn ($to, $from) => "WHEN {$column} = '{$from}' THEN '{$to}'")->implode(' ');
+
+        return "CASE {$cases} ELSE {$column} END";
+    }
+
+    /** Tipos de tarefa que contam no limite $quotaType (ex.: criacao → criacao + video). */
+    public static function taskTypesForQuota(string $quotaType): array
+    {
+        return array_merge([$quotaType], array_keys(self::QUOTA_TYPE_ALIASES, $quotaType, true));
+    }
+
     // Resultado de completeness() guardado por instância — ver o método.
     private ?array $completenessCache = null;
 
@@ -345,8 +371,8 @@ class Client extends Model
             ->where('status', '!=', 'cancelado')
             ->whereRaw('date_trunc(?, COALESCE(approval_date, created_at)) = date_trunc(?, ?::date)',
                 ['month', 'month', $month->toDateString()])
-            ->selectRaw('task_type, count(*) as total')
-            ->groupBy('task_type')
+            ->selectRaw(self::quotaTypeSql() . ' as task_type, count(*) as total')
+            ->groupByRaw(self::quotaTypeSql())
             ->pluck('total', 'task_type');
 
         $conclusoes = \Illuminate\Support\Facades\DB::connection('pgsql')->table('task_status_transitions')
@@ -357,8 +383,8 @@ class Client extends Model
             ->where('tasks.status', 'concluido')
             ->joinSub($conclusoes, 'c', 'c.task_id', '=', 'tasks.id')
             ->whereBetween('c.concluida_em', [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()])
-            ->selectRaw('tasks.task_type, count(*) as total')
-            ->groupBy('tasks.task_type')
+            ->selectRaw(self::quotaTypeSql('tasks.task_type') . ' as task_type, count(*) as total')
+            ->groupByRaw(self::quotaTypeSql('tasks.task_type'))
             ->pluck('total', 'task_type');
 
         $saida = [];
@@ -370,7 +396,7 @@ class Client extends Model
             $used = (int) ($usados[$type] ?? 0);
             $saida[] = [
                 'type'  => $type,
-                'label' => Task::$types[$type] ?? $type,
+                'label' => self::quotaTypeLabel($type),
                 'quota' => $qtd,
                 'used'  => $used,
                 'left'  => max(0, $qtd - $used),

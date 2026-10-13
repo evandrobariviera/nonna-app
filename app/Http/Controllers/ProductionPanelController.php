@@ -370,8 +370,8 @@ class ProductionPanelController extends Controller
             ->whereNotNull('client_id')
             ->where('status', '!=', 'cancelado')
             ->whereRaw("date_trunc('month', coalesce(approval_date, created_at)) = date_trunc('month', current_date)")
-            ->selectRaw('client_id, task_type, count(*) as total')
-            ->groupBy('client_id', 'task_type')
+            ->selectRaw('client_id, ' . Client::quotaTypeSql() . ' as task_type, count(*) as total')
+            ->groupByRaw('client_id, ' . Client::quotaTypeSql())
             ->toBase()->get()
             ->groupBy('client_id')
             ->map(fn ($linhas) => $linhas->pluck('total', 'task_type'));
@@ -463,10 +463,10 @@ class ProductionPanelController extends Controller
         $produzido = $this->comFiltros(Task::query())
             ->where('status', '!=', 'cancelado')
             ->whereRaw("date_trunc('month', coalesce(approval_date, created_at)) = date_trunc('month', current_date)")
-            ->selectRaw('client_id, task_type')
+            ->selectRaw('client_id, ' . Client::quotaTypeSql() . ' as task_type')
             ->selectRaw('count(*) as total')
             ->selectRaw("count(*) filter (where status = 'concluido') as entregues")
-            ->groupBy('client_id', 'task_type')
+            ->groupByRaw('client_id, ' . Client::quotaTypeSql())
             ->toBase()->get();
 
         $linhas = [];
@@ -479,7 +479,7 @@ class ProductionPanelController extends Controller
 
             $linhas[] = [
                 'tipo'      => $tipo,
-                'label'     => Task::$types[$tipo] ?? $tipo,
+                'label'     => Client::quotaTypeLabel($tipo),
                 'icone'     => Task::$typeIcons[$tipo] ?? 'package',
                 'cota'      => (int) $cota,
                 'planejado' => $planejado,

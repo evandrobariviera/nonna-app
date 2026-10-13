@@ -167,12 +167,16 @@ class DistributionCockpit
             ->selectRaw('task_type, count(*) as total')
             ->groupBy('task_type')
             ->pluck('total', 'task_type');
-        $myTypes = $typeCounts->filter(fn ($n) => $n >= 0.10 * $typeCounts->sum())->keys()->all();
+        // Recorte pelo tipo do LIMITE (vídeo conta no de criação) — quem cuida de vídeo vê o
+        // limite de criação do cliente, e as tarefas de vídeo entram na conta dele.
+        $myTypes = $typeCounts->filter(fn ($n) => $n >= 0.10 * $typeCounts->sum())->keys()
+            ->map(fn ($t) => \App\Models\Client::QUOTA_TYPE_ALIASES[$t] ?? $t)->unique()->values()->all();
+        $myTaskTypes = collect($myTypes)->flatMap(fn ($t) => \App\Models\Client::taskTypesForQuota($t))->all();
 
         $rows = $inMonth(Task::where('status', '!=', 'cancelado')->whereIn('client_id', $clients->pluck('id')))
-            ->when($myTypes, fn ($q) => $q->whereIn('task_type', $myTypes))
-            ->selectRaw('client_id, task_type, status, count(*) as total')
-            ->groupBy('client_id', 'task_type', 'status')
+            ->when($myTaskTypes, fn ($q) => $q->whereIn('task_type', $myTaskTypes))
+            ->selectRaw('client_id, ' . \App\Models\Client::quotaTypeSql() . ' as task_type, status, count(*) as total')
+            ->groupByRaw('client_id, ' . \App\Models\Client::quotaTypeSql() . ', status')
             ->toBase()->get()
             ->groupBy('client_id');
 

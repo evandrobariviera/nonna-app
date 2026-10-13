@@ -356,7 +356,7 @@
                                     @foreach(\App\Models\Client::$productionQuotaTypes as $tipo)
                                         <div class="flex items-center gap-3">
                                             <span class="text-xs flex-1" style="color:var(--muted2)">
-                                                {{ \App\Models\Task::$types[$tipo] }}
+                                                {{ \App\Models\Client::quotaTypeLabel($tipo) }}
                                             </span>
                                             <input type="number" min="0" max="999"
                                                    name="production_quota[{{ $tipo }}]"

@@ -38,13 +38,16 @@ class SprintPoints
         'criacao' => [
             ['Logo / identidade visual',     24, 'logo, identidade, manual de marca, branding'],
             ['Apresentação / catálogo / e-book', 13, 'apresentacao, catalogo, ebook, e-book, revista'],
-            ['Reels / vídeo curto',           5, 'reels, reel, tiktok, shorts'],
-            ['Vídeo (produção / edição)',    24, 'video, edicao, motion, animacao, vinheta'],
-            ['Captação / gravação',           6, 'captacao, gravacao, gravar, filmagem, fotos, fotografia'],
             ['Carrossel',                    16, 'carrossel, carrosel'],
             ['Banner / peça gráfica',         8, 'banner, convite, capa, folder, flyer, outdoor, panfleto, cartao, camiseta'],
             ['Roteiro / copy',                4, 'roteiro, copy, legenda, texto'],
             ['Post estático / story',         4, 'post, arte, story, stories, card, criativo'],
+        ],
+        // Vídeo virou tipo próprio em 2026-10-13 — os três formatos saíram de 'criacao'.
+        'video' => [
+            ['Captação / gravação',           6, 'captacao, gravacao, gravar, filmagem, fotos, fotografia'],
+            ['Reels / vídeo curto',           5, 'reels, reel, tiktok, shorts'],
+            ['Vídeo (produção / edição)',    24, 'video, edicao, motion, animacao, vinheta'],
         ],
         'web' => [
             ['Ajuste / manutenção em site',  15, 'ajuste, ajustar, correcao, corrigir, manutencao, plugin, atualizacao, atualizar, otimizar, popup, formulario'],
@@ -55,7 +58,7 @@ class SprintPoints
     ];
 
     public const DEFAULT_TYPE_POINTS = [
-        'criacao' => 8, 'web' => 12, 'trafego' => 8, 'setup' => 8, 'social' => 4, 'seo' => 8,
+        'criacao' => 8, 'video' => 8, 'web' => 12, 'trafego' => 8, 'setup' => 8, 'social' => 4, 'seo' => 8,
         'email' => 8, 'estrategia' => 4, 'administrativo' => 4, 'reunioes' => 4,
     ];
 
@@ -68,7 +71,7 @@ class SprintPoints
 
     // Status em que cada tipo pontua, quando a organização não configurou. Criação pontua ao
     // entregar pra Revisão Interna (fim do trabalho de quem executou); o resto, na conclusão.
-    public const DEFAULT_SCORE_STATUS = ['criacao' => 'revisao_interna'];
+    public const DEFAULT_SCORE_STATUS = ['criacao' => 'revisao_interna', 'video' => 'revisao_interna'];
 
     // Cada "Marcar otimização feita" numa campanha (campaign_logs type=otimizacao).
     public const DEFAULT_OPTIMIZATION_POINTS = 1;

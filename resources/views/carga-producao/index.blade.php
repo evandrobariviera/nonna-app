@@ -183,7 +183,7 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
                     @foreach(\App\Models\Client::$productionQuotaTypes as $tipo)
                         <label class="flex flex-col gap-1">
-                            <span class="text-xs" style="color:var(--muted2)">{{ \App\Models\Task::$types[$tipo] }}</span>
+                            <span class="text-xs" style="color:var(--muted2)">{{ \App\Models\Client::quotaTypeLabel($tipo) }}</span>
                             <input type="number" min="0" max="999" name="production_quota[{{ $tipo }}]"
                                    value="{{ $clienteSel->production_quota[$tipo] ?? '' }}" placeholder="—"
                                    class="px-2 py-1.5 text-sm text-center focus:outline-none"
@@ -275,7 +275,8 @@
                                     @php $c = $l['celulas'][$tipo]; @endphp
                                     <td class="px-3 py-2 text-center font-mono">
                                         @if($c['cota'])
-                                            <span style="color:{{ $c['n'] >= $c['cota'] ? 'var(--green)' : 'var(--orange)' }}">{{ $c['n'] }}<span style="color:var(--muted2)">/{{ $c['cota'] }}</span></span>
+                                            <span style="color:{{ $c['n_cota'] >= $c['cota'] ? 'var(--green)' : 'var(--orange)' }}"
+                                                  @if($c['n_cota'] !== $c['n']) title="Limite de {{ \App\Models\Client::quotaTypeLabel($tipo) }}: {{ $c['n_cota'] }} de {{ $c['cota'] }}" @endif>{{ $c['n'] }}<span style="color:var(--muted2)">/{{ $c['cota'] }}</span></span>
                                         @elseif($c['n'])
                                             <span style="color:var(--text)">{{ $c['n'] }}</span>
                                         @else
