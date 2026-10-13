@@ -31,7 +31,7 @@
         ), fn ($v) => $v !== null && $v !== ''));
     @endphp
 
-    {{-- ── VER COMO — faixa de aviso enquanto o admin olha a Dashboard de outra pessoa.
+    {{-- ── VER COMO — faixa de aviso enquanto admin/Head olha a Dashboard de outra pessoa.
          Só leitura: pendências e quadro ficam sem ação (ver $viewingAs mais abaixo). ── --}}
     @if($viewingAs)
         <div class="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3 mb-4"
@@ -73,7 +73,7 @@
             </p>
         </div>
 
-        {{-- Ver como (só admin/dono) — escolher alguém abre a Dashboard dessa pessoa. --}}
+        {{-- Ver como (admin/dono e Heads — DashboardController::viewAsCandidates) — escolher alguém abre a Dashboard dessa pessoa. --}}
         @if($teamMembers->isNotEmpty())
             <label class="flex items-center gap-2 flex-shrink-0">
                 <span class="text-xs font-semibold flex items-center gap-1" style="color:var(--muted)"><x-icon name="eye" size="13" /> Ver como</span>

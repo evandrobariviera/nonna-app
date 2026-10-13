@@ -66,10 +66,8 @@ class DashboardController extends Controller
             $mode           = app('dashboardMode') ?? 'execucao';
         }
 
-        // Quem o admin pode "ver como" — o seletor fica na própria Dashboard.
-        $teamMembers = in_array(app('currentOrgRole'), ['owner', 'admin'], true)
-            ? app('currentOrganization')->users()->where('users.id', '!=', Auth::id())->orderBy('name')->get(['users.id', 'users.name'])
-            : collect();
+        // Quem dá pra "ver como" — o seletor fica na própria Dashboard.
+        $teamMembers = $this->viewAsCandidates()->orderBy('users.name')->get(['users.id', 'users.name']);
 
         $subjectUserId = (int) $userId;
 
@@ -437,26 +435,50 @@ class DashboardController extends Controller
     }
 
     /**
-     * ?ver_como={userId} — só admin/dono, só gente da própria organização, nunca a si mesmo.
-     * Qualquer coisa fora disso cai silenciosamente na Dashboard normal de quem está logado.
+     * Quem a pessoa logada pode "ver como" (sempre outra pessoa da própria organização):
+     * - admin/dono: qualquer um;
+     * - Head (papel funcional head_*): qualquer um que NÃO seja admin/dono — pedido do Evandro
+     *   (2026-10-13) pra Alessandra/Vitor/Patrick enxergarem a tela do time; a Dashboard de
+     *   admin tem a Visão geral, que não é pra Head.
+     * - resto: ninguém (query vazia).
+     */
+    private function viewAsCandidates()
+    {
+        $query = app('currentOrganization')->users()->where('users.id', '!=', Auth::id());
+
+        if (in_array(app('currentOrgRole'), ['owner', 'admin'], true)) {
+            return $query;
+        }
+
+        $isHead = collect(app('userFunctionRoles'))->contains(fn ($key) => str_starts_with($key, 'head_'));
+
+        return $isHead
+            ? $query->whereNotIn('organization_users.role', ['owner', 'admin'])
+            : $query->whereRaw('false');
+    }
+
+    /**
+     * ?ver_como={userId} — só pra quem está em viewAsCandidates(). Qualquer coisa fora disso
+     * cai silenciosamente na Dashboard normal de quem está logado.
      *
      * @return array{0: ?User, 1: ?OrganizationUser}
      */
     private function resolveViewingAs(Request $request): array
     {
-        if (! $request->filled('ver_como') || ! in_array(app('currentOrgRole'), ['owner', 'admin'], true)) {
+        if (! $request->filled('ver_como')) {
             return [null, null];
         }
 
-        $pivot = rescue(fn () => OrganizationUser::where('organization_id', app('currentOrganization')->id)
-            ->where('user_id', (int) $request->get('ver_como'))
-            ->first(), null, false);
-
-        if (! $pivot || $pivot->user_id === Auth::id()) {
+        $userId = (int) $request->get('ver_como');
+        if (! rescue(fn () => $this->viewAsCandidates()->where('users.id', $userId)->exists(), false, false)) {
             return [null, null];
         }
 
-        return [User::find($pivot->user_id), $pivot];
+        $pivot = OrganizationUser::where('organization_id', app('currentOrganization')->id)
+            ->where('user_id', $userId)
+            ->first();
+
+        return $pivot ? [User::find($pivot->user_id), $pivot] : [null, null];
     }
 
     // Quem a pessoa acompanha na grade da Distribuição (DistributionCockpit::team()). A própria
