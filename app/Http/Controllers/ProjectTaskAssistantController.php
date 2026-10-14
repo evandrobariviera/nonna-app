@@ -77,7 +77,7 @@ class ProjectTaskAssistantController extends Controller
 
             // Os documentos HTML são o ativo do planejamento: o do projeto/campanha (HTML mais
             // recente anexado a ele) e o do planejamento (MacroPlan::mainDocument()).
-            $projectDoc = $project->attachments->filter(fn ($a) => str_contains((string) $a->mime_type, 'html'))->sortByDesc('created_at')->first();
+            $projectDoc = $project->mainDocument();
             if ($text = TaskAssistantContext::documentText($projectDoc)) {
                 $context['project_document'] = "\n" . $text;
             }

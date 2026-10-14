@@ -388,15 +388,15 @@ class ProjectController extends Controller
             'pecas'                  => 'nullable|array',
         ]);
 
-        $data['disciplines']    = $data['disciplines'] ?? [];
-        $data['tags']           = array_values(array_filter($data['tags'] ?? []));
-        $data['content_ideas']  = $data['content_ideas'] ?? [];
-        $data['traffic_phases'] = $data['traffic_phases'] ?? [];
-        $data['tom_comunicacao']     = array_values(array_filter($data['tom_comunicacao'] ?? []));
-        $data['angulos']             = $data['angulos'] ?? [];
-        $data['mecanica']            = $data['mecanica'] ?? [];
-        $data['referencias_visuais'] = $data['referencias_visuais'] ?? [];
-        $data['pecas']               = $data['pecas'] ?? [];
+        // Cadastro enxuto (2026-10): o formulário só manda nome/tipo/status/datas/objetivo. Só
+        // grava o que veio — antes os campos ausentes viravam [] e o salvar apagava briefing,
+        // tags, ideias etc. que agora ficam só como leitura.
+        $data = collect($data)->only(array_keys($request->all()))->all();
+        foreach (['tags', 'tom_comunicacao'] as $list) {
+            if (array_key_exists($list, $data)) {
+                $data[$list] = array_values(array_filter($data[$list] ?? []));
+            }
+        }
 
         $project->update($data);
     }

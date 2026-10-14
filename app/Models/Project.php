@@ -191,6 +191,21 @@ class Project extends Model
         return $this->hasMany(AdCampaign::class);
     }
 
+    /**
+     * Documento principal da campanha/projeto = o HTML anexado mais recente (2026-10: o
+     * conteúdo — briefing, peças, mecânica — mora no HTML, não em campos). É o que a página
+     * mostra e o que o Assistente de Lançamento lê.
+     */
+    public function mainDocument(): ?ProjectAttachment
+    {
+        $attachments = $this->relationLoaded('attachments') ? $this->attachments : $this->attachments()->get();
+
+        return $attachments
+            ->filter(fn ($a) => str_contains((string) $a->mime_type, 'html'))
+            ->sortByDesc('created_at')
+            ->first();
+    }
+
     public function attachments(): HasMany
     {
         return $this->hasMany(ProjectAttachment::class)->orderBy('created_at');

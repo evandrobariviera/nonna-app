@@ -123,6 +123,35 @@
         @endif
     </div>
 
+    {{-- DOCUMENTO — o HTML da campanha/projeto (anexo HTML mais recente). É onde mora o
+         briefing, as peças e a mecânica (2026-10), e o que o Assistente de Tarefas lê. --}}
+    @php $mainDocument = $project->mainDocument(); @endphp
+    <div class="card mb-5 overflow-hidden" x-data="{ open: {{ $mainDocument ? 'true' : 'false' }} }">
+        <div class="px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
+            <button type="button" @click="open = !open" class="flex items-center gap-2 text-left min-w-0">
+                <x-icon name="file-text" size="14" style="color:var(--purple)" />
+                <span class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Documento</span>
+                <span class="text-xs truncate" style="color:var(--text)">{{ $mainDocument?->filename ?? 'nenhum HTML anexado' }}</span>
+                @if($mainDocument)<span class="text-xs" style="color:var(--muted)" x-text="open ? '▴' : '▾'"></span>@endif
+            </button>
+            @if($mainDocument)
+                <a href="{{ $mainDocument->url() }}" target="_blank" rel="noopener" class="btn btn-ghost btn-xs flex items-center gap-1">
+                    <x-icon name="external-link" size="12" /> Abrir em nova aba
+                </a>
+            @endif
+        </div>
+        @if($mainDocument)
+            <iframe x-show="open" x-cloak src="{{ $mainDocument->url() }}" title="Documento {{ $project->type === 'campanha' ? 'da campanha' : 'do projeto' }}"
+                    sandbox="allow-scripts allow-popups" loading="lazy"
+                    style="width:100%; height:70vh; border:0; border-top:1px solid var(--border2); background:#fff; display:block"></iframe>
+        @else
+            <p class="px-5 pb-4 text-xs" style="color:var(--muted)">
+                Anexe o HTML {{ $project->type === 'campanha' ? 'da campanha (skill de campanha)' : 'do projeto (skill de projeto)' }} em "Anexos" logo abaixo —
+                o mais recente vira o documento principal, aparece aqui e o Assistente de Tarefas passa a ler.
+            </p>
+        @endif
+    </div>
+
     {{-- PÁGINA DO CLIENTE — o que aparece no topo da Página do Projeto no
          Portal (Central de Aprovações). Texto separado do objetivo/briefings,
          que são internos. Destaque é opcional. --}}
@@ -797,7 +826,7 @@
                 style="color:var(--muted)"
                 onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
                 <span :class="open ? 'rotate-90' : ''" class="transition-transform">▶</span>
-                Briefings por Head
+                Briefings por Head <span class="normal-case tracking-normal" style="opacity:.7">· conteúdo anterior (o atual fica no Documento)</span>
             </button>
             <div x-show="open" x-cloak class="mt-3 grid gap-3"
                  style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr))">
@@ -823,7 +852,7 @@
                 style="color:var(--muted)"
                 onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
                 <span :class="open ? 'rotate-90' : ''" class="transition-transform">▶</span>
-                Brief Criativo
+                Brief Criativo <span class="normal-case tracking-normal" style="opacity:.7">· conteúdo anterior (o atual fica no Documento)</span>
             </button>
             <div x-show="open" x-cloak class="mt-3 space-y-4">
                 @if($project->big_idea_titulo || $project->big_idea_manifesto)

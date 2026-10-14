@@ -601,21 +601,6 @@
                                 </div>
                             </div>
 
-                            {{-- Disciplinas --}}
-                            <div>
-                                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Disciplinas Envolvidas</label>
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach(\App\Models\Project::$disciplines as $key => $label)
-                                        <label class="flex items-center gap-1.5 text-xs cursor-pointer px-3 py-1.5"
-                                               style="border:1px solid var(--border2); color:var(--muted2)">
-                                            <input type="checkbox" name="disciplines[]" value="{{ $key }}"
-                                                style="accent-color:var(--purple)">
-                                            {{ $label }}
-                                        </label>
-                                    @endforeach
-                                </div>
-                            </div>
-
                             <div class="flex gap-3">
                                 <button type="submit" class="btn btn-primary btn-sm">
                                     Adicionar Projeto
