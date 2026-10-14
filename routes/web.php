@@ -641,6 +641,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('projects.chat.clear');
     Route::post('/projetos/{project}/tarefas/lote', [\App\Http\Controllers\ProjectTaskAssistantController::class, 'confirmDrafts'])
         ->name('projects.tasks.confirm-batch');
+    // Alterações em tarefas que já existem, propostas pelo assistente e marcadas pela pessoa.
+    Route::post('/projetos/{project}/chat/aplicar', [\App\Http\Controllers\ProjectTaskAssistantController::class, 'applyChanges'])
+        ->name('projects.chat.apply');
     Route::post('/projetos/{project}/playbooks/{playbook}/aplicar', [\App\Http\Controllers\ProjectPlaybookController::class, 'apply'])
         ->name('project-playbooks.apply');
     Route::patch('/projetos/{project}/tarefas/{task}', [TaskController::class, 'updateStandalone'])

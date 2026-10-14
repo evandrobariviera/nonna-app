@@ -10,6 +10,7 @@
         chatEndpoint:    '{{ route('projects.chat', $project) }}',
         confirmEndpoint: '{{ route('projects.tasks.confirm-batch', $project) }}',
         clearEndpoint:   '{{ route('projects.chat.clear', $project) }}',
+        applyEndpoint:   '{{ route('projects.chat.apply', $project) }}',
         agentName:       @json($assistantAgent?->name),
         messages:        @json($chatMessages),
         team:            @json($team->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])),
@@ -93,9 +94,9 @@
             <template x-if="messages.length === 0">
                 <div class="flex flex-col items-center justify-center flex-1 py-16 text-center">
                     <x-icon name="message-circle" size="36" stroke="1" class="mb-3" style="color:var(--border2)" />
-                    <p class="text-sm font-medium" style="color:var(--muted2)">Descreva as tarefas que quer criar</p>
-                    <p class="text-xs mt-1" style="color:var(--muted)">Ex: "cria uma tarefa de briefing pra sexta e uma de wireframe pra próxima terça".</p>
-                    <p class="text-xs mt-3 px-6" style="color:var(--muted2)">O contexto deste projeto (cliente, macroplanejamento, tarefas já existentes) vai junto automaticamente. Nada é criado antes de você revisar e confirmar.</p>
+                    <p class="text-sm font-medium" style="color:var(--muted2)">Crie ou reorganize as tarefas deste projeto</p>
+                    <p class="text-xs mt-1 px-6" style="color:var(--muted)">Ex: "cria uma tarefa de briefing pra sexta", "o que está atrasado aqui?" ou "espalha as datas de aprovação dos posts até 24/10, no máximo 2 por dia pro Andreo".</p>
+                    <p class="text-xs mt-3 px-6" style="color:var(--muted2)">O assistente vê todas as tarefas do projeto e a carga do time. Nada é criado nem alterado antes de você revisar e confirmar.</p>
                 </div>
             </template>
 
@@ -123,6 +124,54 @@
                     </div>
                 </div>
             </template>
+
+            {{-- Alterações em tarefas que JÁ existem — propostas pela IA, revisadas aqui. Só as
+                 marcadas são aplicadas (ProjectTaskAssistantController::applyChanges revalida tudo). --}}
+            <div x-show="changes.length > 0" x-cloak class="mt-2 pt-3" style="border-top:1px dashed var(--border2)">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted)">
+                        Alterações propostas — revise antes de aplicar
+                    </p>
+                    <button type="button" @click="discardChanges()" class="text-xs font-semibold" style="color:var(--muted)">Descartar</button>
+                </div>
+                <div class="space-y-2">
+                    <template x-for="g in changeGroups" :key="g.task_id">
+                        <div class="px-3 py-2.5 rounded" style="background:var(--s2); border:1px solid var(--border2)">
+                            <p class="text-xs font-semibold mb-1.5 flex items-center gap-1.5 flex-wrap" style="color:var(--text)">
+                                <span class="font-mono" style="color:var(--muted)" x-text="g.ref"></span>
+                                <template x-if="g.blocked">
+                                    <span class="font-mono font-bold px-1" style="font-size:9px; color:#fff; background:var(--red); border-radius:4px">TRAVA</span>
+                                </template>
+                                <span x-text="g.title"></span>
+                                <span class="font-normal" style="color:var(--muted)" x-text="'· ' + g.status"></span>
+                            </p>
+                            <template x-for="c in g.items" :key="c.key">
+                                <label class="flex items-start gap-2 py-1 text-xs cursor-pointer">
+                                    <input type="checkbox" x-model="c.checked" class="mt-0.5 flex-shrink-0" style="accent-color:var(--purple)">
+                                    <span class="min-w-0" :style="c.checked ? '' : 'opacity:.5'">
+                                        <span class="font-semibold" style="color:var(--text)" x-text="c.field_label + ':'"></span>
+                                        <span style="color:var(--muted); text-decoration:line-through" x-text="c.from_label"></span>
+                                        <span style="color:var(--muted)">→</span>
+                                        <span class="font-semibold" style="color:var(--purple)" x-text="c.to_label"></span>
+                                        <span x-show="c.reason" class="block mt-0.5" style="color:var(--muted2)" x-text="c.reason"></span>
+                                    </span>
+                                </label>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+                <button @click="applyChanges()"
+                        :disabled="applying || checkedChanges.length === 0"
+                        class="w-full mt-3 px-4 py-2.5 text-sm font-semibold text-white transition-opacity"
+                        :style="(applying || checkedChanges.length === 0) ? 'background:var(--purple); opacity:.5' : 'background:var(--purple)'">
+                    <span x-text="applying ? 'Aplicando...' : ('Aplicar ' + checkedChanges.length + ' alteração(ões)')"></span>
+                </button>
+            </div>
+
+            <p x-show="appliedNote" x-cloak class="text-xs mt-1" style="color:var(--muted)">
+                <span x-text="appliedNote"></span>
+                <button type="button" @click="reloadPage()" class="font-semibold" style="color:var(--purple)">Atualizar a página</button>
+            </p>
 
             {{-- Cards de rascunho editáveis --}}
             <div x-show="drafts.length > 0" x-cloak class="mt-2 pt-3" style="border-top:1px dashed var(--border2)">
@@ -212,7 +261,7 @@
                       @keydown.ctrl.enter.prevent="send()"
                       :disabled="!agentName || thinking"
                       rows="3"
-                      placeholder="Descreva as tarefas que quer lançar..."
+                      placeholder="Peça pra criar tarefas ou reorganizar as que já existem..."
                       class="w-full px-4 py-3 text-sm focus:outline-none resize-none"
                       style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); line-height:1.6"></textarea>
             <div class="flex items-center justify-between mt-3">

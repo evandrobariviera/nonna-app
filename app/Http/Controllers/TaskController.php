@@ -19,6 +19,7 @@ use App\Models\User;
 use App\Services\AutomationEngine;
 use App\Services\TaskDeliveryService;
 use App\Services\TaskExecutorSync;
+use App\Services\Tasks\TaskPeople;
 use App\Support\UploadOptions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -565,31 +566,8 @@ class TaskController extends Controller
     {
         $data = $request->validate(['responsavel_id' => 'nullable|exists:users,id']);
 
-        // Guarda quem já era responsável antes de mexer, pra só disparar a automação de
-        // "Responsável/Executor adicionado" quando for alguém genuinely novo — sem isso,
-        // re-salvar o mesmo responsável pareceria uma adição nova toda vez. Mesmo registro
-        // já serve pro rótulo "de" do TaskActivity (não passa pelo TaskObserver — isso é
-        // pivot de task_executors, não coluna de tasks).
-        $oldUser = TaskExecutor::where('task_id', $task->id)->where('role', 'responsavel')->first()?->user;
-        $wasAlready = $data['responsavel_id'] && $oldUser?->id === $data['responsavel_id'];
-
-        TaskExecutor::where('task_id', $task->id)->where('role', 'responsavel')->delete();
-
-        if ($data['responsavel_id']) {
-            // A mesma pessoa pode ser executor E responsável na mesma tarefa (task_executors
-            // permite 1 linha por (task_id, user_id, role) — não mexe na linha de executor
-            // dessa pessoa, só na de responsável).
-            $task->executors()->attach($data['responsavel_id'], ['role' => 'responsavel']);
-
-            if (!$wasAlready) {
-                AutomationEngine::evaluate('executor_added', $task, ['role' => 'responsavel', 'user_id' => $data['responsavel_id']]);
-            }
-        }
-
-        if (($oldUser?->id) !== ($data['responsavel_id'] ?? null)) {
-            $newUser = $data['responsavel_id'] ? User::find($data['responsavel_id']) : null;
-            TaskActivity::log($task, 'responsavel_changed', $oldUser?->name, $newUser?->name);
-        }
+        // Regra em TaskPeople — a mesma usada pelo Assistente de Lançamento.
+        TaskPeople::setResponsavel($task, $data['responsavel_id'] ? (int) $data['responsavel_id'] : null);
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true]);
@@ -602,35 +580,13 @@ class TaskController extends Controller
     {
         $data = $request->validate(['executor_id' => 'nullable|exists:users,id']);
 
-        $oldUser = TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->first()?->user;
-        $wasAlready = $data['executor_id'] && $oldUser?->id === $data['executor_id'];
-
-        if ($task->status === 'em_producao' && $data['executor_id'] && !$wasAlready) {
-            if ($reason = Task::wipBlockReason($data['executor_id'], $task->id)) {
-                if ($request->wantsJson()) {
-                    return response()->json(['message' => $reason], 422);
-                }
-                throw ValidationException::withMessages(['executor_id' => $reason]);
+        // Regra em TaskPeople (trava de 2 em Produção, automação, histórico) — a mesma
+        // usada pelo Assistente de Lançamento.
+        if ($reason = TaskPeople::setExecutor($task, $data['executor_id'] ? (int) $data['executor_id'] : null)) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => $reason], 422);
             }
-        }
-
-        TaskExecutor::where('task_id', $task->id)->where('role', 'executor')->delete();
-
-        if ($data['executor_id']) {
-            // Mesma pessoa pode já ser responsável — não mexe na linha dela, só na de executor.
-            $task->executors()->attach($data['executor_id'], ['role' => 'executor']);
-            $task->updateQuietly(['executor_id' => $data['executor_id']]);
-
-            if (!$wasAlready) {
-                AutomationEngine::evaluate('executor_added', $task, ['role' => 'executor', 'user_id' => $data['executor_id']]);
-            }
-        } else {
-            $task->updateQuietly(['executor_id' => null]);
-        }
-
-        if (($oldUser?->id) !== ($data['executor_id'] ?? null)) {
-            $newUser = $data['executor_id'] ? User::find($data['executor_id']) : null;
-            TaskActivity::log($task, 'executor_changed', $oldUser?->name, $newUser?->name);
+            throw ValidationException::withMessages(['executor_id' => $reason]);
         }
 
         if ($request->wantsJson()) {

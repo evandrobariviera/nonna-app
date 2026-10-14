@@ -11,6 +11,8 @@ use App\Models\User;
 use App\Services\AiService;
 use App\Services\ContextResolver;
 use App\Services\TaskDraftService;
+use App\Services\Tasks\TaskAssistantContext;
+use App\Services\Tasks\TaskPeople;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -24,8 +26,9 @@ class ProjectTaskAssistantController extends Controller
     {
         // 20 mil caracteres = cabe uma lista grande colada (tabela do Word/Planilha).
         $request->validate([
-            'message'        => 'required|string|max:20000',
-            'current_drafts' => 'nullable|array|max:100',
+            'message'         => 'required|string|max:20000',
+            'current_drafts'  => 'nullable|array|max:100',
+            'current_changes' => 'nullable|array|max:300',
         ]);
 
         // Agente fixo (não dá pra escolher outro na tela) — os demais agentes não
@@ -65,6 +68,16 @@ class ProjectTaskAssistantController extends Controller
                 $context['current_drafts'] = $current;
             }
 
+            // Tarefas que já existem, inteiras (no lugar do resumo de 20 títulos) + carga do
+            // time — é o que deixa o assistente ver a organização e reorganizar datas/pessoas.
+            [$tasksText, $taskRefs] = TaskAssistantContext::existingTasks($project);
+            unset($context['existing_tasks_summary']);
+            $context['existing_tasks'] = $tasksText;
+            $context['team_load']      = TaskAssistantContext::teamLoad($project->id);
+            if ($pending = $this->currentChangesForAi($request->input('current_changes', []), $taskRefs)) {
+                $context['current_changes'] = $pending;
+            }
+
             $output  = app(AiService::class)->chatStructured(
                 agent:    $agent,
                 history:  $history,
@@ -79,6 +92,12 @@ class ProjectTaskAssistantController extends Controller
             [$drafts, $warnings] = is_array($output['draft_tasks'] ?? null)
                 ? $this->sanitizeDrafts($project, $output['draft_tasks'])
                 : [null, []];
+
+            // task_changes: mesma convenção — null = não mexeu nas alterações da tela.
+            [$changes, $changeWarnings] = is_array($output['task_changes'] ?? null)
+                ? $this->sanitizeChanges($output['task_changes'], $taskRefs)
+                : [null, []];
+            $warnings = array_merge($warnings, $changeWarnings);
 
             // draft_tasks NÃO é persistido no histórico (AiChatMessage.content é texto
             // livre) — só o texto humano da resposta. Ao recarregar a página os cards
@@ -96,8 +115,9 @@ class ProjectTaskAssistantController extends Controller
                 'agent_name'  => $agent->name,
                 'user_name'   => null,
                 'time'        => $msg->created_at->format('H:i'),
-                'draft_tasks' => $drafts,
-                'warnings'    => $warnings,
+                'draft_tasks'  => $drafts,
+                'task_changes' => $changes,
+                'warnings'     => $warnings,
             ]);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 422);
@@ -134,6 +154,78 @@ class ProjectTaskAssistantController extends Controller
         ]);
     }
 
+    /**
+     * Aplica as alterações que a pessoa marcou na lista "Alterações propostas". Nunca confia
+     * no que veio da tela: revalida tudo (tarefa deste projeto, aberta, campo permitido,
+     * valor válido, pessoa da equipe) e aplica pelo mesmo caminho da edição manual —
+     * datas/textos pelo update normal (histórico no TaskObserver), pessoas por TaskPeople
+     * (trava de 2 em Produção, automação, histórico). Uma alteração que falha não derruba
+     * as outras: volta na lista de "não aplicadas" com o motivo.
+     */
+    public function applyChanges(Request $request, Project $project)
+    {
+        $data = $request->validate([
+            'changes'           => 'required|array|min:1|max:300',
+            'changes.*.task_id' => 'required|uuid',
+            'changes.*.field'   => 'required|in:' . implode(',', array_keys(TaskAssistantContext::EDITABLE)),
+            'changes.*.to'      => 'nullable',
+        ]);
+
+        $teamIds = User::whereNull('client_id')->pluck('id')->flip();
+        $tasks   = Task::where('project_id', $project->id)
+            ->whereIn('id', collect($data['changes'])->pluck('task_id')->unique())
+            ->get()->keyBy('id');
+
+        $applied = 0;
+        $skipped = [];
+        foreach ($data['changes'] as $change) {
+            $task  = $tasks->get($change['task_id']);
+            $field = $change['field'];
+            $label = TaskAssistantContext::EDITABLE[$field];
+
+            if (!$task) {
+                $skipped[] = ['title' => '—', 'reason' => 'Tarefa não é deste projeto.'];
+                continue;
+            }
+            if (in_array($task->status, ['concluido', 'cancelado'], true)) {
+                $skipped[] = ['title' => $task->title, 'reason' => "{$label}: tarefa já está {$task->statusLabel()}."];
+                continue;
+            }
+
+            [$value, $error] = $this->validChangeValue($field, $change['to'] ?? null, $teamIds);
+            if ($error) {
+                $skipped[] = ['title' => $task->title, 'reason' => "{$label}: {$error}"];
+                continue;
+            }
+
+            try {
+                $reason = match ($field) {
+                    'executor_user_id'    => TaskPeople::setExecutor($task, $value),
+                    'responsavel_user_id' => TaskPeople::setResponsavel($task, $value),
+                    default               => $task->update([$field => $value]) ? null : 'não foi possível salvar.',
+                };
+            } catch (\Throwable $e) {
+                $reason = 'erro ao salvar (' . \Illuminate\Support\Str::limit($e->getMessage(), 120) . ').';
+            }
+
+            if ($reason) {
+                $skipped[] = ['title' => $task->title, 'reason' => "{$label}: {$reason}"];
+                continue;
+            }
+            $applied++;
+            $task->refresh();
+        }
+
+        // Registra na conversa — na próxima mensagem a IA sabe o que já foi aplicado.
+        $summary = "✓ {$applied} alteração(ões) aplicada(s)."
+            . ($skipped ? ' Não aplicadas: ' . collect($skipped)->map(fn ($s) => "{$s['title']} — {$s['reason']}")->implode('; ') : '');
+        $agent = AiAgent::bySlug(AiAgent::SLUG_TASK_ASSISTANT);
+        AiChat::firstOrCreate(['entity_type' => 'project', 'entity_id' => $project->id, 'user_id' => auth()->id()])
+            ->messages()->create(['role' => 'assistant', 'content' => $summary, 'agent_id' => $agent?->id]);
+
+        return response()->json(['applied' => $applied, 'skipped' => $skipped, 'summary' => $summary]);
+    }
+
     // Botão "Nova conversa" no painel — apaga o histórico de chat de quem
     // clicou, neste projeto (a conversa dos outros fica intacta). É rascunho
     // de trabalho, não registro de auditoria (diferente de task_activities),
@@ -151,6 +243,138 @@ class ProjectTaskAssistantController extends Controller
             ->where('entity_id', $project->id)
             ->where('user_id', $userId)
             ->delete();
+    }
+
+    /**
+     * Alterações propostas que estão na tela agora → JSON com a referência (#n) da tarefa,
+     * pra IA partir delas ao ajustar ("tira a #5"). Alteração de tarefa que sumiu da lista
+     * (cancelada, movida) é descartada.
+     *
+     * @param array<string, Task> $taskRefs
+     */
+    private function currentChangesForAi(mixed $changes, array $taskRefs): ?string
+    {
+        if (!is_array($changes) || empty($changes)) {
+            return null;
+        }
+
+        $refById = collect($taskRefs)->mapWithKeys(fn (Task $t, $ref) => [$t->id => $ref]);
+
+        $clean = collect($changes)
+            ->filter(fn ($c) => is_array($c) && isset($c['task_id'], $c['field']) && $refById->has($c['task_id']))
+            ->map(fn ($c) => [
+                'ref'    => $refById[$c['task_id']],
+                'field'  => $c['field'],
+                'value'  => $c['to'] ?? null,
+                'reason' => $c['reason'] ?? null,
+            ])
+            ->values()->all();
+
+        return $clean ? json_encode($clean, JSON_UNESCAPED_UNICODE) : null;
+    }
+
+    /**
+     * task_changes da IA → lista de alterações pra tela, com o valor atual e o novo já em
+     * texto de gente. Descarta (com aviso) referência inexistente, campo não permitido,
+     * valor inválido, tarefa concluída e o que não muda nada. A mesma tarefa+campo repetida:
+     * vale a última.
+     *
+     * @param array<string, Task> $taskRefs
+     * @return array{0: array, 1: string[]}
+     */
+    private function sanitizeChanges(array $raw, array $taskRefs): array
+    {
+        $teamIds  = User::whereNull('client_id')->pluck('id')->flip();
+        $names    = User::whereNull('client_id')->pluck('name', 'id');
+        $out      = [];
+        $warnings = [];
+
+        foreach ($raw as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $ref   = '#' . ltrim((string) ($item['ref'] ?? ''), '#');
+            $task  = $taskRefs[$ref] ?? null;
+            $field = (string) ($item['field'] ?? '');
+
+            if (!$task) {
+                $warnings[] = "Alteração ignorada: a tarefa {$ref} não existe neste projeto.";
+                continue;
+            }
+            if (!isset(TaskAssistantContext::EDITABLE[$field])) {
+                $warnings[] = "Alteração ignorada em \"{$task->title}\": o assistente não pode mudar \"{$field}\".";
+                continue;
+            }
+            if (in_array($task->status, ['concluido', 'cancelado'], true)) {
+                $warnings[] = "Alteração ignorada em \"{$task->title}\": tarefa já está {$task->statusLabel()}.";
+                continue;
+            }
+
+            [$value, $error] = $this->validChangeValue($field, $item['value'] ?? null, $teamIds);
+            if ($error) {
+                $warnings[] = "Alteração ignorada em \"{$task->title}\" ({$field}): {$error}";
+                continue;
+            }
+
+            $current = TaskAssistantContext::currentValue($task, $field);
+            if ((string) $current === (string) $value) {
+                continue;
+            }
+
+            $text = fn ($v) => match (true) {
+                $v === null || $v === ''                                    => '—',
+                in_array($field, TaskAssistantContext::DATE_FIELDS, true)  => TaskAssistantContext::dateLabel($v),
+                in_array($field, ['executor_user_id', 'responsavel_user_id'], true) => $names[$v] ?? "#{$v}",
+                default                                                     => \Illuminate\Support\Str::limit((string) $v, 140),
+            };
+
+            $out["{$task->id}|{$field}"] = [
+                'key'         => "{$task->id}|{$field}",
+                'task_id'     => $task->id,
+                'ref'         => $ref,
+                'task_title'  => $task->title,
+                'task_status' => $task->statusLabel(),
+                'blocked'     => (bool) $task->blocker_at,
+                'field'       => $field,
+                'field_label' => TaskAssistantContext::EDITABLE[$field],
+                'from'        => $current,
+                'from_label'  => $text($current),
+                'to'          => $value,
+                'to_label'    => $text($value),
+                'reason'      => is_string($item['reason'] ?? null) ? \Illuminate\Support\Str::limit($item['reason'], 200) : null,
+            ];
+        }
+
+        return [array_values($out), array_values(array_unique($warnings))];
+    }
+
+    /** @return array{0: mixed, 1: ?string} valor normalizado + erro (null = válido) */
+    private function validChangeValue(string $field, mixed $value, $teamIds): array
+    {
+        if (in_array($field, TaskAssistantContext::DATE_FIELDS, true)) {
+            if ($value === null || $value === '') {
+                return [null, null];
+            }
+            $parsed = is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) ? Carbon::createFromFormat('!Y-m-d', $value) : null;
+            if (!$parsed || $parsed->format('Y-m-d') !== $value) {
+                return [null, 'data inválida.'];
+            }
+            return [$value, null];
+        }
+
+        if (in_array($field, ['executor_user_id', 'responsavel_user_id'], true)) {
+            if ($value === null || $value === '') {
+                return [null, null];
+            }
+            return is_numeric($value) && $teamIds->has((int) $value) ? [(int) $value, null] : [null, 'pessoa fora da equipe.'];
+        }
+
+        if ($field === 'title') {
+            $value = trim((string) $value);
+            return $value === '' || mb_strlen($value) > 300 ? [null, 'título vazio ou longo demais.'] : [$value, null];
+        }
+
+        return [is_string($value) ? $value : null, null]; // description
     }
 
     /**

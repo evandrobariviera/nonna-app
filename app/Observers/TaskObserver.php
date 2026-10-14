@@ -27,6 +27,12 @@ class TaskObserver
         'task_type'   => 'task_type_changed',
     ];
 
+    private const TRACKED_DATE_FIELDS = [
+        'approval_date' => 'approval_date_changed',
+        'due_date'      => 'due_date_changed',
+        'publish_date'  => 'publish_date_changed',
+    ];
+
     // Pontos de sprint sempre em dia (formato detectado pelo título / tipo / ajuste manual).
     public function saving(Task $task): void
     {
@@ -43,6 +49,15 @@ class TaskObserver
                     Task::labelForField($field, $task->getOriginal($field)),
                     Task::labelForField($field, $task->$field)
                 );
+            }
+        }
+
+        // Datas de prazo — sem isso não dava pra saber quantas vezes uma entrega foi
+        // adiada nem quem mudou (o Assistente de Lançamento também mexe nelas).
+        foreach (self::TRACKED_DATE_FIELDS as $field => $action) {
+            if ($task->wasChanged($field)) {
+                $fmt = fn ($v) => $v ? \Carbon\Carbon::parse($v)->format('d/m/Y') : null;
+                TaskActivity::log($task, $action, $fmt($task->getOriginal($field)), $fmt($task->$field));
             }
         }
 

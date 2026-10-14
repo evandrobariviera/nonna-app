@@ -41,6 +41,9 @@ class TaskActivity extends Model
         'points_changed'            => 'Pontos de sprint alterados',
         'blocker_changed'           => 'Trava',
         'delivery_edited'           => 'Retorno de entrega editado',
+        'approval_date_changed'     => 'Data de aprovação alterada',
+        'due_date_changed'          => 'Vencimento alterado',
+        'publish_date_changed'      => 'Data de publicação alterada',
     ];
 
     public function task(): BelongsTo
