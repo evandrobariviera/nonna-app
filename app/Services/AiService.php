@@ -228,6 +228,8 @@ class AiService
             'existing_tasks'            => 'Tarefas do projeto (ref | título | tipo | status (situação) | executor (id) | responsável (id) | aprovação | vencimento | publicação | sprint | TRAVA | descrição) — em task_changes use o "ref"',
             'team_load'                 => 'Carga do time por dia útil em OUTROS projetos (tarefas abertas em Backlog/Produção/Ajuste, pela data de aprovação; "atrasadas" = data já passou; as tarefas DESTE projeto não estão aqui, estão na lista acima) — Nome (id): dia: tarefas (pontos)',
             'current_changes'           => 'ALTERAÇÕES PROPOSTAS NA TELA (JSON — ainda não aplicadas; parta delas ao ajustar)',
+            'project_document'          => 'DOCUMENTO DESTA CAMPANHA/PROJETO (texto do HTML — é a fonte do que foi planejado: peças, mecânica, datas, briefing)',
+            'planning_document'         => 'DOCUMENTO DO PLANEJAMENTO DO CICLO (texto do HTML do macroplanejamento)',
             'task_types_catalog'        => 'Tipos de tarefa válidos (chave: rótulo) — task_type só pode usar uma dessas chaves',
             'task_destinations_catalog' => 'Destinos de tarefa válidos (chave: rótulo) — destination só pode usar uma dessas chaves',
             'task_priorities_catalog'   => 'Prioridades de tarefa válidas (chave: rótulo) — priority só pode usar uma dessas chaves',

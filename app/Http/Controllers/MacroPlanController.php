@@ -102,13 +102,17 @@ class MacroPlanController extends Controller
             'tasks' => fn ($q) => $q->whereNull('project_id')->orderByDesc('created_at'),
         ]);
         $users          = User::orderBy('name')->get(['id', 'name']);
-        $currentBlock   = $request->get('bloco', 'bloco1');
+        // Planejamento enxuto (2026-10): abre no Documento (HTML). Blocos antigos só entram
+        // na navegação quando têm conteúdo, e em modo leitura.
+        $legacyBlocks = $macroplan->legacyBlocks();
+        $mainDocument = $macroplan->mainDocument();
+        $currentBlock = $request->get('bloco', 'documento');
 
-        if (!array_key_exists($currentBlock, MacroPlan::$blocks)) {
-            $currentBlock = 'bloco1';
+        if (!in_array($currentBlock, array_merge(['documento', 'bloco3', 'meta'], $legacyBlocks), true)) {
+            $currentBlock = 'documento';
         }
 
-        return view('macroplans.edit', compact('macroplan', 'users', 'currentBlock'));
+        return view('macroplans.edit', compact('macroplan', 'users', 'currentBlock', 'legacyBlocks', 'mainDocument'));
     }
 
     public function update(Request $request, MacroPlan $macroplan)
@@ -126,12 +130,31 @@ class MacroPlanController extends Controller
                 'status'         => 'required|in:' . implode(',', array_keys(MacroPlan::$statuses)),
                 'disciplines'    => 'nullable|array',
                 'disciplines.*'  => 'string',
+                'verba_mensal'   => 'nullable|string|max:30',
             ]);
-            $data['disciplines'] = $data['disciplines'] ?? [];
-            $macroplan->update($data);
+            // Versão e disciplinas saíram do formulário (planejamento enxuto, 2026-10): só
+            // grava se vierem — senão o salvar apagaria o que já existe.
+            foreach (['version', 'disciplines'] as $legacy) {
+                if (!$request->has($legacy)) {
+                    unset($data[$legacy]);
+                }
+            }
 
-            return redirect()->route('macroplans.edit', [$macroplan, 'bloco' => 'bloco1'])
-                ->with('success', 'Metadados atualizados.');
+            // Verba mora em bloco1.verba_total (onde o Orçamento sempre leu); o resto do
+            // bloco antigo fica como está.
+            $verba = $data['verba_mensal'] ?? null;
+            unset($data['verba_mensal']);
+            if ($request->has('verba_mensal')) {
+                $data['bloco1'] = array_merge($macroplan->bloco1 ?? [], ['verba_total' => $verba]);
+            }
+
+            $macroplan->update($data);
+            if ($request->has('verba_mensal')) {
+                $this->syncAdBudget($macroplan, $verba);
+            }
+
+            return redirect()->route('macroplans.edit', [$macroplan, 'bloco' => 'meta'])
+                ->with('success', 'Planejamento atualizado.');
         }
 
         // Atualizar bloco de conteúdo

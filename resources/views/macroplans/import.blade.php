@@ -59,24 +59,27 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                        Início do período <span class="text-[var(--orange)]">*</span>
+                        Início do período
                     </label>
-                    <input type="date" name="period_start" value="{{ old('period_start') }}" required
+                    <input type="date" name="period_start" value="{{ old('period_start') }}"
                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                 </div>
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                        Fim do período <span class="text-[var(--orange)]">*</span>
+                        Fim do período
                     </label>
-                    <input type="date" name="period_end" value="{{ old('period_end') }}" required
+                    <input type="date" name="period_end" value="{{ old('period_end') }}"
                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                 </div>
             </div>
 
+            @if($errors->has('period_start') || $errors->has('period_end'))
+                <p class="text-xs" style="color:var(--red)">{{ $errors->first('period_start') ?: $errors->first('period_end') }}</p>
+            @endif
             <p class="text-xs" style="color:var(--muted)">
-                O período não é extraído do HTML (vem em texto livre na capa, ex: "Julho a Outubro de 2026") — informe as datas exatas aqui.
+                Planejamento no formato novo (um documento só) já traz o período — pode deixar em branco. Formato antigo: informe as datas aqui.
             </p>
 
             <button type="submit"

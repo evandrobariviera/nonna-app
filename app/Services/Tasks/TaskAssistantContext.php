@@ -141,6 +141,44 @@ class TaskAssistantContext
         return "\n" . implode("\n", $out);
     }
 
+    /**
+     * Texto do documento HTML (planejamento ou campanha/projeto) pra IA ler — o HTML é o
+     * ativo (2026-10: "o html será nosso ativo passível de leitura pela IA"). Tira script/
+     * estilo/tags, mantém quebras de bloco. Cacheado por anexo (o arquivo não muda; anexo
+     * novo = id novo), pra não baixar do R2 a cada mensagem.
+     */
+    public static function documentText(?\Illuminate\Database\Eloquent\Model $attachment, int $limit = 30000): ?string
+    {
+        if (!$attachment) {
+            return null;
+        }
+
+        $text = \Illuminate\Support\Facades\Cache::remember(
+            'assistant-doc:' . class_basename($attachment) . ':' . $attachment->id,
+            now()->addDay(),
+            function () use ($attachment) {
+                try {
+                    $html = \Illuminate\Support\Facades\Storage::disk($attachment->disk)->get($attachment->disk_path);
+                } catch (\Throwable $e) {
+                    return '';
+                }
+                $html = preg_replace('~<(script|style|svg|noscript)\b[^>]*>.*?</\1>~is', ' ', (string) $html);
+                $html = preg_replace('~<(br|/p|/div|/li|/h[1-6]|/tr|/section)\b[^>]*>~i', "\n", $html);
+                $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                $text = preg_replace("/[ \t\x{00A0}]+/u", ' ', $text);
+                return trim(preg_replace("/\s*\n\s*/", "\n", $text));
+            }
+        );
+
+        if ($text === '') {
+            return null;
+        }
+
+        return mb_strlen($text) > $limit
+            ? mb_substr($text, 0, $limit) . "\n(documento cortado — mostrando o começo)"
+            : $text;
+    }
+
     /** Valor atual de um campo editável, no mesmo formato que a IA usa (data AAAA-MM-DD, id). */
     public static function currentValue(Task $task, string $field): mixed
     {

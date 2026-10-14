@@ -104,6 +104,51 @@ class MacroPlan extends Model
         }, $block);
     }
 
+    /**
+     * Documento principal do planejamento = o HTML anexado mais recente (2026-10: um
+     * documento só por planejamento, sem versão interna × cliente). É o que a tela mostra
+     * e o que a IA lê.
+     */
+    public function mainDocument(): ?MacroPlanAttachment
+    {
+        $attachments = $this->relationLoaded('attachments') ? $this->attachments : $this->attachments()->get();
+
+        return $attachments
+            ->filter(fn ($a) => str_contains((string) $a->mime_type, 'html'))
+            ->sortByDesc('created_at')
+            ->first();
+    }
+
+    /**
+     * Blocos do formato antigo (1/2/4/5) que têm algum conteúdo — saíram do formulário,
+     * mas o que foi preenchido continua visível (só leitura). Bloco 1 só com a verba não
+     * conta: a verba agora fica em Configurações.
+     *
+     * @return string[]
+     */
+    public function legacyBlocks(): array
+    {
+        $filled = function ($value) use (&$filled): bool {
+            if (is_array($value)) {
+                foreach ($value as $v) {
+                    if ($filled($v)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            return trim((string) $value) !== '';
+        };
+
+        return array_values(array_filter(['bloco1', 'bloco2', 'bloco4', 'bloco5'], function ($key) use ($filled) {
+            $data = $this->{$key} ?? [];
+            if ($key === 'bloco1') {
+                unset($data['verba_total']);
+            }
+            return $filled($data);
+        }));
+    }
+
     public function block(string $name): array
     {
         return static::flattenBlockText($this->{$name} ?? []);

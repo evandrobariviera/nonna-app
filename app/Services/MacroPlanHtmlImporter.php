@@ -27,6 +27,14 @@ class MacroPlanHtmlImporter
     {
         $this->warnings = [];
 
+        // Formato v2 da skill (out/2026): um documento só, visual livre, e um bloco JSON
+        // <script type="application/json" id="nonna-dados"> com o que o sistema precisa. Quando
+        // ele existe, é a única coisa lida — nada de classe/id de layout, que quebrava a
+        // importação a cada mudança visual. Sem o bloco, cai no leitor antigo (transição).
+        if (preg_match('~<script[^>]*id=["\']nonna-dados["\'][^>]*>(.*?)</script>~is', $html, $m)) {
+            return $this->parseDataBlock($m[1]);
+        }
+
         // Normaliza <br> para espaço antes de extrair texto (senão vira tudo colado)
         $html = preg_replace('/<br\s*\/?>/i', ' ', $html);
 
@@ -70,6 +78,75 @@ class MacroPlanHtmlImporter
             'bloco4'           => $this->parseBloco4(),
             'bloco5'           => $this->parseBloco5(),
             'projects'         => $this->parseProjectsAndCampaigns(),
+            'warnings'         => $this->warnings,
+        ];
+    }
+
+    /**
+     * Bloco de dados do formato v2 (ver skill planejamento-nonna, seção "BLOCO DE DADOS").
+     * Devolve o mesmo formato do leitor antigo, + period_start/period_end — os blocos de
+     * texto (1/2/4/5) ficam vazios: o conteúdo mora no próprio HTML, que fica anexado.
+     */
+    private function parseDataBlock(string $json): array
+    {
+        $data = json_decode(trim($json), true);
+        if (!is_array($data)) {
+            throw new \InvalidArgumentException('O bloco de dados do planejamento (id "nonna-dados") não é um JSON válido: ' . json_last_error_msg() . '. Peça pra skill gerar de novo.');
+        }
+
+        $date = function ($v, string $label) {
+            if (!is_string($v) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $v)) {
+                return null;
+            }
+            $d = \Carbon\Carbon::createFromFormat('!Y-m-d', $v);
+            if (!$d || $d->format('Y-m-d') !== $v) {
+                $this->warnings[] = "{$label}: data inválida ({$v}) — ficou em branco.";
+                return null;
+            }
+            return $v;
+        };
+
+        $projects = [];
+        foreach (($data['itens'] ?? []) as $i => $item) {
+            $name = trim((string) ($item['nome'] ?? ''));
+            if (!is_array($item) || $name === '') {
+                $this->warnings[] = 'Item ' . ($i + 1) . ' do bloco de dados sem nome — ignorado.';
+                continue;
+            }
+            $type = ($item['tipo'] ?? '') === 'projeto' ? 'projeto' : 'campanha';
+            $start = $date($item['inicio'] ?? null, "\"{$name}\" (início)");
+            $end   = $date($item['fim'] ?? null, "\"{$name}\" (fim)");
+            if (!$start) {
+                $this->warnings[] = "\"{$name}\" está sem data de início — preencha no sistema.";
+            }
+
+            $projects[] = [
+                'title'        => \Illuminate\Support\Str::limit($name, 250, ''),
+                'type'         => $type,
+                'status'       => 'em_planejamento',
+                'objective'    => is_string($item['objetivo'] ?? null) ? $item['objetivo'] : null,
+                'start_date'   => $start,
+                'end_date'     => $end,
+                'brief_status' => 'basico',
+            ];
+        }
+
+        $verba = $data['verba_mensal'] ?? null;
+
+        return [
+            'client_name'      => is_string($data['cliente'] ?? null) ? trim($data['cliente']) : '',
+            'title'            => is_string($data['titulo'] ?? null) && trim($data['titulo']) !== '' ? trim($data['titulo']) : 'Planejamento',
+            'responsible_name' => is_string($data['responsavel'] ?? null) ? trim($data['responsavel']) : '',
+            'version'          => '2',
+            'disciplines'      => [],
+            'period_start'     => $date($data['periodo_inicio'] ?? null, 'Início do período'),
+            'period_end'       => $date($data['periodo_fim'] ?? null, 'Fim do período'),
+            // Verba fica onde a tela de Orçamentos já procura (bloco1.verba_total).
+            'bloco1'           => is_numeric($verba) ? ['verba_total' => (string) $verba] : null,
+            'bloco2'           => null,
+            'bloco4'           => null,
+            'bloco5'           => null,
+            'projects'         => $projects,
             'warnings'         => $this->warnings,
         ];
     }

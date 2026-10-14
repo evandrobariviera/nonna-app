@@ -74,6 +74,16 @@ class ProjectTaskAssistantController extends Controller
             unset($context['existing_tasks_summary']);
             $context['existing_tasks'] = $tasksText;
             $context['team_load']      = TaskAssistantContext::teamLoad($project->id);
+
+            // Os documentos HTML são o ativo do planejamento: o do projeto/campanha (HTML mais
+            // recente anexado a ele) e o do planejamento (MacroPlan::mainDocument()).
+            $projectDoc = $project->attachments->filter(fn ($a) => str_contains((string) $a->mime_type, 'html'))->sortByDesc('created_at')->first();
+            if ($text = TaskAssistantContext::documentText($projectDoc)) {
+                $context['project_document'] = "\n" . $text;
+            }
+            if ($text = TaskAssistantContext::documentText($project->macroPlan?->mainDocument(), $projectDoc ? 15000 : 30000)) {
+                $context['planning_document'] = "\n" . $text;
+            }
             if ($pending = $this->currentChangesForAi($request->input('current_changes', []), $taskRefs)) {
                 $context['current_changes'] = $pending;
             }

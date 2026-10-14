@@ -43,36 +43,43 @@
         </div>
     @endif
 
+    {{-- Blocos do formato antigo: visíveis, mas sem edição nem botão de salvar/adicionar. --}}
+    <style>
+        fieldset.legacy-ro { border: 0; padding: 0; margin: 0; min-width: 0; }
+        fieldset.legacy-ro button { display: none !important; }
+        fieldset.legacy-ro input, fieldset.legacy-ro textarea, fieldset.legacy-ro select { opacity: .85; cursor: default; }
+        fieldset.legacy-ro::before { content: "Conteúdo do formato antigo do planejamento — só leitura. O planejamento novo vive no Documento."; display: block; font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+    </style>
+
     {{-- LAYOUT: SIDEBAR + CONTEÚDO --}}
     <div x-data="{ block: '{{ $currentBlock }}' }" class="flex gap-6">
 
         {{-- SIDEBAR --}}
         <div class="flex-shrink-0" style="width:220px">
             <div class="card overflow-hidden">
-                <div class="px-4 py-3" style="border-bottom:1px solid var(--border2)">
-                    <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Blocos</p>
-                </div>
-
-                @foreach(\App\Models\MacroPlan::$blocks as $key => $meta)
+                {{-- Planejamento enxuto (2026-10): Documento (HTML) + Campanhas e Projetos +
+                     Configurações. Os blocos antigos só aparecem se tiverem conteúdo, em leitura. --}}
+                @php
+                    $nav = [
+                        'documento' => ['icon' => 'file-text',     'label' => 'Documento'],
+                        'bloco3'    => ['icon' => 'folder-kanban', 'label' => 'Campanhas e Projetos', 'count' => $macroplan->projects->count()],
+                    ];
+                @endphp
+                @foreach($nav as $key => $item)
                     <button type="button"
                             @click="block = '{{ $key }}'"
-                            :class="block === '{{ $key }}' ? 'active' : ''"
                             class="w-full flex items-center gap-3 px-4 py-3 text-left transition-all"
                             style="border:none; border-bottom:1px solid var(--border2); background:none; cursor:pointer"
                             :style="block === '{{ $key }}'
                                 ? 'background:rgba(100, 59, 142,.12); color:var(--purple)'
                                 : 'color:var(--muted2)'">
-                        <span class="text-xs font-mono font-bold opacity-40">{{ $meta['num'] }}</span>
-                        <span class="text-xs font-semibold leading-tight">{{ $meta['label'] }}</span>
-                        @if($key === 'bloco3')
-                            <span class="ml-auto text-xs font-mono" style="color:var(--muted)">
-                                {{ $macroplan->projects->count() }}
-                            </span>
-                        @endif
+                        <span class="opacity-60" style="display:inline-flex"><x-icon :name="$item['icon']" size="13" /></span>
+                        <span class="text-xs font-semibold leading-tight">{{ $item['label'] }}</span>
+                        @isset($item['count'])
+                            <span class="ml-auto text-xs font-mono" style="color:var(--muted)">{{ $item['count'] }}</span>
+                        @endisset
                     </button>
                 @endforeach
-
-                <div style="border-bottom:1px solid var(--border2)"></div>
 
                 {{-- Meta / configurações --}}
                 <button type="button"
@@ -83,9 +90,27 @@
                         :style="block === 'meta'
                             ? 'background:rgba(100, 59, 142,.12); color:var(--purple)'
                             : 'color:var(--muted2)'">
-                    <span class="opacity-40" style="display:inline-flex"><x-icon name="settings" size="13" /></span>
+                    <span class="opacity-60" style="display:inline-flex"><x-icon name="settings" size="13" /></span>
                     <span class="text-xs font-semibold">Configurações</span>
                 </button>
+
+                @if($legacyBlocks)
+                    <div class="px-4 pt-3 pb-1" style="border-top:1px solid var(--border2)">
+                        <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Conteúdo anterior · leitura</p>
+                    </div>
+                    @foreach($legacyBlocks as $key)
+                        <button type="button"
+                                @click="block = '{{ $key }}'"
+                                class="w-full flex items-center gap-3 px-4 py-2 text-left transition-all"
+                                style="border:none; background:none; cursor:pointer"
+                                :style="block === '{{ $key }}'
+                                    ? 'background:rgba(100, 59, 142,.12); color:var(--purple)'
+                                    : 'color:var(--muted)'">
+                            <span class="text-xs font-mono opacity-50">{{ \App\Models\MacroPlan::$blocks[$key]['num'] }}</span>
+                            <span class="text-xs leading-tight">{{ \App\Models\MacroPlan::$blocks[$key]['label'] }}</span>
+                        </button>
+                    @endforeach
+                @endif
             </div>
 
             {{-- Reuniões ligadas --}}
@@ -164,7 +189,42 @@
         {{-- CONTEÚDO --}}
         <div class="flex-1 min-w-0">
 
-            {{-- ══ BLOCO 1: VISÃO GERAL E METAS ══ --}}
+            {{-- ══ DOCUMENTO — o HTML do planejamento (anexo HTML mais recente) ══ --}}
+            <div x-show="block === 'documento'" x-cloak>
+                <div class="card overflow-hidden">
+                    <div class="px-5 py-4 flex items-center justify-between gap-3 flex-wrap" style="border-bottom:1px solid var(--border2)">
+                        <div>
+                            <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Documento do planejamento</p>
+                            <h2 class="text-base font-bold" style="color:var(--text)">{{ $mainDocument?->filename ?? 'Nenhum documento ainda' }}</h2>
+                        </div>
+                        @if($mainDocument)
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs font-mono" style="color:var(--muted)">enviado {{ $mainDocument->created_at->format('d/m/Y') }}</span>
+                                <a href="{{ $mainDocument->url() }}" target="_blank" rel="noopener" class="btn btn-ghost btn-xs flex items-center gap-1">
+                                    <x-icon name="external-link" size="12" /> Abrir em nova aba
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                    @if($mainDocument)
+                        {{-- sandbox sem allow-same-origin: o HTML roda (navegação interna dos
+                             documentos antigos) mas não enxerga a sessão do Nonna App. --}}
+                        <iframe src="{{ $mainDocument->url() }}" title="Documento do planejamento"
+                                sandbox="allow-scripts allow-popups"
+                                style="width:100%; height:78vh; border:0; background:#fff; display:block"></iframe>
+                    @else
+                        <div class="px-5 py-10 text-center">
+                            <p class="text-sm font-semibold" style="color:var(--text)">Anexe o HTML do planejamento</p>
+                            <p class="text-xs mt-1 mx-auto" style="color:var(--muted); max-width:52ch">
+                                É o documento que o cliente e a equipe leem — gerado pela skill de planejamento. Use "Anexar arquivo" na lateral;
+                                o HTML mais recente vira o documento principal.
+                            </p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- ══ BLOCO 1: VISÃO GERAL E METAS (formato antigo — leitura) ══ --}}
             <div x-show="block === 'bloco1'" x-cloak>
                 @php $b1 = $macroplan->block('bloco1'); @endphp
                 @php
@@ -182,6 +242,8 @@
                         <h2 class="text-base font-bold" style="color:var(--text)">Visão Geral e Metas</h2>
                     </div>
                     <form method="POST" action="{{ route('macroplans.update', $macroplan) }}" class="px-5 py-5 space-y-6">
+                        {{-- Formato antigo: só leitura (planejamento enxuto, 2026-10) --}}
+                        <fieldset disabled class="legacy-ro">
                         @csrf @method('PATCH')
                         <input type="hidden" name="_block" value="bloco1">
 
@@ -284,6 +346,7 @@
                                 Salvar Bloco 01
                             </button>
                         </div>
+                    </fieldset>
                     </form>
                 </div>
             </div>
@@ -301,6 +364,8 @@
                         <h2 class="text-base font-bold" style="color:var(--text)">Contexto e Estratégia</h2>
                     </div>
                     <form method="POST" action="{{ route('macroplans.update', $macroplan) }}" class="px-5 py-5 space-y-6">
+                        {{-- Formato antigo: só leitura (planejamento enxuto, 2026-10) --}}
+                        <fieldset disabled class="legacy-ro">
                         @csrf @method('PATCH')
                         <input type="hidden" name="_block" value="bloco2">
 
@@ -448,6 +513,7 @@
                                 Salvar Bloco 02
                             </button>
                         </div>
+                    </fieldset>
                     </form>
 
                     {{-- Resumo do Período (read-only, derivado dos projetos/campanhas já cadastrados) --}}
@@ -699,6 +765,8 @@
                         </p>
                     </div>
                     <form method="POST" action="{{ route('macroplans.update', $macroplan) }}" class="px-5 py-5 space-y-5">
+                        {{-- Formato antigo: só leitura (planejamento enxuto, 2026-10) --}}
+                        <fieldset disabled class="legacy-ro">
                         @csrf @method('PATCH')
                         <input type="hidden" name="_block" value="bloco4">
 
@@ -742,6 +810,7 @@
                                 Salvar Bloco 04
                             </button>
                         </div>
+                    </fieldset>
                     </form>
                 </div>
             </div>
@@ -758,6 +827,8 @@
                         </p>
                     </div>
                     <form method="POST" action="{{ route('macroplans.update', $macroplan) }}" class="px-5 py-5 space-y-5">
+                        {{-- Formato antigo: só leitura (planejamento enxuto, 2026-10) --}}
+                        <fieldset disabled class="legacy-ro">
                         @csrf @method('PATCH')
                         <input type="hidden" name="_block" value="bloco5">
 
@@ -801,6 +872,7 @@
                                 Salvar Bloco 05
                             </button>
                         </div>
+                    </fieldset>
                     </form>
                 </div>
             </div>
@@ -816,23 +888,14 @@
                         @csrf @method('PATCH')
                         <input type="hidden" name="_block" value="meta">
 
-                        {{-- Título + Versão --}}
-                        <div class="grid grid-cols-4 gap-3">
-                            <div class="col-span-3">
-                                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                                    Título <span style="color:var(--orange)">*</span>
-                                </label>
-                                <input type="text" name="title" value="{{ $macroplan->title }}" required
-                                    class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Versão</label>
-                                <input type="text" name="version" value="{{ $macroplan->version ?? '1.0' }}"
-                                    placeholder="1.0"
-                                    class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                            </div>
+                        {{-- Título (versão e disciplinas saíram do cadastro em 2026-10 — o conteúdo mora no documento) --}}
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                                Título <span style="color:var(--orange)">*</span>
+                            </label>
+                            <input type="text" name="title" value="{{ $macroplan->title }}" required
+                                class="w-full px-4 py-2.5 text-sm focus:outline-none"
+                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         </div>
 
                         {{-- Período --}}
@@ -876,20 +939,13 @@
                             </div>
                         </div>
 
-                        {{-- Disciplinas Ativas --}}
+                        {{-- Verba — alimenta o Orçamento do cliente (MacroPlanController::syncAdBudget) --}}
                         <div>
-                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Disciplinas Ativas neste Ciclo</label>
-                            <div class="flex flex-wrap gap-2">
-                                @foreach(\App\Models\MacroPlan::$disciplineOptions as $key => $label)
-                                    <label class="flex items-center gap-1.5 text-xs cursor-pointer px-3 py-1.5"
-                                           style="border:1px solid var(--border2); color:var(--muted2)">
-                                        <input type="checkbox" name="disciplines[]" value="{{ $key }}"
-                                            {{ in_array($key, $macroplan->disciplines ?? []) ? 'checked' : '' }}
-                                            style="accent-color:var(--purple)">
-                                        {{ $label }}
-                                    </label>
-                                @endforeach
-                            </div>
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Verba mensal de anúncios (R$)</label>
+                            <input type="text" name="verba_mensal" value="{{ $macroplan->block('bloco1')['verba_total'] ?? '' }}"
+                                placeholder="Ex: 4500"
+                                class="w-full px-4 py-2.5 text-sm focus:outline-none" style="max-width:240px; background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            <p class="text-xs mt-1" style="color:var(--muted)">Mudou o valor → o Orçamento do cliente ganha uma nova entrada a partir de hoje.</p>
                         </div>
 
                         <div class="flex gap-3 pt-1">

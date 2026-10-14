@@ -26,14 +26,29 @@ class MacroPlanImportController extends Controller
         $data = $request->validate([
             'client_id'    => 'required|uuid|exists:pgsql.clients,id',
             'file'         => 'required|file|mimes:html,htm|max:5120',
-            'period_start' => 'required|date',
-            'period_end'   => 'required|date|after:period_start',
+            // Opcionais: o planejamento v2 traz o período no bloco de dados. Preenchido no
+            // formulário, o formulário manda.
+            'period_start' => 'nullable|date',
+            'period_end'   => 'nullable|date',
         ]);
 
         $client = Client::findOrFail($data['client_id']);
 
         $html = file_get_contents($data['file']->getRealPath());
-        $parsed = $importer->parse($html);
+        try {
+            $parsed = $importer->parse($html);
+        } catch (\InvalidArgumentException $e) {
+            return back()->withInput()->withErrors(['file' => $e->getMessage()]);
+        }
+
+        $data['period_start'] = $data['period_start'] ?: ($parsed['period_start'] ?? null);
+        $data['period_end']   = $data['period_end'] ?: ($parsed['period_end'] ?? null);
+        if (!$data['period_start'] || !$data['period_end']) {
+            return back()->withInput()->withErrors(['period_start' => 'Informe o início e o fim do período — o documento não trouxe essas datas.']);
+        }
+        if ($data['period_end'] <= $data['period_start']) {
+            return back()->withInput()->withErrors(['period_end' => 'O fim do período precisa ser depois do início.']);
+        }
 
         // O nome na Capa do HTML nem sempre bate com o cadastro (abreviação,
         // erro de digitação, etc.) — por isso quem manda é o cliente
