@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\MacroPlan;
 use App\Models\User;
+use App\Services\MacroPlanDocumentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -65,24 +66,56 @@ class MacroPlanController extends Controller
         return view('macroplans.create', compact('client', 'clients', 'users'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, MacroPlanDocumentService $documents)
     {
+        // Com o HTML da skill o período é opcional (o documento traz); sem, é obrigatório.
+        $hasDocument = $request->hasFile('document');
         $data = $request->validate([
             'client_id'      => 'required|uuid|exists:clients,id',
             'focus'          => 'nullable|string|max:200',
-            'period_start'   => 'required|date',
-            'period_end'     => 'required|date|after:period_start',
+            'period_start'   => ($hasDocument ? 'nullable' : 'required') . '|date',
+            'period_end'     => ($hasDocument ? 'nullable' : 'required') . '|date|after:period_start',
             'responsible_id' => 'nullable|exists:users,id',
             'status'         => 'required|in:' . implode(',', array_keys(MacroPlan::$statuses)),
+            'document'       => 'nullable|file|mimes:html,htm|max:5120',
         ]);
+        unset($data['document']);
 
-        $plan = MacroPlan::create([
-            ...$data,
-            'created_by' => Auth::id(),
-        ]);
+        if (!$hasDocument) {
+            $plan = MacroPlan::create([
+                ...$data,
+                'created_by' => Auth::id(),
+            ]);
+
+            return redirect()->route('macroplans.edit', $plan)
+                ->with('success', 'Planejamento criado. Envie o documento (HTML) quando estiver pronto.');
+        }
+
+        try {
+            $parsed = $documents->parse($request->file('document'));
+        } catch (\InvalidArgumentException $e) {
+            return back()->withInput()->withErrors(['document' => $e->getMessage()]);
+        }
+
+        // Formulário manda; o que ficou em branco vem do documento.
+        $data['period_start'] = $data['period_start'] ?: ($parsed['period_start'] ?? null);
+        $data['period_end']   = $data['period_end'] ?: ($parsed['period_end'] ?? null);
+        if (!$data['period_start'] || !$data['period_end']) {
+            return back()->withInput()->withErrors(['period_start' => 'Informe o início e o fim do período — o documento não trouxe essas datas.']);
+        }
+        if ($data['period_end'] <= $data['period_start']) {
+            return back()->withInput()->withErrors(['period_end' => 'O fim do período precisa ser depois do início.']);
+        }
+
+        [$plan, $warnings] = $documents->createFromDocument(
+            Client::findOrFail($data['client_id']), $data, $parsed, $request->file('document')
+        );
+
+        $count = count($parsed['projects'] ?? []);
 
         return redirect()->route('macroplans.edit', $plan)
-            ->with('success', 'Macroplanejamento criado. Preencha os blocos abaixo.');
+            ->with('success', "Planejamento criado a partir do documento: {$count} campanha(s)/projeto(s).")
+            ->with('import_warnings', $warnings);
     }
 
     /**

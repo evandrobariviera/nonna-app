@@ -153,7 +153,7 @@
                     @csrf
                     <label class="flex items-center justify-center w-full py-3 cursor-pointer text-center transition-colors"
                            style="border:1px dashed var(--border2); color:var(--muted); font-size:11px">
-                        + Anexar arquivo (ex: HTML de origem)
+                        + Anexar arquivo
                         <input type="file" name="file" class="hidden" @change="$el.closest('form').submit()">
                     </label>
                 </form>
@@ -162,6 +162,9 @@
                         <a href="{{ $attachment->url() }}" target="_blank" class="truncate hover:underline" style="color:var(--text)">
                             {{ $attachment->icon() }} {{ $attachment->filename }}
                         </a>
+                        @if($attachment->id === $macroplan->document_attachment_id)
+                            <span class="badge badge-purple flex-shrink-0" style="font-size:10px" title="É o que aparece na aba Documento">documento</span>
+                        @endif
                         <form method="POST" action="{{ route('macroplans.attachments.destroy', [$macroplan, $attachment]) }}"
                               @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
                             @csrf @method('DELETE')
@@ -198,15 +201,27 @@
                             <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Documento do planejamento</p>
                             <h2 class="text-base font-bold" style="color:var(--text)">{{ $mainDocument?->filename ?? 'Nenhum documento ainda' }}</h2>
                         </div>
-                        @if($mainDocument)
-                            <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-3 flex-wrap">
+                            @if($mainDocument)
                                 <span class="text-xs font-mono" style="color:var(--muted)">enviado {{ $mainDocument->created_at->format('d/m/Y') }}</span>
                                 <a href="{{ $mainDocument->url() }}" target="_blank" rel="noopener" class="btn btn-ghost btn-xs flex items-center gap-1">
                                     <x-icon name="external-link" size="12" /> Abrir em nova aba
                                 </a>
-                            </div>
-                        @endif
+                            @endif
+                            {{-- Campo próprio do documento (só HTML) — anexos diversos na lateral
+                                 nunca trocam o que aparece aqui. Versão anterior fica nos anexos. --}}
+                            <form method="POST" action="{{ route('macroplans.document.store', $macroplan) }}" enctype="multipart/form-data">
+                                @csrf
+                                <label class="btn btn-primary btn-xs cursor-pointer flex items-center gap-1">
+                                    <x-icon name="upload" size="12" /> {{ $mainDocument ? 'Trocar documento' : 'Enviar documento (HTML)' }}
+                                    <input type="file" name="document" accept=".html,.htm" class="hidden" @change="$el.closest('form').submit()">
+                                </label>
+                            </form>
+                        </div>
                     </div>
+                    @error('document')
+                        <p class="px-5 py-2 text-xs" style="color:var(--red); border-bottom:1px solid var(--border2)">{{ $message }}</p>
+                    @enderror
                     @if($mainDocument)
                         {{-- sandbox sem allow-same-origin: o HTML roda (navegação interna dos
                              documentos antigos) mas não enxerga a sessão do Nonna App. --}}
@@ -215,10 +230,10 @@
                                 style="width:100%; height:78vh; border:0; background:#fff; display:block"></iframe>
                     @else
                         <div class="px-5 py-10 text-center">
-                            <p class="text-sm font-semibold" style="color:var(--text)">Anexe o HTML do planejamento</p>
+                            <p class="text-sm font-semibold" style="color:var(--text)">Envie o HTML do planejamento</p>
                             <p class="text-xs mt-1 mx-auto" style="color:var(--muted); max-width:52ch">
-                                É o documento que o cliente e a equipe leem — gerado pela skill de planejamento. Use "Anexar arquivo" na lateral;
-                                o HTML mais recente vira o documento principal.
+                                É o documento que o cliente e a equipe leem — gerado pela skill de planejamento. Use o botão
+                                "Enviar documento (HTML)" acima. Arquivos em "Anexos" na lateral não aparecem aqui.
                             </p>
                         </div>
                     @endif

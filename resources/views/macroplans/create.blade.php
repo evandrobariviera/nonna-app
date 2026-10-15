@@ -21,10 +21,23 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('macroplans.store') }}">
+        <form method="POST" action="{{ route('macroplans.store') }}" enctype="multipart/form-data"
+              x-data="{ hasDoc: false }">
             @csrf
 
             <div class="card p-6 space-y-5">
+
+                {{-- Documento (HTML da skill) — opcional. Com ele, o App lê período, verba,
+                     campanhas e projetos e já cria tudo (MacroPlanDocumentService). --}}
+                <div class="p-4" style="background:var(--s2); border:1px dashed var(--border2); border-radius:10px">
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-1" style="color:var(--muted)">
+                        Documento do planejamento <span class="normal-case tracking-normal" style="color:var(--muted2)">(HTML da skill — opcional)</span>
+                    </label>
+                    <p class="text-xs mb-3" style="color:var(--muted2)">Enviando o HTML, o App já lê o período, a verba e cria as campanhas e projetos. Sem ele, o planejamento nasce vazio e o documento pode ser enviado depois.</p>
+                    <input type="file" name="document" accept=".html,.htm"
+                           @change="hasDoc = $event.target.files.length > 0"
+                           class="w-full text-sm" style="color:var(--text)">
+                </div>
 
                 {{-- Cliente --}}
                 <div>
@@ -58,21 +71,22 @@
                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                 </div>
 
-                {{-- Período --}}
+                {{-- Período — opcional quando vem o documento (ele traz as datas) --}}
+                <p x-show="hasDoc" x-cloak class="text-xs -mb-3" style="color:var(--muted2)">Pode deixar o período em branco — vem do documento. Preenchido aqui, o daqui vale.</p>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                            Início do Ciclo <span style="color:var(--orange)">*</span>
+                            Início do Ciclo <span x-show="!hasDoc" style="color:var(--orange)">*</span>
                         </label>
-                        <input type="date" name="period_start" value="{{ old('period_start') }}" required
+                        <input type="date" name="period_start" value="{{ old('period_start') }}" :required="!hasDoc"
                             class="w-full px-4 py-2.5 text-sm focus:outline-none"
                             style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     </div>
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                            Fim do Ciclo <span style="color:var(--orange)">*</span>
+                            Fim do Ciclo <span x-show="!hasDoc" style="color:var(--orange)">*</span>
                         </label>
-                        <input type="date" name="period_end" value="{{ old('period_end') }}" required
+                        <input type="date" name="period_end" value="{{ old('period_end') }}" :required="!hasDoc"
                             class="w-full px-4 py-2.5 text-sm focus:outline-none"
                             style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                     </div>
@@ -113,7 +127,7 @@
 
             <div class="flex items-center gap-3 mt-5">
                 <button type="submit" class="btn btn-primary">
-                    Criar e Preencher Blocos →
+                    Criar Planejamento →
                 </button>
                 <a href="{{ route('macroplans.index') }}" class="btn btn-ghost">
                     Cancelar

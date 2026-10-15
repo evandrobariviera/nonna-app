@@ -49,7 +49,6 @@ use App\Http\Controllers\DossierPersonaController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\MacroPlanController;
 use App\Http\Controllers\MacroPlanAttachmentController;
-use App\Http\Controllers\MacroPlanImportController;
 use App\Http\Controllers\MeetingAttachmentController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MeetingController;
@@ -493,11 +492,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::delete('/planejamentos/{macroplan}', [MacroPlanController::class, 'destroy'])
         ->name('macroplans.destroy');
 
-    // ── Import de macroplanejamento via HTML aprovado ──
-    Route::get('/planejamentos/importar', [MacroPlanImportController::class, 'create'])
-        ->name('macroplans.import.create');
-    Route::post('/planejamentos/importar', [MacroPlanImportController::class, 'store'])
-        ->name('macroplans.import.store');
+    // Import via HTML entrou no "+ Novo Planejamento" (2026-10) — link antigo/salvo cai lá.
+    Route::redirect('/planejamentos/importar', '/planejamentos/novo');
+
+    // ── Documento do planejamento (HTML, campo próprio — MacroPlanDocumentService) ──
+    Route::post('/planejamentos/{macroplan}/documento', [MacroPlanAttachmentController::class, 'storeDocument'])
+        ->name('macroplans.document.store');
 
     // ── Anexos do macroplanejamento ──
     Route::post('/planejamentos/{macroplan}/anexos', [MacroPlanAttachmentController::class, 'store'])
