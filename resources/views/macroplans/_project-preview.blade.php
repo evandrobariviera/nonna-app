@@ -84,7 +84,7 @@
     {{-- Produção (entregáveis) --}}
     @if($deliverables->isNotEmpty())
         <div>
-            <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Produção ({{ $deliverables->count() }})</p>
+            <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Entregas aprovadas ({{ $deliverables->count() }})</p>
             <div class="grid grid-cols-3 gap-2">
                 @foreach($deliverables as $d)
                     <a href="{{ $d->url() }}" target="_blank"

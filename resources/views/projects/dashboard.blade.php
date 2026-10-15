@@ -578,7 +578,9 @@
             showClosed: false,
             sortBy: 'urgency',
             groupBy: '',
-            viewMode: localStorage.getItem('projectsViewMode') || 'cards',
+            // Sempre abre em Cards (padrão da agência, 2026-10) — a escolha de Tabela vale só
+            // enquanto a página está aberta, não fica lembrada.
+            viewMode: 'cards',
 
             editOpen: false,
             editSaving: false,
@@ -694,7 +696,6 @@
 
             setViewMode(mode) {
                 this.viewMode = mode;
-                localStorage.setItem('projectsViewMode', mode);
             },
 
             applyFilters() {

@@ -179,11 +179,20 @@ class ProjectController extends Controller
         $totalTasks = $project->tasks()->where('status', '!=', 'cancelado')->count();
         $doneTasks  = $project->tasks()->where('status', 'concluido')->count();
 
-        // Só o que foi produzido (entregável) — insumo (referência recebida) não
-        // entra aqui, mesmo critério já usado na varredura de aprovação.
-        $deliverables = \App\Models\TaskAttachment::whereIn('task_id', $project->tasks()->pluck('tasks.id'))
-            ->where('kind', 'entregavel')
-            ->orderByDesc('created_at')
+        // Só material final (2026-10, pedido do Evandro): arquivo enviado numa rodada que foi
+        // APROVADA, de tarefa já CONCLUÍDA. Versões de rodadas recusadas, insumos e o que
+        // ainda está em produção ficam de fora.
+        $deliverables = \App\Models\TaskAttachment::query()
+            ->select('task_attachments.*')
+            ->join('tasks', 'tasks.id', '=', 'task_attachments.task_id')
+            ->join('task_approval_rounds as r', fn ($j) => $j
+                ->on('r.task_id', '=', 'task_attachments.task_id')
+                ->on('r.round_number', '=', 'task_attachments.round_number'))
+            ->where('tasks.project_id', $project->id)
+            ->where('tasks.status', 'concluido')
+            ->where('r.status', 'approved')
+            ->where('task_attachments.is_deliverable', true)
+            ->orderByDesc('task_attachments.created_at')
             ->limit(24)
             ->get();
 
