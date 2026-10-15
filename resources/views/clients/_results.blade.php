@@ -6,7 +6,9 @@
             <p class="stat-label" style="margin-bottom:2px">CRM · App</p>
             <h2 class="text-sm font-bold" style="color:var(--text)">
                 {{ $clients->total() }} cliente{{ $clients->total() !== 1 ? 's' : '' }}
-                {{ request('status') ? '· ' . App\Models\Client::$statuses[request('status')]['label'] : '' }}
+                {{-- "todos" é a sentinela de "Todos os status" — não existe em $statuses --}}
+                @php $statusLabel = App\Models\Client::$statuses[request('status')]['label'] ?? null; @endphp
+                {{ $statusLabel ? '· ' . $statusLabel : '' }}
             </h2>
         </div>
     </div>
