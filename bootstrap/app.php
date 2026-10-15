@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             \App\Http\Middleware\SetTenant::class,
+            \App\Http\Middleware\RedirectBareResultsFragment::class,
         ]);
 
         $middleware->alias([

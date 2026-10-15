@@ -22,15 +22,17 @@ function initLiveFilterForm(form) {
     let abortController = null;
 
     function runSearch() {
-        clearTimeout(debounceTimer);
-        abortController?.abort();
-        abortController = new AbortController();
-
         const params = new URLSearchParams();
         for (const [key, value] of new FormData(form).entries()) {
             if (value !== '') params.append(key, value);
         }
-        const qs = params.toString();
+        loadResults(params.toString());
+    }
+
+    function loadResults(qs) {
+        clearTimeout(debounceTimer);
+        abortController?.abort();
+        abortController = new AbortController();
 
         target.style.opacity = '.5';
 
@@ -42,7 +44,11 @@ function initLiveFilterForm(form) {
             .then((html) => {
                 target.innerHTML = html;
                 target.style.opacity = '';
-                history.replaceState(null, '', form.action + (qs ? '?' + qs : ''));
+                // form.action pode já trazer query (ex: ?tab=producao) — trocar a query
+                // inteira em vez de concatenar, senão a URL ficava com dois "?".
+                const pageUrl = new URL(form.action, location.origin);
+                pageUrl.search = qs;
+                history.replaceState(null, '', pageUrl.toString());
                 // Gancho pra scripts que precisam reagir a resultados novos (ex: reinicializar
                 // drag-and-drop do Kanban semanal da Sprint, cujos nós de DOM foram trocados).
                 target.dispatchEvent(new CustomEvent('live-filter:updated'));
@@ -51,6 +57,22 @@ function initLiveFilterForm(form) {
                 if (error.name !== 'AbortError') target.style.opacity = '';
             });
     }
+
+    // Paginação dentro do fragmento: o paginator monta os links com a URL do endpoint de
+    // resultados (/clientes/resultados?page=2), e abrir isso direto mostra o fragmento cru,
+    // sem layout nem CSS. Clique normal → carrega aqui mesmo via fetch. Ctrl/meio-clique
+    // (aba nova) segue o link e o servidor redireciona pra tela completa.
+    const resultsPath = new URL(resultsUrl, location.origin).pathname;
+    target.addEventListener('click', (e) => {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        const link = e.target.closest('a[href]');
+        if (!link || !target.contains(link)) return;
+        const url = new URL(link.href, location.origin);
+        if (url.pathname !== resultsPath) return;
+        e.preventDefault();
+        loadResults(url.searchParams.toString());
+        target.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    });
 
     form.addEventListener('submit', (e) => {
         e.preventDefault();
