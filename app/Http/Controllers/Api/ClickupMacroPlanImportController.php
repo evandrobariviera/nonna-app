@@ -142,7 +142,8 @@ class ClickupMacroPlanImportController extends Controller
                 'client_id'           => $clientId,
                 'responsible_id'      => $responsibleId,
                 'created_by'          => $createdBy,
-                'title'               => $row['title'] ?? 'Sem título',
+                // Nome é o padrão (MacroPlan::saving()); o título do ClickUp vira o foco.
+                'focus'               => isset($row['title']) ? \Illuminate\Support\Str::limit($row['title'], 200, '') : null,
                 'period_start'        => $periodStart,
                 'period_end'          => $periodEnd,
                 'status'              => $status,

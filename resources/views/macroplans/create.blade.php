@@ -44,13 +44,15 @@
                     </select>
                 </div>
 
-                {{-- Título --}}
+                {{-- Nome é automático (MacroPlan::standardTitleFor): "Planejamento {apelido} ·
+                     09/26 a 12/26". Aqui só o Foco, opcional, pra diferenciar planejamentos. --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                        Título <span style="color:var(--orange)">*</span>
+                        Foco <span class="normal-case tracking-normal" style="color:var(--muted2)">(opcional)</span>
                     </label>
-                    <input type="text" name="title" value="{{ old('title') }}" required
-                        placeholder="Ex: Macroplanejamento Q3 2026 — Cliente"
+                    <p class="text-xs mb-2" style="color:var(--muted2)">O nome é gerado sozinho: <strong>Planejamento + apelido do cliente + período</strong>. Use o foco só se precisar diferenciar (ex: "Expointer", "Calendário editorial").</p>
+                    <input type="text" name="focus" value="{{ old('focus') }}" maxlength="200"
+                        placeholder="Ex: Expointer"
                         class="w-full px-4 py-2.5 text-sm focus:outline-none"
                         style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">

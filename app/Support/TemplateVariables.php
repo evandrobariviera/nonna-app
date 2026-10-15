@@ -84,7 +84,7 @@ class TemplateVariables
             'attachment_name'=> ['Nome do anexo (quando aplicável)', 'call-2026-09-05.mp3'],
         ],
         'macro_plan' => [
-            'macro_plan_title'  => ['Título do planejamento', 'Zarpellon — Planejamento 09/2026'],
+            'macro_plan_title'  => ['Título do planejamento', 'Planejamento Zarpellon · 09/26 a 12/26'],
             'macro_plan_status' => ['Status', 'Em Planejamento'],
             'client_name'       => ['Cliente', 'Zarpellon'],
             'responsible_name'  => ['Responsável', 'Alisson'],

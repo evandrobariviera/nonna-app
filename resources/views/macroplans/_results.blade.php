@@ -33,6 +33,7 @@
                                            class="font-semibold text-sm hover:underline" style="color:var(--text)">
                                             {{ $plan->title }}
                                         </a>
+                                        @if($plan->focus)<p class="text-xs truncate" style="color:var(--muted2)">{{ $plan->focus }}</p>@endif
                                         @if($plan->isLaunched())
                                             <span class="badge badge-green ml-1">ClickUp</span>
                                         @endif

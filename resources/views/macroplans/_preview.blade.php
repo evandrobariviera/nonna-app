@@ -4,6 +4,7 @@
     {{-- Cabeçalho --}}
     <div>
         <p class="text-base font-bold" style="color:var(--text)">{{ $macroplan->title }}</p>
+        @if($macroplan->focus)<p class="text-xs mt-0.5" style="color:var(--muted2)">{{ $macroplan->focus }}</p>@endif
         <div class="flex items-center gap-2 mt-2 flex-wrap">
             <span class="badge badge-{{ $macroplan->statusColor() }}">{{ $macroplan->statusLabel() }}</span>
             @if($macroplan->client)

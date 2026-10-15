@@ -22,6 +22,7 @@ class MacroPlan extends Model
         'responsible_id',
         'created_by',
         'title',
+        'focus',
         'version',
         'period_start',
         'period_end',
@@ -172,6 +173,67 @@ class MacroPlan extends Model
     public function periodLabel(): string
     {
         return $this->period_start->format('d/m/Y') . ' a ' . $this->period_end->format('d/m/Y');
+    }
+
+    /**
+     * Nome padrão e imutável (2026-10): "Planejamento {apelido} · 09/26 a 12/26". Ninguém
+     * digita o título — é gravado no saving() e reescrito quando o apelido/razão social do
+     * cliente muda (Client::booted). O que diferenciava um planejamento do outro ("Expointer",
+     * "Calendário editorial") mora em `focus`, mostrado à parte.
+     *
+     * $clientFacing = razão social em vez do apelido — o apelido é interno e nunca aparece
+     * pro cliente (Portal), ver Client::displayName().
+     */
+    public static function standardTitleFor(?Client $client, $start, $end, bool $clientFacing = false): string
+    {
+        $name = $client ? ($clientFacing ? $client->company_name : $client->displayName()) : null;
+        $title = trim('Planejamento ' . ($name ?? ''));
+
+        if ($start && $end) {
+            $from = $start->format('m/y');
+            $to   = $end->format('m/y');
+            $title .= ' · ' . ($from === $to ? $from : $from . ' a ' . $to);
+        }
+
+        return $title;
+    }
+
+    public function standardTitle(bool $clientFacing = false): string
+    {
+        $client = $this->relationLoaded('client') && $this->client?->id === $this->client_id
+            ? $this->client
+            : Client::withoutGlobalScopes()->find($this->client_id);
+
+        return self::standardTitleFor($client, $this->period_start, $this->period_end, $clientFacing);
+    }
+
+    /** Título pra tela do cliente (Portal): mesmo padrão, com a razão social. */
+    public function clientTitle(): string
+    {
+        return $this->standardTitle(clientFacing: true);
+    }
+
+    /**
+     * Reescreve o título dos planejamentos do cliente direto no banco (sem eventos — não é
+     * uma edição do planejamento, então não entra no histórico nem dispara automação).
+     */
+    public static function refreshTitlesFor(Client $client): void
+    {
+        self::withoutGlobalScopes()->where('client_id', $client->id)
+            ->get(['id', 'client_id', 'period_start', 'period_end', 'title'])
+            ->each(function (self $plan) use ($client) {
+                $title = self::standardTitleFor($client, $plan->period_start, $plan->period_end);
+                if ($title !== $plan->title) {
+                    self::withoutGlobalScopes()->whereKey($plan->id)->update(['title' => $title]);
+                }
+            });
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $plan) {
+            $plan->title = $plan->standardTitle();
+        });
     }
 
     public function client(): BelongsTo

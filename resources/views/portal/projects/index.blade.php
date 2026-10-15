@@ -20,7 +20,7 @@
         <div class="card p-5 mb-4 flex items-center justify-between">
             <div>
                 <div class="flex items-center gap-3 mb-1">
-                    <p class="font-bold" style="color: var(--text)">{{ $plan->title }}</p>
+                    <p class="font-bold" style="color: var(--text)">{{ $plan->clientTitle() }}</p>
                     <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
                           style="background: {{ $sc['bg'] }}; color: {{ $sc['text'] }}">
                         {{ $sc['label'] }}

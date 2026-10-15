@@ -69,7 +69,7 @@ class MacroPlanController extends Controller
     {
         $data = $request->validate([
             'client_id'      => 'required|uuid|exists:clients,id',
-            'title'          => 'required|string|max:200',
+            'focus'          => 'nullable|string|max:200',
             'period_start'   => 'required|date',
             'period_end'     => 'required|date|after:period_start',
             'responsible_id' => 'nullable|exists:users,id',
@@ -122,7 +122,7 @@ class MacroPlanController extends Controller
         // Atualizar metadados gerais
         if ($block === 'meta') {
             $data = $request->validate([
-                'title'          => 'required|string|max:200',
+                'focus'          => 'nullable|string|max:200',
                 'version'        => 'nullable|string|max:20',
                 'period_start'   => 'required|date',
                 'period_end'     => 'required|date|after:period_start',

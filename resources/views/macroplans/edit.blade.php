@@ -16,6 +16,7 @@
             </a>
             <span style="color:var(--border2)">/</span>
             <span class="text-xs font-semibold" style="color:var(--text)">{{ $macroplan->title }}</span>
+            @if($macroplan->focus)<span class="text-xs" style="color:var(--muted2)">— {{ $macroplan->focus }}</span>@endif
         </div>
         <div class="flex items-center gap-2">
             <x-status-dropdown-inline :options="\App\Models\MacroPlan::$statuses" :current="$macroplan->status"
@@ -874,11 +875,18 @@
                         <input type="hidden" name="_block" value="meta">
 
                         {{-- Título (versão e disciplinas saíram do cadastro em 2026-10 — o conteúdo mora no documento) --}}
+                        {{-- Nome é automático (MacroPlan::standardTitleFor) — muda sozinho com o
+                             período ou o apelido do cliente. Editável só o Foco. --}}
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Nome</label>
+                            <p class="text-sm font-semibold px-4 py-2.5" style="background:var(--s2); border:1px solid var(--border2); border-radius:8px; color:var(--text)">{{ $macroplan->title }}</p>
+                            <p class="text-xs mt-1.5" style="color:var(--muted2)">Gerado sozinho: Planejamento + apelido do cliente + período. Muda se o período ou o apelido mudar.</p>
+                        </div>
                         <div>
                             <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                                Título <span style="color:var(--orange)">*</span>
+                                Foco <span class="normal-case tracking-normal" style="color:var(--muted2)">(opcional)</span>
                             </label>
-                            <input type="text" name="title" value="{{ $macroplan->title }}" required
+                            <input type="text" name="focus" value="{{ $macroplan->focus }}" maxlength="200" placeholder="Ex: Expointer"
                                 class="w-full px-4 py-2.5 text-sm focus:outline-none"
                                 style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
                         </div>
