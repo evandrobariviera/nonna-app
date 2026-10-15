@@ -366,8 +366,11 @@
                        x-text="group.label + ' (' + group.items.length + ')'"></p>
                 </div>
             <template x-for="p in group.items" :key="p.id">
+                {{-- Card no mesmo visual do "Faz parte de" da tarefa (2026-10): faixa na cor do
+                     tipo, rosca de progresso, datas + régua do período e botão que abre o painel
+                     lateral. Borda esquerda continua sinalizando urgência (atraso/sem tarefas). --}}
                 <div class="card flex flex-col relative"
-                     :style="typeTopBorder(p) + urgencyLeftBorder(p)">
+                     :style="'border-top:3px solid ' + typeHex(p) + ';' + urgencyLeftBorder(p)">
 
                     {{-- Lápis de edição rápida --}}
                     <button @click="openEdit(p)"
@@ -376,128 +379,114 @@
                         <x-icon name="pencil" size="14" />
                     </button>
 
-                    <div class="px-4 pt-4 pb-3 flex-1">
+                    <div class="px-5 pt-4 pb-4 flex-1 flex flex-col gap-4">
+
+                        {{-- Tipo + cliente --}}
+                        <div class="pr-8">
+                            <p class="text-xs font-semibold uppercase tracking-widest flex items-center gap-2" :style="'color:' + typeHex(p) + '; letter-spacing:.1em'">
+                                <span class="icon-badge" :style="'color:' + typeHex(p)">
+                                    <span x-show="p.type_icon === 'megaphone'" class="inline-flex"><x-icon name="megaphone" size="16" /></span>
+                                    <span x-show="p.type_icon === 'folder-kanban'" class="inline-flex"><x-icon name="folder-kanban" size="16" /></span>
+                                </span>
+                                <span x-text="p.type_label"></span>
+                                <span style="color:var(--border2)">·</span>
+                                <span class="truncate normal-case tracking-normal font-semibold" style="color:var(--muted); letter-spacing:0" x-text="p.client_name"></span>
+                            </p>
+                        </div>
+
+                        {{-- Título --}}
+                        <a :href="p.url" class="block text-lg font-extrabold leading-snug transition-opacity"
+                           style="color:var(--text)"
+                           @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open(p.preview_url) }"
+                           onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'"
+                           x-text="p.title"></a>
 
                         {{-- Alertas --}}
                         <div x-show="p.has_overdue"
-                             class="flex items-center gap-1.5 text-xs font-bold font-mono mb-2 px-2 py-1"
-                             style="background:rgba(239,68,68,.08); color:var(--red); border:1px solid rgba(239,68,68,.2)">
+                             class="flex items-center gap-1.5 text-xs font-bold px-2 py-1 -mt-1"
+                             style="background:rgba(239,68,68,.08); color:var(--red); border:1px solid rgba(239,68,68,.2); border-radius:6px">
                             <span>⚠</span>
                             <span x-text="p.overdue_tasks + ' tarefa' + (p.overdue_tasks > 1 ? 's atrasadas' : ' atrasada')"></span>
                         </div>
                         <div x-show="p.not_started && !p.has_overdue"
-                             class="flex items-center gap-1.5 text-xs font-bold font-mono mb-2 px-2 py-1"
-                             style="background:rgba(238, 121, 25,.08); color:var(--orange); border:1px solid rgba(238, 121, 25,.2)">
+                             class="flex items-center gap-1.5 text-xs font-bold px-2 py-1 -mt-1"
+                             style="background:rgba(238, 121, 25,.08); color:var(--orange); border:1px solid rgba(238, 121, 25,.2); border-radius:6px">
                             <span>◉</span><span>Sem tarefas</span>
                         </div>
 
-                        {{-- Badge status --}}
-                        <div class="flex items-center gap-1.5 mb-1.5" x-data="{ open: false, style: '' }">
-                            <span class="relative inline-block">
-                                <button type="button" @click="open = !open; style = dropdownStyle($el, 'bottom-left')"
-                                    class="badge text-xs font-bold"
-                                    :style="'border:none; cursor:pointer; background:' + colorHex(p.status_color) + '; color:#fff'">
-                                    <span x-text="p.status_label"></span> ▾
-                                </button>
-                                <template x-teleport="body">
-                                    <div x-show="open" @click.outside="open = false" x-close-on-scroll="open" x-cloak
-                                         class="rounded shadow-lg py-1"
-                                         :style="style + 'background:var(--s1); border:1px solid var(--border2); min-width:190px'">
-                                        <template x-for="opt in statusOptions" :key="opt.key">
-                                            <button type="button" @click="quickSetStatus(p, opt.key); open = false"
-                                                class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
-                                                :style="p.status === opt.key ? 'color:var(--purple)' : 'color:var(--text)'"
-                                                onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
-                                                <span class="inline-block w-2 h-2 rounded-full flex-shrink-0" :style="'background:' + colorHex(opt.color)"></span>
-                                                <span x-text="opt.label"></span>
-                                            </button>
-                                        </template>
-                                    </div>
-                                </template>
-                            </span>
-                        </div>
-
-                        {{-- Cliente --}}
-                        <div class="text-xs font-mono font-semibold truncate mb-0.5 pr-6" style="color:var(--muted)" x-text="p.client_name"></div>
-
-                        {{-- Título --}}
-                        <div class="flex items-center gap-2 mb-1 pr-6">
-                            <span class="inline-flex items-center justify-center flex-shrink-0"
-                                  style="width:18px; height:18px"
-                                  :style="'width:18px; height:18px; color:' + colorHex(p.status_color)">
-                                <span x-show="p.type_icon === 'megaphone'"><x-icon name="megaphone" size="16" /></span>
-                                <span x-show="p.type_icon === 'folder-kanban'"><x-icon name="folder-kanban" size="16" /></span>
-                            </span>
-                            <h3 class="font-bold text-sm leading-snug min-w-0" style="color:var(--text)" x-text="p.title"></h3>
-                        </div>
-
-                        {{-- Planejamento --}}
-                        <p class="text-xs mb-1 truncate" style="color:var(--muted2)"
-                           x-text="p.macroplan_title !== '—' ? '[ROADMAP] ' + p.macroplan_title : 'Sem planejamento'"></p>
-
-                        {{-- Período --}}
-                        <p class="text-xs font-mono mb-3" x-show="p.start_date || p.end_date"
-                           :style="p.deadline_overdue ? 'color:var(--red); font-weight:600' : 'color:var(--muted)'">
-                            <span x-text="p.start_date"></span><span x-show="p.start_date && p.end_date"> → </span><span x-text="p.end_date"></span>
-                            <span x-show="p.deadline_overdue"> · vencido</span>
-                        </p>
-
-                        {{-- Disciplinas --}}
-                        <div class="flex flex-wrap gap-1 mb-3" x-show="p.discipline_labels.length > 0">
-                            <template x-for="d in p.discipline_labels" :key="d">
-                                <span class="badge text-xs" x-text="d"></span>
-                            </template>
-                        </div>
-
-                        {{-- Progresso --}}
-                        <div class="mb-3">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-xs font-mono" style="color:var(--muted)">Progresso</span>
-                                <span class="text-xs font-black font-mono"
-                                      :style="p.progress === 100 ? 'color:var(--green)' : 'color:var(--text)'"
-                                      x-text="p.progress + '%'"></span>
-                            </div>
-                            <div class="w-full h-1.5 rounded-full overflow-hidden" style="background:var(--border2)">
-                                <div class="h-1.5 rounded-full transition-all duration-700"
-                                     :style="'width:' + p.progress + '%; background:' + (p.progress === 100 ? 'var(--green)' : 'var(--grad)')"></div>
-                            </div>
-                            <p class="text-xs mt-1 font-mono" style="color:var(--muted)"
-                               x-text="p.done_tasks + '/' + p.total_tasks + ' tarefas concluídas'"></p>
-                        </div>
-
-                        {{-- Kanban cols --}}
-                        <div class="grid grid-cols-4 gap-1">
-                            <div class="text-center px-1 py-1.5 rounded" style="background:var(--s2)">
-                                <div class="text-sm font-black font-mono" style="color:var(--muted)" x-text="p.col_counts.backlog"></div>
-                                <div class="text-xs font-mono" style="color:var(--muted); font-size:9px">Backlog</div>
-                            </div>
-                            <div class="text-center px-1 py-1.5 rounded" style="background:var(--s2)">
-                                <div class="text-sm font-black font-mono" style="color:var(--orange)" x-text="p.col_counts.em_andamento"></div>
-                                <div class="text-xs font-mono" style="color:var(--muted); font-size:9px">Andamento</div>
-                            </div>
-                            <div class="text-center px-1 py-1.5 rounded" style="background:var(--s2)">
-                                <div class="text-sm font-black font-mono" style="color:var(--purple)" x-text="p.col_counts.revisao"></div>
-                                <div class="text-xs font-mono" style="color:var(--muted); font-size:9px">Revisão</div>
-                            </div>
-                            <div class="text-center px-1 py-1.5 rounded" style="background:var(--s2)">
-                                <div class="text-sm font-black font-mono" style="color:var(--green)" x-text="p.col_counts.concluido"></div>
-                                <div class="text-xs font-mono" style="color:var(--muted); font-size:9px">Concluído</div>
+                        {{-- Rosca de progresso + status (status continua editável aqui) --}}
+                        <div class="flex items-center gap-4">
+                            <svg width="76" height="76" viewBox="0 0 76 76" class="flex-shrink-0" role="img" :aria-label="p.progress + '% concluído'">
+                                <circle cx="38" cy="38" r="30" fill="none" stroke="var(--s3)" stroke-width="8" />
+                                <circle cx="38" cy="38" r="30" fill="none" :stroke="typeHex(p)" stroke-width="8" stroke-linecap="round"
+                                        :stroke-dasharray="ringLen" :stroke-dashoffset="ringLen * (1 - p.progress / 100)"
+                                        transform="rotate(-90 38 38)" />
+                                <text x="38" y="43" text-anchor="middle" font-size="16" font-weight="800" fill="var(--text)" x-text="p.progress + '%'"></text>
+                            </svg>
+                            <div class="min-w-0">
+                                <p class="text-sm font-bold" style="color:var(--text)" x-text="p.done_tasks + ' de ' + p.total_tasks + ' tarefas'"></p>
+                                <p class="text-xs" style="color:var(--muted)">concluídas</p>
+                                <div class="mt-1.5" x-data="{ open: false, style: '' }">
+                                    <button type="button" @click="open = !open; style = dropdownStyle($el, 'bottom-left')"
+                                        class="text-xs font-semibold inline-flex items-center gap-1"
+                                        :style="'color:' + colorHex(p.status_color)" title="Mudar status">
+                                        <span x-text="p.status_label"></span> ▾
+                                    </button>
+                                    <template x-teleport="body">
+                                        <div x-show="open" @click.outside="open = false" x-close-on-scroll="open" x-cloak
+                                             class="rounded shadow-lg py-1"
+                                             :style="style + 'background:var(--s1); border:1px solid var(--border2); min-width:190px'">
+                                            <template x-for="opt in statusOptions" :key="opt.key">
+                                                <button type="button" @click="quickSetStatus(p, opt.key); open = false"
+                                                    class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
+                                                    :style="p.status === opt.key ? 'color:var(--purple)' : 'color:var(--text)'"
+                                                    onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                                                    <span class="inline-block w-2 h-2 rounded-full flex-shrink-0" :style="'background:' + colorHex(opt.color)"></span>
+                                                    <span x-text="opt.label"></span>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
                         </div>
 
+                        {{-- Datas + régua do período --}}
+                        <div x-show="p.start_date || p.end_date || p.pieces_due_date" class="flex flex-col gap-2 pt-3" style="border-top:1px solid var(--border2)">
+                            <div x-show="p.pieces_due_date" class="flex items-center justify-between">
+                                <span class="text-xs" style="color:var(--muted)">Entrega das peças</span>
+                                <span class="text-sm font-semibold" style="color:var(--text)" x-text="p.pieces_due_date"></span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs" style="color:var(--muted)" x-text="p.type === 'campanha' ? 'Vai ao ar' : 'Início'"></span>
+                                <span class="text-sm font-semibold" style="color:var(--text)" x-text="p.start_date || '—'"></span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs" style="color:var(--muted)">Término</span>
+                                <span class="text-sm font-semibold" :style="p.deadline_overdue ? 'color:var(--red)' : 'color:var(--text)'"
+                                      x-text="(p.end_date || '—') + (p.deadline_overdue ? ' · vencido' : '')"></span>
+                            </div>
+                            <div x-show="p.period_pct !== null" class="mt-1">
+                                <div class="relative h-1.5 rounded-full" style="background:var(--s3)">
+                                    <div class="absolute left-0 top-0 h-1.5 rounded-full" :style="'width:' + p.period_pct + '%; background:' + typeHex(p) + '; opacity:.45'"></div>
+                                    <div class="absolute rounded-full" title="Hoje"
+                                         :style="'left:calc(' + p.period_pct + '% - 5px); top:-3px; width:10px; height:10px; background:' + typeHex(p) + '; border:2px solid var(--s1)'"></div>
+                                </div>
+                                <p class="text-xs mt-2" style="color:var(--muted2)" x-text="p.period_text"></p>
+                            </div>
+                        </div>
                     </div>
 
                     {{-- Footer --}}
-                    <div class="px-4 py-3 flex items-center justify-between gap-2"
-                         style="border-top:1px solid var(--border2)">
-                        <a x-show="p.macroplan_url" :href="p.macroplan_url || '#'" class="btn btn-ghost btn-xs">
+                    <div class="px-5 pb-4 flex items-center gap-2">
+                        <a x-show="p.macroplan_url" :href="p.macroplan_url || '#'" class="btn btn-ghost btn-sm" title="Abrir o planejamento">
                             ↗ Planejamento
                         </a>
-                        <span x-show="!p.macroplan_url" class="text-xs font-mono" style="color:var(--border2)">Sem planejamento</span>
-
-                        <a :href="p.url" class="btn btn-primary btn-sm">
-                            Abrir →
-                        </a>
+                        {{-- Clique abre no painel lateral; Ctrl/Cmd+clique abre a página inteira. --}}
+                        <a :href="p.url" class="btn btn-primary btn-sm flex-1 justify-center"
+                           @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open(p.preview_url) }"
+                           :style="'background:' + typeHex(p) + '; border-color:' + typeHex(p)"
+                           x-text="'Ver ' + (p.type === 'campanha' ? 'campanha' : 'projeto') + ' →'"></a>
                     </div>
 
                 </div>
@@ -679,6 +668,13 @@
                 } catch (e) {
                     console.error('quickSetStatus falhou', e);
                 }
+            },
+
+            // Circunferência da rosca de progresso dos cards (r=30).
+            ringLen: 2 * Math.PI * 30,
+
+            typeHex(p) {
+                return this.colorHex(p.type_color);
             },
 
             typeTopBorder(p) {

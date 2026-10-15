@@ -49,9 +49,32 @@ class ProjectController extends Controller
                 && $p->end_date->isPast()
                 && !in_array($p->status, ['concluido', 'cancelado']);
 
+            // Régua do período (mesma do card "Faz parte de" da tarefa): onde "hoje" está
+            // entre início e término, e o texto de quanto falta.
+            $periodPct  = null;
+            $periodText = null;
+            if ($p->start_date && $p->end_date && $p->end_date->gte($p->start_date)) {
+                $todayDate  = now()->startOfDay();
+                $span       = max(1, $p->start_date->diffInDays($p->end_date));
+                $periodPct  = (int) max(0, min(100, round($p->start_date->diffInDays($todayDate, false) / $span * 100)));
+                if ($todayDate->lt($p->start_date)) {
+                    $n = (int) $todayDate->diffInDays($p->start_date);
+                    $periodText = 'Começa em ' . $n . ' dia' . ($n !== 1 ? 's' : '');
+                } elseif ($todayDate->gt($p->end_date)) {
+                    $periodText = 'Período encerrado';
+                } else {
+                    $n = (int) $todayDate->diffInDays($p->end_date);
+                    $periodText = $n === 0 ? 'Termina hoje' : 'Faltam ' . $n . ' dia' . ($n !== 1 ? 's' : '');
+                }
+            }
+
             return [
                 'id'               => $p->id,
                 'title'            => $p->title,
+                'pieces_due_date'  => $p->type === 'campanha' ? $p->pieces_due_date?->format('d/m/y') : null,
+                'period_pct'       => $periodPct,
+                'period_text'      => $periodText,
+                'preview_url'      => route('projects.preview', $p->id),
                 'objective'        => $p->objective,
                 'status'           => $p->status,
                 'status_label'     => $p->statusLabel(),
