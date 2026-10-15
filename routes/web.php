@@ -631,6 +631,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('project-attachments.store');
     Route::delete('/projetos/{project}/anexos/{attachment}', [ProjectAttachmentController::class, 'destroy'])
         ->name('project-attachments.destroy');
+    Route::post('/projetos/{project}/documento', [ProjectAttachmentController::class, 'storeDocument'])
+        ->name('project-attachments.document');
     Route::post('/projetos/{project}/tarefas', [TaskController::class, 'storeStandalone'])
         ->name('tasks.storeStandalone');
 

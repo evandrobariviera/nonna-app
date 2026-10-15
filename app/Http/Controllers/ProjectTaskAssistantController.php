@@ -74,8 +74,8 @@ class ProjectTaskAssistantController extends Controller
             unset($context['existing_tasks_summary']);
             $context['existing_tasks'] = $tasksText;
             $context['team_load']      = TaskAssistantContext::teamLoad($project->id);
-
-            // Os documentos HTML são o ativo do planejamento: o do projeto/campanha (HTML mais
+            // Os documentos HTML são o ativo do planejamento: o do projeto/campanha e o do
+            // planejamento (campo próprio document_attachment_id — Project/MacroPlan::mainDocument()).
             // recente anexado a ele) e o do planejamento (MacroPlan::mainDocument()).
             $projectDoc = $project->mainDocument();
             if ($text = TaskAssistantContext::documentText($projectDoc)) {

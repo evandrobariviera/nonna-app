@@ -41,6 +41,7 @@ class Project extends Model
         'start_date',
         'pieces_due_date',
         'end_date',
+        'document_attachment_id',
         'budget',
         'clickup_task_id',
         'clickup_list_id',
@@ -198,12 +199,22 @@ class Project extends Model
      */
     public function mainDocument(): ?ProjectAttachment
     {
-        $attachments = $this->relationLoaded('attachments') ? $this->attachments : $this->attachments()->get();
+        // Campo próprio (document_attachment_id, 2026-10-15) — antes era "o HTML mais recente
+        // dos anexos", e qualquer HTML anexado à toa virava o documento.
+        if (!$this->document_attachment_id) {
+            return null;
+        }
 
-        return $attachments
-            ->filter(fn ($a) => str_contains((string) $a->mime_type, 'html'))
-            ->sortByDesc('created_at')
-            ->first();
+        if ($this->relationLoaded('attachments')) {
+            return $this->attachments->firstWhere('id', $this->document_attachment_id);
+        }
+
+        return $this->documentAttachment;
+    }
+
+    public function documentAttachment(): BelongsTo
+    {
+        return $this->belongsTo(ProjectAttachment::class, 'document_attachment_id');
     }
 
     public function attachments(): HasMany

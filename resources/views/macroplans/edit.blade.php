@@ -193,7 +193,7 @@
         {{-- CONTEÚDO --}}
         <div class="flex-1 min-w-0">
 
-            {{-- ══ DOCUMENTO — o HTML do planejamento (anexo HTML mais recente) ══ --}}
+            {{-- ══ DOCUMENTO — o HTML do planejamento (campo próprio document_attachment_id) ══ --}}
             <div x-show="block === 'documento'" x-cloak>
                 <div class="card overflow-hidden">
                     <div class="px-5 py-4 flex items-center justify-between gap-3 flex-wrap" style="border-bottom:1px solid var(--border2)">

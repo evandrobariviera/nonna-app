@@ -123,7 +123,7 @@
         @endif
     </div>
 
-    {{-- DOCUMENTO — o HTML da campanha/projeto (anexo HTML mais recente). É onde mora o
+    {{-- DOCUMENTO — o HTML da campanha/projeto (campo próprio document_attachment_id). É onde mora o
          briefing, as peças e a mecânica (2026-10), e o que o Assistente de Tarefas lê. --}}
     @php $mainDocument = $project->mainDocument(); @endphp
     <div class="card mb-5 overflow-hidden" x-data="{ open: {{ $mainDocument ? 'true' : 'false' }} }">
@@ -134,20 +134,34 @@
                 <span class="text-xs truncate" style="color:var(--text)">{{ $mainDocument?->filename ?? 'nenhum HTML anexado' }}</span>
                 @if($mainDocument)<span class="text-xs" style="color:var(--muted)" x-text="open ? '▴' : '▾'"></span>@endif
             </button>
-            @if($mainDocument)
-                <a href="{{ $mainDocument->url() }}" target="_blank" rel="noopener" class="btn btn-ghost btn-xs flex items-center gap-1">
-                    <x-icon name="external-link" size="12" /> Abrir em nova aba
-                </a>
-            @endif
+            <div class="flex items-center gap-2 flex-wrap">
+                @if($mainDocument)
+                    <a href="{{ $mainDocument->url() }}" target="_blank" rel="noopener" class="btn btn-ghost btn-xs flex items-center gap-1">
+                        <x-icon name="external-link" size="12" /> Abrir em nova aba
+                    </a>
+                @endif
+                {{-- Campo próprio do documento (só HTML) — "Anexos" abaixo nunca troca o que
+                     aparece aqui. Versão anterior fica nos anexos. --}}
+                <form method="POST" action="{{ route('project-attachments.document', $project) }}" enctype="multipart/form-data">
+                    @csrf
+                    <label class="btn btn-primary btn-xs cursor-pointer flex items-center gap-1">
+                        <x-icon name="upload" size="12" /> {{ $mainDocument ? 'Trocar documento' : 'Enviar documento (HTML)' }}
+                        <input type="file" name="document" accept=".html,.htm" class="hidden" @change="$el.closest('form').submit()">
+                    </label>
+                </form>
+            </div>
         </div>
+        @error('document')
+            <p class="px-5 pb-3 text-xs" style="color:var(--red)">{{ $message }}</p>
+        @enderror
         @if($mainDocument)
             <iframe x-show="open" x-cloak src="{{ $mainDocument->url() }}" title="Documento {{ $project->type === 'campanha' ? 'da campanha' : 'do projeto' }}"
                     sandbox="allow-scripts allow-popups" loading="lazy"
                     style="width:100%; height:70vh; border:0; border-top:1px solid var(--border2); background:#fff; display:block"></iframe>
         @else
             <p class="px-5 pb-4 text-xs" style="color:var(--muted)">
-                Anexe o HTML {{ $project->type === 'campanha' ? 'da campanha (skill de campanha)' : 'do projeto (skill de projeto)' }} em "Anexos" logo abaixo —
-                o mais recente vira o documento principal, aparece aqui e o Assistente de Tarefas passa a ler.
+                Envie o HTML {{ $project->type === 'campanha' ? 'da campanha (skill de campanha)' : 'do projeto (skill de projeto)' }} pelo botão
+                "Enviar documento (HTML)" — ele aparece aqui e o Assistente de Tarefas passa a ler. Arquivos em "Anexos" não aparecem aqui.
             </p>
         @endif
     </div>
@@ -222,6 +236,9 @@
                 <a href="{{ $attachment->url() }}" target="_blank" class="truncate hover:underline" style="color:var(--text)">
                     {{ $attachment->icon() }} {{ $attachment->filename }}
                 </a>
+                @if($attachment->id === $project->document_attachment_id)
+                    <span class="badge badge-purple flex-shrink-0" style="font-size:10px" title="É o que aparece no card Documento">documento</span>
+                @endif
                 <form method="POST" action="{{ route('project-attachments.destroy', [$project, $attachment]) }}"
                       @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
                     @csrf @method('DELETE')
