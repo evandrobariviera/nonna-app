@@ -333,8 +333,10 @@
                         <span style="color:var(--border2)">›</span>
                         <a href="{{ $task->project->macro_plan_id ? route('macroplans.projects.show', [$task->project->macro_plan_id, $task->project]) : route('projects.showDirect', $task->project) }}"
                            @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('projects.preview', $task->project) }}') }"
-                           style="color:var(--muted2)"
-                           onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted2)'">
+                           class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full"
+                           style="color:{{ \App\Models\Task::colorHex($task->project->typeColor()) }}; background:{{ \App\Models\Task::colorHex($task->project->typeColor()) }}1A; font-weight:700"
+                           onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">
+                            <x-icon :name="$task->project->typeIcon()" size="12" />
                             {{ $task->project->title }}
                         </a>
                     @elseif($task->macroPlan)
@@ -538,18 +540,6 @@
                             style="background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text)">
                             <option value="">— nenhum —</option>
                             @foreach(\App\Models\Task::$destinations as $key => $label)
-                                <option value="{{ $key }}">{{ $label }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Método de Aprovação</p>
-                        <select x-data="selectField({ url: '{{ route('tasks.update-field', $task) }}', field: 'approval_method', value: @js($task->approval_method) })"
-                            x-model="value" @change="change()"
-                            class="w-full px-2 py-1.5 text-sm font-semibold focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text)">
-                            <option value="">— nenhum —</option>
-                            @foreach(\App\Models\Task::$approvalMethods as $key => $label)
                                 <option value="{{ $key }}">{{ $label }}</option>
                             @endforeach
                         </select>
@@ -1144,6 +1134,109 @@
         ══════════════════════════════════════════════════════════ --}}
         <div class="flex flex-col gap-4" style="width:320px; flex-shrink:0">
 
+            {{-- FAZ PARTE DE — campanha/projeto da tarefa em destaque (2026-10): a ideia é a
+                 pessoa enxergar o contexto e ir visitar o projeto a partir da tarefa. Progresso
+                 = concluídas / não canceladas ($projectProgress, TaskController::show()). --}}
+            @if($task->project && $projectProgress)
+                @php
+                    $proj      = $task->project;
+                    $projHex   = \App\Models\Task::colorHex($proj->typeColor());
+                    $projUrl   = $proj->macro_plan_id ? route('macroplans.projects.show', [$proj->macro_plan_id, $proj]) : route('projects.showDirect', $proj);
+                    $isCampaign = $proj->type === 'campanha';
+                    $pct       = $projectProgress['percent'];
+                    $ringLen   = 2 * M_PI * 30;
+                    $today     = now()->startOfDay();
+                    $periodPct = null;
+                    $periodTxt = null;
+                    if ($proj->start_date && $proj->end_date && $proj->end_date->gte($proj->start_date)) {
+                        $span      = max(1, $proj->start_date->diffInDays($proj->end_date));
+                        $periodPct = (int) max(0, min(100, round($proj->start_date->diffInDays($today, false) / $span * 100)));
+                        if ($today->lt($proj->start_date)) {
+                            $n = (int) $today->diffInDays($proj->start_date);
+                            $periodTxt = 'Começa em ' . $n . ' dia' . ($n !== 1 ? 's' : '');
+                        } elseif ($today->gt($proj->end_date)) {
+                            $periodTxt = 'Período encerrado';
+                        } else {
+                            $n = (int) $today->diffInDays($proj->end_date);
+                            $periodTxt = $n === 0 ? 'Termina hoje' : 'Faltam ' . $n . ' dia' . ($n !== 1 ? 's' : '');
+                        }
+                    }
+                @endphp
+                <div class="card" style="border-top:3px solid {{ $projHex }}; overflow:hidden">
+                    <div class="card-body flex flex-col gap-4">
+                        <p class="text-xs font-semibold uppercase tracking-widest flex items-center gap-2" style="color:{{ $projHex }}; letter-spacing:.1em">
+                            <span class="icon-badge" style="color:{{ $projHex }}">
+                                <x-icon :name="$proj->typeIcon()" size="16" />
+                            </span>
+                            Faz parte {{ $isCampaign ? 'da campanha' : 'do projeto' }}
+                        </p>
+
+                        <a href="{{ $projUrl }}" class="block text-lg font-extrabold leading-snug transition-opacity"
+                           style="color:var(--text)" title="Abrir {{ $isCampaign ? 'a campanha' : 'o projeto' }}"
+                           onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">
+                            {{ $proj->title }}
+                        </a>
+
+                        {{-- Rosca de progresso --}}
+                        <div class="flex items-center gap-4">
+                            <svg width="76" height="76" viewBox="0 0 76 76" class="flex-shrink-0" role="img" aria-label="{{ $pct }}% concluído">
+                                <circle cx="38" cy="38" r="30" fill="none" stroke="var(--s3)" stroke-width="8" />
+                                <circle cx="38" cy="38" r="30" fill="none" stroke="{{ $projHex }}" stroke-width="8" stroke-linecap="round"
+                                        stroke-dasharray="{{ $ringLen }}" stroke-dashoffset="{{ $ringLen * (1 - $pct / 100) }}"
+                                        transform="rotate(-90 38 38)" />
+                                <text x="38" y="43" text-anchor="middle" font-size="16" font-weight="800" fill="var(--text)">{{ $pct }}%</text>
+                            </svg>
+                            <div class="min-w-0">
+                                <p class="text-sm font-bold" style="color:var(--text)">{{ $projectProgress['done'] }} de {{ $projectProgress['total'] }} tarefas</p>
+                                <p class="text-xs" style="color:var(--muted)">concluídas {{ $isCampaign ? 'na campanha' : 'no projeto' }}</p>
+                                <p class="text-xs mt-1 font-semibold" style="color:{{ \App\Models\Task::colorHex($proj->statusColor()) }}">{{ $proj->statusLabel() }}</p>
+                            </div>
+                        </div>
+
+                        {{-- Datas + régua do período (marca onde "hoje" está) --}}
+                        @if($proj->start_date || $proj->end_date || ($isCampaign && $proj->pieces_due_date))
+                            <div class="flex flex-col gap-2 pt-3" style="border-top:1px solid var(--border2)">
+                                @if($isCampaign && $proj->pieces_due_date)
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs" style="color:var(--muted)">Entrega das peças</span>
+                                        <span class="text-sm font-semibold" style="color:var(--text)">{{ $proj->pieces_due_date->format('d/m/Y') }}</span>
+                                    </div>
+                                @endif
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs" style="color:var(--muted)">{{ $isCampaign ? 'Vai ao ar' : 'Início' }}</span>
+                                    <span class="text-sm font-semibold" style="color:var(--text)">{{ $proj->start_date?->format('d/m/Y') ?? '—' }}</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs" style="color:var(--muted)">Término</span>
+                                    <span class="text-sm font-semibold" style="color:var(--text)">{{ $proj->end_date?->format('d/m/Y') ?? '—' }}</span>
+                                </div>
+                                @if($periodPct !== null)
+                                    <div class="mt-1">
+                                        <div class="relative h-1.5 rounded-full" style="background:var(--s3)">
+                                            <div class="absolute left-0 top-0 h-1.5 rounded-full" style="width:{{ $periodPct }}%; background:{{ $projHex }}; opacity:.45"></div>
+                                            <div class="absolute rounded-full" title="Hoje"
+                                                 style="left:calc({{ $periodPct }}% - 5px); top:-3px; width:10px; height:10px; background:{{ $projHex }}; border:2px solid var(--s1)"></div>
+                                        </div>
+                                        <p class="text-xs mt-2" style="color:var(--muted2)">{{ $periodTxt }}</p>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
+                        <div class="flex items-center gap-2">
+                            <a href="{{ $projUrl }}" class="btn btn-primary btn-sm flex-1 justify-center"
+                               style="background:{{ $projHex }}; border-color:{{ $projHex }}">
+                                Ver {{ $isCampaign ? 'campanha' : 'projeto' }} →
+                            </a>
+                            <button type="button" class="btn btn-ghost btn-sm" title="Espiar ao lado, sem sair da tarefa"
+                                    @click="$store.sidePanel.open('{{ route('projects.preview', $proj) }}')">
+                                <x-icon name="eye" size="14" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             {{-- PONTOS DE SPRINT (App\Services\Tasks\SprintPoints) — o peso da tarefa. Vem do
                  formato (escolhido aqui ou detectado pelo título) ou do padrão do tipo; dá pra
                  ajustar à mão (aí o catálogo não mexe mais) e voltar ao automático. --}}
@@ -1279,74 +1372,6 @@
                                class="text-sm px-2 py-1 focus:outline-none" style="background:var(--s3); border:1px solid var(--purple); border-radius:6px; color:var(--text)">
                     </div>
                 </div>
-            </div>
-
-            {{-- APROVAÇÃO DO CLIENTE --}}
-            <div class="card card-body">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
-                    <span class="icon-badge">
-                        <x-icon name="shield-check" size="16" />
-                    </span>
-                    Aprovação
-                </p>
-
-                @php
-                    $latestRound = $task->latestApprovalRound;
-                    $latestNotSent = $latestRound && $latestRound->status === 'pending' && !$latestRound->sent_at;
-                @endphp
-
-                @if($latestRound)
-                    <div class="flex flex-col gap-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs" style="color:var(--muted)">Rodada</span>
-                            <span class="text-sm font-semibold" style="color:var(--text)">#{{ $latestRound->round_number }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs" style="color:var(--muted)">Status</span>
-                            <span class="text-xs font-semibold px-2 py-0.5"
-                                  style="background:{{ $latestNotSent ? 'var(--s3)' : ($latestRound->status === 'approved' ? 'rgba(34,197,94,.12)' : ($latestRound->status === 'changes_requested' ? 'rgba(238, 121, 25,.12)' : 'rgba(100, 59, 142,.12)')) }};
-                                         color:{{ $latestNotSent ? 'var(--muted)' : ($latestRound->status === 'approved' ? '#22c55e' : ($latestRound->status === 'changes_requested' ? 'var(--orange)' : 'var(--purple)')) }}">
-                                {{ $latestRound->displayStatusLabel() }}
-                            </span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs" style="color:var(--muted)">Enviado em</span>
-                            <span class="text-xs font-medium" style="color:var(--muted2)">{{ $latestRound->submitted_at->format('d/m H:i') }}</span>
-                        </div>
-                        @php $tokens = $latestRound->tokens; @endphp
-                        @if($tokens->count())
-                            <div style="border-top:1px solid var(--border2); padding-top:10px; margin-top:4px">
-                                <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Aprovadores</p>
-                                @foreach($tokens as $token)
-                                    <div class="flex items-center justify-between mb-1.5">
-                                        <span class="text-xs truncate" style="color:var(--muted2); max-width:120px">{{ $token->contact->name }}</span>
-                                        <span class="text-xs font-semibold"
-                                              style="color:{{ $token->status === 'approved' ? '#22c55e' : ($token->status === 'changes_requested' ? 'var(--orange)' : 'var(--muted)') }}">
-                                            {{ $token->status === 'approved' ? '✓ Aprovado' : ($token->status === 'changes_requested' ? '✎ Ajustes' : '· Pendente') }}
-                                        </span>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
-                @else
-                    <div class="flex flex-col gap-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs" style="color:var(--muted)">Método</span>
-                            <span class="text-sm font-medium" style="color:var(--text)">{{ $task->approvalMethodLabel() ?: '—' }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs" style="color:var(--muted)">Aprov. Interna</span>
-                            <span class="text-sm font-semibold"
-                                  style="color:{{ $task->internal_approval ? 'var(--purple)' : 'var(--muted2)' }}">
-                                {{ $task->internal_approval ? 'Sim' : 'Não' }}
-                            </span>
-                        </div>
-                        <p class="text-xs mt-1" style="color:var(--muted2); line-height:1.5">
-                            Para enviar ao cliente, altere a <strong>Situação</strong> para <em>Enviar para o Cliente</em>.
-                        </p>
-                    </div>
-                @endif
             </div>
 
             {{-- OBSERVADORES (só avatares — nomes completos ficavam na antiga sessão Pessoas

@@ -414,18 +414,6 @@
                     </select>
                 </div>
 
-                {{-- Método de Aprovação --}}
-                <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Método de Aprovação</label>
-                    <select name="approval_method" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                        <option value="">— não definido —</option>
-                        @foreach(\App\Models\Task::$approvalMethods as $key => $label)
-                            <option value="{{ $key }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
                 {{-- Status --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Status</label>
@@ -575,9 +563,6 @@
                                     @if($task->internal_approval)
                                         <span class="badge" style="font-size:10px; color:var(--purple)">Aprov. Int.</span>
                                     @endif
-                                    @if($task->approval_method)
-                                        <span class="badge" style="font-size:10px">{{ $task->approvalMethodLabel() }}</span>
-                                    @endif
                                 </div>
 
                                 {{-- Mover entre colunas --}}
@@ -651,14 +636,6 @@
                                             @endforeach
                                         </select>
 
-                                        <select name="approval_method"
-                                            class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                                            <option value="">— aprovação —</option>
-                                            @foreach(\App\Models\Task::$approvalMethods as $key => $label)
-                                                <option value="{{ $key }}" {{ $task->approval_method === $key ? 'selected' : '' }}>{{ $label }}</option>
-                                            @endforeach
-                                        </select>
 
                                         <div class="flex items-center gap-1.5 px-2">
                                             <input type="hidden" name="internal_approval" value="0">

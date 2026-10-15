@@ -221,7 +221,24 @@ class TaskController extends Controller
             ->orderByDesc('generated_at')
             ->get();
 
-        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages', 'clientProjects', 'clientMacroPlans', 'clients', 'sprints', 'taskNotifications'));
+        // Card "Faz parte de" da lateral: progresso da campanha/projeto numa consulta só
+        // (mesma regra de Project::progressPercent() — cancelada fica fora da conta).
+        $projectProgress = null;
+        if ($task->project) {
+            $row = Task::where('project_id', $task->project_id)
+                ->selectRaw("sum(case when status != 'cancelado' then 1 else 0 end) as total")
+                ->selectRaw("sum(case when status = 'concluido' then 1 else 0 end) as done")
+                ->first();
+            $total = (int) $row->total;
+            $done  = (int) $row->done;
+            $projectProgress = [
+                'total'   => $total,
+                'done'    => $done,
+                'percent' => $total > 0 ? (int) round($done / $total * 100) : 0,
+            ];
+        }
+
+        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages', 'clientProjects', 'clientMacroPlans', 'clients', 'sprints', 'taskNotifications', 'projectProgress'));
     }
 
     // Campo único, salvo na hora (clicou/saiu do campo já grava) — cobre todo campo

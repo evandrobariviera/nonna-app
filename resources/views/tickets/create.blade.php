@@ -100,18 +100,6 @@
                     </select>
                 </div>
 
-                {{-- Método de Aprovação --}}
-                <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Método de Aprovação</label>
-                    <select name="approval_method"
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                        <option value="">— não definido —</option>
-                        @foreach(\App\Models\Task::$approvalMethods as $key => $label)
-                            <option value="{{ $key }}" {{ old('approval_method') === $key ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
 
                 {{-- Sprint --}}
                 <div>
