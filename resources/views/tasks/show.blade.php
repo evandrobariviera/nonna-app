@@ -1223,16 +1223,13 @@
                             </div>
                         @endif
 
-                        <div class="flex items-center gap-2">
-                            <a href="{{ $projUrl }}" class="btn btn-primary btn-sm flex-1 justify-center"
-                               style="background:{{ $projHex }}; border-color:{{ $projHex }}">
-                                Ver {{ $isCampaign ? 'campanha' : 'projeto' }} →
-                            </a>
-                            <button type="button" class="btn btn-ghost btn-sm" title="Espiar ao lado, sem sair da tarefa"
-                                    @click="$store.sidePanel.open('{{ route('projects.preview', $proj) }}')">
-                                <x-icon name="eye" size="14" />
-                            </button>
-                        </div>
+                        {{-- Clique abre no painel lateral (mesmo padrão do breadcrumb);
+                             Ctrl/Cmd+clique abre a página inteira. --}}
+                        <a href="{{ $projUrl }}" class="btn btn-primary btn-sm w-full justify-center"
+                           @click="if(!$event.ctrlKey && !$event.metaKey){ $event.preventDefault(); $store.sidePanel.open('{{ route('projects.preview', $proj) }}') }"
+                           style="background:{{ $projHex }}; border-color:{{ $projHex }}">
+                            Ver {{ $isCampaign ? 'campanha' : 'projeto' }} →
+                        </a>
                     </div>
                 </div>
             @endif
