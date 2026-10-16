@@ -81,52 +81,16 @@
         </div>
     @endif
 
-    {{-- PAINEL DE PROGRESSO --}}
-    <div class="card px-5 py-4 mb-5">
-        <div class="flex items-center justify-between gap-6 flex-wrap">
-            <div class="flex-1 min-w-0" style="min-width:200px">
-                <div class="flex items-center justify-between mb-1.5">
-                    <span class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Progresso</span>
-                    <span id="project-progress-pct" class="text-sm font-black" style="color:var(--text)">{{ $progress }}%</span>
-                </div>
-                <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--border2)">
-                    <div id="project-progress-bar" class="h-2 rounded-full transition-all duration-500"
-                         style="width:{{ $progress }}%; background:{{ $progress >= 100 ? 'var(--green)' : 'var(--grad)' }}">
-                    </div>
-                </div>
-                <p id="project-progress-text" class="text-xs mt-1.5 font-mono" style="color:var(--muted)">
-                    {{ $doneTasks }} de {{ $totalTasks }} tarefa{{ $totalTasks !== 1 ? 's' : '' }} concluída{{ $doneTasks !== 1 ? 's' : '' }}
-                </p>
-            </div>
-            <div class="flex items-center gap-4 flex-wrap">
-                @foreach(\App\Models\Task::$statuses as $statusKey => $meta)
-                    @continue($statusKey === 'cancelado')
-                    @php $count = $kanban[$statusKey]->count(); @endphp
-                    <div class="text-center">
-                        <div class="text-lg font-black" data-stat-count="{{ $statusKey }}" style="color:{{ \App\Models\Task::colorHex($meta['color']) }}">{{ $count }}</div>
-                        <div class="text-xs font-mono" style="color:var(--muted)">{{ $meta['label'] }}</div>
-                    </div>
-                @endforeach
-            </div>
-            @if($project->disciplines)
-                <div class="flex flex-wrap gap-1">
-                    @foreach($project->disciplineLabels() as $d)
-                        <span class="badge">{{ $d }}</span>
-                    @endforeach
-                </div>
-            @endif
-        </div>
-        @if($project->objective)
-            <p class="text-xs mt-3 pt-3" style="color:var(--muted2); border-top:1px solid var(--border2)">
-                {{ $project->objective }}
-            </p>
-        @endif
-    </div>
+    {{-- 2 colunas (2026-10): documento à esquerda, detalhes/portal/anexos/campanhas numa
+         coluna lateral fixa — o HTML é estreito e sozinho na largura toda sobrava cinza. --}}
+    @php $projectClient = $project->client ?? $macroplan?->client; @endphp
+    <div class="grid gap-5 mb-6 lg:grid-cols-[minmax(0,1fr)_340px] items-start">
+    <div class="min-w-0">
 
     {{-- DOCUMENTO — o HTML da campanha/projeto (campo próprio document_attachment_id). É onde mora o
          briefing, as peças e a mecânica (2026-10), e o que o Assistente de Tarefas lê. --}}
     @php $mainDocument = $project->mainDocument(); @endphp
-    <div class="card mb-5 overflow-hidden" x-data="{ open: {{ $mainDocument ? 'true' : 'false' }} }">
+    <div class="card overflow-hidden" x-data="{ open: {{ $mainDocument ? 'true' : 'false' }} }">
         <div class="px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
             <button type="button" @click="open = !open" class="flex items-center gap-2 text-left min-w-0">
                 <x-icon name="file-text" size="14" style="color:var(--purple)" />
@@ -157,13 +121,175 @@
         @if($mainDocument)
             <iframe x-show="open" x-cloak src="{{ $mainDocument->url() }}" title="Documento {{ $project->type === 'campanha' ? 'da campanha' : 'do projeto' }}"
                     sandbox="allow-scripts allow-popups" loading="lazy"
-                    style="width:100%; height:70vh; border:0; border-top:1px solid var(--border2); background:#fff; display:block"></iframe>
+                    style="width:100%; height:calc(100vh - 140px); min-height:560px; border:0; border-top:1px solid var(--border2); background:#fff; display:block"></iframe>
         @else
             <p class="px-5 pb-4 text-xs" style="color:var(--muted)">
                 Envie o HTML {{ $project->type === 'campanha' ? 'da campanha (skill de campanha)' : 'do projeto (skill de projeto)' }} pelo botão
                 "Enviar documento (HTML)" — ele aparece aqui e o Assistente de Tarefas passa a ler. Arquivos em "Anexos" não aparecem aqui.
             </p>
         @endif
+    </div>
+
+    </div>{{-- /coluna documento --}}
+
+    <aside class="min-w-0 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
+
+    {{-- PROGRESSO + DETALHES — mesmo visual do "Faz parte de" da tarefa (tasks/show): rosca,
+         datas e régua do período. Contadores data-stat-count são atualizados ao vivo pelo
+         drag do quadro (script no fim do arquivo). --}}
+    @php
+        $isCampaign = $project->type === 'campanha';
+        $projHex    = \App\Models\Task::colorHex($project->typeColor());
+        $ringLen    = 2 * M_PI * 30;
+        $today      = now()->startOfDay();
+        $periodPct  = null;
+        $periodTxt  = null;
+        if ($project->start_date && $project->end_date && $project->end_date->gte($project->start_date)) {
+            $span      = max(1, $project->start_date->diffInDays($project->end_date));
+            $periodPct = (int) max(0, min(100, round($project->start_date->diffInDays($today, false) / $span * 100)));
+            if ($today->lt($project->start_date)) {
+                $n = (int) $today->diffInDays($project->start_date);
+                $periodTxt = 'Começa em ' . $n . ' dia' . ($n !== 1 ? 's' : '');
+            } elseif ($today->gt($project->end_date)) {
+                $periodTxt = 'Período encerrado';
+            } else {
+                $n = (int) $today->diffInDays($project->end_date);
+                $periodTxt = $n === 0 ? 'Termina hoje' : 'Faltam ' . $n . ' dia' . ($n !== 1 ? 's' : '');
+            }
+        }
+    @endphp
+    <div class="card mb-5" style="border-top:3px solid {{ $projHex }}; overflow:hidden">
+        <div class="card-body flex flex-col gap-4">
+            <div class="flex items-center justify-between gap-2">
+                <p class="text-xs font-semibold uppercase tracking-widest flex items-center gap-2" style="color:{{ $projHex }}; letter-spacing:.1em">
+                    <span class="icon-badge" style="color:{{ $projHex }}"><x-icon :name="$project->typeIcon()" size="16" /></span>
+                    {{ $project->typeLabel() }}
+                </p>
+                @if($projectClient)
+                    <a href="{{ route('clients.show', $projectClient) }}" class="text-xs font-semibold truncate hover:underline" style="color:var(--muted2)">{{ $projectClient->displayName() }}</a>
+                @endif
+            </div>
+
+            {{-- Rosca de progresso --}}
+            <div class="flex items-center gap-4">
+                <svg width="76" height="76" viewBox="0 0 76 76" class="flex-shrink-0" role="img" aria-label="{{ $progress }}% concluído">
+                    <circle cx="38" cy="38" r="30" fill="none" stroke="var(--s3)" stroke-width="8" />
+                    <circle id="project-progress-ring" cx="38" cy="38" r="30" fill="none" stroke="{{ $projHex }}" stroke-width="8" stroke-linecap="round"
+                            stroke-dasharray="{{ $ringLen }}" stroke-dashoffset="{{ $ringLen * (1 - $progress / 100) }}"
+                            transform="rotate(-90 38 38)" style="transition:stroke-dashoffset .5s" />
+                    <text id="project-progress-pct" x="38" y="43" text-anchor="middle" font-size="16" font-weight="800" fill="var(--text)">{{ $progress }}%</text>
+                </svg>
+                <div class="min-w-0">
+                    <p id="project-progress-text" class="text-sm font-bold" style="color:var(--text)">{{ $doneTasks }} de {{ $totalTasks }} tarefa{{ $totalTasks !== 1 ? 's' : '' }}</p>
+                    <p class="text-xs" style="color:var(--muted)">concluídas {{ $isCampaign ? 'na campanha' : 'no projeto' }}</p>
+                    <p class="text-xs mt-1 font-semibold" style="color:{{ \App\Models\Task::colorHex($project->statusColor()) }}">{{ $project->statusLabel() }}</p>
+                </div>
+            </div>
+
+            {{-- Contagem por status (compacta) --}}
+            <div class="grid grid-cols-4 gap-x-2 gap-y-3 pt-3" style="border-top:1px solid var(--border2)">
+                @foreach(\App\Models\Task::$statuses as $statusKey => $meta)
+                    @continue($statusKey === 'cancelado')
+                    <div class="text-center min-w-0" title="{{ $meta['label'] }}">
+                        <div class="text-base font-black leading-none" data-stat-count="{{ $statusKey }}" style="color:{{ \App\Models\Task::colorHex($meta['color']) }}">{{ $kanban[$statusKey]->count() }}</div>
+                        <div class="mt-1 truncate" style="color:var(--muted); font-size:10px">{{ \Illuminate\Support\Str::before($meta['label'], ' /') }}</div>
+                    </div>
+                @endforeach
+            </div>
+
+            {{-- Datas + régua do período (marca onde "hoje" está) --}}
+            @if($project->start_date || $project->end_date || ($isCampaign && $project->pieces_due_date))
+                <div class="flex flex-col gap-2 pt-3" style="border-top:1px solid var(--border2)">
+                    @if($isCampaign && $project->pieces_due_date)
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs" style="color:var(--muted)">Entrega das peças</span>
+                            <span class="text-sm font-semibold" style="color:var(--text)">{{ $project->pieces_due_date->format('d/m/Y') }}</span>
+                        </div>
+                    @endif
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs" style="color:var(--muted)">{{ $isCampaign ? 'Vai ao ar' : 'Início' }}</span>
+                        <span class="text-sm font-semibold" style="color:var(--text)">{{ $project->start_date?->format('d/m/Y') ?? '—' }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs" style="color:var(--muted)">Término</span>
+                        <span class="text-sm font-semibold" style="color:var(--text)">{{ $project->end_date?->format('d/m/Y') ?? '—' }}</span>
+                    </div>
+                    @if($periodPct !== null)
+                        <div class="mt-1">
+                            <div class="relative h-1.5 rounded-full" style="background:var(--s3)">
+                                <div class="absolute left-0 top-0 h-1.5 rounded-full" style="width:{{ $periodPct }}%; background:{{ $projHex }}; opacity:.45"></div>
+                                <div class="absolute rounded-full" title="Hoje"
+                                     style="left:calc({{ $periodPct }}% - 5px); top:-3px; width:10px; height:10px; background:{{ $projHex }}; border:2px solid var(--s1)"></div>
+                            </div>
+                            <p class="text-xs mt-2" style="color:var(--muted2)">{{ $periodTxt }}</p>
+                        </div>
+                    @endif
+                </div>
+            @endif
+
+            @if($project->budget)
+                <div class="flex items-center justify-between pt-3" style="border-top:1px solid var(--border2)">
+                    <span class="text-xs" style="color:var(--muted)">Verba</span>
+                    <span class="text-sm font-semibold" style="color:var(--text)">R$ {{ number_format($project->budget, 2, ',', '.') }}</span>
+                </div>
+            @endif
+            @if($project->disciplines)
+                <div class="flex flex-wrap gap-1 pt-3" style="border-top:1px solid var(--border2)">
+                    @foreach($project->disciplineLabels() as $d)
+                        <span class="badge">{{ $d }}</span>
+                    @endforeach
+                </div>
+            @endif
+            @if($project->objective)
+                <div class="pt-3" style="border-top:1px solid var(--border2)">
+                    <p class="text-xs font-semibold mb-1" style="color:var(--muted)">Objetivo</p>
+                    <p class="text-xs leading-relaxed" style="color:var(--muted2)">{{ $project->objective }}</p>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    {{-- TAREFAS EM FILA, AGRUPADAS POR STATUS — leitura rápida ao lado do documento.
+         Concluídas começam fechadas. O quadro completo (arrastar, editar) fica abaixo. --}}
+    <div class="card mb-5 overflow-hidden" x-data>
+        <div class="px-5 py-3 flex items-center justify-between gap-2" style="border-bottom:1px solid var(--border2)">
+            <span class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
+                Tarefas <span style="color:var(--muted2)">{{ $totalTasks }}</span>
+            </span>
+            <button type="button" @click="$dispatch('open-new-task')" class="btn btn-primary btn-xs">+ Nova</button>
+        </div>
+        @if($totalTasks === 0)
+            <p class="px-5 py-4 text-xs" style="color:var(--muted)">Nenhuma tarefa ainda.</p>
+        @endif
+        @foreach(\App\Models\Task::$statuses as $statusKey => $meta)
+            @continue($statusKey === 'cancelado')
+            @php $group = $kanban[$statusKey]; $hex = \App\Models\Task::colorHex($meta['color']); @endphp
+            @continue($group->isEmpty())
+            <div x-data="{ open: {{ $statusKey === 'concluido' ? 'false' : 'true' }} }" style="border-bottom:1px solid var(--border2)">
+                <button type="button" @click="open = !open" class="w-full px-5 py-2 flex items-center justify-between gap-2 text-left" style="background:var(--s2)">
+                    <span class="flex items-center gap-2 text-xs font-bold" style="color:{{ $hex }}">
+                        <span class="rounded-full" style="width:8px; height:8px; background:{{ $hex }}"></span>
+                        {{ $meta['label'] }}
+                    </span>
+                    <span class="text-xs" style="color:var(--muted)">{{ $group->count() }} <span x-text="open ? '▴' : '▾'"></span></span>
+                </button>
+                <div x-show="open" x-cloak>
+                    @foreach($group as $t)
+                        @php $late = $t->due_date && $t->due_date->lt($today) && $statusKey !== 'concluido'; @endphp
+                        <a href="{{ route('tasks.show', $t) }}" class="block px-5 py-2 transition-colors" style="border-top:1px solid var(--border2)"
+                           onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $t->title }}</p>
+                            <p class="text-xs mt-0.5 flex items-center gap-2" style="color:var(--muted); font-size:11px">
+                                <span class="truncate">{{ $t->executors->map(fn ($u) => \Illuminate\Support\Str::before($u->name, ' '))->join(', ') ?: 'Sem executor' }}</span>
+                                @if($t->due_date)
+                                    <span class="flex-shrink-0 font-mono" style="color:{{ $late ? 'var(--red)' : 'var(--muted)' }}">{{ $t->due_date->format('d/m') }}</span>
+                                @endif
+                            </p>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        @endforeach
     </div>
 
     {{-- PÁGINA DO CLIENTE — o que aparece no topo da Página do Projeto no
@@ -273,12 +399,21 @@
         </div>
     @endif
 
-    {{-- TAREFAS: Quadro (Kanban) ou Fila (lista) --}}
-    <div x-data="{ addCol: null, editTaskId: null, showDone: false, view: 'quadro' }">
+    </aside>
+    </div>{{-- /grid documento + lateral --}}
 
-        <div class="flex items-center justify-between mb-4">
-            <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Tarefas</p>
-            <div class="flex items-center gap-2">
+    {{-- TAREFAS: Quadro (Kanban) ou Fila (lista) — recolhido quando há documento (a lateral
+         já mostra a fila por status); aberto quando não há, pra página não ficar vazia.
+         O "+ Nova" da lateral dispara open-new-task e abre o formulário aqui. --}}
+    <div x-data="{ addCol: null, editTaskId: null, showDone: false, view: 'quadro', boardOpen: {{ $mainDocument ? 'false' : 'true' }} }"
+         @open-new-task.window="addCol = 'backlog'; $nextTick(() => $refs.newTaskForm.scrollIntoView({ behavior: 'smooth', block: 'start' }))">
+
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <button type="button" @click="boardOpen = !boardOpen" class="flex items-center gap-2 text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
+                <span :class="boardOpen ? 'rotate-90' : ''" class="transition-transform">▶</span>
+                Quadro completo de tarefas
+            </button>
+            <div class="flex items-center gap-2" x-show="boardOpen" x-cloak>
                 <div class="flex items-center" style="border:1px solid var(--border2)">
                     <button @click="view = 'quadro'" type="button"
                         class="text-xs font-mono px-3 py-1.5 transition-all"
@@ -305,7 +440,7 @@
         </div>
 
         {{-- ── FORMULÁRIO: NOVA TAREFA ── --}}
-        <div x-show="addCol !== null" x-cloak class="card px-5 py-5 mb-4" style="border-left:3px solid var(--purple)">
+        <div x-show="addCol !== null" x-cloak x-ref="newTaskForm" class="card px-5 py-5 mb-4" style="border-left:3px solid var(--purple); scroll-margin-top:16px">
             <p class="text-xs font-mono uppercase tracking-widest mb-4" style="color:var(--muted)">Nova Tarefa</p>
             <form method="POST" action="{{ $standalone ? route('tasks.storeStandalone', $project) : route('tasks.store', [$macroplan, $project]) }}"
                   enctype="multipart/form-data"
@@ -483,6 +618,7 @@
             </form>
         </div>
 
+        <div x-show="boardOpen" x-cloak>
         <div x-show="view === 'quadro'">
         {{-- ── COLUNAS KANBAN ── --}}
         <div id="project-board" class="flex gap-4 overflow-x-auto pb-2" style="align-items: start;"
@@ -808,6 +944,7 @@
             @endif
         </div>
 
+        </div>{{-- /x-show boardOpen --}}
     </div>{{-- /x-data kanban --}}
     <x-badge-fill-menu />
     <x-person-fill-menu :users="$users" />
@@ -1033,10 +1170,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         document.getElementById('project-progress-pct').textContent = pct + '%';
         document.getElementById('project-progress-text').textContent =
-            done + ' de ' + total + (total !== 1 ? ' tarefas' : ' tarefa') + ' concluída' + (done !== 1 ? 's' : '');
-        var bar = document.getElementById('project-progress-bar');
-        bar.style.width = pct + '%';
-        bar.style.background = pct >= 100 ? 'var(--green)' : 'var(--grad)';
+            done + ' de ' + total + (total !== 1 ? ' tarefas' : ' tarefa');
+        var ring = document.getElementById('project-progress-ring');
+        var len = parseFloat(ring.getAttribute('stroke-dasharray'));
+        ring.setAttribute('stroke-dashoffset', String(len * (1 - pct / 100)));
     });
 });
 </script>
