@@ -143,7 +143,9 @@ class TaskApprovalService
                 'round_id'   => $round->id,
                 'contact_id' => $clientContact->contact_id,
                 'channels'   => $clientContact->subscriptions->first()->channels ?? [],
-                'token'      => Str::uuid()->toString(),
+                // Sem hífens: o WhatsApp lê UUID como "chave Pix aleatória" e, ao tocar,
+                // copia a chave em vez de abrir o link. Tokens antigos (com hífen) seguem válidos.
+                'token'      => Str::uuid()->getHex()->toString(),
                 'status'     => 'pending',
                 'expires_at' => now()->addDays(self::LINK_DAYS),
             ]);
@@ -289,7 +291,7 @@ class TaskApprovalService
                 'round_id'    => $round->id,
                 'contact_id'  => $clientContact->contact_id,
                 'channels'    => $clientContact->subscriptions->first()->channels ?? [],
-                'token'       => Str::uuid()->toString(),
+                'token'       => Str::uuid()->getHex()->toString(),
                 'status'      => 'approved',
                 'reviewed_at' => now(),
                 'expires_at'  => now()->addDays(self::LINK_DAYS),

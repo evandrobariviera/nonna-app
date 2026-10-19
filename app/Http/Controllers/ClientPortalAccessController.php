@@ -75,7 +75,7 @@ class ClientPortalAccessController extends Controller
             $setupToken = PortalPasswordSetupToken::create([
                 'client_id'    => $client->id,
                 'contact_id'   => $contact->id,
-                'token'        => (string) Str::uuid(),
+                'token'        => Str::uuid()->getHex()->toString(),
                 'requested_by' => Auth::id(),
                 'expires_at'   => now()->addDays(7),
             ]);
