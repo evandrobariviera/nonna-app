@@ -406,6 +406,25 @@ class Task extends Model
         return $local?->url();
     }
 
+    // Só "tem imagem?" — sem assinar URL do R2. O Board da Sprint mostra um ícone em vez
+    // da imagem: a miniatura de 80px baixava a arte em tamanho original (428 MB numa
+    // abertura real da Sprint 15) e derrubava a página.
+    public function hasImageAttachment(): bool
+    {
+        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+        foreach ($this->clickup_attachments ?? [] as $file) {
+            $url = $file['url'] ?? null;
+            if ($url && in_array(strtolower(pathinfo(parse_url($url, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION)), $imageExtensions)) {
+                return true;
+            }
+        }
+
+        $attachments = $this->relationLoaded('attachments') ? $this->attachments : $this->attachments()->get();
+
+        return $attachments->contains(fn ($a) => $a->isImage());
+    }
+
     public function comments(): HasMany
     {
         return $this->hasMany(TaskComment::class)->orderBy('created_at');

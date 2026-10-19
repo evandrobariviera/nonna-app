@@ -80,7 +80,6 @@ class SprintController extends Controller
             'tasks.project.macroPlan',
             'tasks.macroPlan',
             'tasks.meeting',
-            'tasks.attachments',
             'tasks.statusTransitions',
             // Sem isso, _fila-task-tr.blade.php (aba Lista) dispara 1 query por
             // tarefa só pra checar sprint->isLocked() — N+1 confirmado (222 das
@@ -88,31 +87,17 @@ class SprintController extends Controller
             'tasks.sprint',
         ]);
 
-        // Board é a mesa de produção ativa — tarefa de cliente inativo nunca aparece
-        // aqui (sem toggle; quem precisa ver isso usa a aba Lista, que tem o filtro).
-        $activeClientTasks = $sprint->tasks->filter(fn ($t) => $t->client?->status !== 'inactive');
-
-        // Agrupar por status (a coluna do board é o próprio status)
-        $kanban = [];
-        foreach (Task::$statuses as $statusKey => $meta) {
-            $kanban[$statusKey] = $activeClientTasks
-                ->where('status', $statusKey)
-                ->values();
-        }
+        // Só os contadores por status (cards de estatística do topo) — os cards do Board
+        // e o backlog do Planejamento vêm sob demanda (board()/planning()) quando a aba é
+        // aberta. Montar as 3 abas de uma vez gerava ~3 MB de HTML escondido e travava a
+        // página (precisava recarregar 2-3 vezes pra abrir).
+        $kanban = $this->kanbanColumns($sprint);
 
         [$listTasks, $listGrouped, $listGroupBy] = $this->filteredListTasks($request, $sprint);
         $chartTasks = $this->applyCommonFilters($request, $sprint->tasks);
         [$sprintTasksByExecutor, $statusVolumeByDay] = $this->sprintLoadData($listTasks, $chartTasks, $sprint);
 
-        // Backlog disponível para adicionar (sem sprint, status backlog) — cliente
-        // inativo some daqui também, mesma regra da Fila (não faz sentido puxar
-        // pra sprint uma tarefa de cliente que já saiu).
-        $backlogTasks = Task::with(['client', 'project.macroPlan', 'macroPlan', 'meeting', 'executor'])
-            ->whereNull('sprint_id')
-            ->whereNotIn('status', ['cancelado', 'concluido'])
-            ->whereHas('client', fn ($q) => $q->where('status', '!=', 'inactive'))
-            ->orderBy('due_date')
-            ->get();
+        $backlogCount = $this->backlogQuery()->count();
 
         $clients      = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         // avatar_path/avatar_disk também, não só id+name — o dropdown de Responsável/Executor
@@ -134,16 +119,64 @@ class SprintController extends Controller
 
         return view('sprints.show', compact(
             'sprint', 'kanban', 'listTasks', 'listGrouped', 'listGroupBy',
-            'backlogTasks', 'clients', 'users', 'projects', 'sprints', 'activeSprint',
+            'backlogCount', 'clients', 'users', 'projects', 'sprints', 'activeSprint',
             'sprintTasksByExecutor', 'statusVolumeByDay'
         ));
+    }
+
+    // Fragmento da aba Board — carregado via fetch só quando a aba é aberta.
+    public function board(Sprint $sprint)
+    {
+        $sprint->load(['tasks.executor', 'tasks.executors', 'tasks.client', 'tasks.project', 'tasks.attachments']);
+
+        $kanban = $this->kanbanColumns($sprint);
+
+        return view('sprints._board', compact('sprint', 'kanban'));
+    }
+
+    // Fragmento da aba Planejamento — carregado via fetch só quando a aba é aberta.
+    public function planning(Sprint $sprint)
+    {
+        $backlogTasks = $this->backlogQuery()
+            ->with(['client', 'project', 'executor'])
+            ->orderBy('due_date')
+            ->get();
+
+        $clients = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
+
+        return view('sprints._planning', compact('sprint', 'backlogTasks', 'clients'));
+    }
+
+    // Board é a mesa de produção ativa — tarefa de cliente inativo nunca aparece
+    // aqui (sem toggle; quem precisa ver isso usa a aba Lista, que tem o filtro).
+    // A coluna do board é o próprio status.
+    private function kanbanColumns(Sprint $sprint): array
+    {
+        $activeClientTasks = $sprint->tasks->filter(fn ($t) => $t->client?->status !== 'inactive');
+
+        $kanban = [];
+        foreach (Task::$statuses as $statusKey => $meta) {
+            $kanban[$statusKey] = $activeClientTasks->where('status', $statusKey)->values();
+        }
+
+        return $kanban;
+    }
+
+    // Backlog disponível para adicionar (sem sprint, status backlog) — cliente
+    // inativo some daqui também, mesma regra da Fila (não faz sentido puxar
+    // pra sprint uma tarefa de cliente que já saiu).
+    private function backlogQuery()
+    {
+        return Task::whereNull('sprint_id')
+            ->whereNotIn('status', ['cancelado', 'concluido'])
+            ->whereHas('client', fn ($q) => $q->where('status', '!=', 'inactive'));
     }
 
     // Fragmento da aba Lista — chamado via fetch por live-filter.js conforme o
     // usuário filtra, sem recarregar a página inteira (Board/Planejamento ficam intocados).
     public function listResults(Request $request, Sprint $sprint)
     {
-        $sprint->load(['tasks.executor', 'tasks.executors', 'tasks.client', 'tasks.project.macroPlan', 'tasks.macroPlan', 'tasks.meeting', 'tasks.attachments', 'tasks.statusTransitions', 'tasks.sprint']);
+        $sprint->load(['tasks.executor', 'tasks.executors', 'tasks.client', 'tasks.project.macroPlan', 'tasks.macroPlan', 'tasks.meeting', 'tasks.statusTransitions', 'tasks.sprint']);
 
         [$listTasks, $listGrouped, $listGroupBy] = $this->filteredListTasks($request, $sprint);
         $chartTasks = $this->applyCommonFilters($request, $sprint->tasks);
@@ -400,7 +433,7 @@ class SprintController extends Controller
 
         $task->update(['sprint_id' => $sprint->id]);
 
-        return redirect()->route('sprints.show', $sprint)->with('success', 'Tarefa adicionada à sprint.');
+        return redirect()->route('sprints.show', ['sprint' => $sprint, 'view' => 'planning'])->with('success', 'Tarefa adicionada à sprint.');
     }
 
     public function removeTask(Sprint $sprint, Task $task)

@@ -704,6 +704,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::post('/sprints', [SprintController::class, 'store'])->name('sprints.store');
     Route::get('/sprints/{sprint}', [SprintController::class, 'show'])->name('sprints.show');
     Route::get('/sprints/{sprint}/lista/resultados', [SprintController::class, 'listResults'])->name('sprints.list-results');
+    Route::get('/sprints/{sprint}/board', [SprintController::class, 'board'])->name('sprints.board');
+    Route::get('/sprints/{sprint}/planejamento', [SprintController::class, 'planning'])->name('sprints.planning');
     Route::patch('/sprints/{sprint}', [SprintController::class, 'update'])->name('sprints.update');
     Route::post('/sprints/{sprint}/travar', [SprintController::class, 'lock'])->name('sprints.lock');
     Route::post('/sprints/{sprint}/reabrir', [SprintController::class, 'unlock'])->name('sprints.unlock');

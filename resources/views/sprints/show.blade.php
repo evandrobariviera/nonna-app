@@ -161,7 +161,11 @@
         </div>
     </div>
 
-    <div x-data="{ tab: '{{ request('view', 'list') }}', clientFilter: '', selectMode: false, ...taskBulk() }" x-cloak>
+    {{-- A aba aberta vai pra URL (?view=) — recarregar ou voltar de um "Mover"/"+ Sprint"
+         cai na mesma aba, em vez de sempre voltar pra Lista. --}}
+    <div x-data="{ tab: '{{ request('view', 'list') }}', clientFilter: '', selectMode: false, ...taskBulk() }"
+         x-init="$watch('tab', v => { const u = new URL(location.href); u.searchParams.set('view', v); history.replaceState(null, '', u.toString()) })"
+         x-cloak>
 
         {{-- TABS --}}
         <div class="flex items-center gap-1 mb-5" style="border-bottom:1px solid var(--border2)">
@@ -180,9 +184,9 @@
                 :style="tab === 'planning' ? 'color:var(--purple); border-bottom:2px solid var(--purple)' : 'color:var(--muted)'"
                 x-show="{{ $sprint->status !== 'closed' ? 'true' : 'false' }}">
                 Planejamento
-                @if($backlogTasks->count() > 0)
+                @if($backlogCount > 0)
                     <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full font-bold"
-                          style="background:var(--s3); color:var(--orange)">{{ $backlogTasks->count() }}</span>
+                          style="background:var(--s3); color:var(--orange)">{{ $backlogCount }}</span>
                 @endif
             </button>
 
@@ -197,144 +201,13 @@
         @include('partials._task-bulk-bar')
 
         {{-- ── TAB BOARD ── --}}
-        <div x-show="tab === 'board'" x-cloak>
-            <div id="sprint-board" class="flex gap-4 overflow-x-auto pb-2" style="align-items: start;"
-                 data-kanban-board data-status-field="status">
-
-                @foreach(\App\Models\Task::$statuses as $statusKey => $meta)
-                    @php $colTasks = $kanban[$statusKey]; @endphp
-                    <div class="flex flex-col gap-2 flex-shrink-0" style="width:270px"
-                         data-kanban-column data-status="{{ $statusKey }}">
-                        <div class="flex items-center justify-between px-3 py-2"
-                             style="background:var(--s2); border:1px solid var(--border2)">
-                            <div class="flex items-center gap-2">
-                                <div class="h-2 w-2 rounded-full"
-                                     style="background:var(--{{ $meta['color'] === 'muted' ? 'muted' : $meta['color'] }})"></div>
-                                <span class="text-xs font-bold font-mono uppercase tracking-widest"
-                                      style="color:var(--{{ $meta['color'] === 'muted' ? 'muted2' : $meta['color'] }})">
-                                    {{ $meta['label'] }}
-                                </span>
-                            </div>
-                            <span class="text-xs font-mono font-bold" data-kanban-count style="color:var(--muted)">{{ $colTasks->count() }}</span>
-                        </div>
-
-                        <div class="flex flex-col gap-2" style="min-height:40px" data-kanban-list>
-                        @forelse($colTasks as $task)
-                            @php
-                                $execList = $task->executors->filter(fn($u) => $u->pivot->role === 'executor');
-                                if ($execList->isEmpty() && $task->executor) {
-                                    $execList = collect([$task->executor]);
-                                }
-                                $respList   = $task->executors->filter(fn($u) => $u->pivot->role === 'responsavel');
-                                $statusUrl  = $task->is_ticket ? route('tickets.update-status', $task) : route('tasks.update-status-direct', $task);
-                                $thumbUrl   = $task->firstImageAttachmentUrl();
-                            @endphp
-                            <div class="card px-0 py-0 relative overflow-hidden" x-data="{ statusOpen: false, moveStyle: '' }"
-                                 data-kanban-card data-id="{{ $task->id }}" data-update-url="{{ $statusUrl }}"
-                                 style="{{ $task->isOverdue() ? 'border-left:3px solid var(--red)' : '' }}; cursor:pointer"
-                                 @click="selectMode
-                                     ? (selected.includes('{{ $task->id }}') ? selected = selected.filter(id => id !== '{{ $task->id }}') : selected.push('{{ $task->id }}'))
-                                     : (window.location = '{{ route('tasks.show', $task) }}')">
-
-                                <input type="checkbox" value="{{ $task->id }}" data-task-id="{{ $task->id }}" x-model="selected"
-                                    x-show="selectMode" @click.stop
-                                    class="absolute top-2 right-2 z-10" style="width:14px; height:14px">
-
-                                @if($thumbUrl)
-                                    <img src="{{ $thumbUrl }}" alt="" class="w-full object-cover" style="height:80px">
-                                @endif
-
-                                <div class="px-4 py-3">
-                                    {{-- Cliente --}}
-                                    <p class="text-xs font-mono mb-1" style="color:var(--purple)">
-                                        {{ $task->client?->displayName() ?? '—' }}
-                                        @if($task->project)
-                                            <span style="color:var(--border2)"> / </span>
-                                            <span style="color:var(--muted)">{{ $task->project->title }}</span>
-                                        @elseif($task->is_ticket)
-                                            <span style="color:var(--border2)"> / </span>
-                                            <span style="color:var(--orange)">Ticket</span>
-                                        @endif
-                                    </p>
-
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="30" />
-                                        <p class="text-xs font-semibold leading-snug min-w-0" style="color:var(--text)">
-                                            {{ $task->title }}
-                                        </p>
-                                    </div>
-
-                                    {{-- Avatares: responsável (laranja) + executor (roxo) --}}
-                                    @if($respList->isNotEmpty() || $execList->isNotEmpty())
-                                        <div class="flex items-center gap-1 mb-2">
-                                            @foreach($respList as $resp)
-                                                <x-user-avatar :user="$resp" size="6" color="var(--orange)" title="{{ $resp->name }} (Responsável)" />
-                                            @endforeach
-                                            @foreach($execList as $exec)
-                                                <x-user-avatar :user="$exec" size="6" color="var(--purple)" title="{{ $exec->name }} (Executor)" />
-                                            @endforeach
-                                        </div>
-                                    @endif
-
-                                    {{-- Data --}}
-                                    <div class="mb-2">
-                                        <x-inline-date-cell :task="$task" field="due_date" :overdue="$task->isOverdue()" />
-                                    </div>
-
-                                    {{-- Mover status + remover da sprint --}}
-                                    <div class="flex items-center gap-1.5 pt-2 relative" style="border-top:1px solid var(--border2)" @click.stop>
-                                        <button @click="statusOpen = !statusOpen; moveStyle = dropdownStyle($el, 'top-left')" @click.stop type="button"
-                                            class="text-xs px-2 py-0.5 font-mono flex items-center gap-1"
-                                            style="border:1px solid var(--border2); color:var(--muted)">
-                                            Mover <span style="opacity:.7">▾</span>
-                                        </button>
-
-                                        <template x-teleport="body">
-                                            <div x-show="statusOpen" @click.outside="statusOpen = false" x-close-on-scroll="statusOpen" x-cloak
-                                                 class="rounded shadow-lg py-1"
-                                                 :style="moveStyle + 'background:var(--s1); border:1px solid var(--border2); min-width:190px'">
-                                                @foreach(\App\Models\Task::$statuses as $targetKey => $targetMeta)
-                                                    @if($targetKey !== $statusKey)
-                                                        <form method="POST" action="{{ $statusUrl }}">
-                                                            @csrf @method('PATCH')
-                                                            <input type="hidden" name="status" value="{{ $targetKey }}">
-                                                            <button type="submit"
-                                                                class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
-                                                                style="color:var(--text)"
-                                                                onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
-                                                                <span class="inline-block w-2 h-2 rounded-full flex-shrink-0"
-                                                                      style="background:{{ \App\Models\Task::colorHex($targetMeta['color']) }}"></span>
-                                                                {{ $targetMeta['label'] }}
-                                                            </button>
-                                                        </form>
-                                                    @endif
-                                                @endforeach
-                                            </div>
-                                        </template>
-
-                                        @if($sprint->status !== 'closed' && !$sprint->isLocked())
-                                            <form method="POST" action="{{ route('sprints.remove-task', [$sprint, $task]) }}"
-                                                  @submit.prevent="if (await $store.confirmDialog.ask('Remover da sprint?')) $el.submit()">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-xs">
-                                                    − Sprint
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="px-4 py-5 text-center text-xs"
-                                 style="border:1px dashed var(--border2); color:var(--muted)">
-                                Sem tarefas
-                            </div>
-                        @endforelse
-                        </div>
-                    </div>
-                @endforeach
-
-            </div>
+        {{-- Board e Planejamento só são montados quando a aba é aberta (fetch do fragmento) —
+             antes a página trazia as 3 abas de uma vez: ~3 MB de HTML + 428 MB de imagens
+             escondidas numa sprint de 162 tarefas, e o navegador travava. --}}
+        <div x-show="tab === 'board'" x-cloak
+             data-lazy-tab data-url="{{ route('sprints.board', $sprint) }}"
+             x-effect="if (tab === 'board') loadSprintTab($el)">
+            @include('sprints._tab-loading')
         </div>
 
         {{-- ── TAB LISTA ── --}}
@@ -362,80 +235,41 @@
         </div>
 
         {{-- ── TAB PLANEJAMENTO ── --}}
-        <div x-show="tab === 'planning'" x-cloak>
-
-            @if($sprint->status === 'closed')
-                <p class="text-sm font-mono" style="color:var(--muted)">Sprint encerrada — planejamento bloqueado.</p>
-            @else
-                {{-- Filtro por cliente --}}
-                <div class="flex items-center gap-3 mb-4">
-                    <span class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Filtrar:</span>
-                    <select x-model="clientFilter"
-                        class="px-3 py-1.5 text-xs focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
-                        <option value="">Todos os clientes</option>
-                        @foreach($clients as $c)
-                            <option value="{{ $c->id }}">{{ $c->displayName() }}</option>
-                        @endforeach
-                    </select>
-                    <span class="text-xs font-mono" style="color:var(--muted)">
-                        {{ $backlogTasks->count() }} tarefa{{ $backlogTasks->count() !== 1 ? 's' : '' }} no backlog
-                    </span>
-                </div>
-
-                @forelse($backlogTasks as $task)
-                    <div class="flex items-center justify-between gap-4 px-4 py-3 mb-2"
-                         style="background:var(--s2); border:1px solid var(--border2)"
-                         x-show="clientFilter === '' || clientFilter === '{{ $task->client_id }}'">
-
-                        <input type="checkbox" value="{{ $task->id }}" data-task-id="{{ $task->id }}" x-model="selected"
-                            style="width:14px; height:14px; flex-shrink:0">
-
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="text-xs font-mono font-bold" style="color:var(--purple)">
-                                    {{ $task->client?->displayName() ?? '—' }}
-                                </span>
-                                @if($task->project)
-                                    <span class="text-xs font-mono" style="color:var(--muted)">/ {{ $task->project->title }}</span>
-                                @elseif($task->is_ticket)
-                                    <span class="badge badge-orange" style="font-size:10px">Ticket</span>
-                                @endif
-                            </div>
-                            <p class="text-xs font-semibold mt-0.5 leading-snug" style="color:var(--text)">{{ $task->title }}</p>
-                            <div class="flex items-center gap-2 mt-1">
-                                <x-task-type-badge :task="$task" class="text-xs" />
-                                @if($task->executor)
-                                    <span class="text-xs font-mono" style="color:var(--muted)">{{ explode(' ', $task->executor->name)[0] }}</span>
-                                @endif
-                                @if($task->due_date)
-                                    <span class="text-xs font-mono" style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">
-                                        {{ $task->due_date->format('d/m') }}
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-
-                        <form method="POST" action="{{ route('sprints.add-task', [$sprint, $task]) }}">
-                            @csrf
-                            <button type="submit" class="btn btn-primary btn-xs flex-shrink-0">
-                                + Sprint
-                            </button>
-                        </form>
-                    </div>
-                @empty
-                    <div class="px-6 py-10 text-center" style="border:1px dashed var(--border2)">
-                        <p class="text-sm font-mono" style="color:var(--muted)">Backlog vazio — todas as tarefas estão em sprints ou concluídas.</p>
-                    </div>
-                @endforelse
-            @endif
+        <div x-show="tab === 'planning'" x-cloak
+             data-lazy-tab data-url="{{ route('sprints.planning', $sprint) }}"
+             x-effect="if (tab === 'planning') loadSprintTab($el)">
+            @include('sprints._tab-loading')
         </div>
 
     </div>
 
     @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        // Carrega o fragmento de uma aba (Board/Planejamento) na primeira vez que ela é aberta.
+        // O HTML entra dentro do x-data da página, então o Alpine inicializa sozinho e os
+        // cartões enxergam selectMode/selected/clientFilter normalmente.
+        window.loadSprintTab = function (el) {
+            if (el.dataset.loaded) return;
+            el.dataset.loaded = '1';
+
+            fetch(el.dataset.url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (res) {
+                    if (!res.ok) throw res;
+                    return res.text();
+                })
+                .then(function (html) {
+                    el.innerHTML = html;
+                    if (el.querySelector('#sprint-board')) initSprintBoard();
+                })
+                .catch(function () {
+                    delete el.dataset.loaded;
+                    el.innerHTML = '<div class="px-6 py-10 text-center text-sm font-mono" style="border:1px dashed var(--border2); color:var(--red)">'
+                        + 'Não foi possível carregar. <button type="button" class="underline" data-retry>Tentar de novo</button></div>';
+                    el.querySelector('[data-retry]').addEventListener('click', function () { window.loadSprintTab(el); });
+                });
+        };
+
+        function initSprintBoard() {
             var board = document.getElementById('sprint-board');
             if (!board) return;
 
@@ -475,7 +309,7 @@
                     seg.style.width = (total > 0 ? (n / total * 100) : 0) + '%';
                 });
             });
-        });
+        }
     </script>
     @endpush
 
