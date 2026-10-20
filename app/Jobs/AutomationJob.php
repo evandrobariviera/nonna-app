@@ -285,20 +285,51 @@ class AutomationJob implements ShouldQueue
         return "Pendência criada: {$pendency->id} ({$title}) — deve: {$pendency->owedName()}, cobra: user {$owner}.";
     }
 
-    /** Pessoa da ação "Criar Pendência": fixa ou alguém da entidade que disparou. */
+    /**
+     * "Variável de pessoa" da ação "Criar Pendência" (opções em
+     * automations/_action-create-pendency): pessoa fixa ou alguém ligado à entidade que
+     * disparou — da tarefa, do cliente, do planejamento, da reunião, da oportunidade.
+     */
     private function resolvePerson(string $source, mixed $fixedId, mixed $entity): ?int
     {
+        $clientId = $entity->client_id ?? null;
+
         $id = match ($source) {
-            'fixed'            => $fixedId,
-            'executor'         => $entity instanceof Task ? $entity->executor_id : null,
-            'responsavel'      => $entity instanceof Task ? $entity->responsibles()->value('users.id') : null,
-            'organizer'        => $entity instanceof Meeting ? $entity->organized_by : null,
-            'plan_responsible' => $entity instanceof MacroPlan ? $entity->responsible_id : null,
-            'creator'          => $entity->created_by ?? null,
-            default            => null,
+            'fixed'        => $fixedId,
+            'executor'     => $entity instanceof Task ? $entity->executor_id : null,
+            'responsavel'  => $entity instanceof Task ? $entity->responsibles()->value('users.id') : null,
+            'task_creator' => $entity instanceof Task ? $entity->created_by : null,
+            'client_creative_lead' => $clientId
+                ? \App\Models\Client::withoutGlobalScopes()->whereKey($clientId)->value('creative_lead_id')
+                : null,
+            // Conta de anúncio ativa primeiro (o cliente pode ter uma antiga, pausada).
+            'client_ad_manager' => $clientId
+                ? \App\Models\ClientAdAccount::withoutGlobalScopes()->where('client_id', $clientId)
+                    ->whereNotNull('responsible_user_id')
+                    ->orderByRaw("CASE WHEN status = 'ativo' THEN 0 ELSE 1 END")
+                    ->value('responsible_user_id')
+                : null,
+            'plan_responsible' => $this->planOf($entity)?->responsible_id,
+            'organizer'         => $entity instanceof Meeting ? $entity->organized_by : null,
+            'opportunity_owner' => $entity instanceof Opportunity ? $entity->assigned_to : null,
+            'creator'           => $entity->created_by ?? null,
+            default             => null,
         };
 
         return $id ? (int) $id : null;
+    }
+
+    /** Planejamento ligado à entidade (ela mesma, ou o da tarefa/projeto/reunião). */
+    private function planOf(mixed $entity): ?MacroPlan
+    {
+        $planId = match (true) {
+            $entity instanceof MacroPlan => $entity->id,
+            $entity instanceof Task      => $entity->macro_plan_id ?? $entity->project?->macro_plan_id,
+            $entity instanceof Project, $entity instanceof Meeting => $entity->macro_plan_id,
+            default                      => null,
+        };
+
+        return $planId ? MacroPlan::withoutGlobalScopes()->find($planId) : null;
     }
 
     // Resolve o usuário a ser atribuído (Responsável + Executor) a partir de

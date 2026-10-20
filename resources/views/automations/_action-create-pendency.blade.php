@@ -5,21 +5,40 @@
     $cfg = $cfg ?? [];
     $inp = 'background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)';
     $lbl = 'color:var(--muted); letter-spacing:.05em';
-    // Fontes de pessoa: valor => [rótulo, entidades onde faz sentido (null = todas)]
+    // "Variáveis de pessoa" — grupo => [valor => [rótulo, entidades onde faz sentido (null = todas)]].
+    // Resolvidas em AutomationJob::resolvePerson().
     $personSources = [
-        'fixed'          => ['Pessoa fixa', null],
-        'executor'       => ['Executor da tarefa que disparou', ['task', 'ticket']],
-        'responsavel'    => ['Responsável da tarefa que disparou', ['task', 'ticket']],
-        'organizer'      => ['Organizador da reunião que disparou', ['meeting']],
-        'plan_responsible' => ['Responsável do planejamento que disparou', ['macro_plan']],
-        'creator'        => ['Quem criou o registro que disparou', null],
+        'Fixa' => [
+            'fixed' => ['Pessoa fixa (escolher ao lado)', null],
+        ],
+        'Da tarefa que disparou' => [
+            'executor'     => ['Executor da tarefa', ['task', 'ticket']],
+            'responsavel'  => ['Responsável da tarefa', ['task', 'ticket']],
+            'task_creator' => ['Quem criou a tarefa', ['task', 'ticket']],
+        ],
+        'Do cliente' => [
+            'client_creative_lead' => ['Direção criativa do cliente', null],
+            'client_ad_manager'    => ['Gestor da conta de anúncio do cliente', null],
+        ],
+        'Do planejamento' => [
+            'plan_responsible' => ['Responsável do planejamento', ['task', 'ticket', 'project', 'meeting', 'macro_plan']],
+        ],
+        'Outros' => [
+            'organizer'         => ['Organizador da reunião', ['meeting']],
+            'opportunity_owner' => ['Responsável da oportunidade', ['opportunity']],
+            'creator'           => ['Quem criou o registro que disparou', null],
+        ],
     ];
     $sourceSelect = function (string $field, string $default) use ($cfg, $personSources, $inp) {
         $current = $cfg[$field] ?? $default;
         $html = '<select name="action_config[' . $field . ']" x-model="' . $field . '" class="w-full px-3 py-2.5 text-sm focus:outline-none" style="' . $inp . '">';
-        foreach ($personSources as $value => [$label, $entities]) {
-            $show = $entities ? ' x-show="' . e(json_encode($entities)) . '.includes(entityType)"' : '';
-            $html .= '<option value="' . $value . '"' . ($current === $value ? ' selected' : '') . $show . '>' . e($label) . '</option>';
+        foreach ($personSources as $group => $options) {
+            $html .= '<optgroup label="' . e($group) . '">';
+            foreach ($options as $value => [$label, $entities]) {
+                $show = $entities ? ' x-show="' . e(json_encode($entities)) . '.includes(entityType)"' : '';
+                $html .= '<option value="' . $value . '"' . ($current === $value ? ' selected' : '') . $show . '>' . e($label) . '</option>';
+            }
+            $html .= '</optgroup>';
         }
         return $html . '</select>';
     };
