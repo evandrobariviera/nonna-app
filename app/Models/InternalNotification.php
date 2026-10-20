@@ -71,6 +71,15 @@ class InternalNotification extends Model
         return ! $this->isAtaReading();
     }
 
+    /**
+     * Aviso de pendência não tem "Resolver": resolver o aviso não resolve a pendência (isso
+     * se faz na própria pendência) — só abrir, marcar como lido ou apagar.
+     */
+    public function canResolve(): bool
+    {
+        return $this->kind !== 'pendencia';
+    }
+
     public function resolveLabel(): string
     {
         return $this->isAtaReading() ? 'Li a ATA' : 'Resolver';

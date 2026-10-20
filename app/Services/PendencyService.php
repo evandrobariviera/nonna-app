@@ -26,7 +26,7 @@ class PendencyService
      * Cria a pendência. O cliente vem da origem quando houver (Tarefa/Projeto/
      * Planejamento) — o form só manda client_id na pendência avulsa.
      */
-    public function create(array $data, ?Model $pendable, int $userId): Pendency
+    public function create(array $data, ?Model $pendable, int $userId, bool $notifyActor = false): Pendency
     {
         $data = $this->normalizeOwed($data);
 
@@ -40,7 +40,8 @@ class PendencyService
             'created_by'    => $userId,
         ]));
 
-        $this->notifyAssigned($pendency, $userId, notifyOwner: true, notifyOwed: true);
+        // Automação: $userId é só o "criado por" (dono da automação) — avisa todo mundo envolvido.
+        $this->notifyAssigned($pendency, $notifyActor ? 0 : $userId, notifyOwner: true, notifyOwed: true);
 
         return $pendency;
     }

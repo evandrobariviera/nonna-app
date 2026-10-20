@@ -95,6 +95,8 @@ class DashboardController extends Controller
         // resolvida, não continuar ali só porque foi vista.
         $myNotifications = InternalNotification::where('user_id', $userId)
             ->where('status', 'novo')
+            // Aviso de pendência fica só no sino: o card "Suas pendências" já mostra a mesma coisa.
+            ->where(fn ($q) => $q->whereNull('kind')->orWhere('kind', '!=', Pendency::NOTIFICATION_KIND))
             ->orderBy('generated_at')
             ->get();
 

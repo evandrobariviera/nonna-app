@@ -501,6 +501,8 @@
                         </div>
                     </div>
 
+                    @include('automations._action-create-pendency', ['cfg' => $automation->action_config ?? []])
+
                     <div x-show="actionType === 'create_macroplan_from_meeting'" x-cloak class="grid gap-3">
                         <p class="text-sm" style="color:var(--muted)">
                             Cria um Macroplanejamento vinculado à Reunião que disparou (responsável = primeiro

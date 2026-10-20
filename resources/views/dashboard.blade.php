@@ -285,10 +285,9 @@
                     {{-- No "Ver como" a pendência é da outra pessoa — resolver aqui sumiria com ela da tela dela. --}}
                     <div class="flex items-center gap-2 flex-shrink-0" @if($viewingAs) style="display:none" @endif>
                         @if($notification->canDiscard())
-                            <form method="POST" action="{{ route('notifications.update-status', $notification) }}">
-                                @csrf @method('PATCH')
-                                <input type="hidden" name="status" value="descartado">
-                                <button type="submit" class="btn btn-ghost btn-xs">Descartar</button>
+                            <form method="POST" action="{{ route('notifications.destroy', $notification) }}">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn btn-ghost btn-xs" title="Apagar este aviso">Apagar</button>
                             </form>
                         @endif
                         <form method="POST" action="{{ route('notifications.update-status', $notification) }}">

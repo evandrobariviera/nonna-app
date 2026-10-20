@@ -34,6 +34,35 @@ class NotificationController extends Controller
         return back()->with('success', 'Notificação atualizada.');
     }
 
+    /**
+     * Apagar o próprio aviso — cada pessoa limpa o seu sino (decisão do Evandro, 2026-10-20:
+     * aviso é só informação, a pessoa controla a limpeza). "Li a ATA" não: é a confirmação
+     * de leitura que a página da reunião mostra.
+     */
+    public function destroy(InternalNotification $notification)
+    {
+        abort_unless($notification->user_id === auth()->id(), 403);
+
+        if (! $notification->canDiscard()) {
+            return back()->with('error', 'Este aviso só sai depois de confirmar "Li a ATA".');
+        }
+
+        $notification->delete();
+
+        return back()->with('success', 'Aviso apagado.');
+    }
+
+    /** "Limpar os já vistos": apaga os meus avisos lidos/resolvidos/descartados (menos ATA). */
+    public function clearSeen()
+    {
+        $n = InternalNotification::where('user_id', auth()->id())
+            ->whereIn('status', ['lido', 'resolvido', 'descartado'])
+            ->where(fn ($q) => $q->whereNull('kind')->orWhere('kind', '!=', InternalNotification::KIND_ATA))
+            ->delete();
+
+        return back()->with('success', $n ? "{$n} aviso(s) apagado(s)." : 'Nada pra limpar.');
+    }
+
     // Polling leve pro aviso de navegador (Notification API + som) — só pega o que é
     // realmente novo desde o último cursor, pra não re-notificar o que já apareceu no
     // sino. "server_time" na resposta vira o próximo cursor no cliente, pra não

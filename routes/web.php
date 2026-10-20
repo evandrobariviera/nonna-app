@@ -330,6 +330,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('notifications.update-status');
     Route::get('/notificacoes/novas', [\App\Http\Controllers\NotificationController::class, 'poll'])
         ->name('notifications.poll');
+    Route::post('/notificacoes/limpar', [\App\Http\Controllers\NotificationController::class, 'clearSeen'])
+        ->name('notifications.clear-seen');
+    Route::delete('/notificacoes/{notification}', [\App\Http\Controllers\NotificationController::class, 'destroy'])
+        ->name('notifications.destroy');
 
     // ── Chat interno (widget flutuante + tela cheia) — ver .claude/docs/internal-chat-plan.md.
     // Acesso a conversa só por participação (ChatConversationPolicy), sem exceção pra admin.

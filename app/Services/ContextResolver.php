@@ -101,7 +101,9 @@ class ContextResolver
         ];
 
         if ($task->client) {
-            $context['client_name']    = $task->client->name ?? '';
+            // clients não tem coluna "name" (saía sempre vazio). company_name e não
+            // displayName(): o apelido é só interno e o contexto pode ir pra fora (webhook).
+            $context['client_name']    = $task->client->company_name ?? '';
             $context['client_segment'] = $task->client->segment ?? '';
         }
 

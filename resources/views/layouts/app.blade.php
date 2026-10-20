@@ -359,13 +359,21 @@
                                                     </button>
                                                 </form>
                                             @endif
-                                            <form method="POST" action="{{ route('notifications.update-status', $n) }}">
-                                                @csrf @method('PATCH')
-                                                <input type="hidden" name="status" value="resolvido">
-                                                <button type="submit" class="btn btn-success btn-xs">
-                                                    {{ $n->resolveLabel() }}
-                                                </button>
-                                            </form>
+                                            @if($n->canResolve())
+                                                <form method="POST" action="{{ route('notifications.update-status', $n) }}">
+                                                    @csrf @method('PATCH')
+                                                    <input type="hidden" name="status" value="resolvido">
+                                                    <button type="submit" class="btn btn-success btn-xs">
+                                                        {{ $n->resolveLabel() }}
+                                                    </button>
+                                                </form>
+                                            @endif
+                                            @if($n->canDiscard())
+                                                <form method="POST" action="{{ route('notifications.destroy', $n) }}" class="ml-auto">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="text-xs" style="color:var(--muted2)" title="Apagar este aviso">✕</button>
+                                                </form>
+                                            @endif
                                         </div>
                                     </div>
                                 @empty

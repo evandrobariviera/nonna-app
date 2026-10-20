@@ -12,6 +12,7 @@ use App\Models\MacroPlan;
 use App\Models\Meeting;
 use App\Models\MeetingAttachment;
 use App\Models\Opportunity;
+use App\Models\Pendency;
 use App\Models\FunctionalRole;
 use App\Models\Sector;
 use App\Models\Sprint;
@@ -19,6 +20,7 @@ use App\Models\User;
 use App\Services\AiService;
 use App\Services\ContextResolver;
 use App\Services\NotificationService;
+use App\Services\PendencyService;
 use App\Services\SystemNotificationService;
 use App\Services\TaskExecutorSync;
 use App\Support\BusinessTime;
@@ -117,6 +119,7 @@ class AutomationJob implements ShouldQueue
             'update_field'      => $this->updateField($config, $entity),
             'send_notification' => $this->sendNotification($config, $entity, $context),
             'create_record'     => $this->createRecord($config, $context, $entity),
+            'create_pendency'   => $this->createPendency($config, $context, $entity),
             'create_macroplan_review' => $this->createMacroplanReview($config, $entity),
             'create_internal_review_pauta' => $this->createInternalReviewPauta($config, $entity),
             'create_macroplan_from_meeting' => $this->createMacroplanFromMeeting($config, $entity),
@@ -214,6 +217,88 @@ class AutomationJob implements ShouldQueue
         $assigneeNote = $this->assignCreatedTask($task, $config, $entity);
 
         return "Registro criado: {$task->id} ({$task->title}).{$assigneeNote}";
+    }
+
+    /**
+     * Ação "Criar Pendência" (form em automations/_action-create-pendency). Liga a pendência
+     * à entidade quando ela pode ter pendências (Tarefa/Ticket, Projeto, Planejamento); senão
+     * fica só com o cliente. Não duplica: já existindo uma aberta com o mesmo título no mesmo
+     * lugar, não cria (gatilho que dispara de novo — status vai e volta).
+     */
+    private function createPendency(array $config, array $context, mixed $entity): string
+    {
+        $title = trim($this->interpolate($config['pendency_title'] ?? '', $context));
+        if ($title === '') {
+            throw new \RuntimeException('Ação "Criar Pendência" sem o campo "O que está pendente".');
+        }
+
+        $pendable = ($entity instanceof Task || $entity instanceof Project || $entity instanceof MacroPlan) ? $entity : null;
+        $clientId = $entity->client_id ?? null;
+        $orgId    = $entity->organization_id ?? $this->automation->createdBy?->organizations()->value('organizations.id');
+
+        $duplicate = Pendency::withoutGlobalScopes()
+            ->where('organization_id', $orgId)
+            ->open()
+            ->where('title', $title)
+            ->when(
+                $pendable,
+                fn ($q) => $q->where('pendable_type', $pendable->getMorphClass())->where('pendable_id', $pendable->getKey()),
+                fn ($q) => $q->whereNull('pendable_id')->where('client_id', $clientId)
+            )
+            ->exists();
+        if ($duplicate) {
+            return "Já existe pendência aberta \"{$title}\" — não criada de novo.";
+        }
+
+        $owedBy   = $config['owed_by'] ?? 'cliente';
+        $fallback = (int) $this->automation->created_by;
+        $owner    = $this->resolvePerson($config['owner_source'] ?? 'fixed', $config['owner_user_id'] ?? null, $entity) ?? $fallback;
+        $requester = $this->resolvePerson($config['requester_source'] ?? 'executor', $config['requester_user_id'] ?? null, $entity) ?? $owner;
+        $owedUser = $owedBy === 'agencia'
+            ? $this->resolvePerson($config['owed_user_source'] ?? 'fixed', $config['owed_user_id'] ?? null, $entity)
+            : null;
+        $contactId = ($owedBy === 'cliente' && !empty($config['owed_primary_contact']) && $clientId)
+            ? \App\Models\Client::withoutGlobalScopes()->find($clientId)?->primaryContact()?->id
+            : null;
+
+        $days = (int) ($config['pendency_due_in_days'] ?? 0);
+        $due  = $days > 0 ? now()->addDays($days) : null;
+        if ($due && !empty($config['pendency_skip_weekends'])) {
+            $due = BusinessTime::nextBusinessDay($due);
+        }
+
+        $pendency = app(PendencyService::class)->create([
+            'organization_id' => $orgId,
+            'client_id'       => $clientId,
+            'title'           => mb_substr($title, 0, 500),
+            'description'     => trim($this->interpolate($config['pendency_description'] ?? '', $context)) ?: null,
+            'kind'            => isset(Pendency::$kinds[$config['pendency_kind'] ?? '']) ? $config['pendency_kind'] : 'outro',
+            'owed_by'         => $owedBy,
+            'owed_user_id'    => $owedUser,
+            'owed_contact_id' => $contactId,
+            'owed_party'      => $owedBy === 'terceiro' ? ($config['owed_party'] ?? null) : null,
+            'owner_id'        => $owner,
+            'requested_by'    => $requester,
+            'due_date'        => $due?->toDateString(),
+        ], $pendable, $fallback, notifyActor: true);
+
+        return "Pendência criada: {$pendency->id} ({$title}) — deve: {$pendency->owedName()}, cobra: user {$owner}.";
+    }
+
+    /** Pessoa da ação "Criar Pendência": fixa ou alguém da entidade que disparou. */
+    private function resolvePerson(string $source, mixed $fixedId, mixed $entity): ?int
+    {
+        $id = match ($source) {
+            'fixed'            => $fixedId,
+            'executor'         => $entity instanceof Task ? $entity->executor_id : null,
+            'responsavel'      => $entity instanceof Task ? $entity->responsibles()->value('users.id') : null,
+            'organizer'        => $entity instanceof Meeting ? $entity->organized_by : null,
+            'plan_responsible' => $entity instanceof MacroPlan ? $entity->responsible_id : null,
+            'creator'          => $entity->created_by ?? null,
+            default            => null,
+        };
+
+        return $id ? (int) $id : null;
     }
 
     // Resolve o usuário a ser atribuído (Responsável + Executor) a partir de

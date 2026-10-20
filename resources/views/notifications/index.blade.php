@@ -1,6 +1,13 @@
 <x-app-layout>
     <x-slot name="header">
-        <h1 class="page-title">Notificações</h1>
+        <div class="flex items-center justify-between w-full gap-3">
+            <h1 class="page-title">Notificações</h1>
+            <form method="POST" action="{{ route('notifications.clear-seen') }}"
+                  @submit.prevent="if (await $store.confirmDialog.ask('Apagar todos os avisos que você já leu ou resolveu?')) $el.submit()">
+                @csrf
+                <button type="submit" class="btn btn-ghost btn-sm" title="Apaga os avisos lidos/resolvidos — os novos ficam">Limpar os já vistos</button>
+            </form>
+        </div>
     </x-slot>
 
     @if(session('success'))
@@ -51,7 +58,7 @@
                                     </button>
                                 </form>
                             @endif
-                            @if($n->status !== 'resolvido')
+                            @if($n->status !== 'resolvido' && $n->canResolve())
                                 <form method="POST" action="{{ route('notifications.update-status', $n) }}">
                                     @csrf @method('PATCH')
                                     <input type="hidden" name="status" value="resolvido">
@@ -60,12 +67,11 @@
                                     </button>
                                 </form>
                             @endif
-                            @if($n->status !== 'descartado' && $n->canDiscard())
-                                <form method="POST" action="{{ route('notifications.update-status', $n) }}">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="status" value="descartado">
-                                    <button type="submit" class="btn btn-danger btn-xs">
-                                        Descartar
+                            @if($n->canDiscard())
+                                <form method="POST" action="{{ route('notifications.destroy', $n) }}">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn btn-ghost btn-xs" title="Apagar este aviso" style="color:var(--red)">
+                                        Apagar
                                     </button>
                                 </form>
                             @endif
