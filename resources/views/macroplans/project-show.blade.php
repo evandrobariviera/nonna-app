@@ -84,7 +84,7 @@
     {{-- 2 colunas (2026-10): documento à esquerda, detalhes/portal/anexos/campanhas numa
          coluna lateral fixa — o HTML é estreito e sozinho na largura toda sobrava cinza. --}}
     @php $projectClient = $project->client ?? $macroplan?->client; @endphp
-    <div class="grid gap-5 mb-6 lg:grid-cols-[minmax(0,1fr)_340px] items-start">
+    <div class="grid gap-5 mb-6 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_460px] items-start">
     <div class="min-w-0">
 
     {{-- DOCUMENTO — o HTML da campanha/projeto (campo próprio document_attachment_id). É onde mora o

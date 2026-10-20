@@ -90,7 +90,7 @@
 
         {{-- ── SIDEBAR DESKTOP ── --}}
         @unless($embed)
-        <aside class="hidden md:flex md:w-64 md:flex-col sidebar-nav flex-shrink-0">
+        <aside class="hidden md:flex md:w-72 md:flex-col sidebar-nav flex-shrink-0">
             {{-- Logo --}}
             <a href="{{ route('dashboard') }}" class="flex h-16 items-center px-6 border-b transition-opacity hover:opacity-80" style="border-color:var(--border); flex-shrink:0">
                 @if(isset($currentOrg) && $currentOrg->logoUrl())
