@@ -70,6 +70,12 @@ class PendencyService
      */
     public function nudge(Pendency $pendency, int $userId, string $channel): void
     {
+        // Tudo ou nada: se o aviso falhar, a cobrança não fica registrada pela metade.
+        \Illuminate\Support\Facades\DB::connection('pgsql')->transaction(fn () => $this->recordNudge($pendency, $userId, $channel));
+    }
+
+    private function recordNudge(Pendency $pendency, int $userId, string $channel): void
+    {
         $pendency->nudges()->create(['user_id' => $userId, 'channel' => $channel]);
 
         $pendency->forceFill([
@@ -80,7 +86,7 @@ class PendencyService
 
         if ($channel === 'lembrete' && $pendency->owed_by === 'agencia' && $pendency->owed_user_id
             && (int) $pendency->owed_user_id !== $userId && ($owed = User::find($pendency->owed_user_id))) {
-            $this->notifications->notifyUsers(
+            $this->notify(
                 collect([$owed]),
                 Pendency::NOTIFICATION_KIND,
                 (User::find($userId)?->name ?? 'Alguém') . ' está cobrando: ' . $pendency->title,
@@ -98,7 +104,7 @@ class PendencyService
         if (!$pendency->owner_id || (int) $pendency->owner_id === $userId || !($owner = User::find($pendency->owner_id))) {
             return;
         }
-        $this->notifications->notifyUsers(
+        $this->notify(
             collect([$owner]),
             Pendency::NOTIFICATION_KIND,
             (User::find($userId)?->name ?? 'Alguém') . ' está esperando: ' . $pendency->title,
@@ -125,7 +131,7 @@ class PendencyService
             ->map(fn ($id) => (int) $id)->reject(fn ($id) => $id === $userId)->unique())->get();
         if ($notify->isNotEmpty()) {
             $by = User::find($userId)?->name ?? 'Alguém';
-            $this->notifications->notifyUsers(
+            $this->notify(
                 $notify,
                 Pendency::NOTIFICATION_KIND,
                 'Pendência resolvida: ' . $pendency->title,
@@ -135,6 +141,21 @@ class PendencyService
                 $pendency->organization_id,
             );
         }
+    }
+
+    /**
+     * Todo aviso de pendência passa por aqui. internal_notifications.title é varchar(255) e
+     * o título da pendência pode ser enorme (comentário virado pendência) — corta o título
+     * do aviso e manda o texto inteiro no corpo, que não tem limite.
+     */
+    private function notify(Collection $users, string $kind, string $title, ?string $body, ?string $link, Pendency $pendency, ?string $organizationId): void
+    {
+        if (mb_strlen($title) > 200) {
+            $body  = $pendency->title . ($body ? "\n" . $body : '');
+            $title = \Illuminate\Support\Str::limit($title, 200);
+        }
+
+        $this->notifications->notifyUsers($users, $kind, $title, $body, $link, $pendency, $organizationId);
     }
 
     private function bodyFor(Pendency $pendency): string
@@ -171,7 +192,7 @@ class PendencyService
             if (!$userId || $userId === $actorId || !($user = User::find($userId))) {
                 return;
             }
-            $this->notifications->notifyUsers(collect([$user]), Pendency::NOTIFICATION_KIND, $title, $body,
+            $this->notify(collect([$user]), Pendency::NOTIFICATION_KIND, $title, $body,
                 $this->linkFor($pendency), $pendency, $pendency->organization_id);
         };
 
