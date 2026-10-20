@@ -24,7 +24,7 @@ class Pendency extends Model
         'organization_id', 'client_id', 'pendable_type', 'pendable_id', 'source_comment_id',
         'title', 'description', 'kind',
         'owed_by', 'owed_contact_id', 'owed_user_id', 'owed_party',
-        'owner_id', 'due_date', 'status', 'nudge_count', 'last_nudged_at',
+        'owner_id', 'requested_by', 'due_date', 'status', 'nudge_count', 'last_nudged_at',
         'resolved_at', 'resolved_by', 'resolution_note', 'created_by',
     ];
 
@@ -92,6 +92,55 @@ class Pendency extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    /** Quem precisa da entrega (ex.: Marlon pede, cliente deve, Alisson cobra). */
+    public function requester(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'requested_by');
+    }
+
+    public function nudges(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PendencyNudge::class)->orderByDesc('created_at');
+    }
+
+    /** Botão de cobrança: só quem cobra (ou admin, cobrindo alguém). */
+    public function canChase(?int $userId, bool $isAdmin = false): bool
+    {
+        return $this->isOpen() && ($isAdmin || ($userId && (int) $this->owner_id === $userId));
+    }
+
+    /** "Lembrar quem cobra": pra quem precisa (ou admin) apressar quem cobra. */
+    public function canRemindOwner(?int $userId, bool $isAdmin = false): bool
+    {
+        return $this->isOpen() && $this->owner_id && (int) $this->owner_id !== (int) $userId
+            && ($isAdmin || ($userId && (int) $this->requested_by === $userId));
+    }
+
+    /**
+     * Link do WhatsApp do contato que deve, com a mensagem de cobrança pronta — null se
+     * não for "deve: cliente" com contato que tenha WhatsApp/telefone.
+     */
+    public function whatsappUrl(string $senderName): ?string
+    {
+        if ($this->owed_by !== 'cliente' || !$this->owedContact) {
+            return null;
+        }
+        $digits = preg_replace('/\D/', '', (string) ($this->owedContact->whatsapp ?: $this->owedContact->phone));
+        if (strlen($digits) < 10) {
+            return null;
+        }
+        if (strlen($digits) <= 11) {
+            $digits = '55' . $digits; // número salvo sem DDI
+        }
+
+        $first = \Illuminate\Support\Str::of($this->owedContact->name)->explode(' ')->first();
+        $me    = \Illuminate\Support\Str::of($senderName)->explode(' ')->first();
+        $due   = $this->due_date ? ' (prazo ' . $this->due_date->format('d/m') . ')' : '';
+        $text  = "Oi {$first}, tudo bem? Aqui é {$me}, da Nonna. Ainda estamos precisando de: {$this->title}{$due}. Consegue nos enviar?";
+
+        return 'https://wa.me/' . $digits . '?text=' . rawurlencode($text);
     }
 
     public function resolvedBy(): BelongsTo

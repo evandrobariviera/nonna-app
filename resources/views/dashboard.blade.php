@@ -333,7 +333,7 @@
 
     {{-- ── SUAS PENDÊNCIAS — fixa em qualquer modo: o que eu devo entregar (o time espera
          de mim) e o que eu cobro (cliente/terceiro/time). Some sem nada. Ver Pendency. ── --}}
-    @if($pendenciesToDeliver->isNotEmpty() || $pendenciesToChase->isNotEmpty())
+    @if($pendenciesToDeliver->isNotEmpty() || $pendenciesToChase->isNotEmpty() || $pendenciesWaiting->isNotEmpty())
         <div class="card px-5 py-4 mb-6" style="border-left:4px solid var(--orange)">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-bold flex items-center gap-1.5" style="color:var(--text)">
@@ -341,10 +341,11 @@
                 </h3>
                 <a href="{{ route('pendencies.index', ['responsavel' => 'meus']) }}" class="text-xs font-semibold" style="color:var(--purple)">Ver na Central →</a>
             </div>
-            <div class="grid gap-4 md:grid-cols-2">
+            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 @foreach([
-                    ['title' => 'Para entregar', 'hint' => 'alguém do time espera isso de você', 'items' => $pendenciesToDeliver, 'empty' => 'Nada esperando por você.'],
-                    ['title' => 'Para cobrar', 'hint' => 'você é quem vai atrás', 'items' => $pendenciesToChase, 'empty' => 'Nada pra cobrar.'],
+                    ['title' => 'Para entregar', 'hint' => 'esperam isso de você', 'items' => $pendenciesToDeliver, 'empty' => 'Nada esperando por você.'],
+                    ['title' => 'Para cobrar', 'hint' => 'você vai atrás', 'items' => $pendenciesToChase, 'empty' => 'Nada pra cobrar.'],
+                    ['title' => 'Aguardando para mim', 'hint' => 'você pediu, outra pessoa cobra', 'items' => $pendenciesWaiting, 'empty' => 'Nada que você pediu em aberto.'],
                 ] as $col)
                     <div>
                         <p class="text-xs font-bold mb-2" style="color:var(--text)">
@@ -363,6 +364,8 @@
                                     <span class="truncate" style="color:var(--muted)">{{ $p->client?->displayName() }}</span>
                                     @if($col['title'] === 'Para cobrar')
                                         <span class="ml-auto flex-shrink-0" style="color:var(--muted)">deve: {{ $p->owedName() }}</span>
+                                    @elseif($col['title'] === 'Aguardando para mim')
+                                        <span class="ml-auto flex-shrink-0" style="color:var(--muted)">cobra: {{ \Illuminate\Support\Str::of($p->owner?->name ?? '—')->explode(' ')->first() }}{{ $p->nudge_count ? ' · ' . $p->nudge_count . 'x' : '' }}</span>
                                     @endif
                                 </a>
                             @empty

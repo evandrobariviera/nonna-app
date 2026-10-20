@@ -574,6 +574,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('pendencies.update');
     Route::patch('/pendencias/{pendency}/cobrar', [\App\Http\Controllers\PendencyController::class, 'nudge'])
         ->name('pendencies.nudge');
+    Route::post('/pendencias/{pendency}/lembrar', [\App\Http\Controllers\PendencyController::class, 'remind'])
+        ->name('pendencies.remind');
     Route::patch('/pendencias/{pendency}/resolver', [\App\Http\Controllers\PendencyController::class, 'resolve'])
         ->name('pendencies.resolve');
     Route::patch('/pendencias/{pendency}/cancelar', [\App\Http\Controllers\PendencyController::class, 'cancel'])

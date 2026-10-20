@@ -51,7 +51,8 @@ class PendencyController extends Controller
         $query = Pendency::with([
             'client:id,company_name,nickname',
             'pendable',
-            'owedContact:id,name',
+            'owedContact:id,name,whatsapp,phone',
+            'requester:id,name',
             'owedUser:id,name',
             'owner:id,name,avatar_path,avatar_disk',
             'resolvedBy:id,name',
@@ -75,6 +76,8 @@ class PendencyController extends Controller
         $owner = $request->get('responsavel', 'todos');
         if ($owner === 'meus') {
             $query->forUser((int) Auth::id()); // cobro OU devo entregar
+        } elseif ($owner === 'pedi') {
+            $query->where('requested_by', Auth::id());
         } elseif (ctype_digit((string) $owner)) {
             $query->where('owner_id', (int) $owner);
         }
@@ -167,9 +170,25 @@ class PendencyController extends Controller
 
     public function nudge(Request $request, Pendency $pendency)
     {
-        $this->service->nudge($pendency);
+        abort_unless($pendency->canChase((int) Auth::id(), $this->isAdmin()), 403, 'Só quem cobra registra a cobrança.');
+        $data = $request->validate(['channel' => ['required', Rule::in(array_keys(\App\Models\PendencyNudge::$channels))]]);
 
-        return $this->done($request, 'Cobrança registrada.');
+        $this->service->nudge($pendency, (int) Auth::id(), $data['channel']);
+
+        return $this->done($request, $data['channel'] === 'lembrete' ? 'Lembrete enviado.' : 'Cobrança registrada.');
+    }
+
+    public function remind(Request $request, Pendency $pendency)
+    {
+        abort_unless($pendency->canRemindOwner((int) Auth::id(), $this->isAdmin()), 403);
+        $this->service->remindOwner($pendency, (int) Auth::id());
+
+        return $this->done($request, 'Lembrete enviado pra ' . ($pendency->owner?->name ?? 'quem cobra') . '.');
+    }
+
+    private function isAdmin(): bool
+    {
+        return in_array(app()->has('currentOrgRole') ? app('currentOrgRole') : null, ['owner', 'admin'], true);
     }
 
     public function resolve(Request $request, Pendency $pendency)
@@ -224,6 +243,7 @@ class PendencyController extends Controller
             'owed_user_id'    => 'nullable|exists:pgsql.users,id',
             'owed_party'      => 'nullable|string|max:255',
             'owner_id'        => 'nullable|exists:pgsql.users,id',
+            'requested_by'    => 'nullable|exists:pgsql.users,id',
             'due_date'        => 'nullable|date',
         ];
     }

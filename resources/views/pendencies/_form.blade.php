@@ -105,13 +105,25 @@
         </div>
     </div>
 
-    <div>
-        <label style="{{ $lbl }}">Quem cobra</label>
-        <select name="owner_id" style="{{ $inp }}">
-            @foreach($users as $u)
-                <option value="{{ $u->id }}" @selected(($pendency->owner_id ?? auth()->id()) == $u->id)>{{ $u->name }}</option>
-            @endforeach
-        </select>
+    {{-- 3 papéis: quem precisa (pediu) · quem deve (acima) · quem cobra.
+         Ex.: Marlon precisa, cliente deve, Alisson cobra. --}}
+    <div class="grid grid-cols-2 gap-3">
+        <div>
+            <label style="{{ $lbl }}">Quem precisa</label>
+            <select name="requested_by" style="{{ $inp }}">
+                @foreach($users as $u)
+                    <option value="{{ $u->id }}" @selected(($pendency->requested_by ?? auth()->id()) == $u->id)>{{ $u->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label style="{{ $lbl }}">Quem cobra</label>
+            <select name="owner_id" style="{{ $inp }}">
+                @foreach($users as $u)
+                    <option value="{{ $u->id }}" @selected(($pendency->owner_id ?? auth()->id()) == $u->id)>{{ $u->name }}</option>
+                @endforeach
+            </select>
+        </div>
     </div>
 
     <div>

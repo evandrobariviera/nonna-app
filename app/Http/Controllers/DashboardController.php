@@ -226,6 +226,19 @@ class DashboardController extends Controller
             ->get();
         $pendenciesToDeliver = $myPendencies->filter->isOwedBy((int) $userId)->values();
         $pendenciesToChase   = $myPendencies->reject->isOwedBy((int) $userId)->values();
+        // Aguardando pra mim: eu pedi, mas outra pessoa cobra/entrega (Marlon esperando o
+        // que o Alisson cobra do cliente).
+        $pendenciesWaiting = Pendency::open()
+            ->where('requested_by', (int) $userId)
+            ->where(fn ($q) => $q->whereNull('owner_id')->orWhere('owner_id', '!=', (int) $userId))
+            ->where(fn ($q) => $q->where('owed_by', '!=', 'agencia')->orWhereNull('owed_user_id')->orWhere('owed_user_id', '!=', (int) $userId))
+            ->where(fn ($q) => $q->whereNull('client_id')->orWhereHas('client', fn ($c) => $c->where('status', '!=', 'inactive')))
+            ->with(['client:id,company_name,nickname', 'pendable', 'owedContact:id,name', 'owedUser:id,name', 'owner:id,name'])
+            ->orderByRaw('due_date IS NULL')
+            ->orderBy('due_date')
+            ->orderBy('created_at')
+            ->limit(30)
+            ->get();
 
         // "Seu foco" — último resumo de atenção já gerado (AttentionDigestService, 2x/dia
         // pelo Scheduler). Só leitura: a Dashboard nunca chama a IA.
@@ -434,7 +447,7 @@ class DashboardController extends Controller
             'creativosProntos', 'creativosProntosTasks', 'budgetsNeedingAddition', 'campaignsNeedingOptimization',
             'myNotifications',
             'mode', 'show', 'myMeetingsToday', 'myOverdueTasks', 'myBlockers', 'attentionDigest',
-            'pendenciesToDeliver', 'pendenciesToChase',
+            'pendenciesToDeliver', 'pendenciesToChase', 'pendenciesWaiting',
             'availableModes', 'subjectRoles', 'subjectIsAdmin', 'viewingAs', 'teamMembers',
             'myExecutorSprintDone', 'myPointsTotal', 'myPointsDone',
             'weekDays', 'weekOffset', 'weekBeforeCount', 'weekAfterCount', 'weekNoDateCount',

@@ -91,13 +91,23 @@
                         <input x-show="p.owed_by === 'terceiro'" type="text" name="owed_party" maxlength="255" x-model="p.owed_party" :disabled="p.owed_by !== 'terceiro'"
                                placeholder="Ex.: Gráfica, fornecedor, Meta…" style="{{ $inp }}">
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Quem cobra</label>
-                        <select name="owner_id" x-model="p.owner_id" style="{{ $inp }}">
-                            @foreach($users as $u)
-                                <option value="{{ $u->id }}">{{ $u->name }}</option>
-                            @endforeach
-                        </select>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Quem precisa</label>
+                            <select name="requested_by" x-model="p.requested_by" style="{{ $inp }}">
+                                @foreach($users as $u)
+                                    <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Quem cobra</label>
+                            <select name="owner_id" x-model="p.owner_id" style="{{ $inp }}">
+                                @foreach($users as $u)
+                                    <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Detalhes (opcional)</label>
@@ -127,8 +137,9 @@
         </select>
 
         <select name="responsavel" class="filter-select">
-            <option value="todos" @selected(request('responsavel', 'todos') === 'todos')>Quem cobra: todos</option>
+            <option value="todos" @selected(request('responsavel', 'todos') === 'todos')>Pessoas: todas</option>
             <option value="meus" @selected(request('responsavel') === 'meus')>Só as minhas (cobro ou entrego)</option>
+            <option value="pedi" @selected(request('responsavel') === 'pedi')>Só as que eu pedi</option>
             @foreach($users as $u)
                 <option value="{{ $u->id }}" @selected(request('responsavel') == $u->id)>{{ $u->name }}</option>
             @endforeach

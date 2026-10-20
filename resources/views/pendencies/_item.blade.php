@@ -44,6 +44,10 @@
                         {{ \App\Models\Pendency::$owedBy[$p->owed_by]['label'] ?? $p->owed_by }}
                     </span>
                 @endif
+                @if($p->requester)
+                    <span title="Quem precisa da entrega">pediu: <strong style="color:var(--muted2)">{{ \Illuminate\Support\Str::of($p->requester->name)->explode(' ')->first() }}</strong></span>
+                    <span style="color:var(--border2)">·</span>
+                @endif
                 <span>deve: <strong style="color:var(--muted2)">{{ $p->owedName() }}</strong></span>
                 @if($p->owner)
                     <span style="color:var(--border2)">·</span>
@@ -57,10 +61,20 @@
                 @endif
             </div>
 
-            @if($open && $p->nudge_count > 0)
-                <p class="text-xs mt-1" style="color:var(--orange)">
-                    Última cobrança {{ $p->last_nudged_at?->diffForHumans() }}
-                </p>
+            @if($p->nudge_count > 0)
+                @php $history = $p->relationLoaded('nudges') ? $p->nudges : collect(); @endphp
+                <div class="text-xs mt-1" x-data="{ hist: false }">
+                    <span style="color:var(--orange)">Última cobrança {{ $p->last_nudged_at?->diffForHumans() }}</span>
+                    @if($history->isNotEmpty())
+                        <button type="button" class="ml-1 underline" style="color:var(--muted2)" @click="hist = !hist"
+                                x-text="hist ? 'ocultar histórico' : 'ver histórico'"></button>
+                        <ul x-show="hist" x-cloak class="mt-1 flex flex-col gap-0.5" style="color:var(--muted2)">
+                            @foreach($history as $n)
+                                <li>{{ $n->user?->name ?? 'Alguém' }} cobrou por {{ $n->channelLabel() }} · {{ $n->created_at->format('d/m H:i') }}</li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
             @endif
 
             @if(!$open)
@@ -84,11 +98,64 @@
                     <button type="button" class="btn btn-xs btn-ghost" style="color:var(--green); border-color:rgba(16,185,129,.35)" @click="resolving = !resolving">
                         ✓ Resolver
                     </button>
-                    <form method="POST" action="{{ route('pendencies.nudge', $p) }}">
-                        @csrf @method('PATCH')
-                        @if(!empty($returnTo))<input type="hidden" name="return_to" value="{{ $returnTo }}">@endif
-                        <button type="submit" class="btn btn-xs btn-ghost" title="Registrar que você cobrou (WhatsApp, e-mail, ligação…)">Cobrei</button>
-                    </form>
+                    {{-- Cobrança — só quem cobra (ou admin). O botão muda com quem deve:
+                         cliente c/ WhatsApp → abre a conversa com a mensagem pronta e registra;
+                         alguém do time → "Lembrar" avisa a pessoa no sino; resto → registrar
+                         como cobrou. Quem precisa (ou admin) pode "Lembrar" quem cobra. --}}
+                    @php
+                        $meId    = (int) auth()->id();
+                        $isAdm   = (bool) ($isOrgAdmin ?? false);
+                        $waUrl   = $p->whatsappUrl(auth()->user()->name);
+                        $owedMe  = $p->isOwedBy($meId);
+                    @endphp
+                    @if($p->canChase($meId, $isAdm))
+                        @if($waUrl)
+                            <form method="POST" action="{{ route('pendencies.nudge', $p) }}" @submit="window.open(@js($waUrl), '_blank')">
+                                @csrf @method('PATCH')
+                                @if(!empty($returnTo))<input type="hidden" name="return_to" value="{{ $returnTo }}">@endif
+                                <input type="hidden" name="channel" value="whatsapp">
+                                <button type="submit" class="btn btn-xs btn-ghost" style="color:#16a34a; border-color:rgba(22,163,74,.35)"
+                                        title="Abre o WhatsApp de {{ $p->owedContact->name }} com a mensagem pronta e registra a cobrança">Cobrar no WhatsApp</button>
+                            </form>
+                        @endif
+                        @if($p->owed_by === 'agencia' && $p->owed_user_id && !$owedMe)
+                            <form method="POST" action="{{ route('pendencies.nudge', $p) }}">
+                                @csrf @method('PATCH')
+                                @if(!empty($returnTo))<input type="hidden" name="return_to" value="{{ $returnTo }}">@endif
+                                <input type="hidden" name="channel" value="lembrete">
+                                <button type="submit" class="btn btn-xs btn-ghost" title="Manda um aviso no sino de {{ $p->owedName() }}">
+                                    Lembrar {{ \Illuminate\Support\Str::of($p->owedName())->explode(' ')->first() }}
+                                </button>
+                            </form>
+                        @elseif($p->owed_by !== 'agencia')
+                            <div class="relative" x-data="{ chan: false }">
+                                <button type="button" class="btn btn-xs btn-ghost" @click="chan = !chan" title="Anotar que você cobrou e por onde">
+                                    {{ $waUrl ? 'Cobrei por outro meio' : 'Registrar cobrança' }}
+                                </button>
+                                <div x-show="chan" @click.outside="chan = false" x-cloak class="absolute left-0 mt-1 z-20 py-1 text-xs"
+                                     style="min-width:150px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
+                                    <p class="px-3 py-1 font-semibold" style="color:var(--muted)">Cobrei por…</p>
+                                    @foreach(\Illuminate\Support\Arr::except(\App\Models\PendencyNudge::$channels, 'lembrete') as $key => $label)
+                                        <form method="POST" action="{{ route('pendencies.nudge', $p) }}">
+                                            @csrf @method('PATCH')
+                                            @if(!empty($returnTo))<input type="hidden" name="return_to" value="{{ $returnTo }}">@endif
+                                            <input type="hidden" name="channel" value="{{ $key }}">
+                                            <button type="submit" class="w-full text-left px-3 py-1.5" style="color:var(--muted2)"
+                                                    onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">{{ ucfirst($label) }}</button>
+                                        </form>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    @elseif($p->canRemindOwner($meId, $isAdm))
+                        <form method="POST" action="{{ route('pendencies.remind', $p) }}">
+                            @csrf
+                            @if(!empty($returnTo))<input type="hidden" name="return_to" value="{{ $returnTo }}">@endif
+                            <button type="submit" class="btn btn-xs btn-ghost" title="Manda um aviso no sino de {{ $p->owner->name }}, que é quem cobra">
+                                Lembrar {{ \Illuminate\Support\Str::of($p->owner->name)->explode(' ')->first() }}
+                            </button>
+                        </form>
+                    @endif
                 @else
                     <form method="POST" action="{{ route('pendencies.reopen', $p) }}">
                         @csrf @method('PATCH')
@@ -105,7 +172,7 @@
                         <button type="button" class="w-full text-left px-3 py-2" style="color:var(--muted2)"
                                 onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'"
                                 @if($showOrigin)
-                                    @click="menu = false; $dispatch('edit-pendency', @js($p->only(['id', 'client_id', 'title', 'description', 'kind', 'owed_by', 'owed_contact_id', 'owed_user_id', 'owed_party', 'owner_id']) + ['due_date' => $p->due_date?->format('Y-m-d')]))"
+                                    @click="menu = false; $dispatch('edit-pendency', @js($p->only(['id', 'client_id', 'title', 'description', 'kind', 'owed_by', 'owed_contact_id', 'owed_user_id', 'owed_party', 'owner_id', 'requested_by']) + ['due_date' => $p->due_date?->format('Y-m-d')]))"
                                 @else
                                     @click="editing = true; menu = false"
                                 @endif

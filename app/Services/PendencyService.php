@@ -35,6 +35,7 @@ class PendencyService
             'pendable_id'   => $pendable?->getKey(),
             'client_id'     => $pendable?->client_id ?? ($data['client_id'] ?? null),
             'owner_id'      => $data['owner_id'] ?? $userId,
+            'requested_by'  => $data['requested_by'] ?? $userId,
             'status'        => 'aberta',
             'created_by'    => $userId,
         ]));
@@ -63,13 +64,49 @@ class PendencyService
     }
 
     /** "Cobrei" — registra mais uma cobrança feita (contador + data da última). */
-    public function nudge(Pendency $pendency): void
+    /**
+     * Registra uma cobrança (quem, canal, quando). Canal "lembrete" = cobrar alguém do
+     * time: o próprio App avisa a pessoa no sino.
+     */
+    public function nudge(Pendency $pendency, int $userId, string $channel): void
     {
+        $pendency->nudges()->create(['user_id' => $userId, 'channel' => $channel]);
+
         $pendency->forceFill([
             'status'         => 'cobrada',
             'nudge_count'    => $pendency->nudge_count + 1,
             'last_nudged_at' => now(),
         ])->save();
+
+        if ($channel === 'lembrete' && $pendency->owed_by === 'agencia' && $pendency->owed_user_id
+            && (int) $pendency->owed_user_id !== $userId && ($owed = User::find($pendency->owed_user_id))) {
+            $this->notifications->notifyUsers(
+                collect([$owed]),
+                Pendency::NOTIFICATION_KIND,
+                (User::find($userId)?->name ?? 'Alguém') . ' está cobrando: ' . $pendency->title,
+                $this->bodyFor($pendency),
+                $this->linkFor($pendency),
+                $pendency,
+                $pendency->organization_id,
+            );
+        }
+    }
+
+    /** "Lembrar" — quem precisa apressa quem cobra (aviso no sino; não conta como cobrança). */
+    public function remindOwner(Pendency $pendency, int $userId): void
+    {
+        if (!$pendency->owner_id || (int) $pendency->owner_id === $userId || !($owner = User::find($pendency->owner_id))) {
+            return;
+        }
+        $this->notifications->notifyUsers(
+            collect([$owner]),
+            Pendency::NOTIFICATION_KIND,
+            (User::find($userId)?->name ?? 'Alguém') . ' está esperando: ' . $pendency->title,
+            $this->bodyFor($pendency) . ($pendency->nudge_count ? ' · cobrada ' . $pendency->nudge_count . 'x' : ' · ainda não cobrada'),
+            $this->linkFor($pendency),
+            $pendency,
+            $pendency->organization_id,
+        );
     }
 
     public function resolve(Pendency $pendency, int $userId, ?string $note = null): void
@@ -83,11 +120,13 @@ class PendencyService
 
         $this->closeNotifications($pendency);
 
-        // Quem cobra fica sabendo que chegou (se não foi ele mesmo que marcou).
-        if ($pendency->owner_id && (int) $pendency->owner_id !== $userId && ($owner = User::find($pendency->owner_id))) {
+        // Quem cobra e quem precisa ficam sabendo que chegou — menos quem marcou.
+        $notify = User::whereIn('id', collect([$pendency->owner_id, $pendency->requested_by])->filter()
+            ->map(fn ($id) => (int) $id)->reject(fn ($id) => $id === $userId)->unique())->get();
+        if ($notify->isNotEmpty()) {
             $by = User::find($userId)?->name ?? 'Alguém';
             $this->notifications->notifyUsers(
-                collect([$owner]),
+                $notify,
                 Pendency::NOTIFICATION_KIND,
                 'Pendência resolvida: ' . $pendency->title,
                 $by . ' marcou como resolvida' . ($note ? ' — ' . $note : '.'),
@@ -96,6 +135,14 @@ class PendencyService
                 $pendency->organization_id,
             );
         }
+    }
+
+    private function bodyFor(Pendency $pendency): string
+    {
+        $client = $pendency->client?->displayName();
+        $due    = $pendency->due_date ? ' · prazo ' . $pendency->due_date->format('d/m') : '';
+
+        return trim(($client ? $client . ' · ' : '') . 'deve: ' . $pendency->owedName() . $due);
     }
 
     public function cancel(Pendency $pendency, int $userId): void
@@ -118,9 +165,7 @@ class PendencyService
     /** Avisa quem passou a cobrar e/ou a dever a pendência — nunca quem fez a ação. */
     private function notifyAssigned(Pendency $pendency, int $actorId, bool $notifyOwner, bool $notifyOwed): void
     {
-        $client = $pendency->client?->displayName();
-        $due    = $pendency->due_date ? ' · prazo ' . $pendency->due_date->format('d/m') : '';
-        $body   = trim(($client ? $client . ' · ' : '') . 'deve: ' . $pendency->owedName() . $due);
+        $body = $this->bodyFor($pendency);
 
         $send = function (?int $userId, string $title) use ($pendency, $actorId, $body) {
             if (!$userId || $userId === $actorId || !($user = User::find($userId))) {
@@ -175,7 +220,7 @@ class PendencyService
     public function panelData(Model $pendable): array
     {
         $pendencies = $pendable->pendencies()
-            ->with(['owedContact:id,name', 'owedUser:id,name,avatar_path,avatar_disk', 'owner:id,name,avatar_path,avatar_disk', 'resolvedBy:id,name'])
+            ->with(['owedContact:id,name,whatsapp,phone', 'owedUser:id,name,avatar_path,avatar_disk', 'owner:id,name,avatar_path,avatar_disk', 'requester:id,name', 'resolvedBy:id,name', 'nudges.user:id,name'])
             ->orderByRaw("CASE WHEN status IN ('aberta','cobrada') THEN 0 ELSE 1 END")
             ->orderByRaw('due_date IS NULL')
             ->orderBy('due_date')
