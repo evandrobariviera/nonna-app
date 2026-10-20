@@ -51,6 +51,7 @@ class InternalNotification extends Model
         'modulo_solicitado'        => 'megaphone',
         'meeting_transcribed'      => 'mic',
         'meeting_transcribe_failed' => 'mic',
+        'pendencia'                => 'hourglass',
         self::KIND_ATA             => 'book-open',
     ];
 

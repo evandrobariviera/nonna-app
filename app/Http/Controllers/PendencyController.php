@@ -71,7 +71,7 @@ class PendencyController extends Controller
 
         $owner = $request->get('responsavel', 'todos');
         if ($owner === 'meus') {
-            $query->where('owner_id', Auth::id());
+            $query->forUser((int) Auth::id()); // cobro OU devo entregar
         } elseif (ctype_digit((string) $owner)) {
             $query->where('owner_id', (int) $owner);
         }
@@ -157,7 +157,7 @@ class PendencyController extends Controller
     public function update(Request $request, Pendency $pendency)
     {
         $data = $request->validateWithBag('pendency', $this->rules());
-        $this->service->update($pendency, $data);
+        $this->service->update($pendency, $data, Auth::id());
 
         return $this->done($request, 'Pendência atualizada.');
     }
@@ -193,7 +193,7 @@ class PendencyController extends Controller
 
     public function destroy(Request $request, Pendency $pendency)
     {
-        $pendency->delete();
+        $this->service->delete($pendency);
 
         return $this->done($request, 'Pendência excluída.');
     }

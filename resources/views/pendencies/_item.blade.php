@@ -3,14 +3,7 @@
 @php
     $open  = $p->isOpen();
     $color = $p->agingColor();
-    if ($open && $p->due_date) {
-        $diff = (int) today()->diffInDays($p->due_date, false);
-        $when = $diff < 0 ? 'venceu há ' . abs($diff) . ' dia' . (abs($diff) > 1 ? 's' : '')
-              : ($diff === 0 ? 'vence hoje' : 'vence ' . $p->due_date->format('d/m'));
-    } elseif ($open) {
-        $days = $p->daysOpen();
-        $when = $days === 0 ? 'aberta hoje' : 'aberta há ' . $days . ' dia' . ($days > 1 ? 's' : '');
-    }
+    $when  = $open ? $p->whenText() : null;
     $origin = $showOrigin ? $p->originLink() : null;
 @endphp
 

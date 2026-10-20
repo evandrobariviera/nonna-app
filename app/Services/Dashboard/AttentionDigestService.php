@@ -6,6 +6,7 @@ use App\Models\AiAgent;
 use App\Models\AttentionDigest;
 use App\Models\InternalNotification;
 use App\Models\Meeting;
+use App\Models\Pendency;
 use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\User;
@@ -175,6 +176,28 @@ class AttentionDigestService
         $overdueItems  = $overdue->take(self::LIST_LIMIT)->values()->map($taskRow('X', 'atrasada'))->all();
         $dueTodayItems = $dueToday->take(self::LIST_LIMIT)->values()->map($taskRow('H', 'hoje'))->all();
 
+
+        // 5b. Pendências vencidas ou vencendo hoje que a pessoa cobra ou deve entregar
+        // (Pendency::scopeForUser). Entram depois das atrasadas: atrasada é trabalho dela
+        // parado; pendência é o trabalho esperando algo que ela precisa entregar/cobrar.
+        $pendencies = Pendency::open()
+            ->forUser($userId)
+            ->whereNotNull('due_date')
+            ->whereDate('due_date', '<=', today())
+            ->where(fn ($q) => $q->whereNull('client_id')->orWhereHas('client', fn ($c) => $c->where('status', '!=', 'inactive')))
+            ->with(['client', 'pendable', 'owedContact:id,name', 'owedUser:id,name'])
+            ->orderBy('due_date')
+            ->get();
+        $pendencyItems = $pendencies->take(self::LIST_LIMIT)->values()->map(fn ($p, $i) => [
+            'ref'        => $ref('D', $i, ($p->originLink()['url'] ?? route('pendencies.index')) . '#pendencias', 'pendencia_vencida'),
+            'pendencia'  => $p->title,
+            'cliente'    => $client($p),
+            'papel'      => $p->isOwedBy($userId) ? 'entregar' : 'cobrar',
+            'deve'       => $p->isOwedBy($userId) ? 'você' : $p->owedName(),
+            'prazo'      => $p->due_date->format('d/m'),
+            'vencida_ha_dias' => (int) $p->due_date->diffInDays(today()),
+            'ja_cobrada_vezes' => $p->nudge_count,
+        ])->all();
         // 6. Reuniões de hoje que ainda não passaram
         $meetings = Meeting::where(fn ($q) => $q->where('organized_by', $userId)->orWhereHas('participants', fn ($p) => $p->where('users.id', $userId)))
             ->whereNotIn('status', ['realizada', 'cancelada'])
@@ -194,7 +217,7 @@ class AttentionDigestService
         // 7. Outras pendências (notificações novas que não são ATA)
         $others = InternalNotification::where('user_id', $userId)
             ->where('status', 'novo')
-            ->where(fn ($q) => $q->whereNull('kind')->orWhere('kind', '!=', InternalNotification::KIND_ATA))
+            ->where(fn ($q) => $q->whereNull('kind')->orWhereNotIn('kind', [InternalNotification::KIND_ATA, Pendency::NOTIFICATION_KIND]))
             ->orderBy('generated_at')
             ->get();
         $otherItems = $others->take(self::LIST_LIMIT)->values()->map(fn ($n, $i) => [
@@ -212,6 +235,7 @@ class AttentionDigestService
             'atas_para_ler'          => ['total' => $atas->count(), 'itens' => $atasItems],
             'revisao_interna_para_revisar' => ['total' => $reviews->count(), 'itens' => $reviewItems],
             'atrasadas'              => ['total' => $overdue->count(), 'itens' => $overdueItems],
+            'pendencias_vencidas'    => ['total' => $pendencies->count(), 'itens' => $pendencyItems],
             'vencem_hoje'            => ['total' => $dueToday->count(), 'itens' => $dueTodayItems],
             'reunioes_hoje'          => ['total' => $meetings->count(), 'itens' => $meetingItems],
             'outras_pendencias'      => ['total' => $others->count(), 'itens' => $otherItems],
@@ -222,7 +246,7 @@ class AttentionDigestService
 
     private function isEmpty(array $items): bool
     {
-        foreach (['travas', 'atas_para_ler', 'revisao_interna_para_revisar', 'atrasadas', 'vencem_hoje', 'reunioes_hoje', 'outras_pendencias'] as $k) {
+        foreach (['travas', 'atas_para_ler', 'revisao_interna_para_revisar', 'atrasadas', 'pendencias_vencidas', 'vencem_hoje', 'reunioes_hoje', 'outras_pendencias'] as $k) {
             if (($items[$k]['total'] ?? 0) > 0) {
                 return false;
             }
@@ -238,11 +262,12 @@ class AttentionDigestService
             'atas_para_ler' => fn ($r) => 'ATA liberada pra Revisão Interna — confirme "Li a ATA".',
             'revisao_interna_para_revisar' => fn ($r) => 'Esperando sua revisão' . ($r['feita_por'] ? " (feita por {$r['feita_por']})." : '.'),
             'atrasadas'     => fn ($r) => "Atrasada — aprovação era {$r['data_aprovacao']}.",
+            'pendencias_vencidas' => fn ($r) => ($r['papel'] === 'entregar' ? 'Esperam isso de você' : 'Cobrar ' . $r['deve']) . ' — prazo era ' . $r['prazo'] . '.',
             'vencem_hoje'   => fn ($r) => 'Data de aprovação é hoje.',
             'reunioes_hoje' => fn ($r) => "Reunião às {$r['horario']}.",
             'outras_pendencias' => fn ($r) => $r['texto'] ?? 'Pendência aberta.',
         ];
-        $title = fn ($r) => trim(($r['tarefa'] ?? $r['reuniao'] ?? $r['aviso'] ?? '') . (!empty($r['cliente']) ? ' — ' . $r['cliente'] : ''));
+        $title = fn ($r) => trim(($r['tarefa'] ?? $r['reuniao'] ?? $r['pendencia'] ?? $r['aviso'] ?? '') . (!empty($r['cliente']) ? ' — ' . $r['cliente'] : ''));
 
         $focus = [];
         foreach ($why as $group => $fn) {

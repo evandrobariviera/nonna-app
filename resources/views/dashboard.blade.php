@@ -100,7 +100,8 @@
             'atrasada'  => ['label' => 'Atrasada',        'color' => 'var(--red)'],
             'hoje'      => ['label' => 'Hoje',            'color' => 'var(--orange)'],
             'reuniao'   => ['label' => 'Reunião',         'color' => '#2E90FA'],
-            'pendencia' => ['label' => 'Pendência',       'color' => 'var(--muted)'],
+            'pendencia' => ['label' => 'Aviso',           'color' => 'var(--muted)'],
+            'pendencia_vencida' => ['label' => 'Pendência', 'color' => 'var(--orange)'],
         ];
     @endphp
     <div class="card px-5 py-4 mb-4" style="border-left:4px solid var(--purple)"
@@ -325,6 +326,50 @@
                             <span class="ml-auto flex-shrink-0" style="color:var(--muted)">com {{ $task->executor->name }}</span>
                         @endif
                     </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    {{-- ── SUAS PENDÊNCIAS — fixa em qualquer modo: o que eu devo entregar (o time espera
+         de mim) e o que eu cobro (cliente/terceiro/time). Some sem nada. Ver Pendency. ── --}}
+    @if($pendenciesToDeliver->isNotEmpty() || $pendenciesToChase->isNotEmpty())
+        <div class="card px-5 py-4 mb-6" style="border-left:4px solid var(--orange)">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-bold flex items-center gap-1.5" style="color:var(--text)">
+                    <x-icon name="hourglass" size="14" /> Suas pendências
+                </h3>
+                <a href="{{ route('pendencies.index', ['responsavel' => 'meus']) }}" class="text-xs font-semibold" style="color:var(--purple)">Ver na Central →</a>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2">
+                @foreach([
+                    ['title' => 'Para entregar', 'hint' => 'alguém do time espera isso de você', 'items' => $pendenciesToDeliver, 'empty' => 'Nada esperando por você.'],
+                    ['title' => 'Para cobrar', 'hint' => 'você é quem vai atrás', 'items' => $pendenciesToChase, 'empty' => 'Nada pra cobrar.'],
+                ] as $col)
+                    <div>
+                        <p class="text-xs font-bold mb-2" style="color:var(--text)">
+                            {{ $col['title'] }} ({{ $col['items']->count() }})
+                            <span class="font-normal" style="color:var(--muted)">· {{ $col['hint'] }}</span>
+                        </p>
+                        <div class="flex flex-col gap-1.5" style="max-height:220px; overflow-y:auto">
+                            @forelse($col['items'] as $p)
+                                @php $origin = $p->originLink(); @endphp
+                                <a href="{{ $origin ? $origin['url'] . '#pendencias' : route('pendencies.index', ['client_id' => $p->client_id]) }}"
+                                   class="flex items-center gap-2 px-3 py-1.5 text-xs transition-colors"
+                                   style="background:var(--s2); border-left:2px solid {{ $p->agingColor() }}"
+                                   onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+                                    <span class="font-mono flex-shrink-0 font-semibold" style="color:{{ $p->agingColor() }}; min-width:96px">{{ $p->whenText() }}</span>
+                                    <span class="font-semibold truncate" style="color:var(--text)">{{ $p->title }}</span>
+                                    <span class="truncate" style="color:var(--muted)">{{ $p->client?->displayName() }}</span>
+                                    @if($col['title'] === 'Para cobrar')
+                                        <span class="ml-auto flex-shrink-0" style="color:var(--muted)">deve: {{ $p->owedName() }}</span>
+                                    @endif
+                                </a>
+                            @empty
+                                <p class="text-xs" style="color:var(--muted)">{{ $col['empty'] }}</p>
+                            @endforelse
+                        </div>
+                    </div>
                 @endforeach
             </div>
         </div>

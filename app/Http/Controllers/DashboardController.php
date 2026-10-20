@@ -11,6 +11,7 @@ use App\Models\LiteraryQuote;
 use App\Models\MacroPlan;
 use App\Models\Meeting;
 use App\Models\OrganizationUser;
+use App\Models\Pendency;
 use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\TaskApprovalRound;
@@ -211,6 +212,20 @@ class DashboardController extends Controller
         // ── Travas (fixa, aparece em qualquer modo, acima do "Hoje") ──
         // Tarefas marcadas como Trava (TaskController::toggleBlocker) — ver Task::scopeBlockersFor.
         $myBlockers = Task::blockersFor((int) $userId)->with(['client', 'executor'])->get();
+
+        // ── Suas pendências (fixa, qualquer modo) — abertas que a pessoa cobra ou deve
+        // entregar (Pendency::scopeForUser), vencidas/prazo mais perto no topo. ──
+        $myPendencies = Pendency::open()
+            ->forUser((int) $userId)
+            ->where(fn ($q) => $q->whereNull('client_id')->orWhereHas('client', fn ($c) => $c->where('status', '!=', 'inactive')))
+            ->with(['client:id,company_name,nickname', 'pendable', 'owedContact:id,name', 'owedUser:id,name', 'owner:id,name'])
+            ->orderByRaw('due_date IS NULL')
+            ->orderBy('due_date')
+            ->orderBy('created_at')
+            ->limit(40)
+            ->get();
+        $pendenciesToDeliver = $myPendencies->filter->isOwedBy((int) $userId)->values();
+        $pendenciesToChase   = $myPendencies->reject->isOwedBy((int) $userId)->values();
 
         // "Seu foco" — último resumo de atenção já gerado (AttentionDigestService, 2x/dia
         // pelo Scheduler). Só leitura: a Dashboard nunca chama a IA.
@@ -419,6 +434,7 @@ class DashboardController extends Controller
             'creativosProntos', 'creativosProntosTasks', 'budgetsNeedingAddition', 'campaignsNeedingOptimization',
             'myNotifications',
             'mode', 'show', 'myMeetingsToday', 'myOverdueTasks', 'myBlockers', 'attentionDigest',
+            'pendenciesToDeliver', 'pendenciesToChase',
             'availableModes', 'subjectRoles', 'subjectIsAdmin', 'viewingAs', 'teamMembers',
             'myExecutorSprintDone', 'myPointsTotal', 'myPointsDone',
             'weekDays', 'weekOffset', 'weekBeforeCount', 'weekAfterCount', 'weekNoDateCount',

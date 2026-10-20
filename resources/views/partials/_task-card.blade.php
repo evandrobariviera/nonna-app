@@ -28,6 +28,7 @@
                     <span style="color:#dc2626">⚑ </span>
                 @endif
                 {{ $task->title }}
+                <x-pendency-badge :task="$task" class="ml-1" />
             </a>
 
             <div class="flex flex-wrap items-center gap-1.5 mt-1.5">

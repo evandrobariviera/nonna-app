@@ -56,6 +56,7 @@
                         <span style="color:#dc2626; margin-right:3px; display:inline-flex; vertical-align:-2px"><x-icon name="flag" size="12" /></span>
                     @endif
                     {{ $task->title }}
+                    <x-pendency-badge :task="$task" class="ml-1" />
                 </a>
                 @if($task->project)
                     <span style="font-size:11px; color:var(--muted)">

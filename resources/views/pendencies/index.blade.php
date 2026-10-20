@@ -122,7 +122,7 @@
 
         <select name="responsavel" class="filter-select">
             <option value="todos" @selected(request('responsavel', 'todos') === 'todos')>Quem cobra: todos</option>
-            <option value="meus" @selected(request('responsavel') === 'meus')>Só as que eu cobro</option>
+            <option value="meus" @selected(request('responsavel') === 'meus')>Só as minhas (cobro ou entrego)</option>
             @foreach($users as $u)
                 <option value="{{ $u->id }}" @selected(request('responsavel') == $u->id)>{{ $u->name }}</option>
             @endforeach

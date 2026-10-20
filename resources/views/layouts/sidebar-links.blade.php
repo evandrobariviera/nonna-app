@@ -245,14 +245,15 @@
     @endif
 </a>
 
-{{-- Pendências — contador = as abertas que EU cobro (vermelho se alguma venceu) --}}
+{{-- Pendências — contador = as abertas que EU cobro ou EU devo entregar (vermelho se
+     alguma venceu). Clicar abre a Central já filtrada nas minhas. --}}
 @php
     $_myPendencies = once(fn () => \App\Models\Pendency::open()
-        ->where('owner_id', auth()->id())
+        ->forUser((int) auth()->id())
         ->selectRaw('count(*) as total, count(*) filter (where due_date < current_date) as overdue')
         ->first());
 @endphp
-<a href="{{ route('pendencies.index') }}"
+<a href="{{ route('pendencies.index', ($_myPendencies->total ?? 0) > 0 ? ['responsavel' => 'meus'] : []) }}"
    class="nav-group-trigger {{ request()->routeIs('pendencies.*') ? 'open' : '' }}"
    style="{{ request()->routeIs('pendencies.*') ? 'color:var(--purple);' : '' }}">
     <span class="flex items-center gap-3">
@@ -262,7 +263,7 @@
     @if(($_myPendencies->total ?? 0) > 0)
         @php $_pendOver = ($_myPendencies->overdue ?? 0) > 0; @endphp
         <span class="text-xs px-1.5 py-px rounded-full font-semibold"
-              title="{{ $_myPendencies->total }} que você cobra{{ $_pendOver ? ', ' . $_myPendencies->overdue . ' vencida(s)' : '' }}"
+              title="{{ $_myPendencies->total }} suas (cobra ou entrega){{ $_pendOver ? ', ' . $_myPendencies->overdue . ' vencida(s)' : '' }}"
               style="background:{{ $_pendOver ? 'rgba(220,38,38,.12)' : 'var(--s3)' }}; color:{{ $_pendOver ? 'var(--red)' : 'var(--muted)' }}; border:1px solid {{ $_pendOver ? 'rgba(220,38,38,.3)' : 'var(--border2)' }}">
             {{ $_myPendencies->total }}
         </span>

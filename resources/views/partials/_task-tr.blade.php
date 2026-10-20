@@ -63,6 +63,7 @@
                         <span style="color:#dc2626; margin-right:3px; display:inline-flex; vertical-align:-2px"><x-icon name="flag" size="12" /></span>
                     @endif
                     {{ $task->title }}
+                    <x-pendency-badge :task="$task" class="ml-1" />
                 </a>
                 @if($task->is_ticket && $task->requester_name)
                     <span style="font-size:11px; color:var(--muted)">

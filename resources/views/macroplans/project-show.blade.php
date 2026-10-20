@@ -284,7 +284,7 @@
                         @php $late = $t->due_date && $t->due_date->lt($today) && $statusKey !== 'concluido'; @endphp
                         <a href="{{ route('tasks.show', $t) }}" class="block px-5 py-2 transition-colors" style="border-top:1px solid var(--border2)"
                            onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
-                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $t->title }}</p>
+                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $t->title }} <x-pendency-badge :task="$t" class="ml-1" /></p>
                             <p class="text-xs mt-0.5 flex items-center gap-2" style="color:var(--muted); font-size:11px">
                                 <span class="truncate">{{ $t->executors->map(fn ($u) => \Illuminate\Support\Str::before($u->name, ' '))->join(', ') ?: 'Sem executor' }}</span>
                                 @if($t->due_date)
@@ -665,6 +665,7 @@
                                         <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="30" />
                                         <p class="text-xs font-semibold leading-snug min-w-0" style="color:var(--text)">
                                             {{ $task->title }}
+                                            <x-pendency-badge :task="$task" class="ml-1" />
                                         </p>
                                     </div>
                                     <button @click="editTaskId = '{{ $task->id }}'" class="btn btn-ghost btn-xs flex-shrink-0">

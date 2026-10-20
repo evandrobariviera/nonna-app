@@ -61,6 +61,7 @@
                                 <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="30" />
                                 <p class="text-xs font-semibold leading-snug min-w-0" style="color:var(--text)">
                                     {{ $task->title }}
+                                    <x-pendency-badge :task="$task" class="ml-1" />
                                 </p>
                             </div>
 

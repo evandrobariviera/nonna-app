@@ -59,6 +59,9 @@ class Pendency extends Model
 
     public const OPEN_STATUSES = ['aberta', 'cobrada'];
 
+    // kind das notificações internas geradas por pendência (ver PendencyService)
+    public const NOTIFICATION_KIND = 'pendencia';
+
     // Aliases do morph (ver AppServiceProvider::boot) — o form manda o alias, nunca a classe.
     public const PENDABLE_TYPES = [
         'task'       => Task::class,
@@ -109,6 +112,35 @@ class Pendency extends Model
     public function scopeOpen(Builder $query): Builder
     {
         return $query->whereIn('status', self::OPEN_STATUSES);
+    }
+
+    /** "Minhas": eu cobro OU eu devo entregar (deve: agência, pessoa = eu). */
+    public function scopeForUser(Builder $query, int $userId): Builder
+    {
+        return $query->where(fn ($q) => $q->where('owner_id', $userId)
+            ->orWhere(fn ($o) => $o->where('owed_by', 'agencia')->where('owed_user_id', $userId)));
+    }
+
+    /**
+     * Quantas pendências abertas a tarefa tem — pra ampulheta nos cartões (Fila, Sprint,
+     * Projeto). UMA consulta por request (once) com as contagens de todas as tarefas: as
+     * abertas são poucas, então isso sai mais barato que withCount em cada listagem.
+     */
+    public static function openCountForTask(string $taskId): int
+    {
+        $counts = once(fn () => static::open()
+            ->where('pendable_type', 'task')
+            ->groupBy('pendable_id')
+            ->selectRaw('pendable_id, count(*) as total')
+            ->pluck('total', 'pendable_id'));
+
+        return (int) ($counts[$taskId] ?? 0);
+    }
+
+    /** Sou quem deve entregar (vs. quem cobra)? */
+    public function isOwedBy(int $userId): bool
+    {
+        return $this->owed_by === 'agencia' && (int) $this->owed_user_id === $userId;
     }
 
     public function isOpen(): bool
@@ -170,6 +202,20 @@ class Pendency extends Model
         $days = $this->daysOpen();
 
         return $days <= 3 ? 'var(--green)' : ($days <= 7 ? 'var(--orange)' : 'var(--red)');
+    }
+
+    /** "venceu há 2 dias" / "vence hoje" / "vence 24/10" / "aberta há 5 dias". */
+    public function whenText(): string
+    {
+        if ($this->due_date) {
+            $diff = (int) today()->diffInDays($this->due_date, false);
+
+            return $diff < 0 ? 'venceu há ' . abs($diff) . ' dia' . (abs($diff) > 1 ? 's' : '')
+                : ($diff === 0 ? 'vence hoje' : 'vence ' . $this->due_date->format('d/m'));
+        }
+        $days = $this->daysOpen();
+
+        return $days === 0 ? 'aberta hoje' : 'aberta há ' . $days . ' dia' . ($days > 1 ? 's' : '');
     }
 
     public function daysOpen(): int

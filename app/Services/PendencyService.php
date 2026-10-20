@@ -3,16 +3,25 @@
 namespace App\Services;
 
 use App\Models\Contact;
+use App\Models\InternalNotification;
 use App\Models\Pendency;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 /**
  * Regras das Pendências (ver App\Models\Pendency). O controller só valida; aqui fica
  * o que precisa ser igual em qualquer lugar que crie/resolva uma pendência.
+ *
+ * Avisos (sino/Dashboard): quem é posto numa pendência — como quem cobra ou quem deve
+ * entregar — recebe uma notificação interna (kind "pendencia", source = a pendência),
+ * nunca quem fez a ação. Ao resolver/cancelar/excluir, os avisos abertos dela viram
+ * "resolvido"; se quem resolveu não é quem cobra, quem cobra é avisado que chegou.
  */
 class PendencyService
 {
+    public function __construct(private NotificationService $notifications) {}
+
     /**
      * Cria a pendência. O cliente vem da origem quando houver (Tarefa/Projeto/
      * Planejamento) — o form só manda client_id na pendência avulsa.
@@ -21,7 +30,7 @@ class PendencyService
     {
         $data = $this->normalizeOwed($data);
 
-        return Pendency::create(array_merge($data, [
+        $pendency = Pendency::create(array_merge($data, [
             'pendable_type' => $pendable?->getMorphClass(),
             'pendable_id'   => $pendable?->getKey(),
             'client_id'     => $pendable?->client_id ?? ($data['client_id'] ?? null),
@@ -29,11 +38,26 @@ class PendencyService
             'status'        => 'aberta',
             'created_by'    => $userId,
         ]));
+
+        $this->notifyAssigned($pendency, $userId, notifyOwner: true, notifyOwed: true);
+
+        return $pendency;
     }
 
-    public function update(Pendency $pendency, array $data): Pendency
+    public function update(Pendency $pendency, array $data, int $userId): Pendency
     {
+        $oldOwner = $pendency->owner_id;
+        $oldOwed  = $pendency->owed_by === 'agencia' ? $pendency->owed_user_id : null;
+
         $pendency->update($this->normalizeOwed($data));
+
+        $newOwed = $pendency->owed_by === 'agencia' ? $pendency->owed_user_id : null;
+        $this->notifyAssigned(
+            $pendency,
+            $userId,
+            notifyOwner: (int) $oldOwner !== (int) $pendency->owner_id,
+            notifyOwed: $newOwed && (int) $oldOwed !== (int) $newOwed,
+        );
 
         return $pendency;
     }
@@ -56,6 +80,22 @@ class PendencyService
             'resolved_by'     => $userId,
             'resolution_note' => $note ?: null,
         ])->save();
+
+        $this->closeNotifications($pendency);
+
+        // Quem cobra fica sabendo que chegou (se não foi ele mesmo que marcou).
+        if ($pendency->owner_id && (int) $pendency->owner_id !== $userId && ($owner = User::find($pendency->owner_id))) {
+            $by = User::find($userId)?->name ?? 'Alguém';
+            $this->notifications->notifyUsers(
+                collect([$owner]),
+                Pendency::NOTIFICATION_KIND,
+                'Pendência resolvida: ' . $pendency->title,
+                $by . ' marcou como resolvida' . ($note ? ' — ' . $note : '.'),
+                $this->linkFor($pendency),
+                $pendency,
+                $pendency->organization_id,
+            );
+        }
     }
 
     public function cancel(Pendency $pendency, int $userId): void
@@ -65,6 +105,55 @@ class PendencyService
             'resolved_at' => now(),
             'resolved_by' => $userId,
         ])->save();
+
+        $this->closeNotifications($pendency);
+    }
+
+    public function delete(Pendency $pendency): void
+    {
+        $this->closeNotifications($pendency);
+        $pendency->delete();
+    }
+
+    /** Avisa quem passou a cobrar e/ou a dever a pendência — nunca quem fez a ação. */
+    private function notifyAssigned(Pendency $pendency, int $actorId, bool $notifyOwner, bool $notifyOwed): void
+    {
+        $client = $pendency->client?->displayName();
+        $due    = $pendency->due_date ? ' · prazo ' . $pendency->due_date->format('d/m') : '';
+        $body   = trim(($client ? $client . ' · ' : '') . 'deve: ' . $pendency->owedName() . $due);
+
+        $send = function (?int $userId, string $title) use ($pendency, $actorId, $body) {
+            if (!$userId || $userId === $actorId || !($user = User::find($userId))) {
+                return;
+            }
+            $this->notifications->notifyUsers(collect([$user]), Pendency::NOTIFICATION_KIND, $title, $body,
+                $this->linkFor($pendency), $pendency, $pendency->organization_id);
+        };
+
+        $owedId = $pendency->owed_by === 'agencia' ? (int) $pendency->owed_user_id : null;
+
+        if ($notifyOwed && $owedId) {
+            $send($owedId, 'Você precisa entregar: ' . $pendency->title);
+        }
+        // Se a mesma pessoa cobra e deve, um aviso só basta.
+        if ($notifyOwner && (int) $pendency->owner_id !== $owedId) {
+            $send((int) $pendency->owner_id, 'Você cobra uma pendência: ' . $pendency->title);
+        }
+    }
+
+    private function closeNotifications(Pendency $pendency): void
+    {
+        InternalNotification::where('source_type', 'Pendency')
+            ->where('source_id', $pendency->id)
+            ->whereIn('status', ['novo', 'lido'])
+            ->update(['status' => 'resolvido']);
+    }
+
+    private function linkFor(Pendency $pendency): string
+    {
+        $origin = $pendency->originLink();
+
+        return $origin ? $origin['url'] . '#pendencias' : route('pendencies.index', ['client_id' => $pendency->client_id]);
     }
 
     /** Volta pra aberta (ou cobrada, se já tinha sido cobrada antes). */
