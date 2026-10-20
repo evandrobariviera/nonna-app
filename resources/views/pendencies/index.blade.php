@@ -120,6 +120,12 @@
             <option value="resolvidas" @selected($view === 'resolvidas')>Resolvidas</option>
         </select>
 
+        <select name="status" class="filter-select" title="Vale pra Em aberto">
+            <option value="">Abertas e cobradas</option>
+            <option value="aberta" @selected(request('status') === 'aberta')>Só ainda não cobradas</option>
+            <option value="cobrada" @selected(request('status') === 'cobrada')>Só já cobradas</option>
+        </select>
+
         <select name="responsavel" class="filter-select">
             <option value="todos" @selected(request('responsavel', 'todos') === 'todos')>Quem cobra: todos</option>
             <option value="meus" @selected(request('responsavel') === 'meus')>Só as minhas (cobro ou entrego)</option>

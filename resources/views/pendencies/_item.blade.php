@@ -21,9 +21,19 @@
                 <p class="text-xs font-semibold mb-0.5" style="color:var(--muted)">{{ $p->client->displayName() }}</p>
             @endif
 
-            <p class="text-sm font-medium" style="color:var(--text); {{ $open ? '' : 'text-decoration:line-through; opacity:.55' }}">
-                {{ $p->title }}
-            </p>
+            {{-- Título + etiqueta de status (Aberta / Cobrada / Resolvida / Cancelada) — contorno
+                 com bolinha, pra não confundir com a etiqueta cheia de "quem deve". --}}
+            @php $stColor = ['muted' => 'var(--muted2)', 'orange' => 'var(--orange)', 'green' => 'var(--green)', 'red' => 'var(--red)'][$p->statusColor()] ?? 'var(--muted2)'; @endphp
+            <div class="flex items-start justify-between gap-2">
+                <p class="text-sm font-medium min-w-0" style="color:var(--text); {{ $open ? '' : 'text-decoration:line-through; opacity:.55' }}">
+                    {{ $p->title }}
+                </p>
+                <span class="flex-shrink-0 inline-flex items-center gap-1 font-semibold"
+                      style="font-size:10px; line-height:1; padding:3px 7px; border-radius:999px; color:{{ $stColor }}; border:1px solid {{ $stColor }}; white-space:nowrap">
+                    <span style="width:6px; height:6px; border-radius:50%; background:{{ $stColor }}"></span>
+                    {{ $p->statusLabel() }}{{ $p->status === 'cobrada' ? ' ' . $p->nudge_count . 'x' : '' }}
+                </span>
+            </div>
             @if($p->description)
                 <p class="text-xs mt-0.5" style="color:var(--muted2); white-space:pre-line">{{ $p->description }}</p>
             @endif
@@ -49,13 +59,13 @@
 
             @if($open && $p->nudge_count > 0)
                 <p class="text-xs mt-1" style="color:var(--orange)">
-                    Cobrada {{ $p->nudge_count }}x · última {{ $p->last_nudged_at?->diffForHumans() }}
+                    Última cobrança {{ $p->last_nudged_at?->diffForHumans() }}
                 </p>
             @endif
 
             @if(!$open)
                 <p class="text-xs mt-1" style="color:var(--muted)">
-                    {{ $p->statusLabel() }}{{ $p->resolvedBy ? ' por ' . $p->resolvedBy->name : '' }}{{ $p->resolved_at ? ' em ' . $p->resolved_at->format('d/m') : '' }}
+                    {{ $p->resolvedBy ? 'por ' . $p->resolvedBy->name : '' }}{{ $p->resolved_at ? ' em ' . $p->resolved_at->format('d/m') : '' }}
                     @if($p->resolution_note)
                         — <span style="color:var(--muted2)">{{ $p->resolution_note }}</span>
                     @endif

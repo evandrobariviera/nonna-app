@@ -58,7 +58,10 @@ class PendencyController extends Controller
         ]);
 
         if ($view === 'abertas') {
-            $query->open()
+            // Status dentro das abertas: só as que ninguém cobrou ainda, ou só as já cobradas.
+            $status = $request->get('status');
+            in_array($status, ['aberta', 'cobrada'], true) ? $query->where('status', $status) : $query->open();
+            $query
                 ->orderByRaw('due_date IS NULL')
                 ->orderBy('due_date')
                 ->orderBy('created_at');
