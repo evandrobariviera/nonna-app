@@ -233,6 +233,11 @@ class AutomationJob implements ShouldQueue
         }
 
         $pendable = ($entity instanceof Task || $entity instanceof Project || $entity instanceof MacroPlan) ? $entity : null;
+        // Reunião ligada a um planejamento: a pendência mora no planejamento (ex.: "lançar
+        // o planejamento e as campanhas" depois da reunião de Macro).
+        if ($entity instanceof Meeting && $entity->macro_plan_id) {
+            $pendable = MacroPlan::withoutGlobalScopes()->find($entity->macro_plan_id);
+        }
         $clientId = $entity->client_id ?? null;
         $orgId    = $entity->organization_id ?? $this->automation->createdBy?->organizations()->value('organizations.id');
 
