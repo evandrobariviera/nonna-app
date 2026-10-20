@@ -72,12 +72,15 @@ class InternalNotification extends Model
     }
 
     /**
-     * Aviso de pendência não tem "Resolver": resolver o aviso não resolve a pendência (isso
-     * se faz na própria pendência) — só abrir, marcar como lido ou apagar.
+     * Dica do ✓ — no aviso de pendência, resolver o AVISO não resolve a pendência (isso se
+     * faz na própria pendência). Todo aviso tem ✓ / lido-não lido / apagar: a pessoa
+     * controla o próprio sino (pedido do Evandro, 2026-10-20).
      */
-    public function canResolve(): bool
+    public function resolveHint(): string
     {
-        return $this->kind !== 'pendencia';
+        return $this->kind === 'pendencia'
+            ? 'Dar este aviso como resolvido — a pendência continua aberta até ser resolvida nela'
+            : 'Marcar como resolvido';
     }
 
     public function resolveLabel(): string

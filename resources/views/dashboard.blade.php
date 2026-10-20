@@ -285,6 +285,11 @@
                     {{-- No "Ver como" a pendência é da outra pessoa — resolver aqui sumiria com ela da tela dela. --}}
                     <div class="flex items-center gap-2 flex-shrink-0" @if($viewingAs) style="display:none" @endif>
                         @if($notification->canDiscard())
+                            <form method="POST" action="{{ route('notifications.update-status', $notification) }}">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="status" value="lido">
+                                <button type="submit" class="btn btn-ghost btn-xs" title="Tira daqui sem resolver — volta como não lido em Notificações">Lido</button>
+                            </form>
                             <form method="POST" action="{{ route('notifications.destroy', $notification) }}">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn btn-ghost btn-xs" title="Apagar este aviso">Apagar</button>

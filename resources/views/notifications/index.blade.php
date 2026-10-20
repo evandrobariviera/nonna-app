@@ -58,12 +58,12 @@
                                     </button>
                                 </form>
                             @endif
-                            @if($n->status !== 'resolvido' && $n->canResolve())
+                            @if($n->status !== 'resolvido')
                                 <form method="POST" action="{{ route('notifications.update-status', $n) }}">
                                     @csrf @method('PATCH')
                                     <input type="hidden" name="status" value="resolvido">
-                                    <button type="submit" class="btn btn-success btn-xs">
-                                        {{ $n->resolveLabel() }}
+                                    <button type="submit" class="btn btn-success btn-xs" title="{{ $n->resolveHint() }}">
+                                        ✓ {{ $n->resolveLabel() }}
                                     </button>
                                 </form>
                             @endif

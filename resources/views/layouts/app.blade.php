@@ -349,22 +349,22 @@
                                         @if($n->body)
                                             <p class="text-xs" style="color:var(--muted2); line-height:1.5">{{ $n->body }}</p>
                                         @endif
-                                        <div class="flex items-center gap-3 mt-0.5">
+                                        {{-- Controle do próprio sino: ✓ resolver · lido · ✕ apagar
+                                             (lido/não lido de volta fica em "Ver todas"). --}}
+                                        <div class="flex items-center gap-2 mt-0.5">
+                                            <form method="POST" action="{{ route('notifications.update-status', $n) }}">
+                                                @csrf @method('PATCH')
+                                                <input type="hidden" name="status" value="resolvido">
+                                                <button type="submit" class="btn btn-success btn-xs" title="{{ $n->resolveHint() }}">
+                                                    ✓ {{ $n->resolveLabel() }}
+                                                </button>
+                                            </form>
                                             @if($n->canDiscard())
                                                 <form method="POST" action="{{ route('notifications.update-status', $n) }}">
                                                     @csrf @method('PATCH')
                                                     <input type="hidden" name="status" value="lido">
-                                                    <button type="submit" class="btn btn-ghost btn-xs">
+                                                    <button type="submit" class="btn btn-ghost btn-xs" title="Tira do sino sem resolver — volta como não lido em Ver todas">
                                                         Marcar como lido
-                                                    </button>
-                                                </form>
-                                            @endif
-                                            @if($n->canResolve())
-                                                <form method="POST" action="{{ route('notifications.update-status', $n) }}">
-                                                    @csrf @method('PATCH')
-                                                    <input type="hidden" name="status" value="resolvido">
-                                                    <button type="submit" class="btn btn-success btn-xs">
-                                                        {{ $n->resolveLabel() }}
                                                     </button>
                                                 </form>
                                             @endif
