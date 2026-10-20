@@ -153,7 +153,7 @@
             {{ request($prefix . 'pendencia') ? 'checked' : '' }}
             class="w-4 h-4" style="accent-color:var(--red)">
         <label for="{{ $prefix }}chk_pendencia" class="text-sm font-medium cursor-pointer" style="color:var(--red)">
-            Só pendências
+            Só cadastro incompleto
         </label>
     </div>
 

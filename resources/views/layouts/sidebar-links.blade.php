@@ -245,6 +245,30 @@
     @endif
 </a>
 
+{{-- Pendências — contador = as abertas que EU cobro (vermelho se alguma venceu) --}}
+@php
+    $_myPendencies = once(fn () => \App\Models\Pendency::open()
+        ->where('owner_id', auth()->id())
+        ->selectRaw('count(*) as total, count(*) filter (where due_date < current_date) as overdue')
+        ->first());
+@endphp
+<a href="{{ route('pendencies.index') }}"
+   class="nav-group-trigger {{ request()->routeIs('pendencies.*') ? 'open' : '' }}"
+   style="{{ request()->routeIs('pendencies.*') ? 'color:var(--purple);' : '' }}">
+    <span class="flex items-center gap-3">
+        <x-icon name="hourglass" size="16" class="flex-shrink-0" />
+        Central de Pendências
+    </span>
+    @if(($_myPendencies->total ?? 0) > 0)
+        @php $_pendOver = ($_myPendencies->overdue ?? 0) > 0; @endphp
+        <span class="text-xs px-1.5 py-px rounded-full font-semibold"
+              title="{{ $_myPendencies->total }} que você cobra{{ $_pendOver ? ', ' . $_myPendencies->overdue . ' vencida(s)' : '' }}"
+              style="background:{{ $_pendOver ? 'rgba(220,38,38,.12)' : 'var(--s3)' }}; color:{{ $_pendOver ? 'var(--red)' : 'var(--muted)' }}; border:1px solid {{ $_pendOver ? 'rgba(220,38,38,.3)' : 'var(--border2)' }}">
+            {{ $_myPendencies->total }}
+        </span>
+    @endif
+</a>
+
 {{-- Rotina --}}
 <div x-data="{ open: {{ request()->routeIs('campaigns.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">

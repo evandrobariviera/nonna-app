@@ -64,6 +64,7 @@
                     $nav = [
                         'documento' => ['icon' => 'file-text',     'label' => 'Documento'],
                         'bloco3'    => ['icon' => 'folder-kanban', 'label' => 'Campanhas e Projetos', 'count' => $macroplan->projects->count()],
+                        'pendencias' => ['icon' => 'hourglass',    'label' => 'Pendências', 'count' => $macroplan->pendencies()->open()->count()],
                     ];
                 @endphp
                 @foreach($nav as $key => $item)
@@ -752,6 +753,13 @@
                         </div>
                     </div>
                 @endif
+            </div>
+
+            {{-- ══ PENDÊNCIAS — o que o planejamento está esperando (dados, acessos, datas do
+                 cliente...). Ver <x-pendencies-panel>. ══ --}}
+            <div x-show="block === 'pendencias'" x-cloak style="max-width:720px">
+                <x-pendencies-panel :pendable="$macroplan" alias="macro_plan" :users="$users"
+                                    :return-to="route('macroplans.edit', [$macroplan, 'bloco' => 'pendencias'])" />
             </div>
 
             {{-- ══ BLOCO 4: TAREFAS ISOLADAS E ROTINA ══ --}}

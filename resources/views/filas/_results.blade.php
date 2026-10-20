@@ -10,7 +10,7 @@
             ['label' => 'Projetos',     'value' => $stats['projetos'],   'color' => 'var(--purple)', 'filter' => 'origin=projeto'],
             ['label' => 'Tickets',      'value' => $stats['tickets'],    'color' => 'var(--orange)', 'filter' => 'origin=ticket'],
             ['label' => 'Atrasadas',    'value' => $stats['atrasadas'],  'color' => 'var(--red)',    'filter' => 'atrasadas=1'],
-            ['label' => 'Pendências',   'value' => $stats['pendencias'], 'color' => 'var(--red)',    'filter' => 'pendencia=1'],
+            ['label' => 'Cadastro incompleto', 'value' => $stats['pendencias'], 'color' => 'var(--red)',    'filter' => 'pendencia=1'],
             ['label' => 'Clientes',     'value' => $stats['clientes'],   'color' => 'var(--muted2)', 'filter' => null],
         ];
     @endphp

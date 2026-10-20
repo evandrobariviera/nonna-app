@@ -561,13 +561,27 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::delete('/tarefas/{task}/comentarios/{comment}', [TaskCommentController::class, 'destroy'])
         ->name('task-comments.destroy');
 
-    // ── Itens de Ação (checklist nascido de comentário) ──
-    Route::post('/tarefas/{task}/itens-acao', [\App\Http\Controllers\TaskChecklistItemController::class, 'store'])
-        ->name('task-checklist-items.store');
-    Route::patch('/tarefas/{task}/itens-acao/{item}/concluir', [\App\Http\Controllers\TaskChecklistItemController::class, 'toggle'])
-        ->name('task-checklist-items.toggle');
-    Route::delete('/tarefas/{task}/itens-acao/{item}', [\App\Http\Controllers\TaskChecklistItemController::class, 'destroy'])
-        ->name('task-checklist-items.destroy');
+    // ── Pendências (Central + bloco em Tarefa/Projeto/Planejamento; substituiu os Itens de Ação) ──
+    Route::get('/pendencias', [\App\Http\Controllers\PendencyController::class, 'index'])
+        ->name('pendencies.index');
+    Route::get('/pendencias/resultados', [\App\Http\Controllers\PendencyController::class, 'results'])
+        ->name('pendencies.results');
+    Route::post('/pendencias', [\App\Http\Controllers\PendencyController::class, 'store'])
+        ->name('pendencies.store');
+    Route::post('/tarefas/{task}/pendencias/do-comentario', [\App\Http\Controllers\PendencyController::class, 'storeFromComment'])
+        ->name('pendencies.from-comment');
+    Route::patch('/pendencias/{pendency}', [\App\Http\Controllers\PendencyController::class, 'update'])
+        ->name('pendencies.update');
+    Route::patch('/pendencias/{pendency}/cobrar', [\App\Http\Controllers\PendencyController::class, 'nudge'])
+        ->name('pendencies.nudge');
+    Route::patch('/pendencias/{pendency}/resolver', [\App\Http\Controllers\PendencyController::class, 'resolve'])
+        ->name('pendencies.resolve');
+    Route::patch('/pendencias/{pendency}/cancelar', [\App\Http\Controllers\PendencyController::class, 'cancel'])
+        ->name('pendencies.cancel');
+    Route::patch('/pendencias/{pendency}/reabrir', [\App\Http\Controllers\PendencyController::class, 'reopen'])
+        ->name('pendencies.reopen');
+    Route::delete('/pendencias/{pendency}', [\App\Http\Controllers\PendencyController::class, 'destroy'])
+        ->name('pendencies.destroy');
 
     // ── Submissão para aprovação (autenticado — designer/gestor) ──
     Route::post('/tarefas/{task}/aprovacao', [TaskApprovalController::class, 'store'])

@@ -249,6 +249,12 @@
         </div>
     </div>
 
+    {{-- PENDÊNCIAS — o que o projeto/campanha está esperando (insumo do cliente, acesso,
+         data...). Ver <x-pendencies-panel>. --}}
+    <div class="mb-5">
+        <x-pendencies-panel :pendable="$project" alias="project" :users="$users" />
+    </div>
+
     {{-- TAREFAS EM FILA, AGRUPADAS POR STATUS — leitura rápida ao lado do documento.
          Concluídas começam fechadas. O quadro completo (arrastar, editar) fica abaixo. --}}
     <div class="card mb-5 overflow-hidden" x-data>

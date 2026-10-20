@@ -280,6 +280,11 @@ class MacroPlan extends Model
         return $this->hasMany(MacroPlanAttachment::class)->latest();
     }
 
+    public function pendencies(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Pendency::class, 'pendable');
+    }
+
     public function activities(): HasMany
     {
         return $this->hasMany(MacroPlanActivity::class)->orderByDesc('created_at');

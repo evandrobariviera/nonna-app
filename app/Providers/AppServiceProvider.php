@@ -39,6 +39,11 @@ class AppServiceProvider extends ServiceProvider
         MacroPlan::observe(MacroPlanObserver::class);
         Project::observe(ProjectObserver::class);
 
+        // Apelidos curtos no pendencies.pendable_type ('task', não 'App\Models\Task') —
+        // renomear/mover a classe não quebra o vínculo. Não é enforce: o morph do Sanctum
+        // (personal_access_tokens) continua com o nome da classe.
+        \Illuminate\Database\Eloquent\Relations\Relation::morphMap(\App\Models\Pendency::PENDABLE_TYPES);
+
         // diffForHumans()/translatedFormat() usam o locale do Carbon, que não
         // segue sozinho o locale do Laravel (config('app.locale')) — sem isso,
         // "há 2 dias" sai como "2 days ago" mesmo com tudo em português.

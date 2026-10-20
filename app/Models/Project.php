@@ -222,6 +222,11 @@ class Project extends Model
         return $this->hasMany(ProjectAttachment::class)->orderBy('created_at');
     }
 
+    public function pendencies(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Pendency::class, 'pendable');
+    }
+
     public function activities(): HasMany
     {
         return $this->hasMany(ProjectActivity::class)->orderByDesc('created_at');
