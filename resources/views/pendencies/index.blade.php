@@ -18,10 +18,48 @@
         </div>
     @endif
 
-    <p class="text-sm mb-5" style="color:var(--muted2); max-width:760px">
-        O que está <strong>esperando alguém</strong> pra o trabalho andar: material do cliente, um acesso, uma data, uma decisão.
-        Cada pendência tem quem deve entregar e quem do time cobra. Pendências criadas numa tarefa, projeto ou planejamento aparecem aqui também.
-    </p>
+    {{-- Resumo do processo — até o time pegar o jeito (pedido do Evandro, 2026-10-20).
+         Fechar esconde só pra quem fechou (localStorage); o artigo completo fica na Ajuda. --}}
+    <div x-data="{ hide: (() => { try { return localStorage.getItem('pendencias_resumo_oculto') === '1' } catch (e) { return false } })() }" class="mb-5">
+        <div x-show="!hide" class="card px-5 py-4" style="border-left:4px solid var(--orange)">
+            <div class="flex items-start justify-between gap-3 mb-3">
+                <p class="text-sm font-bold flex items-center gap-1.5" style="color:var(--text)">
+                    <x-icon name="hourglass" size="14" /> Como funciona
+                </p>
+                <button type="button" class="text-xs flex-shrink-0" style="color:var(--muted2)"
+                        @click="hide = true; try { localStorage.setItem('pendencias_resumo_oculto', '1') } catch (e) {}">Ocultar ✕</button>
+            </div>
+            <p class="text-sm mb-3" style="color:var(--muted2)">
+                Pendência é <strong style="color:var(--text)">algo que alguém precisa entregar pra o trabalho andar</strong>: fotos do cliente, um acesso, uma data, uma decisão.
+                Se é trabalho nosso, é tarefa. Se estamos <em>esperando chegar</em>, é pendência.
+            </p>
+            <div class="grid gap-3 md:grid-cols-4 text-xs" style="color:var(--muted2)">
+                <div>
+                    <p class="font-bold mb-0.5" style="color:var(--text)">1. Registre</p>
+                    Dentro da tarefa, projeto ou planejamento (bloco <strong>Pendências → + Nova</strong>), ou aqui em <strong>+ Nova pendência</strong>. Coloque prazo.
+                </div>
+                <div>
+                    <p class="font-bold mb-0.5" style="color:var(--text)">2. Três pessoas</p>
+                    <strong>Quem precisa</strong> (está esperando), <strong>quem deve</strong> (cliente, terceiro ou alguém do time) e <strong>quem cobra</strong>.
+                    Ex.: Marlon precisa, cliente deve, Alisson cobra.
+                </div>
+                <div>
+                    <p class="font-bold mb-0.5" style="color:var(--text)">3. Cobre e registre</p>
+                    Só quem cobra vê o botão: <strong>Cobrar no WhatsApp</strong>, <strong>Registrar cobrança</strong> ou <strong>Lembrar</strong> alguém do time. Quem precisa pode <strong>Lembrar</strong> quem cobra.
+                </div>
+                <div>
+                    <p class="font-bold mb-0.5" style="color:var(--text)">4. Chegou? Resolva</p>
+                    <strong>✓ Resolver</strong> e conte o que chegou. Quem precisava é avisado na hora.
+                </div>
+            </div>
+            <p class="text-xs mt-3" style="color:var(--muted)">
+                Acompanhe pelo número no menu, pelo sino e pelo card <strong>Suas pendências</strong> no Dashboard.
+                <a href="{{ url('/ajuda/central-de-pendencias-como-funciona') }}" class="font-semibold" style="color:var(--purple)">Ler o passo a passo completo →</a>
+            </p>
+        </div>
+        <button x-show="hide" x-cloak type="button" class="text-xs font-semibold" style="color:var(--purple)"
+                @click="hide = false; try { localStorage.removeItem('pendencias_resumo_oculto') } catch (e) {}">Como funciona a Central de Pendências?</button>
+    </div>
 
     {{-- Nova pendência avulsa (sem tarefa/projeto/planejamento — só o cliente) --}}
     <div x-data="{ adding: {{ $errors->pendency->any() ? 'true' : 'false' }} }"
