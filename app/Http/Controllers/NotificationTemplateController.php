@@ -56,7 +56,7 @@ class NotificationTemplateController extends Controller
 
         app(NotificationDispatchService::class)->dispatch($type, $channel, $fakeClient, $fakeContact, $sampleVars);
 
-        return back()->with('success', 'Disparo de teste enviado — confira no n8n.')->with('tab', 'mensagens');
+        return back()->with('success', 'Disparo de teste enviado — confira no n8n e no Histórico de Envios.')->with('tab', 'mensagens');
     }
 
     public function update(Request $request): RedirectResponse

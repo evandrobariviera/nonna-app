@@ -3,7 +3,12 @@
         <h1 class="page-title">Configurações da Organização</h1>
     </x-slot>
 
-    <div x-data="{ tab: '{{ session('tab', 'geral') }}' }">
+    @php
+        $settingsTabs = ['geral' => 'Geral', 'integracoes' => 'Integrações', 'equipe' => 'Equipe', 'setores' => 'Setores', 'papeis' => 'Papéis Funcionais', 'mensagens' => 'Mensagens Padrão', 'notificacoes-internas' => 'Notificações Internas', 'pontos' => 'Pontos de Sprint', 'api' => 'API & Tokens'];
+        // ?tab= permite link direto pra uma aba (ex: voltar do Histórico de Envios).
+        $initialTab = session('tab') ?? (array_key_exists((string) request('tab'), $settingsTabs) ? request('tab') : 'geral');
+    @endphp
+    <div x-data="{ tab: '{{ $initialTab }}' }">
 
         {{-- Flash --}}
         @if(session('success'))
@@ -27,7 +32,7 @@
 
         {{-- Tabs --}}
         <div class="flex gap-1 mb-6 border-b" style="border-color:var(--border)">
-            @foreach(['geral' => 'Geral', 'integracoes' => 'Integrações', 'equipe' => 'Equipe', 'setores' => 'Setores', 'papeis' => 'Papéis Funcionais', 'mensagens' => 'Mensagens Padrão', 'notificacoes-internas' => 'Notificações Internas', 'pontos' => 'Pontos de Sprint', 'api' => 'API & Tokens'] as $key => $label)
+            @foreach($settingsTabs as $key => $label)
                 <button @click="tab = '{{ $key }}'"
                         class="tab-btn px-4 py-2.5 text-sm font-semibold transition-colors"
                         :class="tab === '{{ $key }}'
@@ -1115,13 +1120,23 @@
 
         {{-- ══ TAB MENSAGENS PADRÃO ══ --}}
         <div x-show="tab === 'mensagens'" x-cloak>
-            <div class="mb-5">
-                <h2 class="text-sm font-bold" style="color:var(--text)">Mensagens Padrão</h2>
-                <p class="text-xs mt-0.5 max-w-lg" style="color:var(--muted)">
-                    Texto padrão por gatilho e canal, usado em toda a organização. Um cliente só recebe uma dessas
-                    mensagens se algum contato dele estiver assinado naquele tipo (aba Portal/Contatos da ficha do
-                    cliente). O disparo automático ainda não está ligado — por enquanto isso só cadastra o texto.
-                </p>
+            <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h2 class="text-sm font-bold" style="color:var(--text)">Mensagens Padrão</h2>
+                    <p class="text-xs mt-0.5 max-w-lg" style="color:var(--muted)">
+                        Texto padrão por gatilho e canal, usado em toda a organização. Um cliente só recebe uma dessas
+                        mensagens se algum contato dele estiver assinado naquele tipo (aba Portal/Contatos da ficha do
+                        cliente).
+                    </p>
+                </div>
+                <a href="{{ route('settings.notification-dispatches.index') }}" class="btn btn-ghost btn-xs whitespace-nowrap">
+                    Histórico de Envios
+                    @if($failedDispatches > 0)
+                        <span class="ml-1 text-xs px-1.5 py-px rounded-full font-bold"
+                              style="background:var(--red); color:#fff"
+                              title="Falhas nos últimos 7 dias">{{ $failedDispatches }}</span>
+                    @endif
+                </a>
             </div>
 
             <form method="POST" action="{{ route('settings.notification-templates.update') }}" class="space-y-4">

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AiAgent;
 use App\Models\FunctionalRole;
+use App\Models\NotificationDispatch;
 use App\Models\NotificationSetting;
 use App\Models\NotificationTemplate;
 use App\Models\Sector;
@@ -45,7 +46,13 @@ class OrganizationSettingsController extends Controller
             ? NotificationSetting::where('organization_id', $org->id)->get()->keyBy('event_key')
             : collect();
 
-        return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens', 'aiAgents', 'notificationTemplates', 'notificationSettings', 'sectors', 'orphanUsers', 'functionalRoles'));
+        // Selo de alerta no link do Histórico de Envios (aba Mensagens Padrão).
+        $failedDispatches = NotificationDispatch::where('status', 'failed')
+            ->where('is_test', false)
+            ->where('created_at', '>=', now()->subDays(7))
+            ->count();
+
+        return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens', 'aiAgents', 'notificationTemplates', 'notificationSettings', 'sectors', 'orphanUsers', 'functionalRoles', 'failedDispatches'));
     }
 
     public function updateNotificationSettings(Request $request): RedirectResponse

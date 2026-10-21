@@ -968,6 +968,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
             ->name('settings.notification-templates.update');
         Route::post('/configuracoes/mensagens/{type}/{channel}/testar', [\App\Http\Controllers\NotificationTemplateController::class, 'test'])
             ->name('settings.notification-templates.test');
+        Route::get('/configuracoes/mensagens/historico', [\App\Http\Controllers\NotificationDispatchController::class, 'index'])
+            ->name('settings.notification-dispatches.index');
+        Route::get('/configuracoes/mensagens/historico/resultados', [\App\Http\Controllers\NotificationDispatchController::class, 'results'])
+            ->name('settings.notification-dispatches.results');
 
         Route::post('/configuracoes/notificacoes-internas', [OrganizationSettingsController::class, 'updateNotificationSettings'])
             ->name('settings.notification-settings.update');
