@@ -110,6 +110,50 @@ class ClientPortalAccessController extends Controller
         return back()->with('success', 'Acesso ao portal habilitado.');
     }
 
+    public function resetPassword(Request $request, Client $client, Contact $portalContact): RedirectResponse
+    {
+        abort_if($client->organization_id !== app('currentOrganization')->id, 403);
+        abort_unless(
+            ClientContact::where('client_id', $client->id)
+                ->where('contact_id', $portalContact->id)
+                ->where('portal_access_enabled', true)
+                ->exists(),
+            403
+        );
+
+        $data = $request->validateWithBag('resetPassword', [
+            'password_mode' => ['required', 'in:link,manual'],
+            'password'      => ['required_if:password_mode,manual', 'nullable', 'string', 'min:8'],
+        ]);
+
+        // A senha é do Contato, não do vínculo — trocar aqui vale pro login dele
+        // em todos os clientes que ele acessa.
+        if ($data['password_mode'] === 'manual') {
+            $portalContact->update(['password' => $data['password']]);
+
+            return back()->with('success', "Senha de {$portalContact->name} redefinida.");
+        }
+
+        // Mesmo link de primeiro acesso: o contato escolhe a nova senha e a
+        // antiga continua valendo até ele concluir.
+        $setupToken = PortalPasswordSetupToken::create([
+            'client_id'    => $client->id,
+            'contact_id'   => $portalContact->id,
+            'token'        => Str::uuid()->getHex()->toString(),
+            'requested_by' => Auth::id(),
+            'expires_at'   => now()->addDays(7),
+        ]);
+
+        foreach (array_keys(NotificationTemplate::$channels) as $channel) {
+            $this->notifications->dispatch('portal_definir_senha', $channel, $client, $portalContact, [
+                'email'              => $portalContact->email,
+                'link_definir_senha' => route('portal.password-setup.show', $setupToken->token),
+            ]);
+        }
+
+        return back()->with('success', "Enviamos um link pra {$portalContact->name} criar uma nova senha.");
+    }
+
     public function destroy(Client $client, Contact $portalContact): RedirectResponse
     {
         abort_if($client->organization_id !== app('currentOrganization')->id, 403);

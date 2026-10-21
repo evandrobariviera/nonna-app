@@ -1080,6 +1080,8 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
 Route::middleware(['auth', 'not-client'])->group(function () {
     Route::post('/clientes/{client}/acesso-portal', [ClientPortalAccessController::class, 'store'])
         ->name('clients.portal-access.store');
+    Route::put('/clientes/{client}/acesso-portal/{portalContact}/senha', [ClientPortalAccessController::class, 'resetPassword'])
+        ->name('clients.portal-access.reset-password');
     Route::delete('/clientes/{client}/acesso-portal/{portalContact}', [ClientPortalAccessController::class, 'destroy'])
         ->name('clients.portal-access.destroy');
 });

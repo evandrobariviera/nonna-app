@@ -2667,7 +2667,9 @@
                 @if($portalContacts->isNotEmpty())
                     <div class="space-y-3 mb-6">
                         @foreach($portalContacts as $portalContact)
-                            <div class="card p-5">
+                            @php $resetFailed = old('reset_contact_id') === $portalContact->id && $errors->resetPassword->any(); @endphp
+                            <div class="card p-5"
+                                 x-data="{ resetOpen: {{ $resetFailed ? 'true' : 'false' }}, mode: '{{ $resetFailed ? old('password_mode', 'link') : 'link' }}' }">
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <p class="text-sm font-semibold" style="color: var(--text)">{{ $portalContact->name }}</p>
@@ -2684,6 +2686,9 @@
                                            style="background: rgba(100, 59, 142,.1); color: var(--purple)">
                                             Ver portal →
                                         </a>
+                                        <button type="button" @click="resetOpen = !resetOpen" class="btn btn-ghost btn-xs">
+                                            Redefinir senha
+                                        </button>
                                         <form method="POST" action="{{ route('clients.portal-access.destroy', [$client, $portalContact]) }}"
                                               @submit.prevent="if (await $store.confirmDialog.ask('Remover acesso de {{ addslashes($portalContact->name) }}?')) $el.submit()">
                                             @csrf
@@ -2694,6 +2699,46 @@
                                         </form>
                                     </div>
                                 </div>
+
+                                <form x-show="resetOpen" x-cloak method="POST"
+                                      action="{{ route('clients.portal-access.reset-password', [$client, $portalContact]) }}"
+                                      class="mt-4 pt-4 space-y-3" style="border-top: 1px solid var(--border2)">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="hidden" name="reset_contact_id" value="{{ $portalContact->id }}">
+                                    <label class="flex items-start gap-2 text-sm cursor-pointer">
+                                        <input type="radio" name="password_mode" value="link" x-model="mode" class="mt-0.5 accent-[var(--purple)]">
+                                        <span>
+                                            <span style="color: var(--text)">Enviar link pro contato criar uma nova senha</span>
+                                            <span class="block text-xs" style="color: var(--muted)">A senha atual continua valendo até ele criar a nova.</span>
+                                        </span>
+                                    </label>
+                                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                        <input type="radio" name="password_mode" value="manual" x-model="mode" class="accent-[var(--purple)]">
+                                        <span style="color: var(--text)">Definir eu mesmo agora</span>
+                                    </label>
+                                    <div x-show="mode === 'manual'" x-cloak>
+                                        <input type="text" name="password" placeholder="Nova senha — mínimo 8 caracteres"
+                                               :required="mode === 'manual'"
+                                               class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
+                                               style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                                        <p class="mt-1 text-xs" style="color: var(--muted)">Nenhuma mensagem é enviada — passe a senha pro contato você mesmo.</p>
+                                    </div>
+                                    @if($resetFailed)
+                                        @foreach($errors->resetPassword->all() as $message)
+                                            <p class="text-xs" style="color: var(--red)">{{ $message }}</p>
+                                        @endforeach
+                                    @endif
+                                    <p class="text-xs" style="color: var(--muted)">A senha vale pro login dele em todos os clientes que ele acessa.</p>
+                                    <div class="flex gap-2">
+                                        <button type="submit" class="btn-primary px-4 py-2 text-sm rounded-lg font-semibold">
+                                            Redefinir
+                                        </button>
+                                        <button type="button" @click="resetOpen = false" class="btn btn-ghost btn-sm">
+                                            Cancelar
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         @endforeach
                     </div>
