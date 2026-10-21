@@ -42,10 +42,11 @@ class LeadController extends Controller
         $leads = $this->filteredQuery($request)->paginate(30)->withQueryString();
 
         return view('leads._results', [
-            'leads'        => $leads,
-            'showClient'   => true,
-            'showAssignee' => true,
-            'showRoute'    => 'leads.show',
+            'leads'               => $leads,
+            'showClient'          => true,
+            'showAssignee'        => true,
+            'showRoute'           => 'leads.show',
+            'unnotifiedClientIds' => ClientLeadSource::clientIdsWithoutLeadSubscriber(),
         ]);
     }
 
@@ -55,6 +56,8 @@ class LeadController extends Controller
             'clients'  => Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']),
             'channels' => LeadChannel::active()->orderBy('name')->get(),
             'sources'  => ClientLeadSource::with('client')->where('is_active', true)->orderBy('label')->get(),
+            // Ícone de alerta ao lado do cliente (lista e quadro).
+            'unnotifiedClientIds' => ClientLeadSource::clientIdsWithoutLeadSubscriber(),
         ];
     }
 
@@ -108,11 +111,14 @@ class LeadController extends Controller
 
     public function show(ClientLeadOpportunity $lead)
     {
-        $lead->load(['lead.client', 'channel', 'source', 'assignedTo', 'createdBy', 'notes.user', 'notes.contact']);
+        $lead->load(['lead.client', 'channel', 'source', 'assignedTo', 'createdBy', 'notes.user', 'notes.contact', 'notificationDispatches']);
 
         $users = User::orderBy('name')->get(['id', 'name']);
 
-        return view('leads.show', ['opportunity' => $lead, 'users' => $users]);
+        $clientWithoutSubscriber = $lead->lead->client_id
+            && in_array($lead->lead->client_id, ClientLeadSource::clientIdsWithoutLeadSubscriber(), true);
+
+        return view('leads.show', ['opportunity' => $lead, 'users' => $users, 'clientWithoutSubscriber' => $clientWithoutSubscriber]);
     }
 
     public function update(Request $request, ClientLeadOpportunity $lead)

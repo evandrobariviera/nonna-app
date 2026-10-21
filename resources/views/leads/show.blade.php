@@ -143,6 +143,63 @@
                 </div>
             @endif
 
+            {{-- Aviso de "Lead Capturado" pros contatos do cliente (notification_dispatches) --}}
+            @if($opportunity->lead->client)
+                <div class="card p-4">
+                    <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-3">Aviso ao cliente</h3>
+
+                    @if($clientWithoutSubscriber)
+                        <div class="flex items-start gap-2 text-xs mb-3 p-2" style="background:rgba(239,68,68,.08); color:var(--red)">
+                            <x-icon name="bell-off" size="14" class="flex-shrink-0 mt-px" />
+                            <span>
+                                Ninguém do cliente está assinado em "Lead Capturado" — leads novos não avisam ninguém.
+                                <a href="{{ route('clients.show', $opportunity->lead->client_id) }}" class="underline">Abrir ficha do cliente</a>
+                            </span>
+                        </div>
+                    @endif
+
+                    @forelse($opportunity->notificationDispatches as $dispatch)
+                        @php $color = 'var(--' . $dispatch->statusColor() . ')'; @endphp
+                        <div class="text-xs py-2 {{ $loop->first ? '' : 'border-t' }}" style="border-color:var(--border)">
+                            <div class="flex items-center gap-2">
+                                <span class="h-2 w-2 rounded-full flex-shrink-0" style="background:{{ $color }}"></span>
+                                <span class="font-semibold" style="color:{{ $color }}">{{ $dispatch->statusLabel() }}</span>
+                                @if($dispatch->channel !== '—')
+                                    <span style="color:var(--muted)">· {{ $dispatch->channelLabel() }}</span>
+                                @endif
+                            </div>
+                            @if($dispatch->contact_name)
+                                <div class="mt-0.5" style="color:var(--text)">
+                                    {{ $dispatch->contact_name }}
+                                    @if($dispatch->recipient)
+                                        <span style="color:var(--muted)">· {{ $dispatch->recipient }}</span>
+                                    @endif
+                                </div>
+                            @endif
+                            @if($dispatch->reason)
+                                <div class="mt-0.5" style="color:{{ $color }}">{{ $dispatch->reason }}</div>
+                            @endif
+                            <div class="mt-0.5" style="color:var(--muted)">{{ $dispatch->created_at->format('d/m/Y H:i') }}</div>
+                        </div>
+                    @empty
+                        <p class="text-xs" style="color:var(--muted)">
+                            @if($opportunity->created_at->lt(\App\Models\NotificationDispatch::LEAD_LINK_STARTED_AT))
+                                Sem registro — este lead chegou antes do App começar a guardar os avisos (21/10/2026).
+                            @else
+                                Nenhum aviso disparado. Acontece quando a mesma pessoa converte de novo em até 72h:
+                                o lead volta pro mesmo cartão sem avisar de novo.
+                            @endif
+                        </p>
+                    @endforelse
+
+                    @if($opportunity->notificationDispatches->isNotEmpty())
+                        <p class="text-xs mt-2" style="color:var(--muted2)">
+                            "Enviado ao n8n" = o n8n recebeu o pedido; a entrega no WhatsApp em si ainda não volta pro App.
+                        </p>
+                    @endif
+                </div>
+            @endif
+
             <div class="card p-4 space-y-3">
                 <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">Timeline</h3>
                 <div class="text-xs text-[var(--muted2)]">

@@ -32,6 +32,7 @@
                     'showClient'   => true,
                     'showAssignee' => true,
                     'showRoute'    => 'leads.show',
+                    'unnotifiedClientIds' => $unnotifiedClientIds,
                 ])
             </div>
         @else
@@ -73,6 +74,9 @@
                                     @if($opp->lead->client)
                                         <div class="text-xs font-semibold mb-1" style="color:var(--purple)">
                                             {{ $opp->lead->client->displayName() }}
+                                            @if(in_array($opp->lead->client_id, $unnotifiedClientIds, true))
+                                                @include('leads._no-subscriber-icon')
+                                            @endif
                                         </div>
                                     @else
                                         <span class="badge" style="font-size:9px; padding:1px 6px; border-color: var(--orange); color: var(--orange)">

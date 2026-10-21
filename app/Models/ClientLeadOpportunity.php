@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Str;
 
 class ClientLeadOpportunity extends Model
@@ -121,6 +122,12 @@ class ClientLeadOpportunity extends Model
     public function notes(): HasMany
     {
         return $this->hasMany(ClientLeadOpportunityNote::class)->orderBy('created_at');
+    }
+
+    /** Avisos de "Lead Capturado" disparados pros contatos do cliente (NotificationDispatchService). */
+    public function notificationDispatches(): MorphMany
+    {
+        return $this->morphMany(NotificationDispatch::class, 'related')->orderBy('created_at');
     }
 
     // Registra tanto uma nota escrita (User interno OU Contact do Portal, XOR)

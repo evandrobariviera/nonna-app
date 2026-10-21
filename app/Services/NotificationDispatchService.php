@@ -7,6 +7,7 @@ use App\Models\ClientContact;
 use App\Models\Contact;
 use App\Models\NotificationDispatch;
 use App\Models\NotificationTemplate;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -26,7 +27,7 @@ class NotificationDispatchService
      * template sem texto pro canal) — mas toda tentativa fica registrada no
      * Histórico de Envios (notification_dispatches), com o motivo.
      */
-    public function send(string $type, Client $client, array $variables = [], ?string $attachmentUrl = null): void
+    public function send(string $type, Client $client, array $variables = [], ?string $attachmentUrl = null, ?Model $related = null): void
     {
         $recipients = ClientContact::where('client_id', $client->id)
             ->whereHas('subscriptions', fn ($q) => $q->where('type', $type))
@@ -34,7 +35,7 @@ class NotificationDispatchService
             ->get();
 
         if ($recipients->isEmpty()) {
-            $this->record($type, '—', $client, null, 'skipped', 'Nenhum contato do cliente está assinado nesse tipo de mensagem.');
+            $this->record($type, '—', $client, null, 'skipped', 'Nenhum contato do cliente está assinado nesse tipo de mensagem.', related: $related);
             return;
         }
 
@@ -43,7 +44,7 @@ class NotificationDispatchService
             $channels = $clientContact->subscriptions->first()->channels ?? [];
 
             foreach ($channels as $channel) {
-                $this->dispatch($type, $channel, $client, $contact, $variables, $attachmentUrl);
+                $this->dispatch($type, $channel, $client, $contact, $variables, $attachmentUrl, $related);
             }
         }
     }
@@ -54,14 +55,14 @@ class NotificationDispatchService
      * que snapshota os canais no TaskApprovalToken no momento da submissão,
      * em vez de reconsultar a assinatura atual).
      */
-    public function dispatch(string $type, string $channel, Client $client, Contact $contact, array $variables = [], ?string $attachmentUrl = null): void
+    public function dispatch(string $type, string $channel, Client $client, Contact $contact, array $variables = [], ?string $attachmentUrl = null, ?Model $related = null): void
     {
         // URL do webhook é configurada por organização (Configurações > Integrações,
         // provider "n8n"), não mais via variável de ambiente — permite cada organização
         // apontar pro seu próprio n8n.
         $webhookUrl = $client->organization?->integration('n8n')?->credential('webhook_url');
         if (!$webhookUrl) {
-            $this->record($type, $channel, $client, $contact, 'skipped', 'Integração n8n sem URL de webhook (Configurações > Integrações).');
+            $this->record($type, $channel, $client, $contact, 'skipped', 'Integração n8n sem URL de webhook (Configurações > Integrações).', related: $related);
             return;
         }
 
@@ -71,7 +72,7 @@ class NotificationDispatchService
             ->first();
 
         if (!$template || (blank($template->subject) && blank($template->body))) {
-            $this->record($type, $channel, $client, $contact, 'skipped', 'Mensagem Padrão sem texto pra esse canal.');
+            $this->record($type, $channel, $client, $contact, 'skipped', 'Mensagem Padrão sem texto pra esse canal.', related: $related);
             return;
         }
 
@@ -84,7 +85,7 @@ class NotificationDispatchService
         };
         if ($contact->exists && blank($address)) {
             $label = NotificationTemplate::$channels[$channel] ?? $channel;
-            $this->record($type, $channel, $client, $contact, 'skipped', "Contato sem {$label} cadastrado.");
+            $this->record($type, $channel, $client, $contact, 'skipped', "Contato sem {$label} cadastrado.", related: $related);
             return;
         }
 
@@ -126,14 +127,14 @@ class NotificationDispatchService
             Log::warning("NotificationDispatchService: falha ao disparar [{$type}/{$channel}] pra contato {$contact->id}: {$e->getMessage()}");
             // URL do webhook sai do texto — não é pra ficar exposta no histórico.
             $error = trim(preg_replace(['~\s*\(see https?://\S+\)~', '~\s*for https?://\S+~', '~https?://\S+~'], ['', '', '[webhook]'], $e->getMessage()));
-            $this->record($type, $channel, $client, $contact, 'failed', 'n8n não respondeu: ' . Str::limit($error, 300), null, $body);
+            $this->record($type, $channel, $client, $contact, 'failed', 'n8n não respondeu: ' . Str::limit($error, 300), null, $body, $related);
             return;
         }
 
         // Http:: não lança exceção em 4xx/5xx — antes disso um fluxo quebrado
         // no n8n passava como enviado.
         if ($response->successful()) {
-            $this->record($type, $channel, $client, $contact, 'sent', null, $response->status(), $body);
+            $this->record($type, $channel, $client, $contact, 'sent', null, $response->status(), $body, $related);
             return;
         }
 
@@ -141,7 +142,7 @@ class NotificationDispatchService
         $this->record(
             $type, $channel, $client, $contact, 'failed',
             "n8n respondeu com erro {$response->status()}" . ($detail !== '' ? ": {$detail}" : '.'),
-            $response->status(), $body
+            $response->status(), $body, $related
         );
     }
 
@@ -149,7 +150,7 @@ class NotificationDispatchService
      * Grava a tentativa no Histórico de Envios. Uma falha aqui nunca pode
      * derrubar o fluxo que pediu o disparo (aprovação, chamado, lead...).
      */
-    private function record(string $type, string $channel, Client $client, ?Contact $contact, string $status, ?string $reason = null, ?int $httpStatus = null, ?string $body = null): void
+    private function record(string $type, string $channel, Client $client, ?Contact $contact, string $status, ?string $reason = null, ?int $httpStatus = null, ?string $body = null, ?Model $related = null): void
     {
         // transaction() próprio = savepoint quando quem chamou já está numa
         // transação: um erro aqui volta só o savepoint, não envenena a
@@ -173,6 +174,8 @@ class NotificationDispatchService
                 'http_status'     => $httpStatus,
                 'message_body'    => $body,
                 'is_test'         => !$client->exists,
+                'related_type'    => $related?->getMorphClass(),
+                'related_id'      => $related?->getKey(),
             ]));
         } catch (\Throwable $e) {
             Log::warning("NotificationDispatchService: não consegui gravar o histórico [{$type}/{$channel}]: {$e->getMessage()}");

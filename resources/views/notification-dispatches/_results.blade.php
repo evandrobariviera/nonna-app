@@ -19,6 +19,10 @@
                             @if($dispatch->is_test)
                                 <span class="badge">Teste</span>
                             @endif
+                            @if($dispatch->related_type === \App\Models\ClientLeadOpportunity::class && $dispatch->related_id)
+                                <a href="{{ route('leads.show', $dispatch->related_id) }}" @click.stop
+                                   class="text-xs font-semibold" style="color:var(--purple)">Ver lead →</a>
+                            @endif
                         </div>
                         <div class="text-xs mt-0.5 truncate" style="color:var(--muted)">
                             {{ $dispatch->created_at->format('d/m/Y H:i') }}

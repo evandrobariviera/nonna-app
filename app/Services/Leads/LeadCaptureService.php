@@ -57,7 +57,7 @@ class LeadCaptureService
                     'lead_telefone'      => $lead->phone ?? '—',
                     'canal'              => $channel?->kindLabel() ?? $payload['source_channel'],
                     'link_central_leads' => route('portal.leads.index'),
-                ]);
+                ], related: $opportunity);
             }
 
             return [

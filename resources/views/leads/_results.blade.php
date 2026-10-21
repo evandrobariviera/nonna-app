@@ -38,6 +38,9 @@
                     @if($showClient)
                         <td class="text-sm" style="color:var(--text)">
                             {{ $opp->lead->client?->displayName() ?? '—' }}
+                            @if($opp->lead->client_id && in_array($opp->lead->client_id, $unnotifiedClientIds ?? [], true))
+                                @include('leads._no-subscriber-icon')
+                            @endif
                         </td>
                     @endif
                     <td>

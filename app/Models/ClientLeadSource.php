@@ -44,4 +44,22 @@ class ClientLeadSource extends Model
     {
         return $this->label ?: $this->external_id;
     }
+
+    /**
+     * Clientes com fonte de leads ativa mas sem nenhum contato assinado em
+     * "Lead Capturado" — os leads entram e ninguém do cliente é avisado
+     * (NotificationDispatchService::send() não tem pra quem mandar). Uma consulta só.
+     *
+     * @return array<int, string>
+     */
+    public static function clientIdsWithoutLeadSubscriber(): array
+    {
+        return self::where('is_active', true)
+            ->whereNotIn('client_id', ClientContact::select('client_contacts.client_id')
+                ->join('client_contact_subscriptions', 'client_contact_subscriptions.client_contact_id', '=', 'client_contacts.id')
+                ->where('client_contact_subscriptions.type', 'lead_capturado'))
+            ->distinct()
+            ->pluck('client_id')
+            ->all();
+    }
 }
