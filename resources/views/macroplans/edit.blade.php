@@ -552,17 +552,133 @@
             </div>
 
             {{-- ══ BLOCO 3: PROJETOS ══ --}}
-            <div x-show="block === 'bloco3'" x-cloak x-data="{ editId: null, addOpen: false }">
+            @php
+                $activeProjects    = $macroplan->projects->reject(fn ($p) => in_array($p->status, ['concluido', 'cancelado'], true));
+                $discussedCount    = $activeProjects->filter(fn ($p) => $p->discussionMeetings->isNotEmpty())->count();
+            @endphp
+            <div x-show="block === 'bloco3'" x-cloak x-data="{ editId: null, addOpen: false, discussOpen: {{ $errors->has('items') || $errors->has('scheduled_at') ? 'true' : 'false' }} }">
                 <div class="card">
-                    <div class="px-5 py-4 flex items-center justify-between" style="border-bottom:1px solid var(--border2)">
+                    <div class="px-5 py-4 flex items-center justify-between gap-3 flex-wrap" style="border-bottom:1px solid var(--border2)">
                         <div>
                             <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Bloco 03</p>
                             <h2 class="text-base font-bold" style="color:var(--text)">Arquitetura de Projetos</h2>
+                            @if($activeProjects->isNotEmpty())
+                                <p class="text-xs mt-1" style="color:{{ $discussedCount === $activeProjects->count() ? 'var(--green)' : 'var(--muted)' }}">
+                                    {{ $discussedCount }} de {{ $activeProjects->count() }} já com reunião de discussão
+                                </p>
+                            @endif
                         </div>
-                        <button @click="addOpen = !addOpen" class="btn btn-primary btn-sm">
-                            + Novo Projeto
-                        </button>
+                        <div class="flex items-center gap-2">
+                            @if($discussionItems->isNotEmpty())
+                                <button type="button" @click="discussOpen = !discussOpen; addOpen = false" class="btn btn-ghost btn-sm">
+                                    <x-icon name="calendar" size="13" /> Agendar reunião de discussão
+                                </button>
+                            @endif
+                            <button @click="addOpen = !addOpen; discussOpen = false" class="btn btn-primary btn-sm">
+                                + Novo Projeto
+                            </button>
+                        </div>
                     </div>
+
+                    {{-- Reunião de discussão: pauta (itens do planejamento) + equipe de cada item.
+                         Um agendamento só; a equipe fica gravada no item. Ver ProjectDiscussionMeetingService. --}}
+                    @if($discussionItems->isNotEmpty())
+                        <div x-show="discussOpen" x-cloak style="border-bottom:1px solid var(--border2); background:var(--s2)"
+                             x-data="{
+                                 items: @js($discussionItems),
+                                 users: @js($users->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])->values()),
+                                 nameOf(id) { return (this.users.find(u => u.id === id) || {}).name || '?' },
+                                 add(item, ev) { const id = parseInt(ev.target.value); if (id && !item.team.includes(id)) item.team.push(id); ev.target.value = '' },
+                                 get selected() { return this.items.filter(i => i.checked).length },
+                             }">
+                            <form method="POST" action="{{ route('macroplans.discussion.store', $macroplan) }}" class="px-5 py-5 space-y-4">
+                                @csrf
+                                <p class="text-xs" style="color:var(--muted2)">
+                                    Marque o que vai pra pauta e quem participa de cada item. O responsável do cliente
+                                    @if($macroplan->client?->creativeLead)
+                                        (<strong>{{ $macroplan->client->creativeLead->name }}</strong>)
+                                    @endif
+                                    entra na reunião de qualquer jeito. Todos são avisados no sino.
+                                </p>
+                                @unless($macroplan->client?->creative_lead_id)
+                                    <p class="text-xs" style="color:var(--orange)">Este cliente está sem responsável cadastrado — adicione a pessoa na equipe dos itens.</p>
+                                @endunless
+                                @error('items')<p class="text-xs" style="color:var(--red)">{{ $message }}</p>@enderror
+                                @error('scheduled_at')<p class="text-xs" style="color:var(--red)">{{ $message }}</p>@enderror
+
+                                <div class="auto-grid-sm gap-3">
+                                    <div>
+                                        <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Data e hora <span style="color:var(--orange)">*</span></label>
+                                        <input type="datetime-local" name="scheduled_at" required class="w-full px-3 py-2 text-sm focus:outline-none"
+                                               style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Duração (min)</label>
+                                        <input type="number" name="duration_minutes" min="5" max="480" :value="Math.max(30, selected * 30)" class="w-full px-3 py-2 text-sm focus:outline-none"
+                                               style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Modalidade</label>
+                                        <select name="modality" class="w-full px-3 py-2 text-sm focus:outline-none"
+                                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                            @foreach(\App\Models\Meeting::$modalities as $key => $label)
+                                                <option value="{{ $key }}">{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Link (online)</label>
+                                        <input type="url" name="online_link" placeholder="https://meet..." class="w-full px-3 py-2 text-sm focus:outline-none"
+                                               style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col gap-2">
+                                    <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Pauta e equipe</p>
+                                    <template x-for="(item, idx) in items" :key="item.id">
+                                        <div class="px-3 py-3" style="background:var(--s1); border:1px solid var(--border2); border-radius:8px"
+                                             :style="item.checked ? '' : 'opacity:.55'">
+                                            <label class="flex items-center gap-2 cursor-pointer">
+                                                <input type="checkbox" x-model="item.checked">
+                                                <span class="badge" x-text="item.type"></span>
+                                                <span class="text-sm font-semibold" style="color:var(--text)" x-text="item.title"></span>
+                                            </label>
+                                            <div x-show="item.checked" class="flex items-center gap-1.5 flex-wrap mt-2 pl-6">
+                                                <template x-for="uid in item.team" :key="uid">
+                                                    <span class="badge badge-purple flex items-center gap-1">
+                                                        <span x-text="nameOf(uid)"></span>
+                                                        <button type="button" @click="item.team = item.team.filter(i => i !== uid)" style="background:none; border:none; cursor:pointer; color:inherit">✕</button>
+                                                    </span>
+                                                </template>
+                                                <select @change="add(item, $event)" class="px-2 py-1 text-xs focus:outline-none"
+                                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">
+                                                    <option value="">+ pessoa</option>
+                                                    <template x-for="u in users.filter(u => !item.team.includes(u.id))" :key="u.id">
+                                                        <option :value="u.id" x-text="u.name"></option>
+                                                    </template>
+                                                </select>
+                                            </div>
+                                            <template x-if="item.checked">
+                                                <div>
+                                                    <input type="hidden" :name="`items[${idx}][id]`" :value="item.id">
+                                                    <template x-for="uid in item.team" :key="uid">
+                                                        <input type="hidden" :name="`items[${idx}][team][]`" :value="uid">
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <div class="flex gap-3">
+                                    <button type="submit" class="btn btn-primary btn-sm" :disabled="selected === 0">
+                                        Agendar (<span x-text="selected"></span> na pauta)
+                                    </button>
+                                    <button type="button" @click="discussOpen = false" class="btn btn-ghost btn-sm">Cancelar</button>
+                                </div>
+                            </form>
+                        </div>
+                    @endif
 
                     {{-- Formulário adicionar projeto --}}
                     <div x-show="addOpen" x-cloak style="border-bottom:1px solid var(--border2)">
@@ -681,6 +797,24 @@
                                     {{-- Objetivo --}}
                                     @if($project->objective)
                                         <p class="text-xs mb-2.5" style="color:var(--muted2)">{{ $project->objective }}</p>
+                                    @endif
+
+                                    {{-- Equipe + reunião de discussão --}}
+                                    @php $lastDiscussion = $project->discussionMeetings->sortByDesc('scheduled_at')->first(); @endphp
+                                    @if($project->members->isNotEmpty() || $lastDiscussion)
+                                        <div class="flex items-center gap-2 flex-wrap mb-2.5">
+                                            @if($project->members->isNotEmpty())
+                                                <span class="text-xs flex items-center gap-1" style="color:var(--muted)"><x-icon name="users" size="11" /> Equipe:</span>
+                                                @foreach($project->members as $member)
+                                                    <span class="badge">{{ $member->name }}</span>
+                                                @endforeach
+                                            @endif
+                                            @if($lastDiscussion)
+                                                <a href="{{ route('meetings.show', $lastDiscussion->id) }}" class="badge badge-{{ $lastDiscussion->statusColor() }} ml-auto" title="Reunião de discussão">
+                                                    Discussão {{ $lastDiscussion->scheduled_at->format('d/m H:i') }} · {{ $lastDiscussion->statusLabel() }}
+                                                </a>
+                                            @endif
+                                        </div>
                                     @endif
 
                                     {{-- Linha de metadados: datas · disciplinas · progresso --}}

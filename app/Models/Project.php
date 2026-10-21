@@ -6,6 +6,7 @@ use App\Traits\Tenantable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
@@ -182,6 +183,25 @@ class Project extends Model
     public function activeTasks(): HasMany
     {
         return $this->hasMany(Task::class)->where('status', '!=', 'cancelado');
+    }
+
+    /**
+     * Equipe da campanha/projeto — quem participa (muda de uma campanha pra outra). O
+     * responsável do cliente (Client::creativeLead) é a referência e entra por padrão na
+     * reunião de discussão; aqui ficam os escolhidos pra este item.
+     */
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'project_members', 'project_id', 'user_id')
+            ->withTimestamps();
+    }
+
+    /** Reuniões de discussão em que este item esteve na pauta (ver Meeting::projects). */
+    public function discussionMeetings(): BelongsToMany
+    {
+        return $this->belongsToMany(Meeting::class, 'meeting_projects', 'project_id', 'meeting_id')
+            ->withPivot('position')
+            ->withTimestamps();
     }
 
     // Campanhas de anúncio (Meta/Google, sincronizadas) vinculadas manualmente

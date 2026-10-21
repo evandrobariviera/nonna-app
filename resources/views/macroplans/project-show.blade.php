@@ -255,6 +255,67 @@
         <x-pendencies-panel :pendable="$project" alias="project" :users="$users" />
     </div>
 
+    {{-- EQUIPE — quem participa desta campanha/projeto (muda de um item pro outro). O
+         responsável do cliente é a referência; aqui entram os demais. Também é montada no
+         agendamento da reunião de discussão, pelo planejamento. --}}
+    @php
+        $clientLead     = $projectClient?->creativeLead;
+        $lastDiscussion = $project->discussionMeetings->sortByDesc('scheduled_at')->first();
+    @endphp
+    <div class="card px-5 py-4 mb-5"
+         x-data="{
+             editing: false,
+             team: @js($project->members->pluck('id')->values()),
+             users: @js($users->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])->values()),
+             nameOf(id) { return (this.users.find(u => u.id === id) || {}).name || '?' },
+         }">
+        <div class="flex items-center justify-between gap-2 mb-3">
+            <span class="text-xs font-semibold uppercase tracking-widest flex items-center gap-1.5" style="color:var(--muted); letter-spacing:.1em">
+                <x-icon name="users" size="12" /> Equipe
+            </span>
+            <button type="button" @click="editing = !editing" class="btn btn-ghost btn-xs" x-text="editing ? 'Fechar' : 'Editar'"></button>
+        </div>
+        <div class="flex flex-wrap gap-1.5">
+            @if($clientLead)
+                <span class="badge badge-purple" title="Responsável do cliente — entra sempre">{{ $clientLead->name }} · resp. do cliente</span>
+            @endif
+            @forelse($project->members->reject(fn ($m) => $m->id === $clientLead?->id) as $member)
+                <span class="badge">{{ $member->name }}</span>
+            @empty
+                @unless($clientLead)
+                    <span class="text-xs" style="color:var(--muted)">Ninguém na equipe ainda.</span>
+                @endunless
+            @endforelse
+        </div>
+        @if($lastDiscussion)
+            <a href="{{ route('meetings.show', $lastDiscussion) }}" class="text-xs mt-3 inline-flex items-center gap-1 hover:underline" style="color:var(--muted2)">
+                <x-icon name="calendar" size="11" /> Discussão {{ $lastDiscussion->scheduled_at->format('d/m H:i') }} · {{ $lastDiscussion->statusLabel() }}
+            </a>
+        @endif
+
+        <form x-show="editing" x-cloak method="POST" action="{{ route('projects.team.update', $project) }}" class="mt-3 pt-3 flex flex-col gap-2" style="border-top:1px solid var(--border2)">
+            @csrf @method('PATCH')
+            <div class="flex flex-wrap gap-1.5">
+                <template x-for="uid in team" :key="uid">
+                    <span class="badge badge-purple flex items-center gap-1">
+                        <span x-text="nameOf(uid)"></span>
+                        <button type="button" @click="team = team.filter(i => i !== uid)" style="background:none; border:none; cursor:pointer; color:inherit">✕</button>
+                        <input type="hidden" name="members[]" :value="uid">
+                    </span>
+                </template>
+            </div>
+            <select @change="const id = parseInt($event.target.value); if (id && !team.includes(id)) team.push(id); $event.target.value = ''"
+                    class="px-2 py-1.5 text-xs focus:outline-none"
+                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">
+                <option value="">+ adicionar pessoa</option>
+                <template x-for="u in users.filter(u => !team.includes(u.id))" :key="u.id">
+                    <option :value="u.id" x-text="u.name"></option>
+                </template>
+            </select>
+            <button type="submit" class="btn btn-primary btn-xs self-start">Salvar equipe</button>
+        </form>
+    </div>
+
     {{-- TAREFAS EM FILA, AGRUPADAS POR STATUS — leitura rápida ao lado do documento.
          Concluídas começam fechadas. O quadro completo (arrastar, editar) fica abaixo. --}}
     <div class="card mb-5 overflow-hidden" x-data>

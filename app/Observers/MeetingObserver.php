@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Meeting;
 use App\Services\AutomationEngine;
+use App\Services\Projects\ProjectDiscussionMeetingService;
 
 class MeetingObserver
 {
@@ -14,6 +15,10 @@ class MeetingObserver
 
     public function updated(Meeting $meeting): void
     {
+        if ($meeting->wasChanged('status') && $meeting->status === 'realizada') {
+            ProjectDiscussionMeetingService::startDiscussedProjects($meeting);
+        }
+
         if ($meeting->wasChanged('status')) {
             AutomationEngine::evaluate('status_changed', $meeting, [
                 'field' => 'status',

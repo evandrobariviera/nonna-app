@@ -139,7 +139,7 @@ class ProjectController extends Controller
     {
         abort_unless($project->macro_plan_id === $macroplan->id, 403);
 
-        $project->load(['client', 'tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount', 'attachments', 'activities.user']);
+        $project->load(['client', 'tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount', 'attachments', 'activities.user', 'members:users.id,users.name', 'discussionMeetings']);
         $users = User::orderBy('name')->get(['id', 'name']);
 
         $kanban = [];
@@ -201,7 +201,7 @@ class ProjectController extends Controller
 
     public function showDirect(Project $project)
     {
-        $project->load(['client', 'tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount', 'attachments', 'activities.user']);
+        $project->load(['client', 'tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount', 'attachments', 'activities.user', 'members:users.id,users.name', 'discussionMeetings']);
         $macroplan  = $project->macroPlan;
         $users      = User::orderBy('name')->get(['id', 'name']);
 
@@ -291,6 +291,20 @@ class ProjectController extends Controller
             : redirect()->route('projects.showDirect', $project);
 
         return $redirect->with('success', 'Planejamento atualizado.');
+    }
+
+    // Equipe da campanha/projeto (quem participa) — também é montada no agendamento da
+    // reunião de discussão (ProjectDiscussionMeetingService).
+    public function updateTeam(Request $request, Project $project)
+    {
+        $data = $request->validate([
+            'members'   => 'nullable|array',
+            'members.*' => 'integer|exists:users,id',
+        ]);
+
+        $project->members()->sync($data['members'] ?? []);
+
+        return redirect()->back()->with('success', 'Equipe atualizada.');
     }
 
     public function store(Request $request, MacroPlan $macroplan)

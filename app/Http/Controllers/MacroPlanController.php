@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\MacroPlan;
+use App\Models\Meeting;
 use App\Models\User;
 use App\Services\MacroPlanDocumentService;
+use App\Services\Projects\ProjectDiscussionMeetingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -131,7 +133,8 @@ class MacroPlanController extends Controller
     public function edit(MacroPlan $macroplan, Request $request)
     {
         $macroplan->load([
-            'client', 'responsible', 'projects.tasks', 'attachments.uploadedBy', 'meetings', 'activities.user',
+            'client.creativeLead:id,name', 'responsible', 'projects.tasks', 'projects.members:users.id,users.name',
+            'projects.discussionMeetings:meetings.id,meetings.title,meetings.status,meetings.scheduled_at', 'attachments.uploadedBy', 'meetings', 'activities.user',
             'tasks' => fn ($q) => $q->whereNull('project_id')->orderByDesc('created_at'),
         ]);
         $users          = User::orderBy('name')->get(['id', 'name']);
@@ -145,7 +148,9 @@ class MacroPlanController extends Controller
             $currentBlock = 'documento';
         }
 
-        return view('macroplans.edit', compact('macroplan', 'users', 'currentBlock', 'legacyBlocks', 'mainDocument'));
+        $discussionItems = ProjectDiscussionMeetingService::formItems($macroplan);
+
+        return view('macroplans.edit', compact('macroplan', 'users', 'currentBlock', 'legacyBlocks', 'mainDocument', 'discussionItems'));
     }
 
     public function update(Request $request, MacroPlan $macroplan)
@@ -265,6 +270,34 @@ class MacroPlanController extends Controller
 
     // Edição rápida de status direto na listagem/detalhe, sem precisar do
     // form completo de "Configurações" (mesmo padrão de MeetingController::updateStatus()).
+    // Reunião de discussão das campanhas/projetos — pauta + equipe de cada item, um
+    // agendamento só (ver ProjectDiscussionMeetingService).
+    public function scheduleDiscussion(Request $request, MacroPlan $macroplan, ProjectDiscussionMeetingService $service)
+    {
+        $data = $request->validate([
+            'scheduled_at'     => 'required|date',
+            'duration_minutes' => 'nullable|integer|min:5|max:480',
+            'modality'         => 'required|in:' . implode(',', array_keys(Meeting::$modalities)),
+            'online_link'      => 'nullable|url|max:500',
+            'location'         => 'nullable|string|max:255',
+            'items'            => 'required|array|min:1',
+            'items.*.id'       => 'required|uuid',
+            'items.*.team'     => 'nullable|array',
+            'items.*.team.*'   => 'integer|exists:users,id',
+        ], [
+            'items.required' => 'Marque ao menos uma campanha ou projeto pra pauta.',
+        ]);
+
+        try {
+            $meeting = $service->schedule($macroplan, $data, array_values($data['items']), Auth::id());
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['items' => $e->getMessage()]);
+        }
+
+        return redirect()->route('meetings.show', $meeting)
+            ->with('success', 'Reunião de discussão agendada — participantes avisados.');
+    }
+
     public function updateStatus(Request $request, MacroPlan $macroplan)
     {
         $data = $request->validate([

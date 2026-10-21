@@ -169,6 +169,19 @@ class Meeting extends Model
             ->withTimestamps();
     }
 
+    /**
+     * Pauta da reunião de discussão: campanhas/projetos do planejamento, na ordem em que
+     * serão discutidos. Cada item tem sua equipe (Project::members) — o agendamento é
+     * agrupado, a discussão é por item.
+     */
+    public function projects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class, 'meeting_projects', 'meeting_id', 'project_id')
+            ->withPivot('position')
+            ->withTimestamps()
+            ->orderBy('meeting_projects.position');
+    }
+
     public function contacts(): BelongsToMany
     {
         return $this->belongsToMany(Contact::class, 'meeting_contacts', 'meeting_id', 'contact_id')

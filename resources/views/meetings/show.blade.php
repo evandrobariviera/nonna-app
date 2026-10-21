@@ -145,6 +145,37 @@
                 </div>
             </div>
 
+            {{-- Campanhas/projetos em discussão — a pauta da reunião de discussão agendada pelo
+                 planejamento (ProjectDiscussionMeetingService). Um bloco por item, com a equipe
+                 dele; ao Finalizar a reunião, os itens em planejamento vão pra Em Execução. --}}
+            @if($meeting->projects->isNotEmpty())
+                <div class="card">
+                    <div class="px-5 py-4" style="border-bottom:1px solid var(--border2)">
+                        <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Em discussão · {{ $meeting->projects->count() }} {{ $meeting->projects->count() === 1 ? 'item' : 'itens' }}</p>
+                        <p class="text-xs mt-1" style="color:var(--muted2)">Leia o documento de cada item antes. Ao finalizar a reunião, o que estiver Em Planejamento passa pra Em Execução.</p>
+                    </div>
+                    <div class="flex flex-col">
+                        @foreach($meeting->projects as $item)
+                            <div class="px-5 py-3 flex items-start gap-3" style="border-bottom:1px solid var(--border2)">
+                                <span class="text-xs font-mono font-bold pt-0.5" style="color:var(--muted)">{{ $loop->iteration }}.</span>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="badge badge-{{ $item->typeColor() }}">{{ $item->typeLabel() }}</span>
+                                        <a href="{{ $item->macro_plan_id ? route('macroplans.projects.show', [$item->macro_plan_id, $item]) : route('projects.showDirect', $item) }}"
+                                           class="text-sm font-semibold hover:underline" style="color:var(--text)">{{ $item->title }}</a>
+                                        <span class="badge badge-{{ $item->statusColor() }}">{{ $item->statusLabel() }}</span>
+                                    </div>
+                                    <p class="text-xs mt-1.5 flex items-center gap-1 flex-wrap" style="color:var(--muted)">
+                                        <x-icon name="users" size="11" />
+                                        {{ $item->members->pluck('name')->implode(', ') ?: 'Só o responsável do cliente' }}
+                                    </p>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             {{-- Pauta — gerada pelo agente de IA junto com a ATA (structure_ata) ou escrita
                  à mão; renderiza como cards quando reconhece o Markdown (##/###/checklist),
                  senão cai pro texto cru. Checklist marcado = já identificado na ATA,

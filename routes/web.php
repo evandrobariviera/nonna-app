@@ -493,6 +493,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('macroplans.update');
     Route::patch('/planejamentos/{macroplan}/status', [MacroPlanController::class, 'updateStatus'])
         ->name('macroplans.update-status');
+    Route::post('/planejamentos/{macroplan}/reuniao-discussao', [MacroPlanController::class, 'scheduleDiscussion'])
+        ->name('macroplans.discussion.store');
     Route::delete('/planejamentos/{macroplan}', [MacroPlanController::class, 'destroy'])
         ->name('macroplans.destroy');
 
@@ -645,6 +647,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('projects.destroyDirect');
     Route::patch('/projetos/{project}/pagina-cliente', [ProjectController::class, 'updateClientPage'])
         ->name('projects.client-page.update');
+    Route::patch('/projetos/{project}/equipe', [ProjectController::class, 'updateTeam'])
+        ->name('projects.team.update');
     Route::patch('/projetos/{project}/editar', [ProjectController::class, 'updateDirect'])
         ->name('projects.updateDirect');
     Route::post('/projetos/{project}/anexos', [ProjectAttachmentController::class, 'store'])
