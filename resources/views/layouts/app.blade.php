@@ -2,6 +2,12 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}"
       x-data="{
           sidebarOpen: false,
+          {{-- Menu recolhido só com ícones (desktop), lembrado no navegador --}}
+          sidebarCollapsed: localStorage.getItem('nonna-sidebar') === 'collapsed',
+          toggleSidebar() {
+              this.sidebarCollapsed = !this.sidebarCollapsed;
+              localStorage.setItem('nonna-sidebar', this.sidebarCollapsed ? 'collapsed' : 'open');
+          },
           darkMode: localStorage.getItem('nonna-theme') === 'dark',
           toggleTheme() {
               document.documentElement.classList.add('theme-transition');
@@ -90,47 +96,33 @@
 
         {{-- ── SIDEBAR DESKTOP ── --}}
         @unless($embed)
-        <aside class="hidden md:flex md:w-72 md:flex-col sidebar-nav flex-shrink-0">
+        {{-- Menu no padrão Mirbal (redesign etapa 2): 264px, branco, logo na altura do topo,
+             sem blocos de usuário/rodapé (foram pro topo). Recolhido = só ícones (76px);
+             clicar num grupo com o menu recolhido reabre o menu. --}}
+        <aside class="hidden md:flex md:flex-col sidebar-nav flex-shrink-0 transition-[width] duration-200"
+               :class="sidebarCollapsed ? 'sidebar-collapsed md:w-[76px]' : 'md:w-[264px]'"
+               @click.capture="if (sidebarCollapsed && $event.target.closest('button.nav-group-trigger')) toggleSidebar()">
             {{-- Logo --}}
-            <a href="{{ route('dashboard') }}" class="flex h-16 items-center px-6 border-b transition-opacity hover:opacity-80" style="border-color:var(--border); flex-shrink:0">
+            <a href="{{ route('dashboard') }}" class="flex h-[70px] items-center transition-opacity hover:opacity-80 flex-shrink-0"
+               :class="sidebarCollapsed ? 'justify-center px-2' : 'px-6'">
                 @if(isset($currentOrg) && $currentOrg->logoUrl())
-                    <img src="{{ $currentOrg->logoUrl() }}" alt="{{ $currentOrg->name }}" class="h-7 w-auto"
+                    <img src="{{ $currentOrg->logoUrl() }}" alt="{{ $currentOrg->name }}" class="h-8 w-auto max-w-full object-contain object-left"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
                     <span class="text-base font-black grad-text hidden">{{ $currentOrg->name }}</span>
                 @else
-                    <img src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png"
-                         alt="{{ config('app.name') }}" class="h-7 w-auto"
+                    <img x-show="sidebarCollapsed" x-cloak src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/FAVICON-150x150.png"
+                         alt="{{ config('app.name') }}" class="h-8 w-8">
+                    <img x-show="!sidebarCollapsed" src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png"
+                         alt="{{ config('app.name') }}" class="h-8 w-auto max-w-full object-contain object-left"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
                     <span class="text-base font-black grad-text hidden">{{ config('app.name') }}</span>
                 @endif
             </a>
 
-            {{-- Usuário logado --}}
-            <div class="flex items-center gap-3 px-5 py-4 border-b" style="border-color:var(--border)">
-                <x-user-avatar :user="Auth::user()" size="8" />
-                <div class="min-w-0">
-                    <p class="text-xs font-bold truncate" style="color:var(--text)">{{ Auth::user()->name }}</p>
-                    <p class="text-xs truncate" style="color:var(--muted); font-size:11px">{{ Auth::user()->email }}</p>
-                </div>
-            </div>
-
             {{-- Links --}}
-            <nav class="flex-1 overflow-y-auto py-3">
+            <nav class="flex-1 overflow-y-auto overflow-x-hidden pb-4">
                 @include('layouts.sidebar-links')
             </nav>
-
-            {{-- Footer --}}
-            <div class="border-t px-5 py-3 flex items-center justify-between" style="border-color:var(--border2)">
-                <a href="{{ route('profile.edit') }}" class="btn btn-ghost btn-xs">
-                    Perfil
-                </a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="btn btn-ghost btn-xs">
-                        Sair
-                    </button>
-                </form>
-            </div>
         </aside>
         @endunless
 
@@ -139,28 +131,23 @@
 
             {{-- TOPBAR --}}
             @unless($embed)
-            <header class="topbar flex h-16 flex-shrink-0 items-center gap-2 md:gap-4 px-3 md:px-6">
+            {{-- Topo "flutuante" do Mirbal: afastado das laterais na mesma margem do conteúdo,
+                 cantos arredondados só embaixo. Título da página saiu daqui e foi pra linha de
+                 título dentro do conteúdo (abaixo). --}}
+            <header class="topbar flex h-[64px] md:h-[70px] flex-shrink-0 items-center gap-1.5 md:gap-3 px-3 md:px-4 mx-3 md:mx-6">
                 {{-- Botão mobile --}}
-                <button type="button" class="md:hidden -ml-1 p-1.5" style="color:var(--muted)" @click="sidebarOpen = true">
+                <button type="button" class="md:hidden topbar-btn" @click="sidebarOpen = true">
                     <x-icon name="menu" size="20" />
                 </button>
 
-                {{-- Início — no mobile isso já mora na barra inferior --}}
-                <a href="{{ route('dashboard') }}"
-                    class="hidden md:flex items-center justify-center w-8 h-8 rounded-lg transition-colors flex-shrink-0"
-                    style="color:var(--muted)"
-                    onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
-                    onmouseout="this.style.background=''; this.style.color='var(--muted)'"
-                    title="Início">
-                    <x-icon name="house" size="16" />
-                </a>
+                {{-- Recolher/abrir o menu (desktop) --}}
+                <button type="button" class="hidden md:inline-flex topbar-btn" @click="toggleSidebar()"
+                        :title="sidebarCollapsed ? 'Abrir o menu' : 'Recolher o menu'">
+                    <x-icon name="panel-left-close" size="19" x-show="!sidebarCollapsed" />
+                    <x-icon name="panel-left-open" size="19" x-show="sidebarCollapsed" x-cloak />
+                </button>
 
-                {{-- Título dinâmico --}}
-                <div class="flex-1">
-                    @isset($header)
-                        <div>{{ $header }}</div>
-                    @endisset
-                </div>
+                <div class="flex-1"></div>
 
                 {{-- Seletor de MODO (ver App\Support\DashboardModes) — o que a pessoa está
                      fazendo agora; trocar salva como último modo e abre a Dashboard nele.
@@ -228,12 +215,8 @@
                          @keydown.slash.window="if (!open && document.activeElement === document.body) { $event.preventDefault(); open = true; $nextTick(() => $refs.globalSearchInput.focus()) }"
                          @nonna-open-search.window="open = true; $nextTick(() => $refs.globalSearchInput.focus())">
                         <button @click="open = !open; if (open) $nextTick(() => $refs.globalSearchInput.focus())"
-                            class="flex items-center justify-center w-8 h-8 rounded-lg transition-colors flex-shrink-0"
-                            style="color:var(--muted)"
-                            onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
-                            onmouseout="this.style.background=''; this.style.color='var(--muted)'"
-                            title="Buscar tarefa/ticket">
-                            <x-icon name="search" size="16" />
+                            class="topbar-btn" title="Buscar tarefa/ticket">
+                            <x-icon name="search" size="18" />
                         </button>
                         <div x-show="open" @click.outside="open = false" x-cloak
                              class="absolute right-0 mt-1 z-30 w-[360px] max-md:fixed max-md:inset-x-3 max-md:top-16 max-md:w-auto"
@@ -286,16 +269,12 @@
                 @endauth
 
                 {{-- Toggle tema --}}
-                <button @click="toggleTheme()"
-                    class="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
-                    style="color:var(--muted)"
-                    onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
-                    onmouseout="this.style.background=''; this.style.color='var(--muted)'"
+                <button @click="toggleTheme()" class="topbar-btn"
                     :title="darkMode ? 'Modo claro' : 'Modo escuro'">
                     {{-- Lua (modo claro → clicar para escurecer) --}}
-                    <x-icon name="moon" size="16" x-show="!darkMode" />
+                    <x-icon name="moon" size="18" x-show="!darkMode" />
                     {{-- Sol (modo escuro → clicar para clarear) --}}
-                    <x-icon name="sun" size="16" x-show="darkMode" x-cloak />
+                    <x-icon name="sun" size="18" x-show="darkMode" x-cloak />
                 </button>
 
                 {{-- Aviso de navegador (Notification API + som) — só liga se o usuário pedir,
@@ -303,12 +282,11 @@
                 @auth
                     <button type="button"
                         @click="$store.browserNotify.enabled ? $store.browserNotify.disable() : $store.browserNotify.enable()"
-                        class="relative flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
-                        :style="$store.browserNotify.enabled ? 'color:var(--purple)' : 'color:var(--muted)'"
-                        onmouseover="this.style.background='var(--s3)'"
-                        onmouseout="this.style.background=''"
+                        class="topbar-btn hidden sm:inline-flex"
+                        :style="$store.browserNotify.enabled ? 'color:var(--purple)' : ''"
                         :title="$store.browserNotify.enabled ? 'Avisos do navegador ativados — clique pra desligar' : 'Ativar avisos do navegador (popup + som)'">
-                        <span x-text="$store.browserNotify.enabled ? '🔔' : '🔕'"></span>
+                        <x-icon name="bell-ring" size="18" x-show="$store.browserNotify.enabled" x-cloak />
+                        <x-icon name="bell-off" size="18" x-show="!$store.browserNotify.enabled" />
                     </button>
                 @endauth
 
@@ -322,16 +300,11 @@
                             ->get();
                     @endphp
                     <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open"
-                            class="relative flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
-                            style="color:var(--muted)"
-                            onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
-                            onmouseout="this.style.background=''; this.style.color='var(--muted)'"
-                            title="Notificações">
-                            <x-icon name="bell" size="16" />
+                        <button @click="open = !open" class="topbar-btn relative" title="Notificações">
+                            <x-icon name="bell" size="18" />
                             @if($unreadNotifications->count() > 0)
-                                <span class="absolute -top-0.5 -right-0.5 flex items-center justify-center rounded-full text-white"
-                                      style="background:var(--orange); font-size:9px; min-width:15px; height:15px; padding:0 3px; line-height:15px">
+                                <span class="absolute top-0.5 right-0.5 flex items-center justify-center rounded-full text-white"
+                                      style="background:var(--orange); font-size:9px; min-width:16px; height:16px; padding:0 4px; line-height:16px; border:2px solid var(--s1)">
                                     {{ $unreadNotifications->count() }}
                                 </span>
                             @endif
@@ -391,23 +364,88 @@
                     </div>
                 @endauth
 
-                {{-- Badge ambiente — escondido no mobile pra dar espaço na topbar --}}
-                <span class="badge badge-purple hidden sm:inline-flex">
-                    Nonna OS
-                </span>
+                {{-- Pessoa logada (Mirbal: nome + função + foto à direita) — Perfil e Sair moram
+                     aqui (antes ficavam no rodapé do menu lateral). --}}
+                @auth
+                    @php $topbarRole = Auth::user()->functionalRoles()->value('functional_roles.name'); @endphp
+                    <div class="relative pl-1 md:pl-2" x-data="{ open: false }">
+                        <button type="button" @click="open = !open" class="flex items-center gap-2.5 rounded-full transition-opacity hover:opacity-80" title="{{ Auth::user()->email }}">
+                            <span class="hidden lg:flex flex-col items-end leading-tight">
+                                <span class="text-sm font-medium" style="color:var(--text)">{{ Auth::user()->name }}</span>
+                                @if($topbarRole)
+                                    <span class="text-xs" style="color:var(--muted)">{{ $topbarRole }}</span>
+                                @endif
+                            </span>
+                            <x-user-avatar :user="Auth::user()" size="9" />
+                        </button>
+                        <div x-show="open" @click.outside="open = false" x-cloak
+                             class="absolute right-0 mt-2 z-30 w-56 py-1.5"
+                             style="background:var(--s1); border:1px solid var(--border2); border-radius:var(--radius); box-shadow:0 8px 24px rgba(0,0,0,.10)">
+                            <div class="px-3.5 py-2" style="border-bottom:1px solid var(--border2)">
+                                <p class="text-sm font-medium truncate" style="color:var(--text)">{{ Auth::user()->name }}</p>
+                                <p class="text-xs truncate" style="color:var(--muted)">{{ Auth::user()->email }}</p>
+                            </div>
+                            <a href="{{ route('profile.edit') }}" class="flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors"
+                               style="color:var(--text)" onmouseover="this.style.background='rgba(100, 59, 142,.08)'; this.style.color='var(--purple)'" onmouseout="this.style.background=''; this.style.color='var(--text)'">
+                                <x-icon name="user" size="15" /> Meu perfil
+                            </a>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-left transition-colors"
+                                        style="color:var(--text)" onmouseover="this.style.background='rgba(100, 59, 142,.08)'; this.style.color='var(--purple)'" onmouseout="this.style.background=''; this.style.color='var(--text)'">
+                                    <x-icon name="log-out" size="15" /> Sair
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @endauth
             </header>
             @endunless
 
             {{-- PÁGINA --}}
-            <main class="app-page flex-1 overflow-y-auto p-4 pb-24 md:p-6 md:pb-6" style="background:var(--bg)">
-                @if($errors->any())
-                    <div class="mb-5 px-4 py-3 text-sm font-semibold" style="background:rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.25); color:var(--red)">
-                        @foreach($errors->all() as $error)
-                            <p>{{ $error }}</p>
-                        @endforeach
-                    </div>
-                @endif
-                {{ $slot }}
+            {{-- Margem lateral fixa, igual à do topo; o conteúdo ocupa o resto (decisão do
+                 Evandro: "margem fixa onde o conteúdo se adapta"). --}}
+            <main class="app-page flex-1 overflow-y-auto {{ $embed ? 'p-4 md:p-6' : 'px-3 pt-4 pb-24 md:px-6 md:pt-5 md:pb-0' }} flex flex-col" style="background:var(--bg)">
+                <div class="flex-1">
+                    {{-- Linha de título (Mirbal): título da página à esquerda, caminho à direita.
+                         Antes o título ficava dentro do topo. --}}
+                    @if(isset($header) && !$embed)
+                        @php
+                            // Cabeçalho com link/botão (Contatos, Campanha...) já traz a própria
+                            // navegação — o caminho à direita só aparece pra título de texto simples.
+                            $headerIsSimple = !preg_match('/<(a|button|form)\b/i', (string) $header);
+                        @endphp
+                        <div class="page-title-row">
+                            <h2 class="min-w-0 {{ $headerIsSimple ? '' : 'flex-1' }}">{{ $header }}</h2>
+                            @if($headerIsSimple)
+                            <nav class="page-crumbs hidden sm:flex" aria-label="Caminho">
+                                <a href="{{ route('dashboard') }}" class="inline-flex" title="Início" style="color:var(--purple)">
+                                    <x-icon name="house" size="15" />
+                                </a>
+                                <x-icon name="chevron-right" size="13" />
+                                <span class="truncate" style="max-width:320px">{{ \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags((string) $header))), 60) }}</span>
+                            </nav>
+                            @endif
+                        </div>
+                    @endif
+
+                    @if($errors->any())
+                        <div class="mb-5 px-4 py-3 text-sm font-semibold" style="background:rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.25); color:var(--red); border-radius:var(--radius)">
+                            @foreach($errors->all() as $error)
+                                <p>{{ $error }}</p>
+                            @endforeach
+                        </div>
+                    @endif
+                    {{ $slot }}
+                </div>
+
+                {{-- Rodapé em card (Mirbal) — só desktop; no celular a barra inferior ocupa o pé --}}
+                @unless($embed)
+                    <footer class="card hidden md:flex items-center justify-between gap-3 px-5 py-4 mt-6 mb-5 text-sm" style="color:var(--muted)">
+                        <span>{{ now()->year }} © Nonna Agência Digital</span>
+                        <span>Nonna OS</span>
+                    </footer>
+                @endunless
             </main>
         </div>
     </div>

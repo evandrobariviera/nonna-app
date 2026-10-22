@@ -129,14 +129,18 @@
         border-right: 1px solid var(--border2);
     }
 
+    /* Menu no padrão Mirbal (redesign etapa 2): título de seção 11px espaçado; itens com
+       cantos de 7px dentro de um respiro de 12px; ativo = fundo roxo 8% + texto roxo, sem
+       barra lateral; subitens com linha guia vertical. */
     .nav-group-label {
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.12em;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 1.5px;
         text-transform: uppercase;
-        color: var(--muted);
-        padding: 18px 18px 5px;
+        color: #242424;
+        padding: 16px 24px 8px;
     }
+    .dark .nav-group-label { color: var(--muted2); }
 
     .nav-item {
         display: flex;
@@ -169,79 +173,141 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        width: 100%;
-        padding: 7px 14px;
-        font-size: 13.5px;
-        font-weight: 600;
-        color: var(--muted2);
+        width: calc(100% - 24px);
+        margin: 0 12px 2px;
+        padding: 9px 12px;
+        font-size: 15px;
+        font-weight: 400;
+        color: #445664;
         background: none;
         border: none;
+        border-radius: var(--radius);
         cursor: pointer;
-        border-left: 2px solid transparent;
-        transition: all 0.12s;
+        text-decoration: none;
+        transition: background .15s, color .15s;
     }
+    .dark .nav-group-trigger { color: var(--muted2); }
 
     .nav-group-trigger:hover {
-        background: var(--s2);
-        color: var(--text);
+        background: rgba(100, 59, 142, .06);
+        color: var(--purple);
     }
 
-    .nav-group-trigger.open {
-        color: var(--text);
+    /* Link de topo ativo (o "open" de <a> = página atual) e grupo que contém a página
+       atual: fundo roxo 8%. Grupo só expandido (<button>.open) fica sem fundo. */
+    a.nav-group-trigger.open,
+    div:has(> div .nav-sub-item.active) > button.nav-group-trigger,
+    div:has(> div .nav-sprint-item.active) > button.nav-group-trigger {
+        background: rgba(100, 59, 142, .08);
+        color: var(--purple) !important;
+    }
+    button.nav-group-trigger.open { color: var(--text); }
+
+    /* Submenu: linha guia vertical + subitem com tracinho quando ativo */
+    .nav-group-trigger + div { position: relative; margin: 2px 0 6px; }
+    .nav-group-trigger + div::after {
+        content: "";
+        position: absolute;
+        top: 6px;
+        bottom: 6px;
+        left: 32px;
+        width: 1px;
+        background: var(--text);
+        opacity: .15;
+        pointer-events: none;
     }
 
     .nav-sub-item {
+        position: relative;
         display: block;
-        padding: 6px 14px 6px 40px;
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--muted);
+        margin: 0 12px;
+        padding: 8px 12px 8px 36px;
+        font-size: 14.5px;
+        font-weight: 400;
+        color: #445664;
         text-decoration: none;
-        transition: all 0.10s;
-        border-left: 2px solid transparent;
-        border-radius: 0 6px 6px 0;
-        margin-right: 8px;
+        border-radius: var(--radius);
+        transition: color .15s;
+    }
+    .dark .nav-sub-item { color: var(--muted2); }
+    .nav-sub-item::before {
+        content: "";
+        position: absolute;
+        z-index: 1;
+        top: 50%;
+        left: 19px;
+        transform: translateY(-50%);
+        width: 2px;
+        height: 22px;
+        border-radius: 10px;
+        background: var(--purple);
+        opacity: 0;
+        transition: opacity .15s;
     }
 
-    .nav-sub-item:hover {
-        color: var(--text);
-        background: var(--s3);
-    }
+    .nav-sub-item:hover { color: var(--purple); }
+    .nav-sub-item:hover::before { opacity: .5; }
 
-    .nav-sub-item.active {
-        color: var(--purple);
-        border-left-color: var(--purple);
-        background: rgba(100, 59, 142, 0.07);
-    }
+    .nav-sub-item.active { color: var(--purple); font-weight: 500; }
+    .nav-sub-item.active::before { opacity: 1; }
 
     /* Sprint sub-items — nível extra de indentação sob Sprints */
     .nav-sprint-item {
+        position: relative;
         display: flex;
         align-items: center;
         gap: 7px;
-        padding: 5px 14px 5px 54px;
-        font-size: 12.5px;
+        margin: 0 12px;
+        padding: 6px 12px 6px 52px;
+        font-size: 13.5px;
         font-weight: 400;
         color: var(--muted);
         text-decoration: none;
-        transition: all 0.10s;
-        border-left: 2px solid transparent;
-        border-radius: 0 6px 6px 0;
-        margin-right: 8px;
+        border-radius: var(--radius);
+        transition: color .15s;
     }
-    .nav-sprint-item:hover { color: var(--text); background: var(--s3); }
-    .nav-sprint-item.active {
-        color: var(--purple);
-        border-left-color: var(--purple);
-        background: rgba(100, 59, 142, 0.07);
-    }
+    .nav-sprint-item:hover { color: var(--purple); }
+    .nav-sprint-item.active { color: var(--purple); font-weight: 500; }
 
-    /* ── TOPBAR ── */
+    /* Menu recolhido (só ícones — botão no topo, lembrado no navegador). Texto some via
+       font-size 0 (os ícones têm tamanho fixo no SVG); subitens, setas e contadores somem;
+       clicar num grupo reabre o menu (ver layouts/app.blade.php). */
+    .sidebar-collapsed .nav-group-label { font-size: 0; padding: 10px 0 4px; }
+    .sidebar-collapsed .nav-group-label::after { content: ""; display: block; height: 1px; margin: 0 22px; background: var(--border2); }
+    .sidebar-collapsed .nav-group-trigger { justify-content: center; padding: 10px 0; }
+    .sidebar-collapsed .nav-group-trigger > span:first-child { font-size: 0; gap: 0; }
+    .sidebar-collapsed .nav-group-trigger > :not(:first-child) { display: none !important; }
+    .sidebar-collapsed .nav-group-trigger + div { display: none !important; }
+
+    /* ── TOPBAR — barra branca "flutuante": afastada das laterais, cantos arredondados só
+       embaixo, borda fina sem topo, sombra quase invisível ── */
     .topbar {
         background: var(--s1);
-        border-bottom: 1px solid var(--border2);
-        box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+        border: 1px solid var(--border2);
+        border-top: 0;
+        border-radius: 0 0 var(--radius) var(--radius);
+        box-shadow: var(--shadow);
     }
+    .topbar-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 38px;
+        height: 38px;
+        border-radius: 9999px;
+        color: var(--muted);
+        transition: background .15s, color .15s;
+    }
+    .topbar-btn:hover { background: var(--s3); color: var(--text); }
+
+    /* Linha de título da página (Mirbal "page-title"): título à esquerda, caminho à direita */
+    .page-title-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 20px; }
+    .page-title-row h2 { font-size: 16px; font-weight: 600; color: var(--text); }
+    .page-title-row h2 > span { font-size: 16px !important; font-weight: 600 !important; }
+    .page-crumbs { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); }
+    .page-crumbs a { color: var(--text); }
+    .page-crumbs a:hover { color: var(--purple); }
 
     /* ── CARDS ── */
     .card {
