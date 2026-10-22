@@ -526,6 +526,64 @@
         color: var(--purple);
     }
 
+    /* ── KANBAN no padrão Mirbal (redesign etapa 3) ──
+       .kb-board  = trilho horizontal das colunas (gap 20px)
+       .kb-col    = coluna: card sem sombra; .kb-col-head com .card-title (risquinho na cor
+                    da coluna via --kb-bar) + contador; .kb-list = cartões (gap 12px)
+       .kb-card   = cartão: borda clara, cantos 10px, padding 12/14px
+         .kb-card-top (etiquetas + ações) · .kb-card-title (2 linhas) · .kb-card-desc
+         (cinza, 2 linhas) · .kb-card-foot (contadores à esquerda, .kb-avatars à direita)
+       Arrastar continua nos data-kanban-* (kanban-dnd.js), independente destas classes. */
+    .kb-board { display: flex; align-items: flex-start; gap: 20px; overflow-x: auto; padding-bottom: 8px; }
+    .kb-col {
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        width: 290px;
+        background: var(--s1);
+        border: 1px solid var(--border2);
+        border-radius: var(--radius-lg);
+    }
+    .kb-col-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 16px 16px 12px 20px; }
+    .kb-col-head .card-title { font-size: 15px; }
+    .kb-col-head .card-title::before { background: var(--kb-bar, var(--purple)); opacity: .85; }
+    .kb-count { font-size: 12px; font-weight: 500; color: var(--muted); background: var(--s2); padding: 1px 8px; border-radius: 9999px; }
+    .kb-list { display: flex; flex-direction: column; gap: 12px; padding: 0 12px 12px; min-height: 48px; }
+    .kb-empty { padding: 18px 12px; text-align: center; font-size: 13px; color: var(--muted); border: 1px dashed var(--border2); border-radius: var(--radius-lg); }
+
+    .kb-card {
+        position: relative;
+        background: var(--s1);
+        border: 1px solid var(--border2);
+        border-radius: var(--radius-lg);
+        padding: 12px 14px;
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .kb-card:hover { border-color: rgba(100, 59, 142, .35); box-shadow: var(--shadow); }
+    .kb-card-overdue { border-color: rgba(220, 38, 38, .45); }
+    .kb-card-top { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; min-height: 22px; }
+    .kb-card-title {
+        font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+        font-size: 14px; font-weight: 600; line-height: 1.35; color: var(--text);
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .kb-card-desc {
+        margin-top: 4px; font-size: 13.5px; line-height: 1.45; color: var(--muted);
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .kb-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; font-size: 13px; color: var(--muted); }
+    /* Item de menu suspenso (Mirbal: hover = roxo 8% + texto roxo) */
+    .dd-item {
+        display: flex; align-items: center; gap: 8px; width: 100%;
+        padding: 7px 12px; font-size: 13.5px; text-align: left; color: var(--text);
+        background: none; border: 0; cursor: pointer; transition: background .12s, color .12s;
+    }
+    .dd-item:hover { background: rgba(100, 59, 142, .08); color: var(--purple); }
+
+    .kb-avatars { display: flex; align-items: center; }
+    .kb-avatars > * { margin-left: -7px; box-shadow: 0 0 0 2px var(--s1); border-radius: 9999px; }
+    .kb-avatars > *:first-child { margin-left: 0; }
+
     /* ── GRADIENT TEXT ── */
     .grad-text {
         background: var(--grad);

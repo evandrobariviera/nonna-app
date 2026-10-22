@@ -3,27 +3,21 @@
      Um único menu "Mover" pro board inteiro (antes: 1 cópia escondida com 7 formulários
      por cartão — 1.144 formulários numa sprint de 162 tarefas). --}}
 <div x-data="{ moveOpen: false, moveStyle: '', moveUrl: '', moveFrom: '' }">
-    <div id="sprint-board" class="flex gap-4 overflow-x-auto pb-2" style="align-items: start;"
-         data-kanban-board data-status-field="status">
+    {{-- Quadro no padrão Mirbal (redesign etapa 3 — classes .kb-* em app.css): coluna com
+         título e risquinho na cor do status; cartão com etiquetas no alto, título em até 2
+         linhas, projeto em cinza, prazo, e no rodapé Mover/− Sprint + avatares sobrepostos. --}}
+    <div id="sprint-board" class="kb-board" data-kanban-board data-status-field="status">
 
         @foreach(\App\Models\Task::$statuses as $statusKey => $meta)
             @php $colTasks = $kanban[$statusKey]; @endphp
-            <div class="flex flex-col gap-2 flex-shrink-0" style="width:270px"
+            <div class="kb-col" style="--kb-bar: {{ \App\Models\Task::colorHex($meta['color']) }}"
                  data-kanban-column data-status="{{ $statusKey }}">
-                <div class="flex items-center justify-between px-3 py-2"
-                     style="background:var(--s2); border:1px solid var(--border2)">
-                    <div class="flex items-center gap-2">
-                        <div class="h-2 w-2 rounded-full"
-                             style="background:var(--{{ $meta['color'] === 'muted' ? 'muted' : $meta['color'] }})"></div>
-                        <span class="text-xs font-bold font-mono uppercase tracking-widest"
-                              style="color:var(--{{ $meta['color'] === 'muted' ? 'muted2' : $meta['color'] }})">
-                            {{ $meta['label'] }}
-                        </span>
-                    </div>
-                    <span class="text-xs font-mono font-bold" data-kanban-count style="color:var(--muted)">{{ $colTasks->count() }}</span>
+                <div class="kb-col-head">
+                    <h5 class="card-title truncate">{{ $meta['label'] }}</h5>
+                    <span class="kb-count" data-kanban-count>{{ $colTasks->count() }}</span>
                 </div>
 
-                <div class="flex flex-col gap-2" style="min-height:40px" data-kanban-list>
+                <div class="kb-list" data-kanban-list>
                 @forelse($colTasks as $task)
                     @php
                         $execList = $task->executors->filter(fn($u) => $u->pivot->role === 'executor');
@@ -32,70 +26,46 @@
                         }
                         $respList  = $task->executors->filter(fn($u) => $u->pivot->role === 'responsavel');
                         $statusUrl = $task->is_ticket ? route('tickets.update-status', $task) : route('tasks.update-status-direct', $task);
+                        $hasImage  = $task->hasImageAttachment();
                     @endphp
-                    <div class="card px-0 py-0 relative overflow-hidden"
+                    <div class="kb-card {{ $task->isOverdue() ? 'kb-card-overdue' : '' }}"
                          data-kanban-card data-id="{{ $task->id }}" data-update-url="{{ $statusUrl }}"
-                         style="{{ $task->isOverdue() ? 'border-left:3px solid var(--red)' : '' }}; cursor:pointer"
+                         style="cursor:pointer"
                          @click="selectMode
                              ? (selected.includes('{{ $task->id }}') ? selected = selected.filter(id => id !== '{{ $task->id }}') : selected.push('{{ $task->id }}'))
                              : (window.location = '{{ route('tasks.show', $task) }}')">
 
                         <input type="checkbox" value="{{ $task->id }}" data-task-id="{{ $task->id }}" x-model="selected"
                             x-show="selectMode" @click.stop
-                            class="absolute top-2 right-2 z-10" style="width:14px; height:14px">
+                            class="absolute top-3 right-3 z-10" style="width:14px; height:14px">
 
-                        <div class="px-4 py-3">
-                            {{-- Cliente --}}
-                            <p class="text-xs font-mono mb-1" style="color:var(--purple)">
-                                {{ $task->client?->displayName() ?? '—' }}
-                                @if($task->project)
-                                    <span style="color:var(--border2)"> / </span>
-                                    <span style="color:var(--muted)">{{ $task->project->title }}</span>
-                                @elseif($task->is_ticket)
-                                    <span style="color:var(--border2)"> / </span>
-                                    <span style="color:var(--orange)">Ticket</span>
-                                @endif
-                            </p>
-
-                            <div class="flex items-center gap-2 mb-2">
-                                <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="30" />
-                                <p class="text-xs font-semibold leading-snug min-w-0" style="color:var(--text)">
-                                    {{ $task->title }}
-                                    <x-pendency-badge :task="$task" class="ml-1" />
-                                </p>
-                            </div>
-
-                            {{-- Avatares: responsável (laranja) + executor (roxo) + aviso de imagem anexada --}}
-                            @php $hasImage = $task->hasImageAttachment(); @endphp
-                            @if($respList->isNotEmpty() || $execList->isNotEmpty() || $hasImage)
-                                <div class="flex items-center gap-1 mb-2">
-                                    @foreach($respList as $resp)
-                                        <x-user-avatar :user="$resp" size="6" color="var(--orange)" title="{{ $resp->name }} (Responsável)" />
-                                    @endforeach
-                                    @foreach($execList as $exec)
-                                        <x-user-avatar :user="$exec" size="6" color="var(--purple)" title="{{ $exec->name }} (Executor)" />
-                                    @endforeach
-                                    @if($hasImage)
-                                        <span class="ml-auto" title="Tem imagem anexada" style="color:var(--muted)">
-                                            <x-icon name="image" size="14" />
-                                        </span>
-                                    @endif
-                                </div>
+                        {{-- Tipo + cliente (+ Ticket) + pendência --}}
+                        <div class="kb-card-top">
+                            <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="22" />
+                            <span class="badge tag-purple truncate" style="max-width:160px" title="{{ $task->client?->displayName() }}">{{ $task->client?->displayName() ?? 'Sem cliente' }}</span>
+                            @if($task->is_ticket)
+                                <span class="badge tag-orange">Ticket</span>
                             @endif
+                            <x-pendency-badge :task="$task" class="ml-auto" />
+                        </div>
 
-                            {{-- Data --}}
-                            <div class="mb-2">
-                                <x-inline-date-cell :task="$task" field="due_date" :overdue="$task->isOverdue()" />
-                            </div>
+                        <p class="kb-card-title">{{ $task->title }}</p>
+                        @if($task->project)
+                            <p class="kb-card-desc">{{ $task->project->title }}</p>
+                        @endif
 
-                            {{-- Mover status + remover da sprint --}}
-                            <div class="flex items-center gap-1.5 pt-2 relative" style="border-top:1px solid var(--border2)" @click.stop>
+                        <div class="mt-2.5">
+                            <x-inline-date-cell :task="$task" field="due_date" :overdue="$task->isOverdue()" />
+                        </div>
+
+                        {{-- Rodapé: ações à esquerda, pessoas à direita --}}
+                        <div class="kb-card-foot" @click.stop>
+                            <div class="flex items-center gap-1.5">
                                 {{-- Coluna lida na hora do clique (não no render): o card pode ter
                                      sido arrastado pra outra coluna depois que a aba carregou. --}}
                                 <button type="button"
                                     @click.stop="moveUrl = '{{ $statusUrl }}'; moveFrom = $el.closest('[data-kanban-column]').dataset.status; moveStyle = dropdownStyle($el, 'top-left'); moveOpen = true"
-                                    class="text-xs px-2 py-0.5 font-mono flex items-center gap-1"
-                                    style="border:1px solid var(--border2); color:var(--muted)">
+                                    class="btn btn-ghost btn-xs">
                                     Mover <span style="opacity:.7">▾</span>
                                 </button>
 
@@ -103,19 +73,29 @@
                                     <form method="POST" action="{{ route('sprints.remove-task', [$sprint, $task]) }}"
                                           @submit.prevent="if (await $store.confirmDialog.ask('Remover da sprint?')) $el.submit()">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-xs">
-                                            − Sprint
-                                        </button>
+                                        <button type="submit" class="btn btn-soft-red btn-xs" title="Remover da sprint">− Sprint</button>
                                     </form>
                                 @endif
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                @if($hasImage)
+                                    <span title="Tem imagem anexada"><x-icon name="image" size="14" /></span>
+                                @endif
+                                {{-- Responsável (laranja) + executor (roxo) --}}
+                                <div class="kb-avatars">
+                                    @foreach($respList as $resp)
+                                        <x-user-avatar :user="$resp" size="6" color="var(--orange)" title="{{ $resp->name }} (Responsável)" />
+                                    @endforeach
+                                    @foreach($execList as $exec)
+                                        <x-user-avatar :user="$exec" size="6" color="var(--purple)" title="{{ $exec->name }} (Executor)" />
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
                     </div>
                 @empty
-                    <div class="px-4 py-5 text-center text-xs"
-                         style="border:1px dashed var(--border2); color:var(--muted)">
-                        Sem tarefas
-                    </div>
+                    <div class="kb-empty">Sem tarefas</div>
                 @endforelse
                 </div>
             </div>

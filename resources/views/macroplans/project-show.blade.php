@@ -760,128 +760,105 @@
         <div x-show="boardOpen" x-cloak>
         <div x-show="view === 'quadro'">
         {{-- ── COLUNAS KANBAN ── --}}
-        <div id="project-board" class="flex gap-4 overflow-x-auto pb-2" style="align-items: start;"
-             data-kanban-board data-status-field="status">
+        {{-- Quadro no padrão Mirbal (redesign etapa 3 — classes .kb-* em app.css). --}}
+        <div id="project-board" class="kb-board" data-kanban-board data-status-field="status">
 
             @foreach(\App\Models\Task::$statuses as $colKey => $col)
                 @continue($colKey === 'cancelado')
                 @php $colTasks = $kanban[$colKey]; @endphp
-                <div class="flex flex-col gap-2 flex-shrink-0" style="width:270px"
+                <div class="kb-col" style="--kb-bar: {{ \App\Models\Task::colorHex($col['color']) }}"
                      data-kanban-column data-status="{{ $colKey }}"
                      @if($colKey === 'concluido') x-show="showDone" x-cloak @endif>
 
-                    {{-- Header da coluna — sólido estilo Monday --}}
-                    <div class="flex items-center justify-between px-3 py-2.5 rounded"
-                         style="background:{{ \App\Models\Task::colorHex($col['color']) }}">
-                        <span class="text-xs font-bold uppercase tracking-wider" style="color:#fff; letter-spacing:.06em">
-                            {{ $col['label'] }}
-                        </span>
-                        <span class="text-xs font-bold" data-kanban-count style="color:rgba(255,255,255,.75)">
-                            {{ $colTasks->count() }}
-                        </span>
+                    {{-- Título da coluna com o risquinho na cor do status --}}
+                    <div class="kb-col-head">
+                        <h5 class="card-title truncate">{{ $col['label'] }}</h5>
+                        <span class="kb-count" data-kanban-count>{{ $colTasks->count() }}</span>
                     </div>
 
                     {{-- Cards --}}
-                    <div class="flex flex-col gap-2" data-kanban-list>
+                    <div class="kb-list" data-kanban-list>
                     @forelse($colTasks as $task)
                         @php
                             $statusUrl = $standalone ? route('tasks.updateStatusStandalone', [$project, $task]) : route('tasks.update-status', [$macroplan, $project, $task]);
                         @endphp
-                        <div class="card px-4 py-3"
-                             data-kanban-card data-id="{{ $task->id }}" data-update-url="{{ $statusUrl }}"
-                             style="{{ $task->isOverdue() ? 'border-left:3px solid var(--red)' : '' }}">
+                        <div class="kb-card {{ $task->isOverdue() ? 'kb-card-overdue' : '' }}"
+                             data-kanban-card data-id="{{ $task->id }}" data-update-url="{{ $statusUrl }}">
 
-                            {{-- VIEW do card --}}
-                            <div x-show="editTaskId !== '{{ $task->id }}'">
-                                <div class="flex items-start justify-between gap-2 mb-2">
-                                    <div class="flex items-center gap-2 min-w-0">
-                                        <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="30" />
-                                        <p class="text-xs font-semibold leading-snug min-w-0" style="color:var(--text)">
-                                            {{ $task->title }}
-                                            <x-pendency-badge :task="$task" class="ml-1" />
-                                        </p>
-                                    </div>
-                                    <button @click="editTaskId = '{{ $task->id }}'" class="btn btn-ghost btn-xs flex-shrink-0">
-                                        ✎
+                            {{-- VIEW do card (padrão Mirbal): etiquetas + ⋮ no alto, título, rodapé com
+                                 datas e pessoas. As ações (abrir, editar, mover, remover) moram no ⋮ —
+                                 antes eram 7+ botões soltos em cada cartão. --}}
+                            <div x-show="editTaskId !== '{{ $task->id }}'" x-data="{ menu: false, menuStyle: '' }">
+                                <div class="kb-card-top">
+                                    <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="22" />
+                                    @if($task->destination)
+                                        <span class="badge tag-muted truncate" style="max-width:120px">{{ $task->destinationLabel() }}</span>
+                                    @endif
+                                    @if($task->internal_approval)
+                                        <span class="badge tag-purple">Aprov. Int.</span>
+                                    @endif
+                                    <x-pendency-badge :task="$task" />
+                                    <button type="button" class="ml-auto flex-shrink-0 inline-flex items-center justify-center rounded-md"
+                                            style="width:24px; height:24px; color:var(--muted)" title="Ações"
+                                            @click.stop="menuStyle = dropdownStyle($el, 'bottom-right'); menu = !menu">
+                                        <x-icon name="ellipsis-vertical" size="16" />
                                     </button>
                                 </div>
 
-                                <div class="flex flex-wrap items-center gap-1.5 mb-2">
-                                    @if($task->destination)
-                                        <span class="text-xs font-mono" style="color:var(--muted2)">{{ $task->destinationLabel() }}</span>
-                                    @endif
-                                </div>
+                                <a href="{{ route('tasks.show', $task) }}" class="kb-card-title hover:underline">{{ $task->title }}</a>
 
-                                {{-- Executores --}}
-                                @if($task->executors->count() > 0)
-                                    <div class="flex flex-wrap gap-1 mb-2">
-                                        @foreach($task->executors as $exec)
-                                            <span class="text-xs px-1.5 py-0.5 font-mono"
-                                                  style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--{{ $exec->pivot->role === 'executor' ? 'orange' : ($exec->pivot->role === 'aprovador' ? 'purple' : 'text') }})">
-                                                {{ explode(' ', $exec->name)[0] }}
-                                                @if($exec->pivot->role !== 'executor')
-                                                    <span style="color:var(--muted)"> · {{ \App\Models\TaskExecutor::$roles[$exec->pivot->role] ?? '' }}</span>
-                                                @endif
+                                <div class="kb-card-foot">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        @if($task->due_date)
+                                            <span class="inline-flex items-center gap-1" title="Vencimento"
+                                                  style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">
+                                                <x-icon name="calendar" size="13" /> {{ $task->due_date->format('d/m') }}
                                             </span>
+                                        @endif
+                                        @if($task->publish_date)
+                                            <span class="inline-flex items-center gap-1" title="Publicação">
+                                                <x-icon name="send" size="13" /> {{ $task->publish_date->format('d/m') }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    @php $people = $task->executors->isNotEmpty() ? $task->executors : collect([$task->executor])->filter(); @endphp
+                                    <div class="kb-avatars">
+                                        @foreach($people as $person)
+                                            @php $role = $person->pivot->role ?? 'executor'; @endphp
+                                            <x-user-avatar :user="$person" size="6"
+                                                :color="$role === 'responsavel' ? 'var(--orange)' : 'var(--purple)'"
+                                                title="{{ $person->name }} ({{ \App\Models\TaskExecutor::$roles[$role] ?? 'Executor' }})" />
                                         @endforeach
                                     </div>
-                                @elseif($task->executor)
-                                    <div class="mb-2">
-                                        <span class="text-xs font-mono" style="color:var(--muted)">
-                                            {{ explode(' ', $task->executor->name)[0] }}
-                                        </span>
+                                </div>
+
+                                {{-- Menu ⋮ — fora do quadro (x-teleport), senão a rolagem lateral corta --}}
+                                <template x-teleport="body">
+                                    <div x-show="menu" @click.outside="menu = false" x-close-on-scroll="menu" x-cloak
+                                         class="py-1.5" :style="menuStyle + 'min-width:210px; background:var(--s1); border:1px solid var(--border2); border-radius:var(--radius); box-shadow:0 8px 24px rgba(0,0,0,.10)'">
+                                        <a href="{{ route('tasks.show', $task) }}" class="dd-item"><x-icon name="external-link" size="14" /> Abrir</a>
+                                        <button type="button" class="dd-item" @click="editTaskId = '{{ $task->id }}'; menu = false"><x-icon name="pencil" size="14" /> Editar aqui</button>
+                                        <p class="px-3 pt-2 pb-1 text-xs" style="color:var(--muted)">Mover para</p>
+                                        @foreach(\App\Models\Task::$statuses as $targetKey => $targetCol)
+                                            @if($targetKey !== $colKey)
+                                                <form method="POST" action="{{ $statusUrl }}">
+                                                    @csrf @method('PATCH')
+                                                    <input type="hidden" name="status" value="{{ $targetKey }}">
+                                                    <button type="submit" class="dd-item">
+                                                        <span class="inline-block w-2 h-2 rounded-full flex-shrink-0" style="background:{{ \App\Models\Task::colorHex($targetCol['color']) }}"></span>
+                                                        {{ $targetCol['label'] }}
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        @endforeach
+                                        <div class="my-1" style="border-top:1px solid var(--border2)"></div>
+                                        <form method="POST" action="{{ $standalone ? route('tasks.destroyStandalone', [$project, $task]) : route('tasks.destroy', [$macroplan, $project, $task]) }}"
+                                              @submit.prevent="menu = false; if (await $store.confirmDialog.ask('Remover?')) $el.submit()">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="dd-item" style="color:var(--red)"><x-icon name="trash-2" size="14" /> Remover</button>
+                                        </form>
                                     </div>
-                                @endif
-
-                                {{-- Datas --}}
-                                <div class="flex flex-wrap gap-2 mb-2">
-                                    @if($task->due_date)
-                                        <span class="text-xs font-mono"
-                                              style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">
-                                            Venc: {{ $task->due_date->format('d/m') }}
-                                        </span>
-                                    @endif
-                                    @if($task->publish_date)
-                                        <span class="text-xs font-mono" style="color:var(--muted)">
-                                            Pub: {{ $task->publish_date->format('d/m') }}
-                                        </span>
-                                    @endif
-                                </div>
-
-                                {{-- Status + badges --}}
-                                <div class="flex items-center flex-wrap gap-1">
-                                    <span class="badge badge-{{ $task->statusColor() }}" style="font-size:10px">
-                                        {{ $task->statusLabel() }}
-                                    </span>
-                                    @if($task->internal_approval)
-                                        <span class="badge" style="font-size:10px; color:var(--purple)">Aprov. Int.</span>
-                                    @endif
-                                </div>
-
-                                {{-- Mover entre colunas --}}
-                                <div class="flex flex-wrap gap-1 mt-2 pt-2" style="border-top:1px solid var(--border2)">
-                                    @foreach(\App\Models\Task::$statuses as $targetKey => $targetCol)
-                                        @if($targetKey !== $colKey)
-                                            <form method="POST" action="{{ $standalone ? route('tasks.updateStatusStandalone', [$project, $task]) : route('tasks.update-status', [$macroplan, $project, $task]) }}">
-                                                @csrf @method('PATCH')
-                                                <input type="hidden" name="status" value="{{ $targetKey }}">
-                                                <button type="submit" class="btn btn-ghost btn-xs">
-                                                    → {{ $targetCol['label'] }}
-                                                </button>
-                                            </form>
-                                        @endif
-                                    @endforeach
-                                    <a href="{{ route('tasks.show', $task) }}" class="btn btn-ghost btn-xs">
-                                        Abrir →
-                                    </a>
-                                    <form method="POST" action="{{ $standalone ? route('tasks.destroyStandalone', [$project, $task]) : route('tasks.destroy', [$macroplan, $project, $task]) }}"
-                                          @submit.prevent="if (await $store.confirmDialog.ask('Remover?')) $el.submit()">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-xs">
-                                            ✕
-                                        </button>
-                                    </form>
-                                </div>
+                                </template>
                             </div>
 
                             {{-- ── FORMULÁRIO DE EDIÇÃO INLINE ── --}}
@@ -1022,10 +999,7 @@
 
                         </div>
                     @empty
-                        <div class="px-4 py-6 text-center text-xs rounded"
-                             style="border:1px dashed var(--border2); color:var(--muted)">
-                            Sem tarefas
-                        </div>
+                        <div class="kb-empty">Sem tarefas</div>
                     @endforelse
                     </div>
 
