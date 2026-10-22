@@ -1,0 +1,17 @@
+{
+  "novidades": [
+    {
+      "title": "Organizador também recebe o aviso da ATA",
+      "summary": "O aviso \"ATA pronta\" / \"ATA atualizada\" vai para participantes e organizador, inclusive para quem gerou ou escreveu a ATA. E o card de Participantes da reunião agora mostra o organizador, marcado como tal.",
+      "kind": "melhoria", "area": "Reuniões"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Fluxo de Reuniões com o Cliente — do agendamento à ATA",
+      "category": "Reuniões",
+      "slug": "fluxo-de-reunioes-e-agendamento-de-macroplanejamento",
+      "body_file": "ajuda-fluxo-reunioes.html"
+    }
+  ]
+}

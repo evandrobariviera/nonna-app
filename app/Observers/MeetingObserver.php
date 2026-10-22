@@ -21,7 +21,7 @@ class MeetingObserver
         if ($meeting->wasChanged('ata') && filled($meeting->ata)) {
             $actorId = MeetingAtaService::$actingUserId ?? auth()->id();
             MeetingAtaService::resolveAtaPendencies($meeting, $actorId);
-            app(MeetingAtaService::class)->notifyParticipants($meeting, blank($meeting->getOriginal('ata')), $actorId);
+            app(MeetingAtaService::class)->notifyParticipants($meeting, blank($meeting->getOriginal('ata')));
         }
 
         if ($meeting->wasChanged('status') && $meeting->status === 'realizada') {

@@ -87,16 +87,16 @@ class MeetingAtaService
     }
 
     // Quem disparou a geração no job (fila não tem usuário logado) — o MeetingObserver
-    // usa pra não avisar a própria pessoa.
+    // usa como "resolvido por" da pendência Registrar a ATA.
     public static ?int $actingUserId = null;
 
     /**
-     * Avisa os participantes (menos quem mudou a ATA) — é o aviso com "✓ Li a ATA". Chamado
-     * pelo MeetingObserver a CADA mudança da ATA (IA ou à mão; decisão do Evandro,
-     * 2026-10-22). Quem ainda tem um aviso dessa ATA sem confirmar não recebe outro: vai
-     * ler a versão mais nova de qualquer jeito — evita encher o sino de quem salva aos poucos.
+     * Avisa participantes + organizador — é o aviso com "✓ Li a ATA". Chamado pelo
+     * MeetingObserver a CADA mudança da ATA (IA ou à mão; decisão do Evandro, 2026-10-22).
+     * Quem ainda tem um aviso dessa ATA sem confirmar não recebe outro: vai ler a versão
+     * mais nova de qualquer jeito — evita encher o sino de quem salva aos poucos.
      */
-    public function notifyParticipants(Meeting $meeting, bool $isNew, ?int $actorId): void
+    public function notifyParticipants(Meeting $meeting, bool $isNew): void
     {
         $pending = InternalNotification::withoutGlobalScopes()
             ->where('source_type', 'Meeting')
@@ -105,9 +105,12 @@ class MeetingAtaService
             ->where('status', '!=', 'resolvido')
             ->pluck('user_id');
 
-        $recipients = $meeting->participants()
-            ->when($actorId, fn ($q) => $q->where('users.id', '!=', $actorId))
-            ->whereNotIn('users.id', $pending)
+        // Participantes + organizador, inclusive quem mudou a ATA (Evandro, 2026-10-22: todo
+        // mundo confirma a leitura da versão final).
+        $recipients = \App\Models\User::where(fn ($q) => $q
+                ->whereIn('id', $meeting->participants()->select('users.id'))
+                ->when($meeting->organized_by, fn ($q) => $q->orWhere('id', $meeting->organized_by)))
+            ->whereNotIn('id', $pending)
             ->get();
         if ($recipients->isEmpty()) {
             return;

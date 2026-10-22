@@ -491,20 +491,35 @@
                  sozinha quando a reunião passa do horário sem ATA. --}}
             <x-pendencies-panel :pendable="$meeting" alias="meeting" :users="$users" />
 
-            {{-- Participantes --}}
+            {{-- Participantes — o organizador entra primeiro (é avisado da ATA junto com o
+                 resto, ver MeetingAtaService::notifyParticipants), sem repetir se também
+                 estiver na lista de participantes. --}}
+            @php
+                $everyone = collect([$meeting->organizer])->filter()
+                    ->merge($meeting->participants)
+                    ->unique('id')->values();
+            @endphp
             <div class="card">
                 <div class="px-5 py-4" style="border-bottom:1px solid var(--border2)">
-                    <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Participantes</p>
+                    <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
+                        Participantes
+                        @if($everyone->isNotEmpty())
+                            <span class="ml-1 px-1.5 py-0.5" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $everyone->count() }}</span>
+                        @endif
+                    </p>
                 </div>
                 <div class="px-5 py-4">
-                    @if($meeting->participants->isEmpty())
+                    @if($everyone->isEmpty())
                         <p class="text-sm" style="color:var(--muted)">Nenhum participante.</p>
                     @else
                         <ul class="space-y-2">
-                            @foreach($meeting->participants as $user)
+                            @foreach($everyone as $user)
                                 <li class="flex items-center gap-3">
                                     <x-user-avatar :user="$user" size="7" />
                                     <span class="text-sm" style="color:var(--text)">{{ $user->name }}</span>
+                                    @if($user->id === $meeting->organized_by)
+                                        <span class="badge badge-purple ml-auto" style="font-size:10px">organizador</span>
+                                    @endif
                                 </li>
                             @endforeach
                         </ul>
