@@ -55,8 +55,10 @@
              x-transition:leave="transition duration-200 transform"
              x-transition:leave-start="translate-x-0"
              x-transition:leave-end="-translate-x-full">
-            <div class="flex h-16 items-center justify-between px-5 border-b" style="border-color:var(--border)">
-                <span class="text-sm font-bold grad-text">Portal do Cliente</span>
+            <div class="flex h-[64px] items-center justify-between px-5">
+                <img src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png"
+                     alt="Nonna" class="h-7 w-auto object-contain object-left">
+                <span class="badge tag-purple">Portal do Cliente</span>
                 <button @click="sidebarOpen = false" style="color:var(--muted)">
                     <x-icon name="x" size="20" />
                 </button>
@@ -76,14 +78,20 @@
     <div class="flex h-screen">
 
         {{-- ── SIDEBAR DESKTOP ── --}}
-        <aside class="hidden md:flex md:w-64 md:flex-col sidebar-nav flex-shrink-0">
+        {{-- Mesmo menu do App (redesign Mirbal, etapa 2): 264px, logo na altura do topo; Minha
+             Conta e Sair foram pro menu da pessoa no topo. --}}
+        <aside class="hidden md:flex md:w-[264px] md:flex-col sidebar-nav flex-shrink-0">
             {{-- Logo --}}
-            <div class="flex h-16 items-center px-6 border-b" style="border-color:var(--border); flex-shrink:0">
-                <span class="text-lg font-black grad-text">NONNA</span>
-            </div>
+            <a href="{{ $_magic ? route('portal.approvals.index') : route('portal.dashboard') }}"
+               class="flex h-[70px] items-center px-6 flex-shrink-0 transition-opacity hover:opacity-80">
+                <img src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png"
+                     alt="Nonna" class="h-8 w-auto max-w-full object-contain object-left"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                <span class="text-lg font-black grad-text hidden">NONNA</span>
+            </a>
 
             {{-- Cliente logado --}}
-            <div class="px-5 py-4 border-b" style="border-color:var(--border)">
+            <div class="mx-4 mb-2 px-3 py-2.5 card-inset">
                 @if(($portalClients ?? collect())->count() > 1)
                     <div x-data="{ open: false }" class="relative">
                         <button @click="open = !open" class="flex items-center justify-between w-full text-left" style="min-width:0">
@@ -107,59 +115,27 @@
                 @else
                     <p class="text-xs font-bold truncate" style="color:var(--text)">{{ $currentClient->company_name }}</p>
                 @endif
-                <p class="text-xs truncate mt-0.5" style="color:var(--muted); font-size:11px">{{ $portalContact->name }}</p>
             </div>
 
             {{-- Links --}}
-            <nav class="flex-1 overflow-y-auto py-3">
+            <nav class="flex-1 overflow-y-auto overflow-x-hidden pb-4">
                 @include('layouts.portal-sidebar-links')
             </nav>
-
-            {{-- Footer --}}
-            <div class="border-t px-5 py-3 flex items-center justify-between" style="border-color:var(--border2)">
-                @if($_magic)
-                <span></span>
-                @else
-                <a href="{{ route('portal.account') }}"
-                   class="text-xs font-semibold transition-colors {{ request()->routeIs('portal.account') ? '' : '' }}"
-                   style="color: {{ request()->routeIs('portal.account') ? 'var(--purple)' : 'var(--muted)' }}"
-                   onmouseover="this.style.color='var(--purple)'" onmouseout="this.style.color='{{ request()->routeIs('portal.account') ? 'var(--purple)' : 'var(--muted)' }}'">
-                    Minha Conta
-                </a>
-                @endif
-                <form method="POST" action="{{ route('portal.logout') }}">
-                    @csrf
-                    <button type="submit" class="btn btn-ghost btn-xs">
-                        Sair
-                    </button>
-                </form>
-            </div>
         </aside>
 
         {{-- ── CONTEÚDO PRINCIPAL ── --}}
         <div class="flex flex-1 flex-col min-w-0">
 
-            {{-- TOPBAR --}}
-            <header class="topbar flex h-16 flex-shrink-0 items-center gap-4 px-6">
+            {{-- TOPBAR — "flutuante" como no App: mesma margem do conteúdo, cantos só embaixo --}}
+            <header class="topbar flex h-[64px] md:h-[70px] flex-shrink-0 items-center gap-1.5 md:gap-3 px-3 md:px-4 mx-3 md:mx-6">
                 {{-- Botão mobile --}}
-                <button type="button" class="md:hidden -ml-1 p-1.5" style="color:var(--muted)" @click="sidebarOpen = true">
+                <button type="button" class="md:hidden topbar-btn" @click="sidebarOpen = true">
                     <x-icon name="menu" size="20" />
                 </button>
 
-                {{-- Início --}}
-                <a href="{{ $_magic ? route('portal.approvals.index') : route('portal.dashboard') }}"
-                    class="flex items-center justify-center w-8 h-8 rounded-lg transition-colors flex-shrink-0"
-                    style="color:{{ request()->routeIs('portal.dashboard') ? 'var(--purple)' : 'var(--muted)' }}"
-                    onmouseover="this.style.background='var(--s3)'; this.style.color='var(--text)'"
-                    onmouseout="this.style.background=''; this.style.color='{{ request()->routeIs('portal.dashboard') ? 'var(--purple)' : 'var(--muted)' }}'"
-                    title="Início">
-                    <x-icon name="house" size="16" />
-                </a>
+                <span class="badge tag-purple hidden sm:inline-flex">Portal do Cliente</span>
 
-                {{-- Título dinâmico --}}
-                <div class="flex-1">
-                    <h1 class="text-sm font-bold" style="color:var(--text)">{{ $title ?? '' }}</h1>
-                </div>
+                <div class="flex-1"></div>
 
                 @unless($_magic)
                 <a href="{{ route('portal.tickets.create') }}" class="btn btn-primary btn-sm flex items-center gap-1.5 flex-shrink-0">
@@ -168,14 +144,59 @@
                 </a>
                 @endunless
 
-                <span class="badge badge-purple">Portal do Cliente</span>
+                {{-- Pessoa logada: nome + empresa + inicial; Minha Conta e Sair moram aqui --}}
+                <div class="relative pl-1 md:pl-2" x-data="{ open: false }">
+                    <button type="button" @click="open = !open" class="flex items-center gap-2.5 rounded-full transition-opacity hover:opacity-80">
+                        <span class="hidden lg:flex flex-col items-end leading-tight">
+                            <span class="text-sm font-medium" style="color:var(--text)">{{ $portalContact->name }}</span>
+                            <span class="text-xs" style="color:var(--muted)">{{ $currentClient->company_name }}</span>
+                        </span>
+                        <span class="flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold flex-shrink-0"
+                              style="background:rgba(100, 59, 142,.12); color:var(--purple)">
+                            {{ mb_strtoupper(mb_substr($portalContact->name, 0, 1)) }}
+                        </span>
+                    </button>
+                    <div x-show="open" @click.outside="open = false" x-cloak
+                         class="absolute right-0 mt-2 z-30 w-56 py-1.5"
+                         style="background:var(--s1); border:1px solid var(--border2); border-radius:var(--radius); box-shadow:0 8px 24px rgba(0,0,0,.10)">
+                        <div class="px-3.5 py-2" style="border-bottom:1px solid var(--border2)">
+                            <p class="text-sm font-medium truncate" style="color:var(--text)">{{ $portalContact->name }}</p>
+                            <p class="text-xs truncate" style="color:var(--muted)">{{ $currentClient->company_name }}</p>
+                        </div>
+                        @unless($_magic)
+                        <a href="{{ route('portal.account') }}" class="dd-item">
+                            <x-icon name="user" size="15" /> Minha Conta
+                        </a>
+                        @endunless
+                        <form method="POST" action="{{ route('portal.logout') }}">
+                            @csrf
+                            <button type="submit" class="dd-item">
+                                <x-icon name="log-out" size="15" /> Sair
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </header>
 
             {{-- PÁGINA --}}
-            <main class="portal-page flex-1 overflow-y-auto p-6" style="background:var(--bg)">
+            <main class="portal-page flex-1 overflow-y-auto px-3 pt-4 pb-8 md:px-6 md:pt-5" style="background:var(--bg)">
+                {{-- Caminho (casa › página). As páginas do Portal já trazem o próprio título
+                     grande, então aqui vai só o caminho — e nada na página inicial. --}}
+                @if(!empty($title) && !request()->routeIs('portal.dashboard'))
+                    <div class="mb-3">
+                        <nav class="page-crumbs" aria-label="Caminho">
+                            <a href="{{ $_magic ? route('portal.approvals.index') : route('portal.dashboard') }}" class="inline-flex" title="Início" style="color:var(--purple)">
+                                <x-icon name="house" size="15" />
+                            </a>
+                            <x-icon name="chevron-right" size="13" />
+                            <span class="truncate" style="max-width:320px">{{ \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags((string) $title))), 60) }}</span>
+                        </nav>
+                    </div>
+                @endif
+
                 @if(session('success'))
-                    <div class="mb-6 rounded-lg px-4 py-3 text-sm font-semibold"
-                         style="background: rgba(5,150,105,.08); color: var(--green); border: 1px solid rgba(5,150,105,.2)">
+                    <div class="mb-6 px-4 py-3 text-sm font-semibold"
+                         style="background: rgba(5,150,105,.08); color: var(--green); border: 1px solid rgba(5,150,105,.2); border-radius:var(--radius)">
                         {{ session('success') }}
                     </div>
                 @endif

@@ -1,0 +1,11 @@
+{
+  "novidades": [
+    {
+      "title": "Portal do Cliente no novo visual",
+      "summary": "O Portal do Cliente ganhou o mesmo menu e topo do App: logo da Nonna no menu, nome do contato e da empresa no canto direito (com Minha Conta e Sair) e o caminho da página acima do título.",
+      "body": "<p>Se o cliente perguntar onde foi parar o botão Sair: agora fica clicando no nome dele, no canto de cima à direita. O resto do Portal continua igual.</p>",
+      "kind": "melhoria", "area": "Portal do Cliente"
+    }
+  ],
+  "ajuda": []
+}
