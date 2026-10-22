@@ -4,25 +4,25 @@
 >
 > Este arquivo é o mapa de trabalho. Atualize a seção **Progresso** ao fim de cada etapa.
 
-## ▶ Como retomar (estado em 2026-10-22, fim do dia)
+## ▶ Como retomar (estado em 2026-10-22, noite)
 
-**No ar (main 2b7eb2f, deploy ok 19:45):** etapas 1 (base visual), 2 (menu/topo/título), 3 (todos os quadros) e 4 (gráficos). Novidades publicadas: "Novo visual do App" e "Gráficos novos".
-**Aguardando:** Evandro aprovar os gráficos no ar (Dashboard modo Execução, Financeiro, Produtividade, Campanha) — depois começar a etapa 5.
-**Ramo de trabalho:** criar `redesign/etapa-5` a partir do `main`. Autorizado subir pra produção ao fim de cada etapa (com Novidade + espera do deploy antes de outro push).
+**No ar (main 466e051):** etapas 1–4 + etapa 5 itens 1, 3, 4, 6, 7, 8 e 9 (um push por item, Novidade publicada em cada).
+**Falta:** item 2 (Evandro decidir a fonte de datas/números), item 5 (acabamento tela a tela — pedir prints do Evandro) e item 10 (conferir no celular).
+**Trabalho:** direto no `main` (Evandro autorizou subir ao fim de cada item; esperar o deploy anterior — CSS novo em /login — antes do próximo push).
 
 ### O que falta — etapa 5 (acabamento tela a tela)
 
 Ordem sugerida, cada item vira um commit/deploy próprio:
 
-1. [ ] **Campos de formulário** — criar classe `.field` (borda `#e9e9e9`, raio 7px, foco roxo, sem halo) e trocar o estilo inline repetido `background:var(--s3); border:1px solid var(--border); border-radius:8px` (~306 lugares). Começar por create/edit de tarefa, reunião, cliente, planejamento.
+1. [x] **Campos de formulário** — criar classe `.field` (borda `#e9e9e9`, raio 7px, foco roxo, sem halo) e trocar o estilo inline repetido `background:var(--s3); border:1px solid var(--border); border-radius:8px` (~306 lugares). Começar por create/edit de tarefa, reunião, cliente, planejamento.
 2. [ ] **Fonte de máquina de escrever** — `font-mono` sem `uppercase` ainda aparece em datas/números ("vence 23/10", "19%"). Uma regra em `.app-page/.portal-page` trocando por Outfit com `font-variant-numeric: tabular-nums` (Evandro já viu e não decidiu — perguntar ou incluir aqui).
-3. [ ] **Títulos dos blocos** (Equipe, Comentários, Pendências, Reuniões, Documento…) com `.card-title` (risquinho roxo) — hoje são `text-xs font-semibold uppercase tracking-widest` convertidos em texto normal pequeno.
-4. [ ] **Cards de número antigos** `.stat-card` (11 lugares, linha degradê no topo) → `.kpi-card`; Produtividade e Carga de Produção com os KPIs de topo no mesmo padrão; considerar mais gráficos (Carga de Produção por período, Mídia Paga, Diagnóstico de Atendimento — etapa 4 deixou de fora).
+3. [x] **Títulos dos blocos** (Equipe, Comentários, Pendências, Reuniões, Documento…) com `.card-title` (risquinho roxo) — hoje são `text-xs font-semibold uppercase tracking-widest` convertidos em texto normal pequeno.
+4. [x] **Cards de número antigos** `.stat-card` (11 lugares, linha degradê no topo) → `.kpi-card`; Produtividade e Carga de Produção com os KPIs de topo no mesmo padrão; considerar mais gráficos (Carga de Produção por período, Mídia Paga, Diagnóstico de Atendimento — etapa 4 deixou de fora).
 5. [ ] **Telas mais usadas, uma a uma:** Tarefa (`tasks/show`), Cliente (`clients/show`), Planejamento (`macroplans/edit`), Campanha/Projeto (`macroplans/project-show`), Reunião (`meetings/show`), Aprovações (Lista), Pendências, Sprint (Lista). Seções divididas no mesmo card (linhas finas) e áreas internas `.card-inset` como nos prints do Mirbal (tela Activities, "Savings This Month").
-6. [ ] **Modais/janelas e menus suspensos** — raio 7px, `.dd-item` nos menus que ainda têm hover inline.
-7. [ ] **Portal do Cliente** (`components/portal-layout.blade.php` + `layouts/portal-sidebar-links.blade.php`) — ainda no layout antigo: aplicar o mesmo menu/topo/título da etapa 2.
-8. [ ] **Páginas públicas** (aprovação `approval/show`, cadastro, credenciais, senha do portal) — têm `font-family:'Inter'` escrito direto e layout próprio.
-9. [ ] **Menu recolhido:** mostrar o nome do item ao passar o mouse (tooltip).
+6. [x] **Modais/janelas e menus suspensos** — raio 7px, `.dd-item` nos menus que ainda têm hover inline.
+7. [x] **Portal do Cliente** (`components/portal-layout.blade.php` + `layouts/portal-sidebar-links.blade.php`) — ainda no layout antigo: aplicar o mesmo menu/topo/título da etapa 2.
+8. [x] **Páginas públicas** (aprovação `approval/show`, cadastro, credenciais, senha do portal) — têm `font-family:'Inter'` escrito direto e layout próprio.
+9. [x] **Menu recolhido:** mostrar o nome do item ao passar o mouse (tooltip).
 10. [ ] **Celular:** conferir menu/topo/quadros no celular (`bottom-nav`, drawer).
 
 Cuidados que valem pra tudo: cores de status continuam sólidas (decisão do Evandro); ícone novo sempre vendorizado em `resources/icons/lucide/`; testar renderização com dado real (requisição completa via HTTP kernel, em transação com rollback); não rodar consulta pesada sem índice no banco de produção (ex.: EXISTS em `ad_daily_snapshots`).
@@ -145,3 +145,10 @@ Cada etapa num ramo (`redesign/etapa-N`), Evandro confere em `nonna-app.test` (o
 - 2026-10-22 — Etapa 3b publicada (728547e) + correção do 500 de ícone (8d05244/9bec3c6).
 - 2026-10-22 — **Etapa 4 (gráficos)**: ApexCharts 5.3.6 (import dinâmico — chunk separado, só baixa onde tem gráfico), `resources/js/charts.js` (Alpine `apexChart`, padrões Mirbal, cores via CSS vars, redesenha ao trocar tema) + `<x-chart>` (type/series/categories/labels/colors/format/axisFormat/sparkline/stacked/options). Aplicado: Campanha (gasto/resultados por dia → área com degradê, via `partials/_line-chart`), Financeiro (fluxo de caixa e projeção → barras), Produtividade (Mix de Origem → rosca), Dashboard Execução (cards de número `.kpi-card` + "Concluídas" com área das conclusões por dia na sprint — `mySprintDoneDaily`, 1 consulta em task_status_transitions). Testado: telas renderizam (requisição completa) e o componente desenha bar/area/donut em DOM simulado.
 - 2026-10-22 — Etapa 4 **publicada** (2b7eb2f, deploy ok 19:45) + novidade "Gráficos novos". Ver "▶ Como retomar" no topo pra etapa 5.
+- 2026-10-22 (noite) — **Etapa 5, itens no ar** (um commit/deploy cada, Novidade em cada):
+  - 5.1 `6de0158` — classe `.field` (fundo branco, borda clara, 7px, foco roxo sem halo) em 425 campos de 70 telas; scripts trocaram o inline repetido (fundo s1/s2/s3 + borda) só em input/select/textarea.
+  - 5.3 `5f56fce` — 106 títulos de bloco viram `.card-title`; risquinho acompanha o padding do card via `--card-px` (card-body 24, -lg 28, -sm 20, p-4/5/6). Pula cards com borda colorida e rótulos de card de número.
+  - 5.4 `152c9d0` — `.stat-card` com visual do `.kpi-card` (sem faixa degradê); KPIs do topo de Produtividade e Carga de Produção em `.kpi-card`. Gráficos extras (Carga por período, Mídia Paga, Diagnóstico) NÃO feitos.
+  - 5.6+5.9 `8eb3c01` — `.dd-hover` (hover roxo 8%) em 29 itens de menu que tinham hover cinza inline; janelas com 10px e `modal` com fundo do tema; balão `.nav-tip` com o nome do item no menu recolhido (Alpine `showNavTip` no `<html>`, posição fixa).
+  - 5.7 `cb91f43` — Portal: menu 264px com logo, cliente em `.card-inset`, topo flutuante com contato+empresa (Minha Conta/Sair), caminho casa › página acima do título (páginas do Portal já têm h1 próprio; nada na inicial).
+  - 5.8 `466e051` — páginas públicas: corpo Outfit, campos/botões 7px e rótulos normais via regra `body .pub-input…` em app.css.
