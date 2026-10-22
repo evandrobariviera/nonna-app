@@ -22,20 +22,21 @@
     $capa = 30; // ver nota em baixo, na coluna
 @endphp
 
-<div class="flex flex-col gap-2 flex-shrink-0" style="width:270px{{ $hoje ? '; padding:6px; border-radius:10px; border:2px solid var(--green); background:rgba(52,211,153,.05)' : '' }}"
+{{-- Coluna no padrão Mirbal (classes .kb-* em app.css); "hoje" com borda e risquinho verdes.
+     O fundo tingido na cor do status nos cartões continua (esquema de cores do time). --}}
+<div class="kb-col" style="--kb-bar: {{ $hoje ? 'var(--green)' : 'var(--purple)' }}; width:280px{{ $hoje ? '; border:2px solid var(--green)' : '' }}"
      data-kanban-column data-status="{{ $dataStatus }}">
-    <div class="flex items-center justify-between px-3 py-2"
-         style="{{ $hoje ? 'background:rgba(52,211,153,.12); border:1px solid var(--green)' : 'background:var(--s2); border:1px solid var(--border2)' }}">
-        <span class="text-xs font-bold font-mono uppercase tracking-widest" style="color:{{ $hoje ? 'var(--green)' : 'var(--purple)' }}">
+    <div class="kb-col-head">
+        <h5 class="card-title truncate" style="{{ $hoje ? 'color:var(--green)' : '' }}">
             {{ ucfirst($data->translatedFormat('D')) }} · {{ $data->format('d/m') }}{{ $hoje ? ' · Hoje' : '' }}
-        </span>
-        <span class="text-xs font-mono font-bold" data-kanban-count style="color:var(--muted)">{{ $colTasks->count() }}</span>
+        </h5>
+        <span class="kb-count" data-kanban-count>{{ $colTasks->count() }}</span>
     </div>
 
     {{-- Coluna com muito card trava o navegador se renderizar tudo de cara: cada card tem
          avatares e o Alpine tem que hidratar cada um. Mostra só os primeiros e revela o resto
          sob pedido. --}}
-    <div class="flex flex-col gap-2" style="min-height:40px; max-height:70vh; overflow-y:auto"
+    <div class="kb-list" style="max-height:70vh; overflow-y:auto"
          data-kanban-list @if($colTasks->count() > $capa) x-data="{ mostrarMais: false }" @endif>
     @forelse($colTasks as $i => $task)
         @php
@@ -50,59 +51,51 @@
         {{-- Card reduzido de propósito: sem miniatura nem ícone de tipo, sem botão "Mover" (o
              arrastar já cobre isso) — com ~400+ tarefas na tela, cada elemento extra por card
              pesava o navegador. Clique abre a tarefa num popup, não navega pra fora do painel. --}}
-        <div class="px-3.5 py-3 relative"
+        <div class="kb-card {{ $task->isOverdue() ? 'kb-card-overdue' : '' }}"
              @if($i >= $capa) x-show="mostrarMais" x-cloak @endif
              data-kanban-card data-id="{{ $task->id }}" data-update-url="{{ $approvalUrl }}"
-             style="background:rgba({{ $rgb }}, .2);
-                    border:1px solid var(--border2);
-                    {{ $task->isOverdue() ? 'border-left:3px solid var(--red)' : '' }}; cursor:pointer"
+             style="background:rgba({{ $rgb }}, .16); cursor:pointer"
              @click="$store.taskPopup.open('{{ route('tasks.show', $task) }}')">
 
-            @if(! $task->sprint_id)
-                <p class="text-xs font-mono truncate mb-0.5" style="color:var(--orange)">Fila</p>
-            @endif
+            <div class="kb-card-top flex-wrap" style="margin-bottom:8px">
+                <span class="badge tag-purple truncate" style="max-width:170px">{{ $task->client?->displayName() ?? '—' }}</span>
+                @if(! $task->sprint_id)
+                    <span class="badge tag-orange">Fila</span>
+                @endif
+            </div>
 
-            <p class="text-xs font-mono truncate" style="color:var(--purple)">
-                {{ $task->client?->displayName() ?? '—' }}
-            </p>
-
-            <p class="font-semibold leading-snug mt-1.5" style="color:var(--text); font-size:14px">
-                {{ $task->title }}
-            </p>
+            <p class="kb-card-title">{{ $task->title }}</p>
 
             <div class="flex items-center gap-1 mt-2 flex-wrap">
-                <span class="badge badge-{{ $task->statusColor() }}" style="font-size:8px; padding:1px 5px">{{ $task->statusLabel() }}</span>
+                <span class="badge badge-{{ $task->statusColor() }}" style="font-size:10px; padding:1px 6px">{{ $task->statusLabel() }}</span>
                 @if($task->situation)
-                    <span class="badge" style="font-size:8px; padding:1px 5px; background:{{ $task->situationColor() }}; color:#fff; border-color:transparent">
+                    <span class="badge" style="font-size:10px; padding:1px 6px; background:{{ $task->situationColor() }}; color:#fff">
                         {{ $task->situationLabel() }}
                     </span>
                 @endif
             </div>
 
-            <div class="flex items-center gap-1.5 mt-2.5">
-                @forelse($respList as $resp)
-                    <x-user-avatar :user="$resp" size="5" color="var(--orange)" title="{{ $resp->name }} (Responsável)" />
-                @empty
-                    @if($execList->isEmpty())
-                        <span class="text-xs" style="color:var(--muted2)">—</span>
-                    @endif
-                @endforelse
-                @foreach($execList as $exec)
-                    <x-user-avatar :user="$exec" size="5" color="var(--purple)" title="{{ $exec->name }} (Executor)" />
-                @endforeach
+            <div class="kb-card-foot" style="justify-content:flex-end; margin-top:10px">
+                <div class="kb-avatars">
+                    @foreach($respList as $resp)
+                        <x-user-avatar :user="$resp" size="6" color="var(--orange)" title="{{ $resp->name }} (Responsável)" />
+                    @endforeach
+                    @foreach($execList as $exec)
+                        <x-user-avatar :user="$exec" size="6" color="var(--purple)" title="{{ $exec->name }} (Executor)" />
+                    @endforeach
+                </div>
+                @if($respList->isEmpty() && $execList->isEmpty())
+                    <span style="color:var(--muted2)">sem pessoa</span>
+                @endif
             </div>
         </div>
     @empty
-        <div class="px-4 py-5 text-center text-xs"
-             style="border:1px dashed var(--border2); color:var(--muted)">
-            Sem tarefas
-        </div>
+        <div class="kb-empty">Sem tarefas</div>
     @endforelse
 
     @if($colTasks->count() > $capa)
         <button type="button" x-show="!mostrarMais" @click="mostrarMais = true" x-cloak
-                class="text-xs font-semibold py-2 text-center"
-                style="color:var(--purple); border:1px dashed var(--border2); background:var(--s2)">
+                class="btn btn-soft-purple btn-xs justify-center">
             + mostrar mais {{ $colTasks->count() - $capa }} tarefa{{ ($colTasks->count() - $capa) !== 1 ? 's' : '' }}
         </button>
     @endif

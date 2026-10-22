@@ -13,55 +13,47 @@
             ['key' => 'approved',          'icon' => 'check',     'label' => 'Aprovado',             'color' => 'var(--green)'],
         ];
     @endphp
-    <div class="grid gap-4 mb-6" style="grid-template-columns: repeat(4, 1fr)">
+    {{-- Colunas no padrão Mirbal (classes .kb-* em app.css), 4 lado a lado --}}
+    <div class="grid gap-5 mb-6" style="grid-template-columns: repeat(4, minmax(0, 1fr))">
         @foreach($boardColumns as $col)
             @php $colRounds = $board[$col['key']]; @endphp
-            <div class="card px-4 py-4">
-                <h4 class="text-xs font-bold mb-3 flex items-center gap-1.5" style="color:var(--text)">
-                    <x-icon :name="$col['icon']" size="13" />
-                    {{ $col['label'] }} ({{ $colRounds->count() }})
-                </h4>
-                @if($colRounds->isEmpty())
-                    <p class="text-xs" style="color:var(--muted)">Nada por aqui.</p>
-                @else
-                    <div class="flex flex-col gap-2">
-                        @foreach($colRounds as $round)
-                            <div class="block px-3 py-2" style="background:var(--s2); border-left:2px solid {{ $col['color'] }}"
-                                 x-data="{ statusOpen: false, situacaoOpen: false, statusStyle: '', situacaoStyle: '' }">
-                                <a href="{{ route('tasks.show', $round->task_id) }}" class="flex items-center gap-2 hover:underline">
-                                    <x-icon-chip :icon="$round->task?->typeIcon() ?? 'tag'" :color="$round->task?->statusColor() ?? 'muted'" size="24" />
-                                    <p class="text-xs font-semibold leading-snug" style="color:var(--text)">
-                                        {{ $round->task?->title ?? '—' }}
-                                    </p>
-                                </a>
-                                <div class="flex items-center gap-2 mt-1 flex-wrap">
-                                    <span class="text-xs font-mono" style="color:var(--muted)">{{ $round->task?->client?->displayName() ?? '—' }}</span>
-                                    <span class="text-xs font-mono" style="color:var(--muted)">rodada {{ $round->round_number }}</span>
-                                </div>
-                                @if($col['key'] === 'awaiting_send' && $round->isAviso())
-                                    <a href="{{ route('approvals.index', ['view' => 'list']) }}"
-                                       class="inline-block mt-2 text-xs font-semibold px-2.5 py-1"
-                                       style="color:var(--orange); border:1px solid var(--orange)">
-                                        ⚠ Aviso — decidir na Lista
-                                    </a>
-                                @elseif($col['key'] === 'awaiting_send')
-                                    <form method="POST" action="{{ route('approvals.send', $round) }}"
-                                          @submit.prevent="if (await $store.confirmDialog.ask('Enviar essa rodada para o cliente agora?')) $el.submit()" class="mt-2">
-                                        @csrf
-                                        <button type="submit" class="text-xs font-semibold px-2.5 py-1 text-white"
-                                                style="background:var(--purple)">
-                                            Enviar pro Cliente
-                                        </button>
-                                    </form>
-                                @elseif($col['key'] === 'changes_requested')
-                                    <div class="mt-2 monday-fill-td relative" style="height:26px">
-                                        @include('partials._status-fill', ['task' => $round->task, 'statusUrl' => route('approvals.update-task-status', $round), 'showCurrent' => false])
-                                    </div>
-                                @endif
+            <div class="kb-col" style="--kb-bar: {{ $col['color'] }}; width:auto">
+                <div class="kb-col-head">
+                    <h5 class="card-title truncate flex items-center gap-1.5"><x-icon :name="$col['icon']" size="14" /> {{ $col['label'] }}</h5>
+                    <span class="kb-count">{{ $colRounds->count() }}</span>
+                </div>
+                <div class="kb-list">
+                    @forelse($colRounds as $round)
+                        <div class="kb-card"
+                             x-data="{ statusOpen: false, situacaoOpen: false, statusStyle: '', situacaoStyle: '' }">
+                            <div class="kb-card-top">
+                                <x-icon-chip :icon="$round->task?->typeIcon() ?? 'tag'" :color="$round->task?->statusColor() ?? 'muted'" size="22" />
+                                <span class="badge tag-purple truncate" style="max-width:150px">{{ $round->task?->client?->displayName() ?? '—' }}</span>
+                                <span class="badge tag-muted ml-auto">rodada {{ $round->round_number }}</span>
                             </div>
-                        @endforeach
-                    </div>
-                @endif
+                            <a href="{{ route('tasks.show', $round->task_id) }}" class="kb-card-title hover:underline">
+                                {{ $round->task?->title ?? '—' }}
+                            </a>
+                            @if($col['key'] === 'awaiting_send' && $round->isAviso())
+                                <a href="{{ route('approvals.index', ['view' => 'list']) }}" class="btn btn-soft-orange btn-xs mt-3">
+                                    ⚠ Aviso — decidir na Lista
+                                </a>
+                            @elseif($col['key'] === 'awaiting_send')
+                                <form method="POST" action="{{ route('approvals.send', $round) }}"
+                                      @submit.prevent="if (await $store.confirmDialog.ask('Enviar essa rodada para o cliente agora?')) $el.submit()" class="mt-3">
+                                    @csrf
+                                    <button type="submit" class="btn btn-primary btn-xs">Enviar pro Cliente</button>
+                                </form>
+                            @elseif($col['key'] === 'changes_requested')
+                                <div class="mt-3 monday-fill-td relative" style="height:26px; border-radius:6px; overflow:hidden">
+                                    @include('partials._status-fill', ['task' => $round->task, 'statusUrl' => route('approvals.update-task-status', $round), 'showCurrent' => false])
+                                </div>
+                            @endif
+                        </div>
+                    @empty
+                        <div class="kb-empty">Nada por aqui.</div>
+                    @endforelse
+                </div>
             </div>
         @endforeach
     </div>

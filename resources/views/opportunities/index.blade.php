@@ -19,8 +19,8 @@
             </div>
         @endif
 
-        {{-- Kanban Board --}}
-        <div id="opportunities-board" class="flex gap-4 overflow-x-auto pb-4" style="min-height: 70vh;"
+        {{-- Kanban Board — padrão Mirbal (classes .kb-* em app.css) --}}
+        <div id="opportunities-board" class="kb-board" style="min-height: 70vh;"
              data-kanban-board data-status-field="stage">
 
             @php
@@ -39,88 +39,57 @@
                     $stageCards = $opportunities->get($stage, collect());
                     $stageMeta  = \App\Models\Opportunity::$stages[$stage];
                 @endphp
-                <div class="flex-shrink-0 w-64 flex flex-col gap-3"
+                <div class="kb-col" style="--kb-bar: {{ $stageColors[$stage] ?? 'var(--purple)' }}; width:280px"
                      data-kanban-column data-status="{{ $stage }}">
 
-                    {{-- Column Header --}}
-                    <div class="flex items-center justify-between px-3 py-2 border-b"
-                         style="border-color: {{ $stageColors[$stage] ?? 'var(--border2)' }}; border-bottom-width: 2px;">
-                        <span class="text-xs font-bold font-mono uppercase tracking-wider"
-                              style="color: {{ $stageColors[$stage] ?? 'var(--muted2)' }}">
-                            {{ $stageMeta['label'] }}
-                        </span>
-                        <span class="text-xs font-mono px-1.5 py-0.5 rounded" data-kanban-count
-                              style="background: var(--s3); color: var(--muted);">
-                            {{ $stageCards->count() }}
-                        </span>
+                    <div class="kb-col-head">
+                        <h5 class="card-title truncate">{{ $stageMeta['label'] }}</h5>
+                        <span class="kb-count" data-kanban-count>{{ $stageCards->count() }}</span>
                     </div>
 
-                    {{-- Cards --}}
-                    <div class="flex flex-col gap-2 flex-1" data-kanban-list>
+                    <div class="kb-list" data-kanban-list>
                         @forelse($stageCards as $opp)
-                            <div class="card p-3 cursor-pointer hover:border-[var(--purple)] transition-colors group"
+                            <div class="kb-card cursor-pointer group"
                                  data-kanban-card data-id="{{ $opp->id }}" data-update-url="{{ route('opportunities.update-stage', $opp) }}"
                                  x-data="{ open: false }">
 
-                                <div class="flex items-start justify-between gap-2 mb-2">
-                                    <a href="{{ route('opportunities.show', $opp) }}"
-                                       class="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--purple)] transition-colors leading-tight">
-                                        {{ $opp->title }}
-                                    </a>
-                                </div>
-
-                                <div class="text-xs text-[var(--muted)] mb-2">
-                                    {{ $opp->contact->name }}
-                                    @if($opp->contact->company_name)
-                                        · {{ $opp->contact->company_name }}
-                                    @endif
-                                </div>
-
-                                @if(($opp->type ?? 'novo_cliente') !== 'novo_cliente')
-                                    <div class="mb-2">
-                                        <span class="badge" style="font-size:9px; padding:1px 6px;">{{ $opp->typeLabel() }}</span>
-                                    </div>
-                                @endif
-
-                                @if($opp->proposed_fee)
-                                    <div class="text-xs font-mono text-[var(--green)] mb-2">
-                                        R$ {{ number_format($opp->proposed_fee, 0, ',', '.') }}/mês
-                                    </div>
-                                @endif
-
-                                @if($opp->services_interest)
-                                    <div class="flex flex-wrap gap-1 mb-3">
-                                        @foreach(array_slice($opp->services_interest, 0, 3) as $svc)
-                                            <span class="badge" style="font-size: 9px; padding: 1px 6px;">
-                                                {{ \App\Models\Client::$services[$svc] ?? $svc }}
-                                            </span>
+                                {{-- Tipo (quando não é cliente novo) + serviços de interesse --}}
+                                @if(($opp->type ?? 'novo_cliente') !== 'novo_cliente' || $opp->services_interest)
+                                    <div class="kb-card-top flex-wrap">
+                                        @if(($opp->type ?? 'novo_cliente') !== 'novo_cliente')
+                                            <span class="badge tag-orange">{{ $opp->typeLabel() }}</span>
+                                        @endif
+                                        @foreach(array_slice($opp->services_interest ?? [], 0, 3) as $svc)
+                                            <span class="badge tag-purple">{{ \App\Models\Client::$services[$svc] ?? $svc }}</span>
                                         @endforeach
                                     </div>
                                 @endif
 
-                                {{-- Stage move buttons --}}
-                                <div class="flex flex-wrap items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a href="{{ route('opportunities.show', $opp) }}" class="kb-card-title group-hover:text-[var(--purple)] transition-colors">
+                                    {{ $opp->title }}
+                                </a>
+                                <p class="kb-card-desc">
+                                    {{ $opp->contact->name }}@if($opp->contact->company_name) · {{ $opp->contact->company_name }}@endif
+                                </p>
+
+                                <div class="kb-card-foot">
+                                    <span>{{ $opp->created_at->diffForHumans() }}</span>
+                                    @if($opp->proposed_fee)
+                                        <span class="font-medium" style="color:var(--green)">R$ {{ number_format($opp->proposed_fee, 0, ',', '.') }}/mês</span>
+                                    @endif
+                                </div>
+
+                                {{-- Mover etapa / ganho / perdido — aparece ao passar o mouse --}}
+                                <div class="flex flex-wrap items-center gap-1 mt-2.5 pt-2.5 opacity-0 group-hover:opacity-100 transition-opacity" style="border-top:1px solid var(--border2)">
                                     @if($stage !== 'novo_lead')
-                                        @php
-                                            $prevStage = $openStages[array_search($stage, $openStages) - 1];
-                                        @endphp
-                                        <button onclick="moveStage('{{ $opp->id }}', '{{ $prevStage }}')"
-                                                class="btn btn-ghost btn-xs">
-                                            ← Voltar
-                                        </button>
+                                        @php $prevStage = $openStages[array_search($stage, $openStages) - 1]; @endphp
+                                        <button onclick="moveStage('{{ $opp->id }}', '{{ $prevStage }}')" class="btn btn-ghost btn-xs">← Voltar</button>
                                     @endif
-
                                     @if($stage !== 'negociando')
-                                        @php
-                                            $nextStage = $openStages[array_search($stage, $openStages) + 1];
-                                        @endphp
-                                        <button onclick="moveStage('{{ $opp->id }}', '{{ $nextStage }}')"
-                                                class="btn btn-ghost btn-xs">
-                                            Avançar →
-                                        </button>
+                                        @php $nextStage = $openStages[array_search($stage, $openStages) + 1]; @endphp
+                                        <button onclick="moveStage('{{ $opp->id }}', '{{ $nextStage }}')" class="btn btn-ghost btn-xs">Avançar →</button>
                                     @endif
-
-                                    <button type="button" class="btn btn-ghost btn-xs" style="color: var(--green);"
+                                    <button type="button" class="btn btn-soft-green btn-xs"
                                             @click.stop="openWin(@js([
                                                 'winUrl'        => route('opportunities.win', $opp),
                                                 'title'         => $opp->title,
@@ -131,7 +100,7 @@
                                             ]))">
                                         ✓ Ganho
                                     </button>
-                                    <button type="button" class="btn btn-ghost btn-xs" style="color: var(--red);"
+                                    <button type="button" class="btn btn-soft-red btn-xs"
                                             @click.stop="openLose(@js([
                                                 'loseUrl' => route('opportunities.lose', $opp),
                                                 'title'   => $opp->title,
@@ -139,15 +108,9 @@
                                         ✗ Perdido
                                     </button>
                                 </div>
-
-                                <div class="text-xs text-[var(--muted)] font-mono mt-2">
-                                    {{ $opp->created_at->diffForHumans() }}
-                                </div>
                             </div>
                         @empty
-                            <div class="border border-dashed border-[var(--border)] rounded text-center py-8 text-xs text-[var(--muted)] opacity-50">
-                                Nenhuma oportunidade
-                            </div>
+                            <div class="kb-empty">Nenhuma oportunidade</div>
                         @endforelse
                     </div>
 

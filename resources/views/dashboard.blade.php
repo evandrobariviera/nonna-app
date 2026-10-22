@@ -634,19 +634,18 @@
             ['icon' => 'clipboard-list', 'label' => 'Pronto para Produção',  'tasks' => $myReadyForProductionTasks, 'status' => 'backlog',           'extra' => ['situation' => 'Pronto para produção']],
         ]);
     @endphp
+    {{-- Colunas no padrão Mirbal (classes .kb-* em app.css), cartões compactos em linha --}}
     <div id="dashboard-board" class="auto-grid mb-6"
          data-kanban-board data-status-field="status">
         @foreach($quadros as $q)
-            <div class="card px-5 py-4"
+            <div class="kb-col" style="width:auto"
                  data-kanban-column data-status="{{ $q['status'] }}"
                  @if($q['extra']) data-extra='{{ json_encode($q['extra']) }}' @endif>
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-sm font-bold flex items-center gap-1.5" style="color:var(--text)">
-                        <x-icon :name="$q['icon']" size="14" />
-                        {{ $q['label'] }} (<span data-kanban-count>{{ $q['tasks']->count() }}</span>)
-                    </h3>
+                <div class="kb-col-head">
+                    <h5 class="card-title truncate flex items-center gap-1.5"><x-icon :name="$q['icon']" size="15" /> {{ $q['label'] }}</h5>
+                    <span class="kb-count" data-kanban-count>{{ $q['tasks']->count() }}</span>
                 </div>
-                <div class="flex flex-col gap-2" style="min-height:40px" data-kanban-list>
+                <div class="kb-list" data-kanban-list>
                     @forelse($q['tasks'] as $task)
                         @php
                             $statusUrl = $task->is_ticket ? route('tickets.update-status', $task) : route('tasks.update-status-direct', $task);
@@ -655,38 +654,36 @@
                             $isApprovalOverdue = \App\Services\Tasks\ExecutorQueue::isOverdue($task);
                         @endphp
                         <div data-kanban-card data-id="{{ $task->id }}" data-update-url="{{ $statusUrl }}"
-                             class="flex items-center gap-2.5 px-3 py-2 transition-colors" style="cursor:pointer;
-                                    background:var(--s2); {{ $isApprovalOverdue ? 'border-left:2px solid var(--red)' : '' }}"
-                             onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'"
+                             class="kb-card flex items-center gap-2.5 {{ $isApprovalOverdue ? 'kb-card-overdue' : '' }}" style="cursor:pointer; padding:10px 12px"
                              onclick="window.location='{{ route('tasks.show', $task) }}'">
-                            <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="32" />
+                            <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="30" />
                             <div class="min-w-0">
-                                <p class="text-xs font-semibold leading-snug" style="color:var(--text)">
+                                <p class="text-sm font-semibold leading-snug" style="color:var(--text)">
                                     @if($task->blocker_at)
                                         {{-- Trava = urgência (tem gente esperando) — sobe pro topo da coluna (ExecutorQueue::prioritized). --}}
-                                        <span class="font-mono font-bold mr-1 px-1" style="font-size:9px; color:#fff; background:var(--red); border-radius:4px; vertical-align:1px">TRAVA</span>
+                                        <span class="font-bold mr-1 px-1.5" style="font-size:10px; color:#fff; background:var(--red); border-radius:5px; vertical-align:1px">TRAVA</span>
                                     @endif
                                     {{ $task->title }}
                                 </p>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->client?->displayName() ?? '—' }}</span>
+                                <div class="flex items-center gap-2 mt-1 text-xs" style="color:var(--muted)">
+                                    <span class="truncate">{{ $task->client?->displayName() ?? '—' }}</span>
                                     @if(! empty($q['review']))
                                         @php $autor = $task->executors->firstWhere('pivot.role', 'executor')?->name ?? $task->executor?->name; @endphp
-                                        @if($autor)<span class="text-xs font-mono" style="color:var(--purple)">por {{ explode(' ', $autor)[0] }}</span>@endif
+                                        @if($autor)<span style="color:var(--purple)">por {{ explode(' ', $autor)[0] }}</span>@endif
                                     @endif
                                     @if($task->approval_date)
-                                        <span class="text-xs font-mono" style="color:{{ $isApprovalOverdue ? 'var(--red)' : 'var(--muted)' }}">
-                                            {{ $task->approval_date->format('d/m') }}
+                                        <span class="inline-flex items-center gap-1 flex-shrink-0" style="color:{{ $isApprovalOverdue ? 'var(--red)' : 'var(--muted)' }}">
+                                            <x-icon name="calendar" size="12" /> {{ $task->approval_date->format('d/m') }}
                                         </span>
                                     @endif
                                 </div>
                             </div>
                         </div>
                     @empty
-                        <p class="text-xs flex items-center gap-1.5" style="color:var(--muted)">
+                        <div class="kb-empty flex items-center justify-center gap-1.5">
                             <x-icon name="party-popper" size="13" />
                             Nada por aqui.
-                        </p>
+                        </div>
                     @endforelse
                 </div>
             </div>

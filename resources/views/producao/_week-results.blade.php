@@ -51,7 +51,7 @@
 {{-- Os botões ‹ › nas pontas estendem a régua um dia por vez (JS em producao-week-scroll.js),
      limitados a ±7 dias de hoje — além disso, use a navegação de semana acima. Ficam sempre
      como primeiro/último filho: o JS insere as colunas novas ao lado deles, nunca antes. --}}
-<div id="producao-week-board" class="flex gap-2 overflow-x-auto pb-2" style="align-items: start;"
+<div id="producao-week-board" class="kb-board"
      data-kanban-board data-status-field="approval_date">
 
     @php
