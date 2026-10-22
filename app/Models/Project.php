@@ -196,10 +196,15 @@ class Project extends Model
             ->withTimestamps();
     }
 
-    /** Reuniões de discussão em que este item esteve na pauta (ver Meeting::projects). */
+    /**
+     * Reuniões de discussão (Alinhamento de Projeto) que citaram este item na pauta — é o
+     * que conta pro "X de Y já com reunião de discussão". Qualquer reunião relacionada
+     * (inclusive via tarefa) é Meeting::relatedToProject.
+     */
     public function discussionMeetings(): BelongsToMany
     {
-        return $this->belongsToMany(Meeting::class, 'meeting_projects', 'project_id', 'meeting_id')
+        return $this->morphToMany(Meeting::class, 'item', 'meeting_agenda_items')
+            ->where('meetings.type', 'alinhamento_projeto')
             ->withPivot('position')
             ->withTimestamps();
     }

@@ -71,7 +71,7 @@ class ProjectDiscussionMeetingService
 
             // A pauta são os itens ligados (Meeting::projects) — o campo `agenda` fica livre
             // pra observações de quem agenda.
-            $meeting->projects()->sync(collect($items)->mapWithKeys(fn ($item, $i) => [$item['id'] => ['position' => $i]])->all());
+            $meeting->agendaProjects()->sync(collect($items)->mapWithKeys(fn ($item, $i) => [$item['id'] => ['position' => $i]])->all());
             $meeting->participants()->sync($participantIds->filter()->unique()->values()->all());
 
             return $meeting;
@@ -102,11 +102,17 @@ class ProjectDiscussionMeetingService
 
     /**
      * Reunião de discussão finalizada → os itens da pauta que ainda estavam em
-     * planejamento começam a execução (decisão do Evandro, 2026-10-21).
+     * planejamento começam a execução (decisão do Evandro, 2026-10-21). Só reunião de
+     * discussão (Alinhamento de Projeto): outras reuniões também citam campanhas na pauta
+     * (2026-10-22) e só citar não quer dizer que a campanha foi pra execução.
      */
     public static function startDiscussedProjects(Meeting $meeting): void
     {
-        $meeting->projects()
+        if ($meeting->type !== 'alinhamento_projeto') {
+            return;
+        }
+
+        $meeting->agendaProjects()
             ->where('projects.status', 'em_planejamento')
             ->get()
             ->each(fn (Project $project) => $project->update(['status' => 'em_execucao']));

@@ -8,7 +8,8 @@ use App\Models\Meeting;
 use App\Models\NotificationTemplate;
 use App\Models\Opportunity;
 use App\Models\User;
-use App\Services\AtaMarkdownRenderer;
+use App\Services\MeetingAgendaService;
+use App\Services\MeetingText;
 use App\Services\NotificationDispatchService;
 use App\Services\SystemNotificationService;
 use Carbon\Carbon;
@@ -150,14 +151,18 @@ class MeetingController extends Controller
             'location'         => 'nullable|string|max:255',
             'online_link'      => 'nullable|url|max:500',
             'agenda'           => 'nullable|string',
+            'agenda_items'          => 'nullable|array',
+            'agenda_items.*.type'   => 'required|in:macro_plan,project,task',
+            'agenda_items.*.id'     => 'required|uuid',
             'participants'     => 'nullable|array',
             'participants.*'   => 'exists:users,id',
             'contacts'         => 'nullable|array',
             'contacts.*'       => 'exists:contacts,id',
         ]);
+        $data['agenda'] = MeetingText::fromEditor($data['agenda'] ?? null);
 
         $meeting = Meeting::create([
-            ...collect($data)->except(['contacts'])->all(),
+            ...collect($data)->except(['contacts', 'agenda_items'])->all(),
             'created_by' => Auth::id(),
         ]);
 
@@ -167,6 +172,9 @@ class MeetingController extends Controller
         if (!empty($data['contacts'])) {
             $meeting->contacts()->sync($data['contacts']);
         }
+        if (!empty($data['agenda_items'])) {
+            app(MeetingAgendaService::class)->sync($meeting, array_values($data['agenda_items']));
+        }
 
         return redirect()->route('meetings.show', $meeting)
             ->with('success', 'Reunião criada com sucesso.');
@@ -174,7 +182,9 @@ class MeetingController extends Controller
 
     public function show(Meeting $meeting)
     {
-        $meeting->load(['client', 'opportunity', 'organizer', 'participants', 'contacts', 'createdBy', 'attachments.uploadedBy', 'macroPlan', 'projects.members:users.id,users.name,users.avatar_path,users.avatar_disk', 'tasks' => fn ($q) => $q->orderByDesc('created_at')]);
+        $meeting->load(['client', 'opportunity', 'organizer', 'participants', 'contacts', 'createdBy', 'attachments.uploadedBy', 'macroPlan',
+            'agendaMacroPlans', 'agendaProjects.members:users.id,users.name,users.avatar_path,users.avatar_disk', 'agendaTasks.executors',
+            'tasks' => fn ($q) => $q->orderByDesc('created_at')]);
         $users = User::orderBy('name')->get(['id', 'name']);
 
         // Notificações internas geradas por esta reunião (ver NotificationService::notifyUsers,
@@ -187,7 +197,7 @@ class MeetingController extends Controller
 
         // Pauta gerada pelo agente de IA (structure_ata) vem em Markdown com a mesma
         // sintaxe da ATA — reaproveita o parser em vez de mostrar texto cru.
-        $agendaCards = $meeting->agenda ? AtaMarkdownRenderer::toCards($meeting->agenda) : [];
+        $agendaCards = MeetingText::cards($meeting->agenda);
 
         return view('meetings.show', compact('meeting', 'users', 'meetingNotifications', 'agendaCards'));
     }
@@ -205,7 +215,7 @@ class MeetingController extends Controller
     public function ataPrint(Meeting $meeting)
     {
         $meeting->load(['client', 'organizer', 'participants']);
-        $cards = AtaMarkdownRenderer::toCards($meeting->ata ?? '');
+        $cards = MeetingText::cards($meeting->ata);
 
         return view('meetings.ata-print', compact('meeting', 'cards'));
     }
@@ -217,8 +227,20 @@ class MeetingController extends Controller
         $clients       = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $opportunities = Opportunity::orderBy('title')->get(['id', 'title', 'client_id']);
         $contacts      = Contact::with('clients:id')->orderBy('name')->get(['id', 'name']);
+        $agendaItems   = app(MeetingAgendaService::class)->formItems($meeting);
 
-        return view('meetings.edit', compact('meeting', 'users', 'clients', 'opportunities', 'contacts'));
+        return view('meetings.edit', compact('meeting', 'users', 'clients', 'opportunities', 'contacts', 'agendaItems'));
+    }
+
+    // Seletor da pauta citada (ver MeetingAgendaService::search).
+    public function agendaSearch(Request $request, MeetingAgendaService $agenda)
+    {
+        $data = $request->validate([
+            'q'         => 'nullable|string|max:100',
+            'client_id' => 'nullable|uuid',
+        ]);
+
+        return response()->json(['items' => $agenda->search($data['q'] ?? '', $data['client_id'] ?? null)]);
     }
 
     public function update(Request $request, Meeting $meeting)
@@ -236,14 +258,20 @@ class MeetingController extends Controller
             'location'         => 'nullable|string|max:255',
             'online_link'      => 'nullable|url|max:500',
             'agenda'           => 'nullable|string',
+            'agenda_items'          => 'nullable|array',
+            'agenda_items.*.type'   => 'required|in:macro_plan,project,task',
+            'agenda_items.*.id'     => 'required|uuid',
             'ata'              => 'nullable|string',
             'transcricao'      => 'nullable|string',
-            'next_steps'       => 'nullable|string',
             'participants'     => 'nullable|array',
             'participants.*'   => 'exists:users,id',
             'contacts'         => 'nullable|array',
             'contacts.*'       => 'exists:contacts,id',
         ]);
+
+        // Pauta e ATA vêm do editor rico (ver MeetingText — a IA continua lendo Markdown).
+        $data['agenda'] = MeetingText::fromEditor($data['agenda'] ?? null);
+        $data['ata']    = MeetingText::fromEditor($data['ata'] ?? null);
 
         // Mark ata_recorded_at when ata is filled for the first time
         if (!empty($data['ata']) && empty($meeting->ata)) {
@@ -256,10 +284,15 @@ class MeetingController extends Controller
             $data['transcricao_updated_at'] = now();
         }
 
-        $meeting->update($data);
+        $meeting->update(collect($data)->except('agenda_items')->all());
 
         $meeting->participants()->sync($data['participants'] ?? []);
         $meeting->contacts()->sync($data['contacts'] ?? []);
+        // Só mexe na pauta citada quando o seletor veio no form (marcador abaixo) — um
+        // form sem ele não pode apagar o que estava citado.
+        if ($request->boolean('agenda_items_sent')) {
+            app(MeetingAgendaService::class)->sync($meeting, array_values($data['agenda_items'] ?? []));
+        }
 
         return redirect()->route('meetings.show', $meeting)
             ->with('success', 'Reunião atualizada.');

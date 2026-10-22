@@ -437,6 +437,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Agenda (Reuniões) ──
     // Precisa vir ANTES do resource() — senão "resultados" colide com o {meeting}
     // wildcard de meetings.show (Laravel casa rotas na ordem de registro).
+    // Seletor da pauta citada (planejamentos, campanhas/projetos, tarefas) — antes do resource.
+    Route::get('/agenda/pauta/buscar', [MeetingController::class, 'agendaSearch'])
+        ->middleware('throttle:120,1')
+        ->name('meetings.agenda-search');
     Route::get('/agenda/resultados', [MeetingController::class, 'results'])
         ->name('meetings.results');
 
@@ -463,6 +467,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
 
     Route::get('/agenda/{meeting}/ata', [MeetingController::class, 'ataPrint'])
         ->name('meetings.ata-print');
+    Route::post('/agenda/{meeting}/editor-imagem', [\App\Http\Controllers\MeetingEditorImageController::class, 'store'])
+        ->name('meetings.editor-image.store');
+    Route::get('/agenda/{meeting}/editor-imagem/{filename}', [\App\Http\Controllers\MeetingEditorImageController::class, 'show'])
+        ->name('meetings.editor-image.show');
 
     Route::post('/agenda/{meeting}/anexos', [MeetingAttachmentController::class, 'store'])
         ->name('meeting-attachments.store');

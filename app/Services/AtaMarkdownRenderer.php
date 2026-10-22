@@ -108,7 +108,12 @@ class AtaMarkdownRenderer
     // card corrente. Conteúdo antes do primeiro h2 (se houver) vira um card sem título.
     public static function toCards(string $markdown): array
     {
-        $blocks = self::parse($markdown);
+        return self::groupCards(self::parse($markdown));
+    }
+
+    /** Mesmo agrupamento pra blocos vindos do editor rico (ver MeetingText::blocks). */
+    public static function groupCards(array $blocks): array
+    {
         $cards = [];
         $current = null;
 

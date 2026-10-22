@@ -237,7 +237,13 @@ class TaskController extends Controller
             ];
         }
 
-        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages', 'clientProjects', 'clientMacroPlans', 'clients', 'sprints', 'taskNotifications', 'projectProgress'));
+        // Reuniões que citaram a tarefa na pauta (a de origem, Task::meeting, aparece à parte).
+        $citedMeetings = \App\Models\Meeting::whereHas('agendaTasks', fn ($q) => $q->whereKey($task->id))
+            ->when($task->meeting_id, fn ($q) => $q->where('meetings.id', '!=', $task->meeting_id))
+            ->orderByDesc('scheduled_at')
+            ->get(['meetings.id', 'meetings.title', 'meetings.status', 'meetings.scheduled_at']);
+
+        return view('tasks.show', compact('task', 'users', 'agents', 'chatMessages', 'clientProjects', 'clientMacroPlans', 'clients', 'sprints', 'taskNotifications', 'projectProgress', 'citedMeetings'));
     }
 
     // Campo único, salvo na hora (clicou/saiu do campo já grava) — cobre todo campo

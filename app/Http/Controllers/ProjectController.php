@@ -139,7 +139,7 @@ class ProjectController extends Controller
     {
         abort_unless($project->macro_plan_id === $macroplan->id, 403);
 
-        $project->load(['client', 'tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount', 'attachments', 'activities.user', 'members:users.id,users.name,users.avatar_path,users.avatar_disk', 'discussionMeetings']);
+        $project->load(['client', 'tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount', 'attachments', 'activities.user', 'members:users.id,users.name,users.avatar_path,users.avatar_disk']);
         $users = User::orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']);
 
         $kanban = [];
@@ -159,7 +159,7 @@ class ProjectController extends Controller
 
         return view('macroplans.project-show', array_merge(compact(
             'macroplan', 'project', 'users', 'kanban', 'cancelled', 'progress', 'totalTasks', 'doneTasks', 'standalone', 'clientMacroplans', 'sprints', 'activeSprint'
-        ), $this->chatDrawerData($project)));
+        ), $this->chatDrawerData($project), ['relatedMeetings' => $this->relatedMeetings($project)]));
     }
 
     /**
@@ -201,7 +201,7 @@ class ProjectController extends Controller
 
     public function showDirect(Project $project)
     {
-        $project->load(['client', 'tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount', 'attachments', 'activities.user', 'members:users.id,users.name,users.avatar_path,users.avatar_disk', 'discussionMeetings']);
+        $project->load(['client', 'tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount', 'attachments', 'activities.user', 'members:users.id,users.name,users.avatar_path,users.avatar_disk']);
         $macroplan  = $project->macroPlan;
         $users      = User::orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']);
 
@@ -222,7 +222,16 @@ class ProjectController extends Controller
 
         return view('macroplans.project-show', array_merge(compact(
             'macroplan', 'project', 'users', 'kanban', 'cancelled', 'progress', 'totalTasks', 'doneTasks', 'standalone', 'clientMacroplans', 'sprints', 'activeSprint'
-        ), $this->chatDrawerData($project)));
+        ), $this->chatDrawerData($project), ['relatedMeetings' => $this->relatedMeetings($project)]));
+    }
+
+    // Reuniões que citaram a campanha/projeto ou uma tarefa dela (Meeting::relatedToProject).
+    private function relatedMeetings(Project $project)
+    {
+        return \App\Models\Meeting::relatedToProject($project)
+            ->with(['agendaMacroPlans:macro_plans.id', 'agendaProjects:projects.id', 'agendaTasks:tasks.id,tasks.title,tasks.project_id,tasks.macro_plan_id'])
+            ->orderByDesc('scheduled_at')
+            ->get();
     }
 
     // Dados do drawer do Assistente de Lançamento de Tarefas — compartilhado

@@ -61,7 +61,7 @@
     @if($meeting->agenda)
         <div class="card p-6 mb-6">
             <h2 class="text-sm font-bold uppercase tracking-wide mb-3" style="color: var(--muted)">Pauta</h2>
-            <p class="text-sm whitespace-pre-wrap" style="color: var(--text); line-height: 1.7">{{ $meeting->agenda }}</p>
+            <x-rich-content :value="\App\Services\MeetingText::toHtml($meeting->agenda)" class="text-sm" />
         </div>
     @endif
 
@@ -74,14 +74,7 @@
             @if($meeting->ata_recorded_at)
                 <p class="text-xs mb-3" style="color: var(--muted)">Registrada em {{ $meeting->ata_recorded_at->format('d/m/Y') }}</p>
             @endif
-            <p class="text-sm whitespace-pre-wrap" style="color: var(--text); line-height: 1.7">{{ $meeting->ata }}</p>
-        </div>
-    @endif
-
-    @if($meeting->next_steps)
-        <div class="card p-6">
-            <h2 class="text-sm font-bold uppercase tracking-wide mb-3" style="color: var(--muted)">Próximos Passos</h2>
-            <p class="text-sm whitespace-pre-wrap" style="color: var(--text); line-height: 1.7">{{ $meeting->next_steps }}</p>
+            <x-rich-content :value="\App\Services\MeetingText::toHtml($meeting->ata)" class="text-sm" />
         </div>
     @endif
 

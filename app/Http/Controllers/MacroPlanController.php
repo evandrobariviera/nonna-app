@@ -134,7 +134,7 @@ class MacroPlanController extends Controller
     {
         $macroplan->load([
             'client.creativeLead:id,name,avatar_path,avatar_disk', 'responsible', 'projects.tasks', 'projects.members:users.id,users.name,users.avatar_path,users.avatar_disk',
-            'projects.discussionMeetings:meetings.id,meetings.title,meetings.status,meetings.scheduled_at', 'attachments.uploadedBy', 'meetings', 'activities.user',
+            'projects.discussionMeetings:meetings.id,meetings.title,meetings.status,meetings.scheduled_at', 'attachments.uploadedBy', 'activities.user',
             'tasks' => fn ($q) => $q->whereNull('project_id')->orderByDesc('created_at'),
         ]);
         $users          = User::orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']);
@@ -149,8 +149,13 @@ class MacroPlanController extends Controller
         }
 
         $discussionItems = ProjectDiscussionMeetingService::formItems($macroplan);
+        // Ligadas direto, citadas na pauta, ou citadas por uma campanha/tarefa do planejamento.
+        $relatedMeetings = Meeting::relatedToMacroPlan($macroplan)
+            ->with(['agendaMacroPlans:macro_plans.id', 'agendaProjects:projects.id,projects.title,projects.type,projects.macro_plan_id', 'agendaTasks:tasks.id,tasks.title,tasks.project_id,tasks.macro_plan_id'])
+            ->orderByDesc('scheduled_at')
+            ->get();
 
-        return view('macroplans.edit', compact('macroplan', 'users', 'currentBlock', 'legacyBlocks', 'mainDocument', 'discussionItems'));
+        return view('macroplans.edit', compact('macroplan', 'users', 'currentBlock', 'legacyBlocks', 'mainDocument', 'discussionItems', 'relatedMeetings'));
     }
 
     public function update(Request $request, MacroPlan $macroplan)

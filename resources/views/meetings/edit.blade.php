@@ -208,12 +208,12 @@
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
                         Pauta
                     </label>
-                    <textarea name="agenda" rows="5"
-                        placeholder="Tópicos que serão abordados..."
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
-                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ old('agenda', $meeting->agenda) }}</textarea>
+                    <x-rich-editor name="agenda" min-height="140px"
+                        :value="\App\Services\MeetingText::toHtml(old('agenda', $meeting->agenda))"
+                        :upload-url="route('meetings.editor-image.store', $meeting)" />
                 </div>
+
+                @include('meetings._agenda-picker', ['items' => $agendaItems])
 
             </div>
 
@@ -236,26 +236,15 @@
 
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">ATA</label>
-                    <p class="text-xs mb-2" style="color:var(--muted)">Gerada/atualizada automaticamente pela IA a partir da Transcrição — pode editar à mão se precisar ajustar.</p>
-                    <textarea name="ata" rows="14"
-                        placeholder="Registro do que foi discutido e decidido..."
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
-                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ old('ata', $meeting->ata) }}</textarea>
+                    <p class="text-xs mb-2" style="color:var(--muted)">Gerada/atualizada automaticamente pela IA a partir da Transcrição — pode editar à mão se precisar ajustar. Cada título (H2) vira um card na ATA formatada; item de lista começando com ☐ (a fazer) ou ☑ (feito) vira checklist, e o que vier depois de " — " é o responsável.</p>
+                    <x-rich-editor name="ata" min-height="320px"
+                        :value="\App\Services\MeetingText::toHtml(old('ata', $meeting->ata))"
+                        :upload-url="route('meetings.editor-image.store', $meeting)" />
                     @if($meeting->hasAta())
                         <a href="{{ route('meetings.ata-print', $meeting) }}" target="_blank" class="btn btn-ghost btn-xs mt-2">
                             Ver ATA formatada →
                         </a>
                     @endif
-                </div>
-
-                <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Próximos Passos</label>
-                    <textarea name="next_steps" rows="4"
-                        placeholder="Ações definidas, responsáveis, prazos..."
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
-                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ old('next_steps', $meeting->next_steps) }}</textarea>
                 </div>
             </div>
 

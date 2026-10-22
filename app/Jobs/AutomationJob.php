@@ -19,6 +19,7 @@ use App\Models\Sprint;
 use App\Models\User;
 use App\Services\AiService;
 use App\Services\ContextResolver;
+use App\Services\MeetingText;
 use App\Services\NotificationService;
 use App\Services\PendencyService;
 use App\Services\SystemNotificationService;
@@ -548,7 +549,7 @@ class AutomationJob implements ShouldQueue
         $userMessage = "Tipo da reunião: {$entity->typeLabel()}\n"
             . "Cliente: {$entity->client->displayName()}\n"
             . "Data da reunião: {$entity->scheduled_at->format('d/m/Y')}\n\n"
-            . "ATA:\n{$entity->ata}\n\n"
+            . "ATA:\n" . MeetingText::toMarkdown($entity->ata) . "\n\n"
             . "Gere a pauta da Reunião Interna seguindo a estrutura definida.";
 
         $pauta = app(\App\Services\AiService::class)->run(
@@ -575,7 +576,7 @@ class AutomationJob implements ShouldQueue
             'created_by'        => $this->automation->created_by,
             'scheduled_at'      => $reviewDate,
             'duration_minutes'  => $entity->duration_minutes,
-            'agenda'            => $pauta,
+            'agenda'            => MeetingText::fromAi($pauta),
         ]);
 
         // Copia os anexos complementares da reunião com cliente (documentos, materiais) —
@@ -725,10 +726,10 @@ class AutomationJob implements ShouldQueue
             . "Data: {$entity->scheduled_at->format('d/m/Y')}\n\n";
 
         if (filled($entity->ata)) {
-            $userMessage .= "ATA ATUAL (base — preserve e enriqueça, nunca reescreva do zero):\n{$entity->ata}\n\n";
+            $userMessage .= "ATA ATUAL (base — preserve e enriqueça, nunca reescreva do zero):\n" . MeetingText::toMarkdown($entity->ata) . "\n\n";
         }
         if (filled($entity->agenda)) {
-            $userMessage .= "PAUTA DA REVISÃO INTERNA (o roteiro que a equipe usou pra fechar o ciclo):\n{$entity->agenda}\n\n";
+            $userMessage .= "PAUTA DA REVISÃO INTERNA (o roteiro que a equipe usou pra fechar o ciclo):\n" . MeetingText::toMarkdown($entity->agenda) . "\n\n";
         }
         if ($transcricaoMudou) {
             $userMessage .= "TRANSCRIÇÃO COMPLEMENTAR (nova — incorpore à ATA):\n{$entity->transcricao}\n\n";
@@ -759,7 +760,7 @@ class AutomationJob implements ShouldQueue
         // ATA atualizada — só grava quando entrou transcrição nova.
         if ($transcricaoMudou && filled($out['ata'] ?? null)) {
             $entity->update([
-                'ata'             => trim($out['ata']),
+                'ata'             => MeetingText::fromAi($out['ata']),
                 'ata_recorded_at' => now(),
             ]);
         }
@@ -946,7 +947,7 @@ class AutomationJob implements ShouldQueue
             . "Data da reunião: {$entity->scheduled_at->format('d/m/Y')}\n\n";
 
         if (!empty($entity->ata)) {
-            $userMessage .= "ATA JÁ EXISTENTE (atualize e enriqueça, não substitua do zero):\n{$entity->ata}\n\n";
+            $userMessage .= "ATA JÁ EXISTENTE (atualize e enriqueça, não substitua do zero):\n" . MeetingText::toMarkdown($entity->ata) . "\n\n";
         }
 
         $userMessage .= "TRANSCRIÇÃO BRUTA (nova):\n{$entity->transcricao}\n\n"
@@ -968,11 +969,11 @@ class AutomationJob implements ShouldQueue
         [$ata, $agenda] = self::splitAtaAndAgenda($response);
 
         $update = [
-            'ata' => $ata,
+            'ata' => MeetingText::fromAi($ata),
             'ata_recorded_at' => $entity->ata_recorded_at ?? now(),
         ];
         if ($agenda !== null) {
-            $update['agenda'] = $agenda;
+            $update['agenda'] = MeetingText::fromAi($agenda);
         }
 
         $entity->update($update);

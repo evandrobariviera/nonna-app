@@ -625,6 +625,23 @@
                             </a>
                         </div>
                     @endif
+                    {{-- Reuniões que citaram esta tarefa na pauta (MeetingAgendaService). --}}
+                    @if(($citedMeetings ?? collect())->isNotEmpty())
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Discutida em</label>
+                            <div class="flex flex-col gap-1">
+                                @foreach($citedMeetings as $m)
+                                    <a href="{{ route('meetings.show', $m) }}"
+                                       class="flex items-center gap-2 w-full px-3 py-2 text-sm hover:underline"
+                                       style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--purple)"
+                                       title="{{ $m->title }}">
+                                        <span class="truncate">{{ $m->title }}</span>
+                                        <span class="text-xs font-mono flex-shrink-0 ml-auto" style="color:var(--muted)">{{ $m->scheduled_at->format('d/m/y') }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
                 <p class="text-xs" style="color:var(--muted2); line-height:1.5">A lista de Projetos/Planejamentos reflete o Cliente com que a página foi carregada — se você trocar o Cliente, atualize a página pra ver as opções do novo cliente.</p>
             </div>

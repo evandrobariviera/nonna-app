@@ -145,33 +145,59 @@
                 </div>
             </div>
 
-            {{-- Campanhas/projetos em discussão — a pauta da reunião de discussão agendada pelo
-                 planejamento (ProjectDiscussionMeetingService). Um bloco por item, com a equipe
-                 dele; ao Finalizar a reunião, os itens em planejamento vão pra Em Execução. --}}
-            @if($meeting->projects->isNotEmpty())
+            {{-- Itens da pauta — planejamentos, campanhas/projetos e tarefas citados
+                 (MeetingAgendaService), na ordem da pauta. Na reunião de discussão
+                 (Alinhamento de Projeto) cada campanha mostra a equipe, e ao Finalizar as que
+                 estão Em Planejamento vão pra Em Execução. --}}
+            @php
+                $isDiscussion = $meeting->type === 'alinhamento_projeto';
+                $agendaList = collect()
+                    ->merge($meeting->agendaMacroPlans)->merge($meeting->agendaProjects)->merge($meeting->agendaTasks)
+                    ->sortBy(fn ($i) => $i->pivot->position)->values();
+            @endphp
+            @if($agendaList->isNotEmpty())
                 <div class="card">
-                    <div class="px-5 py-4" style="border-bottom:1px solid var(--border2)">
-                        <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Em discussão · {{ $meeting->projects->count() }} {{ $meeting->projects->count() === 1 ? 'item' : 'itens' }}</p>
-                        <p class="text-xs mt-1" style="color:var(--muted2)">Leia o documento de cada item antes. Ao finalizar a reunião, o que estiver Em Planejamento passa pra Em Execução.</p>
+                    <div class="px-5 py-4 flex items-center justify-between gap-3" style="border-bottom:1px solid var(--border2)">
+                        <div>
+                            <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">{{ $isDiscussion ? 'Em discussão' : 'Itens da pauta' }} · {{ $agendaList->count() }} {{ $agendaList->count() === 1 ? 'item' : 'itens' }}</p>
+                            @if($isDiscussion)
+                                <p class="text-xs mt-1" style="color:var(--muted2)">Leia o documento de cada item antes. Ao finalizar a reunião, o que estiver Em Planejamento passa pra Em Execução.</p>
+                            @endif
+                        </div>
+                        <a href="{{ route('meetings.edit', $meeting) }}#agenda" class="btn btn-ghost btn-xs flex-shrink-0">Editar →</a>
                     </div>
                     <div class="flex flex-col">
-                        @foreach($meeting->projects as $item)
+                        @foreach($agendaList as $item)
+                            @php
+                                [$kind, $kindColor, $url] = match (true) {
+                                    $item instanceof \App\Models\MacroPlan => ['Planejamento', 'purple', route('macroplans.edit', $item)],
+                                    $item instanceof \App\Models\Project   => [$item->typeLabel(), $item->typeColor(), $item->macro_plan_id ? route('macroplans.projects.show', [$item->macro_plan_id, $item]) : route('projects.showDirect', $item)],
+                                    default                                 => [$item->is_ticket ? 'Chamado' : 'Tarefa', 'muted', route('tasks.show', $item)],
+                                };
+                            @endphp
                             <div class="px-5 py-3 flex items-start gap-3" style="border-bottom:1px solid var(--border2)">
                                 <span class="text-xs font-mono font-bold pt-0.5" style="color:var(--muted)">{{ $loop->iteration }}.</span>
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="badge badge-{{ $item->typeColor() }}">{{ $item->typeLabel() }}</span>
-                                        <a href="{{ $item->macro_plan_id ? route('macroplans.projects.show', [$item->macro_plan_id, $item]) : route('projects.showDirect', $item) }}"
-                                           class="text-sm font-semibold hover:underline" style="color:var(--text)">{{ $item->title }}</a>
+                                        <span class="badge badge-{{ $kindColor }}">{{ $kind }}</span>
+                                        <a href="{{ $url }}" class="text-sm font-semibold hover:underline" style="color:var(--text)">{{ $item->title }}</a>
                                         <span class="badge badge-{{ $item->statusColor() }}">{{ $item->statusLabel() }}</span>
                                     </div>
-                                    <div class="mt-2 flex items-center gap-1.5 flex-wrap">
-                                        @forelse($item->members as $member)
-                                            <x-user-chip :user="$member" :highlight="$member->id === $meeting->client?->creative_lead_id" />
-                                        @empty
-                                            <span class="text-xs" style="color:var(--muted)">Só o responsável do cliente</span>
-                                        @endforelse
-                                    </div>
+                                    @if($item instanceof \App\Models\Project && ($isDiscussion || $item->members->isNotEmpty()))
+                                        <div class="mt-2 flex items-center gap-1.5 flex-wrap">
+                                            @forelse($item->members as $member)
+                                                <x-user-chip :user="$member" :highlight="$member->id === $meeting->client?->creative_lead_id" />
+                                            @empty
+                                                <span class="text-xs" style="color:var(--muted)">Só o responsável do cliente</span>
+                                            @endforelse
+                                        </div>
+                                    @elseif($item instanceof \App\Models\Task && $item->executors->isNotEmpty())
+                                        <div class="mt-2 flex items-center gap-1.5 flex-wrap">
+                                            @foreach($item->executors as $person)
+                                                <x-user-chip :user="$person" />
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach
@@ -231,7 +257,7 @@
                                 @endforeach
                             </div>
                         @empty
-                            <p class="text-sm whitespace-pre-wrap" style="color:var(--text)">{{ $meeting->agenda }}</p>
+                            <x-rich-content :value="\App\Services\MeetingText::toHtml($meeting->agenda)" class="text-sm" />
                         @endforelse
                     </div>
                 </div>
@@ -249,11 +275,7 @@
                 </div>
                 <div class="px-5 py-4">
                     @if($meeting->hasAta())
-                        <p class="text-sm whitespace-pre-wrap mb-4" style="color:var(--text)">{{ $meeting->ata }}</p>
-                        @if($meeting->next_steps)
-                            <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Próximos Passos</p>
-                            <p class="text-sm whitespace-pre-wrap" style="color:var(--text)">{{ $meeting->next_steps }}</p>
-                        @endif
+                        <x-rich-content :value="\App\Services\MeetingText::toHtml($meeting->ata)" class="text-sm mb-4" />
                         <div class="mt-4 flex gap-3">
                             <a href="{{ route('meetings.edit', $meeting) }}#ata" class="btn btn-ghost btn-xs">
                                 Editar ATA →

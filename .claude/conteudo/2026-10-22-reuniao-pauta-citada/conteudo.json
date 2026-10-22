@@ -1,0 +1,24 @@
+{
+  "novidades": [
+    {
+      "title": "Pauta e ATA com formatação",
+      "summary": "A pauta e a ATA da reunião agora usam o mesmo editor do briefing: títulos, negrito, listas, links e imagens. A IA continua montando a ATA, e a ATA formatada sai igual.",
+      "body": "<p>O campo Próximos passos saiu: ninguém usava, e as pendências e tarefas fazem esse papel. A transcrição continua sendo texto simples, porque é só matéria-prima para a IA.</p>",
+      "kind": "melhoria", "area": "Reuniões"
+    },
+    {
+      "title": "Pauta que cita planejamento, campanha ou tarefa",
+      "summary": "Na pauta da reunião dá para citar planejamentos, campanhas/projetos e tarefas. A reunião aparece sozinha na página de cada um, e citando uma tarefa também no projeto e no planejamento dela.",
+      "body": "<p>Na página da reunião, o bloco <strong>Itens da pauta</strong> lista o que foi citado. Na campanha aparece o card <strong>Reuniões</strong>; na tarefa, <strong>Discutida em</strong>. Passo a passo no capítulo <em>Fluxo de Reuniões com o Cliente</em>, na Central de Ajuda.</p>",
+      "kind": "novidade", "area": "Reuniões"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Fluxo de Reuniões com o Cliente — do agendamento à ATA",
+      "category": "Reuniões",
+      "slug": "fluxo-de-reunioes-e-agendamento-de-macroplanejamento",
+      "body_file": "ajuda-fluxo-reunioes.html"
+    }
+  ]
+}

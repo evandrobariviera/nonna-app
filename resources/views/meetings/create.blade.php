@@ -207,12 +207,12 @@
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
                         Pauta
                     </label>
-                    <textarea name="agenda" rows="5"
-                        placeholder="Tópicos que serão abordados na reunião..."
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
-                        onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ old('agenda') }}</textarea>
+                    {{-- Sem envio de imagem aqui: a reunião ainda não existe pra guardar o arquivo
+                         (imagem colada ficaria embutida no texto). Dá pra pôr imagem ao editar. --}}
+                    <x-rich-editor name="agenda" min-height="140px" :value="old('agenda', '')" />
                 </div>
+
+                @include('meetings._agenda-picker', ['items' => []])
 
             </div>
 

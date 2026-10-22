@@ -258,10 +258,7 @@
     {{-- EQUIPE — quem participa desta campanha/projeto (muda de um item pro outro). O
          responsável do cliente é a referência; aqui entram os demais. Também é montada no
          agendamento da reunião de discussão, pelo planejamento. --}}
-    @php
-        $clientLead     = $projectClient?->creativeLead;
-        $lastDiscussion = $project->discussionMeetings->sortByDesc('scheduled_at')->first();
-    @endphp
+    @php $clientLead = $projectClient?->creativeLead; @endphp
     <div class="card px-5 py-4 mb-5"
          x-data="{
              editing: false,
@@ -287,11 +284,6 @@
                 @endunless
             @endforelse
         </div>
-        @if($lastDiscussion)
-            <a href="{{ route('meetings.show', $lastDiscussion) }}" class="text-xs mt-3 inline-flex items-center gap-1 hover:underline" style="color:var(--muted2)">
-                <x-icon name="calendar" size="11" /> Discussão {{ $lastDiscussion->scheduled_at->format('d/m H:i') }} · {{ $lastDiscussion->statusLabel() }}
-            </a>
-        @endif
 
         <form x-show="editing" x-cloak method="POST" action="{{ route('projects.team.update', $project) }}" class="mt-3 pt-3 flex flex-col gap-2" style="border-top:1px solid var(--border2)">
             @csrf @method('PATCH')
@@ -322,6 +314,11 @@
             </select>
             <button type="submit" class="btn btn-primary btn-xs self-start">Salvar equipe</button>
         </form>
+    </div>
+
+    {{-- REUNIÕES — que citaram a campanha/projeto ou uma tarefa dela (Meeting::relatedToProject). --}}
+    <div class="card px-5 py-4 mb-5">
+        <x-related-meetings :meetings="$relatedMeetings" :context="$project" empty="Nenhuma reunião citou este item ainda." />
     </div>
 
     {{-- TAREFAS EM FILA, AGRUPADAS POR STATUS — leitura rápida ao lado do documento.

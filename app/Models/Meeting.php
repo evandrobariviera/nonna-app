@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Traits\Tenantable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Meeting extends Model
 {
@@ -170,16 +172,88 @@ class Meeting extends Model
     }
 
     /**
-     * Pauta da reunião de discussão: campanhas/projetos do planejamento, na ordem em que
-     * serão discutidos. Cada item tem sua equipe (Project::members) — o agendamento é
-     * agrupado, a discussão é por item.
+     * Pauta citada (meeting_agenda_items): além do texto livre da pauta, a reunião cita
+     * planejamentos, campanhas/projetos e tarefas, na ordem da pauta. Na reunião de
+     * discussão, cada campanha citada tem sua equipe (Project::members).
      */
-    public function projects(): BelongsToMany
+    public function agendaProjects(): MorphToMany
     {
-        return $this->belongsToMany(Project::class, 'meeting_projects', 'meeting_id', 'project_id')
+        return $this->agendaItems(Project::class);
+    }
+
+    public function agendaTasks(): MorphToMany
+    {
+        return $this->agendaItems(Task::class);
+    }
+
+    public function agendaMacroPlans(): MorphToMany
+    {
+        return $this->agendaItems(MacroPlan::class);
+    }
+
+    private function agendaItems(string $class): MorphToMany
+    {
+        return $this->morphedByMany($class, 'item', 'meeting_agenda_items')
             ->withPivot('position')
             ->withTimestamps()
-            ->orderBy('meeting_projects.position');
+            ->orderBy('meeting_agenda_items.position');
+    }
+
+    public function hasAgendaItems(): bool
+    {
+        return $this->agendaMacroPlans->isNotEmpty() || $this->agendaProjects->isNotEmpty() || $this->agendaTasks->isNotEmpty();
+    }
+
+    // ── Onde a reunião aparece sozinha ──
+    // Citar uma tarefa mostra a reunião na tarefa, no projeto e no planejamento dela; citar
+    // um projeto, no projeto e no planejamento (decisão do Evandro, 2026-10-22).
+
+    public function scopeRelatedToTask(Builder $query, Task $task): Builder
+    {
+        return $query->where(fn ($q) => $q->whereHas('agendaTasks', fn ($t) => $t->whereKey($task->id))
+            ->when($task->meeting_id, fn ($q) => $q->orWhere('meetings.id', $task->meeting_id)));
+    }
+
+    public function scopeRelatedToProject(Builder $query, Project $project): Builder
+    {
+        return $query->where(fn ($q) => $q->whereHas('agendaProjects', fn ($p) => $p->whereKey($project->id))
+            ->orWhereHas('agendaTasks', fn ($t) => $t->where('tasks.project_id', $project->id)));
+    }
+
+    public function scopeRelatedToMacroPlan(Builder $query, MacroPlan $plan): Builder
+    {
+        return $query->where(fn ($q) => $q->where('meetings.macro_plan_id', $plan->id)
+            ->orWhereHas('agendaMacroPlans', fn ($m) => $m->whereKey($plan->id))
+            ->orWhereHas('agendaProjects', fn ($p) => $p->where('projects.macro_plan_id', $plan->id))
+            ->orWhereHas('agendaTasks', fn ($t) => $t->where(fn ($w) => $w->where('tasks.macro_plan_id', $plan->id)
+                ->orWhereIn('tasks.project_id', Project::where('macro_plan_id', $plan->id)->select('id')))));
+    }
+
+    /**
+     * Por que a reunião aparece nesta página quando o item não foi citado direto — "via
+     * tarefa X", "via campanha Y". Null = citado direto (ou reunião ligada ao planejamento).
+     * Precisa de agendaProjects/agendaTasks carregados.
+     */
+    public function viaLabelFor(Model $context): ?string
+    {
+        $cites = fn ($items) => $items->contains(fn ($i) => $i->getKey() === $context->getKey() && $i::class === $context::class);
+        if ($cites($this->agendaMacroPlans ?? collect()) || $cites($this->agendaProjects) || $cites($this->agendaTasks)
+            || ($context instanceof MacroPlan && $this->macro_plan_id === $context->id)
+            || ($context instanceof Task && $this->id === $context->meeting_id)) {
+            return null;
+        }
+
+        if ($context instanceof MacroPlan) {
+            $project = $this->agendaProjects->firstWhere('macro_plan_id', $context->id);
+            if ($project) {
+                return 'via ' . mb_strtolower($project->typeLabel()) . ' ' . $project->title;
+            }
+        }
+        $task = $context instanceof Project
+            ? $this->agendaTasks->firstWhere('project_id', $context->id)
+            : ($this->agendaTasks->firstWhere('macro_plan_id', $context->id) ?? $this->agendaTasks->first());
+
+        return $task ? 'via tarefa ' . $task->title : null;
     }
 
     public function contacts(): BelongsToMany

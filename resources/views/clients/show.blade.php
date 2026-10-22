@@ -2265,7 +2265,7 @@
                                         {{ $meeting->typeLabel() }} · {{ $meeting->scheduled_at->format('d/m/Y \à\s H:i') }}
                                     </p>
                                     @if($meeting->hasAta())
-                                        <p class="text-xs" style="color:var(--muted2)">{{ \Illuminate\Support\Str::limit($meeting->ata, 140) }}</p>
+                                        <p class="text-xs" style="color:var(--muted2)">{{ \Illuminate\Support\Str::limit(\App\Services\MeetingText::plain($meeting->ata), 140) }}</p>
                                     @endif
                                 </div>
                                 <a href="{{ route('meetings.show', $meeting) }}" class="btn btn-ghost btn-xs flex-shrink-0">
