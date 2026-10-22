@@ -19,11 +19,21 @@
                 </h4>
                 <div class="flex flex-col gap-1.5">
                     @foreach($articles as $article)
+                        @php
+                            // Não lido = nunca abriu; atualizado = mudou depois da última leitura.
+                            $lidoEm   = ($readAt ?? collect())->get($article->id);
+                            $leitura  = ! $lidoEm ? 'não lido' : ($lidoEm->lt($article->updated_at) ? 'atualizado' : null);
+                        @endphp
                         <a href="{{ route('help.show', $article) }}"
                            class="flex items-center justify-between gap-3 px-3 py-2.5 transition-colors"
-                           style="background:var(--s2)"
+                           style="background:var(--s2); {{ $leitura ? 'border-left:3px solid var(--purple)' : '' }}"
                            onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                            <span class="text-sm font-semibold" style="color:var(--text)">{{ $article->title }}</span>
+                            <span class="text-sm font-semibold flex items-center gap-2 flex-wrap" style="color:var(--text)">
+                                {{ $article->title }}
+                                @if($leitura)
+                                    <span class="text-xs font-bold" style="color:var(--purple)">{{ $leitura }}</span>
+                                @endif
+                            </span>
                             <span class="text-xs font-mono flex-none" style="color:var(--muted)">
                                 atualizado {{ $article->updated_at->diffForHumans() }}
                             </span>

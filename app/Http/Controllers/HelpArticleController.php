@@ -13,8 +13,9 @@ class HelpArticleController extends Controller
     {
         $articlesByCategory = $this->filteredArticles($request)
             ->groupBy(fn (HelpArticle $a) => $a->category ?: 'Sem categoria');
+        $readAt = $this->readAtByArticle();
 
-        return view('help.index', compact('articlesByCategory'));
+        return view('help.index', compact('articlesByCategory', 'readAt'));
     }
 
     // Fragmento pra busca dinâmica (live-filter.js) — mesmo padrão de ClientController::results().
@@ -22,8 +23,18 @@ class HelpArticleController extends Controller
     {
         $articlesByCategory = $this->filteredArticles($request)
             ->groupBy(fn (HelpArticle $a) => $a->category ?: 'Sem categoria');
+        $readAt = $this->readAtByArticle();
 
-        return view('help._results', compact('articlesByCategory'));
+        return view('help._results', compact('articlesByCategory', 'readAt'));
+    }
+
+    /** Última leitura da pessoa por capítulo — marca "não lido" / "atualizado" na lista. */
+    private function readAtByArticle()
+    {
+        return \Illuminate\Support\Facades\DB::connection('pgsql')->table('help_article_reads')
+            ->where('user_id', Auth::id())
+            ->pluck('read_at', 'help_article_id')
+            ->map(fn ($at) => \Illuminate\Support\Carbon::parse($at));
     }
 
     private function filteredArticles(Request $request)
@@ -72,6 +83,9 @@ class HelpArticleController extends Controller
     public function show(HelpArticle $article)
     {
         $article->load('createdBy', 'updatedBy');
+        // Abrir = ler (contador do menu). Quem cria/edita cai aqui depois de salvar, então
+        // a própria edição não volta como "não lida" pra quem escreveu.
+        $article->markReadBy(Auth::user());
 
         return view('help.show', compact('article'));
     }

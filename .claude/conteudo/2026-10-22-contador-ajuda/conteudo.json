@@ -1,0 +1,10 @@
+{
+  "novidades": [
+    {
+      "title": "Contador na Central de Ajuda",
+      "summary": "O item Central de Ajuda do menu mostra quantos capítulos são novos ou mudaram desde a última vez que você leu. Na lista, eles aparecem marcados como \"não lido\" ou \"atualizado\".",
+      "body": "<p>O número cai à medida que você abre cada capítulo. O contador de Novidades também ficou mais certo: conta tudo o que entrou depois da sua última visita, mesmo quando a novidade é de uma entrega de dias atrás.</p>",
+      "kind": "melhoria", "area": "Sistema"
+    }
+  ]
+}

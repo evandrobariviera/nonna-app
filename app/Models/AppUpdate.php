@@ -56,7 +56,17 @@ class AppUpdate extends Model
         return static::$kinds[$this->kind]['color'] ?? 'var(--muted)';
     }
 
-    /** Quantas novidades essa pessoa ainda não viu — alimenta o ponto na barra lateral. */
+    /**
+     * Quando a novidade chegou pra equipe: a publicação, ou o cadastro se foi depois. Uma
+     * novidade registrada hoje com data de entrega de semanas atrás (published_at no
+     * passado) ainda é nova pra quem abriu a tela ontem.
+     */
+    public function chegouEm(): ?\Illuminate\Support\Carbon
+    {
+        return $this->published_at?->max($this->created_at);
+    }
+
+    /** Quantas novidades essa pessoa ainda não viu — alimenta o contador na barra lateral. */
     public static function naoVistasPor(?User $user): int
     {
         if (! $user) {
@@ -64,7 +74,7 @@ class AppUpdate extends Model
         }
 
         return static::publicadas()
-            ->when($user->app_updates_seen_at, fn ($q) => $q->where('published_at', '>', $user->app_updates_seen_at))
+            ->when($user->app_updates_seen_at, fn ($q) => $q->whereRaw('greatest(published_at, created_at) > ?', [$user->app_updates_seen_at]))
             ->count();
     }
 }

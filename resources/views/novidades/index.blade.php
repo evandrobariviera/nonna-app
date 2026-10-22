@@ -41,8 +41,8 @@
         <div class="flex flex-col gap-3">
             @foreach($entradas as $u)
                 @php
-                    // "Novo pra você" = publicado depois da última vez que essa pessoa abriu a tela.
-                    $novo = $u->published_at && (! $vistoAte || $u->published_at->gt($vistoAte));
+                    // "Novo pra você" = chegou depois da última vez que essa pessoa abriu a tela.
+                    $novo = $u->published_at && (! $vistoAte || $u->chegouEm()->gt($vistoAte));
                 @endphp
                 <div class="card px-5 py-4"
                      style="{{ $novo ? 'border-left:3px solid var(--purple)' : '' }}">

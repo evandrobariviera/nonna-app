@@ -391,13 +391,25 @@
     </span>
 </a>
 
-{{-- Central de Ajuda (wiki interno de processos) --}}
+{{-- Central de Ajuda (wiki interno de processos). Contador = capítulos novos ou
+     atualizados desde a última leitura da pessoa (HelpArticle::naoLidosPor). --}}
+@php
+    $_ajudaNaoLida = once(fn () => \App\Models\HelpArticle::naoLidosPor(auth()->user()));
+@endphp
 <a href="{{ route('help.index') }}"
    class="nav-group-trigger {{ request()->routeIs('help.*') ? 'open' : '' }}"
    style="{{ request()->routeIs('help.*') ? 'color:var(--purple);' : '' }}">
     <span class="flex items-center gap-3">
         <x-icon name="book-open" size="16" class="flex-shrink-0" />
-        Central de Ajuda
+        <span class="flex items-center justify-between w-full gap-2">
+            <span>Central de Ajuda</span>
+            @if($_ajudaNaoLida > 0)
+                <span class="text-xs px-1.5 py-px rounded-full font-semibold" title="Capítulos novos ou atualizados que você ainda não leu"
+                      style="background:rgba(100, 59, 142,.15); color:var(--purple); border:1px solid rgba(100, 59, 142,.3)">
+                    {{ $_ajudaNaoLida }}
+                </span>
+            @endif
+        </span>
     </span>
 </a>
 
