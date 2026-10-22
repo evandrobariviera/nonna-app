@@ -1,0 +1,9 @@
+{
+  "ajuda": [
+    {
+      "title": "Aprovações do cliente — como funciona",
+      "category": "Aprovações",
+      "body_file": "ajuda-aprovacoes.html"
+    }
+  ]
+}
