@@ -258,7 +258,7 @@
 
     {{-- ── Semana de Produção: todas as tarefas abertas, arrastáveis entre dias ── --}}
     <div class="card card-body-lg mb-4">
-        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.1em">
+        <p class="card-title mb-1">
             Semana de Produção
         </p>
         <p class="text-xs mb-4" style="color:var(--muted2)">
@@ -310,7 +310,7 @@
 
         {{-- ── Distribuição entre as sprints ── --}}
         <div class="card card-body-lg">
-            <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.1em">
+            <p class="card-title mb-1">
                 Distribuição entre as sprints
             </p>
             <p class="text-xs mb-4" style="color:var(--muted2)">
@@ -373,7 +373,7 @@
 
         {{-- ── Carga por executor ── --}}
         <div class="card card-body-lg">
-            <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.1em">
+            <p class="card-title mb-1">
                 Carga por executor
             </p>
             <p class="text-xs mb-4" style="color:var(--muted2)">
@@ -418,7 +418,7 @@
 
     {{-- ── Mix de produção ── --}}
     <div class="card card-body-lg mb-4">
-        <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
+        <p class="card-title mb-4">
             Que tipo de trabalho está aberto
         </p>
         <div class="auto-grid-sm">

@@ -104,7 +104,7 @@
                     <input type="hidden" name="_section" value="sec01">
 
                     <div class="card p-5 space-y-4">
-                        <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">História e Identidade</p>
+                        <p class="card-title">História e Identidade</p>
                         <div>
                             <label class="block text-xs font-mono uppercase tracking-widest mb-1" style="color:var(--muted)">Como e por que a empresa foi fundada? <span style="color:var(--orange)">*</span></label>
                             <p class="text-xs italic mb-2" style="color:var(--muted)">Peça para contar desde o início. O que motivou — pode ser o propósito.</p>
@@ -129,7 +129,7 @@
                     </div>
 
                     <div class="card p-5 space-y-4">
-                        <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Momento Atual</p>
+                        <p class="card-title">Momento Atual</p>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-mono uppercase tracking-widest mb-1" style="color:var(--muted)">Faturamento mensal aprox.</label>
@@ -161,7 +161,7 @@
                     </div>
 
                     <div class="card p-5 space-y-4">
-                        <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Visão e Objetivos</p>
+                        <p class="card-title">Visão e Objetivos</p>
                         <div>
                             <label class="block text-xs font-mono uppercase tracking-widest mb-1" style="color:var(--muted)">Onde quer estar em 2 anos?</label>
                             <textarea name="sec01[visao]" rows="2"
@@ -185,7 +185,7 @@
                     </div>
 
                     <div class="card p-5">
-                        <p class="text-xs font-mono uppercase tracking-widest mb-4" style="color:var(--muted)">Checklist — Perguntas cobertas</p>
+                        <p class="card-title mb-4">Checklist — Perguntas cobertas</p>
                         @php
                             $cl01 = $sec01['checklist'] ?? [];
                             $checklist01 = [
@@ -238,7 +238,7 @@
                     <input type="hidden" name="_section" value="sec02">
 
                     <div class="card p-5 space-y-4">
-                        <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Presença Digital Atual</p>
+                        <p class="card-title">Presença Digital Atual</p>
                         <div class="grid grid-cols-2 gap-4">
                             @foreach([
                                 'url_site'     => ['URL do Site', 'https://...'],
@@ -259,7 +259,7 @@
                     </div>
 
                     <div class="card p-5 space-y-4">
-                        <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Histórico de Tráfego Pago</p>
+                        <p class="card-title">Histórico de Tráfego Pago</p>
                         <div>
                             <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Se já rodaram: qual foi o resultado?</label>
                             <textarea name="sec02[hist_trafego]" rows="3"
@@ -283,7 +283,7 @@
                     </div>
 
                     <div class="card p-5 space-y-4">
-                        <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Estrutura de Vendas</p>
+                        <p class="card-title">Estrutura de Vendas</p>
                         <div>
                             <label class="block text-xs font-mono uppercase tracking-widest mb-1" style="color:var(--muted)">Como é o processo de venda hoje?</label>
                             <p class="text-xs italic mb-2" style="color:var(--muted)">Como o lead chega, como é atendido, como fecha...</p>
@@ -308,7 +308,7 @@
                     </div>
 
                     <div class="card p-5">
-                        <p class="text-xs font-mono uppercase tracking-widest mb-4" style="color:var(--muted)">Checklist — Informações coletadas</p>
+                        <p class="card-title mb-4">Checklist — Informações coletadas</p>
                         @php
                             $cl02 = $sec02['checklist'] ?? [];
                             $checklist02 = [
@@ -381,7 +381,7 @@
 
                     @foreach($auditChannels as $channel => $meta)
                         <div class="card p-5 space-y-3">
-                            <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">{{ $meta['label'] }}</p>
+                            <p class="card-title">{{ $meta['label'] }}</p>
                             @foreach($meta['items'] as $itemKey => $itemLabel)
                                 @php $current = $sec03[$channel][$itemKey] ?? ''; @endphp
                                 <div x-data="{ val: '{{ $current }}' }">
@@ -419,7 +419,7 @@
                     @endforeach
 
                     <div class="card p-5 space-y-4">
-                        <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Síntese da Auditoria</p>
+                        <p class="card-title">Síntese da Auditoria</p>
                         <div>
                             <label class="block text-xs font-mono uppercase tracking-widest mb-1" style="color:var(--muted)">Maior problema de comunicação identificado</label>
                             <textarea name="sec03[maior_problema]" rows="3"
@@ -457,7 +457,7 @@
                     @csrf @method('PATCH')
                     <input type="hidden" name="_section" value="sec04">
                     <div class="card p-5 space-y-3">
-                        <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Mapa de Posicionamento</p>
+                        <p class="card-title">Mapa de Posicionamento</p>
                         <div>
                             <label class="block text-xs font-mono uppercase tracking-widest mb-1" style="color:var(--purple)">Qual espaço está em aberto no mercado?</label>
                             <p class="text-xs italic mb-2" style="color:var(--muted)">O que nenhum concorrente comunica? O cliente pode e deve ocupar.</p>
@@ -642,7 +642,7 @@
                     @csrf @method('PATCH')
                     <input type="hidden" name="_section" value="sec05">
                     <div class="card p-5">
-                        <p class="text-xs font-mono uppercase tracking-widest mb-4" style="color:var(--muted)">Checklist — Personas</p>
+                        <p class="card-title mb-4">Checklist — Personas</p>
                         @php
                             $cl05 = $sec05['checklist'] ?? [];
                             $checklist05 = [
@@ -874,7 +874,7 @@
                     @endforeach
 
                     <div class="card p-5">
-                        <p class="text-xs font-mono uppercase tracking-widest mb-4" style="color:var(--muted)">Checklist de Qualidade</p>
+                        <p class="card-title mb-4">Checklist de Qualidade</p>
                         @php
                             $cl06 = $sec06['checklist'] ?? [];
                             $checklist06 = [

@@ -49,7 +49,7 @@
 
     {{-- ── Fluxo de caixa mensal ── --}}
     <div class="card card-body-lg mb-4">
-        <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
+        <p class="card-title mb-4">
             Fluxo de Caixa Mensal <span style="color:var(--muted2); text-transform:none; letter-spacing:normal">· entradas x saídas</span>
         </p>
         <x-chart type="bar" :height="240" format="currency" axis-format="currencyShort"
@@ -64,7 +64,7 @@
     {{-- ── Projeção futura ── --}}
     <div class="card card-body-lg mb-4">
         <div class="flex items-center justify-between mb-1 flex-wrap gap-3">
-            <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
+            <p class="card-title">
                 Projeção Futura <span style="color:var(--muted2); text-transform:none; letter-spacing:normal">· inclui contratos ativos ainda não lançados</span>
             </p>
             <div class="flex items-center gap-1.5">
@@ -102,7 +102,7 @@
     {{-- ── Por categoria ── --}}
     <div class="grid grid-cols-2 gap-4 mb-4">
         <div class="card card-body-lg">
-            <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Despesas por Categoria</p>
+            <p class="card-title mb-4">Despesas por Categoria</p>
             @if($despesasPorCategoria->isEmpty())
                 <p class="text-sm py-6 text-center" style="color:var(--muted)">Nenhuma despesa categorizada no período.</p>
             @else
@@ -123,7 +123,7 @@
             @endif
         </div>
         <div class="card card-body-lg">
-            <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Receitas por Categoria</p>
+            <p class="card-title mb-4">Receitas por Categoria</p>
             @if($receitasPorCategoria->isEmpty())
                 <p class="text-sm py-6 text-center" style="color:var(--muted)">Nenhuma receita categorizada no período.</p>
             @else

@@ -49,7 +49,7 @@
     {{-- Volume de tarefas por status ao longo dos dias — reconstruído a partir de
          task_status_transitions, sempre inclui concluído/cancelado (ver SprintController::sprintLoadData) --}}
     <div class="card px-5 py-4">
-        <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">
+        <p class="card-title mb-3">
             Volume de Tarefas por Status
         </p>
 

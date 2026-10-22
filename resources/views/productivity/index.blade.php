@@ -65,7 +65,7 @@
         {{-- QUEM ENTREGA MAIS / VOLUME POR EXECUTOR (filtrável por status) --}}
         <div class="card card-body-lg">
             <div class="flex items-start justify-between gap-3 mb-4">
-                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
+                <p class="card-title">
                     @if($statusFilter === 'concluido')
                         Quem Entrega Mais <span style="color:var(--muted2); text-transform:none; letter-spacing:normal">· tarefas concluídas, por executor</span>
                     @else
@@ -103,7 +103,7 @@
 
         {{-- CARGA DE TRABALHO ATUAL (WIP) --}}
         <div class="card card-body-lg">
-            <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
+            <p class="card-title mb-4">
                 Carga de Trabalho Atual (WIP) <span style="color:var(--muted2); text-transform:none; letter-spacing:normal">· tarefas em aberto agora, por executor</span>
             </p>
             @if($wipByExecutor->isEmpty())
@@ -128,7 +128,7 @@
 
         {{-- TIPO DE TAREFA MAIS ENTREGUE --}}
         <div class="card card-body-lg">
-            <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
+            <p class="card-title mb-4">
                 Tipo de Tarefa Mais Entregue
             </p>
             @if($byType->isEmpty())
@@ -153,7 +153,7 @@
 
         {{-- MIX DE ORIGEM --}}
         <div class="card card-body-lg">
-            <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
+            <p class="card-title mb-4">
                 Mix de Origem <span style="color:var(--muted2); text-transform:none; letter-spacing:normal">· planejado vs. avulso, entregues no período</span>
             </p>
             @if($originMix->isEmpty())
@@ -169,7 +169,7 @@
 
         {{-- CLIENTE QUE MAIS CONSOME --}}
         <div class="card card-body-lg">
-            <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
+            <p class="card-title mb-4">
                 Cliente Que Mais Consome a Agência <span style="color:var(--muted2); text-transform:none; letter-spacing:normal">· tarefas abertas no período</span>
             </p>
             @if($byClient->isEmpty())
@@ -196,7 +196,7 @@
 
         {{-- ATRASADAS POR EXECUTOR --}}
         <div class="card card-body-lg">
-            <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
+            <p class="card-title mb-4">
                 Tarefas Atrasadas, Por Executor <span style="color:var(--muted2); text-transform:none; letter-spacing:normal">· estado atual</span>
             </p>
             @if($overdueByExecutor->isEmpty())
@@ -223,7 +223,7 @@
         </div>
         {{-- RETRABALHO POR EXECUTOR --}}
         <div class="card card-body-lg">
-            <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
+            <p class="card-title mb-4">
                 Retrabalho, Por Executor <span style="color:var(--muted2); text-transform:none; letter-spacing:normal">· % que passou por Ajuste/Alteração</span>
             </p>
             @if($reworkRate['by_executor']->isEmpty())
@@ -250,7 +250,7 @@
 
     {{-- TENDÊNCIA SEMANAL --}}
     <div class="card card-body-lg mb-4">
-        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.1em">
+        <p class="card-title mb-1">
             Tendência Semanal de Entregas
         </p>
         <p class="text-xs mb-4" style="color:var(--muted2)">Tarefas concluídas por semana, últimas 8 semanas — janela fixa, independente do filtro de período acima.</p>
@@ -269,7 +269,7 @@
 
     {{-- TEMPO MÉDIO EM CADA STATUS --}}
     <div class="card card-body-lg mb-4">
-        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.1em">
+        <p class="card-title mb-1">
             Tempo Médio em Cada Status
         </p>
         <p class="text-xs mb-4" style="color:var(--muted2)">Dias úteis (fins de semana descontados) — só conta tarefas que já saíram do status, todo o histórico disponível.</p>
@@ -299,7 +299,7 @@
 
     {{-- SAÚDE DA APROVAÇÃO POR CLIENTE --}}
     <div class="card card-body-lg mb-4">
-        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.1em">
+        <p class="card-title mb-1">
             Saúde da Aprovação, Por Cliente
         </p>
         <p class="text-xs mb-4" style="color:var(--muted2)">Rodadas resolvidas no período — % aprovada de primeira (sem pedido de ajuste) e tempo médio até o cliente responder.</p>
@@ -338,7 +338,7 @@
 
     {{-- MATRIZ TIPO DE TAREFA × EXECUTOR --}}
     <div class="card card-body-lg">
-        <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.1em">
+        <p class="card-title mb-1">
             Tipo de Tarefa × Executor
         </p>
         <p class="text-xs mb-4" style="color:var(--muted2)">Tarefas concluídas no período — quem cobre cada tipo (até 8 executores de maior volume).</p>

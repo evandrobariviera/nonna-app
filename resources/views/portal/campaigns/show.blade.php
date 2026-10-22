@@ -86,7 +86,7 @@
         @endphp
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
             <div class="card p-5">
-                <p class="text-xs font-bold uppercase tracking-widest mb-4" style="color: var(--muted)">Investimento por Dia</p>
+                <p class="card-title mb-4">Investimento por Dia</p>
                 <div class="flex items-end gap-1" style="height: 80px">
                     @foreach($dailyStats as $day)
                         @php
@@ -106,7 +106,7 @@
                 </div>
             </div>
             <div class="card p-5">
-                <p class="text-xs font-bold uppercase tracking-widest mb-4" style="color: var(--muted)">Conversões por Dia</p>
+                <p class="card-title mb-4">Conversões por Dia</p>
                 <div class="flex items-end gap-1" style="height: 80px">
                     @foreach($dailyStats as $day)
                         @php
@@ -131,7 +131,7 @@
     {{-- Como está indo --}}
     @if($insights->isNotEmpty())
         <div class="card p-5 mb-8">
-            <p class="text-xs font-bold uppercase tracking-widest mb-3" style="color: var(--muted)">Como está indo</p>
+            <p class="card-title mb-3">Como está indo</p>
             <div class="flex flex-col gap-3">
                 @foreach($insights as $insight)
                     <p class="text-sm" style="color: var(--muted2); line-height: 1.6">{{ $insight->client_summary }}</p>
@@ -142,7 +142,7 @@
 
     {{-- Conjuntos de anúncios --}}
     <div class="card p-5 mb-8">
-        <p class="text-xs font-bold uppercase tracking-widest mb-4" style="color: var(--muted)">
+        <p class="card-title mb-4">
             Conjuntos de Anúncios · {{ $periodLabel }}
         </p>
 
@@ -205,7 +205,7 @@
 
     {{-- Histórico de otimizações --}}
     <div class="card p-5">
-        <p class="text-xs font-bold uppercase tracking-widest mb-4" style="color: var(--muted)">
+        <p class="card-title mb-4">
             Histórico de Otimizações
             @if($optimizationLogs->count() > 0)
                 <span class="ml-1">({{ $optimizationLogs->count() }})</span>

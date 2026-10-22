@@ -14,7 +14,7 @@
     <div class="flex flex-col gap-5">
         @foreach($articlesByCategory as $category => $articles)
             <div class="card px-5 py-4">
-                <h4 class="text-xs font-mono uppercase tracking-widest mb-3" style="color:var(--purple)">
+                <h4 class="card-title mb-3" style="color:var(--purple)">
                     {{ $category }} ({{ $articles->count() }})
                 </h4>
                 <div class="flex flex-col gap-1.5">

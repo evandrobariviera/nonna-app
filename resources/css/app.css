@@ -335,7 +335,8 @@
     }
 
     /* Título de card no estilo Mirbal: 16px Inter + barrinha vertical da cor da marca
-       encostada na borda esquerda do card (o card precisa de padding-left ~20px). */
+       encostada na borda esquerda do card. A barrinha recua o padding esquerdo do card
+       (--card-px, definido abaixo conforme a classe de padding do card; padrão 20px). */
     .card-title {
         position: relative;
         font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -348,7 +349,7 @@
         content: "";
         position: absolute;
         top: 50%;
-        left: -20px;
+        left: calc(-1 * var(--card-px, 20px));
         transform: translateY(-50%);
         width: 4px;
         height: 22px;
@@ -364,9 +365,12 @@
     }
 
     /* padding padrão dos cards — sem depender do JIT compilar px-N py-N */
-    .card-body   { padding: 20px 24px; }
-    .card-body-lg { padding: 24px 28px; }
-    .card-body-sm { padding: 16px 20px; }
+    .card-body   { padding: 20px 24px; --card-px: 24px; }
+    .card-body-lg { padding: 24px 28px; --card-px: 28px; }
+    .card-body-sm { padding: 16px 20px; --card-px: 20px; }
+    .card.p-4, .card.px-4 { --card-px: 16px; }
+    .card.p-5, .card.px-5 { --card-px: 20px; }
+    .card.p-6, .card.px-6 { --card-px: 24px; }
 
     .card-header {
         border-bottom: 1px solid var(--border2);
@@ -558,7 +562,7 @@
         border: 1px solid var(--border2);
         border-radius: var(--radius-lg);
     }
-    .kb-col-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 16px 16px 12px 20px; }
+    .kb-col-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 16px 16px 12px 20px; --card-px: 20px; }
     .kb-col-head .card-title { font-size: 15px; }
     .kb-col-head .card-title::before { background: var(--kb-bar, var(--purple)); opacity: .85; }
     .kb-count { font-size: 12px; font-weight: 500; color: var(--muted); background: var(--s2); padding: 1px 8px; border-radius: 9999px; }

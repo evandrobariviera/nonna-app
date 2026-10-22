@@ -1326,7 +1326,7 @@
             @endphp
             <div class="card p-5 mb-6">
                 <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">
+                    <h3 class="card-title">
                         Orçamento de Anúncios (mês vigente)
                     </h3>
                     <div class="flex items-center gap-3">
@@ -2128,7 +2128,7 @@
                         @endphp
                         <div class="card p-5">
                             <div class="flex items-center justify-between mb-3">
-                                <h4 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">
+                                <h4 class="card-title">
                                     {{ \App\Models\ClientOnboarding::$phases[$phase] ?? $phase }}
                                 </h4>
                                 @if($doneAt)
@@ -2319,7 +2319,7 @@
         <div x-show="tab === 'briefing'" x-cloak x-data="{ editingBriefing: false }">
             <div class="card card-body-lg">
                 <div class="flex items-center justify-between mb-1">
-                    <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Briefing do Cliente</p>
+                    <p class="card-title">Briefing do Cliente</p>
                     <button type="button" @click="editingBriefing = !editingBriefing" class="text-xs font-semibold" style="color:var(--purple)">
                         <span x-text="editingBriefing ? 'Cancelar' : (@js((bool) $client->briefing) ? 'Editar' : '+ Adicionar')"></span>
                     </button>

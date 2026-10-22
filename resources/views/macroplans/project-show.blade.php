@@ -323,7 +323,7 @@
     {{-- COMENTÁRIOS — observações do time sobre a campanha/projeto (ProjectCommentController).
          Mesmo jeito dos comentários da tarefa; comentário novo avisa a equipe. Só interno. --}}
     <div class="card px-5 py-4 mb-5" id="comentarios" x-data="{ editId: null }" style="scroll-margin-top:16px">
-        <p class="text-xs font-semibold uppercase tracking-widest mb-3 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+        <p class="card-title mb-3 flex items-center gap-2">
             <x-icon name="message-circle" size="12" /> Comentários
             @if($project->comments->isNotEmpty())
                 <span class="px-1.5 py-0.5" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $project->comments->count() }}</span>
@@ -479,7 +479,7 @@
 
     {{-- ANEXOS --}}
     <div class="card px-5 py-4 mb-5">
-        <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">
+        <p class="card-title mb-3">
             Anexos
             @if($project->attachments->count() > 0)
                 <span class="ml-1 px-1.5 py-0.5" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $project->attachments->count() }}</span>
@@ -516,7 +516,7 @@
          (Projeto Vinculado → campanhas.update-project). --}}
     @if($project->adCampaigns->isNotEmpty())
         <div class="card px-5 py-4 mb-5">
-            <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">
+            <p class="card-title mb-3">
                 Campanhas Vinculadas ({{ $project->adCampaigns->count() }})
             </p>
             <div class="flex flex-col gap-2">
@@ -1052,7 +1052,7 @@
                 @foreach($project->disciplines as $disc)
                     @if($project->hasBriefingFor($disc))
                         <div class="card px-4 py-4">
-                            <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                            <p class="card-title mb-2">
                                 {{ \App\Models\Project::$disciplines[$disc] ?? $disc }}
                             </p>
                             <p class="text-xs whitespace-pre-wrap leading-relaxed" style="color:var(--text)">{{ $project->{'briefing_' . $disc} }}</p>
@@ -1076,7 +1076,7 @@
             <div x-show="open" x-cloak class="mt-3 space-y-4">
                 @if($project->big_idea_titulo || $project->big_idea_manifesto)
                     <div class="card px-5 py-4">
-                        <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--purple)">Big Idea</p>
+                        <p class="card-title mb-2" style="color:var(--purple)">Big Idea</p>
                         @if($project->big_idea_titulo)
                             <p class="text-base font-bold mb-2" style="color:var(--text)">{{ $project->big_idea_titulo }}</p>
                         @endif
@@ -1088,21 +1088,21 @@
 
                 @if($project->territorio_alternativo)
                     <div class="card px-5 py-4">
-                        <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Território Alternativo (rota B)</p>
+                        <p class="card-title mb-2">Território Alternativo (rota B)</p>
                         <p class="text-sm whitespace-pre-wrap leading-relaxed" style="color:var(--muted2)">{{ $project->territorio_alternativo }}</p>
                     </div>
                 @endif
 
                 @if($project->racional_estrategico)
                     <div class="card px-5 py-4">
-                        <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Racional Estratégico</p>
+                        <p class="card-title mb-2">Racional Estratégico</p>
                         <p class="text-sm whitespace-pre-wrap leading-relaxed" style="color:var(--text)">{{ $project->racional_estrategico }}</p>
                     </div>
                 @endif
 
                 @if(!empty($project->tom_comunicacao) || $project->frase_voz)
                     <div class="card px-5 py-4">
-                        <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Linha de Comunicação</p>
+                        <p class="card-title mb-2">Linha de Comunicação</p>
                         @if(!empty($project->tom_comunicacao))
                             <div class="flex flex-wrap gap-1.5 mb-2">
                                 @foreach($project->tom_comunicacao as $tom)
@@ -1135,7 +1135,7 @@
 
                 @if(!empty($project->mecanica))
                     <div class="card px-5 py-4">
-                        <p class="text-xs font-mono uppercase tracking-widest mb-3" style="color:var(--muted)">Mecânica da Campanha</p>
+                        <p class="card-title mb-3">Mecânica da Campanha</p>
                         <div class="space-y-3">
                             @foreach($project->mecanica as $i => $passo)
                                 <div class="flex gap-3">
@@ -1160,7 +1160,7 @@
                     <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr))">
                         @foreach($project->referencias_visuais as $ref)
                             <div class="card px-4 py-4">
-                                <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">{{ $ref['label'] ?? '' }}</p>
+                                <p class="card-title mb-2">{{ $ref['label'] ?? '' }}</p>
                                 <p class="text-xs leading-relaxed" style="color:var(--muted2)">{{ $ref['texto'] ?? '' }}</p>
                             </div>
                         @endforeach
@@ -1169,7 +1169,7 @@
 
                 @if(!empty($project->pecas))
                     <div class="card px-5 py-4">
-                        <p class="text-xs font-mono uppercase tracking-widest mb-3" style="color:var(--muted)">Desdobramento em Peças</p>
+                        <p class="card-title mb-3">Desdobramento em Peças</p>
                         <ul class="space-y-2">
                             @foreach($project->pecas as $peca)
                                 <li style="border-bottom:1px solid var(--border2)" class="pb-2">

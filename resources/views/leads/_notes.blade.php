@@ -3,7 +3,7 @@
      (app/Http/Controllers/Portal/LeadController). Espera $opportunity (com
      'notes.user'/'notes.contact' carregados) e $notesStoreRoute. --}}
 <div class="card p-5" id="notas">
-    <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-4">
+    <h3 class="card-title mb-4">
         Notas
         @if($opportunity->notes->isNotEmpty())
             <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full" style="background:var(--s3); color:var(--muted2)">{{ $opportunity->notes->where('to_stage', null)->count() }}</span>

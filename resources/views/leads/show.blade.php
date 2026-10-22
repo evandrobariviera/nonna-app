@@ -34,7 +34,7 @@
 
             {{-- Contact card --}}
             <div class="card p-5">
-                <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-4">Contato</h3>
+                <h3 class="card-title mb-4">Contato</h3>
                 <div class="flex items-center gap-4">
                     <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-white flex-shrink-0"
                          style="background: var(--purple);">
@@ -61,7 +61,7 @@
 
             {{-- Attribution --}}
             <div class="card p-5">
-                <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-3">Atribuição</h3>
+                <h3 class="card-title mb-3">Atribuição</h3>
                 <div class="grid grid-cols-2 gap-3 text-xs">
                     <div><span class="text-[var(--muted)]">Canal:</span> <span class="text-[var(--text)]">{{ $opportunity->channel?->kindLabel() ?? '—' }}</span></div>
                     <div><span class="text-[var(--muted)]">Fonte:</span> <span class="text-[var(--text)]">{{ $opportunity->source?->displayName() ?? '—' }}</span></div>
@@ -93,7 +93,7 @@
 
             {{-- Assign / Lost reason --}}
             <div class="card p-5">
-                <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-3">Responsável</h3>
+                <h3 class="card-title mb-3">Responsável</h3>
                 <form method="POST" action="{{ route('leads.update', $opportunity) }}" class="space-y-4">
                     @csrf
                     @method('PATCH')
@@ -128,7 +128,7 @@
 
             @if($opportunity->lead->client)
                 <div class="card p-4" style="border-color: rgba(52,211,153,.2);">
-                    <h3 class="text-xs font-mono uppercase tracking-widest mb-3" style="color: var(--green);">Cliente</h3>
+                    <h3 class="card-title mb-3" style="color: var(--green)">Cliente</h3>
                     <a href="{{ route('clients.show', $opportunity->lead->client_id) }}"
                        class="text-sm font-semibold text-[var(--text)] hover:text-[var(--purple)] transition-colors">
                         {{ $opportunity->lead->client->displayName() }}
@@ -136,7 +136,7 @@
                 </div>
             @else
                 <div class="card p-4" style="border-color: rgba(238,121,25,.25);">
-                    <h3 class="text-xs font-mono uppercase tracking-widest mb-2" style="color: var(--orange);">Sem cliente identificado</h3>
+                    <h3 class="card-title mb-2" style="color: var(--orange)">Sem cliente identificado</h3>
                     <p class="text-xs text-[var(--muted)]">
                         Nenhuma fonte cadastrada bateu com o identificador recebido — este lead ficou em triagem manual.
                     </p>
@@ -146,7 +146,7 @@
             {{-- Aviso de "Lead Capturado" pros contatos do cliente (notification_dispatches) --}}
             @if($opportunity->lead->client)
                 <div class="card p-4">
-                    <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-3">Aviso ao cliente</h3>
+                    <h3 class="card-title mb-3">Aviso ao cliente</h3>
 
                     @if($clientWithoutSubscriber)
                         <div class="flex items-start gap-2 text-xs mb-3 p-2" style="background:rgba(239,68,68,.08); color:var(--red)">
@@ -201,7 +201,7 @@
             @endif
 
             <div class="card p-4 space-y-3">
-                <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">Timeline</h3>
+                <h3 class="card-title">Timeline</h3>
                 <div class="text-xs text-[var(--muted2)]">
                     <div class="text-[var(--muted)] mb-0.5">Convertido em</div>
                     {{ ($opportunity->received_at ?? $opportunity->created_at)->format('d/m/Y H:i') }}
@@ -222,7 +222,7 @@
 
             @if($opportunity->assignedTo)
                 <div class="card p-4">
-                    <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Responsável</h3>
+                    <h3 class="card-title mb-2">Responsável</h3>
                     <div class="text-sm text-[var(--text)]">{{ $opportunity->assignedTo->name }}</div>
                 </div>
             @endif

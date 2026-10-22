@@ -553,7 +553,7 @@
                  se já houver Projeto vinculado (troca desvincula, mesma regra de sempre de
                  TaskController::updateClient()). --}}
             <div class="card card-body-lg flex flex-col gap-5">
-                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Cliente / Planejamento / Projeto{{ $task->meeting ? ' / Reunião' : '' }}</p>
+                <p class="card-title">Cliente / Planejamento / Projeto{{ $task->meeting ? ' / Reunião' : '' }}</p>
                 <div class="grid {{ $task->meeting ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-3' }} gap-4">
                     <div x-data="{
                             value: @js($task->client_id),
@@ -642,7 +642,7 @@
             {{-- PESSOAS — Responsável/Executor salvam ao trocar a seleção; Observadores
                  salva a cada chip adicionado/removido. Nenhum dos três depende de "Salvar". --}}
             <div class="card card-body-lg flex flex-col gap-5">
-                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Pessoas</p>
+                <p class="card-title">Pessoas</p>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Responsável</label>
@@ -737,7 +737,7 @@
             {{-- INSUMOS --}}
             @php $insumos = $task->attachments->where('kind', 'insumo'); @endphp
             <div class="card card-body-lg">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-1 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                <p class="card-title mb-1 flex items-center gap-2">
                     <span class="icon-badge">
                         <x-icon name="paperclip" size="16" />
                     </span>
@@ -833,7 +833,7 @@
             @endphp
             @if($deliveries->isNotEmpty())
                 <div class="card card-body-lg">
-                    <p class="text-xs font-semibold uppercase tracking-widest mb-1 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                    <p class="card-title mb-1 flex items-center gap-2">
                         <span class="icon-badge">
                             <x-icon name="send" size="16" />
                         </span>
@@ -906,7 +906,7 @@
             {{-- ENTREGÁVEIS --}}
             @php $entregaveis = $task->attachments->where('kind', 'entregavel'); @endphp
             <div class="card card-body-lg">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-1 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                <p class="card-title mb-1 flex items-center gap-2">
                     <span class="icon-badge">
                         <x-icon name="package" size="16" />
                     </span>
@@ -984,7 +984,7 @@
 
                 <div class="card card-body-lg">
                     <div class="flex items-center justify-between mb-5">
-                        <p class="text-xs font-semibold uppercase tracking-widest flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                        <p class="card-title flex items-center gap-2">
                             <span class="icon-badge">
                                 <x-icon name="circle-check" size="16" />
                             </span>
@@ -1299,7 +1299,7 @@
                  campos rápidos antes. Aprovação um pouco mais destacada porque é a data que
                  coordena a entrega da operação. --}}
             <div class="card card-body">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                <p class="card-title mb-4 flex items-center gap-2">
                     <span class="icon-badge">
                         <x-icon name="calendar" size="16" />
                     </span>
@@ -1382,7 +1382,7 @@
                  da coluna principal, removida por ocupar espaço demais) --}}
             @if($task->observers->count() > 0)
                 <div class="card card-body">
-                    <p class="text-xs font-semibold uppercase tracking-widest mb-3 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                    <p class="card-title mb-3 flex items-center gap-2">
                         <span class="icon-badge">
                             <x-icon name="users" size="16" />
                         </span>
@@ -1399,7 +1399,7 @@
             {{-- SOLICITANTE --}}
             @if($task->is_ticket && $task->requester_name)
                 <div class="card card-body">
-                    <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                    <p class="card-title mb-4 flex items-center gap-2">
                         <span class="icon-badge">
                             <x-icon name="id-card" size="16" />
                         </span>
@@ -1441,7 +1441,7 @@
 
             {{-- ══ COMENTÁRIOS (antes na coluna principal, movido pra lateral) ══ --}}
             <div class="card card-body-lg" id="comentarios" x-data="{ editId: null }">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-5 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                <p class="card-title mb-5 flex items-center gap-2">
                     <span class="icon-badge">
                         <x-icon name="message-circle" size="16" />
                     </span>

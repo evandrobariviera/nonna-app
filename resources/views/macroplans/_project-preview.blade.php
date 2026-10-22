@@ -27,7 +27,7 @@
     {{-- Progresso --}}
     <div class="card card-body">
         <div class="flex items-center justify-between mb-2">
-            <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Progresso</p>
+            <p class="card-title">Progresso</p>
             <p class="text-sm font-bold" style="color:var(--text)">{{ $progress }}%</p>
         </div>
         <div class="w-full h-1.5 rounded-full overflow-hidden" style="background:var(--s3)">

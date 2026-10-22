@@ -108,7 +108,7 @@
                 </a>
             @else
                 <div class="card p-5">
-                    <p class="text-xs font-bold uppercase tracking-widest mb-1" style="color: var(--muted)">Próxima Reunião</p>
+                    <p class="card-title mb-1">Próxima Reunião</p>
                     <p class="text-sm" style="color: var(--muted)">Nenhuma reunião agendada.</p>
                 </div>
             @endif

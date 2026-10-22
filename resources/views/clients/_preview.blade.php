@@ -67,7 +67,7 @@
         <div x-show="tab === 'geral'" x-cloak class="flex flex-col gap-6">
 
             <div class="card card-body">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Contato</p>
+                <p class="card-title mb-3">Contato</p>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Responsável</p>

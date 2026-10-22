@@ -21,7 +21,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5 min-w-0">
         <div class="card card-body min-w-0">
             <div class="flex items-center justify-between mb-1">
-                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Macro em Revisão Interna</p>
+                <p class="card-title">Macro em Revisão Interna</p>
                 <span class="text-lg font-black" style="color:{{ count($radar['em_revisao']) ? 'var(--purple)' : 'var(--muted2)' }}">{{ count($radar['em_revisao']) }}</span>
             </div>
             <p class="text-xs mb-3" style="color:var(--muted2)">Reuniões de Macro e Kick-off com a ATA sendo revisada. Depois da revisão, vão pro Despacho.</p>
@@ -42,7 +42,7 @@
 
         <div class="card card-body min-w-0">
             <div class="flex items-center justify-between mb-1">
-                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.08em">Macro em Despacho</p>
+                <p class="card-title">Macro em Despacho</p>
                 <span class="text-lg font-black" style="color:{{ count($radar['em_despacho']) ? 'var(--orange)' : 'var(--muted2)' }}">{{ count($radar['em_despacho']) }}</span>
             </div>
             <p class="text-xs mb-3" style="color:var(--muted2)">ATA e planejamento prontos pra distribuir. Lance as tarefas de cada projeto/campanha e marque a reunião como Finalizada.</p>

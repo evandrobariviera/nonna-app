@@ -4,7 +4,7 @@
      (Collection<external_id, stdClass> já com cpa/ctr/roas calculados via
      CampaignController::buildCampaignStats()), $periodLabel. --}}
 <div class="card card-body-lg">
-    <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">
+    <p class="card-title mb-3">
         Conjuntos de anúncios
     </p>
 

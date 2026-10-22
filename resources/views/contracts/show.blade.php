@@ -220,7 +220,7 @@
 
         {{-- ANEXOS --}}
         <div class="card card-body-lg">
-            <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
+            <p class="card-title mb-4">
                 Anexos
                 @if($contract->attachments->count() > 0)
                     <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $contract->attachments->count() }}</span>

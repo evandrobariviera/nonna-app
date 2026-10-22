@@ -100,7 +100,7 @@
         @if($dailySpend->isNotEmpty())
             @php $maxSpend = $dailySpend->max('total_spend'); @endphp
             <div class="card p-5 mb-8">
-                <p class="text-xs font-bold uppercase tracking-widest mb-4" style="color: var(--muted)">Investimento Diário — Últimos 14 Dias</p>
+                <p class="card-title mb-4">Investimento Diário — Últimos 14 Dias</p>
                 <div class="flex items-end gap-1" style="height: 80px">
                     @foreach($dailySpend as $day)
                         @php

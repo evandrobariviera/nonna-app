@@ -7,7 +7,7 @@
 
     {{-- Contagens atuais --}}
     <div class="card card-body mb-6">
-        <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color: var(--muted)">O que será apagado</p>
+        <p class="card-title mb-4">O que será apagado</p>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
             @foreach([
                 'Tarefas'        => $counts['tasks'],

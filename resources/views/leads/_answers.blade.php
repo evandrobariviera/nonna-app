@@ -10,7 +10,7 @@
 @endphp
 
 <div class="card p-5">
-    <h3 class="text-xs font-mono uppercase tracking-widest mb-4" style="color: var(--muted)">
+    <h3 class="card-title mb-4">
         Conteúdo do formulário
         @if($opportunity->form_name)
             <span class="normal-case tracking-normal font-sans" style="color: var(--muted2)">· {{ $opportunity->form_name }}</span>

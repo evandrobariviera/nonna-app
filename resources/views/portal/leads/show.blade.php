@@ -29,7 +29,7 @@
         <div class="col-span-2 space-y-6">
 
             <div class="card p-5">
-                <h3 class="text-xs uppercase tracking-widest mb-4" style="color: var(--muted)">Contato</h3>
+                <h3 class="card-title mb-4">Contato</h3>
                 <div class="flex items-center gap-4">
                     <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-white flex-shrink-0"
                          style="background: var(--purple);">
@@ -56,11 +56,11 @@
 
         <div class="space-y-4">
             <div class="card p-4 space-y-3">
-                <h3 class="text-xs uppercase tracking-widest" style="color: var(--muted)">Origem</h3>
+                <h3 class="card-title">Origem</h3>
                 <div class="text-sm" style="color: var(--text)">{{ $opportunity->channel?->kindLabel() ?? '—' }}</div>
             </div>
             <div class="card p-4 space-y-3">
-                <h3 class="text-xs uppercase tracking-widest" style="color: var(--muted)">Convertido em</h3>
+                <h3 class="card-title">Convertido em</h3>
                 <div class="text-sm" style="color: var(--text)">{{ ($opportunity->received_at ?? $opportunity->created_at)->format('d/m/Y H:i') }}</div>
             </div>
         </div>

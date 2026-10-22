@@ -17,7 +17,7 @@
 
     {{-- ── Nova categoria ── --}}
     <div class="card card-body mb-6">
-        <p class="text-xs font-mono uppercase tracking-widest mb-3" style="color:var(--muted)">Nova categoria</p>
+        <p class="card-title mb-3">Nova categoria</p>
         <form method="POST" action="{{ route('financial-categories.store') }}" class="flex flex-wrap items-end gap-3">
             @csrf
             <div>
@@ -48,7 +48,7 @@
     <div class="grid gap-4" style="grid-template-columns: repeat(2, 1fr)">
         @foreach(\App\Models\FinancialCategory::$types as $typeKey => $typeLabel)
             <div class="card card-body">
-                <p class="text-xs font-mono uppercase tracking-widest mb-3" style="color:var(--muted)">{{ $typeLabel }}</p>
+                <p class="card-title mb-3">{{ $typeLabel }}</p>
                 @php $group = $categories->get($typeKey, collect()); @endphp
                 @if($group->isEmpty())
                     <p class="text-sm" style="color:var(--muted)">Nenhuma categoria.</p>

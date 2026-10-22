@@ -162,7 +162,7 @@
 
             {{-- Contact card --}}
             <div class="card p-5">
-                <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-4">Contato</h3>
+                <h3 class="card-title mb-4">Contato</h3>
                 <div class="flex items-center gap-4">
                     <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-white flex-shrink-0"
                          style="background: var(--purple);">
@@ -194,7 +194,7 @@
             {{-- Services --}}
             @if($opportunity->services_interest)
                 <div class="card p-5">
-                    <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-3">Serviços de Interesse</h3>
+                    <h3 class="card-title mb-3">Serviços de Interesse</h3>
                     <div class="flex flex-wrap gap-2">
                         @foreach($opportunity->services_interest as $svc)
                             <span class="badge badge-purple">
@@ -208,7 +208,7 @@
             {{-- Notes --}}
             @if($opportunity->notes)
                 <div class="card p-5">
-                    <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-3">Observações</h3>
+                    <h3 class="card-title mb-3">Observações</h3>
                     <p class="text-sm text-[var(--muted2)] leading-relaxed whitespace-pre-wrap">{{ $opportunity->notes }}</p>
                 </div>
             @endif
@@ -216,7 +216,7 @@
             {{-- Lost reason --}}
             @if($opportunity->stage === 'perdido' && $opportunity->lost_reason)
                 <div class="card p-5" style="border-color: rgba(248,113,113,.25);">
-                    <h3 class="text-xs font-mono uppercase tracking-widest mb-3" style="color: var(--red);">Motivo da Perda</h3>
+                    <h3 class="card-title mb-3" style="color: var(--red)">Motivo da Perda</h3>
                     <p class="text-sm text-[var(--muted2)] leading-relaxed">{{ $opportunity->lost_reason }}</p>
                 </div>
             @endif
@@ -227,7 +227,7 @@
         <div class="space-y-4">
 
             <div class="card p-4 space-y-3">
-                <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">Valores</h3>
+                <h3 class="card-title">Valores</h3>
                 <div>
                     <div class="text-xs text-[var(--muted)] mb-1">Fee mensal</div>
                     <div class="text-lg font-bold" style="color: var(--green);">
@@ -264,7 +264,7 @@
             </div>
 
             <div class="card p-4 space-y-3">
-                <h3 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">Timeline</h3>
+                <h3 class="card-title">Timeline</h3>
                 <div class="text-xs text-[var(--muted2)]">
                     <div class="text-[var(--muted)] mb-0.5">Criada em</div>
                     {{ $opportunity->created_at->format('d/m/Y') }}
@@ -285,7 +285,7 @@
 
             @if($opportunity->client_id)
                 <div class="card p-4" style="border-color: rgba(52,211,153,.2);">
-                    <h3 class="text-xs font-mono uppercase tracking-widest mb-3" style="color: var(--green);">Cliente Criado</h3>
+                    <h3 class="card-title mb-3" style="color: var(--green)">Cliente Criado</h3>
                     <a href="{{ route('clients.show', $opportunity->client_id) }}"
                        class="text-sm font-semibold text-[var(--text)] hover:text-[var(--purple)] transition-colors">
                         {{ $opportunity->client?->displayName() ?? '—' }}

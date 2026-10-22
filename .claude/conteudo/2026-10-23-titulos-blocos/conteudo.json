@@ -1,0 +1,11 @@
+{
+  "novidades": [
+    {
+      "title": "Títulos dos blocos com destaque",
+      "summary": "Os títulos dos blocos (Pessoas, Contexto, Big Idea, gráficos de investimento e outros) ficaram maiores, em texto normal e com um risquinho roxo à esquerda — fica mais fácil achar cada parte da tela.",
+      "body": "<p>Só aparência: nada mudou de lugar. Vale para tarefa, cliente, campanha/projeto, oportunidade, leads, financeiro e Portal do Cliente.</p>",
+      "kind": "melhoria", "area": "Geral"
+    }
+  ],
+  "ajuda": []
+}

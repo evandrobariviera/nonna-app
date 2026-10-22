@@ -54,7 +54,7 @@
             {{-- PROJETO VINCULADO — correlaciona a campanha (sync do Meta/Google) com
                  o Projeto interno (planejamento/tarefas) que a originou. Vínculo manual. --}}
             <div class="card card-body-lg">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Projeto Vinculado</p>
+                <p class="card-title mb-3">Projeto Vinculado</p>
                 <form method="POST" action="{{ route('campaigns.update-project', $campaign) }}">
                     @csrf @method('PATCH')
                     <select name="project_id" onchange="this.form.submit()"
@@ -155,7 +155,7 @@
             @if($dailyStats->count() > 1)
                 <div class="grid gap-3" style="grid-template-columns: repeat(2, 1fr)">
                     <div class="card px-4 py-4">
-                        <p class="text-xs font-mono uppercase tracking-widest mb-3" style="color:var(--muted)">Gasto por dia</p>
+                        <p class="card-title mb-3">Gasto por dia</p>
                         @include('partials._line-chart', [
                             'points' => $dailyStats->map(fn ($d) => ['x' => \Carbon\Carbon::parse($d->snapshot_date)->format('d/m'), 'y' => (float) $d->spend])->all(),
                             'color'  => 'var(--purple)',
@@ -164,7 +164,7 @@
                         ])
                     </div>
                     <div class="card px-4 py-4">
-                        <p class="text-xs font-mono uppercase tracking-widest mb-3" style="color:var(--muted)">Resultados por dia</p>
+                        <p class="card-title mb-3">Resultados por dia</p>
                         @include('partials._line-chart', [
                             'points' => $dailyStats->map(fn ($d) => ['x' => \Carbon\Carbon::parse($d->snapshot_date)->format('d/m'), 'y' => (float) $d->conversions])->all(),
                             'color'  => 'var(--orange)',
@@ -236,7 +236,7 @@
 
             {{-- OTIMIZAÇÃO --}}
             <div class="card card-body-lg" id="otimizacao" x-data="{ open: false }">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Otimização</p>
+                <p class="card-title mb-3">Otimização</p>
 
                 <div class="relative mb-3" style="max-width:320px">
                     <button @click="open = !open"
@@ -299,7 +299,7 @@
 
             {{-- HISTÓRICO DE OTIMIZAÇÕES --}}
             <div class="card card-body-lg" id="otimizacoes" x-data="{ editId: null }">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
+                <p class="card-title mb-4">
                     Histórico de Otimizações
                     @if($optimizationLogs->count() > 0)
                         <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $optimizationLogs->count() }}</span>
@@ -368,7 +368,7 @@
 
             {{-- CONTEXTO --}}
             <div class="card card-body">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Contexto</p>
+                <p class="card-title mb-4">Contexto</p>
                 <div class="flex flex-col gap-4">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Cliente</p>
@@ -392,7 +392,7 @@
 
             {{-- STATUS --}}
             <div class="card card-body" x-data="{ open: false }">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Status</p>
+                <p class="card-title mb-3">Status</p>
                 <div class="relative">
                     <button @click="open = !open"
                         class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold"
@@ -425,7 +425,7 @@
 
             {{-- SITUAÇÃO --}}
             <div class="card card-body" x-data="{ open: false }">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Situação</p>
+                <p class="card-title mb-3">Situação</p>
                 <div class="relative">
                     <button @click="open = !open"
                         class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-semibold"
@@ -463,7 +463,7 @@
             {{-- METAS DESTA CAMPANHA — override opcional do padrão da conta;
                  vazio usa o valor herdado (mostrado como placeholder). --}}
             <div class="card card-body">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Metas desta campanha</p>
+                <p class="card-title mb-3">Metas desta campanha</p>
                 <p class="text-xs mb-3" style="color:var(--muted)">
                     Deixe em branco pra usar o padrão da conta de anúncios ({{ $campaign->adAccount?->target_cost_per_result ? 'R$ ' . number_format($campaign->adAccount->target_cost_per_result, 2, ',', '.') : '—' }} / {{ $campaign->adAccount?->target_roas ? number_format($campaign->adAccount->target_roas, 1, ',', '.') . 'x' : '—' }}).
                 </p>
@@ -486,7 +486,7 @@
             {{-- TRAVA DE OTIMIZAÇÃO — presença de motivo = travado. Enquanto
                  travada, a campanha não gera insight de IA nenhum. --}}
             <div class="card card-body">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">
+                <p class="card-title mb-3">
                     {{ $campaign->optimization_locked_reason ? '🔒 ' : '' }}Travar Otimização
                 </p>
                 <p class="text-xs mb-3" style="color:var(--muted)">
@@ -504,7 +504,7 @@
 
             {{-- COMENTÁRIO — mesmo padrão da Otimização (input acima, histórico abaixo) --}}
             <div class="card card-body">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Comentário</p>
+                <p class="card-title mb-3">Comentário</p>
                 <p class="text-xs mb-3" style="color:var(--muted)">
                     Anotações (orçamento, segmentação, criativo, pausa...) — não mexe no prazo de otimização.
                 </p>
@@ -538,7 +538,7 @@
 
             {{-- HISTÓRICO DE COMENTÁRIOS --}}
             <div class="card card-body" id="historico" x-data="{ editId: null }">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
+                <p class="card-title mb-4">
                     Histórico de Comentários
                     @if($commentLogs->count() > 0)
                         <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $commentLogs->count() }}</span>
