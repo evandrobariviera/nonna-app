@@ -158,6 +158,7 @@ class DashboardController extends Controller
         $myExecutorSprintByStatus = collect();
         $myExecutorSprintTotal = 0;
         $myExecutorSprintDone  = 0;
+        $mySprintDoneDaily     = collect(); // concluídas por dia na sprint (gráfico do card)
         $myPointsTotal = $myPointsDone = 0; // pontos de sprint (métrica híbrida, ao lado da quantidade)
 
         if ($activeSprint && $show('meus_numeros')) {
@@ -182,6 +183,22 @@ class DashboardController extends Controller
                     'hex'   => Task::colorHex($meta['color']),
                 ])
                 ->filter(fn ($row) => $row['count'] > 0)
+                ->values();
+
+            // Concluídas por dia na sprint (gráfico de área do card "Concluídas", padrão
+            // Mirbal) — uma consulta só: transições pra concluido das tarefas da pessoa na
+            // sprint, do início até hoje.
+            $from = $activeSprint->starts_at->copy()->startOfDay();
+            $to   = min(today(), $activeSprint->ends_at->copy())->endOfDay();
+            $perDay = DB::connection('pgsql')->table('task_status_transitions')
+                ->whereIn('task_id', $this->executorTasksQuery($userId)->where('sprint_id', $activeSprint->id)->select('tasks.id'))
+                ->where('to_status', 'concluido')
+                ->whereBetween('changed_at', [$from, $to])
+                ->selectRaw('changed_at::date as day, count(distinct task_id) as total')
+                ->groupBy('day')
+                ->pluck('total', 'day');
+            $mySprintDoneDaily = collect(\Carbon\CarbonPeriod::create($from, $to->copy()->startOfDay()))
+                ->map(fn ($d) => ['x' => $d->format('d/m'), 'y' => (int) ($perDay[$d->toDateString()] ?? 0)])
                 ->values();
         }
 
@@ -451,7 +468,7 @@ class DashboardController extends Controller
             'mode', 'show', 'myMeetingsToday', 'myOverdueTasks', 'myBlockers', 'attentionDigest',
             'pendenciesToDeliver', 'pendenciesToChase', 'pendenciesWaiting',
             'availableModes', 'subjectRoles', 'subjectIsAdmin', 'viewingAs', 'teamMembers',
-            'myExecutorSprintDone', 'myPointsTotal', 'myPointsDone',
+            'myExecutorSprintDone', 'mySprintDoneDaily', 'myPointsTotal', 'myPointsDone',
             'weekDays', 'weekOffset', 'weekBeforeCount', 'weekAfterCount', 'weekNoDateCount',
             'distribution', 'subjectUserId', 'planning', 'scoreboard'
         ));

@@ -159,19 +159,11 @@
             @if($originMix->isEmpty())
                 <p class="text-sm py-6 text-center" style="color:var(--muted)">Nenhuma tarefa concluída nesse período.</p>
             @else
-                <div class="flex flex-col gap-3">
-                    @foreach($originMix as $row)
-                        <div>
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-sm font-medium" style="color:var(--text)">{{ $row->label }}</span>
-                                <span class="text-sm font-bold" style="color:var(--purple)">{{ $row->count }} <span class="text-xs font-normal" style="color:var(--muted2)">({{ $row->pct }}%)</span></span>
-                            </div>
-                            <div class="w-full h-2 rounded-full overflow-hidden" style="background:var(--border2)">
-                                <div class="h-2 rounded-full" style="width:{{ $row->pct }}%; background:var(--grad)"></div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
+                {{-- Rosca (padrão Mirbal "Platform Traffic") --}}
+                <x-chart type="donut" :height="260" format="number"
+                         :colors="['var(--purple)', 'var(--orange)', 'var(--blue)', 'var(--green)', 'var(--cyan)', 'var(--yellow)']"
+                         :labels="$originMix->pluck('label')->all()"
+                         :series="$originMix->pluck('count')->map(fn ($c) => (int) $c)->all()" />
             @endif
         </div>
 

@@ -1,0 +1,10 @@
+{
+  "novidades": [
+    {
+      "title": "Gráficos novos",
+      "summary": "Os gráficos ganharam o novo visual: área com degradê nos números da campanha, barras no fluxo de caixa e na projeção do Financeiro, rosca no Mix de Origem da Produtividade e, no Dashboard, o card Concluídas mostra quantas tarefas você concluiu por dia na sprint.",
+      "body": "<p>Passe o mouse sobre o gráfico para ver o valor de cada dia ou mês.</p>",
+      "kind": "melhoria", "area": "Sistema"
+    }
+  ]
+}

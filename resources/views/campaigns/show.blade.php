@@ -152,7 +152,7 @@
                 </div>
             </div>
 
-            {{-- DADOS — gráficos de linha (gasto e resultados por dia, sem dependência de JS) --}}
+            {{-- DADOS — gráficos de área (gasto e resultados por dia, padrão Mirbal) --}}
             @if($dailyStats->count() > 1)
                 <div class="grid gap-3" style="grid-template-columns: repeat(2, 1fr)">
                     <div class="card px-4 py-4">
@@ -160,7 +160,8 @@
                         @include('partials._line-chart', [
                             'points' => $dailyStats->map(fn ($d) => ['x' => \Carbon\Carbon::parse($d->snapshot_date)->format('d/m'), 'y' => (float) $d->spend])->all(),
                             'color'  => 'var(--purple)',
-                            'formatValue' => fn ($v) => 'R$ ' . number_format($v, 2, ',', '.'),
+                            'format' => 'currency',
+                            'name'   => 'Gasto',
                         ])
                     </div>
                     <div class="card px-4 py-4">
@@ -168,7 +169,8 @@
                         @include('partials._line-chart', [
                             'points' => $dailyStats->map(fn ($d) => ['x' => \Carbon\Carbon::parse($d->snapshot_date)->format('d/m'), 'y' => (float) $d->conversions])->all(),
                             'color'  => 'var(--orange)',
-                            'formatValue' => fn ($v) => number_format($v, 0, ',', '.'),
+                            'format' => 'number',
+                            'name'   => 'Resultados',
                         ])
                     </div>
                 </div>

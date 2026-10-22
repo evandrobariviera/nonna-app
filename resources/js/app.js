@@ -18,6 +18,7 @@ import { registerGroupCollapse } from './group-collapse.js';
 import { registerBrowserNotify } from './browser-notify.js';
 import { registerAiChatDrawer } from './ai-chat-drawer.js';
 import { registerChatWidget } from './chat-widget.js';
+import { registerCharts } from './charts.js';
 
 window.Alpine = Alpine;
 
@@ -41,5 +42,6 @@ registerGroupCollapse(Alpine);
 registerBrowserNotify(Alpine);
 registerAiChatDrawer(Alpine);
 registerChatWidget(Alpine);
+registerCharts(Alpine);
 
 Alpine.start();

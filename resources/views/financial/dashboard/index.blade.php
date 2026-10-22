@@ -52,22 +52,13 @@
         <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">
             Fluxo de Caixa Mensal <span style="color:var(--muted2); text-transform:none; letter-spacing:normal">· entradas x saídas</span>
         </p>
-        @php $maxTrend = max($monthlyTrend->flatMap(fn($m) => [$m->entrada, $m->saida])->max(), 1); @endphp
-        <div class="flex items-end gap-4" style="height:140px">
-            @foreach($monthlyTrend as $month)
-                <div class="flex-1 flex flex-col items-center justify-end h-full">
-                    <div class="flex items-end gap-1 w-full justify-center" style="height:100%">
-                        <div class="rounded-t" style="width:40%; height:{{ round($month->entrada / $maxTrend * 100) }}%; min-height:{{ $month->entrada > 0 ? '4px' : '0' }}; background:var(--green)"></div>
-                        <div class="rounded-t" style="width:40%; height:{{ round($month->saida / $maxTrend * 100) }}%; min-height:{{ $month->saida > 0 ? '4px' : '0' }}; background:var(--red)"></div>
-                    </div>
-                    <span class="text-xs mt-1.5" style="color:var(--muted2)">{{ $month->label }}</span>
-                </div>
-            @endforeach
-        </div>
-        <div class="flex items-center gap-4 mt-4 text-xs" style="color:var(--muted2)">
-            <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full" style="background:var(--green)"></span> Entradas</span>
-            <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full" style="background:var(--red)"></span> Saídas</span>
-        </div>
+        <x-chart type="bar" :height="240" format="currency" axis-format="currencyShort"
+                 :colors="['var(--green)', 'var(--red)']"
+                 :categories="$monthlyTrend->pluck('label')->all()"
+                 :series="[
+                     ['name' => 'Entradas', 'data' => $monthlyTrend->map(fn ($m) => round((float) $m->entrada, 2))->all()],
+                     ['name' => 'Saídas',   'data' => $monthlyTrend->map(fn ($m) => round((float) $m->saida, 2))->all()],
+                 ]" />
     </div>
 
     {{-- ── Projeção futura ── --}}
@@ -99,18 +90,13 @@
             <span class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">variação de caixa projetada ({{ $future }} meses)</span>
         </div>
 
-        @php $maxFuture = max($futureProjection->flatMap(fn($m) => [$m->entrada, $m->saida])->max(), 1); @endphp
-        <div class="flex items-end gap-2" style="height:140px; overflow-x:auto">
-            @foreach($futureProjection as $month)
-                <div class="flex-1 flex flex-col items-center justify-end h-full" style="min-width:32px">
-                    <div class="flex items-end gap-1 w-full justify-center" style="height:100%">
-                        <div class="rounded-t" style="width:40%; height:{{ round($month->entrada / $maxFuture * 100) }}%; min-height:{{ $month->entrada > 0 ? '4px' : '0' }}; background:var(--green)"></div>
-                        <div class="rounded-t" style="width:40%; height:{{ round($month->saida / $maxFuture * 100) }}%; min-height:{{ $month->saida > 0 ? '4px' : '0' }}; background:var(--red)"></div>
-                    </div>
-                    <span class="text-xs mt-1.5" style="color:var(--muted2); white-space:nowrap">{{ $month->label }}</span>
-                </div>
-            @endforeach
-        </div>
+        <x-chart type="bar" :height="240" format="currency" axis-format="currencyShort"
+                 :colors="['var(--green)', 'var(--red)']"
+                 :categories="$futureProjection->pluck('label')->all()"
+                 :series="[
+                     ['name' => 'Receita', 'data' => $futureProjection->map(fn ($m) => round((float) $m->entrada, 2))->all()],
+                     ['name' => 'Despesa', 'data' => $futureProjection->map(fn ($m) => round((float) $m->saida, 2))->all()],
+                 ]" />
     </div>
 
     {{-- ── Por categoria ── --}}

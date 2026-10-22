@@ -567,25 +567,29 @@
 
             @if($myExecutorSprintTotal > 0)
                 {{-- Linha principal: o tamanho da régua e quanto ainda falta dela. --}}
-                <div class="grid gap-3 mb-3" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr))">
-                    <div class="px-3 py-3 text-center" style="background:var(--s2); border-top:3px solid var(--purple)">
-                        <p class="text-3xl font-black" style="color:var(--text)">{{ $myExecutorSprintTotal }}</p>
-                        <p class="text-xs font-mono mt-0.5" style="color:var(--muted)">Tarefas na Sprint</p>
-                        <p class="text-xs font-mono" style="color:var(--muted)">{{ $myPointsTotal }} pts</p>
+                {{-- Cards de número no padrão Mirbal: número grande à esquerda, rótulo embaixo;
+                     "Concluídas" com o gráfico de área das conclusões por dia na sprint. --}}
+                <div class="grid gap-4 mb-4" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr))">
+                    <div class="kpi-card">
+                        <p class="kpi-value">{{ $myExecutorSprintTotal }} <span class="kpi-sub">{{ $myPointsTotal }} pts</span></p>
+                        <p class="kpi-label">Tarefas na Sprint</p>
                     </div>
-                    <div class="px-3 py-3 text-center" style="background:var(--s2); border-top:3px solid var(--green)">
-                        <p class="text-3xl font-black" style="color:var(--green)">{{ $myExecutorSprintDone }}</p>
-                        <p class="text-xs font-mono mt-0.5" style="color:var(--muted)">Concluídas · {{ $myDonePct }}%</p>
-                        <p class="text-xs font-mono" style="color:var(--muted)">{{ $myPointsDone }} pts</p>
+                    <div class="kpi-card">
+                        <p class="kpi-value" style="color:var(--green)">{{ $myExecutorSprintDone }} <span class="kpi-sub" style="color:var(--green)">{{ $myDonePct }}%</span></p>
+                        <p class="kpi-label">Concluídas · {{ $myPointsDone }} pts</p>
+                        @if($mySprintDoneDaily->count() > 1)
+                            <div class="kpi-chart">
+                                @include('partials._line-chart', ['points' => $mySprintDoneDaily->all(), 'color' => 'var(--green)', 'name' => 'Concluídas', 'height' => 64])
+                            </div>
+                        @endif
                     </div>
-                    <div class="px-3 py-3 text-center" style="background:var(--s2); border-top:3px solid var(--orange)">
-                        <p class="text-3xl font-black" style="color:{{ $myRemaining > 0 ? 'var(--orange)' : 'var(--muted)' }}">{{ $myRemaining }}</p>
-                        <p class="text-xs font-mono mt-0.5" style="color:var(--muted)">Faltam</p>
-                        <p class="text-xs font-mono" style="color:var(--muted)">{{ $myPointsTotal - $myPointsDone }} pts</p>
+                    <div class="kpi-card">
+                        <p class="kpi-value" style="color:{{ $myRemaining > 0 ? 'var(--orange)' : 'var(--muted)' }}">{{ $myRemaining }} <span class="kpi-sub">{{ $myPointsTotal - $myPointsDone }} pts</span></p>
+                        <p class="kpi-label">Faltam</p>
                     </div>
-                    <div class="px-3 py-3 text-center" style="background:var(--s2); border-top:3px solid var(--red)">
-                        <p class="text-3xl font-black" style="color:{{ $myOverdueTasks->isNotEmpty() ? 'var(--red)' : 'var(--muted)' }}">{{ $myOverdueTasks->count() }}</p>
-                        <p class="text-xs font-mono mt-0.5" style="color:var(--muted)">Atrasadas</p>
+                    <div class="kpi-card">
+                        <p class="kpi-value" style="color:{{ $myOverdueTasks->isNotEmpty() ? 'var(--red)' : 'var(--muted)' }}">{{ $myOverdueTasks->count() }}</p>
+                        <p class="kpi-label">Atrasadas</p>
                     </div>
                 </div>
 
