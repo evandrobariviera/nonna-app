@@ -1,0 +1,10 @@
+{
+  "novidades": [
+    {
+      "title": "Novo visual do App",
+      "summary": "O App ganhou um visual mais leve e organizado: fundo claro, cards com bordas suaves, fonte nova, menu lateral redesenhado e quadros (Kanban) com cartões mais limpos. As cores da Nonna e dos status continuam as mesmas.",
+      "body": "<p>O que mudou de lugar:</p><ul><li><p><strong>Meu perfil e Sair</strong> agora ficam no canto direito do topo, clicando na sua foto.</p></li><li><p>O <strong>título da página</strong> saiu do topo e fica logo acima do conteúdo.</p></li><li><p>O botão no canto esquerdo do topo <strong>recolhe o menu</strong>, deixando só os ícones. Clique de novo para abrir.</p></li><li><p>Nos quadros de <strong>Campanha/Projeto</strong>, as ações do cartão (abrir, editar, mover, remover) ficam no menu <strong>⋮</strong>.</p></li></ul><p>Este é o primeiro passo: gráficos e o acabamento das telas vêm nas próximas semanas.</p>",
+      "kind": "melhoria", "area": "Sistema"
+    }
+  ]
+}
