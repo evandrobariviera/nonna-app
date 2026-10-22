@@ -204,8 +204,8 @@
     button.nav-group-trigger.open { color: var(--text); }
 
     /* Submenu: linha guia vertical + subitem com tracinho quando ativo */
-    .nav-group-trigger + div { position: relative; margin: 2px 0 6px; }
-    .nav-group-trigger + div::after {
+    button.nav-group-trigger + div { position: relative; margin: 2px 0 6px; }
+    button.nav-group-trigger + div::after {
         content: "";
         position: absolute;
         top: 6px;
@@ -277,7 +277,7 @@
     .sidebar-collapsed .nav-group-trigger { justify-content: center; padding: 10px 0; }
     .sidebar-collapsed .nav-group-trigger > span:first-child { font-size: 0; gap: 0; }
     .sidebar-collapsed .nav-group-trigger > :not(:first-child):not(.chat-badge):not(.rounded-full) { display: none !important; }
-    .sidebar-collapsed .nav-group-trigger + div { display: none !important; }
+    .sidebar-collapsed button.nav-group-trigger + div { display: none !important; }
     /* Contadores (Novidades, Ajuda, Fila, Chat...) viram uma bolinha no canto do ícone —
        sinalizam que tem coisa nova sem o número espremido ao lado. */
     .sidebar-collapsed .nav-group-trigger { position: relative; }
