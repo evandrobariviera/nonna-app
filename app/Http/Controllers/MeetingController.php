@@ -305,9 +305,15 @@ class MeetingController extends Controller
         // Pauta e ATA vêm do editor rico (ver MeetingText — a IA continua lendo Markdown).
         $data['agenda'] = MeetingText::fromEditor($data['agenda'] ?? null);
         $data['ata']    = MeetingText::fromEditor($data['ata'] ?? null);
+        // O editor reenvia a ATA mesmo quando só o título/pauta mudou, e pode serializar o
+        // HTML um pouco diferente (ou converter uma ATA antiga em Markdown). Conteúdo igual =
+        // não mexe — senão os participantes receberiam "ATA atualizada" sem nada ter mudado.
+        if ($data['ata'] !== null && MeetingText::sameContent($data['ata'], $meeting->ata)) {
+            unset($data['ata']);
+        }
 
-        // Mark ata_recorded_at when ata is filled for the first time
-        if (!empty($data['ata']) && empty($meeting->ata)) {
+        // "Atualizada em" acompanha toda mudança de conteúdo da ATA (só chega aqui se mudou).
+        if (!empty($data['ata'])) {
             $data['ata_recorded_at'] = now();
         }
 

@@ -16,9 +16,12 @@ class MeetingObserver
 
     public function updated(Meeting $meeting): void
     {
-        // ATA preenchida (botão da IA ou à mão) → resolve "Registrar a ATA" do organizador.
+        // ATA mudou (botão da IA ou à mão) → resolve "Registrar a ATA" do organizador e avisa
+        // os participantes ("✓ Li a ATA" — ver MeetingAtaService::notifyParticipants).
         if ($meeting->wasChanged('ata') && filled($meeting->ata)) {
-            MeetingAtaService::resolveAtaPendencies($meeting, auth()->id());
+            $actorId = MeetingAtaService::$actingUserId ?? auth()->id();
+            MeetingAtaService::resolveAtaPendencies($meeting, $actorId);
+            app(MeetingAtaService::class)->notifyParticipants($meeting, blank($meeting->getOriginal('ata')), $actorId);
         }
 
         if ($meeting->wasChanged('status') && $meeting->status === 'realizada') {

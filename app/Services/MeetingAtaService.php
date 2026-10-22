@@ -86,10 +86,29 @@ class MeetingAtaService
         return $isNew;
     }
 
-    /** Avisa os participantes (menos quem gerou) — é o aviso com "✓ Li a ATA". */
+    // Quem disparou a geração no job (fila não tem usuário logado) — o MeetingObserver
+    // usa pra não avisar a própria pessoa.
+    public static ?int $actingUserId = null;
+
+    /**
+     * Avisa os participantes (menos quem mudou a ATA) — é o aviso com "✓ Li a ATA". Chamado
+     * pelo MeetingObserver a CADA mudança da ATA (IA ou à mão; decisão do Evandro,
+     * 2026-10-22). Quem ainda tem um aviso dessa ATA sem confirmar não recebe outro: vai
+     * ler a versão mais nova de qualquer jeito — evita encher o sino de quem salva aos poucos.
+     */
     public function notifyParticipants(Meeting $meeting, bool $isNew, ?int $actorId): void
     {
-        $recipients = $meeting->participants()->when($actorId, fn ($q) => $q->where('users.id', '!=', $actorId))->get();
+        $pending = InternalNotification::withoutGlobalScopes()
+            ->where('source_type', 'Meeting')
+            ->where('source_id', $meeting->id)
+            ->where('kind', InternalNotification::KIND_ATA)
+            ->where('status', '!=', 'resolvido')
+            ->pluck('user_id');
+
+        $recipients = $meeting->participants()
+            ->when($actorId, fn ($q) => $q->where('users.id', '!=', $actorId))
+            ->whereNotIn('users.id', $pending)
+            ->get();
         if ($recipients->isEmpty()) {
             return;
         }

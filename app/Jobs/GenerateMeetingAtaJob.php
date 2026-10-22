@@ -50,8 +50,9 @@ class GenerateMeetingAtaJob implements ShouldQueue
             $agent = MeetingAtaService::defaultAgent()
                 ?? throw new \RuntimeException('Nenhum agente de IA ativo pra ATA (Agentes & IA → "ATA Estruturada").');
 
-            $isNew = $service->generate($meeting, $agent, $this->requestedBy, 'meeting:gerar_ata');
-            $service->notifyParticipants($meeting, $isNew, $this->requestedBy);
+            // O aviso aos participantes sai do MeetingObserver (vale pra toda mudança da ATA).
+            MeetingAtaService::$actingUserId = $this->requestedBy;
+            $service->generate($meeting, $agent, $this->requestedBy, 'meeting:gerar_ata');
         } catch (\Throwable $e) {
             $user = User::find($this->requestedBy);
             if ($user) {
@@ -67,6 +68,7 @@ class GenerateMeetingAtaJob implements ShouldQueue
             }
             report($e);
         } finally {
+            MeetingAtaService::$actingUserId = null;
             Cache::forget(MeetingAtaService::generatingKey($this->meetingId));
         }
     }

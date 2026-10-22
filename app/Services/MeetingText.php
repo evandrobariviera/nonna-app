@@ -84,6 +84,17 @@ class MeetingText
         return trim(preg_replace("/\n{3,}/", "\n\n", implode("\n\n", $lines)));
     }
 
+    /**
+     * Mesmo conteúdo, ignorando a forma (HTML x Markdown antigo, espaços, como o editor
+     * serializou) — os dois lados passam pelo mesmo caminho antes de comparar.
+     */
+    public static function sameContent(?string $a, ?string $b): bool
+    {
+        $canonical = fn (?string $v) => preg_replace('/\s+/u', ' ', self::toMarkdown(self::toHtml($v)));
+
+        return $canonical($a) === $canonical($b);
+    }
+
     /** Texto corrido, sem formatação (resumos de uma linha). */
     public static function plain(?string $value): string
     {

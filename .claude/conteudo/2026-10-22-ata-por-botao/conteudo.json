@@ -2,7 +2,7 @@
   "novidades": [
     {
       "title": "ATA pelo botão \"Gerar ATA com IA\"",
-      "summary": "A IA não monta mais a ATA na passagem para Revisão Interna: na reunião, cole a transcrição e clique em Gerar ATA com IA. Os participantes recebem \"ATA pronta\" com o ✓ Li a ATA — e \"ATA atualizada\" quando ela é atualizada.",
+      "summary": "A IA não monta mais a ATA na passagem para Revisão Interna: na reunião, cole a transcrição e clique em Gerar ATA com IA. Toda mudança na ATA (pela IA ou à mão) avisa os participantes com o ✓ Li a ATA — \"ATA pronta\" e depois \"ATA atualizada\".",
       "body": "<p>Funciona em qualquer tipo de reunião. Com mais transcrição depois, <strong>Atualizar ATA com a transcrição</strong> acrescenta o que é novo sem apagar a ATA. Passo a passo no capítulo <em>Fluxo de Reuniões com o Cliente</em>, na Central de Ajuda.</p>",
       "kind": "novidade", "area": "Reuniões"
     },
