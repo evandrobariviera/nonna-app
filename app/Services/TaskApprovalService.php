@@ -465,7 +465,57 @@ class TaskApprovalService
         // passa por aqui) — Aviso não tem entregável pra baixar.
         if ($status === 'approved') {
             $this->notifyApproved($round);
+        } else {
+            $this->notifyChangesRequested($round);
         }
+    }
+
+    /**
+     * Cliente pediu ajuste → avisa o RESPONSÁVEL da tarefa (decisão do Evandro, 2026-10-22):
+     * a tarefa volta pro executor, mas é o responsável quem confere se o pedido precisa de
+     * mais informação antes de ir pra produção. Sem responsável, avisa os executores. O
+     * aviso já traz o que o cliente escreveu (comentário da decisão; por peça, se houver).
+     */
+    private function notifyChangesRequested(TaskApprovalRound $round): void
+    {
+        $task = $round->task;
+        $task->loadMissing(['responsibles', 'executors', 'client']);
+        $recipients = $task->responsibles->isNotEmpty()
+            ? $task->responsibles
+            : $task->executors;
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        $round->loadMissing(['tokens.contact', 'tokens.feedbacks']);
+        $said = collect();
+        if (filled($round->portal_comment)) {
+            $said->push(trim($round->portal_comment));
+        }
+        foreach ($round->tokens as $token) {
+            $who = $token->contact?->name ? Str::before($token->contact->name, ' ') . ': ' : '';
+            if (filled($token->overall_comment)) {
+                $said->push($who . trim($token->overall_comment));
+            }
+            foreach ($token->feedbacks->filter(fn ($f) => filled($f->comment)) as $feedback) {
+                $said->push($who . trim($feedback->comment));
+            }
+        }
+
+        app(NotificationService::class)->notifyUsers(
+            $recipients,
+            'ajuste_cliente',
+            'Cliente pediu ajuste: ' . $task->title,
+            Str::limit(
+                ($task->client ? $task->client->displayName() . ' — ' : '')
+                . ($said->isNotEmpty() ? $said->unique()->implode(' · ') : 'sem comentário escrito.')
+                . "\n\nVeja se precisa de mais alguma informação antes de voltar pra produção.",
+                600
+            ),
+            route('tasks.show', $task),
+            $task,
+            $task->organization_id,
+        );
     }
 
     private function notifyApproved(TaskApprovalRound $round): void

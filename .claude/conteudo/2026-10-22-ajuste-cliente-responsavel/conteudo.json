@@ -1,0 +1,10 @@
+{
+  "novidades": [
+    {
+      "title": "Cliente pediu ajuste: o responsável é avisado",
+      "summary": "Quando o cliente pede ajuste numa aprovação, o responsável da tarefa recebe um aviso no sino com o que o cliente escreveu, para conferir se falta alguma informação antes de a peça voltar para produção.",
+      "body": "<p>A tarefa continua indo para Ajuste/Alteração com o mesmo executor. Se a tarefa não tiver responsável, quem recebe o aviso são os executores. Ajuste pedido internamente, na Revisão Interna, não gera esse aviso.</p>",
+      "kind": "melhoria", "area": "Aprovações"
+    }
+  ]
+}
