@@ -52,6 +52,7 @@ class InternalNotification extends Model
         'meeting_transcribed'      => 'mic',
         'meeting_transcribe_failed' => 'mic',
         'pendencia'                => 'hourglass',
+        'project_comment'          => 'message-circle',
         self::KIND_ATA             => 'book-open',
     ];
 

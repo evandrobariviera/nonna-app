@@ -196,6 +196,12 @@ class Project extends Model
             ->withTimestamps();
     }
 
+    /** Comentários/observações do time — mais recente primeiro. */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(ProjectComment::class)->latest();
+    }
+
     /**
      * Reuniões de discussão (Alinhamento de Projeto) que citaram este item na pauta — é o
      * que conta pro "X de Y já com reunião de discussão". Qualquer reunião relacionada

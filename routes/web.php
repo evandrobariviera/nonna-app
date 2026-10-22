@@ -662,6 +662,17 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('projects.client-page.update');
     Route::patch('/projetos/{project}/equipe', [ProjectController::class, 'updateTeam'])
         ->name('projects.team.update');
+    // ── Comentários da campanha/projeto ──
+    Route::post('/projetos/{project}/comentarios', [\App\Http\Controllers\ProjectCommentController::class, 'store'])
+        ->name('project-comments.store');
+    Route::patch('/projetos/{project}/comentarios/{comment}', [\App\Http\Controllers\ProjectCommentController::class, 'update'])
+        ->name('project-comments.update');
+    Route::delete('/projetos/{project}/comentarios/{comment}', [\App\Http\Controllers\ProjectCommentController::class, 'destroy'])
+        ->name('project-comments.destroy');
+    Route::post('/projetos/{project}/editor-imagem', [\App\Http\Controllers\ProjectEditorImageController::class, 'store'])
+        ->name('projects.editor-image.store');
+    Route::get('/projetos/{project}/editor-imagem/{filename}', [\App\Http\Controllers\ProjectEditorImageController::class, 'show'])
+        ->name('projects.editor-image.show');
     Route::patch('/projetos/{project}/editar', [ProjectController::class, 'updateDirect'])
         ->name('projects.updateDirect');
     Route::post('/projetos/{project}/anexos', [ProjectAttachmentController::class, 'store'])

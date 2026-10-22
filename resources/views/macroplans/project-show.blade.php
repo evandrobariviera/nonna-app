@@ -321,6 +321,73 @@
         <x-related-meetings :meetings="$relatedMeetings" :context="$project" empty="Nenhuma reunião citou este item ainda." />
     </div>
 
+    {{-- COMENTÁRIOS — observações do time sobre a campanha/projeto (ProjectCommentController).
+         Mesmo jeito dos comentários da tarefa; comentário novo avisa a equipe. Só interno. --}}
+    <div class="card px-5 py-4 mb-5" id="comentarios" x-data="{ editId: null }" style="scroll-margin-top:16px">
+        <p class="text-xs font-semibold uppercase tracking-widest mb-3 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+            <x-icon name="message-circle" size="12" /> Comentários
+            @if($project->comments->isNotEmpty())
+                <span class="px-1.5 py-0.5" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $project->comments->count() }}</span>
+            @endif
+        </p>
+
+        <form method="POST" action="{{ route('project-comments.store', $project) }}" class="flex flex-col gap-2 mb-2">
+            @csrf
+            <x-rich-editor name="comment_body" min-height="80px" :upload-url="route('projects.editor-image.store', $project)" />
+            @error('comment_body')<p class="text-xs" style="color:var(--red)">{{ $message }}</p>@enderror
+            <div class="flex items-center justify-between gap-2">
+                <span class="text-xs" style="color:var(--muted2)">A equipe é avisada.</span>
+                <button type="submit" class="btn btn-primary btn-xs">Comentar</button>
+            </div>
+        </form>
+
+        <div class="flex flex-col" style="max-height:520px; overflow-y:auto">
+            @foreach($project->comments as $comment)
+                <div class="flex gap-2.5 py-3" style="border-top:1px solid var(--border2)">
+                    <x-user-avatar :user="$comment->user" size="7" class="mt-0.5" />
+                    <div class="flex-1 min-w-0">
+                        <div x-show="editId !== '{{ $comment->id }}'">
+                            <div class="flex items-baseline gap-2 mb-1 flex-wrap">
+                                <span class="text-sm font-semibold" style="color:var(--text)">{{ $comment->user?->name ?? '—' }}</span>
+                                <span class="text-xs" style="color:var(--muted2)" title="{{ $comment->created_at->format('d/m/Y H:i') }}">{{ $comment->created_at->diffForHumans() }}</span>
+                                @if($comment->updated_at->ne($comment->created_at))
+                                    <span class="text-xs" style="color:var(--muted2)">(editado)</span>
+                                @endif
+                            </div>
+                            <x-rich-content :value="$comment->body" class="text-sm" style="color:var(--text); line-height:1.6" />
+                            @if($comment->user_id === auth()->id())
+                                <div class="flex items-center gap-3 mt-1.5">
+                                    <button type="button" @click="editId = '{{ $comment->id }}'" class="text-xs font-mono" style="color:var(--muted)">Editar</button>
+                                    <form method="POST" action="{{ route('project-comments.destroy', [$project, $comment]) }}"
+                                          @submit.prevent="if (await $store.confirmDialog.ask('Remover comentário?')) $el.submit()">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-xs font-mono" style="color:var(--red)">Remover</button>
+                                    </form>
+                                </div>
+                            @endif
+                        </div>
+                        @if($comment->user_id === auth()->id())
+                            <template x-if="editId === '{{ $comment->id }}'">
+                                <form method="POST" action="{{ route('project-comments.update', [$project, $comment]) }}" class="flex flex-col gap-2">
+                                    @csrf @method('PATCH')
+                                    <x-rich-editor name="comment_body" min-height="80px" :value="$comment->body" :upload-url="route('projects.editor-image.store', $project)" />
+                                    <div class="flex gap-2">
+                                        <button type="submit" class="btn btn-primary btn-xs">Salvar</button>
+                                        <button type="button" @click="editId = null" class="btn btn-ghost btn-xs">Cancelar</button>
+                                    </div>
+                                </form>
+                            </template>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- HISTÓRICO — só ações (status, datas, planejamento, "briefing editado"), nunca o
+         conteúdo (ver ProjectObserver). Antes ficava no fim da página, depois do quadro. --}}
+    <x-activity-history :activities="$project->activities" class="card px-5 py-4 mb-5" max-height="320px" />
+
     {{-- TAREFAS EM FILA, AGRUPADAS POR STATUS — leitura rápida ao lado do documento.
          Concluídas começam fechadas. O quadro completo (arrastar, editar) fica abaixo. --}}
     <div class="card mb-5 overflow-hidden" x-data>
@@ -1169,9 +1236,6 @@
         </div>
     @endif
 
-    {{-- HISTÓRICO — só ações (status, datas, planejamento, "briefing editado"),
-         nunca o conteúdo (ver ProjectObserver). --}}
-    <x-activity-history :activities="$project->activities" class="card-body mt-6" />
 
     {{-- @push precisa ficar dentro do <x-app-layout> — fora dele, o slot já foi
          renderizado e o @stack('scripts') do layout já rodou, então o script nunca

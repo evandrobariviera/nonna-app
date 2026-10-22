@@ -1,0 +1,18 @@
+{
+  "novidades": [
+    {
+      "title": "Comentários na campanha/projeto",
+      "summary": "A página da campanha/projeto ganhou Comentários, para registrar observações do time com formatação. A equipe é avisada a cada comentário novo, e o Histórico de ações subiu para logo abaixo.",
+      "body": "<p>Use para o que hoje fica perdido no WhatsApp: pedidos do cliente, decisões, mudanças de rumo. Os comentários são internos, o cliente não vê.</p>",
+      "kind": "novidade", "area": "Projetos"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Planejamento, campanhas e reunião de discussão — como funciona",
+      "category": "Planejamentos",
+      "slug": "planejamento-campanhas-e-reuniao-de-discussao-como-funciona",
+      "body_file": "ajuda-planejamento-discussao.html"
+    }
+  ]
+}
