@@ -30,30 +30,30 @@
 
     {{-- KPIs DE TOPO --}}
     <div class="grid grid-cols-4 gap-4 mb-4">
-        <div class="card card-body">
-            <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Taxa de Retrabalho</p>
-            <p class="text-2xl font-black" style="color:{{ ($reworkRate['overall_rate'] ?? 0) > 20 ? 'var(--red)' : 'var(--text)' }}">
+        <div class="kpi-card">
+            <p class="stat-label">Taxa de Retrabalho</p>
+            <p class="kpi-value" style="color:{{ ($reworkRate['overall_rate'] ?? 0) > 20 ? 'var(--red)' : 'var(--text)' }}">
                 {{ $reworkRate['overall_rate'] !== null ? $reworkRate['overall_rate'] . '%' : '—' }}
             </p>
             <p class="text-xs mt-1" style="color:var(--muted2)">{{ $reworkRate['total'] }} tarefas concluídas passaram por Ajuste/Alteração</p>
         </div>
-        <div class="card card-body">
-            <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Cumprimento de Prazo</p>
-            <p class="text-2xl font-black" style="color:{{ ($onTimeRate['rate'] ?? 100) < 70 ? 'var(--red)' : 'var(--text)' }}">
+        <div class="kpi-card">
+            <p class="stat-label">Cumprimento de Prazo</p>
+            <p class="kpi-value" style="color:{{ ($onTimeRate['rate'] ?? 100) < 70 ? 'var(--red)' : 'var(--text)' }}">
                 {{ $onTimeRate['rate'] !== null ? $onTimeRate['rate'] . '%' : '—' }}
             </p>
             <p class="text-xs mt-1" style="color:var(--muted2)">{{ $onTimeRate['on_time'] }} de {{ $onTimeRate['total'] }} com prazo definido</p>
         </div>
-        <div class="card card-body">
-            <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Aprovação de Primeira</p>
-            <p class="text-2xl font-black" style="color:var(--text)">
+        <div class="kpi-card">
+            <p class="stat-label">Aprovação de Primeira</p>
+            <p class="kpi-value" style="color:var(--text)">
                 {{ $approvalOverall->first_time_rate !== null ? $approvalOverall->first_time_rate . '%' : '—' }}
             </p>
             <p class="text-xs mt-1" style="color:var(--muted2)">{{ $approvalOverall->total }} rodadas resolvidas no período</p>
         </div>
-        <div class="card card-body">
-            <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Cliente Responde Em</p>
-            <p class="text-2xl font-black" style="color:var(--text)">
+        <div class="kpi-card">
+            <p class="stat-label">Cliente Responde Em</p>
+            <p class="kpi-value" style="color:var(--text)">
                 {{ $approvalOverall->avg_response ?? '—' }}
             </p>
             <p class="text-xs mt-1" style="color:var(--muted2)">tempo médio até aprovar/pedir ajuste (dias úteis)</p>

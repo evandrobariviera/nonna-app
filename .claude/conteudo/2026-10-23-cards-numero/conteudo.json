@@ -1,0 +1,11 @@
+{
+  "novidades": [
+    {
+      "title": "Cards de número no novo visual",
+      "summary": "Os números de destaque da Produtividade, da Carga de Produção, das Filas e do Diagnóstico de Atendimento ficaram no mesmo estilo do Dashboard: número grande, nome em texto normal, sem a faixa colorida no topo.",
+      "body": "<p>Só aparência: os números e as contas são os mesmos de antes.</p>",
+      "kind": "melhoria", "area": "Geral"
+    }
+  ],
+  "ajuda": []
+}

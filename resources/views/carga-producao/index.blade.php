@@ -107,9 +107,9 @@
     @endphp
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         @foreach($tiles as [$label, $valor, $ajuda, $cor])
-            <div class="card card-body min-w-0">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">{{ $label }}</p>
-                <p class="text-2xl font-black" style="color:{{ $cor }}">{{ $valor }}</p>
+            <div class="kpi-card min-w-0">
+                <p class="kpi-value" style="color:{{ $cor }}">{{ $valor }}</p>
+                <p class="kpi-label">{{ $label }}</p>
                 <p class="text-xs mt-1" style="color:var(--muted2)">{{ $ajuda }}</p>
             </div>
         @endforeach
