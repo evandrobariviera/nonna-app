@@ -276,8 +276,25 @@
     .sidebar-collapsed .nav-group-label::after { content: ""; display: block; height: 1px; margin: 0 22px; background: var(--border2); }
     .sidebar-collapsed .nav-group-trigger { justify-content: center; padding: 10px 0; }
     .sidebar-collapsed .nav-group-trigger > span:first-child { font-size: 0; gap: 0; }
-    .sidebar-collapsed .nav-group-trigger > :not(:first-child) { display: none !important; }
+    .sidebar-collapsed .nav-group-trigger > :not(:first-child):not(.chat-badge):not(.rounded-full) { display: none !important; }
     .sidebar-collapsed .nav-group-trigger + div { display: none !important; }
+    /* Contadores (Novidades, Ajuda, Fila, Chat...) viram uma bolinha no canto do ícone —
+       sinalizam que tem coisa nova sem o número espremido ao lado. */
+    .sidebar-collapsed .nav-group-trigger { position: relative; }
+    .sidebar-collapsed .nav-group-trigger .rounded-full.text-xs,
+    .sidebar-collapsed .nav-group-trigger .chat-badge {
+        position: absolute;
+        top: 7px;
+        right: 16px;
+        width: 9px;
+        height: 9px;
+        min-width: 0;
+        padding: 0;
+        font-size: 0 !important;
+        border: 2px solid var(--s1) !important;
+        border-radius: 9999px;
+        background: var(--orange) !important;
+    }
 
     /* ── TOPBAR — barra branca "flutuante": afastada das laterais, cantos arredondados só
        embaixo, borda fina sem topo, sombra quase invisível ── */
