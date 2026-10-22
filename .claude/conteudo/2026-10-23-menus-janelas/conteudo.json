@@ -1,0 +1,17 @@
+{
+  "novidades": [
+    {
+      "title": "Menu recolhido mostra o nome do item",
+      "summary": "Com o menu lateral recolhido (só ícones), passe o mouse num ícone e aparece o nome dele — não precisa mais abrir o menu pra saber o que é cada um.",
+      "body": "<p>Para recolher ou abrir o menu, use o botão no topo do menu lateral.</p>",
+      "kind": "melhoria", "area": "Geral"
+    },
+    {
+      "title": "Menus e janelas no novo visual",
+      "summary": "Nas listas de opções (status, situação, pessoas, canais), a opção sob o mouse fica em roxo claro. As janelas de confirmação ficaram com os mesmos cantos dos cards e com fundo escuro no modo escuro.",
+      "body": "<p>Só aparência: as opções e o que elas fazem continuam iguais.</p>",
+      "kind": "melhoria", "area": "Geral"
+    }
+  ],
+  "ajuda": []
+}

@@ -312,9 +312,8 @@
                                                  :style="style + 'background:var(--s1); border:1px solid var(--border2); min-width:190px'">
                                                 <template x-for="opt in statusOptions" :key="opt.key">
                                                     <button type="button" @click="quickSetStatus(p, opt.key); open = false"
-                                                        class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
-                                                        :style="p.status === opt.key ? 'color:var(--purple)' : 'color:var(--text)'"
-                                                        onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                                                        class="dd-hover w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
+                                                        :style="p.status === opt.key ? 'color:var(--purple)' : 'color:var(--text)'">
                                                         <span class="inline-block w-2 h-2 rounded-full flex-shrink-0" :style="'background:' + colorHex(opt.color)"></span>
                                                         <span x-text="opt.label"></span>
                                                     </button>
@@ -428,9 +427,8 @@
                                              :style="style + 'background:var(--s1); border:1px solid var(--border2); min-width:190px'">
                                             <template x-for="opt in statusOptions" :key="opt.key">
                                                 <button type="button" @click="quickSetStatus(p, opt.key); open = false"
-                                                    class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
-                                                    :style="p.status === opt.key ? 'color:var(--purple)' : 'color:var(--text)'"
-                                                    onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                                                    class="dd-hover w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
+                                                    :style="p.status === opt.key ? 'color:var(--purple)' : 'color:var(--text)'">
                                                     <span class="inline-block w-2 h-2 rounded-full flex-shrink-0" :style="'background:' + colorHex(opt.color)"></span>
                                                     <span x-text="opt.label"></span>
                                                 </button>

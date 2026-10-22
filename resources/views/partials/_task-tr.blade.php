@@ -189,9 +189,8 @@
                                     <form method="POST" action="{{ route('sprints.add-task', [$sp, $task]) }}">
                                         @csrf
                                         <button type="submit"
-                                            class="w-full text-left px-3 py-1.5 text-xs"
-                                            style="color:var(--text)"
-                                            onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                                            class="dd-hover w-full text-left px-3 py-1.5 text-xs"
+                                            style="color:var(--text)">
                                             {{ $sp->title }}
                                             @if($sp->status === 'active') <span class="badge badge-green" style="font-size:9px">ativa</span> @endif
                                         </button>

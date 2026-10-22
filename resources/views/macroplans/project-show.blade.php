@@ -414,8 +414,7 @@
                 <div x-show="open" x-cloak>
                     @foreach($group as $t)
                         @php $late = $t->due_date && $t->due_date->lt($today) && $statusKey !== 'concluido'; @endphp
-                        <a href="{{ route('tasks.show', $t) }}" class="block px-5 py-2 transition-colors" style="border-top:1px solid var(--border2)"
-                           onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+                        <a href="{{ route('tasks.show', $t) }}" class="dd-hover block px-5 py-2 transition-colors" style="border-top:1px solid var(--border2)">
                             <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $t->title }} <x-pendency-badge :task="$t" class="ml-1" /></p>
                             <p class="text-xs mt-0.5 flex items-center gap-2" style="color:var(--muted); font-size:11px">
                                 <span class="truncate">{{ $t->executors->map(fn ($u) => \Illuminate\Support\Str::before($u->name, ' '))->join(', ') ?: 'Sem executor' }}</span>

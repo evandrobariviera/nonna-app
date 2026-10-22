@@ -835,9 +835,8 @@
                         <div class="flex flex-col">
                             @foreach($macroplan->tasks as $task)
                                 <a href="{{ route('tasks.show', $task) }}"
-                                   class="flex items-center gap-3 px-5 py-3 transition-colors"
-                                   style="border-bottom:1px solid var(--border2)"
-                                   onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                                   class="dd-hover flex items-center gap-3 px-5 py-3 transition-colors"
+                                   style="border-bottom:1px solid var(--border2)">
                                     <span class="badge badge-{{ $task->statusColor() }} flex-shrink-0">{{ $task->statusLabel() }}</span>
                                     <span class="text-sm truncate" style="color:var(--text)">{{ $task->title }}</span>
                                     @if($task->is_ticket)

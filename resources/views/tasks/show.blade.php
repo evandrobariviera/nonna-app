@@ -1332,9 +1332,8 @@
                                  class="absolute left-0 mt-1 z-20 py-1" style="min-width:180px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
                                 @foreach(\App\Models\Task::$priorities as $key => $p)
                                     <button type="button" @click="set('{{ $key }}')"
-                                        class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
-                                        :style="key === '{{ $key }}' ? 'color:var(--purple);font-weight:600' : 'color:var(--muted2);font-weight:400'"
-                                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                        class="dd-hover w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
+                                        :style="key === '{{ $key }}' ? 'color:var(--purple);font-weight:600' : 'color:var(--muted2);font-weight:400'">
                                         <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:{{ \App\Models\Task::colorHex($p['color']) }}"></span>
                                         {{ $p['label'] }}
                                     </button>
@@ -1504,9 +1503,8 @@
                                                         <input type="hidden" name="comment_id" value="{{ $comment->id }}">
                                                         <input type="hidden" name="owed_by" value="cliente">
                                                         <button type="submit"
-                                                                class="w-full flex items-center gap-2 px-3 py-2 text-xs text-left font-semibold transition-colors"
-                                                                style="color:var(--orange); border-bottom:1px solid var(--border2)"
-                                                                onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                                                class="dd-hover w-full flex items-center gap-2 px-3 py-2 text-xs text-left font-semibold transition-colors"
+                                                                style="color:var(--orange); border-bottom:1px solid var(--border2)">
                                                             <x-icon name="users" size="14" />
                                                             O cliente
                                                         </button>
@@ -1518,9 +1516,8 @@
                                                             <input type="hidden" name="owed_by" value="agencia">
                                                             <input type="hidden" name="owed_user_id" value="{{ $u->id }}">
                                                             <button type="submit"
-                                                                    class="w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors"
-                                                                    style="color:var(--muted2)"
-                                                                    onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                                                    class="dd-hover w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors"
+                                                                    style="color:var(--muted2)">
                                                                 <x-user-avatar :user="$u" size="5" />
                                                                 {{ $u->name }}
                                                             </button>

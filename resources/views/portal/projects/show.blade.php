@@ -55,9 +55,8 @@
                             $st = $statusMap[$task->status] ?? ['label' => $task->status, 'color' => 'var(--muted)'];
                         @endphp
                         <a href="{{ route('portal.tasks.show', $task) }}"
-                           class="px-5 py-3 flex items-center justify-between transition-colors"
-                           style="border-color: var(--border2); text-decoration:none"
-                           onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+                           class="dd-hover px-5 py-3 flex items-center justify-between transition-colors"
+                           style="border-color: var(--border2); text-decoration:none">
                             <div class="flex items-center gap-3">
                                 <div class="h-4 w-4 rounded-full flex-shrink-0 flex items-center justify-center"
                                      style="background: {{ $isDone ? 'rgba(5,150,105,.15)' : 'var(--s3)' }};

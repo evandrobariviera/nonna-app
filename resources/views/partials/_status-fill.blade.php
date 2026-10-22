@@ -53,9 +53,8 @@
                     @csrf @method('PATCH')
                     <input type="hidden" name="status" value="{{ $key }}">
                     <button type="submit"
-                        class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
-                        style="color:{{ $showCurrent && $task->status === $key ? 'var(--purple)' : 'var(--text)' }}"
-                        onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                        class="dd-hover w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
+                        style="color:{{ $showCurrent && $task->status === $key ? 'var(--purple)' : 'var(--text)' }}">
                         <span class="inline-block w-2 h-2 rounded-full flex-shrink-0" style="background:{{ $hex }}"></span>
                         {{ $s['label'] }}
                     </button>

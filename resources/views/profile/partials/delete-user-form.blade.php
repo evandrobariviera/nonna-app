@@ -16,7 +16,7 @@
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100">
         <div class="absolute inset-0 bg-black/60" @click="confirmOpen = false"></div>
-        <div class="relative w-full max-w-md rounded-xl shadow-2xl p-6"
+        <div class="relative w-full max-w-md rounded-[10px] shadow-2xl p-6"
              style="background:var(--s1); border:1px solid var(--border)"
              x-transition:enter="transition duration-150"
              x-transition:enter-start="opacity-0 scale-95"

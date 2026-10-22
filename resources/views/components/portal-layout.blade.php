@@ -96,9 +96,8 @@
                             @foreach($portalClients as $switchClient)
                                 <form method="POST" action="{{ route('portal.client-context.switch', $switchClient) }}">
                                     @csrf
-                                    <button type="submit" class="w-full text-left px-3 py-2 text-xs font-semibold transition-colors"
-                                            style="color:{{ $switchClient->id === $currentClient->id ? 'var(--purple)' : 'var(--text)' }}"
-                                            onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background=''">
+                                    <button type="submit" class="dd-hover w-full text-left px-3 py-2 text-xs font-semibold transition-colors"
+                                            style="color:{{ $switchClient->id === $currentClient->id ? 'var(--purple)' : 'var(--text)' }}">
                                         {{ $switchClient->company_name }}
                                     </button>
                                 </form>

@@ -7,6 +7,15 @@
           toggleSidebar() {
               this.sidebarCollapsed = !this.sidebarCollapsed;
               localStorage.setItem('nonna-sidebar', this.sidebarCollapsed ? 'collapsed' : 'open');
+              this.navTip.show = false;
+          },
+          {{-- Nome do item ao passar o mouse com o menu recolhido (fixo na tela: o menu corta o que vaza) --}}
+          navTip: { show: false, text: '', top: 0, left: 0 },
+          showNavTip(e) {
+              const el = this.sidebarCollapsed && e.target.closest('.nav-group-trigger');
+              if (!el) { this.navTip.show = false; return; }
+              const r = el.getBoundingClientRect();
+              this.navTip = { show: true, text: el.querySelector('span')?.textContent.trim() || '', top: r.top + r.height / 2, left: r.right + 10 };
           },
           darkMode: localStorage.getItem('nonna-theme') === 'dark',
           toggleTheme() {
@@ -101,7 +110,10 @@
              clicar num grupo com o menu recolhido reabre o menu. --}}
         <aside class="hidden md:flex md:flex-col sidebar-nav flex-shrink-0 transition-[width] duration-200"
                :class="sidebarCollapsed ? 'sidebar-collapsed md:w-[76px]' : 'md:w-[264px]'"
-               @click.capture="if (sidebarCollapsed && $event.target.closest('button.nav-group-trigger')) toggleSidebar()">
+               @click.capture="if (sidebarCollapsed && $event.target.closest('button.nav-group-trigger')) toggleSidebar()"
+               @mouseover="showNavTip($event)" @mouseleave="navTip.show = false">
+            <div x-show="navTip.show && navTip.text" x-cloak class="nav-tip"
+                 :style="`top:${navTip.top}px; left:${navTip.left}px`" x-text="navTip.text"></div>
             {{-- Logo --}}
             <a href="{{ route('dashboard') }}" class="flex h-[70px] items-center transition-opacity hover:opacity-80 flex-shrink-0"
                :class="sidebarCollapsed ? 'justify-center px-2' : 'px-6'">
@@ -251,9 +263,8 @@
                                     </div>
                                 </template>
                                 <template x-for="r in results" :key="r.id">
-                                    <a :href="r.url" class="block px-4 py-2.5 transition-colors"
-                                       style="border-bottom:1px solid var(--border2)"
-                                       onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+                                    <a :href="r.url" class="dd-hover block px-4 py-2.5 transition-colors"
+                                       style="border-bottom:1px solid var(--border2)">
                                         <div class="flex items-center justify-between gap-2">
                                             <span class="text-sm font-semibold truncate" style="color:var(--text)" x-text="r.title"></span>
                                             <span class="badge flex-shrink-0" :class="'badge-' + r.status_color" x-text="r.status_label"></span>

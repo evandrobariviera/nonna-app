@@ -140,8 +140,7 @@
                                             @csrf @method('PATCH')
                                             @if(!empty($returnTo))<input type="hidden" name="return_to" value="{{ $returnTo }}">@endif
                                             <input type="hidden" name="channel" value="{{ $key }}">
-                                            <button type="submit" class="w-full text-left px-3 py-1.5" style="color:var(--muted2)"
-                                                    onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">{{ ucfirst($label) }}</button>
+                                            <button type="submit" class="dd-hover w-full text-left px-3 py-1.5" style="color:var(--muted2)">{{ ucfirst($label) }}</button>
                                         </form>
                                     @endforeach
                                 </div>
@@ -169,8 +168,7 @@
                     <div x-show="menu" @click.outside="menu = false" x-cloak
                          class="absolute right-0 mt-1 z-20 py-1 text-xs"
                          style="min-width:150px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
-                        <button type="button" class="w-full text-left px-3 py-2" style="color:var(--muted2)"
-                                onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'"
+                        <button type="button" class="dd-hover w-full text-left px-3 py-2" style="color:var(--muted2)"
                                 @if($showOrigin)
                                     @click="menu = false; $dispatch('edit-pendency', @js($p->only(['id', 'client_id', 'title', 'description', 'kind', 'owed_by', 'owed_contact_id', 'owed_user_id', 'owed_party', 'owner_id', 'requested_by']) + ['due_date' => $p->due_date?->format('Y-m-d')]))"
                                 @else
@@ -182,16 +180,14 @@
                                   @submit.prevent="if (await $store.confirmDialog.ask('Cancelar essa pendência? (não é mais necessária)')) $el.submit()">
                                 @csrf @method('PATCH')
                                 @if(!empty($returnTo))<input type="hidden" name="return_to" value="{{ $returnTo }}">@endif
-                                <button type="submit" class="w-full text-left px-3 py-2" style="color:var(--muted2)"
-                                        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">Não precisa mais</button>
+                                <button type="submit" class="dd-hover w-full text-left px-3 py-2" style="color:var(--muted2)">Não precisa mais</button>
                             </form>
                         @endif
                         <form method="POST" action="{{ route('pendencies.destroy', $p) }}"
                               @submit.prevent="if (await $store.confirmDialog.ask('Excluir essa pendência? Use só se foi criada por engano.')) $el.submit()">
                             @csrf @method('DELETE')
                             @if(!empty($returnTo))<input type="hidden" name="return_to" value="{{ $returnTo }}">@endif
-                            <button type="submit" class="w-full text-left px-3 py-2" style="color:var(--red)"
-                                    onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">Excluir</button>
+                            <button type="submit" class="dd-hover w-full text-left px-3 py-2" style="color:var(--red)">Excluir</button>
                         </form>
                     </div>
                 </div>

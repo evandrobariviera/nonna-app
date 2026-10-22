@@ -199,9 +199,8 @@
                                     <form method="POST" action="{{ route('sprints.add-task', [$sp, $task]) }}">
                                         @csrf
                                         <button type="submit" @click="sprintOpen = false"
-                                            class="w-full flex items-center gap-2 px-3 py-2 text-xs text-left"
-                                            style="color:var(--text)"
-                                            onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                            class="dd-hover w-full flex items-center gap-2 px-3 py-2 text-xs text-left"
+                                            style="color:var(--text)">
                                             <span class="h-1.5 w-1.5 rounded-full flex-shrink-0"
                                                   style="background:{{ $sp->status === 'active' ? 'var(--green)' : 'var(--orange)' }}"></span>
                                             <span class="font-medium truncate">{{ $sp->title }}</span>

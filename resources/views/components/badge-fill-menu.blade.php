@@ -14,9 +14,8 @@
                     @php $hex = \App\Models\Task::colorHex($s['color']); @endphp
                     <button type="button"
                         @click="$store.badgeFill.select('{{ $key }}', '{{ addslashes($s['label']) }}', '{{ $hex }}')"
-                        class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
-                        :style="$store.badgeFill.currentKey === '{{ $key }}' ? 'color:var(--purple)' : 'color:var(--text)'"
-                        onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                        class="dd-hover w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
+                        :style="$store.badgeFill.currentKey === '{{ $key }}' ? 'color:var(--purple)' : 'color:var(--text)'">
                         <span class="inline-block w-2 h-2 rounded-full flex-shrink-0" style="background:{{ $hex }}"></span>
                         {{ $s['label'] }}
                     </button>
@@ -29,9 +28,8 @@
                     @php $situacaoHex = \App\Models\Task::$situationColors[$key] ?? '#94a3b8'; @endphp
                     <button type="button"
                         @click="$store.badgeFill.select('{{ $key }}', '{{ addslashes($label ?: '— Limpar —') }}', '{{ $situacaoHex }}')"
-                        class="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
-                        :style="$store.badgeFill.currentKey === '{{ $key }}' ? 'color:var(--purple)' : 'color:var(--text)'"
-                        onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+                        class="dd-hover w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors"
+                        :style="$store.badgeFill.currentKey === '{{ $key }}' ? 'color:var(--purple)' : 'color:var(--text)'">
                         @if($key !== '')
                             <span class="inline-block w-2 h-2 rounded-full flex-shrink-0" style="background:{{ $situacaoHex }}"></span>
                         @else

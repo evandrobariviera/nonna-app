@@ -269,9 +269,8 @@
                                          style="min-width:220px; background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.1)">
                                         @foreach($round->tokens as $token)
                                             <a href="{{ route('approval.show', $token->token) }}" target="_blank" rel="noopener"
-                                               class="w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors"
-                                               style="color:var(--muted2)"
-                                               onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                               class="dd-hover w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors"
+                                               style="color:var(--muted2)">
                                                 Abrir link — {{ $token->contact->name }}
                                             </a>
                                         @endforeach

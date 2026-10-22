@@ -281,6 +281,14 @@
     /* Contadores (Novidades, Ajuda, Fila, Chat...) viram uma bolinha no canto do ícone —
        sinalizam que tem coisa nova sem o número espremido ao lado. */
     .sidebar-collapsed .nav-group-trigger { position: relative; }
+    /* Balão com o nome do item (menu recolhido) */
+    .nav-tip {
+        position: fixed; z-index: 60; transform: translateY(-50%); pointer-events: none;
+        padding: 5px 10px; border-radius: var(--radius); white-space: nowrap;
+        font-size: 13px; font-weight: 500; color: #fff; background: #242424;
+        box-shadow: var(--shadow);
+    }
+    .dark .nav-tip { background: #3a3a3a; }
     .sidebar-collapsed .nav-group-trigger .rounded-full.text-xs,
     .sidebar-collapsed .nav-group-trigger .chat-badge {
         position: absolute;
@@ -597,6 +605,10 @@
         background: none; border: 0; cursor: pointer; transition: background .12s, color .12s;
     }
     .dd-item:hover { background: rgba(100, 59, 142, .08); color: var(--purple); }
+    /* Mesmo hover para itens de menu que mantêm o próprio layout (substitui o hover cinza
+       que era feito com onmouseover inline). !important vence a cor inline do item. */
+    .dd-hover { transition: background .12s, color .12s; }
+    .dd-hover:hover { background: rgba(100, 59, 142, .08) !important; color: var(--purple) !important; }
 
     .kb-avatars { display: flex; align-items: center; }
     .kb-avatars > * { margin-left: -7px; box-shadow: 0 0 0 2px var(--s1); border-radius: 9999px; }

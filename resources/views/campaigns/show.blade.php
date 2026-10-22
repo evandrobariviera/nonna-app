@@ -256,9 +256,8 @@
                                 @csrf @method('PATCH')
                                 <input type="hidden" name="optimization_tier" value="{{ $key }}">
                                 <button type="submit" @click="open = false"
-                                    class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
-                                    style="color:{{ $campaign->optimization_tier === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ $campaign->optimization_tier === $key ? '600' : '400' }}"
-                                    onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                    class="dd-hover w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
+                                    style="color:{{ $campaign->optimization_tier === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ $campaign->optimization_tier === $key ? '600' : '400' }}">
                                     <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:var(--{{ $t['color'] }})"></span>
                                     {{ $t['label'] }}
                                 </button>
@@ -411,9 +410,8 @@
                                 @csrf @method('PATCH')
                                 <input type="hidden" name="management_status" value="{{ $key }}">
                                 <button type="submit" @click="open = false"
-                                    class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
-                                    style="color:{{ $campaign->management_status === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ $campaign->management_status === $key ? '600' : '400' }}"
-                                    onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                    class="dd-hover w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
+                                    style="color:{{ $campaign->management_status === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ $campaign->management_status === $key ? '600' : '400' }}">
                                     <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:var(--{{ $s['color'] }})"></span>
                                     {{ $s['label'] }}
                                 </button>
@@ -446,9 +444,8 @@
                                 @csrf @method('PATCH')
                                 <input type="hidden" name="management_situation" value="{{ $key }}">
                                 <button type="submit" @click="open = false"
-                                    class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
-                                    style="color:{{ ($campaign->management_situation ?? '') === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ ($campaign->management_situation ?? '') === $key ? '600' : '400' }}"
-                                    onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='transparent'">
+                                    class="dd-hover w-full flex items-center gap-2.5 px-4 py-2 text-sm text-left transition-colors"
+                                    style="color:{{ ($campaign->management_situation ?? '') === $key ? 'var(--purple)' : 'var(--muted2)' }}; font-weight:{{ ($campaign->management_situation ?? '') === $key ? '600' : '400' }}">
                                     @if($key)
                                         <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" style="background:var(--{{ \App\Models\AdCampaign::$managementSituationColors[$key] ?? 'muted' }})"></span>
                                     @endif
