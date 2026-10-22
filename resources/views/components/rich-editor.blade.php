@@ -97,7 +97,10 @@
     </div>
 
     {{-- ── Editor ── --}}
-    <div x-ref="editor" class="rich-editor" style="min-height: {{ $minHeight }}"></div>
+    {{-- Clique em qualquer ponto da caixa (não só na linha de texto) já põe o cursor no
+         editor — antes a área de escrita tinha só a altura do texto e era preciso dar Tab. --}}
+    <div x-ref="editor" class="rich-editor" style="min-height: {{ $minHeight }}"
+         @mousedown="focusFromBox($event)"></div>
 
     {{-- ── Hidden inputs ── --}}
     <input type="hidden" name="{{ $name }}" x-ref="input">

@@ -605,7 +605,11 @@
     resize: vertical;
     overflow: auto;
     min-height: 120px;
+    /* a área de escrita ocupa a caixa toda (ver focusFromBox em tiptap-editor.js) */
+    display: flex;
+    flex-direction: column;
 }
+.rich-editor > .ProseMirror { flex: 1 0 auto; }
 .rich-editor .ProseMirror {
     outline: none;
     color: var(--text);

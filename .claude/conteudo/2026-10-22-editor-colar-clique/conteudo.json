@@ -1,0 +1,10 @@
+{
+  "novidades": [
+    {
+      "title": "Editor de texto: colar do Docs/Word e clicar para escrever",
+      "summary": "Nos campos com formatação (pauta, ATA, briefing, descrição da tarefa...), colar do Google Docs ou do Word mantém os títulos, e clicar em qualquer ponto da caixa já começa a escrever, sem precisar de Tab.",
+      "body": "<p>Antes, o \"Título 1\" do Docs virava texto comum e colar do Word podia entrar como imagem do trecho. Negrito, itálico, listas e links continuam vindo como antes.</p>",
+      "kind": "correcao", "area": "Sistema"
+    }
+  ]
+}

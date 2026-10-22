@@ -89,7 +89,18 @@ export function registerRichEditor() {
                     content: html,
                     editorProps: {
                         attributes: { class: 'rich-prose' },
+                        // Colado do Google Docs/Word: o editor só tem H2/H3, então H1 vira H2 e
+                        // H4–H6 viram H3 — sem isso o título era descartado e virava texto comum.
+                        transformPastedHTML(html) {
+                            return html
+                                .replace(/<(\/?)h1(\s|>)/gi, '<$1h2$2')
+                                .replace(/<(\/?)h[4-6](\s|>)/gi, '<$1h3$2');
+                        },
                         handlePaste(view, event) {
+                            // Word/Docs mandam texto E uma "foto" do trecho copiado; com texto
+                            // na área de transferência, cola o texto formatado, nunca a foto.
+                            const types = Array.from(event.clipboardData?.types ?? []);
+                            if (types.includes('text/html') || types.includes('text/plain')) return false;
                             const items = Array.from(event.clipboardData?.items ?? []);
                             const img   = items.find(i => i.type.startsWith('image/'));
                             if (!img) return false;
@@ -139,6 +150,14 @@ export function registerRichEditor() {
         destroy() {
             this._observer?.disconnect();
             this.editor?.destroy();
+        },
+
+        // Clique na moldura/espaço vazio da caixa (fora do texto): leva o cursor pro fim do
+        // texto. Clique dentro do texto segue o caminho normal do ProseMirror.
+        focusFromBox(event) {
+            if (!this.editor || this.editor.view.dom.contains(event.target)) return;
+            event.preventDefault();
+            this.editor.commands.focus('end');
         },
 
         // Reading this.tick makes Alpine track it as a dependency, so active()
