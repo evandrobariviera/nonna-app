@@ -966,21 +966,17 @@ class AutomationJob implements ShouldQueue
         // definido no system_prompt do agente, não aqui (ver AiAgent "ATA Estruturada —
         // Reunião com Cliente"). A pauta usa a mesma sintaxe de checklist da ATA
         // ("- [ ]"/"- [x]") pra marcar o que já foi identificado e o que ficou pendente.
-        [$ata, $agenda] = self::splitAtaAndAgenda($response);
+        // A pauta da IA NÃO é mais gravada (decisão do Evandro, 2026-10-22): a pauta virou
+        // campo do time, escrito à mão e com itens citados — a IA escrevia por cima. O
+        // split continua só pra o marcador e a pauta não vazarem pra dentro da ATA.
+        [$ata] = self::splitAtaAndAgenda($response);
 
-        $update = [
+        $entity->update([
             'ata' => MeetingText::fromAi($ata),
             'ata_recorded_at' => $entity->ata_recorded_at ?? now(),
-        ];
-        if ($agenda !== null) {
-            $update['agenda'] = MeetingText::fromAi($agenda);
-        }
+        ]);
 
-        $entity->update($update);
-
-        return $agenda !== null
-            ? "ATA e Pauta de Revisão Interna geradas e salvas ({$agent->name})."
-            : "ATA gerada e salva ({$agent->name}).";
+        return "ATA gerada e salva ({$agent->name}).";
     }
 
     private const PAUTA_MARKER = '===PAUTA_REVISAO_INTERNA===';

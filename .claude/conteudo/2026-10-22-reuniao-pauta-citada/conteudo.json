@@ -3,7 +3,7 @@
     {
       "title": "Pauta e ATA com formatação",
       "summary": "A pauta e a ATA da reunião agora usam o mesmo editor do briefing: títulos, negrito, listas, links e imagens. A IA continua montando a ATA, e a ATA formatada sai igual.",
-      "body": "<p>O campo Próximos passos saiu: ninguém usava, e as pendências e tarefas fazem esse papel. A transcrição continua sendo texto simples, porque é só matéria-prima para a IA.</p>",
+      "body": "<p>A IA não escreve mais por cima da pauta: ela é do time. O campo Próximos passos saiu: ninguém usava, e as pendências e tarefas fazem esse papel. A transcrição continua sendo texto simples, porque é só matéria-prima para a IA.</p>",
       "kind": "melhoria", "area": "Reuniões"
     },
     {
