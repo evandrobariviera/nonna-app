@@ -7,16 +7,19 @@
 [x-cloak] { display: none !important; }
 
 @layer base {
+    /* Redesign "estilo Mirbal" (2026-10, ver .claude/docs/redesign-mirbal.md): fundo quase
+       branco, cards brancos com borda clara #e9e9e9, cinzas neutros, sombra quase
+       invisível. Cores da marca (roxo/laranja) e cores de status ficam as mesmas. */
     :root {
-        --bg:      #eeeef5;
+        --bg:      #fffdfd;
         --s1:      #ffffff;
-        --s2:      #f6f6fb;
-        --s3:      #ececf4;
-        --border:  rgba(100, 59, 142, 0.10);
-        --border2: rgba(0, 0, 0, 0.09);
-        --text:    #1c1c2e;
-        --muted:   rgba(28, 28, 46, 0.38);
-        --muted2:  rgba(28, 28, 46, 0.58);
+        --s2:      #f6f6f8;
+        --s3:      #f3f2f2;
+        --border:  #e9e9e9;
+        --border2: #e9e9e9;
+        --text:    #161616;
+        --muted:   #8b8b8b;
+        --muted2:  #5f5f5f;
         --purple:  #643B8E;
         --orange:  #EE7919;
         --grad:    linear-gradient(135deg, #643B8E, #EE7919);
@@ -26,20 +29,22 @@
         --cyan:    #0891b2;
         --blue:    #2E90FA;
         --slate:   #697386;
-        --shadow:  0 1px 4px rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0,0,0,0.04);
+        --shadow:  rgba(126, 126, 126, 0.05) 0 5px 8px;
+        --radius:    7px;   /* botão, campo, etiqueta, menu suspenso */
+        --radius-lg: 10px;  /* cards, caixas de kanban */
     }
 
     .dark {
-        --bg:      #13141f;
-        --s1:      #1c1d2e;
-        --s2:      #22233a;
-        --s3:      #2c2d45;
-        --border:  rgba(100, 59, 142, 0.18);
-        --border2: rgba(255, 255, 255, 0.07);
-        --text:    #e2e2f0;
-        --muted:   rgba(226, 226, 240, 0.36);
-        --muted2:  rgba(226, 226, 240, 0.58);
-        --shadow:  0 1px 6px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255,255,255,0.04);
+        --bg:      #161616;
+        --s1:      #202020;
+        --s2:      #262626;
+        --s3:      #303030;
+        --border:  #303030;
+        --border2: #303030;
+        --text:    #e9e9e9;
+        --muted:   rgba(233, 233, 233, 0.45);
+        --muted2:  rgba(233, 233, 233, 0.72);
+        --shadow:  rgba(0, 0, 0, 0.25) 0 5px 8px;
     }
 
     /* Transição suave ao trocar tema */
@@ -54,11 +59,13 @@
         text-size-adjust: 100%;
     }
 
+    /* Corpo em Outfit, títulos em Inter (como o Mirbal). Outfit desenha menor que a Inter
+       no mesmo tamanho — por isso 15px aqui equivale aos 14px de antes. */
     html, body {
         background-color: var(--bg);
         color: var(--text);
-        font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "BlinkMacSystemFont", "Segoe UI", sans-serif;
-        font-size: 14px;
+        font-family: 'Outfit', ui-sans-serif, system-ui, -apple-system, "BlinkMacSystemFont", "Segoe UI", sans-serif;
+        font-size: 15px;
         font-weight: 400;
         line-height: 1.5;
         -webkit-font-smoothing: antialiased;
@@ -69,17 +76,17 @@
     * {
         border-color: var(--border2);
         scrollbar-width: thin;
-        scrollbar-color: #d4d4e4 transparent;
+        scrollbar-color: #d9d9d9 transparent;
     }
-    .dark * { scrollbar-color: #3a3b56 transparent; }
+    .dark * { scrollbar-color: #3a3a3a transparent; }
 
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
-    ::-webkit-scrollbar-thumb { background: #d4d4e4; border-radius: 2px; }
-    .dark ::-webkit-scrollbar-thumb { background: #3a3b56; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-thumb { background: #d9d9d9; border-radius: 3px; }
+    .dark ::-webkit-scrollbar-thumb { background: #3a3a3a; }
 
-    h1, h2, h3, h4 {
+    h1, h2, h3, h4, h5, h6 {
         font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-        font-weight: 700;
+        font-weight: 600;
         line-height: 1.25;
     }
 
@@ -240,8 +247,37 @@
     .card {
         background: var(--s1);
         border: 1px solid var(--border2);
-        border-radius: 10px;
+        border-radius: var(--radius-lg);
         box-shadow: var(--shadow);
+    }
+
+    /* Título de card no estilo Mirbal: 16px Inter + barrinha vertical da cor da marca
+       encostada na borda esquerda do card (o card precisa de padding-left ~20px). */
+    .card-title {
+        position: relative;
+        font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text);
+        line-height: 1.3;
+    }
+    .card-title::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: -20px;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 22px;
+        border-radius: 0 3px 3px 0;
+        background: linear-gradient(to bottom, rgba(100, 59, 142, .75), rgba(100, 59, 142, .4), rgba(100, 59, 142, .75));
+    }
+
+    /* Área interna com fundo cinza claro dentro de um card (caixa "Savings", cabeçalho
+       de tabela, blocos de resumo) — o "fundo de outra cor" das subdivisões. */
+    .card-inset {
+        background: var(--s2);
+        border-radius: var(--radius);
     }
 
     /* padding padrão dos cards — sem depender do JIT compilar px-N py-N */
@@ -259,11 +295,11 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 7px 16px;
-        font-size: 13px;
-        font-weight: 600;
+        padding: 7px 18px;
+        font-size: 14px;
+        font-weight: 500;
         line-height: 1.4;
-        border-radius: 6px;
+        border-radius: var(--radius);
         border: 1px solid transparent;
         cursor: pointer;
         text-decoration: none;
@@ -278,8 +314,22 @@
     .btn-ghost:hover { background: var(--s3); color: var(--text); }
     .btn-danger { background: #DC2626; color: #fff; border-color: #DC2626; }
     .btn-danger:hover { background: #b91c1c; border-color: #b91c1c; }
-    .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 5px; }
-    .btn-xs { padding: 3px 10px; font-size: 11px; border-radius: 4px; }
+    .btn-sm { padding: 5px 13px; font-size: 13px; border-radius: 6px; }
+    .btn-xs { padding: 3px 10px; font-size: 12px; border-radius: 5px; }
+    .btn-primary:active, .btn-danger:active, .btn-success:active { box-shadow: 0 .125rem .375rem 0 rgba(100, 59, 142, .3); }
+
+    /* Botões "suaves" do Mirbal: fundo da cor a 12%, texto da cor; no hover viram sólidos.
+       Bons pra ações secundárias e botões só de ícone (ver/excluir em tabela). */
+    .btn-soft-purple { background: rgba(100, 59, 142, .12); color: var(--purple); border-color: transparent; }
+    .btn-soft-purple:hover { background: var(--purple); color: #fff; }
+    .btn-soft-orange { background: rgba(238, 121, 25, .12); color: var(--orange); border-color: transparent; }
+    .btn-soft-orange:hover { background: var(--orange); color: #fff; }
+    .btn-soft-red { background: rgba(220, 38, 38, .10); color: var(--red); border-color: transparent; }
+    .btn-soft-red:hover { background: var(--red); color: #fff; }
+    .btn-soft-green { background: rgba(16, 185, 129, .12); color: var(--green); border-color: transparent; }
+    .btn-soft-green:hover { background: var(--green); color: #fff; }
+    /* Botão quadrado só com ícone (28px), ex.: ações de linha de tabela */
+    .btn-icon { width: 28px; height: 28px; padding: 0; justify-content: center; border-radius: 6px; }
 
     /* ── FILTER SELECT ── */
     .filter-select {
@@ -290,7 +340,7 @@
         background: var(--s1);
         border: 1px solid var(--border2);
         color: var(--text);
-        border-radius: 6px;
+        border-radius: var(--radius);
         cursor: pointer;
         transition: border-color 0.12s;
     }
@@ -298,28 +348,29 @@
 
     /* ── TABLE — Monday style ── */
     .nonna-table { width: 100%; border-collapse: collapse; }
+    /* Cabeçalho de tabela do Mirbal: faixa cinza clara com cantos arredondados, texto
+       normal (sem caixa-alta) peso 500. */
     .nonna-table thead tr {
-        border-bottom: 2px solid var(--border2);
+        border-bottom: none;
     }
     .nonna-table th {
-        padding: 12px 14px;
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: var(--muted);
+        padding: 10px 14px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text);
+        background: var(--s2);
         text-align: left;
         white-space: nowrap;
-        font-family: 'Inter', sans-serif;
     }
+    .nonna-table thead th:first-child { border-radius: var(--radius) 0 0 var(--radius); padding-left: 18px; }
+    .nonna-table thead th:last-child  { border-radius: 0 var(--radius) var(--radius) 0; padding-right: 18px; }
     .nonna-table td {
         padding: 0 14px;
-        height: 48px;
-        font-size: 13.5px;
+        height: 50px;
+        font-size: 14px;
         border-bottom: 1px solid var(--border2);
         color: var(--text);
         vertical-align: middle;
-        font-family: 'Inter', sans-serif;
     }
     .nonna-table tbody tr { transition: background 0.08s; }
     .nonna-table tbody tr:hover { background: var(--s2); }
@@ -345,15 +396,29 @@
     .badge {
         display: inline-flex;
         align-items: center;
-        padding: 2px 8px;
+        padding: 3px 9px;
         font-size: 11px;
         font-weight: 500;
         line-height: 1.45;
-        border-radius: 100px;
-        border: 1px solid var(--border2);
+        border-radius: 6px;
+        border: 1px solid transparent;
         background: var(--s3);
         color: var(--muted2);
     }
+
+    /* ── ETIQUETA SUAVE (Mirbal) — fundo da cor a ~14%, texto da cor. Pra prioridade,
+       tipo, área, disciplina. STATUS de tarefa continua nos .badge-{cor} sólidos abaixo
+       (decisão do Evandro: o time se guia pela cor sólida do status). ── */
+    .tag-purple { background: rgba(100, 59, 142, .12); color: #643B8E; }
+    .tag-orange { background: rgba(238, 121, 25, .14); color: #c2610f; }
+    .tag-red    { background: rgba(220, 38, 38, .12);  color: #c42020; }
+    .tag-green  { background: rgba(16, 185, 129, .14); color: #0d9467; }
+    .tag-blue   { background: rgba(46, 144, 250, .14); color: #1f74d1; }
+    .tag-cyan   { background: rgba(8, 145, 178, .14);  color: #07809d; }
+    .tag-yellow { background: rgba(245, 158, 11, .16); color: #b77408; }
+    .tag-muted  { background: var(--s3);               color: var(--muted2); }
+    .dark .tag-purple { color: #b597d6; } .dark .tag-orange { color: #f5a361; } .dark .tag-red { color: #f07a7a; }
+    .dark .tag-green { color: #4fd3a5; } .dark .tag-blue { color: #74b5fb; } .dark .tag-cyan { color: #4fc3df; } .dark .tag-yellow { color: #f8bf55; }
 
     /* ── STATUS PILL — sólido estilo Monday ── */
     .badge-green  { background: #10B981; color: #fff; border-color: transparent; }
@@ -434,9 +499,8 @@
         align-items: center;
         gap: 6px;
         padding: 10px 16px;
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.02em;
+        font-size: 14px;
+        font-weight: 500;
         color: var(--muted);
         border: none;
         border-bottom: 2px solid transparent;
@@ -516,6 +580,26 @@
 .portal-page .text-2xl,  .app-page .text-2xl  { font-size: 24px; }
 .portal-page .text-3xl,  .app-page .text-3xl  { font-size: 30px; }
 .portal-page .text-4xl,  .app-page .text-4xl  { font-size: 36px; }
+
+/* ══ Rótulos no estilo Mirbal (redesign 2026-10) ══
+ * O app inteiro usava rótulo em CAIXA-ALTA + fonte mono + letras espaçadas
+ * ("font-mono uppercase tracking-widest", ~650 lugares; mais ~240 sem o mono). O
+ * Mirbal usa rótulo em texto normal, peso 500. Esta regra converte todos de uma vez,
+ * só dentro do conteúdo (.app-page/.portal-page) — o menu lateral segue com os títulos
+ * de seção em caixa-alta, como no Mirbal. Fora de @layer pra vencer os utilitários. */
+.app-page .uppercase.font-mono,
+.portal-page .uppercase.font-mono,
+.app-page .uppercase.tracking-widest,
+.portal-page .uppercase.tracking-widest,
+.app-page .uppercase.tracking-wider,
+.portal-page .uppercase.tracking-wider {
+    font-family: inherit;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 500;
+}
+.app-page .uppercase.text-xs,
+.portal-page .uppercase.text-xs { font-size: 13px; }
 
 /* Entrada suave da página — só uma vez, ao carregar */
 @keyframes pageFadeIn {

@@ -106,11 +106,12 @@ Cada etapa num ramo (`redesign/etapa-N`), Evandro confere em `nonna-app.test` (o
 
 ## Decisões
 
-- [ ] Cor principal: manter roxo `#643B8E` + laranja `#EE7919` aplicados "à Mirbal" (recomendado) × usar a paleta dele.
-- [ ] Fonte: Outfit no corpo + Inter nos títulos (recomendado, é o que o Mirbal faz).
-- [ ] Etiquetas de status de tarefa: subtle (Mirbal) × manter sólido estilo Monday (a equipe se guia pela cor do status).
-- [ ] Largura da área: padding 5rem em telas grandes encolhe o espaço útil das telas largas (Sprint, Fila) — avaliar por tela.
+- [x] Cor principal: **manter roxo `#643B8E` + laranja `#EE7919`** aplicados "à Mirbal" (Evandro, 22/10).
+- [x] Fonte: **Outfit no corpo + Inter nos títulos** (Evandro, 22/10).
+- [x] Etiquetas: **status de tarefa continua sólido, mesmas cores**; suave (`.tag-*`) só no resto — "não mudar os esquemas de cores" (Evandro, 22/10).
+- [x] Largura: **margem lateral fixa, conteúdo fluido** (Evandro, 22/10). Ele também destacou: seções divididas dentro do mesmo card (linhas finas entre colunas, ex. tela Activities), áreas internas com fundo cinza claro (cabeçalho de tabela, "Savings This Month", card "Keep you safe"), sparklines de área com degradê nos cards de KPI, rosca de fatias grossas, botões de ação quadrados suaves (ver/excluir), progresso fino com trilha, rodapé em card, sidebar recolhível só com ícones.
 
 ## Progresso
 
 - 2026-10-22 — Leitura do template concluída (variáveis, componentes, estrutura, kanban, gráficos). Aguardando as decisões acima pra começar a etapa 1.
+- 2026-10-22 — **Etapa 1 (base visual)** no ramo `redesign/etapa-1`: tokens claro/escuro (`--bg #fffdfd`, bordas `#e9e9e9`, cinzas neutros, sombra Mirbal, `--radius 7px` / `--radius-lg 10px`), Outfit 15px no corpo + Inter 600 nos títulos (fonte carregada em todos os layouts/páginas públicas), `.card` com raio do token, novas `.card-title` (barrinha roxa) e `.card-inset`, botões peso 500 + `.btn-soft-{purple,orange,red,green}` + `.btn-icon`, `.badge` com cantos 6px (status sólidos intactos) + etiquetas suaves `.tag-{cor}`, tabela com cabeçalho em faixa cinza arredondada sem caixa-alta, abas peso 500/14px, e regra central que tira caixa-alta/mono/espaçamento de ~890 rótulos dentro de `.app-page/.portal-page`. Aguardando prints do Evandro em nonna-app.test (Herd precisa estar rodando) antes do merge.
