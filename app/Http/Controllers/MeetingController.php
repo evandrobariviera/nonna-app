@@ -8,7 +8,9 @@ use App\Models\Meeting;
 use App\Models\NotificationTemplate;
 use App\Models\Opportunity;
 use App\Models\User;
+use App\Jobs\GenerateMeetingAtaJob;
 use App\Services\MeetingAgendaService;
+use App\Services\MeetingAtaService;
 use App\Services\MeetingText;
 use App\Services\NotificationDispatchService;
 use App\Services\SystemNotificationService;
@@ -232,6 +234,37 @@ class MeetingController extends Controller
         return view('meetings.edit', compact('meeting', 'users', 'clients', 'opportunities', 'contacts', 'agendaItems'));
     }
 
+    // Botão "Gerar ATA com IA" (ver MeetingAtaService / GenerateMeetingAtaJob).
+    public function generateAta(Meeting $meeting)
+    {
+        if (blank($meeting->transcricao)) {
+            return redirect()->route('meetings.show', $meeting)
+                ->with('warning', 'Cole a transcrição (ou transcreva um áudio anexado) antes de gerar a ATA.');
+        }
+
+        $this->dispatchAta($meeting);
+
+        return redirect()->route('meetings.show', $meeting)
+            ->with('success', 'Gerando a ATA — leva cerca de um minuto. Os participantes são avisados quando ficar pronta.');
+    }
+
+    // A página da reunião pergunta a cada poucos segundos se a ATA já ficou pronta.
+    public function ataStatus(Meeting $meeting)
+    {
+        return response()->json([
+            'generating'      => MeetingAtaService::isGenerating($meeting),
+            'ata_recorded_at' => $meeting->ata_recorded_at?->toIso8601String(),
+        ]);
+    }
+
+    private function dispatchAta(Meeting $meeting): void
+    {
+        // Um clique por vez: com a geração em andamento, não enfileira outra.
+        if (\Illuminate\Support\Facades\Cache::add(MeetingAtaService::generatingKey($meeting->id), Auth::id(), now()->addMinutes(10))) {
+            GenerateMeetingAtaJob::dispatch($meeting->id, (int) Auth::id());
+        }
+    }
+
     // Seletor da pauta citada (ver MeetingAgendaService::search).
     public function agendaSearch(Request $request, MeetingAgendaService $agenda)
     {
@@ -292,6 +325,14 @@ class MeetingController extends Controller
         // form sem ele não pode apagar o que estava citado.
         if ($request->boolean('agenda_items_sent')) {
             app(MeetingAgendaService::class)->sync($meeting, array_values($data['agenda_items'] ?? []));
+        }
+
+        // Botão "Salvar e gerar ATA com IA" (ao lado da Transcrição, na edição).
+        if ($request->boolean('generate_ata') && filled($meeting->transcricao)) {
+            $this->dispatchAta($meeting);
+
+            return redirect()->route('meetings.show', $meeting)
+                ->with('success', 'Reunião salva. Gerando a ATA — leva cerca de um minuto; os participantes são avisados quando ficar pronta.');
         }
 
         return redirect()->route('meetings.show', $meeting)

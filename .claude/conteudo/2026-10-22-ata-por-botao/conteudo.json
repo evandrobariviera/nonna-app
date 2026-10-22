@@ -1,0 +1,23 @@
+{
+  "novidades": [
+    {
+      "title": "ATA pelo botão \"Gerar ATA com IA\"",
+      "summary": "A IA não monta mais a ATA na passagem para Revisão Interna: na reunião, cole a transcrição e clique em Gerar ATA com IA. Os participantes recebem \"ATA pronta\" com o ✓ Li a ATA — e \"ATA atualizada\" quando ela é atualizada.",
+      "body": "<p>Funciona em qualquer tipo de reunião. Com mais transcrição depois, <strong>Atualizar ATA com a transcrição</strong> acrescenta o que é novo sem apagar a ATA. Passo a passo no capítulo <em>Fluxo de Reuniões com o Cliente</em>, na Central de Ajuda.</p>",
+      "kind": "novidade", "area": "Reuniões"
+    },
+    {
+      "title": "Pendência \"Registrar a ATA\" para o organizador",
+      "summary": "Quando uma reunião passa do horário de término sem ATA, o organizador recebe a pendência Registrar a ATA, que se resolve sozinha quando a ATA é salva. Substitui a tarefa \"Atualização da ATA\".",
+      "kind": "melhoria", "area": "Reuniões"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Fluxo de Reuniões com o Cliente — do agendamento à ATA",
+      "category": "Reuniões",
+      "slug": "fluxo-de-reunioes-e-agendamento-de-macroplanejamento",
+      "body_file": "ajuda-fluxo-reunioes.html"
+    }
+  ]
+}

@@ -467,6 +467,11 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
 
     Route::get('/agenda/{meeting}/ata', [MeetingController::class, 'ataPrint'])
         ->name('meetings.ata-print');
+    Route::post('/agenda/{meeting}/gerar-ata', [MeetingController::class, 'generateAta'])
+        ->middleware('throttle:10,1')
+        ->name('meetings.ata.generate');
+    Route::get('/agenda/{meeting}/ata-status', [MeetingController::class, 'ataStatus'])
+        ->name('meetings.ata.status');
     Route::post('/agenda/{meeting}/editor-imagem', [\App\Http\Controllers\MeetingEditorImageController::class, 'store'])
         ->name('meetings.editor-image.store');
     Route::get('/agenda/{meeting}/editor-imagem/{filename}', [\App\Http\Controllers\MeetingEditorImageController::class, 'show'])

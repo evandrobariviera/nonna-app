@@ -256,6 +256,21 @@ class Meeting extends Model
         return $task ? 'via tarefa ' . $task->title : null;
     }
 
+    // Pendência aberta pro organizador quando a reunião passa do horário sem ATA
+    // (meetings:ata-pendencies); se resolve sozinha quando a ATA é preenchida.
+    public const ATA_PENDENCY_PREFIX = 'Registrar a ATA';
+
+    public function pendencies(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Pendency::class, 'pendable');
+    }
+
+    /** Fim previsto da reunião (sem duração cadastrada, 1 hora). */
+    public function endsAt(): \Illuminate\Support\Carbon
+    {
+        return $this->scheduled_at->copy()->addMinutes($this->duration_minutes ?: 60);
+    }
+
     public function contacts(): BelongsToMany
     {
         return $this->belongsToMany(Contact::class, 'meeting_contacts', 'meeting_id', 'contact_id')

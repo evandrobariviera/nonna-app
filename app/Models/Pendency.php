@@ -67,6 +67,7 @@ class Pendency extends Model
         'task'       => Task::class,
         'project'    => Project::class,
         'macro_plan' => MacroPlan::class,
+        'meeting'    => Meeting::class, // "Registrar a ATA" do organizador (2026-10-22)
     ];
 
     public function pendable(): MorphTo
@@ -281,6 +282,7 @@ class Pendency extends Model
             $p instanceof Task      => ['label' => ($p->is_ticket ? 'Ticket' : 'Tarefa') . ': ' . $p->title, 'url' => route('tasks.show', $p)],
             $p instanceof Project   => ['label' => 'Projeto: ' . $p->title, 'url' => route('projects.showDirect', $p)],
             $p instanceof MacroPlan => ['label' => 'Planejamento: ' . $p->title, 'url' => route('macroplans.edit', $p)],
+            $p instanceof Meeting   => ['label' => 'Reunião: ' . $p->title, 'url' => route('meetings.show', $p)],
             default                 => null,
         };
     }

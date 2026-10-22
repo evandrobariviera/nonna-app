@@ -226,17 +226,23 @@
 
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Transcrição</label>
-                    <p class="text-xs mb-2" style="color:var(--muted)">Cole aqui a transcrição bruta da call (gravação/Whisper). A cada nova transcrição colada, a automação atualiza a ATA abaixo — some o texto anterior antes de colar o novo.</p>
+                    <p class="text-xs mb-2" style="color:var(--muted)">Cole aqui a transcrição bruta da call (gravação/Whisper) e use <strong>Salvar e gerar ATA com IA</strong>. Se a reunião teve uma continuação, troque o texto pela transcrição nova e gere de novo: a IA acrescenta o que é novo sem apagar a ATA.</p>
                     <textarea name="transcricao" rows="10"
                         placeholder="Cole a transcrição da reunião..."
                         class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                         style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ old('transcricao', $meeting->transcricao) }}</textarea>
+                    {{-- type="button": um submit aqui viraria o padrão do Enter no form e geraria ATA sem querer. --}}
+                    <input type="hidden" name="generate_ata" value="0">
+                    <button type="button" class="btn btn-primary btn-xs mt-2"
+                            onclick="const f = this.form; f.querySelector('[name=generate_ata]').value = '1'; f.requestSubmit();">
+                        <x-icon name="sparkles" size="12" /> Salvar e gerar ATA com IA
+                    </button>
                 </div>
 
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">ATA</label>
-                    <p class="text-xs mb-2" style="color:var(--muted)">Gerada/atualizada automaticamente pela IA a partir da Transcrição — pode editar à mão se precisar ajustar. Cada título (H2) vira um card na ATA formatada; item de lista começando com ☐ (a fazer) ou ☑ (feito) vira checklist, e o que vier depois de " — " é o responsável.</p>
+                    <p class="text-xs mb-2" style="color:var(--muted)">Gerada pela IA a partir da Transcrição (botão acima) ou escrita à mão — dá pra ajustar à mão depois. Cada título (H2) vira um card na ATA formatada; item de lista começando com ☐ (a fazer) ou ☑ (feito) vira checklist, e o que vier depois de " — " é o responsável.</p>
                     <x-rich-editor name="ata" min-height="320px"
                         :value="\App\Services\MeetingText::toHtml(old('ata', $meeting->ata))"
                         :upload-url="route('meetings.editor-image.store', $meeting)" />

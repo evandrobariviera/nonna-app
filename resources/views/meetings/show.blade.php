@@ -273,23 +273,60 @@
                         </span>
                     @endif
                 </div>
-                <div class="px-5 py-4">
+                {{-- "Gerar ATA com IA" (MeetingAtaService): roda em segundo plano; enquanto
+                     isso a página pergunta a cada 4s e recarrega quando a ATA fica pronta. --}}
+                @php
+                    $ataGenerating = \App\Services\MeetingAtaService::isGenerating($meeting);
+                    $hasTranscript = filled($meeting->transcricao);
+                @endphp
+                <div class="px-5 py-4"
+                     x-data="{
+                         generating: @js($ataGenerating),
+                         init() {
+                             if (!this.generating) return;
+                             const timer = setInterval(async () => {
+                                 try {
+                                     const res = await fetch(@js(route('meetings.ata.status', $meeting)), { headers: { 'Accept': 'application/json' } });
+                                     if (res.ok && !(await res.json()).generating) { clearInterval(timer); window.location.reload(); }
+                                 } catch (e) {}
+                             }, 4000);
+                         },
+                     }">
+                    <div x-show="generating" x-cloak class="mb-4 px-4 py-3 text-sm flex items-center gap-2"
+                         style="background:rgba(100, 59, 142,.08); border:1px solid rgba(100, 59, 142,.25); border-radius:8px; color:var(--purple)">
+                        <x-icon name="sparkles" size="14" /> Gerando a ATA a partir da transcrição… a página atualiza sozinha quando ficar pronta.
+                    </div>
+
                     @if($meeting->hasAta())
                         <x-rich-content :value="\App\Services\MeetingText::toHtml($meeting->ata)" class="text-sm mb-4" />
-                        <div class="mt-4 flex gap-3">
-                            <a href="{{ route('meetings.edit', $meeting) }}#ata" class="btn btn-ghost btn-xs">
-                                Editar ATA →
-                            </a>
+                    @else
+                        <p class="text-sm mb-4" style="color:var(--muted)">
+                            Nenhuma ATA registrada ainda.
+                            @unless($hasTranscript)
+                                Cole a transcrição em <strong>Editar</strong> (ou transcreva um áudio anexado) e gere a ATA com a IA — ou escreva à mão.
+                            @endunless
+                        </p>
+                    @endif
+
+                    <div class="mt-4 flex gap-3 flex-wrap items-center">
+                        @if($hasTranscript)
+                            <form method="POST" action="{{ route('meetings.ata.generate', $meeting) }}"
+                                  @submit.prevent="if (!@js($meeting->hasAta()) || await $store.confirmDialog.ask('Atualizar a ATA com a transcrição? A IA acrescenta o que é novo sem apagar o que já está na ATA, e os participantes são avisados de novo.')) $el.submit()">
+                                @csrf
+                                <button type="submit" class="btn btn-primary btn-xs" :disabled="generating">
+                                    <x-icon name="sparkles" size="12" /> {{ $meeting->hasAta() ? 'Atualizar ATA com a transcrição' : 'Gerar ATA com IA' }}
+                                </button>
+                            </form>
+                        @endif
+                        <a href="{{ route('meetings.edit', $meeting) }}#ata" class="btn btn-ghost btn-xs">
+                            {{ $meeting->hasAta() ? 'Editar ATA →' : '+ Escrever ATA à mão' }}
+                        </a>
+                        @if($meeting->hasAta())
                             <a href="{{ route('meetings.ata-print', $meeting) }}" target="_blank" class="btn btn-ghost btn-xs">
                                 Ver ATA formatada →
                             </a>
-                        </div>
-                    @else
-                        <p class="text-sm mb-4" style="color:var(--muted)">Nenhuma ATA registrada ainda.</p>
-                        <a href="{{ route('meetings.edit', $meeting) }}#ata" class="btn btn-ghost btn-sm">
-                            + Registrar ATA
-                        </a>
-                    @endif
+                        @endif
+                    </div>
                 </div>
             </div>
 
@@ -449,6 +486,10 @@
 
         {{-- Coluna lateral --}}
         <div class="flex flex-col gap-5 w-full lg:w-[280px] lg:flex-shrink-0">
+
+            {{-- Pendências da reunião — ex.: "Registrar a ATA" do organizador, aberta
+                 sozinha quando a reunião passa do horário sem ATA. --}}
+            <x-pendencies-panel :pendable="$meeting" alias="meeting" :users="$users" />
 
             {{-- Participantes --}}
             <div class="card">

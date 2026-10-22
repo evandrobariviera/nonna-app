@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Meeting;
 use App\Services\AutomationEngine;
+use App\Services\MeetingAtaService;
 use App\Services\Projects\ProjectDiscussionMeetingService;
 
 class MeetingObserver
@@ -15,6 +16,11 @@ class MeetingObserver
 
     public function updated(Meeting $meeting): void
     {
+        // ATA preenchida (botão da IA ou à mão) → resolve "Registrar a ATA" do organizador.
+        if ($meeting->wasChanged('ata') && filled($meeting->ata)) {
+            MeetingAtaService::resolveAtaPendencies($meeting, auth()->id());
+        }
+
         if ($meeting->wasChanged('status') && $meeting->status === 'realizada') {
             ProjectDiscussionMeetingService::startDiscussedProjects($meeting);
         }

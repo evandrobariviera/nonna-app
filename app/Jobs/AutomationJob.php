@@ -919,82 +919,22 @@ class AutomationJob implements ShouldQueue
         Project::create($data);
     }
 
-    // Gera (ou atualiza) a ATA via IA a partir da TRANSCRIÇÃO bruta da call (campo
-    // "transcricao" — colada manualmente, ex: saída de gravação/Whisper). Quando a
-    // reunião já tem uma ATA de uma rodada anterior (gerada por IA ou escrita à mão), ela
-    // entra no prompt como contexto pra fusão — o agente deve atualizar/enriquecer, não
-    // substituir do zero (suporta reunião que recebe uma segunda transcrição depois, ex:
-    // continuação). Não notifica ninguém — isso fica por conta de uma automação separada
-    // (send_notification, destinatário "participants"). Substitui create_internal_review_pauta
-    // pra esse ponto do fluxo — não cria mais nenhuma Reunião Interna.
+    // Gera (ou atualiza) a ATA via IA a partir da TRANSCRIÇÃO — mesma geração do botão
+    // "Gerar ATA com IA" da reunião (MeetingAtaService), que substituiu esta automação no
+    // fluxo (2026-10-22: a ATA deixou de depender da troca de status). A ação continua
+    // disponível pra quem quiser automatizar; não notifica ninguém (o botão notifica).
     private function structureAta(array $config, mixed $entity): string
     {
         if (!$entity instanceof Meeting) {
             throw new \RuntimeException('structure_ata só funciona com entidade Reunião.');
         }
 
-        if (empty($entity->transcricao)) {
-            throw new \RuntimeException('Reunião sem Transcrição preenchida — não é possível gerar a ATA.');
-        }
-
         $agentId = $config['agent_id'] ?? throw new \RuntimeException('structure_ata sem agente de IA configurado.');
         $agent = AiAgent::findOrFail($agentId);
 
-        $entity->loadMissing('client');
-
-        $userMessage = "Tipo da reunião: {$entity->typeLabel()}\n"
-            . 'Cliente: ' . ($entity->client?->displayName() ?? '—') . "\n"
-            . "Data da reunião: {$entity->scheduled_at->format('d/m/Y')}\n\n";
-
-        if (!empty($entity->ata)) {
-            $userMessage .= "ATA JÁ EXISTENTE (atualize e enriqueça, não substitua do zero):\n" . MeetingText::toMarkdown($entity->ata) . "\n\n";
-        }
-
-        $userMessage .= "TRANSCRIÇÃO BRUTA (nova):\n{$entity->transcricao}\n\n"
-            . 'Gere a ATA seguindo o formato definido.';
-
-        $response = app(\App\Services\AiService::class)->run(
-            agent: $agent,
-            userMessage: $userMessage,
-            userId: $this->automation->created_by,
-            clientId: $entity->client_id,
-            trigger: 'automation:structure_ata',
-        );
-
-        // O agente pode devolver só a ATA (agentes antigos que não conhecem o marcador)
-        // ou ATA + Pauta de Revisão Interna separadas pelo marcador abaixo — contrato
-        // definido no system_prompt do agente, não aqui (ver AiAgent "ATA Estruturada —
-        // Reunião com Cliente"). A pauta usa a mesma sintaxe de checklist da ATA
-        // ("- [ ]"/"- [x]") pra marcar o que já foi identificado e o que ficou pendente.
-        // A pauta da IA NÃO é mais gravada (decisão do Evandro, 2026-10-22): a pauta virou
-        // campo do time, escrito à mão e com itens citados — a IA escrevia por cima. O
-        // split continua só pra o marcador e a pauta não vazarem pra dentro da ATA.
-        [$ata] = self::splitAtaAndAgenda($response);
-
-        $entity->update([
-            'ata' => MeetingText::fromAi($ata),
-            'ata_recorded_at' => $entity->ata_recorded_at ?? now(),
-        ]);
+        app(\App\Services\MeetingAtaService::class)->generate($entity, $agent, $this->automation->created_by, 'automation:structure_ata');
 
         return "ATA gerada e salva ({$agent->name}).";
-    }
-
-    private const PAUTA_MARKER = '===PAUTA_REVISAO_INTERNA===';
-
-    /**
-     * @return array{0: string, 1: ?string}
-     */
-    private static function splitAtaAndAgenda(string $response): array
-    {
-        $pos = mb_strpos($response, self::PAUTA_MARKER);
-        if ($pos === false) {
-            return [trim($response), null];
-        }
-
-        $ata = trim(mb_substr($response, 0, $pos));
-        $agenda = trim(mb_substr($response, $pos + mb_strlen(self::PAUTA_MARKER)));
-
-        return [$ata, $agenda !== '' ? $agenda : null];
     }
 
     // Ajusta um campo de data na própria entidade por N dias (positivo ou negativo) a
