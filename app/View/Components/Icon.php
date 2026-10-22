@@ -64,11 +64,17 @@ class Icon extends Component
     {
         $path = resource_path("icons/lucide/{$name}.svg");
 
-        abort_unless(
-            file_exists($path),
-            500,
-            "Ícone Lucide '{$name}' não encontrado em resources/icons/lucide/ — vendorize antes de usar (ver comentário no topo de app/View/Components/Icon.php)."
-        );
+        if (! file_exists($path)) {
+            $message = "Ícone Lucide '{$name}' não encontrado em resources/icons/lucide/ — vendorize antes de usar (ver comentário no topo de app/View/Components/Icon.php).";
+
+            // Local: quebra pra gente ver na hora. Produção: um ícone faltando não pode
+            // derrubar a página inteira (22/10: 'rotate-ccw' de um tipo de aviso novo deu
+            // 500 no Dashboard de quem recebeu o aviso) — registra e mostra um círculo.
+            abort_if(! app()->isProduction(), 500, $message);
+            report(new \RuntimeException($message));
+
+            return file_get_contents(resource_path('icons/lucide/circle.svg'));
+        }
 
         return file_get_contents($path);
     }
