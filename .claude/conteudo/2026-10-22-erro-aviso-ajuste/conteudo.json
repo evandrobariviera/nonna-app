@@ -1,0 +1,9 @@
+{
+  "novidades": [
+    {
+      "title": "Erro ao abrir o Dashboard corrigido",
+      "summary": "Quem tinha recebido o aviso \"Cliente pediu ajuste\" podia ver uma tela de erro ao abrir o Dashboard. Já está corrigido.",
+      "kind": "correcao", "area": "Sistema"
+    }
+  ]
+}
