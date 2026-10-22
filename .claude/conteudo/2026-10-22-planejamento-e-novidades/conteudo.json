@@ -1,0 +1,164 @@
+{
+  "novidades": [
+    {
+      "title": "Baixar anexos da reunião",
+      "summary": "Os anexos da reunião ganharam um botão de download, sem precisar abrir o arquivo antes.",
+      "kind": "melhoria", "area": "Reuniões", "published_at": "2026-09-28 12:00"
+    },
+    {
+      "title": "Mapa de Projetos",
+      "summary": "Uma visão nova (menu Visões) para o gestor de projetos: todos os projetos e campanhas abertos com farol de prazo, o que está em risco e o que está parado há dias.",
+      "body": "<p>Campanha passa a ter dois marcos: <strong>entrega das peças</strong> e <strong>vai ao ar</strong>. Projetos sem nenhuma tarefa aberta aparecem com os botões Concluir e Stand By, para o gestor decidir ali mesmo.</p>",
+      "kind": "novidade", "area": "Projetos", "published_at": "2026-09-30 12:00"
+    },
+    {
+      "title": "Carga de Produção",
+      "summary": "Nova tela (menu Visões) com o que foi executado por cliente, período, pessoa e tipo de tarefa, e o controle dos limites mensais contratados por cliente.",
+      "body": "<p>O Painel de Produção é o retrato de agora; a Carga de Produção é o histórico de um período. O cliente também passa a ver no Portal o volume de produção do mês.</p>",
+      "kind": "novidade", "area": "Produção", "published_at": "2026-09-30 12:30"
+    },
+    {
+      "title": "Reunião ganhou o status Despacho",
+      "summary": "Entre a Revisão Interna e a Finalizada (antiga Realizada) existe agora o Despacho: a hora de transformar o que foi decidido em planejamento e campanhas.",
+      "kind": "melhoria", "area": "Reuniões", "published_at": "2026-09-30 13:00"
+    },
+    {
+      "title": "Chat interno da equipe",
+      "summary": "Conversas da equipe dentro do App: um balão no canto da tela, conversa individual e canal por setor, com imagens e arquivos.",
+      "body": "<p>Digite <strong>/</strong> para citar uma tarefa, projeto, campanha ou cliente na mensagem. Nas conversas individuais aparece o ✓✓ de lida. Ninguém lê conversa dos outros, nem a administração.</p>",
+      "kind": "novidade", "area": "Sistema", "published_at": "2026-10-02 12:00"
+    },
+    {
+      "title": "Histórico de ações em Projetos e Planejamentos",
+      "summary": "Projetos, campanhas e planejamentos mostram quem mudou o quê e quando: status, responsável, período, projeto adicionado ou removido.",
+      "kind": "melhoria", "area": "Projetos", "published_at": "2026-10-05 12:00"
+    },
+    {
+      "title": "Respostas do formulário nos leads",
+      "summary": "Na Central de Leads, cada lead mostra as respostas que a pessoa deu no formulário.",
+      "kind": "melhoria", "area": "Leads", "published_at": "2026-10-05 12:30"
+    },
+    {
+      "title": "Dashboard por modo de trabalho",
+      "summary": "A Dashboard muda conforme o que você está fazendo agora: Execução, Distribuição, Planejamento e outros. Ela abre no último modo que você usou.",
+      "body": "<p><strong>Execução</strong>: seus números da sprint e a sua semana. <strong>Distribuição</strong>: o painel do Head, com a carga de cada pessoa e o equilíbrio por cliente. <strong>Planejamento</strong>: a esteira de planejamentos e as reuniões de macro. Quem pode, usa o <strong>Ver como</strong> para enxergar a Dashboard de outra pessoa (só leitura).</p>",
+      "kind": "novidade", "area": "Sistema", "published_at": "2026-10-06 12:00"
+    },
+    {
+      "title": "Pontos de Sprint",
+      "summary": "Cada tarefa vale pontos conforme o formato (post, reels, carrossel, vídeo...), e o placar aparece na Execução junto com a quantidade de tarefas.",
+      "body": "<p>Só pontua tarefa que passou por Em Produção, e cada otimização de campanha vale 1 ponto. Detalhes no capítulo <em>Pontos de Sprint — como funciona a pontuação</em>, na Central de Ajuda.</p>",
+      "kind": "novidade", "area": "Sprints", "published_at": "2026-10-07 12:00"
+    },
+    {
+      "title": "Retorno de entrega ao mandar para Revisão Interna",
+      "summary": "Ao mandar uma tarefa para Revisão Interna, quem produziu conta o que fez: se executou tudo ou em parte (e o que faltou), em texto livre.",
+      "body": "<p>Vale para tarefas e chamados, e para cada entrega (inclusive depois de um ajuste). Só o Responsável da tarefa pode editar o texto depois.</p>",
+      "kind": "novidade", "area": "Tarefas", "published_at": "2026-10-07 12:30"
+    },
+    {
+      "title": "Central de Aprovações do cliente",
+      "summary": "O cliente tem uma página no Portal com tudo o que está esperando aprovação, organizado por projeto, com Revisar pendentes e Aprovar todas.",
+      "body": "<p>O link de aprovação enviado no WhatsApp entra direto na Central, sem senha. Do lado de dentro, a Central de Aprovações ganhou a aba <strong>Por cliente</strong>, mostra se o cliente abriu o link, manda um lembrete único por cliente e tem o botão <strong>Ver como o cliente vê</strong>.</p>",
+      "kind": "novidade", "area": "Aprovações", "published_at": "2026-10-08 12:00"
+    },
+    {
+      "title": "Trava: a tarefa que segura o time",
+      "summary": "Qualquer pessoa pode ligar a Trava numa tarefa que está segurando o trabalho de outros. Ela sobe para o topo da Dashboard, na faixa \"Travando o time\".",
+      "body": "<p>A Trava é só um aviso: não bloqueia nada. Prioridade fala de prazo; Trava fala de impacto nos outros.</p>",
+      "kind": "novidade", "area": "Tarefas", "published_at": "2026-10-09 12:00"
+    },
+    {
+      "title": "\"Seu foco\": resumo do dia feito por IA",
+      "summary": "No topo da Dashboard, um resumo curto do que merece a sua atenção, atualizado às 07:30 e às 12:00 dos dias úteis.",
+      "kind": "novidade", "area": "Sistema", "published_at": "2026-10-09 12:30"
+    },
+    {
+      "title": "\"Li a ATA\"",
+      "summary": "O aviso de ATA pronta virou uma confirmação de leitura: clique em ✓ Li a ATA, e a página da reunião mostra quem já leu.",
+      "kind": "melhoria", "area": "Reuniões", "published_at": "2026-10-09 13:00"
+    },
+    {
+      "title": "Observações de credenciais com várias linhas",
+      "summary": "O campo de observações das credenciais do cliente guarda quebras de linha e espaços, então códigos de recuperação (2FA) não se embaralham mais.",
+      "kind": "melhoria", "area": "Clientes", "published_at": "2026-10-09 13:30"
+    },
+    {
+      "title": "Vídeo separado de Material Gráfico",
+      "summary": "Vídeo virou um tipo de tarefa próprio, separado de Material Gráfico, para a carga e os pontos de cada um ficarem certos.",
+      "kind": "melhoria", "area": "Tarefas", "published_at": "2026-10-13 12:00"
+    },
+    {
+      "title": "Planejamento enxuto: o documento é o planejamento",
+      "summary": "O planejamento virou um documento só (HTML), para o cliente e para a equipe. Em + Novo Planejamento, é só enviar o arquivo: o App lê o período, a verba e cria as campanhas e projetos.",
+      "body": "<p>O nome do planejamento agora é automático (<em>Planejamento {cliente} · mm/aa a mm/aa</em>). O assunto, quando houver, vai no campo Foco.</p>",
+      "kind": "novidade", "area": "Planejamentos", "published_at": "2026-10-15 12:00"
+    },
+    {
+      "title": "Campanha e projeto com documento próprio",
+      "summary": "Cada campanha e projeto tem o seu documento HTML, que abre na própria página. A página foi reorganizada em duas colunas: documento à esquerda; progresso, pendências e tarefas à direita.",
+      "body": "<p>O cadastro da campanha ficou enxuto: nome, tipo, status, entrega das peças, vai ao ar, término e objetivo. Na tarefa, o card <strong>Faz parte da campanha</strong> mostra de onde ela veio.</p>",
+      "kind": "novidade", "area": "Projetos", "published_at": "2026-10-16 12:00"
+    },
+    {
+      "title": "Link de aprovação no WhatsApp virava chave Pix",
+      "summary": "O WhatsApp confundia o código do link de aprovação com uma chave Pix. Os links novos não têm mais esse problema.",
+      "kind": "correcao", "area": "Aprovações", "published_at": "2026-10-19 12:00"
+    },
+    {
+      "title": "Sprint abre mais rápido",
+      "summary": "As abas Board e Planejamento da Sprint só carregam quando você abre a aba, então a Sprint abre mais rápido.",
+      "kind": "melhoria", "area": "Sprints", "published_at": "2026-10-19 12:30"
+    },
+    {
+      "title": "Central de Pendências",
+      "summary": "Tudo o que estamos esperando para o trabalho andar (fotos, acessos, datas, decisões) num lugar só, com quem precisa, quem deve entregar e quem cobra.",
+      "body": "<p>Crie pendências dentro da tarefa, do projeto, do planejamento ou pela Central (menu Operacional). Quem cobra registra cada cobrança, inclusive pelo botão <strong>Cobrar no WhatsApp</strong>. Tudo explicado no capítulo <em>Central de Pendências — como funciona</em>, na Central de Ajuda.</p>",
+      "kind": "novidade", "area": "Pendências", "published_at": "2026-10-20 12:00"
+    },
+    {
+      "title": "Avisos: resolver, lido/não lido e apagar",
+      "summary": "Todo aviso do sino agora pode ser resolvido (✓), marcado como lido ou não lido, e apagado.",
+      "kind": "melhoria", "area": "Sistema", "published_at": "2026-10-20 13:00"
+    },
+    {
+      "title": "Histórico de Envios das Mensagens Padrão",
+      "summary": "Em Configurações → Mensagens Padrão → Histórico de Envios dá para ver cada WhatsApp e e-mail que o App mandou: se foi enviado, se falhou e por quê.",
+      "kind": "novidade", "area": "Sistema", "published_at": "2026-10-21 12:00"
+    },
+    {
+      "title": "Alerta de cliente sem ninguém para receber leads",
+      "summary": "Na Central de Leads, um sino cortado mostra o cliente que capta leads mas não tem nenhum contato assinado para receber o aviso. Dentro do lead aparece se o aviso foi enviado.",
+      "kind": "melhoria", "area": "Leads", "published_at": "2026-10-21 12:30"
+    },
+    {
+      "title": "Redefinir a senha do contato no Portal",
+      "summary": "Na ficha do cliente, aba Portal, dá para redefinir a senha de acesso de um contato.",
+      "kind": "melhoria", "area": "Portal", "published_at": "2026-10-21 13:00"
+    },
+    {
+      "title": "Equipe por campanha e reunião de discussão",
+      "summary": "Cada campanha e projeto tem a sua equipe, com foto. No planejamento, Agendar reunião de discussão monta a pauta e a equipe de cada item numa reunião só, e quem participa é avisado.",
+      "body": "<p>Quando a reunião é finalizada, as campanhas da pauta passam para Em Execução. Passo a passo no capítulo <em>Planejamento, campanhas e reunião de discussão — como funciona</em>, na Central de Ajuda.</p>",
+      "kind": "novidade", "area": "Planejamentos", "published_at": "2026-10-22 09:00"
+    },
+    {
+      "title": "Pendência de leitura do planejamento",
+      "summary": "Planejamento em Revisão Interna cria uma pendência de leitura para o responsável do cliente e para o Marlon, no lugar da tarefa \"Revisar Macroplanejamento\".",
+      "kind": "melhoria", "area": "Planejamentos", "published_at": "2026-10-22 09:01"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Planejamento, campanhas e reunião de discussão — como funciona",
+      "category": "Planejamentos",
+      "body_file": "ajuda-planejamento-discussao.html"
+    },
+    {
+      "title": "Fluxo de Reuniões com o Cliente — do agendamento à ATA",
+      "category": "Reuniões",
+      "slug": "fluxo-de-reunioes-e-agendamento-de-macroplanejamento",
+      "body_file": "ajuda-fluxo-reunioes.html"
+    }
+  ]
+}

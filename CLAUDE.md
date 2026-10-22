@@ -134,6 +134,15 @@ Ver [.claude/docs/architecture.md](.claude/docs/architecture.md) para schema com
 - **Alpine.js:** Para interatividade de TABS, campos dinâmicos (adicionar concorrentes/personas), e estados de UI
 - **JSONB:** Para seções de texto livre do diagnóstico, briefing multidisciplinar de projetos, campos processados de atas
 
+## Novidades e Central de Ajuda (obrigatório em toda entrega)
+
+Toda funcionalidade nova ou alteração importante só está **pronta** quando o time fica sabendo. No fim de cada entrega (antes ou junto do push):
+
+1. **Novidades** (`/novidades`, tabela `app_updates`): uma entrada por mudança que o time percebe — `novidade` (não existia), `melhoria` (mexeu no que existia) ou `correcao`. Título curto, resumo de uma linha em linguagem do dia a dia, área (Tarefas, Planejamentos, Produção...). Ajuste interno sem efeito na tela não entra.
+2. **Central de Ajuda** (`/ajuda`, tabela `help_articles`): se a mudança altera **como se usa** algo, criar ou atualizar o capítulo daquele assunto. Formato dos capítulos: "Resumo em 30 segundos", analogia + exemplo real, passo a passo, "Combinados do time", "Perguntas frequentes". Ao mudar um fluxo, procurar artigos que ficaram desatualizados e corrigi-los.
+3. **Como publicar:** escrever o conteúdo em `.claude/conteudo/AAAA-MM-DD-assunto/` (`conteudo.json` + `.html` dos artigos) e rodar `php artisan conteudo:publicar <caminho>/conteudo.json` (use `--dry` antes). Pode rodar de novo sem duplicar (novidade pelo título; artigo pelo `slug`).
+4. Na mensagem final ao usuário, dizer o que foi registrado em Novidades/Ajuda (ou por que não entrou nada).
+
 ## O que NÃO fazer
 
 - Não presumir que toda integração externa precisa passar pelo n8n — o App pode integrar diretamente com APIs externas quando fizer sentido (ex: Meta/Google Ads). O n8n continua valendo pra automações que já funcionam bem assim (ex: ClickUp) ou quando orquestração visual/cross-tool realmente ajuda
