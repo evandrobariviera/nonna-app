@@ -586,8 +586,8 @@
                         <div x-show="discussOpen" x-cloak style="border-bottom:1px solid var(--border2); background:var(--s2)"
                              x-data="{
                                  items: @js($discussionItems),
-                                 users: @js($users->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])->values()),
-                                 nameOf(id) { return (this.users.find(u => u.id === id) || {}).name || '?' },
+                                 users: @js($users->map(fn ($u) => ['id' => $u->id, 'name' => $u->name, 'avatar' => $u->avatarUrl(), 'initials' => strtoupper(substr($u->name, 0, 2))])->values()),
+                                 userOf(id) { return this.users.find(u => u.id === id) || { name: '?', initials: '?' } },
                                  add(item, ev) { const id = parseInt(ev.target.value); if (id && !item.team.includes(id)) item.team.push(id); ev.target.value = '' },
                                  get selected() { return this.items.filter(i => i.checked).length },
                              }">
@@ -645,9 +645,17 @@
                                             </label>
                                             <div x-show="item.checked" class="flex items-center gap-1.5 flex-wrap mt-2 pl-6">
                                                 <template x-for="uid in item.team" :key="uid">
-                                                    <span class="badge badge-purple flex items-center gap-1">
-                                                        <span x-text="nameOf(uid)"></span>
-                                                        <button type="button" @click="item.team = item.team.filter(i => i !== uid)" style="background:none; border:none; cursor:pointer; color:inherit">✕</button>
+                                                    <span class="inline-flex items-center gap-1.5 rounded-full py-0.5 pl-0.5 pr-2 text-xs font-semibold"
+                                                          style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                                                        <template x-if="userOf(uid).avatar">
+                                                            <img :src="userOf(uid).avatar" :alt="userOf(uid).name" class="rounded-full object-cover flex-shrink-0" style="height:24px; width:24px">
+                                                        </template>
+                                                        <template x-if="!userOf(uid).avatar">
+                                                            <span class="rounded-full flex items-center justify-center font-black text-white flex-shrink-0"
+                                                                  style="height:24px; width:24px; background:var(--grad); font-size:10px" x-text="userOf(uid).initials"></span>
+                                                        </template>
+                                                        <span x-text="userOf(uid).name"></span>
+                                                        <button type="button" @click="item.team = item.team.filter(i => i !== uid)" style="background:none; border:none; cursor:pointer; color:var(--muted)">✕</button>
                                                     </span>
                                                 </template>
                                                 <select @change="add(item, $event)" class="px-2 py-1 text-xs focus:outline-none"
@@ -806,7 +814,7 @@
                                             @if($project->members->isNotEmpty())
                                                 <span class="text-xs flex items-center gap-1" style="color:var(--muted)"><x-icon name="users" size="11" /> Equipe:</span>
                                                 @foreach($project->members as $member)
-                                                    <span class="badge">{{ $member->name }}</span>
+                                                    <x-user-chip :user="$member" :highlight="$member->id === $macroplan->client?->creative_lead_id" />
                                                 @endforeach
                                             @endif
                                             @if($lastDiscussion)

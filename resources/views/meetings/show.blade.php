@@ -165,10 +165,13 @@
                                            class="text-sm font-semibold hover:underline" style="color:var(--text)">{{ $item->title }}</a>
                                         <span class="badge badge-{{ $item->statusColor() }}">{{ $item->statusLabel() }}</span>
                                     </div>
-                                    <p class="text-xs mt-1.5 flex items-center gap-1 flex-wrap" style="color:var(--muted)">
-                                        <x-icon name="users" size="11" />
-                                        {{ $item->members->pluck('name')->implode(', ') ?: 'Só o responsável do cliente' }}
-                                    </p>
+                                    <div class="mt-2 flex items-center gap-1.5 flex-wrap">
+                                        @forelse($item->members as $member)
+                                            <x-user-chip :user="$member" :highlight="$member->id === $meeting->client?->creative_lead_id" />
+                                        @empty
+                                            <span class="text-xs" style="color:var(--muted)">Só o responsável do cliente</span>
+                                        @endforelse
+                                    </div>
                                 </div>
                             </div>
                         @endforeach

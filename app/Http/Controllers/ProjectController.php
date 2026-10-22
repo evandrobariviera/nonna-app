@@ -139,8 +139,8 @@ class ProjectController extends Controller
     {
         abort_unless($project->macro_plan_id === $macroplan->id, 403);
 
-        $project->load(['client', 'tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount', 'attachments', 'activities.user', 'members:users.id,users.name', 'discussionMeetings']);
-        $users = User::orderBy('name')->get(['id', 'name']);
+        $project->load(['client', 'tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount', 'attachments', 'activities.user', 'members:users.id,users.name,users.avatar_path,users.avatar_disk', 'discussionMeetings']);
+        $users = User::orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']);
 
         $kanban = [];
         foreach (Task::$statuses as $statusKey => $meta) {
@@ -201,9 +201,9 @@ class ProjectController extends Controller
 
     public function showDirect(Project $project)
     {
-        $project->load(['client', 'tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount', 'attachments', 'activities.user', 'members:users.id,users.name', 'discussionMeetings']);
+        $project->load(['client', 'tasks.executor', 'tasks.executors', 'macroPlan.client', 'adCampaigns.adAccount', 'attachments', 'activities.user', 'members:users.id,users.name,users.avatar_path,users.avatar_disk', 'discussionMeetings']);
         $macroplan  = $project->macroPlan;
-        $users      = User::orderBy('name')->get(['id', 'name']);
+        $users      = User::orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']);
 
         $kanban = [];
         foreach (Task::$statuses as $statusKey => $meta) {

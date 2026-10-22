@@ -174,7 +174,7 @@ class MeetingController extends Controller
 
     public function show(Meeting $meeting)
     {
-        $meeting->load(['client', 'opportunity', 'organizer', 'participants', 'contacts', 'createdBy', 'attachments.uploadedBy', 'macroPlan', 'projects.members:users.id,users.name', 'tasks' => fn ($q) => $q->orderByDesc('created_at')]);
+        $meeting->load(['client', 'opportunity', 'organizer', 'participants', 'contacts', 'createdBy', 'attachments.uploadedBy', 'macroPlan', 'projects.members:users.id,users.name,users.avatar_path,users.avatar_disk', 'tasks' => fn ($q) => $q->orderByDesc('created_at')]);
         $users = User::orderBy('name')->get(['id', 'name']);
 
         // Notificações internas geradas por esta reunião (ver NotificationService::notifyUsers,

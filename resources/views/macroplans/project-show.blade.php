@@ -266,8 +266,8 @@
          x-data="{
              editing: false,
              team: @js($project->members->pluck('id')->values()),
-             users: @js($users->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])->values()),
-             nameOf(id) { return (this.users.find(u => u.id === id) || {}).name || '?' },
+             users: @js($users->map(fn ($u) => ['id' => $u->id, 'name' => $u->name, 'avatar' => $u->avatarUrl(), 'initials' => strtoupper(substr($u->name, 0, 2))])->values()),
+             userOf(id) { return this.users.find(u => u.id === id) || { name: '?', initials: '?' } },
          }">
         <div class="flex items-center justify-between gap-2 mb-3">
             <span class="text-xs font-semibold uppercase tracking-widest flex items-center gap-1.5" style="color:var(--muted); letter-spacing:.1em">
@@ -277,10 +277,10 @@
         </div>
         <div class="flex flex-wrap gap-1.5">
             @if($clientLead)
-                <span class="badge badge-purple" title="Responsável do cliente — entra sempre">{{ $clientLead->name }} · resp. do cliente</span>
+                <x-user-chip :user="$clientLead" highlight note="resp. do cliente" />
             @endif
             @forelse($project->members->reject(fn ($m) => $m->id === $clientLead?->id) as $member)
-                <span class="badge">{{ $member->name }}</span>
+                <x-user-chip :user="$member" />
             @empty
                 @unless($clientLead)
                     <span class="text-xs" style="color:var(--muted)">Ninguém na equipe ainda.</span>
@@ -297,9 +297,17 @@
             @csrf @method('PATCH')
             <div class="flex flex-wrap gap-1.5">
                 <template x-for="uid in team" :key="uid">
-                    <span class="badge badge-purple flex items-center gap-1">
-                        <span x-text="nameOf(uid)"></span>
-                        <button type="button" @click="team = team.filter(i => i !== uid)" style="background:none; border:none; cursor:pointer; color:inherit">✕</button>
+                    <span class="inline-flex items-center gap-1.5 rounded-full py-0.5 pl-0.5 pr-2 text-xs font-semibold"
+                          style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        <template x-if="userOf(uid).avatar">
+                            <img :src="userOf(uid).avatar" :alt="userOf(uid).name" class="rounded-full object-cover flex-shrink-0" style="height:24px; width:24px">
+                        </template>
+                        <template x-if="!userOf(uid).avatar">
+                            <span class="rounded-full flex items-center justify-center font-black text-white flex-shrink-0"
+                                  style="height:24px; width:24px; background:var(--grad); font-size:10px" x-text="userOf(uid).initials"></span>
+                        </template>
+                        <span x-text="userOf(uid).name"></span>
+                        <button type="button" @click="team = team.filter(i => i !== uid)" style="background:none; border:none; cursor:pointer; color:var(--muted)">✕</button>
                         <input type="hidden" name="members[]" :value="uid">
                     </span>
                 </template>

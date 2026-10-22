@@ -133,11 +133,11 @@ class MacroPlanController extends Controller
     public function edit(MacroPlan $macroplan, Request $request)
     {
         $macroplan->load([
-            'client.creativeLead:id,name', 'responsible', 'projects.tasks', 'projects.members:users.id,users.name',
+            'client.creativeLead:id,name,avatar_path,avatar_disk', 'responsible', 'projects.tasks', 'projects.members:users.id,users.name,users.avatar_path,users.avatar_disk',
             'projects.discussionMeetings:meetings.id,meetings.title,meetings.status,meetings.scheduled_at', 'attachments.uploadedBy', 'meetings', 'activities.user',
             'tasks' => fn ($q) => $q->whereNull('project_id')->orderByDesc('created_at'),
         ]);
-        $users          = User::orderBy('name')->get(['id', 'name']);
+        $users          = User::orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']);
         // Planejamento enxuto (2026-10): abre no Documento (HTML). Blocos antigos só entram
         // na navegação quando têm conteúdo, e em modo leitura.
         $legacyBlocks = $macroplan->legacyBlocks();
