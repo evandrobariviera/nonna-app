@@ -58,8 +58,7 @@
                 <form method="POST" action="{{ route('campaigns.update-project', $campaign) }}">
                     @csrf @method('PATCH')
                     <select name="project_id" onchange="this.form.submit()"
-                        class="w-full px-3 py-2 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                        class="field w-full px-3 py-2 text-sm focus:outline-none">
                         <option value="">— nenhum —</option>
                         @foreach($clientProjects as $p)
                             <option value="{{ $p->id }}" {{ $campaign->project_id === $p->id ? 'selected' : '' }}>
@@ -78,8 +77,8 @@
 
             {{-- FILTRO DE PERÍODO --}}
             <form method="GET" action="{{ route('campaigns.show', $campaign) }}" class="flex items-center gap-2">
-                <select name="period" onchange="this.form.submit()"
-                    style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
+                <select class="field" name="period" onchange="this.form.submit()"
+                    style="color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
                     @foreach(\App\Http\Controllers\CampaignController::$campaignPeriods as $key => $label)
                         <option value="{{ $key }}" {{ $period === $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
@@ -102,7 +101,7 @@
                     @csrf @method('PATCH')
                     <textarea name="description" rows="4" maxlength="2000"
                         placeholder="Ex: Campanha de remarketing pra quem visitou o site nos últimos 30 dias e não converteu — objetivo é recuperar esses visitantes com uma oferta direcionada."
-                        class="w-full text-sm rounded px-3 py-2" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); resize:vertical">{{ $campaign->description }}</textarea>
+                        class="field w-full text-sm px-3 py-2" style="resize:vertical">{{ $campaign->description }}</textarea>
                     <button type="submit" class="btn btn-primary btn-sm mt-2">Salvar descrição</button>
                 </form>
             </div>
@@ -286,8 +285,8 @@
                     @csrf
                     <textarea name="comment" x-model="comment" rows="4" required
                         placeholder="O que foi otimizado? (obrigatório)"
-                        class="w-full px-3 py-2 text-sm mb-2 focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); resize:vertical"></textarea>
+                        class="field w-full px-3 py-2 text-sm mb-2 focus:outline-none"
+                        style="resize:vertical"></textarea>
                     <button type="submit" :disabled="!comment.trim()" :style="!comment.trim() ? 'opacity:.5; cursor:not-allowed' : ''"
                         class="btn btn-primary btn-sm">
                         Marcar otimização feita
@@ -331,8 +330,8 @@
                                             <form method="POST" action="{{ route('campaign-logs.update', [$campaign, $log]) }}">
                                                 @csrf @method('PATCH')
                                                 <textarea name="description" rows="3" required
-                                                    class="w-full px-3 py-2 text-xs focus:outline-none resize-none"
-                                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); line-height:1.55">{{ $log->description }}</textarea>
+                                                    class="field w-full px-3 py-2 text-xs focus:outline-none resize-none"
+                                                    style="line-height:1.55">{{ $log->description }}</textarea>
                                                 <div class="flex items-center gap-3 mt-2">
                                                     <button type="submit" class="btn btn-success btn-xs">Salvar</button>
                                                     <button type="button" @click="editId = null" class="btn btn-ghost btn-xs">Cancelar</button>
@@ -473,12 +472,12 @@
                     <div>
                         <label class="block text-xs mb-1" style="color:var(--muted)">Custo/resultado (R$)</label>
                         <input type="number" step="0.01" min="0" name="target_cost_per_result" value="{{ $campaign->target_cost_per_result }}"
-                               class="w-full px-3 py-2 text-sm" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                               class="field w-full px-3 py-2 text-sm">
                     </div>
                     <div>
                         <label class="block text-xs mb-1" style="color:var(--muted)">ROAS (x)</label>
                         <input type="number" step="0.1" min="0" name="target_roas" value="{{ $campaign->target_roas }}"
-                               class="w-full px-3 py-2 text-sm" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                               class="field w-full px-3 py-2 text-sm">
                     </div>
                     <button type="submit" class="btn btn-primary btn-sm mt-1">Salvar Metas</button>
                 </form>
@@ -496,7 +495,7 @@
                 <form method="POST" action="{{ route('campaigns.update-lock', $campaign) }}">
                     @csrf @method('PATCH')
                     <textarea name="optimization_locked_reason" rows="2" placeholder="Motivo (deixe em branco pra destravar)"
-                              class="w-full px-3 py-2 text-sm mb-2" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); resize:vertical">{{ $campaign->optimization_locked_reason }}</textarea>
+                              class="field w-full px-3 py-2 text-sm mb-2" style="resize:vertical">{{ $campaign->optimization_locked_reason }}</textarea>
                     <button type="submit" class="btn btn-ghost btn-sm">
                         {{ $campaign->optimization_locked_reason ? 'Atualizar' : 'Travar' }}
                     </button>
@@ -513,7 +512,7 @@
                       x-data="{ description: '', rows: 2 }"
                       @submit="if (!description.trim()) { $event.preventDefault(); }">
                     @csrf
-                    <select name="type" class="w-full mb-2 px-3 py-2 text-sm" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                    <select name="type" class="field w-full mb-2 px-3 py-2 text-sm">
                         @foreach(\App\Models\CampaignLog::$types as $key => $t)
                             @continue($key === 'otimizacao')
                             <option value="{{ $key }}">{{ $t['label'] }}</option>
@@ -525,8 +524,8 @@
                         :rows="rows"
                         @focus="rows = 4"
                         placeholder="Descreva a atualização..."
-                        class="w-full px-3 py-2 text-sm focus:outline-none resize-none transition-all"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); line-height:1.55"
+                        class="field w-full px-3 py-2 text-sm focus:outline-none resize-none transition-all"
+                        style="line-height:1.55"
                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'"
                     ></textarea>
                     <div class="flex justify-end mt-2" x-show="description.trim().length > 0" x-cloak>
@@ -572,15 +571,15 @@
                                         <div x-show="editId === '{{ $log->id }}'" x-cloak>
                                             <form method="POST" action="{{ route('campaign-logs.update', [$campaign, $log]) }}">
                                                 @csrf @method('PATCH')
-                                                <select name="type" class="w-full mb-2 px-3 py-2 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                                <select name="type" class="field w-full mb-2 px-3 py-2 text-xs">
                                                     @foreach(\App\Models\CampaignLog::$types as $key => $t)
                                                         @continue($key === 'otimizacao')
                                                         <option value="{{ $key }}" {{ $log->type === $key ? 'selected' : '' }}>{{ $t['label'] }}</option>
                                                     @endforeach
                                                 </select>
                                                 <textarea name="description" rows="3" required
-                                                    class="w-full px-3 py-2 text-xs focus:outline-none resize-none"
-                                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); line-height:1.55">{{ $log->description }}</textarea>
+                                                    class="field w-full px-3 py-2 text-xs focus:outline-none resize-none"
+                                                    style="line-height:1.55">{{ $log->description }}</textarea>
                                                 <div class="flex items-center gap-3 mt-2">
                                                     <button type="submit" class="btn btn-success btn-xs">Salvar</button>
                                                     <button type="button" @click="editId = null" class="btn btn-ghost btn-xs">Cancelar</button>

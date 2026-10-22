@@ -24,8 +24,7 @@
         <div class="flex gap-2 {{ $compact ? '' : 'w-full' }}">
             @if($compact)
                 <select x-model="playbookId"
-                        class="px-2 py-1.5 text-xs focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                        class="field px-2 py-1.5 text-xs focus:outline-none">
                     <option value="">Aplicar playbook...</option>
                     @foreach($playbooks as $p)
                         <option value="{{ $p->id }}">{{ $p->name }}</option>
@@ -43,8 +42,7 @@
                 </button>
             @else
                 <select x-model="playbookId"
-                        class="flex-1 px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                        class="field flex-1 px-3 py-2.5 text-sm focus:outline-none">
                     <option value="">Selecione um playbook...</option>
                     @foreach($playbooks as $p)
                         <option value="{{ $p->id }}">{{ $p->name }} ({{ $p->tasks()->count() }} tarefa(s))</option>

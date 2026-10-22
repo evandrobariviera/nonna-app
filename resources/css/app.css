@@ -429,6 +429,20 @@
     }
     .filter-select:focus { outline: none; border-color: var(--purple); }
 
+    /* ── CAMPO DE FORMULÁRIO (Mirbal form-control): fundo branco, borda clara, cantos de 7px;
+       foco = borda roxa, sem halo. Padding/tamanho continuam nas classes utilitárias de cada campo. ── */
+    .field {
+        background-color: var(--s1);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--text);
+        transition: border-color 0.12s;
+    }
+    .dark .field { background-color: var(--bg); }
+    .field:focus { outline: none; border-color: var(--purple); box-shadow: none; }
+    .field::placeholder { color: var(--muted); }
+    .field:disabled { background-color: var(--s2); cursor: not-allowed; }
+
     /* ── TABLE — Monday style ── */
     .nonna-table { width: 100%; border-collapse: collapse; }
     /* Cabeçalho de tabela do Mirbal: faixa cinza clara com cantos arredondados, texto

@@ -1,0 +1,11 @@
+{
+  "novidades": [
+    {
+      "title": "Campos de formulário no novo visual",
+      "summary": "Os campos de digitar e escolher (tarefa, reunião, cliente, planejamento, configurações e outros) ficaram brancos, com borda clara e contorno roxo quando você clica neles.",
+      "body": "<p>É só aparência: nenhum campo mudou de lugar nem de função. Continuação do novo visual do App.</p>",
+      "kind": "melhoria", "area": "Geral"
+    }
+  ],
+  "ajuda": []
+}

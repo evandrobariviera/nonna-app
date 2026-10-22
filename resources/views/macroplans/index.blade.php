@@ -25,16 +25,16 @@
           data-live-filter data-results-url="{{ route('macroplans.results') }}" data-target="#macroplans-results">
         <input type="hidden" name="mostrar_concluidos" value="{{ request('mostrar_concluidos') }}">
         <input type="hidden" name="mostrar_inativos" value="{{ request('mostrar_inativos') }}">
-        <select name="status"
-            style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
+        <select class="field" name="status"
+            style="color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
             <option value="">Todos os status</option>
             @foreach(\App\Models\MacroPlan::$statuses as $key => $s)
                 <option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
             @endforeach
         </select>
 
-        <select name="client_id"
-            style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
+        <select class="field" name="client_id"
+            style="color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
             <option value="">Todos os clientes</option>
             @foreach($clients as $c)
                 <option value="{{ $c->id }}" {{ request('client_id') === $c->id ? 'selected' : '' }}>{{ $c->displayName() }}</option>

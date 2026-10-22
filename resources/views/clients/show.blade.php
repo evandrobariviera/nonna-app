@@ -333,8 +333,7 @@
                                     Direção criativa
                                 </label>
                                 <select name="creative_lead_id"
-                                        class="w-full px-3 py-2 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field w-full px-3 py-2 text-sm focus:outline-none">
                                     <option value="">Ninguém definido</option>
                                     @foreach($users as $u)
                                         <option value="{{ $u->id }}" @selected($client->creative_lead_id == $u->id)>{{ $u->name }}</option>
@@ -362,8 +361,8 @@
                                                    name="production_quota[{{ $tipo }}]"
                                                    value="{{ $client->production_quota[$tipo] ?? '' }}"
                                                    placeholder="—"
-                                                   class="px-2 py-1.5 text-sm text-center focus:outline-none"
-                                                   style="width:72px; background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text)">
+                                                   class="field px-2 py-1.5 text-sm text-center focus:outline-none"
+                                                   style="width:72px">
                                         </div>
                                     @endforeach
                                 </div>
@@ -2720,8 +2719,7 @@
                                     <div x-show="mode === 'manual'" x-cloak>
                                         <input type="text" name="password" placeholder="Nova senha — mínimo 8 caracteres"
                                                :required="mode === 'manual'"
-                                               class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
-                                               style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                                               class="field w-full px-3 py-2 text-sm font-mono">
                                         <p class="mt-1 text-xs" style="color: var(--muted)">Nenhuma mensagem é enviada — passe a senha pro contato você mesmo.</p>
                                     </div>
                                     @if($resetFailed)
@@ -2755,8 +2753,7 @@
                                 Contato
                             </label>
                             <select name="contact_id" required
-                                    class="w-full rounded-lg border px-3 py-2 text-sm"
-                                    style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                                    class="field w-full px-3 py-2 text-sm">
                                 <option value="">Selecione...</option>
                                 @foreach($availableContacts as $availableContact)
                                     <option value="{{ $availableContact->id }}" @selected(old('contact_id') === $availableContact->id)>
@@ -2787,8 +2784,7 @@
                         <div x-show="mode === 'manual'" x-cloak>
                             <input type="text" name="password"
                                    placeholder="Mínimo 8 caracteres — deixe em branco se o contato já tem senha (de outro cliente)"
-                                   class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
-                                   style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                                   class="field w-full px-3 py-2 text-sm font-mono">
                             @error('password')
                                 <p class="mt-1 text-xs" style="color: var(--red)">{{ $message }}</p>
                             @enderror

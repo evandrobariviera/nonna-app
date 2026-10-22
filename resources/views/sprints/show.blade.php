@@ -81,21 +81,18 @@
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Início</label>
                     <input type="date" name="starts_at" required value="{{ old('starts_at', $sprint->starts_at->format('Y-m-d')) }}"
-                        class="px-3 py-2 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                        class="field px-3 py-2 text-sm focus:outline-none">
                     @error('starts_at') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Fim</label>
                     <input type="date" name="ends_at" required value="{{ old('ends_at', $sprint->ends_at->format('Y-m-d')) }}"
-                        class="px-3 py-2 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                        class="field px-3 py-2 text-sm focus:outline-none">
                     @error('ends_at') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Status</label>
-                    <select name="status" class="px-3 py-2 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                    <select name="status" class="field px-3 py-2 text-sm focus:outline-none">
                         @foreach(\App\Models\Sprint::$statuses as $key => $s)
                             <option value="{{ $key }}" {{ old('status', $sprint->status) === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
                         @endforeach

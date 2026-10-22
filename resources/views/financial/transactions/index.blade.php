@@ -64,7 +64,7 @@
                 @csrf
                 <div>
                     <label class="text-xs font-mono uppercase tracking-widest mb-1 block" style="color:var(--muted)">Tipo</label>
-                    <select name="type" required class="w-full" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px">
+                    <select name="type" required class="field w-full" style="padding:8px 12px; font-size:13px">
                         @foreach(\App\Models\FinancialTransaction::$types as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
                         @endforeach
@@ -72,7 +72,7 @@
                 </div>
                 <div>
                     <label class="text-xs font-mono uppercase tracking-widest mb-1 block" style="color:var(--muted)">Categoria</label>
-                    <select name="category_id" class="w-full" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px">
+                    <select name="category_id" class="field w-full" style="padding:8px 12px; font-size:13px">
                         <option value="">—</option>
                         @foreach($categories as $type => $group)
                             <optgroup label="{{ \App\Models\FinancialCategory::$types[$type] ?? $type }}">
@@ -86,16 +86,16 @@
                 <div>
                     <label class="text-xs font-mono uppercase tracking-widest mb-1 block" style="color:var(--muted)">Valor (R$)</label>
                     <input type="number" name="amount" step="0.01" min="0.01" required
-                           class="w-full" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px">
+                           class="field w-full" style="padding:8px 12px; font-size:13px">
                 </div>
                 <div>
                     <label class="text-xs font-mono uppercase tracking-widest mb-1 block" style="color:var(--muted)">Vencimento</label>
                     <input type="date" name="due_date" required
-                           class="w-full" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px">
+                           class="field w-full" style="padding:8px 12px; font-size:13px">
                 </div>
                 <div>
                     <label class="text-xs font-mono uppercase tracking-widest mb-1 block" style="color:var(--muted)">Forma de Pagamento</label>
-                    <select name="payment_method" class="w-full" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px">
+                    <select name="payment_method" class="field w-full" style="padding:8px 12px; font-size:13px">
                         <option value="">—</option>
                         <option value="pix">Pix</option>
                         <option value="cartao">Cartão</option>
@@ -104,7 +104,7 @@
                 </div>
                 <div>
                     <label class="text-xs font-mono uppercase tracking-widest mb-1 block" style="color:var(--muted)">Cliente</label>
-                    <select name="client_id" class="w-full" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px">
+                    <select name="client_id" class="field w-full" style="padding:8px 12px; font-size:13px">
                         <option value="">—</option>
                         @foreach($clients as $client)
                             <option value="{{ $client->id }}">{{ $client->displayName() }}</option>
@@ -113,7 +113,7 @@
                 </div>
                 <div>
                     <label class="text-xs font-mono uppercase tracking-widest mb-1 block" style="color:var(--muted)">Contrato</label>
-                    <select name="contract_id" class="w-full" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px">
+                    <select name="contract_id" class="field w-full" style="padding:8px 12px; font-size:13px">
                         <option value="">—</option>
                         @foreach($contracts as $contract)
                             <option value="{{ $contract->id }}">{{ $contract->client?->company_name }} — {{ $contract->title }}</option>
@@ -123,11 +123,11 @@
                 <div>
                     <label class="text-xs font-mono uppercase tracking-widest mb-1 block" style="color:var(--muted)">Descrição</label>
                     <input type="text" name="description" maxlength="255"
-                           class="w-full" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px">
+                           class="field w-full" style="padding:8px 12px; font-size:13px">
                 </div>
                 <div>
                     <label class="text-xs font-mono uppercase tracking-widest mb-1 block" style="color:var(--muted)">Repetição</label>
-                    <select name="repeat_mode" x-model="repeatMode" class="w-full" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px">
+                    <select name="repeat_mode" x-model="repeatMode" class="field w-full" style="padding:8px 12px; font-size:13px">
                         <option value="none">Nenhuma</option>
                         <option value="recurring">Recorrente — mesmo valor todo mês</option>
                         <option value="installments">Parcelado — divide o valor total</option>
@@ -139,7 +139,7 @@
                 <div x-show="repeatMode !== 'none'" x-cloak>
                     <label class="text-xs font-mono uppercase tracking-widest mb-1 block" style="color:var(--muted)">Quantas vezes</label>
                     <input type="number" name="repeat_count" min="2" max="60" :required="repeatMode !== 'none'"
-                           class="w-full" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px">
+                           class="field w-full" style="padding:8px 12px; font-size:13px">
                 </div>
 
                 <div class="flex items-end">

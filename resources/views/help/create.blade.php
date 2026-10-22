@@ -25,15 +25,13 @@
                     <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">TÍTULO *</label>
                     <input type="text" name="title" value="{{ old('title') }}" required autofocus
                            placeholder="Ex: Fluxo de Reuniões e Agendamento"
-                           class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                           style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                           class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">CATEGORIA</label>
                     <input type="text" name="category" value="{{ old('category') }}" list="category-options"
                            placeholder="Ex: Reuniões, Automações, Financeiro..."
-                           class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                           style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                           class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                     <datalist id="category-options">
                         @foreach($categories as $cat)
                             <option value="{{ $cat }}">

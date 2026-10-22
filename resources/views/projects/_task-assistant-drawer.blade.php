@@ -183,13 +183,13 @@
                         <div class="px-3 py-3 rounded relative" style="background:var(--s2); border:1px solid var(--border2)">
                             <button type="button" @click="removeDraft(i)" class="absolute top-2 right-2 text-xs" style="color:var(--muted)">✕</button>
                             <input type="text" x-model="d.title"
-                                   class="px-2 py-1.5 text-xs font-semibold rounded mb-2 focus:outline-none"
-                                   style="width:calc(100% - 22px); background:var(--s3); border:1px solid var(--border); color:var(--text)">
+                                   class="field px-2 py-1.5 text-xs font-semibold mb-2 focus:outline-none"
+                                   style="width:calc(100% - 22px)">
                             {{-- Descrição visível e editável — antes a IA escrevia e ela era
                                  gravada sem ninguém ter lido --}}
                             <textarea x-model="d.description" rows="3" placeholder="Descrição (opcional)"
-                                      class="w-full px-2 py-1.5 text-xs rounded mb-2 focus:outline-none resize-y"
-                                      style="background:var(--s3); border:1px solid var(--border); color:var(--text); line-height:1.5"></textarea>
+                                      class="field w-full px-2 py-1.5 text-xs mb-2 focus:outline-none resize-y"
+                                      style="line-height:1.5"></textarea>
                             <div class="grid grid-cols-2 gap-2 mb-2">
                                 <select x-model="d.task_type" class="px-2 py-1.5 text-xs rounded focus:outline-none"
                                         :style="!d.task_type
@@ -200,8 +200,7 @@
                                         <option value="{{ $key }}">{{ $label }}</option>
                                     @endforeach
                                 </select>
-                                <select x-model="d.priority" class="px-2 py-1.5 text-xs rounded focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); color:var(--text)">
+                                <select x-model="d.priority" class="field px-2 py-1.5 text-xs focus:outline-none">
                                     <option value="">Prioridade —</option>
                                     @foreach(\App\Models\Task::$priorities as $key => $meta)
                                         <option value="{{ $key }}">{{ $meta['label'] }}</option>
@@ -211,14 +210,12 @@
                             <div class="grid grid-cols-2 gap-2 mb-2">
                                 <div>
                                     <input type="date" x-model="d.due_date" title="Prazo"
-                                           class="w-full px-2 py-1.5 text-xs rounded focus:outline-none"
-                                           style="background:var(--s3); border:1px solid var(--border); color:var(--text)">
+                                           class="field w-full px-2 py-1.5 text-xs focus:outline-none">
                                     <p class="mt-0.5" style="color:var(--muted); font-size:.68rem"
                                        x-text="d.due_date ? weekdayLabel(d.due_date) : 'Sem prazo'"></p>
                                 </div>
                                 <select x-model="d.executor_user_id" title="Executor (quem faz)"
-                                        class="self-start px-2 py-1.5 text-xs rounded focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); color:var(--text)">
+                                        class="field self-start px-2 py-1.5 text-xs focus:outline-none">
                                     <option value="">Executor —</option>
                                     <template x-for="u in team" :key="u.id">
                                         <option :value="u.id" x-text="u.name" :selected="u.id == d.executor_user_id"></option>
@@ -227,15 +224,13 @@
                             </div>
                             <div class="grid grid-cols-2 gap-2">
                                 <select x-model="d.responsavel_user_id" title="Responsável"
-                                        class="px-2 py-1.5 text-xs rounded focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); color:var(--text)">
+                                        class="field px-2 py-1.5 text-xs focus:outline-none">
                                     <option value="">Responsável —</option>
                                     <template x-for="u in team" :key="u.id">
                                         <option :value="u.id" x-text="u.name" :selected="u.id == d.responsavel_user_id"></option>
                                     </template>
                                 </select>
-                                <select x-model="d.destination" class="px-2 py-1.5 text-xs rounded focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); color:var(--text)">
+                                <select x-model="d.destination" class="field px-2 py-1.5 text-xs focus:outline-none">
                                     <option value="">Destino —</option>
                                     @foreach(\App\Models\Task::$destinations as $key => $label)
                                         <option value="{{ $key }}">{{ $label }}</option>
@@ -262,8 +257,8 @@
                       :disabled="!agentName || thinking"
                       rows="3"
                       placeholder="Peça pra criar tarefas ou reorganizar as que já existem..."
-                      class="w-full px-4 py-3 text-sm focus:outline-none resize-none"
-                      style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); line-height:1.6"></textarea>
+                      class="field w-full px-4 py-3 text-sm focus:outline-none resize-none"
+                      style="line-height:1.6"></textarea>
             <div class="flex items-center justify-between mt-3">
                 <span class="text-xs" style="color:var(--muted2)">⌘+Enter envia</span>
                 <button @click="send()"

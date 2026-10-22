@@ -18,15 +18,15 @@
 
         {{-- Filtros --}}
         <form method="GET" action="{{ route('portal.campaigns.index') }}" class="flex flex-wrap items-center gap-3 mb-6">
-            <select name="period" onchange="this.form.submit()"
-                    style="background: var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px; border-radius:6px; outline:none; cursor:pointer">
+            <select class="field" name="period" onchange="this.form.submit()"
+                    style="padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
                 @foreach(\App\Http\Controllers\Portal\CampaignController::$periods as $key => $label)
                     <option value="{{ $key }}" {{ $period === $key ? 'selected' : '' }}>{{ $label }}</option>
                 @endforeach
             </select>
 
-            <select name="status" onchange="this.form.submit()"
-                    style="background: var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px; border-radius:6px; outline:none; cursor:pointer">
+            <select class="field" name="status" onchange="this.form.submit()"
+                    style="padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
                 <option value="" {{ $statusFilter === '' ? 'selected' : '' }}>Todos os status</option>
                 @foreach(\App\Http\Controllers\Portal\CampaignController::$statuses as $key => $label)
                     <option value="{{ $key }}" {{ $statusFilter === $key ? 'selected' : '' }}>{{ $label }}</option>

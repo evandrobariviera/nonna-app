@@ -50,8 +50,8 @@
     <form method="GET" action="{{ route('contracts.index') }}" class="flex flex-wrap items-center gap-3 mb-5"
           data-live-filter data-results-url="{{ route('contracts.results') }}" data-target="#contracts-results">
         <input type="hidden" name="vencidos" value="{{ request('vencidos') }}">
-        <select name="status"
-            style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
+        <select class="field" name="status"
+            style="color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
             <option value="">Todos os status</option>
             @foreach(\App\Models\Contract::$statuses as $key => $s)
                 <option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>

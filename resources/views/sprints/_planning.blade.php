@@ -7,8 +7,7 @@
     <div class="flex items-center gap-3 mb-4">
         <span class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Filtrar:</span>
         <select x-model="clientFilter"
-            class="px-3 py-1.5 text-xs focus:outline-none"
-            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+            class="field px-3 py-1.5 text-xs focus:outline-none">
             <option value="">Todos os clientes</option>
             @foreach($clients as $c)
                 <option value="{{ $c->id }}">{{ $c->displayName() }}</option>

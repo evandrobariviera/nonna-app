@@ -300,8 +300,8 @@
                         <div class="px-5 pb-4 pt-0" x-data="{ message: '' }">
                             <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Mensagem pro cliente</label>
                             <textarea x-model="message" rows="2" placeholder="Escreva o retorno que o cliente vai receber..."
-                                      class="w-full px-3 py-2 text-sm focus:outline-none"
-                                      style="background:var(--s2); border:1px solid var(--border2); color:var(--text); resize:vertical"></textarea>
+                                      class="field w-full px-3 py-2 text-sm focus:outline-none"
+                                      style="resize:vertical"></textarea>
                             <div class="flex items-center gap-2 mt-2">
                                 <form method="POST" action="{{ route('approvals.send-aviso', $round) }}"
                                       @submit.prevent="

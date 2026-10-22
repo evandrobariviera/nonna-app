@@ -48,8 +48,7 @@
     <div class="relative">
         <input type="text" x-model="q" @input="search()" @focus="search()" @keydown.escape="open = false"
                placeholder="Buscar planejamento, campanha, projeto ou tarefa..."
-               class="w-full px-4 py-2.5 text-sm focus:outline-none"
-               style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+               class="field w-full px-4 py-2.5 text-sm focus:outline-none">
         <div x-show="open" x-cloak class="absolute left-0 right-0 mt-1 z-20 overflow-y-auto"
              style="max-height:280px; background:var(--s1); border:1px solid var(--border); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.12)">
             <p x-show="loading" class="px-3 py-2 text-xs" style="color:var(--muted)">Buscando…</p>

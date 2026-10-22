@@ -73,7 +73,7 @@
                     @endif
                 </p>
                 <select onchange="location.href='{{ route('productivity.index', ['period' => $period]) }}&status_filter=' + this.value"
-                        class="text-xs font-semibold flex-shrink-0" style="background:var(--s3); color:var(--muted); border:1px solid var(--border2); padding:4px 6px">
+                        class="field text-xs font-semibold flex-shrink-0" style="color:var(--muted); padding:4px 6px">
                     @foreach(\App\Models\Task::$statuses as $key => $status)
                         <option value="{{ $key }}" @selected($statusFilter === $key)>{{ $key === 'concluido' ? 'Concluído (entrega)' : $status['label'] }}</option>
                     @endforeach

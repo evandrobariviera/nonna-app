@@ -19,12 +19,12 @@
         <form method="GET" action="{{ route('clients.index') }}" class="flex items-center gap-3 flex-1 min-w-0"
               data-live-filter data-results-url="{{ route('clients.results') }}" data-target="#clients-results">
             <input type="text" name="q" value="{{ request('q') }}" placeholder="Buscar empresa, CNPJ ou e-mail..."
-                class="flex-1 min-w-0 px-4 py-2 text-sm font-medium"
-                style="background:var(--s2); border:1px solid var(--border2); color:var(--text); outline:none; max-width:360px">
+                class="field flex-1 min-w-0 px-4 py-2 text-sm font-medium"
+                style="outline:none; max-width:360px">
 
             @php $selectedStatus = request()->filled('status') ? request('status') : 'active'; @endphp
-            <select name="status"
-                style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; font-family:'Inter',sans-serif; outline:none; cursor:pointer">
+            <select class="field" name="status"
+                style="color:var(--muted2); padding:8px 12px; font-size:13px; font-family:'Inter',sans-serif; outline:none; cursor:pointer">
                 <option value="todos" {{ $selectedStatus === 'todos' ? 'selected' : '' }}>Todos os status</option>
                 @foreach(App\Models\Client::$statuses as $key => $s)
                     <option value="{{ $key }}" {{ $selectedStatus === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>

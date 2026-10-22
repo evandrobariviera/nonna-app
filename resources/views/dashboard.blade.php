@@ -78,8 +78,8 @@
             <label class="flex items-center gap-2 flex-shrink-0">
                 <span class="text-xs font-semibold flex items-center gap-1" style="color:var(--muted)"><x-icon name="eye" size="13" /> Ver como</span>
                 <select onchange="window.location = this.value"
-                        class="px-3 py-1.5 text-xs focus:outline-none"
-                        style="background:var(--s2); border:1px solid var(--border2); color:var(--text); max-width:220px">
+                        class="field px-3 py-1.5 text-xs focus:outline-none"
+                        style="max-width:220px">
                     <option value="{{ route('dashboard') }}">Eu mesmo</option>
                     @foreach($teamMembers as $member)
                         <option value="{{ route('dashboard', ['ver_como' => $member->id]) }}" @selected($viewingAs?->id === $member->id)>{{ $member->name }}</option>
@@ -438,8 +438,8 @@
                 Agenda
             </h3>
             <select x-model="filterType"
-                class="px-3 py-1.5 text-xs font-mono focus:outline-none"
-                style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2)">
+                class="field px-3 py-1.5 text-xs font-mono focus:outline-none"
+                style="color:var(--muted2)">
                 <option value="">Todos os tipos</option>
                 @foreach(\App\Models\Meeting::$types as $key => $label)
                     <option value="{{ $key }}">{{ $label }}</option>

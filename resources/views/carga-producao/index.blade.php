@@ -186,8 +186,7 @@
                             <span class="text-xs" style="color:var(--muted2)">{{ \App\Models\Client::quotaTypeLabel($tipo) }}</span>
                             <input type="number" min="0" max="999" name="production_quota[{{ $tipo }}]"
                                    value="{{ $clienteSel->production_quota[$tipo] ?? '' }}" placeholder="—"
-                                   class="px-2 py-1.5 text-sm text-center focus:outline-none"
-                                   style="background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text)">
+                                   class="field px-2 py-1.5 text-sm text-center focus:outline-none">
                         </label>
                     @endforeach
                 </div>

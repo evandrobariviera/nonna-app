@@ -172,7 +172,7 @@
         <div class="flex-1 min-w-36">
             <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Cliente</label>
             <select name="cliente" onchange="this.form.submit()"
-                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    class="field text-sm px-3 py-1.5 w-full">
                 <option value="">Todos os clientes</option>
                 @foreach($opcoesClientes as $op)
                     <option value="{{ $op->id }}" @selected($clienteSel?->id === $op->id)>{{ $op->displayName() }}</option>
@@ -183,7 +183,7 @@
         <div class="min-w-44">
             <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Executor</label>
             <select name="executor" onchange="this.form.submit()"
-                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    class="field text-sm px-3 py-1.5 w-full">
                 <option value="">Todo o time</option>
                 @foreach($opcoesExecutores as $op)
                     <option value="{{ $op->id }}" @selected($executorSel?->id === $op->id)>{{ $op->name }}</option>
@@ -194,7 +194,7 @@
         <div class="min-w-44">
             <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Direção criativa</label>
             <select name="direcao_criativa" onchange="this.form.submit()"
-                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    class="field text-sm px-3 py-1.5 w-full">
                 <option value="">Todas</option>
                 @foreach($opcoesDirecaoCriativa as $op)
                     <option value="{{ $op->id }}" @selected($direcaoSel?->id === $op->id)>{{ $op->name }}</option>
@@ -205,7 +205,7 @@
         <div class="min-w-44">
             <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Responsável</label>
             <select name="responsavel" onchange="this.form.submit()"
-                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    class="field text-sm px-3 py-1.5 w-full">
                 <option value="">Todos</option>
                 @foreach($opcoesResponsaveis as $op)
                     <option value="{{ $op->id }}" @selected($responsavelSel?->id === $op->id)>{{ $op->name }}</option>
@@ -216,7 +216,7 @@
         <div class="min-w-40">
             <label class="block text-xs font-semibold uppercase mb-1.5" style="color:var(--muted); letter-spacing:.08em">Sprint ou Fila</label>
             <select name="sprint_fila" onchange="this.form.submit()"
-                    class="text-sm px-3 py-1.5 w-full" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                    class="field text-sm px-3 py-1.5 w-full">
                 <option value="" @selected($sprintFila === '')>Tudo</option>
                 <option value="sprint" @selected($sprintFila === 'sprint')>Só em sprint</option>
                 <option value="fila" @selected($sprintFila === 'fila')>Só na fila</option>
@@ -455,7 +455,7 @@
             </div>
             <div class="flex items-center gap-2">
                 <input type="search" x-model="busca" placeholder="Buscar cliente…"
-                       class="text-xs px-3 py-1.5" style="background:var(--s3); border:1px solid var(--border2); color:var(--text); min-width:180px">
+                       class="field text-xs px-3 py-1.5" style="min-width:180px">
                 <button type="button" @click="soAtrasados = !soAtrasados"
                         class="px-3 py-1.5 text-xs font-semibold"
                         :style="soAtrasados

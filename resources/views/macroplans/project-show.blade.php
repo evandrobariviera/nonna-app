@@ -30,8 +30,7 @@
                 @csrf @method('PATCH')
                 <label class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted)">Planejamento</label>
                 <select name="macro_plan_id" onchange="this.form.submit()"
-                    class="px-2 py-1.5 text-xs focus:outline-none"
-                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                    class="field px-2 py-1.5 text-xs focus:outline-none">
                     <option value="">— nenhum —</option>
                     @foreach($clientMacroplans as $mp)
                         <option value="{{ $mp->id }}" {{ $project->macro_plan_id === $mp->id ? 'selected' : '' }}>
@@ -305,8 +304,8 @@
                 </template>
             </div>
             <select @change="const id = parseInt($event.target.value); if (id && !team.includes(id)) team.push(id); $event.target.value = ''"
-                    class="px-2 py-1.5 text-xs focus:outline-none"
-                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">
+                    class="field px-2 py-1.5 text-xs focus:outline-none"
+                    style="color:var(--muted2)">
                 <option value="">+ adicionar pessoa</option>
                 <template x-for="u in users.filter(u => !team.includes(u.id))" :key="u.id">
                     <option :value="u.id" x-text="u.name"></option>
@@ -454,14 +453,13 @@
                 <label class="block text-xs font-semibold mb-1.5" style="color:var(--text)">Descrição para o cliente</label>
                 <textarea name="client_description" rows="3" maxlength="2000"
                     placeholder="Texto curto explicando a ideia do projeto, na linguagem do cliente."
-                    class="w-full px-3 py-2 text-sm focus:outline-none"
-                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); resize:vertical">{{ old('client_description', $project->client_description) }}</textarea>
+                    class="field w-full px-3 py-2 text-sm focus:outline-none"
+                    style="resize:vertical">{{ old('client_description', $project->client_description) }}</textarea>
                 <p class="text-xs mt-1" style="color:var(--muted)">O cliente lê isso no topo da página do projeto. Objetivo e briefings continuam só internos.</p>
             </div>
             <div>
                 <label class="block text-xs font-semibold mb-1.5" style="color:var(--text)">Tarefa em destaque</label>
-                <select name="highlight_task_id" class="w-full px-3 py-2 text-sm focus:outline-none"
-                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                <select name="highlight_task_id" class="field w-full px-3 py-2 text-sm focus:outline-none">
                     <option value="">— nenhuma —</option>
                     @foreach($project->tasks->where('status', '!=', 'cancelado') as $t)
                         <option value="{{ $t->id }}" @selected($project->highlight_task_id === $t->id)>{{ $t->title }}</option>
@@ -592,37 +590,32 @@
                         Título <span style="color:var(--orange)">*</span>
                     </label>
                     <input type="text" name="title" required placeholder="O que precisa ser feito?"
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                        class="field w-full px-4 py-2.5 text-sm focus:outline-none"
                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                 </div>
 
                 {{-- Data de Aprovação --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Data de Aprovação</label>
-                    <input type="date" name="approval_date" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                    <input type="date" name="approval_date" class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                 </div>
 
                 {{-- Data de Publicação --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Data de Publicação</label>
-                    <input type="date" name="publish_date" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                    <input type="date" name="publish_date" class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                 </div>
 
                 {{-- Vencimento --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Vencimento</label>
-                    <input type="date" name="due_date" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                    <input type="date" name="due_date" class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                 </div>
 
                 {{-- Prioridade --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Prioridade</label>
-                    <select name="priority" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                    <select name="priority" class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                         <option value="normal" selected>Normal</option>
                         @foreach(\App\Models\Task::$priorities as $key => $p)
                             <option value="{{ $key }}">{{ $p['label'] }}</option>
@@ -633,8 +626,7 @@
                 {{-- Responsável --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Responsável</label>
-                    <select name="responsavel_id" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                    <select name="responsavel_id" class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                         <option value="">— nenhum —</option>
                         @foreach($users as $u)
                             <option value="{{ $u->id }}">{{ $u->name }}</option>
@@ -662,8 +654,7 @@
                         </template>
                     </div>
                     <p x-show="roleError" x-text="roleError" x-cloak class="text-xs mb-1.5" style="color:var(--red)"></p>
-                    <select @change="add($event)" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                    <select @change="add($event)" class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                         <option value="">+ Adicionar executor</option>
                         @foreach($users as $u)
                             <option value="{{ $u->id }}" data-name="{{ $u->name }}">{{ $u->name }}</option>
@@ -674,8 +665,7 @@
                 {{-- Origem --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Origem</label>
-                    <select name="origin" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                    <select name="origin" class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                         @foreach(\App\Models\Task::$origins as $key => $label)
                             <option value="{{ $key }}" {{ $key === 'projeto' ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
@@ -685,8 +675,7 @@
                 {{-- Destino --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Destino</label>
-                    <select name="destination" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                    <select name="destination" class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                         <option value="">— sem destino —</option>
                         @foreach(\App\Models\Task::$destinations as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
@@ -697,8 +686,7 @@
                 {{-- Tipo --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Tipo</label>
-                    <select name="task_type" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                    <select name="task_type" class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                         @foreach(\App\Models\Task::$types as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
                         @endforeach
@@ -708,8 +696,7 @@
                 {{-- Status --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Status</label>
-                    <select name="status" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                    <select name="status" class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                         @foreach(\App\Models\Task::$statuses as $key => $s)
                             @if($key !== 'cancelado')
                                 <option value="{{ $key }}" {{ $key === 'backlog' ? 'selected' : '' }}>{{ $s['label'] }}</option>
@@ -721,8 +708,7 @@
                 {{-- Situação --}}
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Situação</label>
-                    <select name="situation" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                    <select name="situation" class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                         @foreach(\App\Models\Task::$situations as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
                         @endforeach
@@ -739,8 +725,7 @@
                 <div class="col-span-2 md:col-span-4">
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Anexos</label>
                     <input type="file" name="files[]" multiple
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                        class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                 </div>
 
                 <div class="col-span-2 md:col-span-4 flex items-center gap-3">
@@ -869,21 +854,18 @@
                                     @csrf @method('PATCH')
 
                                     <input type="text" name="title" value="{{ $task->title }}" required
-                                        class="w-full px-3 py-2 text-xs focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field w-full px-3 py-2 text-xs focus:outline-none">
 
                                     <div class="grid grid-cols-2 gap-1.5">
                                         <select name="task_type"
-                                            class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                            class="field w-full px-2 py-1.5 text-xs focus:outline-none">
                                             @foreach(\App\Models\Task::$types as $key => $label)
                                                 <option value="{{ $key }}" {{ $task->task_type === $key ? 'selected' : '' }}>{{ $label }}</option>
                                             @endforeach
                                         </select>
 
                                         <select name="destination"
-                                            class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                            class="field w-full px-2 py-1.5 text-xs focus:outline-none">
                                             <option value="">— destino —</option>
                                             @foreach(\App\Models\Task::$destinations as $key => $label)
                                                 <option value="{{ $key }}" {{ $task->destination === $key ? 'selected' : '' }}>{{ $label }}</option>
@@ -891,16 +873,14 @@
                                         </select>
 
                                         <select name="status"
-                                            class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                            class="field w-full px-2 py-1.5 text-xs focus:outline-none">
                                             @foreach(\App\Models\Task::$statuses as $key => $s)
                                                 <option value="{{ $key }}" {{ $task->status === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
                                             @endforeach
                                         </select>
 
                                         <select name="origin"
-                                            class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                            class="field w-full px-2 py-1.5 text-xs focus:outline-none">
                                             @foreach(\App\Models\Task::$origins as $key => $label)
                                                 <option value="{{ $key }}" {{ $task->origin === $key ? 'selected' : '' }}>{{ $label }}</option>
                                             @endforeach
@@ -923,22 +903,19 @@
                                             <p class="text-xs font-mono mb-0.5" style="color:var(--muted)">Vencimento</p>
                                             <input type="date" name="due_date"
                                                 value="{{ $task->due_date?->format('Y-m-d') }}"
-                                                class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                                class="field w-full px-2 py-1.5 text-xs focus:outline-none">
                                         </div>
                                         <div>
                                             <p class="text-xs font-mono mb-0.5" style="color:var(--muted)">Dt. Aprovação</p>
                                             <input type="date" name="approval_date"
                                                 value="{{ $task->approval_date?->format('Y-m-d') }}"
-                                                class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                                class="field w-full px-2 py-1.5 text-xs focus:outline-none">
                                         </div>
                                         <div>
                                             <p class="text-xs font-mono mb-0.5" style="color:var(--muted)">Dt. Publicação</p>
                                             <input type="date" name="publish_date"
                                                 value="{{ $task->publish_date?->format('Y-m-d') }}"
-                                                class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                                class="field w-full px-2 py-1.5 text-xs focus:outline-none">
                                         </div>
                                     </div>
 
@@ -963,8 +940,7 @@
                                             </template>
                                         </div>
                                         <p x-show="roleError" x-text="roleError" x-cloak class="text-xs mb-1" style="color:var(--red)"></p>
-                                        <select @change="add($event)" class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        <select @change="add($event)" class="field w-full px-2 py-1.5 text-xs focus:outline-none">
                                             <option value="">+ Adicionar executor</option>
                                             @foreach($users as $u)
                                                 <option value="{{ $u->id }}" data-name="{{ $u->name }}">{{ $u->name }}</option>
@@ -973,8 +949,7 @@
                                     </div>
 
                                     {{-- Situação --}}
-                                    <select name="situation" class="w-full px-2 py-1.5 text-xs focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    <select name="situation" class="field w-full px-2 py-1.5 text-xs focus:outline-none">
                                         @foreach(\App\Models\Task::$situations as $key => $label)
                                             <option value="{{ $key }}" {{ ($task->situation ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
                                         @endforeach
@@ -983,8 +958,7 @@
                                     {{-- Descrição --}}
                                     <textarea name="description" rows="2"
                                         placeholder="Descrição (opcional)"
-                                        class="w-full px-2 py-2 text-xs focus:outline-none resize-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">{{ $task->description }}</textarea>
+                                        class="field w-full px-2 py-2 text-xs focus:outline-none resize-none">{{ $task->description }}</textarea>
 
                                     <div class="flex gap-2">
                                         <button type="submit" class="btn btn-primary btn-xs">

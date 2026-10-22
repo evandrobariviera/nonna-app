@@ -109,15 +109,13 @@
                                     <label class="block text-xs font-semibold mb-1" style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">RÓTULO</label>
                                     <input type="text" name="label" placeholder="ex: Chave Principal"
                                            required
-                                           class="w-full rounded px-3 py-2 text-sm"
-                                           style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                                           class="field w-full px-3 py-2 text-sm">
                                 </div>
                                 <div style="flex:2">
                                     <label class="block text-xs font-semibold mb-1" style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">CHAVE DE API</label>
                                     <input type="password" name="api_key" placeholder="sk-..."
                                            required autocomplete="off"
-                                           class="w-full rounded px-3 py-2 text-sm font-mono"
-                                           style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                                           class="field w-full px-3 py-2 text-sm font-mono">
                                 </div>
                                 <button type="submit"
                                         class="px-4 py-2 rounded text-xs font-bold transition-colors flex-shrink-0"

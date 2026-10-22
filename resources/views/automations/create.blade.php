@@ -32,20 +32,17 @@
                         <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">NOME *</label>
                         <input type="text" name="name" value="{{ old('name') }}" required
                                placeholder="Ex: Verificar ortografia ao entrar em revisão"
-                               class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                               style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                               class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DESCRIÇÃO</label>
                         <textarea name="description" rows="2"
-                                  class="w-full px-3 py-2.5 text-sm focus:outline-none resize-none"
-                                  style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">{{ old('description') }}</textarea>
+                                  class="field w-full px-3 py-2.5 text-sm focus:outline-none resize-none">{{ old('description') }}</textarea>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">ENTIDADE *</label>
                         <select name="entity_type" x-model="entityType" required
-                                class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                             <option value="">Selecione...</option>
                             @foreach($entityTypes as $value => $label)
                                 <option value="{{ $value }}" {{ old('entity_type') === $value ? 'selected' : '' }}>{{ $label }}</option>
@@ -63,8 +60,7 @@
                     <div>
                         <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">TIPO DE GATILHO *</label>
                         <select name="trigger_type" x-model="triggerType" required
-                                class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                             <option value="">Selecione...</option>
                             @foreach($triggerTypes as $value => $label)
                                 <option value="{{ $value }}" {{ old('trigger_type') === $value ? 'selected' : '' }}>{{ $label }}</option>
@@ -84,8 +80,7 @@
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DE (OPCIONAL)</label>
                                 <select name="trigger_config[from]" :disabled="triggerType !== 'status_changed'"
-                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                     <option value="*">Qualquer</option>
                                     <template x-for="[val, label] in Object.entries((conditionFieldsMap[entityType]||{})[primaryField()]?.options || {})" :key="val">
                                         <option :value="val" x-text="label"></option>
@@ -95,8 +90,7 @@
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">PARA *</label>
                                 <select name="trigger_config[to]" :disabled="triggerType !== 'status_changed'"
-                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                     <option value="">Selecione...</option>
                                     <template x-for="[val, label] in Object.entries((conditionFieldsMap[entityType]||{})[primaryField()]?.options || {})" :key="val">
                                         <option :value="val" x-text="label"></option>
@@ -111,8 +105,7 @@
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">CAMPO MONITORADO *</label>
                                 <select name="trigger_config[field]" x-model="fieldUpdatedField" :disabled="triggerType !== 'field_updated'"
-                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                     <option value="">Selecione...</option>
                                     <template x-for="[key, meta] in Object.entries(conditionFieldsMap[entityType] || {})" :key="key">
                                         <option :value="key" x-text="meta.label"></option>
@@ -122,8 +115,7 @@
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DE (OPCIONAL)</label>
                                 <select name="trigger_config[from]" :disabled="triggerType !== 'field_updated'"
-                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                     <option value="*">Qualquer valor</option>
                                     <template x-for="[val, label] in Object.entries((conditionFieldsMap[entityType]||{})[fieldUpdatedField]?.options || {})" :key="val">
                                         <option :value="val" x-text="label"></option>
@@ -133,8 +125,7 @@
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">PARA *</label>
                                 <select name="trigger_config[to]" :disabled="triggerType !== 'field_updated'"
-                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                     <option value="">Qualquer valor</option>
                                     <template x-for="[val, label] in Object.entries((conditionFieldsMap[entityType]||{})[fieldUpdatedField]?.options || {})" :key="val">
                                         <option :value="val" x-text="label"></option>
@@ -149,8 +140,7 @@
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">QUAL DATA *</label>
                                 <select name="trigger_config[date_field]"
-                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                     <option value="">Selecione...</option>
                                     <template x-for="[val, label] in Object.entries(dateFieldsMap[entityType] || {})" :key="val">
                                         <option :value="val" x-text="label"></option>
@@ -160,8 +150,7 @@
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DIAS DE ANTECEDÊNCIA</label>
                                 <input type="number" name="trigger_config[offset_days]" min="0" value="0"
-                                       class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                       style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                       class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                             </div>
                         </div>
                         <p class="text-xs mt-1" style="color:var(--muted)">Checado 1x por dia (07:00) — dispara quando faltam N dias pra data escolhida (0 = dispara no próprio dia).</p>
@@ -200,21 +189,19 @@
                         <template x-for="(cond, idx) in conditions" :key="idx">
                             <div class="flex items-center gap-2 mb-2">
                                 <select :name="'trigger_config[conditions][' + idx + '][field]'" x-model="cond.field"
-                                        class="flex-1 px-2 py-1.5 text-xs focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field flex-1 px-2 py-1.5 text-xs focus:outline-none">
                                     <option value="">Campo...</option>
                                     <template x-for="[key, meta] in Object.entries(conditionFieldsMap[entityType] || {})" :key="key">
                                         <option :value="key" x-text="meta.label"></option>
                                     </template>
                                 </select>
                                 <select :name="'trigger_config[conditions][' + idx + '][operator]'" x-model="cond.operator"
-                                        class="px-2 py-1.5 text-xs focus:outline-none" style="width:76px; background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field px-2 py-1.5 text-xs focus:outline-none" style="width:76px">
                                     <option value="=">é</option>
                                     <option value="!=">não é</option>
                                 </select>
                                 <select :name="'trigger_config[conditions][' + idx + '][value]'" x-model="cond.value"
-                                        class="flex-1 px-2 py-1.5 text-xs focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field flex-1 px-2 py-1.5 text-xs focus:outline-none">
                                     <option value="">Valor...</option>
                                     <template x-for="[val, label] in Object.entries((conditionFieldsMap[entityType]||{})[cond.field]?.options || {})" :key="val">
                                         <option :value="val" x-text="label"></option>
@@ -239,8 +226,7 @@
                     <div>
                         <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">TIPO DE AÇÃO *</label>
                         <select name="action_type" x-model="actionType" required
-                                class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                             <option value="">Selecione...</option>
                             @foreach($actionTypes as $value => $label)
                                 <option value="{{ $value }}" {{ old('action_type') === $value ? 'selected' : '' }}>{{ $label }}</option>
@@ -252,8 +238,7 @@
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">AGENTE DE IA *</label>
                             <select name="action_config[agent_id]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="">Selecione um agente...</option>
                                 @foreach($agents as $agent)
                                     <option value="{{ $agent->id }}">{{ $agent->name }}</option>
@@ -264,8 +249,7 @@
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">MENSAGEM ADICIONAL (OPCIONAL)</label>
                             <textarea name="action_config[user_message]" rows="2"
                                       placeholder="Deixe em branco para usar o prompt padrão do agente"
-                                      class="w-full px-3 py-2.5 text-sm focus:outline-none resize-none"
-                                      style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"></textarea>
+                                      class="field w-full px-3 py-2.5 text-sm focus:outline-none resize-none"></textarea>
                             <p class="text-xs mt-1" style="color:var(--muted)">Variáveis disponíveis: {task_title}, {client_name}, {project_name}...</p>
                         </div>
                     </div>
@@ -275,14 +259,12 @@
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">URL DO WEBHOOK *</label>
                             <input type="url" name="action_config[url]"
                                    placeholder="https://..."
-                                   class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                   style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                   class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">MÉTODO</label>
                             <select name="action_config[method]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="POST">POST</option>
                                 <option value="GET">GET</option>
                             </select>
@@ -294,8 +276,7 @@
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">CAMPO *</label>
                                 <select name="action_config[field]" x-model="actionField"
-                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                     <option value="">Selecione...</option>
                                     <template x-for="[key, meta] in Object.entries(conditionFieldsMap[entityType] || {})" :key="key">
                                         <option :value="key" x-text="meta.label"></option>
@@ -307,8 +288,7 @@
                                 <select name="action_config[value]" x-model="actionValue"
                                         x-show="Object.keys(actionFieldOptions()).length > 0"
                                         :disabled="Object.keys(actionFieldOptions()).length === 0"
-                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                     <option value="">Selecione...</option>
                                     <template x-for="[val, label] in Object.entries(actionFieldOptions())" :key="val">
                                         <option :value="val" x-text="label"></option>
@@ -318,8 +298,7 @@
                                        x-show="Object.keys(actionFieldOptions()).length === 0"
                                        :disabled="Object.keys(actionFieldOptions()).length > 0"
                                        placeholder="Ex: revisao"
-                                       class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                       style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                       class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                             </div>
                         </div>
                         <p class="text-xs mt-1" style="color:var(--muted)">Campos sem lista fixa (título, datas, e-mails...) ficam como texto livre.</p>
@@ -329,8 +308,7 @@
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">NOTIFICAR QUEM</label>
                             <select name="action_config[to]" x-model="notifyTo"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="executor">Executor da tarefa</option>
                                 <option value="creator">Criador da tarefa</option>
                                 <option value="all">Todos os envolvidos</option>
@@ -342,8 +320,7 @@
                         <div x-show="notifyTo === 'sector'" x-cloak>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">QUAL SETOR *</label>
                             <select name="action_config[sector_id]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="">Selecione...</option>
                                 @foreach($sectors as $sector)
                                     <option value="{{ $sector->id }}">{{ $sector->name }}</option>
@@ -353,8 +330,7 @@
                         <div x-show="notifyTo === 'role'" x-cloak>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">QUAL PAPEL FUNCIONAL *</label>
                             <select name="action_config[role]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="">Selecione...</option>
                                 @foreach($functionRoles as $value => $label)
                                     <option value="{{ $value }}">{{ $label }}</option>
@@ -365,15 +341,13 @@
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">MENSAGEM</label>
                             <textarea name="action_config[message]" rows="2"
-                                      class="w-full px-3 py-2.5 text-sm focus:outline-none resize-none"
-                                      style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"></textarea>
+                                      class="field w-full px-3 py-2.5 text-sm focus:outline-none resize-none"></textarea>
                         </div>
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">IDENTIFICADOR — OPCIONAL</label>
                             <input type="text" name="action_config[kind]"
                                    placeholder="Ex: criativo_pronto_campanha"
-                                   class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                   style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                   class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                             <p class="text-xs mt-1" style="color:var(--muted)">Usado pra filtrar esse tipo de notificação em painéis específicos. Deixe em branco se não precisar.</p>
                         </div>
                     </div>
@@ -382,8 +356,7 @@
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">TIPO DE REGISTRO</label>
                             <select name="action_config[record_type]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="ticket">Ticket</option>
                                 <option value="task">Tarefa avulsa</option>
                             </select>
@@ -392,21 +365,18 @@
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">TÍTULO *</label>
                             <input type="text" name="action_config[title]"
                                    placeholder="Ex: Follow-up — {opportunity_title}"
-                                   class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                   style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                   class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                             <p class="text-xs mt-1" style="color:var(--muted)">Variáveis disponíveis: {task_title}, {client_name}, {project_name}, {opportunity_title}...</p>
                         </div>
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DESCRIÇÃO (OPCIONAL)</label>
                             <textarea name="action_config[description]" rows="2"
-                                      class="w-full px-3 py-2.5 text-sm focus:outline-none resize-none"
-                                      style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"></textarea>
+                                      class="field w-full px-3 py-2.5 text-sm focus:outline-none resize-none"></textarea>
                         </div>
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">TIPO</label>
                             <select name="action_config[task_type]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 @foreach($taskTypes as $value => $label)
                                     <option value="{{ $value }}" {{ $value === 'estrategia' ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
@@ -415,8 +385,7 @@
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">SITUAÇÃO INICIAL (OPCIONAL)</label>
                             <select name="action_config[situation]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 @foreach($taskSituations as $value => $label)
                                     <option value="{{ $value }}">{{ $label }}</option>
                                 @endforeach
@@ -425,8 +394,7 @@
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">CLIENTE</label>
                             <select name="action_config[client_id]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="inherit">— usar cliente da tarefa/oportunidade que disparou —</option>
                                 @foreach($clients as $client)
                                     <option value="{{ $client->id }}">{{ $client->displayName() }}</option>
@@ -438,8 +406,7 @@
                         <div class="pt-3" style="border-top:1px solid var(--border2)">
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">RESPONSÁVEL/EXECUTOR</label>
                             <select name="action_config[assignee_source]" x-model="assigneeSource"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="none">Não atribuir</option>
                                 <option value="fixed_user">Pessoa fixa</option>
                                 <option value="trigger_organizer" x-show="entityType === 'meeting'">Organizador da Reunião que disparou</option>
@@ -449,8 +416,7 @@
                         <div x-show="assigneeSource === 'fixed_user'" x-cloak>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">QUAL PESSOA *</label>
                             <select name="action_config[user_id]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="">Selecione...</option>
                                 @foreach($users as $user)
                                     <option value="{{ $user->id }}">{{ $user->name }}</option>
@@ -461,8 +427,7 @@
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">SPRINT</label>
                             <select name="action_config[sprint_target]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="none">Fica no Backlog</option>
                                 <option value="active_sprint">Já nasce na Sprint ativa</option>
                             </select>
@@ -471,8 +436,7 @@
                         <div class="pt-3" style="border-top:1px solid var(--border2)">
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">BASE DO PRAZO</label>
                             <select name="action_config[due_base]" x-model="dueBase"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="now">A partir de agora (quando a automação dispara)</option>
                                 <option value="entity_field" x-show="entityType === 'meeting'">A partir de uma data da Reunião que disparou</option>
                             </select>
@@ -480,8 +444,7 @@
                         <div x-show="dueBase === 'entity_field'" x-cloak>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">CAMPO DE DATA DE ORIGEM</label>
                             <select name="action_config[due_base_field]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="scheduled_at">Data/hora da Reunião</option>
                             </select>
                         </div>
@@ -489,8 +452,7 @@
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DIAS A SOMAR</label>
                                 <input type="number" name="action_config[due_in_days]" min="0" value="0"
-                                       class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                       style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                       class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <p class="text-xs mt-1" style="color:var(--muted)">Ex: 1 = "dia seguinte" à base escolhida acima.</p>
                             </div>
                             <div class="flex items-end pb-2.5">
@@ -517,8 +479,7 @@
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">PAPEL FUNCIONAL RESPONSÁVEL PELO MACRO *</label>
                             <select name="action_config[responsible_role]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="">Selecione...</option>
                                 @foreach($functionRoles as $value => $label)
                                     <option value="{{ $value }}">{{ $label }}</option>
@@ -529,8 +490,7 @@
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">TÍTULO DA TAREFA (OPCIONAL)</label>
                             <input type="text" name="action_config[task_title]"
                                    placeholder="Criar macroplanejamento"
-                                   class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                   style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                   class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                         </div>
                     </div>
 
@@ -544,8 +504,7 @@
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">PAPEL FUNCIONAL A NOTIFICAR *</label>
                             <select name="action_config[role]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="">Selecione...</option>
                                 @foreach($functionRoles as $value => $label)
                                     <option value="{{ $value }}">{{ $label }}</option>
@@ -565,8 +524,7 @@
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">AGENTE DE IA *</label>
                             <select name="action_config[agent_id]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="">Selecione um agente...</option>
                                 @foreach($agents as $agent)
                                     <option value="{{ $agent->id }}">{{ $agent->name }}</option>
@@ -576,8 +534,7 @@
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">PAPEL FUNCIONAL A NOTIFICAR *</label>
                             <select name="action_config[role]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="">Selecione...</option>
                                 @foreach($functionRoles as $value => $label)
                                     <option value="{{ $value }}">{{ $label }}</option>
@@ -597,8 +554,7 @@
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">AGENTE DE IA *</label>
                             <select name="action_config[agent_id]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="">Selecione um agente...</option>
                                 @foreach($agents as $agent)
                                     <option value="{{ $agent->id }}">{{ $agent->name }}</option>
@@ -616,8 +572,7 @@
                         <div>
                             <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">BASE DA DATA</label>
                             <select name="action_config[date_base]"
-                                    class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <option value="field">A partir do valor atual do próprio campo</option>
                                 <option value="trigger">A partir de agora (quando a automação disparar)</option>
                             </select>
@@ -627,8 +582,7 @@
                             <div>
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">QUAL DATA *</label>
                                 <select name="action_config[date_field]"
-                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                     <option value="">Selecione...</option>
                                     <template x-for="[val, label] in Object.entries(dateFieldsMap[entityType] || {})" :key="val">
                                         <option :value="val" x-text="label"></option>
@@ -639,8 +593,7 @@
                                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">DESLOCAR (DIAS) *</label>
                                 <input type="number" name="action_config[offset_days]" value="0"
                                        placeholder="Ex: 3 ou -2"
-                                       class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                       style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                       class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 <p class="text-xs mt-1" style="color:var(--muted)">Positivo adia, negativo antecipa. 0 = igual à base.</p>
                             </div>
                         </div>

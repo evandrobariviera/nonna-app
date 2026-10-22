@@ -40,8 +40,8 @@
 
     {{-- Filtro de período --}}
     <form method="GET" action="{{ route('portal.campaigns.show', $campaign) }}" class="mb-6">
-        <select name="period" onchange="this.form.submit()"
-                style="background: var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px; border-radius:6px; outline:none; cursor:pointer">
+        <select class="field" name="period" onchange="this.form.submit()"
+                style="padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
             @foreach(\App\Http\Controllers\Portal\CampaignController::$periods as $key => $label)
                 <option value="{{ $key }}" {{ $period === $key ? 'selected' : '' }}>{{ $label }}</option>
             @endforeach

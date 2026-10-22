@@ -100,8 +100,8 @@
                     <textarea x-model="message"
                               rows="5"
                               placeholder="Digite a mensagem para o agente... ex: 'Gere 5 opções de legenda para Instagram sobre lançamento de produto'"
-                              class="w-full rounded px-3 py-2 text-sm"
-                              style="background:var(--s2); border:1px solid var(--border2); color:var(--text); resize:vertical; line-height:1.6"
+                              class="field w-full px-3 py-2 text-sm"
+                              style="resize:vertical; line-height:1.6"
                               @keydown.meta.enter="run()"
                               @keydown.ctrl.enter="run()"></textarea>
                     <div class="text-xs mt-1" style="color:var(--muted2)">Ctrl+Enter / Cmd+Enter para enviar</div>
@@ -116,8 +116,7 @@
                     <input type="text"
                            x-model="contextRaw"
                            placeholder='{"client_name": "Nonna", "brand_voice": "jovem e direto"}'
-                           class="w-full rounded px-3 py-2 text-sm font-mono"
-                           style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                           class="field w-full px-3 py-2 text-sm font-mono">
                 </div>
 
                 {{-- Botão --}}

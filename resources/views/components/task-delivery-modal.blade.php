@@ -34,8 +34,7 @@
                 <label class="text-sm font-semibold mb-1.5 block" style="color:var(--text)">O que faltou, e por quê?</label>
                 <textarea x-ref="missing" x-model="$store.delivery.missing" rows="2"
                     placeholder="Ex: faltou a versão em vídeo — o cliente ainda não mandou as imagens do produto."
-                    class="w-full px-3 py-2 text-sm focus:outline-none resize-y leading-relaxed"
-                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"></textarea>
+                    class="field w-full px-3 py-2 text-sm focus:outline-none resize-y leading-relaxed"></textarea>
             </div>
 
             <div>
@@ -46,8 +45,7 @@
                 </p>
                 <textarea x-model="$store.delivery.body" rows="6"
                     placeholder="Ex: Criamos 3 artes com foco no lançamento. Usamos fotos reais da loja em vez de banco de imagem pra passar proximidade, e a chamada destaca o frete grátis, que foi o que mais converteu no último mês..."
-                    class="w-full px-3 py-2 text-sm focus:outline-none resize-y leading-relaxed"
-                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"></textarea>
+                    class="field w-full px-3 py-2 text-sm focus:outline-none resize-y leading-relaxed"></textarea>
                 <p class="text-[11px] mt-1 text-right" style="color:var(--muted)"
                    x-text="$store.delivery.body.trim().length < 40 ? 'mínimo 40 caracteres (' + $store.delivery.body.trim().length + ')' : ''"></p>
             </div>

@@ -237,8 +237,7 @@
                                         }, 300)
                                     "
                                     placeholder="Buscar por título ou ID ClickUp..."
-                                    class="w-full px-3 py-2 text-sm focus:outline-none"
-                                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                                    class="field w-full px-3 py-2 text-sm focus:outline-none">
                             </div>
                             <div style="max-height:360px; overflow-y:auto">
                                 <template x-if="loading">

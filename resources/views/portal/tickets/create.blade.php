@@ -16,8 +16,7 @@
                 <label class="block text-xs font-semibold mb-1.5" style="color: var(--muted)">Título</label>
                 <input type="text" name="title" value="{{ old('title') }}" required maxlength="300"
                        placeholder="Resumo do que você precisa"
-                       class="w-full rounded-lg border px-3 py-2 text-sm"
-                       style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                       class="field w-full px-3 py-2 text-sm">
                 @error('title')
                     <p class="mt-1 text-xs" style="color: var(--red)">{{ $message }}</p>
                 @enderror
@@ -26,8 +25,7 @@
             <div>
                 <label class="block text-xs font-semibold mb-1.5" style="color: var(--muted)">Categoria</label>
                 <select name="task_type" required
-                        class="w-full rounded-lg border px-3 py-2 text-sm"
-                        style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                        class="field w-full px-3 py-2 text-sm">
                     <option value="">Selecione...</option>
                     @foreach(\App\Models\Task::$types as $value => $label)
                         <option value="{{ $value }}" @selected(old('task_type') === $value)>{{ $label }}</option>
@@ -41,8 +39,7 @@
             <div>
                 <label class="block text-xs font-semibold mb-1.5" style="color: var(--muted)">Urgência</label>
                 <select name="priority"
-                        class="w-full rounded-lg border px-3 py-2 text-sm"
-                        style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                        class="field w-full px-3 py-2 text-sm">
                     @foreach(\App\Models\Task::$priorities as $value => $p)
                         <option value="{{ $value }}" @selected(old('priority', 'normal') === $value)>{{ $p['label'] }}</option>
                     @endforeach
@@ -56,8 +53,7 @@
                 <label class="block text-xs font-semibold mb-1.5" style="color: var(--muted)">Descrição</label>
                 <textarea name="description" rows="5"
                           placeholder="Detalhe sua solicitação..."
-                          class="w-full rounded-lg border px-3 py-2 text-sm resize-none"
-                          style="background: var(--s2); border-color: var(--border2); color: var(--text)">{{ old('description') }}</textarea>
+                          class="field w-full px-3 py-2 text-sm resize-none">{{ old('description') }}</textarea>
                 @error('description')
                     <p class="mt-1 text-xs" style="color: var(--red)">{{ $message }}</p>
                 @enderror

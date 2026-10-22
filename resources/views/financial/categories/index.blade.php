@@ -22,7 +22,7 @@
             @csrf
             <div>
                 <label class="text-xs font-mono uppercase tracking-widest mb-1 block" style="color:var(--muted)">Tipo</label>
-                <select name="type" required style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px">
+                <select class="field" name="type" required style="padding:8px 12px; font-size:13px">
                     @foreach(\App\Models\FinancialCategory::$types as $key => $label)
                         <option value="{{ $key }}">{{ $label }}</option>
                     @endforeach
@@ -30,12 +30,12 @@
             </div>
             <div>
                 <label class="text-xs font-mono uppercase tracking-widest mb-1 block" style="color:var(--muted)">Nome</label>
-                <input type="text" name="name" maxlength="60" required
-                       style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px">
+                <input class="field" type="text" name="name" maxlength="60" required
+                       style="padding:8px 12px; font-size:13px">
             </div>
             <div>
                 <label class="text-xs font-mono uppercase tracking-widest mb-1 block" style="color:var(--muted)">Cor</label>
-                <select name="color" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px">
+                <select class="field" name="color" style="padding:8px 12px; font-size:13px">
                     @foreach(['green', 'blue', 'purple', 'orange', 'red', 'yellow', 'cyan', 'muted'] as $color)
                         <option value="{{ $color }}">{{ ucfirst($color) }}</option>
                     @endforeach

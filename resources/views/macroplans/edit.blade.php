@@ -248,8 +248,7 @@
                             <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Foco Principal do Ciclo</label>
                             <textarea name="foco_principal" rows="3"
                                 placeholder="Qual é a grande prioridade deste trimestre?"
-                                class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                                class="field w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                                 onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ $b1['foco_principal'] ?? '' }}</textarea>
                         </div>
 
@@ -258,8 +257,7 @@
                             <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Ponto de Partida</label>
                             <textarea name="contexto_anterior" rows="3"
                                 placeholder="Histórico recente relevante que embasa as decisões deste ciclo (ex: resultado da campanha anterior, situação de mercado do cliente)"
-                                class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                                class="field w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                                 onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ $b1['contexto_anterior'] ?? '' }}</textarea>
                         </div>
 
@@ -280,8 +278,7 @@
                                     <input type="text" name="verba_total"
                                         value="{{ $b1['verba_total'] ?? ($b1['verba_anuncios'] ?? ($currentBudget->monthly_budget ?? '')) }}"
                                         placeholder="Ex: 2000"
-                                        class="w-full px-3 py-2 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                                        class="field w-full px-3 py-2 text-sm focus:outline-none"
                                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                                     <p class="text-xs mt-1" style="color:var(--muted)">Se mudar este valor, o histórico de orçamento do cliente é atualizado automaticamente ao salvar.</p>
                                 </div>
@@ -290,8 +287,7 @@
                                     <input type="number" name="meta_pct" min="0" max="100"
                                         value="{{ $b1['meta_pct'] ?? '' }}"
                                         placeholder="Ex: 70"
-                                        class="w-full px-3 py-2 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                                        class="field w-full px-3 py-2 text-sm focus:outline-none"
                                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                                 </div>
                                 <div>
@@ -299,16 +295,14 @@
                                     <input type="number" name="google_pct" min="0" max="100"
                                         value="{{ $b1['google_pct'] ?? '' }}"
                                         placeholder="Ex: 30"
-                                        class="w-full px-3 py-2 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                                        class="field w-full px-3 py-2 text-sm focus:outline-none"
                                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                                 </div>
                             </div>
                             <p class="text-xs font-mono mt-1.5" style="color:var(--muted)">Observação sobre a verba (distribuição, timing)</p>
                             <textarea name="verba_obs" rows="2"
                                 placeholder="Ex: Mês 1 = 100% Meta. A partir do Mês 2 = 70/30..."
-                                class="w-full px-3 py-2 text-sm focus:outline-none resize-none mt-1"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                                class="field w-full px-3 py-2 text-sm focus:outline-none resize-none mt-1"
                                 onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ $b1['verba_obs'] ?? '' }}</textarea>
                         </div>
 
@@ -322,13 +316,11 @@
                                         <p class="text-xs font-bold font-mono uppercase tracking-widest mb-2" style="color:var(--purple)" x-text="kpi.label"></p>
                                         <input type="text" :name="'kpis['+i+'][title]'" x-model="kpi.title"
                                             placeholder="Nome do KPI..."
-                                            class="w-full px-3 py-1.5 text-sm focus:outline-none mb-1.5"
-                                            style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"
+                                            class="field w-full px-3 py-1.5 text-sm focus:outline-none mb-1.5"
                                             onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                                         <textarea :name="'kpis['+i+'][desc]'" x-model="kpi.desc" rows="2"
                                             placeholder="Como medir, baseline, meta..."
-                                            class="w-full px-3 py-1.5 text-xs focus:outline-none resize-none"
-                                            style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"
+                                            class="field w-full px-3 py-1.5 text-xs focus:outline-none resize-none"
                                             onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'"></textarea>
                                     </div>
                                 </template>
@@ -370,8 +362,7 @@
                             <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">O Desafio Atual</label>
                             <textarea name="desafio_atual" rows="4"
                                 placeholder="Qual é o principal problema ou oportunidade que estamos endereçando?"
-                                class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                                class="field w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                                 onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ $b2['desafio_atual'] ?? '' }}</textarea>
                         </div>
 
@@ -383,16 +374,14 @@
                                     <p class="text-xs font-mono mb-1.5" style="color:var(--muted)">Antes (situação atual)</p>
                                     <textarea name="o_que_muda_antes" rows="4"
                                         placeholder="Como está hoje..."
-                                        class="w-full px-3 py-2 text-sm focus:outline-none resize-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                                        class="field w-full px-3 py-2 text-sm focus:outline-none resize-none"
                                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ $b2['o_que_muda_antes'] ?? '' }}</textarea>
                                 </div>
                                 <div>
                                     <p class="text-xs font-mono mb-1.5" style="color:var(--muted)">Agora (o que queremos)</p>
                                     <textarea name="o_que_muda_agora" rows="4"
                                         placeholder="O que mudará com este planejamento..."
-                                        class="w-full px-3 py-2 text-sm focus:outline-none resize-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                                        class="field w-full px-3 py-2 text-sm focus:outline-none resize-none"
                                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ $b2['o_que_muda_agora'] ?? '' }}</textarea>
                                 </div>
                             </div>
@@ -403,8 +392,7 @@
                             <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">A Nossa Estratégia</label>
                             <textarea name="estrategia" rows="4"
                                 placeholder="Como a equipe vai agir para resolver o desafio?"
-                                class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                                class="field w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                                 onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ $b2['estrategia'] ?? '' }}</textarea>
                         </div>
 
@@ -434,13 +422,11 @@
                                         <button type="button" @click="removePilar(i)" class="btn btn-danger btn-xs absolute top-2 right-2">✕</button>
                                         <input type="text" :name="'pilares['+i+'][nome]'" x-model="pilar.nome"
                                             placeholder="Nome do pilar (ex: Autoridade e Prova Social)"
-                                            class="w-full px-3 py-1.5 text-sm font-bold focus:outline-none mb-2"
-                                            style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"
+                                            class="field w-full px-3 py-1.5 text-sm font-bold focus:outline-none mb-2"
                                             onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                                         <textarea :name="'pilares['+i+'][desc]'" x-model="pilar.desc" rows="2"
                                             placeholder="Descrição do pilar, mensagem-chave..."
-                                            class="w-full px-3 py-1.5 text-xs focus:outline-none resize-none"
-                                            style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"
+                                            class="field w-full px-3 py-1.5 text-xs focus:outline-none resize-none"
                                             onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'"></textarea>
                                     </div>
                                 </template>
@@ -471,22 +457,19 @@
                                         <button type="button" @click="removeMes(i)" class="btn btn-danger btn-xs absolute top-2 right-2">✕</button>
                                         <input type="text" :name="'linha_tempo['+i+'][mes]'" x-model="mesItem.mes"
                                             placeholder="Ex: Julho"
-                                            class="w-full px-3 py-1.5 text-sm font-bold focus:outline-none mb-2"
-                                            style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"
+                                            class="field w-full px-3 py-1.5 text-sm font-bold focus:outline-none mb-2"
                                             onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                                         <template x-for="(item, j) in mesItem.itens" :key="j">
                                             <div class="flex items-center gap-2 mb-2">
                                                 <select :name="'linha_tempo['+i+'][itens]['+j+'][tipo]'" x-model="item.tipo"
-                                                    class="text-xs px-2 py-1.5 focus:outline-none"
-                                                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                                                    class="field text-xs px-2 py-1.5 focus:outline-none">
                                                     <option value="geral">Geral</option>
                                                     <option value="projeto">Projeto</option>
                                                     <option value="campanha">Campanha</option>
                                                 </select>
                                                 <input type="text" :name="'linha_tempo['+i+'][itens]['+j+'][texto]'" x-model="item.texto"
                                                     placeholder="Ex: Lançamento da campanha X"
-                                                    class="flex-1 px-3 py-1.5 text-xs focus:outline-none"
-                                                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)"
+                                                    class="field flex-1 px-3 py-1.5 text-xs focus:outline-none"
                                                     onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                                                 <button type="button" @click="removeItem(i, j)" class="btn btn-danger btn-xs flex-shrink-0">✕</button>
                                             </div>
@@ -588,18 +571,15 @@
                                 <div class="auto-grid-sm gap-3">
                                     <div>
                                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Data e hora <span style="color:var(--orange)">*</span></label>
-                                        <input type="datetime-local" name="scheduled_at" required class="w-full px-3 py-2 text-sm focus:outline-none"
-                                               style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        <input type="datetime-local" name="scheduled_at" required class="field w-full px-3 py-2 text-sm focus:outline-none">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Duração (min)</label>
-                                        <input type="number" name="duration_minutes" min="5" max="480" :value="Math.max(30, selected * 30)" class="w-full px-3 py-2 text-sm focus:outline-none"
-                                               style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        <input type="number" name="duration_minutes" min="5" max="480" :value="Math.max(30, selected * 30)" class="field w-full px-3 py-2 text-sm focus:outline-none">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Modalidade</label>
-                                        <select name="modality" class="w-full px-3 py-2 text-sm focus:outline-none"
-                                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        <select name="modality" class="field w-full px-3 py-2 text-sm focus:outline-none">
                                             @foreach(\App\Models\Meeting::$modalities as $key => $label)
                                                 <option value="{{ $key }}">{{ $label }}</option>
                                             @endforeach
@@ -607,8 +587,7 @@
                                     </div>
                                     <div>
                                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Link (online)</label>
-                                        <input type="url" name="online_link" placeholder="https://meet..." class="w-full px-3 py-2 text-sm focus:outline-none"
-                                               style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        <input type="url" name="online_link" placeholder="https://meet..." class="field w-full px-3 py-2 text-sm focus:outline-none">
                                     </div>
                                 </div>
 
@@ -637,8 +616,8 @@
                                                         <button type="button" @click="item.team = item.team.filter(i => i !== uid)" style="background:none; border:none; cursor:pointer; color:var(--muted)">✕</button>
                                                     </span>
                                                 </template>
-                                                <select @change="add(item, $event)" class="px-2 py-1 text-xs focus:outline-none"
-                                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">
+                                                <select @change="add(item, $event)" class="field px-2 py-1 text-xs focus:outline-none"
+                                                        style="color:var(--muted2)">
                                                     <option value="">+ pessoa</option>
                                                     <template x-for="u in users.filter(u => !item.team.includes(u.id))" :key="u.id">
                                                         <option :value="u.id" x-text="u.name"></option>
@@ -678,8 +657,7 @@
                                 <div>
                                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Tipo</label>
                                     <select name="type"
-                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                         @foreach(\App\Models\Project::$types as $key => $t)
                                             <option value="{{ $key }}">{{ $t['label'] }}</option>
                                         @endforeach
@@ -691,8 +669,7 @@
                                     </label>
                                     <input type="text" name="title" required
                                         placeholder="Ex: Captação B2B — Landing Page"
-                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 </div>
                             </div>
 
@@ -701,8 +678,7 @@
                                 <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Objetivo</label>
                                 <textarea name="objective" rows="2"
                                     placeholder="O que este projeto precisa alcançar?"
-                                    class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"></textarea>
+                                    class="field w-full px-4 py-2.5 text-sm focus:outline-none resize-none"></textarea>
                             </div>
 
                             {{-- Datas --}}
@@ -710,14 +686,12 @@
                                 <div>
                                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Início</label>
                                     <input type="date" name="start_date"
-                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Término</label>
                                     <input type="date" name="end_date"
-                                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                                 </div>
                             </div>
 
@@ -906,8 +880,7 @@
                             </label>
                             <textarea name="trafego_continuo" rows="4"
                                 placeholder="Acompanhamento, otimização de campanhas, gestão de budget..."
-                                class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                                class="field w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                                 onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ $b4['trafego_continuo'] ?? '' }}</textarea>
                         </div>
 
@@ -917,8 +890,7 @@
                             </label>
                             <textarea name="social_continuo" rows="4"
                                 placeholder="Publicações, stories, engajamento, calendário editorial..."
-                                class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                                class="field w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                                 onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ $b4['social_continuo'] ?? '' }}</textarea>
                         </div>
 
@@ -928,8 +900,7 @@
                             </label>
                             <textarea name="outras_demandas" rows="4"
                                 placeholder="Relatórios, calls de alinhamento, revisões..."
-                                class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                                class="field w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                                 onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ $b4['outras_demandas'] ?? '' }}</textarea>
                         </div>
 
@@ -968,8 +939,7 @@
                             </label>
                             <textarea name="acessos" rows="5"
                                 placeholder="BM, pixel, GA4, GTM, contas de anúncios, drives, credenciais..."
-                                class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                                class="field w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                                 onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ $b5['acessos'] ?? '' }}</textarea>
                         </div>
 
@@ -979,8 +949,7 @@
                             </label>
                             <textarea name="materiais" rows="4"
                                 placeholder="Fotos, vídeos, logos, catálogos, textos do cliente..."
-                                class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                                class="field w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                                 onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ $b5['materiais'] ?? '' }}</textarea>
                         </div>
 
@@ -990,8 +959,7 @@
                             </label>
                             <textarea name="pendencias" rows="4"
                                 placeholder="Itens pendentes, dependências externas, alertas para a equipe..."
-                                class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                                class="field w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                                 onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ $b5['pendencias'] ?? '' }}</textarea>
                         </div>
 
@@ -1031,8 +999,7 @@
                                 Foco <span class="normal-case tracking-normal" style="color:var(--muted2)">(opcional)</span>
                             </label>
                             <input type="text" name="focus" value="{{ $macroplan->focus }}" maxlength="200" placeholder="Ex: Expointer"
-                                class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                         </div>
 
                         {{-- Período --}}
@@ -1040,14 +1007,12 @@
                             <div>
                                 <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Início do Ciclo</label>
                                 <input type="date" name="period_start" value="{{ $macroplan->period_start->format('Y-m-d') }}" required
-                                    class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Fim do Ciclo</label>
                                 <input type="date" name="period_end" value="{{ $macroplan->period_end->format('Y-m-d') }}" required
-                                    class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                             </div>
                         </div>
 
@@ -1056,8 +1021,7 @@
                             <div>
                                 <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Responsável</label>
                                 <select name="responsible_id"
-                                    class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                                     <option value="">— sem responsável —</option>
                                     @foreach($users as $u)
                                         <option value="{{ $u->id }}" {{ $macroplan->responsible_id == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
@@ -1067,8 +1031,7 @@
                             <div>
                                 <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Status</label>
                                 <select name="status" required
-                                    class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                                    style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                                     @foreach(\App\Models\MacroPlan::$statuses as $key => $s)
                                         <option value="{{ $key }}" {{ $macroplan->status === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
                                     @endforeach
@@ -1081,7 +1044,7 @@
                             <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Verba mensal de anúncios (R$)</label>
                             <input type="text" name="verba_mensal" value="{{ $macroplan->block('bloco1')['verba_total'] ?? '' }}"
                                 placeholder="Ex: 4500"
-                                class="w-full px-4 py-2.5 text-sm focus:outline-none" style="max-width:240px; background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                class="field w-full px-4 py-2.5 text-sm focus:outline-none" style="max-width:240px">
                             <p class="text-xs mt-1" style="color:var(--muted)">Mudou o valor → o Orçamento do cliente ganha uma nova entrada a partir de hoje.</p>
                         </div>
 

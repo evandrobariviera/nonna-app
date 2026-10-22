@@ -250,13 +250,12 @@
                             :style="tipo === '{{ $valor }}' ? 'background:var(--purple); color:#fff' : 'color:var(--muted)'">{{ $label }}</button>
                 @endforeach
             </div>
-            <select x-model="cliente" class="text-xs px-3 py-1.5 rounded-lg"
-                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+            <select x-model="cliente" class="field text-xs px-3 py-1.5">
                 <option value="">Todos os clientes</option>
                 <template x-for="c in clientes" :key="c"><option :value="c" x-text="c"></option></template>
             </select>
             <input type="search" x-model.debounce.200ms="busca" placeholder="Buscar projeto…"
-                   class="text-xs px-3 py-1.5 rounded-lg" style="background:var(--s2); border:1px solid var(--border2); color:var(--text); min-width:180px">
+                   class="field text-xs px-3 py-1.5" style="min-width:180px">
             <span class="text-xs ml-auto hidden md:flex items-center gap-3 flex-wrap" style="color:var(--muted2)">
                 <template x-for="[k, label, cor] in etapas" :key="k">
                     <span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-sm" :style="'background:' + cor"></span><span x-text="label"></span></span>

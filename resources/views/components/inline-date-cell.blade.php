@@ -20,5 +20,5 @@
           title="Clique para editar"></span>
     <input x-show="editing" x-cloak x-ref="input" x-model="value" type="date"
            @blur="commit()" @change="commit()" @keydown.escape="cancel()"
-           class="text-xs px-1 py-0.5" style="background:var(--s3); border:1px solid var(--border2); border-radius:4px; color:var(--text); max-width:125px">
+           class="field text-xs px-1 py-0.5" style="max-width:125px">
 </div>

@@ -23,9 +23,8 @@
             <input id="email" type="email" name="email"
                    value="{{ old('email') }}"
                    required autofocus placeholder="seu@email.com"
-                   class="w-full rounded-lg border px-3 py-2.5 text-sm outline-none focus:ring-2"
-                   style="background: var(--s1); border-color: var(--border2); color: var(--text);
-                          --tw-ring-color: var(--purple); --tw-ring-opacity: 0.25">
+                   class="field w-full px-3 py-2.5 text-sm outline-none focus:ring-2"
+                   style="--tw-ring-color: var(--purple); --tw-ring-opacity: 0.25">
             @error('email')
                 <p class="mt-1.5 text-xs" style="color: var(--red)">{{ $message }}</p>
             @enderror

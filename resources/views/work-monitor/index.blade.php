@@ -7,10 +7,10 @@
         <form method="GET" action="{{ route('work-monitor.index') }}" class="flex items-center gap-2 flex-wrap">
             <input type="date" name="date" value="{{ $date->toDateString() }}" max="{{ today()->toDateString() }}"
                    onchange="this.form.submit()"
-                   class="px-3 py-1.5 text-xs" style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                   class="field px-3 py-1.5 text-xs">
 
             <select name="user_id" onchange="this.form.submit()"
-                    class="px-3 py-1.5 text-xs" style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                    class="field px-3 py-1.5 text-xs">
                 <option value="">Todos da equipe</option>
                 @foreach($members as $member)
                     <option value="{{ $member->id }}" @selected((string) $selectedUserId === (string) $member->id)>{{ $member->name }}</option>

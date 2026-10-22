@@ -494,8 +494,7 @@
                         <div class="flex items-center gap-1.5"
                              x-data="selectField({ url: '{{ route('tasks.update-sprint', $task) }}', payloadKey: 'sprint_id', value: @js($task->sprint_id) })">
                             <select x-model="value" @change="change()"
-                                class="flex-1 min-w-0 px-2 py-1.5 text-sm font-semibold focus:outline-none"
-                                style="background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text)">
+                                class="field flex-1 min-w-0 px-2 py-1.5 text-sm font-semibold focus:outline-none">
                                 <option value="">Backlog (fora de sprint)</option>
                                 @foreach($sprints as $sp)
                                     <option value="{{ $sp->id }}">
@@ -514,8 +513,7 @@
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Tipo</p>
                         <select x-data="selectField({ url: '{{ route('tasks.update-field', $task) }}', field: 'task_type', value: @js($task->task_type) })"
                             x-model="value" @change="change()"
-                            class="w-full px-2 py-1.5 text-sm font-semibold focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text)">
+                            class="field w-full px-2 py-1.5 text-sm font-semibold focus:outline-none">
                             @foreach(\App\Models\Task::$types as $key => $label)
                                 <option value="{{ $key }}">{{ $label }}</option>
                             @endforeach
@@ -525,8 +523,7 @@
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Origem</p>
                         <select x-data="selectField({ url: '{{ route('tasks.update-field', $task) }}', field: 'origin', value: @js($task->origin) })"
                             x-model="value" @change="change()"
-                            class="w-full px-2 py-1.5 text-sm font-semibold focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text)">
+                            class="field w-full px-2 py-1.5 text-sm font-semibold focus:outline-none">
                             @foreach(\App\Models\Task::$origins as $key => $label)
                                 <option value="{{ $key }}">{{ $label }}</option>
                             @endforeach
@@ -536,8 +533,7 @@
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Destino</p>
                         <select x-data="selectField({ url: '{{ route('tasks.update-field', $task) }}', field: 'destination', value: @js($task->destination) })"
                             x-model="value" @change="change()"
-                            class="w-full px-2 py-1.5 text-sm font-semibold focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text)">
+                            class="field w-full px-2 py-1.5 text-sm font-semibold focus:outline-none">
                             <option value="">— nenhum —</option>
                             @foreach(\App\Models\Task::$destinations as $key => $label)
                                 <option value="{{ $key }}">{{ $label }}</option>
@@ -576,8 +572,7 @@
                         }">
                         <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Cliente</label>
                         <select x-model="value" @change="change()"
-                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                             @foreach($clients as $c)
                                 <option value="{{ $c->id }}">{{ $c->displayName() }}</option>
                             @endforeach
@@ -589,8 +584,7 @@
                          @task-client-changed.window="value = ''">
                         <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Planejamento</label>
                         <select x-model="value" @change="change()" :disabled="@js((bool) $task->project_id)"
-                            class="w-full px-3 py-2.5 text-sm focus:outline-none disabled:opacity-50"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-3 py-2.5 text-sm focus:outline-none disabled:opacity-50">
                             <option value="">— nenhum —</option>
                             @foreach($clientMacroPlans as $m)
                                 <option value="{{ $m->id }}">{{ $m->title }}</option>
@@ -604,8 +598,7 @@
                          @task-client-changed.window="value = ''">
                         <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Projeto</label>
                         <select x-model="value" @change="change()"
-                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                             <option value="">— nenhum —</option>
                             @foreach($clientProjects as $p)
                                 <option value="{{ $p->id }}">{{ $p->title }}</option>
@@ -655,8 +648,7 @@
                         <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Responsável</label>
                         <select x-data="selectField({ url: '{{ route('tasks.update-responsavel', $task) }}', payloadKey: 'responsavel_id', value: @js($task->responsibles->first()?->id) })"
                             x-model="value" @change="change()"
-                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                             <option value="">— nenhum —</option>
                             @foreach($users as $u)
                                 <option value="{{ $u->id }}">{{ $u->name }}</option>
@@ -667,8 +659,7 @@
                         <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Executor</label>
                         <select x-data="selectField({ url: '{{ route('tasks.update-executor', $task) }}', payloadKey: 'executor_id', value: @js($task->executor?->id) })"
                             x-model="value" @change="change()"
-                            class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                             <option value="">— nenhum —</option>
                             @foreach($users as $u)
                                 <option value="{{ $u->id }}">{{ $u->name }}</option>
@@ -689,8 +680,7 @@
                             </div>
                         </template>
                     </div>
-                    <select @change="add($event)" class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                    <select @change="add($event)" class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                         <option value="">+ Adicionar observador</option>
                         @foreach($users as $u)
                             <option value="{{ $u->id }}" data-name="{{ $u->name }}">{{ $u->name }}</option>
@@ -891,15 +881,15 @@
                                             <label class="flex flex-col gap-1 text-xs font-semibold" style="color:var(--orange)">
                                                 O que faltou
                                                 <textarea name="missing" rows="2" required minlength="10" maxlength="2000"
-                                                    class="w-full px-3 py-2 text-sm font-normal focus:outline-none"
-                                                    style="background:var(--s1); border:1px solid var(--border); border-radius:8px; color:var(--text); resize:vertical">{{ $delivery->missing }}</textarea>
+                                                    class="field w-full px-3 py-2 text-sm font-normal focus:outline-none"
+                                                    style="resize:vertical">{{ $delivery->missing }}</textarea>
                                             </label>
                                         @endunless
                                         <label class="flex flex-col gap-1 text-xs font-semibold" style="color:var(--muted2)">
                                             Retorno
                                             <textarea name="body" rows="6" required minlength="40" maxlength="5000"
-                                                class="w-full px-3 py-2 text-sm font-normal focus:outline-none"
-                                                style="background:var(--s1); border:1px solid var(--border); border-radius:8px; color:var(--text); resize:vertical; line-height:1.6">{{ $delivery->body }}</textarea>
+                                                class="field w-full px-3 py-2 text-sm font-normal focus:outline-none"
+                                                style="resize:vertical; line-height:1.6">{{ $delivery->body }}</textarea>
                                         </label>
                                         <div class="flex justify-end gap-2">
                                             <button type="button" @click="editing = false" class="btn btn-ghost btn-xs">Cancelar</button>
@@ -1293,7 +1283,7 @@
                 </div>
                 <label class="block text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Formato</label>
                 <select x-model="formatId" @change="send({ task_format_id: formatId || null })"
-                        class="w-full text-sm px-2 py-1.5" style="background:var(--s3); border:1px solid var(--border2); color:var(--text)">
+                        class="field w-full text-sm px-2 py-1.5">
                     <option value="">Automático{{ $detectedFormat ? ' — '.$detectedFormat->name.' ('.$detectedFormat->points.')' : ' — padrão do tipo' }}</option>
                     @foreach($pointFormats as $f)
                         <option value="{{ $f->id }}">{{ $f->name }} ({{ $f->points }})</option>
@@ -1679,8 +1669,7 @@
                 <label class="block text-xs font-semibold uppercase tracking-widest mb-2"
                        style="color:var(--muted); letter-spacing:.08em">Especialista</label>
                 <select x-model="selectedAgent"
-                        class="w-full px-3 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                        class="field w-full px-3 py-2.5 text-sm focus:outline-none"
                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                     <option value="">Selecione um especialista...</option>
                     <template x-for="agent in agents" :key="agent.id">
@@ -1746,8 +1735,8 @@
                           :disabled="!selectedAgent || thinking"
                           rows="3"
                           placeholder="Mensagem para o especialista..."
-                          class="w-full px-4 py-3 text-sm focus:outline-none resize-none"
-                          style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text); line-height:1.6"
+                          class="field w-full px-4 py-3 text-sm focus:outline-none resize-none"
+                          style="line-height:1.6"
                           onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'"></textarea>
                 <div class="flex items-center justify-between mt-3">
                     <span class="text-xs" style="color:var(--muted2)">⌘+Enter envia</span>

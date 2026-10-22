@@ -202,8 +202,8 @@
                     @csrf @method('PATCH')
                     @if(!empty($returnTo))<input type="hidden" name="return_to" value="{{ $returnTo }}">@endif
                     <input type="text" name="resolution_note" maxlength="2000" placeholder="O que chegou? (opcional)"
-                           class="flex-1 min-w-0"
-                           style="background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:5px 9px; font-size:12px; outline:none">
+                           class="field flex-1 min-w-0"
+                           style="padding:5px 9px; font-size:12px; outline:none">
                     <button type="submit" class="btn btn-xs btn-success">Confirmar</button>
                 </form>
             @endif

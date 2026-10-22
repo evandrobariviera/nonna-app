@@ -48,8 +48,8 @@
 
         @unless($view === 'quadros')
             <select name="status" @if($view !== 'lista') onchange="this.form.submit()" @endif
-                class="w-full sm:w-auto"
-                style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
+                class="field w-full sm:w-auto"
+                style="color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
                 <option value="">Todos os status</option>
                 @foreach(\App\Models\Meeting::$statuses as $key => $s)
                     <option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
@@ -58,8 +58,8 @@
         @endunless
 
         <select name="type" @if($view !== 'lista') onchange="this.form.submit()" @endif
-            class="w-full sm:w-auto"
-            style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
+            class="field w-full sm:w-auto"
+            style="color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
             <option value="">Todos os tipos</option>
             @foreach(\App\Models\Meeting::$types as $key => $label)
                 <option value="{{ $key }}" {{ request('type') === $key ? 'selected' : '' }}>{{ $label }}</option>
@@ -67,8 +67,8 @@
         </select>
 
         <select name="client_id" @if($view !== 'lista') onchange="this.form.submit()" @endif
-            class="w-full sm:w-auto"
-            style="background:var(--s2); border:1px solid var(--border2); color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
+            class="field w-full sm:w-auto"
+            style="color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
             <option value="">Todos os clientes</option>
             @foreach($clients as $c)
                 <option value="{{ $c->id }}" {{ request('client_id') === $c->id ? 'selected' : '' }}>{{ $c->displayName() }}</option>

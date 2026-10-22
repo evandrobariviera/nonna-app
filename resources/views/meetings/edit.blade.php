@@ -33,8 +33,7 @@
                         Título <span style="color:var(--orange)">*</span>
                     </label>
                     <input type="text" name="title" value="{{ old('title', $meeting->title) }}" required
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                        class="field w-full px-4 py-2.5 text-sm focus:outline-none"
                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                 </div>
 
@@ -45,8 +44,7 @@
                             Tipo de Reunião <span style="color:var(--orange)">*</span>
                         </label>
                         <select name="type" required
-                            class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                             @foreach(\App\Models\Meeting::$types as $key => $label)
                                 <option value="{{ $key }}" {{ old('type', $meeting->type) === $key ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
@@ -57,8 +55,7 @@
                             Modalidade <span style="color:var(--orange)">*</span>
                         </label>
                         <select name="modality" x-model="modality" required
-                            class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                             @foreach(\App\Models\Meeting::$modalities as $key => $label)
                                 <option value="{{ $key }}" {{ old('modality', $meeting->modality) === $key ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
@@ -74,8 +71,7 @@
                         </label>
                         <input type="datetime-local" name="scheduled_at" required
                             value="{{ old('scheduled_at', $meeting->scheduled_at->format('Y-m-d\TH:i')) }}"
-                            class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
@@ -83,16 +79,14 @@
                         </label>
                         <input type="number" name="duration_minutes" min="5" max="480"
                             value="{{ old('duration_minutes', $meeting->duration_minutes) }}"
-                            class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
                             Status <span style="color:var(--orange)">*</span>
                         </label>
                         <select name="status" required
-                            class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                             @foreach(\App\Models\Meeting::$statuses as $key => $s)
                                 <option value="{{ $key }}" {{ old('status', $meeting->status) === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
                             @endforeach
@@ -107,8 +101,7 @@
                     </label>
                     <input type="url" name="online_link" value="{{ old('online_link', $meeting->online_link) }}"
                         placeholder="https://meet.google.com/..."
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                        class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                 </div>
 
                 {{-- Local físico --}}
@@ -118,8 +111,7 @@
                     </label>
                     <input type="text" name="location" value="{{ old('location', $meeting->location) }}"
                         placeholder="Endereço ou sala..."
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                        class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                 </div>
 
                 {{-- Cliente + Oportunidade --}}
@@ -129,8 +121,7 @@
                             Cliente (opcional)
                         </label>
                         <select name="client_id" x-model="clientId"
-                            class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                             <option value="">— sem cliente —</option>
                             @foreach($clients as $c)
                                 <option value="{{ $c->id }}" {{ old('client_id', $meeting->client_id) === $c->id ? 'selected' : '' }}>{{ $c->displayName() }}</option>
@@ -142,8 +133,7 @@
                             Oportunidade (opcional)
                         </label>
                         <select name="opportunity_id"
-                            class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                             <option value="">— sem oportunidade —</option>
                             @foreach($opportunities as $o)
                                 <option value="{{ $o->id }}" {{ old('opportunity_id', $meeting->opportunity_id) === $o->id ? 'selected' : '' }}>{{ $o->title }}</option>
@@ -158,8 +148,7 @@
                         Organizador <span style="color:var(--orange)">*</span>
                     </label>
                     <select name="organized_by" required
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                        class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                         @foreach($users as $u)
                             <option value="{{ $u->id }}" {{ old('organized_by', $meeting->organized_by) == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
                         @endforeach
@@ -229,8 +218,7 @@
                     <p class="text-xs mb-2" style="color:var(--muted)">Cole aqui a transcrição bruta da call (gravação/Whisper) e use <strong>Salvar e gerar ATA com IA</strong>. Se a reunião teve uma continuação, troque o texto pela transcrição nova e gere de novo: a IA acrescenta o que é novo sem apagar a ATA.</p>
                     <textarea name="transcricao" rows="10"
                         placeholder="Cole a transcrição da reunião..."
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                        class="field w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ old('transcricao', $meeting->transcricao) }}</textarea>
                     {{-- type="button": um submit aqui viraria o padrão do Enter no form e geraria ATA sem querer. --}}
                     <input type="hidden" name="generate_ata" value="0">

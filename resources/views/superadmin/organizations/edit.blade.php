@@ -21,8 +21,7 @@
                     Nome da organização
                 </label>
                 <input type="text" name="name" value="{{ old('name', $organization->name) }}" required
-                       class="w-full rounded-lg border px-3 py-2 text-sm"
-                       style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                       class="field w-full px-3 py-2 text-sm">
                 @error('name') <p class="mt-1 text-xs" style="color:var(--red)">{{ $message }}</p> @enderror
             </div>
 
@@ -30,8 +29,7 @@
                 <div>
                     <label class="block text-xs font-semibold mb-1.5" style="color: var(--muted)">Plano</label>
                     <select name="plan" required
-                            class="w-full rounded-lg border px-3 py-2 text-sm"
-                            style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                            class="field w-full px-3 py-2 text-sm">
                         @foreach(\App\Models\Organization::$plans as $key => $label)
                             <option value="{{ $key }}" {{ old('plan', $organization->plan) === $key ? 'selected' : '' }}>
                                 {{ $label }}
@@ -43,8 +41,7 @@
                 <div>
                     <label class="block text-xs font-semibold mb-1.5" style="color: var(--muted)">Status</label>
                     <select name="status" required
-                            class="w-full rounded-lg border px-3 py-2 text-sm"
-                            style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                            class="field w-full px-3 py-2 text-sm">
                         @foreach(\App\Models\Organization::$statuses as $key => $label)
                             <option value="{{ $key }}" {{ old('status', $organization->status) === $key ? 'selected' : '' }}>
                                 {{ $label }}

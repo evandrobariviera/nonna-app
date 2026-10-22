@@ -18,8 +18,8 @@
         <form method="POST" action="{{ route('leads.update-stage', $opportunity) }}" class="flex items-center gap-2">
             @csrf
             @method('PATCH')
-            <select name="stage" onchange="this.form.submit()"
-                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
+            <select class="field" name="stage" onchange="this.form.submit()"
+                    style="padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
                 @foreach(\App\Models\ClientLeadOpportunity::$stages as $key => $s)
                     <option value="{{ $key }}" {{ $opportunity->stage === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
                 @endforeach

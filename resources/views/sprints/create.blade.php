@@ -35,8 +35,7 @@
                             Início <span style="color:var(--orange)">*</span>
                         </label>
                         <input type="date" name="starts_at" required x-model="inicio" @change="aoMudarInicio()"
-                            class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                         @error('starts_at') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
                     </div>
                     <div>
@@ -44,8 +43,7 @@
                             Fim <span style="color:var(--orange)">*</span>
                         </label>
                         <input type="date" name="ends_at" required x-model="fim"
-                            class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                         @error('ends_at') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
                     </div>
                 </div>
@@ -62,8 +60,7 @@
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Status</label>
                     <select name="status"
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                        class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                         @foreach(\App\Models\Sprint::$statuses as $key => $s)
                             <option value="{{ $key }}" {{ old('status', 'planning') === $key ? 'selected' : '' }}>
                                 {{ $s['label'] }}

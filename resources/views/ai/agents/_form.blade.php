@@ -34,8 +34,7 @@
                            value="{{ old('name', $agent?->name) }}"
                            placeholder="ex: Extrator de Kickoff"
                            required
-                           class="w-full rounded px-3 py-2 text-sm"
-                           style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                           class="field w-full px-3 py-2 text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold mb-1"
@@ -43,8 +42,7 @@
                     <input type="text" name="description"
                            value="{{ old('description', $agent?->description) }}"
                            placeholder="Para que serve este agente…"
-                           class="w-full rounded px-3 py-2 text-sm"
-                           style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                           class="field w-full px-3 py-2 text-sm">
                 </div>
             </div>
 
@@ -60,8 +58,8 @@
                 </div>
                 <textarea name="system_prompt" rows="10" required
                           placeholder="Você é um especialista em estratégia de marca…"
-                          class="w-full rounded px-3 py-2 text-sm font-mono"
-                          style="background:var(--s2); border:1px solid var(--border2); color:var(--text); line-height:1.6; resize:vertical">{{ old('system_prompt', $agent?->system_prompt) }}</textarea>
+                          class="field w-full px-3 py-2 text-sm font-mono"
+                          style="line-height:1.6; resize:vertical">{{ old('system_prompt', $agent?->system_prompt) }}</textarea>
             </div>
 
             {{-- Provider + Modelo --}}
@@ -70,8 +68,7 @@
                     <label class="block text-xs font-semibold mb-1"
                            style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">PROVIDER *</label>
                     <select name="provider_id" required x-model="providerId"
-                            class="w-full rounded px-3 py-2 text-sm"
-                            style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                            class="field w-full px-3 py-2 text-sm">
                         <option value="">— selecione —</option>
                         @foreach($providers as $p)
                             <option value="{{ $p->id }}"
@@ -85,8 +82,7 @@
                     <label class="block text-xs font-semibold mb-1"
                            style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">MODELO *</label>
                     <select name="model" required
-                            class="w-full rounded px-3 py-2 text-sm"
-                            style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                            class="field w-full px-3 py-2 text-sm">
                         <option value="">— selecione o provider primeiro —</option>
                         <template x-if="models.length > 0">
                             <template x-for="m in models" :key="m.id">
@@ -110,8 +106,7 @@
                 <label class="block text-xs font-semibold mb-1"
                        style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">CHAVE DE API ESPECÍFICA <span style="font-weight:400">(opcional — usa a padrão do provider se vazio)</span></label>
                 <select name="api_key_id"
-                        class="w-full rounded px-3 py-2 text-sm"
-                        style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                        class="field w-full px-3 py-2 text-sm">
                     <option value="">— usar chave padrão do provider —</option>
                     <template x-if="providerId">
                         <template x-for="p in providers.filter(p => p.id === providerId)" :key="p.id">
@@ -135,8 +130,7 @@
                     <input type="number" name="temperature" step="0.05" min="0" max="2"
                            value="{{ old('temperature', $agent?->temperature ?? 0.70) }}"
                            required
-                           class="w-full rounded px-3 py-2 text-sm"
-                           style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                           class="field w-full px-3 py-2 text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold mb-1"
@@ -145,16 +139,14 @@
                     <input type="number" name="max_tokens" min="128" max="128000" step="128"
                            value="{{ old('max_tokens', $agent?->max_tokens ?? 4096) }}"
                            required
-                           class="w-full rounded px-3 py-2 text-sm"
-                           style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                           class="field w-full px-3 py-2 text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold mb-1"
                            style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">CONTEXTO</label>
                     <div class="text-xs mb-1" style="color:var(--muted2)">Escopo do contexto injetado</div>
                     <select name="context_scope" required
-                            class="w-full rounded px-3 py-2 text-sm"
-                            style="background:var(--s2); border:1px solid var(--border2); color:var(--text)">
+                            class="field w-full px-3 py-2 text-sm">
                         <option value="global"  {{ old('context_scope', $agent?->context_scope) === 'global'  ? 'selected' : '' }}>Global (sem contexto de cliente)</option>
                         <option value="client"  {{ old('context_scope', $agent?->context_scope) === 'client'  ? 'selected' : '' }}>Por Cliente (injeta dados do cliente)</option>
                     </select>

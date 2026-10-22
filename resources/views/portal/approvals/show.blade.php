@@ -182,8 +182,7 @@
                     <label class="text-xs font-bold uppercase tracking-widest mb-1 block" style="color: var(--muted)">
                         Comentário <span x-show="decision === 'changes_requested'">(obrigatório)</span>
                     </label>
-                    <textarea name="comment" rows="3" class="w-full rounded-lg p-3 text-sm"
-                              style="background: var(--s2); color: var(--text); border: 1px solid var(--border2)"
+                    <textarea name="comment" rows="3" class="field w-full p-3 text-sm"
                               :required="decision === 'changes_requested'"
                               placeholder="Descreva o que precisa ajustar..."></textarea>
                 </div>

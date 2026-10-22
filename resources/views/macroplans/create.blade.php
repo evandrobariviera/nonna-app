@@ -45,8 +45,7 @@
                         Cliente <span style="color:var(--orange)">*</span>
                     </label>
                     <select name="client_id" required
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                        class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                         <option value="">Selecione o cliente...</option>
                         @foreach($clients as $c)
                             <option value="{{ $c->id }}"
@@ -66,8 +65,7 @@
                     <p class="text-xs mb-2" style="color:var(--muted2)">O nome é gerado sozinho: <strong>Planejamento + apelido do cliente + período</strong>. Use o foco só se precisar diferenciar (ex: "Expointer", "Calendário editorial").</p>
                     <input type="text" name="focus" value="{{ old('focus') }}" maxlength="200"
                         placeholder="Ex: Expointer"
-                        class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)"
+                        class="field w-full px-4 py-2.5 text-sm focus:outline-none"
                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                 </div>
 
@@ -79,16 +77,14 @@
                             Início do Ciclo <span x-show="!hasDoc" style="color:var(--orange)">*</span>
                         </label>
                         <input type="date" name="period_start" value="{{ old('period_start') }}" :required="!hasDoc"
-                            class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
                             Fim do Ciclo <span x-show="!hasDoc" style="color:var(--orange)">*</span>
                         </label>
                         <input type="date" name="period_end" value="{{ old('period_end') }}" :required="!hasDoc"
-                            class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                     </div>
                 </div>
 
@@ -99,8 +95,7 @@
                             Responsável (Estrategista)
                         </label>
                         <select name="responsible_id"
-                            class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                             <option value="">— sem responsável —</option>
                             @foreach($users as $u)
                                 <option value="{{ $u->id }}" {{ old('responsible_id', auth()->id()) == $u->id ? 'selected' : '' }}>
@@ -114,8 +109,7 @@
                             Status <span style="color:var(--orange)">*</span>
                         </label>
                         <select name="status" required
-                            class="w-full px-4 py-2.5 text-sm focus:outline-none"
-                            style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                            class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                             @foreach(\App\Models\MacroPlan::$statuses as $key => $s)
                                 <option value="{{ $key }}" {{ old('status','draft') === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
                             @endforeach

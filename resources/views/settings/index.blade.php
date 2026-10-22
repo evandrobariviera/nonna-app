@@ -84,8 +84,7 @@
                             </label>
                             <input type="text" name="name"
                                    value="{{ old('name', $org->name) }}"
-                                   class="w-full rounded-lg border px-3 py-2 text-sm"
-                                   style="background:var(--s2); border-color:var(--border2); color:var(--text)"
+                                   class="field w-full px-3 py-2 text-sm"
                                    required>
                             @error('name')
                                 <p class="mt-1 text-xs" style="color:var(--red)">{{ $message }}</p>
@@ -98,8 +97,8 @@
                             </label>
                             <div class="flex items-center gap-2">
                                 <input type="text" value="{{ $org->slug }}" disabled
-                                       class="flex-1 rounded-lg border px-3 py-2 text-sm opacity-50 cursor-not-allowed"
-                                       style="background:var(--s3); border-color:var(--border2); color:var(--muted)">
+                                       class="field flex-1 px-3 py-2 text-sm opacity-50 cursor-not-allowed"
+                                       style="color:var(--muted)">
                                 <span class="text-xs" style="color:var(--muted)">
                                     {{ $org->slug }}.{{ config('app.domain') }}
                                 </span>
@@ -138,8 +137,7 @@
                             <input type="url" name="logo_url"
                                    value="{{ old('logo_url', $org->logoUrl()) }}"
                                    placeholder="https://..."
-                                   class="w-full rounded-lg border px-3 py-2 text-sm"
-                                   style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                   class="field w-full px-3 py-2 text-sm">
                             @error('logo_url')
                                 <p class="mt-1 text-xs" style="color:var(--red)">{{ $message }}</p>
                             @enderror
@@ -157,8 +155,7 @@
                                            style="border-color:var(--border2); background:var(--s2)">
                                     <input type="text" x-ref="primaryColorText"
                                            value="{{ old('primary_color', $org->brandColor('primary_color')) }}"
-                                           class="flex-1 rounded-lg border px-3 py-2 text-sm font-mono"
-                                           style="background:var(--s2); border-color:var(--border2); color:var(--text)"
+                                           class="field flex-1 px-3 py-2 text-sm font-mono"
                                            readonly>
                                 </div>
                             </div>
@@ -173,8 +170,7 @@
                                            style="border-color:var(--border2); background:var(--s2)">
                                     <input type="text"
                                            value="{{ old('secondary_color', $org->brandColor('secondary_color')) }}"
-                                           class="flex-1 rounded-lg border px-3 py-2 text-sm font-mono"
-                                           style="background:var(--s2); border-color:var(--border2); color:var(--text)"
+                                           class="field flex-1 px-3 py-2 text-sm font-mono"
                                            readonly>
                                 </div>
                             </div>
@@ -193,8 +189,7 @@
                             Agente de IA
                         </label>
                         <select name="campaign_insights_agent_id"
-                                class="w-full rounded-lg border px-3 py-2 text-sm"
-                                style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                class="field w-full px-3 py-2 text-sm">
                             <option value="">Nenhum (sem narrativa de IA)</option>
                             @foreach($aiAgents as $agent)
                                 <option value="{{ $agent->id }}"
@@ -368,8 +363,7 @@
                                 Plataforma / Ferramenta
                             </label>
                             <select name="provider" x-model="form.provider" required
-                                    class="w-full rounded-lg border px-3 py-2 text-sm"
-                                    style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                    class="field w-full px-3 py-2 text-sm">
                                 <option value="">Selecione...</option>
                                 @php
                                     $grouped = collect(\App\Models\OrganizationIntegration::$providers)
@@ -399,8 +393,7 @@
                             </label>
                             <input type="text" name="label" x-model="form.label" required
                                    placeholder="Ex: BM Principal"
-                                   class="w-full rounded-lg border px-3 py-2 text-sm"
-                                   style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                   class="field w-full px-3 py-2 text-sm">
                         </div>
 
                         {{-- External ID --}}
@@ -411,8 +404,7 @@
                             </label>
                             <input type="text" name="external_id" x-model="form.external_id"
                                    placeholder="Ex: 123456789"
-                                   class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
-                                   style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                   class="field w-full px-3 py-2 text-sm font-mono">
                         </div>
 
                         {{-- Status --}}
@@ -421,8 +413,7 @@
                                 Status da conexão
                             </label>
                             <select name="status" x-model="form.status" required
-                                    class="w-full rounded-lg border px-3 py-2 text-sm"
-                                    style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                    class="field w-full px-3 py-2 text-sm">
                                 @foreach(\App\Models\OrganizationIntegration::$statuses as $key => $info)
                                     <option value="{{ $key }}">{{ $info['label'] }}</option>
                                 @endforeach
@@ -441,8 +432,7 @@
                                 <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Access Token</label>
                                 <input type="password" name="credentials[access_token]" x-model="form.credentials.access_token"
                                        placeholder="{{ '' }}" autocomplete="off"
-                                       class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
-                                       style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                       class="field w-full px-3 py-2 text-sm font-mono">
                             </div>
 
                             {{-- Google Ads --}}
@@ -450,8 +440,7 @@
                                 <div>
                                     <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Developer Token</label>
                                     <input type="password" name="credentials[developer_token]" x-model="form.credentials.developer_token" autocomplete="off"
-                                           class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
-                                           style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                           class="field w-full px-3 py-2 text-sm font-mono">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Customer ID</label>
@@ -460,8 +449,7 @@
                                     </p>
                                     <input type="text" name="credentials[customer_id]" x-model="form.credentials.customer_id"
                                            placeholder="Ex: 123-456-7890"
-                                           class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
-                                           style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                           class="field w-full px-3 py-2 text-sm font-mono">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Login Customer ID (MCC)</label>
@@ -470,20 +458,17 @@
                                     </p>
                                     <input type="text" name="credentials[login_customer_id]" x-model="form.credentials.login_customer_id"
                                            placeholder="Ex: 123-456-7890"
-                                           class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
-                                           style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                           class="field w-full px-3 py-2 text-sm font-mono">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">OAuth Client ID</label>
                                     <input type="text" name="credentials[client_id]" x-model="form.credentials.client_id"
-                                           class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
-                                           style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                           class="field w-full px-3 py-2 text-sm font-mono">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">OAuth Client Secret</label>
                                     <input type="password" name="credentials[client_secret]" x-model="form.credentials.client_secret" autocomplete="off"
-                                           class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
-                                           style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                           class="field w-full px-3 py-2 text-sm font-mono">
                                 </div>
                                 <p class="text-xs" style="color:var(--muted)">
                                     Depois de salvar com Client ID/Secret preenchidos, use o botão "Conectar com Google Ads" no card da integração — o App cuida de gerar e renovar o token de acesso sozinho.
@@ -498,16 +483,14 @@
                                 </p>
                                 <input type="text" name="credentials[webhook_url]" x-model="form.credentials.webhook_url" autocomplete="off"
                                        placeholder="https://seu-n8n.com/webhook/..."
-                                       class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
-                                       style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                       class="field w-full px-3 py-2 text-sm font-mono">
                             </div>
 
                             {{-- Demais providers: token genérico --}}
                             <div x-show="form.provider && !['meta','tiktok','linkedin','pinterest','google','n8n'].includes(form.provider)" class="mb-3">
                                 <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Access Token / API Key</label>
                                 <input type="password" name="credentials[access_token]" x-model="form.credentials.access_token" autocomplete="off"
-                                       class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
-                                       style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                       class="field w-full px-3 py-2 text-sm font-mono">
                             </div>
                         </div>
 
@@ -671,8 +654,7 @@
                                                 <form method="POST" action="{{ route('settings.orphan-users.attach', $orphan) }}"
                                                       class="flex items-center gap-1.5">
                                                     @csrf
-                                                    <select name="role" class="text-xs rounded-lg border px-2 py-1.5"
-                                                            style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                                    <select name="role" class="field text-xs px-2 py-1.5">
                                                         @foreach(\App\Models\OrganizationUser::$roles as $key => $label)
                                                             @continue($key === 'owner')
                                                             <option value="{{ $key }}" {{ $key === 'member' ? 'selected' : '' }}>{{ $label }}</option>
@@ -734,15 +716,13 @@
                         <div>
                             <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Nome</label>
                             <input type="text" name="name" x-model="form.name" required
-                                   class="w-full rounded-lg border px-3 py-2 text-sm"
-                                   style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                   class="field w-full px-3 py-2 text-sm">
                         </div>
 
                         <div>
                             <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">E-mail</label>
                             <input type="email" name="email" x-model="form.email" required
-                                   class="w-full rounded-lg border px-3 py-2 text-sm"
-                                   style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                   class="field w-full px-3 py-2 text-sm">
                         </div>
 
                         <div>
@@ -753,15 +733,13 @@
                             <input type="password" name="password" x-model="form.password"
                                    :required="!editing"
                                    placeholder="Mínimo 8 caracteres"
-                                   class="w-full rounded-lg border px-3 py-2 text-sm"
-                                   style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                   class="field w-full px-3 py-2 text-sm">
                         </div>
 
                         <div>
                             <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Papel (permissão)</label>
                             <select name="role" x-model="form.role" required
-                                    class="w-full rounded-lg border px-3 py-2 text-sm"
-                                    style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                    class="field w-full px-3 py-2 text-sm">
                                 <option value="admin">Administrador</option>
                                 <option value="manager">Gestor</option>
                                 <option value="member">Membro</option>
@@ -943,8 +921,7 @@
                             <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Nome do Setor</label>
                             <input type="text" name="name" x-model="form.name" required
                                    placeholder="Ex: Tráfego"
-                                   class="w-full rounded-lg border px-3 py-2 text-sm"
-                                   style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                   class="field w-full px-3 py-2 text-sm">
                         </div>
 
                         <div>
@@ -1098,8 +1075,7 @@
                             <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Nome do Papel</label>
                             <input type="text" name="name" x-model="form.name" required
                                    placeholder="Ex: Growth"
-                                   class="w-full rounded-lg border px-3 py-2 text-sm"
-                                   style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                                   class="field w-full px-3 py-2 text-sm">
                         </div>
 
                         <div class="flex justify-end gap-3 pt-2">
@@ -1167,15 +1143,13 @@
                                                    name="templates[{{ $type }}][{{ $channel }}][subject]"
                                                    value="{{ old("templates.{$type}.{$channel}.subject", $existing?->subject) }}"
                                                    placeholder="Assunto do e-mail"
-                                                   class="w-full rounded-lg border px-3 py-2 text-sm mb-2"
-                                                   style="background:var(--s1); border-color:var(--border2); color:var(--text)">
+                                                   class="field w-full px-3 py-2 text-sm mb-2">
                                         @endif
 
                                         <textarea name="templates[{{ $type }}][{{ $channel }}][body]"
                                                   rows="4"
                                                   placeholder="Texto padrão..."
-                                                  class="w-full rounded-lg border px-3 py-2 text-sm resize-none"
-                                                  style="background:var(--s1); border-color:var(--border2); color:var(--text)">{{ old("templates.{$type}.{$channel}.body", $existing?->body) }}</textarea>
+                                                  class="field w-full px-3 py-2 text-sm resize-none">{{ old("templates.{$type}.{$channel}.body", $existing?->body) }}</textarea>
 
                                         <div class="flex justify-end mt-2">
                                             <button type="submit" form="test-{{ $type }}-{{ $channel }}"
@@ -1259,13 +1233,11 @@
                                     <input type="text" name="settings[{{ $key }}][title]"
                                            value="{{ old("settings.{$key}.title", $setting?->title) }}"
                                            placeholder="{{ $cat['title'] }}"
-                                           class="w-full rounded-lg border px-3 py-2 text-sm mb-2"
-                                           style="background:var(--s1); border-color:var(--border2); color:var(--text)">
+                                           class="field w-full px-3 py-2 text-sm mb-2">
 
                                     <textarea name="settings[{{ $key }}][body]" rows="2"
                                               placeholder="{{ $cat['body'] }}"
-                                              class="w-full rounded-lg border px-3 py-2 text-sm resize-none mb-3"
-                                              style="background:var(--s1); border-color:var(--border2); color:var(--text)">{{ old("settings.{$key}.body", $setting?->body) }}</textarea>
+                                              class="field w-full px-3 py-2 text-sm resize-none mb-3">{{ old("settings.{$key}.body", $setting?->body) }}</textarea>
 
                                     <x-variable-hints :context="$cat['context']" />
 
@@ -1328,8 +1300,7 @@
                     <input type="text" name="token_name" x-model="name"
                            placeholder="Nome do token (ex: n8n-prod)"
                            required maxlength="80"
-                           class="rounded-lg border px-3 py-2 text-sm w-52"
-                           style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                           class="field px-3 py-2 text-sm w-52">
                     <button type="submit" :disabled="!name"
                             class="btn-primary px-4 py-2 text-sm rounded-lg font-semibold whitespace-nowrap">
                         Gerar Token

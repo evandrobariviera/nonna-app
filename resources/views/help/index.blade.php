@@ -12,8 +12,8 @@
         <form method="GET" action="{{ route('help.index') }}" class="flex items-center gap-3 flex-1 min-w-0"
               data-live-filter data-results-url="{{ route('help.results') }}" data-target="#help-results">
             <input type="text" name="q" value="{{ request('q') }}" placeholder="Buscar artigo..."
-                class="flex-1 min-w-0 px-4 py-2 text-sm font-medium"
-                style="background:var(--s2); border:1px solid var(--border2); color:var(--text); outline:none; max-width:360px">
+                class="field flex-1 min-w-0 px-4 py-2 text-sm font-medium"
+                style="outline:none; max-width:360px">
         </form>
 
         <a href="{{ route('help.create') }}" class="btn btn-primary flex items-center gap-2">

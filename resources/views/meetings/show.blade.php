@@ -360,8 +360,7 @@
                                         Título <span style="color:var(--orange)">*</span>
                                     </label>
                                     <input type="text" name="title" required autofocus placeholder="Próximo passo combinado na reunião..."
-                                        class="w-full px-3 py-2 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                        class="field w-full px-3 py-2 text-sm focus:outline-none">
                                 </div>
 
                                 <div class="col-span-2 md:col-span-4">
@@ -371,8 +370,7 @@
 
                                 <div>
                                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Tipo</label>
-                                    <select name="task_type" class="w-full px-3 py-2 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    <select name="task_type" class="field w-full px-3 py-2 text-sm focus:outline-none">
                                         @foreach(\App\Models\Task::$types as $key => $label)
                                             <option value="{{ $key }}">{{ $label }}</option>
                                         @endforeach
@@ -380,8 +378,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Destino</label>
-                                    <select name="destination" class="w-full px-3 py-2 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    <select name="destination" class="field w-full px-3 py-2 text-sm focus:outline-none">
                                         <option value="">— sem destino —</option>
                                         @foreach(\App\Models\Task::$destinations as $key => $label)
                                             <option value="{{ $key }}">{{ $label }}</option>
@@ -390,8 +387,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Prioridade</label>
-                                    <select name="priority" class="w-full px-3 py-2 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    <select name="priority" class="field w-full px-3 py-2 text-sm focus:outline-none">
                                         <option value="normal" selected>Normal</option>
                                         @foreach(\App\Models\Task::$priorities as $key => $p)
                                             @if($key !== 'normal')
@@ -402,8 +398,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Responsável</label>
-                                    <select name="responsavel_id" class="w-full px-3 py-2 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    <select name="responsavel_id" class="field w-full px-3 py-2 text-sm focus:outline-none">
                                         <option value="">— nenhum —</option>
                                         @foreach($users as $u)
                                             <option value="{{ $u->id }}">{{ $u->name }}</option>
@@ -413,18 +408,15 @@
 
                                 <div>
                                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Vencimento</label>
-                                    <input type="date" name="due_date" class="w-full px-3 py-2 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    <input type="date" name="due_date" class="field w-full px-3 py-2 text-sm focus:outline-none">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Data de Aprovação</label>
-                                    <input type="date" name="approval_date" class="w-full px-3 py-2 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    <input type="date" name="approval_date" class="field w-full px-3 py-2 text-sm focus:outline-none">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">Data de Publicação</label>
-                                    <input type="date" name="publish_date" class="w-full px-3 py-2 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    <input type="date" name="publish_date" class="field w-full px-3 py-2 text-sm focus:outline-none">
                                 </div>
 
                                 {{-- Executores (múltiplos) --}}
@@ -447,8 +439,7 @@
                                         </template>
                                     </div>
                                     <p x-show="roleError" x-text="roleError" x-cloak class="text-xs mb-1.5" style="color:var(--red)"></p>
-                                    <select @change="add($event)" class="w-full px-3 py-2 text-sm focus:outline-none"
-                                        style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--text)">
+                                    <select @change="add($event)" class="field w-full px-3 py-2 text-sm focus:outline-none">
                                         <option value="">+ Adicionar executor</option>
                                         @foreach($users as $u)
                                             <option value="{{ $u->id }}" data-name="{{ $u->name }}">{{ $u->name }}</option>

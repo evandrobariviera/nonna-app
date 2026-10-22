@@ -130,8 +130,8 @@
 
             <div>
                 <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Status</label>
-                <select name="status" class="px-3 py-2 text-sm focus:outline-none"
-                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text); min-width:180px">
+                <select name="status" class="field px-3 py-2 text-sm focus:outline-none"
+                    style="min-width:180px">
                     <option value="">Todos os status</option>
                     <option value="pending"            {{ request('status') === 'pending'            ? 'selected' : '' }}>Aguardando Resposta</option>
                     <option value="changes_requested"  {{ request('status') === 'changes_requested'  ? 'selected' : '' }}>Ajustes Solicitados</option>
@@ -141,8 +141,8 @@
 
             <div>
                 <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Tipo</label>
-                <select name="type" class="px-3 py-2 text-sm focus:outline-none"
-                    style="background:var(--s2); border:1px solid var(--border2); color:var(--text); min-width:160px">
+                <select name="type" class="field px-3 py-2 text-sm focus:outline-none"
+                    style="min-width:160px">
                     <option value="">Todos os tipos</option>
                     <option value="aprovacao" {{ request('type') === 'aprovacao' ? 'selected' : '' }}>Aprovação</option>
                     <option value="aviso"     {{ request('type') === 'aviso'     ? 'selected' : '' }}>Aviso</option>
@@ -152,8 +152,8 @@
             @if($clients->count() > 0)
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Cliente</label>
-                    <select name="client_id" class="px-3 py-2 text-sm focus:outline-none"
-                        style="background:var(--s2); border:1px solid var(--border2); color:var(--text); min-width:200px">
+                    <select name="client_id" class="field px-3 py-2 text-sm focus:outline-none"
+                        style="min-width:200px">
                         <option value="">Todos os clientes</option>
                         @foreach($clients as $c)
                             <option value="{{ $c->id }}" {{ request('client_id') === $c->id ? 'selected' : '' }}>

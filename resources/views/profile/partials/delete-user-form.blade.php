@@ -33,8 +33,7 @@
 
                 <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Senha</label>
                 <input id="password" name="password" type="password" placeholder="Senha"
-                       class="w-full rounded-lg border px-3 py-2 text-sm"
-                       style="background:var(--s2); border-color:var(--border2); color:var(--text)">
+                       class="field w-full px-3 py-2 text-sm">
                 @error('password', 'userDeletion') <p class="text-xs mt-1" style="color:var(--red)">{{ $message }}</p> @enderror
 
                 <div class="flex justify-end gap-3 pt-5">

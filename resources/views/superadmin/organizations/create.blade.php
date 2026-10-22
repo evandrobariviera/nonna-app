@@ -23,8 +23,7 @@
                         Nome da organização
                     </label>
                     <input type="text" name="name" value="{{ old('name') }}" required
-                           class="w-full rounded-lg border px-3 py-2 text-sm"
-                           style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                           class="field w-full px-3 py-2 text-sm">
                     @error('name') <p class="mt-1 text-xs" style="color:var(--red)">{{ $message }}</p> @enderror
                 </div>
                 <div>
@@ -33,8 +32,7 @@
                     </label>
                     <input type="text" name="slug" value="{{ old('slug') }}" required
                            pattern="[a-z0-9\-]+" placeholder="apenas-letras-e-hifens"
-                           class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
-                           style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                           class="field w-full px-3 py-2 text-sm font-mono">
                     @error('slug') <p class="mt-1 text-xs" style="color:var(--red)">{{ $message }}</p> @enderror
                 </div>
             </div>
@@ -42,8 +40,7 @@
             <div>
                 <label class="block text-xs font-semibold mb-1.5" style="color: var(--muted)">Plano</label>
                 <select name="plan" required
-                        class="w-full rounded-lg border px-3 py-2 text-sm"
-                        style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                        class="field w-full px-3 py-2 text-sm">
                     @foreach(\App\Models\Organization::$plans as $key => $label)
                         <option value="{{ $key }}" {{ old('plan', 'trial') === $key ? 'selected' : '' }}>
                             {{ $label }}
@@ -62,8 +59,7 @@
             <div>
                 <label class="block text-xs font-semibold mb-1.5" style="color: var(--muted)">Nome</label>
                 <input type="text" name="owner_name" value="{{ old('owner_name') }}" required
-                       class="w-full rounded-lg border px-3 py-2 text-sm"
-                       style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                       class="field w-full px-3 py-2 text-sm">
                 @error('owner_name') <p class="mt-1 text-xs" style="color:var(--red)">{{ $message }}</p> @enderror
             </div>
 
@@ -71,16 +67,14 @@
                 <div>
                     <label class="block text-xs font-semibold mb-1.5" style="color: var(--muted)">E-mail</label>
                     <input type="email" name="owner_email" value="{{ old('owner_email') }}" required
-                           class="w-full rounded-lg border px-3 py-2 text-sm"
-                           style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                           class="field w-full px-3 py-2 text-sm">
                     @error('owner_email') <p class="mt-1 text-xs" style="color:var(--red)">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label class="block text-xs font-semibold mb-1.5" style="color: var(--muted)">Senha inicial</label>
                     <input type="text" name="owner_password" value="{{ old('owner_password') }}" required
                            placeholder="Mínimo 8 caracteres"
-                           class="w-full rounded-lg border px-3 py-2 text-sm font-mono"
-                           style="background: var(--s2); border-color: var(--border2); color: var(--text)">
+                           class="field w-full px-3 py-2 text-sm font-mono">
                     @error('owner_password') <p class="mt-1 text-xs" style="color:var(--red)">{{ $message }}</p> @enderror
                 </div>
             </div>
