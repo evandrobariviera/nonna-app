@@ -11,9 +11,9 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|outfit:300,400,500,600,700&display=swap" rel="stylesheet"/>
     @vite(['resources/css/app.css'])
     <style>
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
+        body { background: var(--bg); color: var(--text); font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; font-size: 15px; min-height: 100vh; }
         .pub-input {
-            width: 100%; padding: 10px 14px; font-size: 13px; font-family: 'Inter', sans-serif;
+            width: 100%; padding: 10px 14px; font-size: 13px; font-family: inherit;
             background: var(--s2); border: 1px solid var(--border2); color: var(--text); outline: none;
             transition: border-color .15s;
         }
@@ -21,7 +21,7 @@
         .pub-input::placeholder { color: var(--muted); }
         .pub-mono { font-family:Arial,'Segoe UI',Tahoma,sans-serif; }
         .pub-select {
-            width: 100%; padding: 10px 14px; font-size: 13px; font-family: 'Inter', sans-serif;
+            width: 100%; padding: 10px 14px; font-size: 13px; font-family: inherit;
             background: var(--s2); border: 1px solid var(--border2); color: var(--muted2); outline: none; cursor: pointer;
             transition: border-color .15s;
         }
@@ -253,7 +253,7 @@
 
             {{-- SUBMIT --}}
             <button type="submit"
-                style="width:100%; padding:16px; font-family:'Inter',sans-serif; font-size:14px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#fff; background:var(--grad); border:none; cursor:pointer; transition:opacity .2s"
+                style="width:100%; padding:16px; font-family: inherit; font-size:14px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#fff; background:var(--grad); border:none; cursor:pointer; transition:opacity .2s"
                 onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
                 Enviar Cadastro →
             </button>

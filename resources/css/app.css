@@ -769,6 +769,19 @@
 .app-page .uppercase.text-xs,
 .portal-page .uppercase.text-xs { font-size: 13px; }
 
+/* ══ Páginas públicas (aprovação, cadastro, credenciais, senha do Portal) ══
+ * Cada uma tem um <style> próprio, carregado depois deste arquivo; o "body" na frente
+ * dá a especificidade pra vencer. Campos e botões no padrão Mirbal (cantos de 7px, campo
+ * branco) e rótulos em texto normal, sem caixa-alta minúscula. */
+body .pub-input, body .pub-select, body .field-input, body .textarea-pub {
+    background: var(--s1); border-color: var(--border); border-radius: var(--radius); font-size: 14px;
+}
+body .submit-btn, body .btn-decision { border-radius: var(--radius); letter-spacing: normal; }
+body .pub-label, body .label-sm {
+    font-family: inherit; font-size: 13px; font-weight: 500; letter-spacing: normal;
+    text-transform: none; color: var(--muted2);
+}
+
 /* Entrada suave da página — só uma vez, ao carregar */
 @keyframes pageFadeIn {
     from { opacity: 0; transform: translateY(6px); }

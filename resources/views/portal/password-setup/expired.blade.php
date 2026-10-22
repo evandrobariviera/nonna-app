@@ -11,7 +11,7 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|outfit:300,400,500,600,700&display=swap" rel="stylesheet"/>
     @vite(['resources/css/app.css'])
     <style>
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+        body { background: var(--bg); color: var(--text); font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; font-size: 15px; min-height: 100vh; display: flex; flex-direction: column; }
         .mono { font-family:Arial,'Segoe UI',Tahoma,sans-serif; }
     </style>
 </head>

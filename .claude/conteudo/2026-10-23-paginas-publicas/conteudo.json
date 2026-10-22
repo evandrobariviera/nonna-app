@@ -1,0 +1,11 @@
+{
+  "novidades": [
+    {
+      "title": "Páginas do cliente no novo visual",
+      "summary": "As páginas que o cliente abre por link — aprovação de peças, cadastro, envio de acessos e criação de senha do Portal — ficaram com a mesma fonte do App, campos brancos com cantos arredondados e rótulos mais fáceis de ler.",
+      "body": "<p>Só aparência: os links, o que o cliente preenche e o que acontece depois continuam iguais.</p>",
+      "kind": "melhoria", "area": "Portal do Cliente"
+    }
+  ],
+  "ajuda": []
+}

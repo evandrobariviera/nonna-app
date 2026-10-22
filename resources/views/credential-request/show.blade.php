@@ -12,15 +12,15 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     @vite(['resources/css/app.css'])
     <style>
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
+        body { background: var(--bg); color: var(--text); font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; font-size: 15px; min-height: 100vh; }
         .mono { font-family:Arial,'Segoe UI',Tahoma,sans-serif; }
         .label-sm { font-family:Arial,'Segoe UI',Tahoma,sans-serif; font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
-        .field-input { width: 100%; padding: 9px 12px; font-size: 13px; font-family: 'Inter', sans-serif; background: var(--s2); border: 1px solid var(--border2); color: var(--text); outline: none; box-sizing: border-box; }
+        .field-input { width: 100%; padding: 9px 12px; font-size: 13px; font-family: inherit; background: var(--s2); border: 1px solid var(--border2); color: var(--text); outline: none; box-sizing: border-box; }
         .field-input:focus { border-color: var(--purple); }
         .entry-card { background: var(--s1); border: 1px solid var(--border); padding: 16px; margin-bottom: 16px; position: relative; }
         .remove-btn { position: absolute; top: 10px; right: 10px; font-size: 12px; color: var(--muted); background: none; border: none; cursor: pointer; }
         .add-btn { width: 100%; padding: 12px; font-size: 13px; font-weight: 700; background: transparent; border: 1px dashed var(--border2); color: var(--muted2); cursor: pointer; }
-        .submit-btn { width: 100%; padding: 16px; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 800; background: var(--purple); color: #fff; border: none; cursor: pointer; letter-spacing: .04em; }
+        .submit-btn { width: 100%; padding: 16px; font-family: inherit; font-size: 15px; font-weight: 800; background: var(--purple); color: #fff; border: none; cursor: pointer; letter-spacing: .04em; }
         .submit-btn:not(:disabled):hover { opacity: .88; }
         [x-cloak] { display: none !important; }
     </style>

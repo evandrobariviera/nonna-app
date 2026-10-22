@@ -3,9 +3,9 @@
 @php $isEdit = isset($client) && $client->exists; @endphp
 
 @php
-$inputStyle = "background:var(--s1); border:1px solid var(--border2); color:var(--text); outline:none; font-family:'Inter',sans-serif";
+$inputStyle = "background:var(--s1); border:1px solid var(--border2); color:var(--text); outline:none; font-family: inherit";
 $inputMono  = "background:var(--s1); border:1px solid var(--border2); color:var(--text); outline:none; font-family:Arial,'Segoe UI',Tahoma,sans-serif";
-$selectStyle = "background:var(--s1); border:1px solid var(--border2); color:var(--muted2); outline:none; cursor:pointer; font-family:'Inter',sans-serif";
+$selectStyle = "background:var(--s1); border:1px solid var(--border2); color:var(--muted2); outline:none; cursor:pointer; font-family: inherit";
 @endphp
 
 {{-- BLOCO 01: EMPRESA --}}

@@ -12,7 +12,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     @vite(['resources/css/app.css'])
     <style>
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
+        body { background: var(--bg); color: var(--text); font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; font-size: 15px; min-height: 100vh; }
         .mono { font-family:Arial,'Segoe UI',Tahoma,sans-serif; }
         .label-sm { font-family:Arial,'Segoe UI',Tahoma,sans-serif; font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
 
@@ -37,11 +37,11 @@
              e pre-wrap dobraria o espaçamento dos parágrafos. --}}
         .comment-body { font-size: 13px; color: var(--text); line-height: 1.6; margin: 4px 0 0; }
 
-        .btn-decision { flex: 1; padding: 12px 10px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; border: 2px solid var(--border2); cursor: pointer; transition: all .15s; background: transparent; color: var(--muted2); }
+        .btn-decision { flex: 1; padding: 12px 10px; font-family: inherit; font-size: 13px; font-weight: 700; border: 2px solid var(--border2); cursor: pointer; transition: all .15s; background: transparent; color: var(--muted2); }
         .btn-decision.sel-approve  { border-color: #22c55e; background: rgba(34,197,94,.12); color: #22c55e; }
         .btn-decision.sel-changes  { border-color: var(--orange); background: rgba(238, 121, 25,.12); color: var(--orange); }
 
-        .textarea-pub { width: 100%; padding: 10px 14px; font-size: 13px; font-family: 'Inter', sans-serif; background: var(--s2); border: 1px solid var(--border2); color: var(--text); resize: vertical; outline: none; min-height: 80px; box-sizing: border-box; }
+        .textarea-pub { width: 100%; padding: 10px 14px; font-size: 13px; font-family: inherit; background: var(--s2); border: 1px solid var(--border2); color: var(--text); resize: vertical; outline: none; min-height: 80px; box-sizing: border-box; }
         .textarea-pub:focus { border-color: var(--purple); }
         .textarea-pub::placeholder { color: var(--muted); }
 
@@ -62,7 +62,7 @@
         .history-item { padding: 12px 0; }
         .history-item + .history-item { border-top: 1px solid var(--border); }
 
-        .submit-btn { width: 100%; padding: 16px; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 800; background: var(--purple); color: #fff; border: none; cursor: pointer; transition: opacity .15s; letter-spacing: .04em; }
+        .submit-btn { width: 100%; padding: 16px; font-family: inherit; font-size: 15px; font-weight: 800; background: var(--purple); color: #fff; border: none; cursor: pointer; transition: opacity .15s; letter-spacing: .04em; }
         .submit-btn:disabled { opacity: .3; cursor: not-allowed; }
         .submit-btn:not(:disabled):hover { opacity: .88; }
 
