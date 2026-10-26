@@ -32,6 +32,19 @@ class LinkWhatsappLeads extends Command
             ClientLead::whereNull('phone_key')->whereNotNull('phone')->each(fn (ClientLead $lead) => $lead->save());
         }
 
+        // Conversa sem nome na agenda do cliente → nome do perfil de WhatsApp da
+        // pessoa (última mensagem dela com alguma letra; "." e emoji não contam).
+        $nameSql = "FROM (SELECT DISTINCT ON (m.conversation_id) m.conversation_id, m.sender_name
+                FROM service_messages m JOIN service_conversations c ON c.id = m.conversation_id
+                WHERE m.direction = 'in' AND m.sender_name ~ '[[:alpha:]]' AND NOT c.is_group
+                  AND COALESCE(c.contact_name, '') = '' AND (?::uuid IS NULL OR c.client_id = ?::uuid)
+                ORDER BY m.conversation_id, m.sent_at DESC) AS p";
+        $clientFilter = [$this->option('client'), $this->option('client')];
+        $namesFound = $dry
+            ? DB::connection('pgsql')->selectOne("SELECT COUNT(*) AS n {$nameSql}", $clientFilter)->n
+            : DB::connection('pgsql')->update("UPDATE service_conversations SET contact_name = p.sender_name {$nameSql} WHERE service_conversations.id = p.conversation_id", $clientFilter);
+        $this->info("Conversas sem nome que ganham o nome do perfil de WhatsApp: {$namesFound}");
+
         // Primeira mensagem da pessoa por conversa — sem
         // tocar em raw_payload (pesado, ver project-service-diagnostic-ad-attribution).
         $firsts = DB::connection('pgsql')->table('service_messages')
@@ -96,6 +109,14 @@ class LinkWhatsappLeads extends Command
                 $this->warn("Conversa {$conversation->id}: {$e->getMessage()}");
                 DB::purge('pgsql');
             }
+        }
+
+        // Pessoa já ligada (inclusive antes desta carga) sem nome → nome da conversa.
+        if (!$dry) {
+            $filled = DB::connection('pgsql')->update("UPDATE client_leads SET name = c.contact_name, updated_at = NOW()
+                FROM service_conversations c
+                WHERE c.client_lead_id = client_leads.id AND COALESCE(client_leads.name, '') = '' AND COALESCE(c.contact_name, '') <> ''");
+            $this->info("Pessoas da Central que ganharam nome: {$filled}");
         }
 
         $this->table(

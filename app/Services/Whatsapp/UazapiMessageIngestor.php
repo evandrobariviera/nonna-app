@@ -81,7 +81,10 @@ class UazapiMessageIngestor
             }
         }
 
-        $conversation->contact_name  = $chat['wa_contactName'] ?? $chat['name'] ?? $conversation->contact_name;
+        // Nome salvo na agenda do cliente vence; sem ele (quem chega pela 1ª vez
+        // quase nunca está salvo), o nome do perfil de WhatsApp da pessoa.
+        $conversation->contact_name  = $chat['wa_contactName'] ?? $chat['name'] ?? $conversation->contact_name
+            ?? (($message['fromMe'] ?? false) ? null : WhatsappLeadLinker::profileName($chat['wa_name'] ?? $message['senderName'] ?? null));
         $conversation->contact_phone = $chat['phone'] ?? $conversation->contact_phone;
         $conversation->is_group      = (bool) ($chat['wa_isGroup'] ?? false);
 
@@ -90,6 +93,8 @@ class UazapiMessageIngestor
         }
 
         $conversation->save();
+        // increment() mais abaixo zera o wasChanged — guarda agora.
+        $nameChanged = $conversation->wasChanged('contact_name');
 
         $externalMessageId = $message['messageid'] ?? $message['id'] ?? null;
 
@@ -118,23 +123,26 @@ class UazapiMessageIngestor
         $conversation->increment('message_count');
         $integration->update(['last_synced_at' => now(), 'status' => 'connected']);
 
-        if (!($message['fromMe'] ?? false)) {
-            $this->linkLead($conversation, $sentAt, $adReply);
-        }
+        $this->linkLead($conversation, $sentAt, $adReply, (bool) ($message['fromMe'] ?? false), $nameChanged);
     }
 
     /**
      * Mensagem da pessoa → liga a conversa à Central de Leads (ver WhatsappLeadLinker).
-     * Só faz consulta quando há algo a decidir: clique em anúncio ou conversa ainda sem lead.
+     * Só faz consulta quando há algo a decidir: clique em anúncio, conversa ainda sem
+     * lead ou nome que acabou de aparecer (vale também em mensagem do cliente).
      * Nunca derruba o webhook — a mensagem já foi gravada.
      */
-    private function linkLead(ServiceConversation $conversation, Carbon $sentAt, ?array $adReply): void
+    private function linkLead(ServiceConversation $conversation, Carbon $sentAt, ?array $adReply, bool $fromMe, bool $nameChanged): void
     {
-        if (!WhatsappLeadLinker::isFromAd($adReply) && $conversation->client_lead_id) {
-            return;
-        }
-
         try {
+            if ($fromMe || (!WhatsappLeadLinker::isFromAd($adReply) && $conversation->client_lead_id)) {
+                if ($nameChanged) {
+                    $this->leadLinker->fillMissingName($conversation);
+                }
+
+                return;
+            }
+
             $this->leadLinker->link($conversation, $sentAt, $adReply);
         } catch (\Throwable $e) {
             Log::warning('UazapiMessageIngestor: falha ao ligar conversa à Central de Leads', [

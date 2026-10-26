@@ -2,6 +2,7 @@
 
 namespace App\Services\Leads;
 
+use App\Models\ClientLead;
 use App\Models\ServiceConversation;
 use App\Support\PhoneKey;
 use Carbon\Carbon;
@@ -60,6 +61,26 @@ class WhatsappLeadLinker
         if ($conversation->client_lead_id !== $leadId) {
             $conversation->forceFill(['client_lead_id' => $leadId])->saveQuietly();
         }
+    }
+
+    // O nome costuma aparecer depois da ligação (cliente salva o contato).
+    public function fillMissingName(ServiceConversation $conversation): void
+    {
+        if (!$conversation->client_lead_id || blank($conversation->contact_name)) {
+            return;
+        }
+
+        ClientLead::whereKey($conversation->client_lead_id)
+            ->where(fn ($q) => $q->whereNull('name')->orWhere('name', ''))
+            ->update(['name' => $conversation->contact_name]);
+    }
+
+    // Nome do perfil de WhatsApp só vale se tiver alguma letra ("." e "🫡" não são nome).
+    public static function profileName(?string $name): ?string
+    {
+        $name = trim((string) $name);
+
+        return preg_match('/\p{L}/u', $name) ? $name : null;
     }
 
     public static function isFromAd(?array $adReply): bool
