@@ -27,7 +27,7 @@ class WhatsappLeadLinker
     {
     }
 
-    public function link(ServiceConversation $conversation, Carbon $at, ?array $adReply = null): void
+    public function link(ServiceConversation $conversation, Carbon $at, ?array $adReply = null, ?string $firstMessage = null): void
     {
         if ($conversation->is_group || !$conversation->client_id || !PhoneKey::from($conversation->contact_phone)) {
             return;
@@ -50,6 +50,10 @@ class WhatsappLeadLinker
                 'ctwa_clid'               => $adReply['ctwaClid'] ?? null,
                 'form_name'               => $adReply['title'] ?? 'Anúncio WhatsApp',
                 'service_conversation_id' => $conversation->id,
+                // Referência do que a pessoa queria — aparece em destaque na ficha e no cartão.
+                'form_answers'            => filled($firstMessage)
+                    ? [['label' => 'Primeira mensagem', 'value' => mb_substr(trim($firstMessage), 0, 2000)]]
+                    : null,
                 // O cliente já está vendo a conversa chegar no WhatsApp dele.
                 'notify'                  => false,
             ]);

@@ -123,7 +123,7 @@ class UazapiMessageIngestor
         $conversation->increment('message_count');
         $integration->update(['last_synced_at' => now(), 'status' => 'connected']);
 
-        $this->linkLead($conversation, $sentAt, $adReply, (bool) ($message['fromMe'] ?? false), $nameChanged);
+        $this->linkLead($conversation, $sentAt, $adReply, (bool) ($message['fromMe'] ?? false), $nameChanged, $body);
     }
 
     /**
@@ -132,7 +132,7 @@ class UazapiMessageIngestor
      * lead ou nome que acabou de aparecer (vale também em mensagem do cliente).
      * Nunca derruba o webhook — a mensagem já foi gravada.
      */
-    private function linkLead(ServiceConversation $conversation, Carbon $sentAt, ?array $adReply, bool $fromMe, bool $nameChanged): void
+    private function linkLead(ServiceConversation $conversation, Carbon $sentAt, ?array $adReply, bool $fromMe, bool $nameChanged, ?string $body): void
     {
         try {
             if ($fromMe || (!WhatsappLeadLinker::isFromAd($adReply) && $conversation->client_lead_id)) {
@@ -143,7 +143,7 @@ class UazapiMessageIngestor
                 return;
             }
 
-            $this->leadLinker->link($conversation, $sentAt, $adReply);
+            $this->leadLinker->link($conversation, $sentAt, $adReply, $body);
         } catch (\Throwable $e) {
             Log::warning('UazapiMessageIngestor: falha ao ligar conversa à Central de Leads', [
                 'conversation_id' => $conversation->id,

@@ -45,10 +45,10 @@ class LinkWhatsappLeads extends Command
             : DB::connection('pgsql')->update("UPDATE service_conversations SET contact_name = p.sender_name {$nameSql} WHERE service_conversations.id = p.conversation_id", $clientFilter);
         $this->info("Conversas sem nome que ganham o nome do perfil de WhatsApp: {$namesFound}");
 
-        // Primeira mensagem da pessoa por conversa — sem
+        // Primeira mensagem da pessoa por conversa (data e texto) — sem
         // tocar em raw_payload (pesado, ver project-service-diagnostic-ad-attribution).
         $firsts = DB::connection('pgsql')->table('service_messages')
-            ->selectRaw("conversation_id, MIN(sent_at) FILTER (WHERE direction = 'in') AS first_inbound_at")
+            ->selectRaw("conversation_id, MIN(sent_at) FILTER (WHERE direction = 'in') AS first_inbound_at, (array_agg(body ORDER BY sent_at) FILTER (WHERE direction = 'in' AND COALESCE(body, '') <> ''))[1] AS first_inbound_body")
             ->groupBy('conversation_id')
             ->get()
             ->keyBy('conversation_id');
@@ -104,7 +104,7 @@ class LinkWhatsappLeads extends Command
             ] : null;
 
             try {
-                $linker->link($conversation, $at, $adReply);
+                $linker->link($conversation, $at, $adReply, $first->first_inbound_body);
             } catch (\Throwable $e) {
                 $this->warn("Conversa {$conversation->id}: {$e->getMessage()}");
                 DB::purge('pgsql');
