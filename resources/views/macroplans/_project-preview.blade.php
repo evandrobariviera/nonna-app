@@ -39,7 +39,7 @@
     {{-- Anexos do projeto --}}
     @if($project->attachments->isNotEmpty())
         <div>
-            <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Anexos do projeto</p>
+            <p class="card-title mb-3">Anexos do projeto</p>
             <div class="flex flex-col gap-2">
                 @foreach($project->attachments as $a)
                     <a href="{{ $a->url() }}" target="_blank"
@@ -58,7 +58,7 @@
     {{-- Tarefas recentes --}}
     @if($recentTasks->isNotEmpty())
         <div>
-            <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Tarefas recentes</p>
+            <p class="card-title mb-3">Tarefas recentes</p>
             <div class="flex flex-col gap-2">
                 @foreach($recentTasks as $task)
                     <a href="{{ route('tasks.show', $task) }}"
@@ -84,7 +84,7 @@
     {{-- Produção (entregáveis) --}}
     @if($deliverables->isNotEmpty())
         <div>
-            <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Entregas aprovadas ({{ $deliverables->count() }})</p>
+            <p class="card-title mb-3">Entregas aprovadas ({{ $deliverables->count() }})</p>
             <div class="grid grid-cols-3 gap-2">
                 @foreach($deliverables as $d)
                     <a href="{{ $d->url() }}" target="_blank"

@@ -2,7 +2,7 @@
     <x-slot name="header">Planejamento — {{ $macroplan->client->displayName() }}</x-slot>
 
     {{-- BREADCRUMB + STATUS --}}
-    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+    <div class="own-crumbs flex items-center justify-between mb-6 flex-wrap gap-3">
         <div class="flex items-center gap-3 flex-wrap">
             <a href="{{ route('macroplans.index') }}" class="text-xs font-semibold transition-colors"
                style="color:var(--muted)"

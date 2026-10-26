@@ -332,6 +332,9 @@
     .page-crumbs { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); }
     .page-crumbs a { color: var(--text); }
     .page-crumbs a:hover { color: var(--purple); }
+    /* Página com migalhas próprias (.own-crumbs: Planejamento, Projeto) — o caminho ao lado do
+       título repetiria o mesmo nome pela terceira vez. */
+    .app-page:has(.own-crumbs) .page-title-row .page-crumbs { display: none; }
 
     /* ── CARDS ── */
     .card {
@@ -406,8 +409,10 @@
     .btn-success { background: #10B981; color: #fff; border-color: #10B981; }
     .btn-ghost { background: transparent; color: var(--muted2); border-color: var(--border2); }
     .btn-ghost:hover { background: var(--s3); color: var(--text); }
-    .btn-danger { background: #DC2626; color: #fff; border-color: #DC2626; }
-    .btn-danger:hover { background: #b91c1c; border-color: #b91c1c; }
+    /* Ação de apagar no padrão Mirbal: vermelho suave, sólido só ao passar o mouse — vários
+       "Remover" na mesma tela não gritam mais que as ações principais. */
+    .btn-danger { background: rgba(220, 38, 38, .10); color: var(--red); border-color: transparent; }
+    .btn-danger:hover { background: #DC2626; color: #fff; border-color: #DC2626; }
     .btn-sm { padding: 5px 13px; font-size: 13px; border-radius: 6px; }
     .btn-xs { padding: 3px 10px; font-size: 12px; border-radius: 5px; }
     .btn-primary:active, .btn-danger:active, .btn-success:active { box-shadow: 0 .125rem .375rem 0 rgba(100, 59, 142, .3); }

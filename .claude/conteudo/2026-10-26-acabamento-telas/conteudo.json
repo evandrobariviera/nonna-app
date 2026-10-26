@@ -1,0 +1,17 @@
+{
+  "novidades": [
+    {
+      "title": "Telas mais leves: botões de apagar, títulos e status",
+      "summary": "Os botões de remover/excluir ficaram em vermelho claro (só ficam fortes ao passar o mouse), os botões de Status e Situação da tarefa saíram da caixa-alta e os títulos de bloco que faltavam (Briefing, Legenda, Histórico, Pontos de sprint) ganharam o mesmo destaque dos outros.",
+      "body": "<p>No Planejamento e no Projeto, o nome não aparece mais repetido três vezes no topo. Nada mudou de lugar nem de função; as cores dos status continuam as mesmas.</p>",
+      "kind": "melhoria", "area": "Geral"
+    },
+    {
+      "title": "Página de aprovação do cliente mais clara",
+      "summary": "As páginas que o cliente abre por link (aprovação, cadastro, acessos, senha) ficaram com o topo branco, onde o logo da Nonna aparece de verdade. Na aprovação, os botões das peças e os quadros ficaram com cantos arredondados, e as imagens aparecem sobre fundo cinza claro em vez de preto.",
+      "body": "<p>Só aparência: o cliente aprova e pede ajuste do mesmo jeito.</p>",
+      "kind": "melhoria", "area": "Aprovações"
+    }
+  ],
+  "ajuda": []
+}

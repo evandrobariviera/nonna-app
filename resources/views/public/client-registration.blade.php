@@ -41,7 +41,7 @@
 <body>
 
     {{-- TOPBAR --}}
-    <header style="background:rgba(12,12,18,.95); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); height:56px; display:flex; align-items:center; padding:0 28px; position:sticky; top:0; z-index:10">
+    <header style="background:var(--s1); box-shadow:var(--shadow); border-bottom:1px solid var(--border); height:56px; display:flex; align-items:center; padding:0 28px; position:sticky; top:0; z-index:10">
         <img src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png"
              alt="Nonna" style="height:22px"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">

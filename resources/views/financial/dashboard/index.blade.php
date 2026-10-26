@@ -147,7 +147,7 @@
 
     {{-- ── Inadimplência ── --}}
     <div class="card overflow-x-auto">
-        <p class="text-xs font-semibold uppercase tracking-widest px-5 pt-5 mb-1" style="color:var(--muted); letter-spacing:.1em">Inadimplência</p>
+        <p class="card-title px-5 pt-5 mb-1">Inadimplência</p>
         @if($overdue->isEmpty())
             <div class="px-6 py-10 text-center" style="color:var(--muted)">
                 <p class="text-sm">Nenhum lançamento previsto em atraso.</p>

@@ -138,7 +138,7 @@
         <div class="card mb-4" x-data="{ editando: {{ $lc ? 'false' : 'true' }} }">
             <div class="px-5 pt-4 pb-3 flex items-start justify-between gap-3 flex-wrap">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
+                    <p class="card-title">
                         Controle de produção · {{ $clienteSel->displayName() }} · {{ $mesLimite }}
                     </p>
                     <p class="text-xs mt-1" style="color:var(--muted2)">
@@ -213,7 +213,7 @@
         @endphp
         <div class="card mb-4" x-data="{ todos: false }">
             <div class="px-5 pt-4 pb-3">
-                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Limites de produção · {{ $mesLimite }}</p>
+                <p class="card-title">Limites de produção · {{ $mesLimite }}</p>
                 <p class="text-xs mt-1" style="color:var(--muted2)">
                     Pedido no mês × limite combinado de cada cliente{{ $notaMes }}.
                     <strong style="color:{{ $acima->count() ? 'var(--red)' : 'var(--green)' }}">{{ $acima->count() }} de {{ $limites['clientes']->count() }}</strong> passaram do limite em algum tipo.
@@ -246,7 +246,7 @@
     {{-- ── Cliente × tipo ── --}}
     <div class="card mb-4 overflow-hidden">
         <div class="px-5 pt-4 pb-3">
-            <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Cliente × tipo de tarefa</p>
+            <p class="card-title">Cliente × tipo de tarefa</p>
             <p class="text-xs mt-1" style="color:var(--muted2)">
                 Cada célula = tarefas executadas no período.
                 @if($matriz['mes_inteiro'])
@@ -323,7 +323,7 @@
     {{-- ── Pessoas ── --}}
     <div class="card mb-4 overflow-hidden">
         <div class="px-5 pt-4 pb-3">
-            <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Carga por pessoa</p>
+            <p class="card-title">Carga por pessoa</p>
             <p class="text-xs mt-1" style="color:var(--muted2)">
                 Tarefa feita por duas pessoas conta pras duas — por isso a soma das pessoas pode passar do total. Clique numa pessoa pra ver por cliente.
             </p>

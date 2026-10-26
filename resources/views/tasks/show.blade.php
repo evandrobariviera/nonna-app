@@ -423,7 +423,7 @@
                                 $staticStyle = "clip-path:{$clip};min-width:82px;{$chevronOutline}cursor:pointer;padding-left:" . ($loop->first ? '13px' : '15px') . ';padding-right:' . ($loop->last ? '13px' : '15px') . ';margin-left:' . ($loop->first ? '0' : '-' . $chevronPt . 'px') . ';letter-spacing:.01em;';
                             @endphp
                             <button type="button" @click="set('{{ $key }}')"
-                                class="flex-shrink-0 py-3 text-xs font-bold uppercase text-center transition-colors"
+                                class="flex-shrink-0 py-3 text-[13px] font-semibold text-center transition-colors"
                                 :style="'{{ $staticStyle }}' + (statusKey === '{{ $key }}' ? 'background:var(--' + colors['{{ $key }}'] + ');color:#fff;' : 'background:var(--s2);color:var(--muted2);')"
                                 @mouseover="if (statusKey !== '{{ $key }}') $el.style.background = 'var(--s3)'"
                                 @mouseout="if (statusKey !== '{{ $key }}') $el.style.background = 'var(--s2)'">
@@ -433,7 +433,7 @@
                     </div>
 
                     {{-- Cancelado — separado da corrente, mesma mecânica de sempre --}}
-                    <button type="button" @click="set('cancelado')" class="flex-shrink-0 px-4 py-3 text-xs font-bold uppercase transition-colors"
+                    <button type="button" @click="set('cancelado')" class="flex-shrink-0 px-4 py-3 text-[13px] font-semibold transition-colors"
                         :style="'letter-spacing:.01em;cursor:pointer;' + (statusKey === 'cancelado' ? 'border:1px solid var(--' + colors.cancelado + ');background:var(--' + colors.cancelado + ');color:#fff;' : 'border:1px solid var(--border2);background:transparent;color:var(--muted2);')"
                         @mouseover="if (statusKey !== 'cancelado') $el.style.background = 'var(--s2)'"
                         @mouseout="if (statusKey !== 'cancelado') $el.style.background = 'transparent'">
@@ -471,7 +471,7 @@
                     <div class="grid grid-cols-7 gap-1.5">
                         @foreach(\App\Models\Task::$situations as $key => $label)
                             <button type="button" @click="set('{{ $key }}')"
-                                class="w-full h-full px-2 py-2.5 text-[11px] font-bold uppercase text-center leading-tight transition-colors rounded-lg"
+                                class="w-full h-full px-2 py-2.5 text-xs font-semibold text-center leading-tight transition-colors rounded-lg"
                                 :style="'letter-spacing:.01em;cursor:pointer;' + (situacaoKey === '{{ $key }}'
                                     ? 'background:' + (colors['{{ $key }}'] || 'var(--muted2)') + ';color:#fff;'
                                     : 'background:var(--s2);color:var(--muted2);border:1px solid var(--border);')"
@@ -694,7 +694,7 @@
                  mousedown.prevent de propósito pra não tirar o foco do editor). --}}
             <div class="card card-body-lg" x-data="debouncedField({ url: '{{ route('tasks.update-field', $task) }}', field: 'description', value: @js($task->description ?? '') })"
                  @input="queue($event.target.value)">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                <p class="card-title mb-4 flex items-center gap-2">
                     <span class="icon-badge">
                         <x-icon name="file-text" size="16" />
                     </span>
@@ -708,7 +708,7 @@
             <div class="card card-body-lg"
                  x-data="inlineField({ url: '{{ route('tasks.update-caption', $task) }}', payloadKey: 'caption', value: @js($task->caption ?? '') })">
                 <div class="flex items-center justify-between mb-1">
-                    <p class="text-xs font-semibold uppercase tracking-widest flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                    <p class="card-title flex items-center gap-2">
                         <span class="icon-badge">
                             <x-icon name="tag" size="16" />
                         </span>
@@ -792,7 +792,7 @@
                 {{-- Arquivos importados do ClickUp --}}
                 @if(!empty($task->clickup_attachments))
                     <div class="mt-4 pt-4" style="border-top:1px solid var(--border2)">
-                        <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">
+                        <p class="card-title mb-3">
                             Arquivos do ClickUp
                             <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ count($task->clickup_attachments) }}</span>
                         </p>
@@ -1265,7 +1265,7 @@
                          this.points = data.sprint_points; this.manual = data.manual; this.formatId = data.format_id ?? ''; this.editing = false;
                      },
                  }">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-3 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+                <p class="card-title mb-3 flex items-center gap-2">
                     <span class="icon-badge"><x-icon name="gauge" size="16" /></span>
                     Pontos de sprint
                 </p>

@@ -16,9 +16,9 @@
         .mono { font-variant-numeric:tabular-nums; }
         .label-sm { font-variant-numeric:tabular-nums; font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
 
-        .piece-card { background: var(--s1); border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
+        .piece-card { background: var(--s1); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
 
-        .preview-img { width: 100%; max-height: 460px; object-fit: contain; background: #000; display: block; }
+        .preview-img { width: 100%; max-height: 460px; object-fit: contain; background: var(--s2); display: block; }
 
         {{-- Material + Comentários: empilhado (material primeiro) em telas pequenas;
              lado a lado a partir de tablet/desktop. --}}
@@ -49,12 +49,12 @@
         .file-link:hover { border-color: var(--purple); }
         .file-link + .file-link { border-top: 1px solid var(--border); }
 
-        .badge { font-variant-numeric:tabular-nums; font-size: 9px; letter-spacing: .1em; padding: 3px 8px; }
+        .badge { font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: var(--radius); }
         .badge-pending  { background: rgba(100,100,130,.2); color: var(--muted); }
         .badge-approved { background: rgba(34,197,94,.15); color: #22c55e; }
         .badge-changes  { background: rgba(238, 121, 25,.15); color: var(--orange); }
 
-        .approvers-box { background: var(--s1); border: 1px solid var(--border); padding: 16px 18px; margin-bottom: 24px; }
+        .approvers-box { background: var(--s1); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 16px 18px; margin-bottom: 24px; }
         .approver-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 13px; }
         .approver-row + .approver-row { border-top: 1px solid var(--border); }
         .approver-feedback { font-size: 12px; color: var(--muted2); margin: 4px 0 0; line-height: 1.5; border-left: 2px solid var(--border2); padding-left: 10px; }
@@ -71,7 +71,7 @@
 </head>
 <body>
 
-    <header style="background:rgba(12,12,18,.95); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); height:56px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; position:sticky; top:0; z-index:10">
+    <header style="background:var(--s1); box-shadow:var(--shadow); border-bottom:1px solid var(--border); height:56px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; position:sticky; top:0; z-index:10">
         <img src="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/Nonna-Horizontal-Mescla-Roxo-1024x294.png"
              alt="Nonna" style="height:20px"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
@@ -98,7 +98,7 @@
                     @php $isCurrent = $t->id === $approvalToken->id; @endphp
                     <a href="{{ route('approval.show', $t->token) }}"
                        title="{{ $t->round->task->title }}"
-                       style="display:inline-flex; align-items:center; gap:5px; padding:8px 14px; font-size:13px; font-weight:700; text-decoration:none; border:2px solid {{ $isCurrent ? 'var(--purple)' : ($t->status !== 'pending' ? '#22c55e' : 'var(--border2)') }}; background:{{ $isCurrent ? 'var(--purple)' : ($t->status !== 'pending' ? 'rgba(34,197,94,.1)' : 'transparent') }}; color:{{ $isCurrent ? '#fff' : ($t->status !== 'pending' ? '#22c55e' : 'var(--muted2)') }}">
+                       style="display:inline-flex; align-items:center; gap:5px; padding:7px 13px; font-size:13px; font-weight:600; text-decoration:none; border-radius:var(--radius); border:1px solid {{ $isCurrent ? 'var(--purple)' : ($t->status !== 'pending' ? '#22c55e' : 'var(--border2)') }}; background:{{ $isCurrent ? 'var(--purple)' : ($t->status !== 'pending' ? 'rgba(34,197,94,.1)' : 'transparent') }}; color:{{ $isCurrent ? '#fff' : ($t->status !== 'pending' ? '#22c55e' : 'var(--muted2)') }}">
                         @if(!$isCurrent && $t->status !== 'pending')✓@endif {{ $i + 1 }}
                     </a>
                 @endforeach
@@ -138,7 +138,7 @@
                         {{ explode(' ', $t->contact->name)[0] }}{{ $t->id === $approvalToken->id ? ' (você)' : '' }}
                     </span>
                     <span class="badge badge-{{ $t->status === 'approved' ? 'approved' : ($t->status === 'changes_requested' ? 'changes' : 'pending') }}">
-                        {{ $t->status === 'approved' ? 'APROVOU' : ($t->status === 'changes_requested' ? 'PEDIU AJUSTE' : 'AGUARDANDO') }}
+                        {{ $t->status === 'approved' ? 'Aprovou' : ($t->status === 'changes_requested' ? 'Pediu ajuste' : 'Aguardando') }}
                     </span>
                 </div>
                 @if($t->status === 'changes_requested' && $t->overall_comment)

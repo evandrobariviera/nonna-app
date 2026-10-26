@@ -35,8 +35,7 @@
     @endif
 
     @foreach($porMes as $mes => $entradas)
-        <p class="text-xs font-semibold uppercase tracking-widest mb-3 mt-6 first:mt-0"
-           style="color:var(--muted); letter-spacing:.1em">{{ $mes }}</p>
+        <p class="card-title mb-3 mt-6 first:mt-0">{{ $mes }}</p>
 
         <div class="flex flex-col gap-3">
             @foreach($entradas as $u)

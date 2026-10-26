@@ -6,7 +6,7 @@
 
 @if($activities->isNotEmpty())
     <div {{ $attributes->merge(['class' => 'card']) }}>
-        <p class="text-xs font-semibold uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+        <p class="card-title mb-4 flex items-center gap-2">
             <span class="icon-badge">
                 <x-icon name="history" size="16" />
             </span>

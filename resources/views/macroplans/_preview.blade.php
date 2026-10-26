@@ -30,7 +30,7 @@
     {{-- Projetos --}}
     @if($macroplan->projects->isNotEmpty())
         <div>
-            <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Projetos ({{ $macroplan->projects->count() }})</p>
+            <p class="card-title mb-3">Projetos ({{ $macroplan->projects->count() }})</p>
             <div class="flex flex-col gap-2">
                 @foreach($macroplan->projects as $proj)
                     <a href="{{ route('macroplans.projects.show', [$macroplan, $proj]) }}"

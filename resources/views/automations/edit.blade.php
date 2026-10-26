@@ -24,8 +24,8 @@
             @csrf @method('PATCH')
 
             {{-- Identificação --}}
-            <div class="card" style="padding:1.5rem; margin-bottom:1rem">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-4" style="color:var(--muted); letter-spacing:.1em">Identificação</p>
+            <div class="card" style="padding:1.5rem; margin-bottom:1rem; --card-px:1.5rem">
+                <p class="card-title mb-4">Identificação</p>
 
                 <div class="grid gap-4">
                     <div>

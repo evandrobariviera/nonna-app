@@ -101,7 +101,7 @@
 
             @if($recentMacroplans->isNotEmpty())
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Planejamentos recentes</p>
+                    <p class="card-title mb-3">Planejamentos recentes</p>
                     <div class="flex flex-col gap-2">
                         @foreach($recentMacroplans as $plan)
                             <a href="{{ route('macroplans.edit', $plan) }}"

@@ -65,7 +65,7 @@
     <div class="card card-body-lg mb-4">
         <div class="flex items-start justify-between gap-3 mb-4 flex-wrap">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
+                <p class="card-title">
                     Volume de {{ now()->locale('pt_BR')->translatedFormat('F') }}
                     @if($volume['cliente'])
                         · {{ $volume['cliente']->displayName() }}
@@ -443,7 +443,7 @@
     <div class="card card-body-lg" x-data="{ busca: '', soAtrasados: false, mostrarSemCarga: false }">
         <div class="flex items-start justify-between gap-3 mb-4 flex-wrap">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
+                <p class="card-title">
                     Produção por cliente
                 </p>
                 <p class="text-xs mt-1" style="color:var(--muted2)">

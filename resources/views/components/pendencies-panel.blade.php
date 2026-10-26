@@ -13,7 +13,7 @@
      x-data="{ adding: {{ $errors->pendency->any() ? 'true' : 'false' }}, showClosed: false }"
      @pendency-form-close="adding = false">
     <div class="flex items-center justify-between mb-4">
-        <p class="text-xs font-semibold uppercase tracking-widest flex items-center gap-2" style="color:var(--muted); letter-spacing:.1em">
+        <p class="card-title flex items-center gap-2">
             <span class="icon-badge">
                 <x-icon name="hourglass" size="16" />
             </span>

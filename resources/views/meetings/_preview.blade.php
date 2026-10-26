@@ -30,7 +30,7 @@
     {{-- Planejamento vinculado --}}
     @if($meeting->macroPlan)
         <div>
-            <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Planejamento</p>
+            <p class="card-title mb-3">Planejamento</p>
             <a href="{{ route('macroplans.edit', $meeting->macroPlan) }}"
                class="card card-body flex items-center justify-between gap-3 transition-colors"
                onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
@@ -43,7 +43,7 @@
     {{-- Anexos --}}
     @if($meeting->attachments->isNotEmpty())
         <div>
-            <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--muted); letter-spacing:.1em">Anexos ({{ $meeting->attachments->count() }})</p>
+            <p class="card-title mb-3">Anexos ({{ $meeting->attachments->count() }})</p>
             <div class="flex flex-col gap-2">
                 @foreach($meeting->attachments as $attachment)
                     <a href="{{ $attachment->url() }}" target="_blank"
