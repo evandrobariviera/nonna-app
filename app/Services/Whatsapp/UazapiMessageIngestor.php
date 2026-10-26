@@ -63,7 +63,6 @@ class UazapiMessageIngestor
         ]);
 
         $isNewConversation = !$conversation->exists;
-        $previousMessageAt = $conversation->last_message_at;
         $adReply = $message['content']['contextInfo']['externalAdReply'] ?? null;
 
         if ($isNewConversation) {
@@ -120,27 +119,23 @@ class UazapiMessageIngestor
         $integration->update(['last_synced_at' => now(), 'status' => 'connected']);
 
         if (!($message['fromMe'] ?? false)) {
-            $this->linkLead($conversation, $sentAt, $isNewConversation, $previousMessageAt, $adReply);
+            $this->linkLead($conversation, $sentAt, $adReply);
         }
     }
 
     /**
      * Mensagem da pessoa → liga a conversa à Central de Leads (ver WhatsappLeadLinker).
-     * Só faz consulta quando há algo a decidir: entrada nova ou conversa ainda sem lead.
+     * Só faz consulta quando há algo a decidir: clique em anúncio ou conversa ainda sem lead.
      * Nunca derruba o webhook — a mensagem já foi gravada.
      */
-    private function linkLead(ServiceConversation $conversation, Carbon $sentAt, bool $isNewConversation, ?Carbon $previousMessageAt, ?array $adReply): void
+    private function linkLead(ServiceConversation $conversation, Carbon $sentAt, ?array $adReply): void
     {
-        $isEntry = $isNewConversation
-            || $adReply
-            || ($previousMessageAt && $previousMessageAt->lt($sentAt->copy()->subDays(WhatsappLeadLinker::REENTRY_SILENCE_DAYS)));
-
-        if (!$isEntry && $conversation->client_lead_id) {
+        if (!WhatsappLeadLinker::isFromAd($adReply) && $conversation->client_lead_id) {
             return;
         }
 
         try {
-            $this->leadLinker->link($conversation, $isEntry, $sentAt, $adReply);
+            $this->leadLinker->link($conversation, $sentAt, $adReply);
         } catch (\Throwable $e) {
             Log::warning('UazapiMessageIngestor: falha ao ligar conversa à Central de Leads', [
                 'conversation_id' => $conversation->id,

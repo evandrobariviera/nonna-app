@@ -1,9 +1,9 @@
 {
   "novidades": [
     {
-      "title": "Conversas do WhatsApp entram na Central de Leads",
-      "summary": "Quem chama no WhatsApp do Atendimento Assistido agora vira lead na Central sozinho, já com o anúncio de origem quando veio de anúncio — e a mesma pessoa do site e do WhatsApp é reconhecida como uma só.",
-      "body": "<p>A pessoa é reconhecida pelo telefone, mesmo escrito de jeitos diferentes (com ou sem 55, com ou sem o 9). Na ficha do lead, o bloco <strong>Atribuição</strong> mostra o anúncio e a campanha que trouxeram a pessoa, com link para a campanha. O cliente não recebe aviso de \"Lead Capturado\" pelo WhatsApp, porque já está vendo a conversa chegar.</p>",
+      "title": "Quem clica em anúncio de WhatsApp entra na Central de Leads",
+      "summary": "Quem chama no WhatsApp do Atendimento Assistido a partir de um anúncio agora vira lead na Central sozinho, com o anúncio de origem — e a mesma pessoa do site e do WhatsApp é reconhecida como uma só.",
+      "body": "<p>Só vira cartão quem veio de anúncio: o WhatsApp do negócio também recebe aluno, fornecedor e curioso, e isso não deve lotar a Central. As demais conversas só ficam ligadas à pessoa, sem cartão. A pessoa é reconhecida pelo telefone, mesmo escrito de jeitos diferentes (com ou sem 55, com ou sem o 9). Na ficha do lead, o bloco <strong>Atribuição</strong> mostra o anúncio e a campanha, com link. O cliente não recebe aviso de \"Lead Capturado\" pelo WhatsApp, porque já está vendo a conversa chegar.</p>",
       "kind": "novidade", "area": "Central de Leads"
     },
     {
