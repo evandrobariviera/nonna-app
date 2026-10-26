@@ -1,0 +1,18 @@
+{
+  "novidades": [
+    {
+      "title": "Playbooks com fases: Onboarding e Site prontos",
+      "summary": "Aplicar um Playbook num projeto agora monta a linha do tempo inteira: fases com datas, marcos e as tarefas já dentro de cada fase. Já estão prontos os modelos Onboarding de Cliente e Desenvolvimento de Site.",
+      "body": "<p>As datas contam a partir do início do projeto, e cada tarefa vence no fim da sua fase. Os modelos podem ser ajustados em Playbooks (fases, duração em dias e tarefas).</p>",
+      "kind": "melhoria", "area": "Planejamentos"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Linha do tempo de campanhas e projetos — fases e marcos",
+      "category": "Planejamentos",
+      "slug": "linha-do-tempo-fases-e-marcos",
+      "body_file": "ajuda-linha-do-tempo.html"
+    }
+  ]
+}

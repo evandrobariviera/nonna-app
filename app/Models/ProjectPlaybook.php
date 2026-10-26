@@ -38,6 +38,12 @@ class ProjectPlaybook extends Model
         return $this->hasMany(ProjectPlaybookTask::class)->orderBy('position');
     }
 
+    // Fases-modelo da linha do tempo (ProjectPlaybookPhase) — opcionais.
+    public function phases(): HasMany
+    {
+        return $this->hasMany(ProjectPlaybookPhase::class)->orderBy('position');
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

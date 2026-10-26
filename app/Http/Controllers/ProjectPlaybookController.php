@@ -15,7 +15,7 @@ class ProjectPlaybookController extends Controller
 {
     public function index()
     {
-        $playbooks = ProjectPlaybook::withCount('tasks')->orderBy('name')->get();
+        $playbooks = ProjectPlaybook::withCount('tasks', 'phases')->orderBy('name')->get();
 
         return view('playbooks.index', compact('playbooks'));
     }
@@ -41,7 +41,7 @@ class ProjectPlaybookController extends Controller
                 'created_by'  => Auth::id(),
             ]);
 
-            $this->syncTasks($playbook, $data['tasks'] ?? []);
+            $this->syncTasks($playbook, $data['tasks'] ?? [], $data['phases'] ?? []);
 
             return $playbook;
         });
@@ -51,7 +51,7 @@ class ProjectPlaybookController extends Controller
 
     public function edit(ProjectPlaybook $playbook)
     {
-        $playbook->load('tasks');
+        $playbook->load('tasks', 'phases');
 
         return view('playbooks.edit', [
             'playbook'        => $playbook,
@@ -71,7 +71,7 @@ class ProjectPlaybookController extends Controller
                 'is_active'   => $request->boolean('is_active', true),
             ]);
 
-            $this->syncTasks($playbook, $data['tasks'] ?? []);
+            $this->syncTasks($playbook, $data['tasks'] ?? [], $data['phases'] ?? []);
         });
 
         return redirect()->route('playbooks.index')->with('success', "Playbook \"{$playbook->name}\" atualizado.");
@@ -127,17 +127,43 @@ class ProjectPlaybookController extends Controller
             'tasks.*.priority'            => 'nullable|in:' . implode(',', array_keys(Task::$priorities)),
             'tasks.*.due_offset_days'     => 'nullable|integer|min:0|max:3650',
             'tasks.*.functional_role_id'  => 'nullable|uuid|exists:pgsql.functional_roles,id',
+            'tasks.*.phase_index'         => 'nullable|integer|min:0',
+            // Fases-modelo da linha do tempo (opcionais). phase_index da tarefa = posição aqui.
+            'phases'                      => 'nullable|array|max:40',
+            'phases.*.name'               => 'required|string|max:150',
+            'phases.*.is_milestone'       => 'nullable|boolean',
+            'phases.*.start_offset_days'  => 'nullable|integer|min:0|max:3650',
+            'phases.*.duration_days'      => 'nullable|integer|min:1|max:3650',
         ]);
     }
 
     // Estratégia simples pra update: apaga e recria em vez de diff — o
     // formulário sempre reenvia a lista completa, então não há perda de dado.
-    private function syncTasks(ProjectPlaybook $playbook, array $tasks): void
+    // Fases antes das tarefas: a tarefa aponta pra fase pela posição dela no formulário.
+    private function syncTasks(ProjectPlaybook $playbook, array $tasks, array $phases = []): void
     {
         $playbook->tasks()->delete();
+        $playbook->phases()->delete();
+
+        $phaseIds = [];
+        foreach (array_values($phases) as $i => $item) {
+            $milestone = !empty($item['is_milestone']);
+            $created = $playbook->phases()->create([
+                'position'          => $i + 1,
+                'name'              => trim($item['name']),
+                'is_milestone'      => $milestone,
+                'start_offset_days' => $item['start_offset_days'] ?? null,
+                'duration_days'     => $milestone ? null : ($item['duration_days'] ?? null),
+            ]);
+            // Marco não tem tarefa — tarefa apontando pra marco fica sem fase.
+            $phaseIds[$i] = $milestone ? null : $created->id;
+        }
 
         foreach (array_values($tasks) as $i => $item) {
+            $phaseIndex = isset($item['phase_index']) && $item['phase_index'] !== '' ? (int) $item['phase_index'] : null;
+
             $playbook->tasks()->create([
+                'project_playbook_phase_id' => $phaseIndex !== null ? ($phaseIds[$phaseIndex] ?? null) : null,
                 'position'            => $i + 1,
                 'title'               => $item['title'],
                 'description'         => $item['description'] ?? null,

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\FunctionalRole;
 use App\Models\Project;
+use App\Models\ProjectPhase;
 use App\Models\ProjectPlaybook;
 use App\Models\ProjectPlaybookTask;
 use App\Models\Task;
@@ -48,11 +49,15 @@ class TaskDraftService
             return ['tasks' => collect(), 'warnings' => [], 'already_applied' => true];
         }
 
-        $playbook->loadMissing('tasks');
+        $playbook->loadMissing('tasks', 'phases');
         $warnings = [];
 
         $tasks = DB::connection('pgsql')->transaction(function () use ($project, $playbook, $userId, &$warnings) {
-            return $playbook->tasks->map(function (ProjectPlaybookTask $item) use ($project, $userId, &$warnings) {
+            $phaseMap = $this->createPhases($project, $playbook);
+
+            return $playbook->tasks->map(function (ProjectPlaybookTask $item) use ($project, $userId, $phaseMap, &$warnings) {
+                $phase = $phaseMap[$item->project_playbook_phase_id] ?? null;
+
                 [$task, $warning] = $this->createTask($project, [
                     'title'              => $item->title,
                     'description'        => $item->description,
@@ -60,7 +65,10 @@ class TaskDraftService
                     'destination'        => $item->destination,
                     'priority'           => $item->priority,
                     'due_offset_days'    => $item->due_offset_days,
+                    // Sem prazo próprio no modelo, a tarefa vence no fim da fase dela.
+                    'due_date'           => $item->due_offset_days === null ? $phase?->end_date?->format('Y-m-d') : null,
                     'functional_role_id' => $item->functional_role_id,
+                    'project_phase_id'   => $phase?->id,
                 ], 'playbook', $userId);
 
                 if ($warning) {
@@ -79,6 +87,38 @@ class TaskDraftService
         }
 
         return ['tasks' => $tasks, 'warnings' => $warnings, 'already_applied' => false];
+    }
+
+    /**
+     * Fases-modelo do Playbook → fases do projeto (linha do tempo), com datas contadas a
+     * partir do início do projeto (ou de hoje, se o projeto não tiver início). Entram depois
+     * das fases que o projeto já tiver.
+     *
+     * @return array<string, ProjectPhase> fase-modelo id → fase criada
+     */
+    private function createPhases(Project $project, ProjectPlaybook $playbook): array
+    {
+        $base     = $project->start_date ? Carbon::parse($project->start_date)->startOfDay() : now()->startOfDay();
+        $position = (int) $project->phases()->max('position');
+        $map      = [];
+
+        foreach ($playbook->phases as $item) {
+            $start = $item->start_offset_days !== null ? $base->copy()->addDays($item->start_offset_days) : null;
+            $end   = $start && !$item->is_milestone && $item->duration_days
+                ? $start->copy()->addDays(max(1, $item->duration_days) - 1)
+                : $start;
+
+            $map[$item->id] = $project->phases()->create([
+                'organization_id' => $project->organization_id,
+                'position'        => ++$position,
+                'name'            => $item->name,
+                'is_milestone'    => $item->is_milestone,
+                'start_date'      => $item->is_milestone ? null : $start,
+                'end_date'        => $end,
+            ]);
+        }
+
+        return $map;
     }
 
     /**
@@ -137,6 +177,7 @@ class TaskDraftService
             'status'        => 'backlog',
             'origin'        => $origin,
             'created_by'    => $userId,
+            'project_phase_id' => $data['project_phase_id'] ?? null,
         ];
 
         // tasks.priority é NOT NULL com default 'normal' no banco — passar

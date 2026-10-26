@@ -56,6 +56,7 @@
                 <p class="text-sm" style="color:var(--muted2)">
                     Ainda não tem fases. Divida {{ $project->type === 'campanha' ? 'a campanha' : 'o projeto' }} em etapas
                     (ex.: Conceito → Produção → Aprovação → Veiculação) pra todo mundo saber em que pé está e o que vem depois.
+                    Aplicando um <strong>Playbook</strong> com fases (botão no topo da página), as fases e as tarefas de cada uma já vêm prontas, com datas.
                 </p>
                 <div class="flex items-center gap-2 flex-wrap mt-3">
                     <span class="text-xs" style="color:var(--muted)">Começar de um modelo:</span>

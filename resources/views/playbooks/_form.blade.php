@@ -2,8 +2,21 @@
      edit.blade.php (mesmo padrão de resources/views/ai/agents/_form.blade.php).
      Espera no escopo: $action, $method, $playbook (null na criação),
      $functionalRoles. --}}
+{{-- Fases-modelo (linha do tempo): a tarefa guarda a `key` da fase (estável ao reordenar);
+     no envio vira phase_index = posição atual da fase na lista. --}}
+@php
+    $pbPhases = ($playbook?->phases ?? collect())->values();
+    $pbPhaseKey = $pbPhases->mapWithKeys(fn ($p, $i) => [$p->id => 'f' . $i]);
+@endphp
 <div style="max-width:900px"
      x-data="{
+        phases: {{ json_encode($pbPhases->map(fn ($p, $i) => [
+            'key'               => 'f' . $i,
+            'name'              => $p->name,
+            'is_milestone'      => $p->is_milestone,
+            'start_offset_days' => $p->start_offset_days,
+            'duration_days'     => $p->duration_days,
+        ])->values()) }},
         tasks: {{ json_encode(($playbook?->tasks ?? collect())->map(fn ($t) => [
             'title'               => $t->title,
             'description'         => $t->description,
@@ -12,11 +25,30 @@
             'priority'            => $t->priority,
             'due_offset_days'     => $t->due_offset_days,
             'functional_role_id'  => $t->functional_role_id,
+            'phase_key'           => $pbPhaseKey[$t->project_playbook_phase_id] ?? '',
         ])->values()) }},
+        seq: {{ $pbPhases->count() }},
         addTask() {
-            this.tasks.push({ title: '', description: '', task_type: '', destination: '', priority: '', due_offset_days: '', functional_role_id: '' });
+            this.tasks.push({ title: '', description: '', task_type: '', destination: '', priority: '', due_offset_days: '', functional_role_id: '', phase_key: '' });
         },
         removeTask(i) { this.tasks.splice(i, 1); },
+        addPhase(milestone) {
+            this.phases.push({ key: 'f' + (this.seq++), name: '', is_milestone: milestone, start_offset_days: '', duration_days: '' });
+        },
+        removePhase(i) {
+            const key = this.phases[i].key;
+            this.phases.splice(i, 1);
+            this.tasks.forEach(t => { if (t.phase_key === key) t.phase_key = ''; });
+        },
+        movePhase(i, dir) {
+            const j = i + dir;
+            if (j < 0 || j >= this.phases.length) return;
+            [this.phases[i], this.phases[j]] = [this.phases[j], this.phases[i]];
+        },
+        phaseIndex(key) {
+            const i = this.phases.findIndex(p => p.key === key);
+            return i < 0 ? '' : i;
+        },
      }">
 
     @if($errors->any())
@@ -79,6 +111,53 @@
             </div>
             @endif
 
+            {{-- Fases do playbook (linha do tempo do projeto) --}}
+            <div style="border-top:1px solid var(--border2)" class="pt-5">
+                <div class="flex items-center justify-between mb-1 flex-wrap gap-2">
+                    <label class="text-xs font-semibold" style="color:var(--muted); letter-spacing:.05em">FASES E MARCOS</label>
+                    <div class="flex gap-2">
+                        <button type="button" @click="addPhase(false)" class="text-xs font-semibold px-3 py-1.5 rounded"
+                            style="border:1px solid var(--border2); color:var(--muted2)">+ Fase</button>
+                        <button type="button" @click="addPhase(true)" class="text-xs font-semibold px-3 py-1.5 rounded"
+                            style="border:1px solid var(--border2); color:var(--muted2)">+ Marco</button>
+                    </div>
+                </div>
+                <p class="text-xs mb-3" style="color:var(--muted2)">
+                    Ao aplicar o playbook, viram a linha do tempo do projeto. "Começa no dia" conta a partir do início do projeto
+                    (dia 0 = início; sem início, conta de hoje). Tarefa sem prazo próprio vence no último dia da fase dela.
+                </p>
+                <div class="space-y-2">
+                    <template x-for="(p, i) in phases" :key="p.key">
+                        <div class="flex items-end gap-2 flex-wrap px-3 py-2 rounded" style="background:var(--s2); border:1px solid var(--border2)">
+                            <input type="hidden" :name="'phases['+i+'][is_milestone]'" :value="p.is_milestone ? 1 : 0">
+                            <div class="flex flex-col gap-0.5">
+                                <button type="button" class="text-xs" style="color:var(--muted)" @click="movePhase(i, -1)" :disabled="i === 0" title="Subir">▲</button>
+                                <button type="button" class="text-xs" style="color:var(--muted)" @click="movePhase(i, 1)" :disabled="i === phases.length - 1" title="Descer">▼</button>
+                            </div>
+                            <div class="flex-1" style="min-width:200px">
+                                <p class="text-xs mb-1" style="color:var(--muted)" x-text="(p.is_milestone ? '◆ Marco ' : 'Fase ') + (i + 1)"></p>
+                                <input type="text" :name="'phases['+i+'][name]'" x-model="p.name" required maxlength="150"
+                                    class="field w-full px-2 py-1.5 text-xs focus:outline-none" :placeholder="p.is_milestone ? 'Ex: Site no ar' : 'Ex: Briefing'">
+                            </div>
+                            <div style="width:110px">
+                                <p class="text-xs mb-1" style="color:var(--muted)" x-text="p.is_milestone ? 'No dia' : 'Começa no dia'"></p>
+                                <input type="number" min="0" max="3650" :name="'phases['+i+'][start_offset_days]'" x-model="p.start_offset_days"
+                                    class="field w-full px-2 py-1.5 text-xs focus:outline-none" placeholder="0">
+                            </div>
+                            <div style="width:110px" x-show="!p.is_milestone">
+                                <p class="text-xs mb-1" style="color:var(--muted)">Dura (dias)</p>
+                                <input type="number" min="1" max="3650" :name="'phases['+i+'][duration_days]'" x-model="p.duration_days" :disabled="p.is_milestone"
+                                    class="field w-full px-2 py-1.5 text-xs focus:outline-none" placeholder="5">
+                            </div>
+                            <button type="button" @click="removePhase(i)" class="text-xs px-1 pb-1.5" style="color:var(--muted)" title="Remover">✕</button>
+                        </div>
+                    </template>
+                    <p x-show="phases.length === 0" class="text-xs py-1" style="color:var(--muted)">
+                        Sem fases — o playbook cria só as tarefas.
+                    </p>
+                </div>
+            </div>
+
             {{-- Tarefas do playbook --}}
             <div style="border-top:1px solid var(--border2)" class="pt-5">
                 <div class="flex items-center justify-between mb-3">
@@ -111,6 +190,17 @@
                                         @endforeach
                                     </select>
                                 </div>
+                            </div>
+
+                            <div class="mb-2" x-show="phases.length > 0">
+                                <p class="text-xs mb-1" style="color:var(--muted)">Fase</p>
+                                <input type="hidden" :name="'tasks['+i+'][phase_index]'" :value="phaseIndex(t.phase_key)">
+                                <select x-model="t.phase_key" class="field w-full px-2 py-1.5 text-xs focus:outline-none">
+                                    <option value="">— sem fase —</option>
+                                    <template x-for="(p, pi) in phases.filter(p => !p.is_milestone)" :key="p.key">
+                                        <option :value="p.key" x-text="p.name || '(fase sem nome)'" :selected="p.key === t.phase_key"></option>
+                                    </template>
+                                </select>
                             </div>
 
                             <div class="mb-2">

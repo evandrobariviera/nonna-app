@@ -17,6 +17,7 @@ class ProjectPlaybookTask extends Model
 
     protected $fillable = [
         'project_playbook_id',
+        'project_playbook_phase_id',
         'position',
         'title',
         'description',

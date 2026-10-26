@@ -50,7 +50,7 @@
                                 @endif
                                 <span class="text-xs px-2 py-px rounded"
                                       style="background:rgba(100, 59, 142,.1); color:var(--purple); border:1px solid rgba(100, 59, 142,.2)">
-                                    {{ $playbook->tasks_count }} tarefa(s)
+                                    {{ $playbook->tasks_count }} tarefa(s)@if($playbook->phases_count) · {{ $playbook->phases_count }} fase(s)/marco(s)@endif
                                 </span>
                             </div>
                             @if($playbook->description)
