@@ -18,7 +18,7 @@ class Task extends Model
     protected $connection = 'pgsql';
 
     protected $fillable = [
-        'organization_id', 'project_id', 'macro_plan_id', 'meeting_id', 'sprint_id', 'client_id',
+        'organization_id', 'project_id', 'project_phase_id', 'macro_plan_id', 'meeting_id', 'sprint_id', 'client_id',
         'title', 'description', 'caption', 'task_type', 'destination', 'status', 'situation',
         'priority',
         'executor_id', 'created_by', 'contact_id',
@@ -337,6 +337,13 @@ class Task extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    // Fase da linha do tempo do projeto (ProjectPhase) — some sozinha se a tarefa trocar de
+    // projeto (TaskObserver::saving).
+    public function phase(): BelongsTo
+    {
+        return $this->belongsTo(ProjectPhase::class, 'project_phase_id');
     }
 
     public function macroPlan(): BelongsTo

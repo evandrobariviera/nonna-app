@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Client;
 use App\Models\Project;
+use App\Models\ProjectPhase;
 use App\Models\Sprint;
 use App\Models\Task;
 use App\Models\TaskActivity;
@@ -37,6 +38,12 @@ class TaskObserver
     public function saving(Task $task): void
     {
         app(SprintPoints::class)->apply($task);
+
+        // Fase é do projeto: trocou de projeto (por qualquer caminho — tela, sync, assistente)
+        // sem escolher fase nova, a antiga não vale mais.
+        if ($task->isDirty('project_id') && !$task->isDirty('project_phase_id')) {
+            $task->project_phase_id = null;
+        }
     }
 
     public function updated(Task $task): void
@@ -75,6 +82,16 @@ class TaskObserver
                 'project_changed',
                 Project::find($task->getOriginal('project_id'))?->title,
                 $task->project?->title
+            );
+        }
+        // Só a troca de fase dentro do mesmo projeto — a que acompanha troca de projeto já
+        // aparece como "Projeto alterado".
+        if ($task->wasChanged('project_phase_id') && !$task->wasChanged('project_id')) {
+            TaskActivity::log(
+                $task,
+                'phase_changed',
+                ProjectPhase::find($task->getOriginal('project_phase_id'))?->name,
+                $task->phase?->name
             );
         }
         if ($task->wasChanged('sprint_id')) {

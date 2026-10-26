@@ -148,6 +148,7 @@ class TaskController extends Controller
             'client.links',
             'project.macroPlan.client',
             'project.macroPlan.attachments',
+            'project.phases',
             'macroPlan',
             'meeting',
             'sprint',
@@ -311,6 +312,7 @@ class TaskController extends Controller
         abort_unless($project->macro_plan_id === $macroplan->id, 403);
 
         $data = $request->validate($this->storeRules());
+        $this->assertPhase($project, $data, true);
 
         if (($data['status'] ?? 'backlog') === 'em_producao') {
             if ($reason = Task::wipBlockReason($this->firstExecutorId($data))) {
@@ -338,6 +340,7 @@ class TaskController extends Controller
     public function storeStandalone(Request $request, Project $project)
     {
         $data = $request->validate($this->storeRules());
+        $this->assertPhase($project, $data, true);
 
         if (($data['status'] ?? 'backlog') === 'em_producao') {
             if ($reason = Task::wipBlockReason($this->firstExecutorId($data))) {
@@ -401,6 +404,7 @@ class TaskController extends Controller
         abort_unless($task->project_id === $project->id, 403);
 
         $data = $request->validate($this->updateRules());
+        $this->assertPhase($project, $data, false);
         TaskDeliveryService::guard($request, $task, $data['status']);
 
         if ($reason = $this->wipBlockReasonForSave($task, $data['status'], $this->firstExecutorId($data))) {
@@ -419,6 +423,7 @@ class TaskController extends Controller
         abort_unless($task->project_id === $project->id, 403);
 
         $data = $request->validate($this->updateRules());
+        $this->assertPhase($project, $data, false);
         TaskDeliveryService::guard($request, $task, $data['status']);
 
         if ($reason = $this->wipBlockReasonForSave($task, $data['status'], $this->firstExecutorId($data))) {
@@ -1099,6 +1104,7 @@ class TaskController extends Controller
             'requester_name'     => 'nullable|string|max:150',
             'requester_whatsapp' => 'nullable|string|max:30',
             'requester_channel'  => 'nullable|in:' . implode(',', array_keys(Task::$requesterChannels)),
+            'project_phase_id'   => 'nullable|uuid',
             'files'              => 'nullable|array',
             'files.*'            => 'file|max:153600', // 150 MB
         ];
@@ -1127,7 +1133,27 @@ class TaskController extends Controller
             'requester_name'     => 'nullable|string|max:150',
             'requester_whatsapp' => 'nullable|string|max:30',
             'requester_channel'  => 'nullable|in:' . implode(',', array_keys(Task::$requesterChannels)),
+            'project_phase_id'   => 'nullable|uuid',
         ];
+    }
+
+    // Fase da linha do tempo (ProjectPhase): tem que ser do próprio projeto e não pode ser
+    // marco. Na criação é obrigatória quando o projeto já tem fases ("toda tarefa pertence a
+    // uma fase"); na edição só valida o que veio (não força escolher pra salvar outra coisa).
+    private function assertPhase(Project $project, array $data, bool $requiredIfPhases): void
+    {
+        $phaseId = $data['project_phase_id'] ?? null;
+
+        if (!$phaseId) {
+            if ($requiredIfPhases && $project->phases()->where('is_milestone', false)->exists()) {
+                throw ValidationException::withMessages(['project_phase_id' => 'Escolha a fase da tarefa.']);
+            }
+            return;
+        }
+
+        if (!$project->phases()->where('id', $phaseId)->where('is_milestone', false)->exists()) {
+            throw ValidationException::withMessages(['project_phase_id' => 'Essa fase não é deste projeto.']);
+        }
     }
 
     private function syncPersonnel(Task $task, array $data): void

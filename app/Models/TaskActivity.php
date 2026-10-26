@@ -34,6 +34,7 @@ class TaskActivity extends Model
         'task_type_changed'         => 'Tipo alterado',
         'client_changed'            => 'Cliente alterado',
         'project_changed'           => 'Projeto alterado',
+        'phase_changed'             => 'Fase alterada',
         'sprint_changed'            => 'Sprint alterada',
         'responsavel_changed'       => 'Responsável alterado',
         'executor_changed'          => 'Executor alterado',

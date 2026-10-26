@@ -180,6 +180,12 @@ class Project extends Model
         return $this->hasMany(Task::class)->orderBy('created_at');
     }
 
+    /** Linha do tempo: fases e marcos na ordem (ProjectPhase, Services\Projects\ProjectTimeline). */
+    public function phases(): HasMany
+    {
+        return $this->hasMany(ProjectPhase::class)->orderBy('position');
+    }
+
     public function activeTasks(): HasMany
     {
         return $this->hasMany(Task::class)->where('status', '!=', 'cancelado');

@@ -80,6 +80,8 @@
         </div>
     @endif
 
+    @include('projects._timeline', ['project' => $project, 'timeline' => $timeline])
+
     {{-- 2 colunas (2026-10): documento à esquerda, detalhes/portal/anexos/campanhas numa
          coluna lateral fixa — o HTML é estreito e sozinho na largura toda sobrava cinza. --}}
     @php $projectClient = $project->client ?? $macroplan?->client; @endphp
@@ -541,7 +543,7 @@
     {{-- TAREFAS: Quadro (Kanban) ou Fila (lista) — recolhido quando há documento (a lateral
          já mostra a fila por status); aberto quando não há, pra página não ficar vazia.
          O "+ Nova" da lateral dispara open-new-task e abre o formulário aqui. --}}
-    <div x-data="{ addCol: null, editTaskId: null, showDone: false, view: 'quadro', boardOpen: {{ $mainDocument ? 'false' : 'true' }} }"
+    <div x-data="{ addCol: null, editTaskId: null, showDone: false, view: 'quadro', phaseMoved: false, boardOpen: {{ $mainDocument ? 'false' : 'true' }} }"
          @open-new-task.window="addCol = 'backlog'; $nextTick(() => $refs.newTaskForm.scrollIntoView({ behavior: 'smooth', block: 'start' }))">
 
         <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
@@ -561,8 +563,15 @@
                         :style="view === 'fila' ? 'background:var(--purple); color:#fff' : 'color:var(--muted)'">
                         Fila
                     </button>
+                    @if($project->phases->where('is_milestone', false)->isNotEmpty())
+                        <button @click="view = 'fases'" type="button"
+                            class="text-xs font-mono px-3 py-1.5 transition-all"
+                            :style="view === 'fases' ? 'background:var(--purple); color:#fff' : 'color:var(--muted)'">
+                            Fases
+                        </button>
+                    @endif
                 </div>
-                <button @click="showDone = !showDone" x-show="view === 'quadro'"
+                <button @click="showDone = !showDone" x-show="view === 'quadro' || view === 'fases'"
                     class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 transition-all"
                     :style="showDone
                         ? 'border:1px solid var(--purple); color:var(--purple)'
@@ -592,6 +601,22 @@
                         class="field w-full px-4 py-2.5 text-sm focus:outline-none"
                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                 </div>
+
+                {{-- Fase (linha do tempo) — obrigatória quando o projeto já tem fases --}}
+                @php $phaseOptions = $project->phases->where('is_milestone', false); @endphp
+                @if($phaseOptions->isNotEmpty())
+                    <div class="col-span-2">
+                        <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">
+                            Fase <span style="color:var(--orange)">*</span>
+                        </label>
+                        <select name="project_phase_id" required class="field w-full px-3 py-2.5 text-sm focus:outline-none">
+                            <option value="">— escolha a fase —</option>
+                            @foreach($phaseOptions as $opt)
+                                <option value="{{ $opt->id }}" {{ ($timeline['current']['phase']->id ?? null) === $opt->id ? 'selected' : '' }}>{{ $opt->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
 
                 {{-- Data de Aprovação --}}
                 <div>
@@ -790,6 +815,11 @@
                                 </div>
 
                                 <a href="{{ route('tasks.show', $task) }}" class="kb-card-title hover:underline">{{ $task->title }}</a>
+                                @if($task->project_phase_id && ($taskPhase = $project->phases->firstWhere('id', $task->project_phase_id)))
+                                    <p class="text-xs truncate flex items-center gap-1" style="color:var(--muted2); margin-top:-2px" title="Fase">
+                                        <x-icon name="chart-gantt" size="11" /> {{ $taskPhase->name }}
+                                    </p>
+                                @endif
 
                                 <div class="kb-card-foot">
                                     <div class="flex items-center gap-2.5 min-w-0">
@@ -884,6 +914,16 @@
                                                 <option value="{{ $key }}" {{ $task->origin === $key ? 'selected' : '' }}>{{ $label }}</option>
                                             @endforeach
                                         </select>
+
+                                        @if($phaseOptions->isNotEmpty())
+                                            <select name="project_phase_id" title="Fase"
+                                                class="field w-full px-2 py-1.5 text-xs focus:outline-none">
+                                                <option value="">— sem fase —</option>
+                                                @foreach($phaseOptions as $opt)
+                                                    <option value="{{ $opt->id }}" {{ $task->project_phase_id === $opt->id ? 'selected' : '' }}>{{ $opt->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        @endif
 
 
                                         <div class="flex items-center gap-1.5 px-2">
@@ -1002,6 +1042,79 @@
             </div>{{-- /x-show showDone --}}
         @endif
         </div>{{-- /x-show view === 'quadro' --}}
+
+        {{-- ── FASES — uma coluna por fase da linha do tempo; arrastar o cartão troca a fase
+             (tasks.update-phase, mesmo kanban-dnd do Quadro). "Sem fase" fica primeiro, pra
+             esvaziar. --}}
+        @if($project->phases->where('is_milestone', false)->isNotEmpty())
+            @php
+                $phaseCols = collect([['id' => '', 'name' => 'Sem fase', 'status' => null, 'phase' => null]])
+                    ->merge($timeline['rows']->where('phase.is_milestone', false)->map(fn ($r) => [
+                        'id' => $r['phase']->id, 'name' => $r['phase']->name, 'status' => $r['status'], 'phase' => $r['phase'],
+                    ]));
+                $tasksByPhase = $project->tasks->where('status', '!=', 'cancelado')->groupBy(fn ($t) => $t->project_phase_id ?? '');
+            @endphp
+            <div x-show="view === 'fases'" x-cloak>
+                <div x-show="phaseMoved" x-cloak class="mb-3 px-4 py-2 text-xs flex items-center gap-3 flex-wrap"
+                     style="background:rgba(100,59,142,.07); border:1px solid rgba(100,59,142,.25); border-radius:8px; color:var(--text)">
+                    Fase trocada. A linha do tempo lá em cima recalcula quando a página recarregar.
+                    <button type="button" class="btn btn-ghost btn-xs" @click="window.location.reload()">Atualizar agora</button>
+                </div>
+                <div id="project-phase-board" class="kb-board" data-kanban-board data-status-field="project_phase_id"
+                     @kanban:moved="phaseMoved = true">
+                    @foreach($phaseCols as $col)
+                        @php
+                            $colTasks = $tasksByPhase->get($col['id'], collect())
+                                ->sortBy(fn ($t) => [$t->status === 'concluido' ? 1 : 0, $t->due_date?->timestamp ?? PHP_INT_MAX]);
+                            $colHex = $col['status'] ? \App\Models\Task::colorHex(\App\Models\ProjectPhase::statusColor($col['status'])) : 'var(--orange)';
+                        @endphp
+                        <div class="kb-col" style="--kb-bar: {{ $colHex }}" data-kanban-column data-status="{{ $col['id'] }}">
+                            <div class="kb-col-head">
+                                <div class="min-w-0">
+                                    <h5 class="card-title truncate" title="{{ $col['name'] }}">{{ $col['name'] }}</h5>
+                                    <p class="text-xs truncate" style="color:var(--muted); font-size:10px">
+                                        @if($col['phase'])
+                                            <span style="color:{{ $colHex }}">{{ \App\Models\ProjectPhase::statusLabel($col['status']) }}</span>
+                                            @if($col['phase']->end_date) · até {{ $col['phase']->end_date->format('d/m') }} @endif
+                                        @else
+                                            arraste pra uma fase
+                                        @endif
+                                    </p>
+                                </div>
+                                <span class="kb-count" data-kanban-count>{{ $colTasks->count() }}</span>
+                            </div>
+                            <div class="kb-list" data-kanban-list>
+                                @foreach($colTasks as $task)
+                                    @php $tHex = \App\Models\Task::colorHex($task->statusColor()); @endphp
+                                    <div class="kb-card {{ $task->isOverdue() ? 'kb-card-overdue' : '' }}"
+                                         data-kanban-card data-id="{{ $task->id }}" data-update-url="{{ route('tasks.update-phase', $task) }}"
+                                         @if($task->status === 'concluido') x-show="showDone" @endif>
+                                        <div class="kb-card-top">
+                                            <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="22" />
+                                            <span class="text-xs truncate" style="color:{{ $tHex }}">{{ \Illuminate\Support\Str::before($task->statusLabel(), ' /') }}</span>
+                                        </div>
+                                        <a href="{{ route('tasks.show', $task) }}" class="kb-card-title hover:underline">{{ $task->title }}</a>
+                                        <div class="kb-card-foot">
+                                            <div class="flex items-center gap-2.5 min-w-0">
+                                                @if($task->due_date)
+                                                    <span class="inline-flex items-center gap-1" title="Vencimento"
+                                                          style="color:{{ $task->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">
+                                                        <x-icon name="calendar" size="13" /> {{ $task->due_date->format('d/m') }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            @if($task->executor)
+                                                <span class="text-xs truncate" style="color:var(--muted2)">{{ \Illuminate\Support\Str::before($task->executor->name, ' ') }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         {{-- ── FILA (lista) ── --}}
         <div x-show="view === 'fila'" x-cloak x-data="taskBulk()">
@@ -1230,6 +1343,9 @@ function executorPicker(initial = []) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Visão "Fases": arrastar troca a fase (data-status-field="project_phase_id").
+    if (document.getElementById('project-phase-board')) initKanbanDnd('#project-phase-board');
+
     var board = document.getElementById('project-board');
     if (!board) return;
 

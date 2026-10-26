@@ -662,6 +662,11 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('projects.client-page.update');
     Route::patch('/projetos/{project}/equipe', [ProjectController::class, 'updateTeam'])
         ->name('projects.team.update');
+    // ── Linha do tempo (fases e marcos) ──
+    Route::put('/projetos/{project}/fases', [\App\Http\Controllers\ProjectPhaseController::class, 'sync'])
+        ->name('projects.phases.sync');
+    Route::patch('/tarefas/{task}/fase', [\App\Http\Controllers\ProjectPhaseController::class, 'updateTask'])
+        ->name('tasks.update-phase');
     // ── Comentários da campanha/projeto ──
     Route::post('/projetos/{project}/comentarios', [\App\Http\Controllers\ProjectCommentController::class, 'store'])
         ->name('project-comments.store');

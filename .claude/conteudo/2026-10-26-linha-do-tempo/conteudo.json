@@ -1,0 +1,18 @@
+{
+  "novidades": [
+    {
+      "title": "Linha do tempo nas campanhas e projetos",
+      "summary": "Campanhas e projetos agora se dividem em fases (ex.: Conceito → Produção → Aprovação → Veiculação) e marcos (dias que não podem escorregar), com uma linha do tempo no topo da página mostrando onde estamos hoje e o que está atrasado.",
+      "body": "<p>Cada tarefa pertence a uma fase, e a fase se conclui sozinha quando a última tarefa dela termina. Tem modelos prontos de Campanha, Site e Onboarding pra começar. No quadro de tarefas, a nova visão <strong>Fases</strong> mostra uma coluna por fase: é só arrastar o cartão pra trocar a fase. Tarefas antigas começam na coluna <strong>Sem fase</strong>.</p>",
+      "kind": "novidade", "area": "Planejamentos"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Linha do tempo de campanhas e projetos — fases e marcos",
+      "category": "Planejamentos",
+      "slug": "linha-do-tempo-fases-e-marcos",
+      "body_file": "ajuda-linha-do-tempo.html"
+    }
+  ]
+}

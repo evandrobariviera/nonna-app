@@ -1184,6 +1184,23 @@
                             {{ $proj->title }}
                         </a>
 
+                        {{-- Fase da linha do tempo (ProjectPhase) — troca salva na hora --}}
+                        @php $phaseOptions = $proj->phases->where('is_milestone', false); @endphp
+                        @if($phaseOptions->isNotEmpty())
+                            <div x-data="selectField({ url: '{{ route('tasks.update-phase', $task) }}', payloadKey: 'project_phase_id', value: @js($task->project_phase_id) })">
+                                <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5 flex items-center gap-1.5" style="color:var(--muted); letter-spacing:.08em">
+                                    <x-icon name="chart-gantt" size="12" /> Fase
+                                </label>
+                                <select x-model="value" @change="change()" class="field w-full px-3 py-2.5 text-sm focus:outline-none"
+                                        :style="value ? '' : 'border-color:var(--orange)'">
+                                    <option value="">— sem fase —</option>
+                                    @foreach($phaseOptions as $opt)
+                                        <option value="{{ $opt->id }}">{{ $opt->name }}{{ $opt->end_date ? ' · até ' . $opt->end_date->format('d/m') : '' }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
+
                         {{-- Rosca de progresso --}}
                         <div class="flex items-center gap-4">
                             <svg width="76" height="76" viewBox="0 0 76 76" class="flex-shrink-0" role="img" aria-label="{{ $pct }}% concluído">
