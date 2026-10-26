@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AdCampaign;
+use App\Models\AdDailySnapshot;
 use App\Models\Client;
 use App\Models\ClientAdAccount;
 use App\Models\FunctionalRole;
@@ -312,7 +313,7 @@ class DashboardController extends Controller
         $roundsAwaitingSendCount = 0;
         $headsTickets = collect();
         $pendingTasksCount = 0;
-        $creativosProntos = $creativosProntosTasks = $budgetsNeedingAddition = $campaignsNeedingOptimization = collect();
+        $creativosProntos = $creativosProntosTasks = $budgetsNeedingAddition = $campaignsNeedingOptimization = $spendDaily = collect();
 
         // ── Seção "Estratégia" ──
         if ($show('estrategia')) {
@@ -449,6 +450,25 @@ class DashboardController extends Controller
                 ->get()
                 ->filter(fn ($c) => $c->isOptimizationOverdue())
                 ->values();
+
+            // Investimento por dia (30 dias, todas as contas de clientes ativos). Nível campanha
+            // porque é o único que a Meta e o Google sincronizam — somar adset/ad duplicaria.
+            // Usa o índice (client_ad_account_id, entity_level, snapshot_date). Termina ontem: o
+            // dia de hoje ainda não foi sincronizado e apareceria como R$ 0.
+            $desde = today()->subDays(30);
+            $gastoPorDia = AdDailySnapshot::query()
+                ->whereIn('client_ad_account_id', ClientAdAccount::whereHas('client', fn ($q) => $q->where('status', '!=', 'inactive'))->select('id'))
+                ->where('entity_level', 'campaign')
+                ->whereBetween('snapshot_date', [$desde, today()->subDay()])
+                ->groupBy('snapshot_date')
+                ->selectRaw('snapshot_date, sum(spend) as total')
+                ->pluck('total', 'snapshot_date')
+                ->mapWithKeys(fn ($v, $d) => [substr((string) $d, 0, 10) => (float) $v]);
+            $spendDaily = collect(range(0, 29))->map(function ($i) use ($desde, $gastoPorDia) {
+                $d = $desde->copy()->addDays($i);
+
+                return ['x' => $d->format('d/m'), 'y' => round($gastoPorDia->get($d->toDateString(), 0), 2)];
+            });
         }
 
         return view('dashboard', compact(
@@ -463,7 +483,7 @@ class DashboardController extends Controller
             'roundsPending', 'roundsAwaitingSendCount', 'roundsApproved', 'roundsChangesRequested',
             'headsTickets', 'myReviewTasks',
             'pendingTasksCount',
-            'creativosProntos', 'creativosProntosTasks', 'budgetsNeedingAddition', 'campaignsNeedingOptimization',
+            'creativosProntos', 'creativosProntosTasks', 'budgetsNeedingAddition', 'campaignsNeedingOptimization', 'spendDaily',
             'myNotifications',
             'mode', 'show', 'myMeetingsToday', 'myOverdueTasks', 'myBlockers', 'attentionDigest',
             'pendenciesToDeliver', 'pendenciesToChase', 'pendenciesWaiting',

@@ -1,26 +1,23 @@
 @php
     $metrics = [
-        'service_score' => ['label' => 'Índice de Atendimento', 'suffix' => '', 'direction' => 'up'],
-        'conversion_rate' => ['label' => 'Taxa de conversão', 'suffix' => '%', 'direction' => 'up'],
-        'avg_first_response_minutes' => ['label' => '1ª resposta (min)', 'suffix' => 'min', 'direction' => 'down'],
-        'avg_sentiment_score' => ['label' => 'Sentimento', 'suffix' => '', 'direction' => 'up'],
-        'sales_confirmed' => ['label' => 'Vendas confirmadas', 'suffix' => '', 'direction' => 'up'],
-        'estimated_lost_revenue' => ['label' => 'R$ perdido no período', 'suffix' => '', 'direction' => 'down'],
+        'service_score' => ['label' => 'Índice de Atendimento', 'suffix' => '', 'direction' => 'up', 'format' => 'decimal'],
+        'conversion_rate' => ['label' => 'Taxa de conversão', 'suffix' => '%', 'direction' => 'up', 'format' => 'percent'],
+        'avg_first_response_minutes' => ['label' => '1ª resposta (min)', 'suffix' => 'min', 'direction' => 'down', 'format' => 'decimal'],
+        'avg_sentiment_score' => ['label' => 'Sentimento', 'suffix' => '', 'direction' => 'up', 'format' => 'decimal'],
+        'sales_confirmed' => ['label' => 'Vendas confirmadas', 'suffix' => '', 'direction' => 'up', 'format' => 'number'],
+        'estimated_lost_revenue' => ['label' => 'R$ perdido no período', 'suffix' => '', 'direction' => 'down', 'format' => 'currency'],
     ];
 
     $series = [];
     foreach ($metrics as $key => $meta) {
         $values = $diagnostics->pluck($key)->map(fn ($v) => (float) $v)->values();
-        $min = $values->min();
-        $max = $values->max();
-        $range = ($max - $min) ?: 1;
         $count = $values->count();
 
-        $points = $values->values()->map(function ($v, $i) use ($count, $min, $range) {
-            $x = $count > 1 ? ($i / ($count - 1)) * 100 : 50;
-            $y = 26 - (($v - $min) / $range) * 22;
-            return round($x, 1) . ',' . round($y, 1);
-        })->implode(' ');
+        // Um ponto por versão do diagnóstico (rótulo = fim do período), pro mini gráfico de área
+        $points = $diagnostics->values()->map(fn ($d, $i) => [
+            'x' => 'v' . $d->version . ' · até ' . $d->period_end->format('d/m'),
+            'y' => $values->get($i),
+        ])->all();
 
         $current = $values->last();
         $previous = $count > 1 ? $values->get($count - 2) : null;
@@ -144,11 +141,9 @@
                         @endif
 
                         @if($diagnostics->count() > 1)
-                            <svg viewBox="0 0 100 28" class="mt-2" style="width:100%; height:28px" preserveAspectRatio="none">
-                                <polyline points="{{ $s['points'] }}" fill="none"
-                                          stroke="var(--purple)" stroke-width="2"
-                                          stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
+                            <div class="kpi-chart">
+                                @include('partials._line-chart', ['points' => $s['points'], 'color' => 'var(--purple)', 'name' => $s['label'], 'format' => $s['format'], 'height' => 56])
+                            </div>
                         @endif
                     </div>
                 @endforeach

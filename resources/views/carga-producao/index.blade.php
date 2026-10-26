@@ -115,6 +115,19 @@
         @endforeach
     </div>
 
+    {{-- ── Ritmo de entrega: executadas por dia (ou semana, em períodos longos) ── --}}
+    @if(count($ritmo['valores']) > 1)
+        <div class="card card-body mb-4">
+            <div class="flex items-center justify-between gap-3 flex-wrap mb-1">
+                <p class="card-title">Executadas por {{ $ritmo['por_semana'] ? 'semana' : 'dia' }}</p>
+                <span class="text-xs" style="color:var(--muted)">mesmos filtros dos números acima</span>
+            </div>
+            <x-chart type="bar" :height="220" :colors="['var(--green)']"
+                     :categories="$ritmo['categorias']"
+                     :series="[['name' => 'Executadas', 'data' => $ritmo['valores']]]" />
+        </div>
+    @endif
+
     {{-- ── Limites mensais (controle de produção da ficha do cliente) ── --}}
     @php
         $mesLimite = $limites['mes']->locale('pt_BR')->translatedFormat('F/Y');

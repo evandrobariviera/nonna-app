@@ -1,5 +1,21 @@
 {{-- Seção "Mídia Paga" (papel Tráfego) — fila compartilhada de criativos prontos, orçamentos
      precisando de adição e campanhas com otimização atrasada. --}}
+
+{{-- Investimento por dia nos últimos 30 dias (todas as contas de clientes ativos) --}}
+@if(($spendDaily ?? collect())->sum('y') > 0)
+    <div class="card card-body mb-4">
+        <div class="flex items-center justify-between gap-3 flex-wrap mb-1">
+            <p class="card-title">Investimento por dia · últimos 30 dias</p>
+            <span class="text-sm" style="color:var(--muted)">
+                total <strong style="color:var(--text)">R$ {{ number_format($spendDaily->sum('y'), 2, ',', '.') }}</strong>
+            </span>
+        </div>
+        <x-chart type="area" :height="200" :colors="['var(--purple)']" format="currency" axisFormat="currencyShort"
+                 :categories="$spendDaily->pluck('x')->all()"
+                 :series="[['name' => 'Investimento', 'data' => $spendDaily->pluck('y')->all()]]" />
+    </div>
+@endif
+
 <div class="auto-grid">
 
     {{-- Criativos prontos pra campanha (fila compartilhada — gerada pela automação, ver /automacoes) --}}

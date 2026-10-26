@@ -181,11 +181,40 @@ class ProductionLoadService
                 'no_prazo_pct' => $comPrazo->count() ? (int) round($noPrazo->count() / $comPrazo->count() * 100) : null,
                 'com_prazo' => $comPrazo->count(),
             ],
+            'ritmo' => $this->ritmo($executadas),
             'matriz' => $this->matriz($executadas, $abertas, $pedidas),
             'pessoas' => $this->pessoas($executadas, $abertas),
             'limites' => $this->limites(),
             'executadas' => $executadas,
             'abertas' => $abertas,
+        ];
+    }
+
+    /**
+     * Ritmo de entrega: executadas por dia do período (por semana quando passa de 45 dias),
+     * com zero nos dias sem conclusão. Usa as executadas já carregadas — nenhuma consulta nova.
+     */
+    private function ritmo(Collection $executadas): array
+    {
+        $porSemana = $this->inicio->diffInDays($this->fim) > 45;
+        $fimGrafico = $this->fim->copy()->min(now()->endOfDay());
+        $chave = fn (Carbon $d) => $porSemana ? $d->copy()->startOfWeek()->toDateString() : $d->toDateString();
+
+        $contagem = $executadas->countBy(fn (Task $t) => $chave(Carbon::parse($t->concluida_em)));
+
+        $categorias = [];
+        $valores = [];
+        $d = $porSemana ? $this->inicio->copy()->startOfWeek() : $this->inicio->copy()->startOfDay();
+        for (; $d->lte($fimGrafico); $porSemana ? $d->addWeek() : $d->addDay()) {
+            $k = $chave($d);
+            $categorias[$k] = $porSemana ? 'sem. ' . Carbon::parse($k)->format('d/m') : $d->format('d/m');
+            $valores[$k] = $contagem->get($k, 0);
+        }
+
+        return [
+            'por_semana' => $porSemana,
+            'categorias' => array_values($categorias),
+            'valores' => array_values($valores),
         ];
     }
 

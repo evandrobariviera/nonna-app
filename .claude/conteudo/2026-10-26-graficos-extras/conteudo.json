@@ -1,0 +1,23 @@
+{
+  "novidades": [
+    {
+      "title": "Gráfico de investimento na Mídia Paga",
+      "summary": "No Dashboard, a seção Mídia Paga mostra o investimento por dia dos últimos 30 dias (todas as contas de clientes ativos), com o total ao lado. Passe o mouse num dia pra ver o valor.",
+      "body": "<p>O gráfico vai até ontem, porque o dia de hoje ainda está sendo sincronizado com a Meta e o Google.</p>",
+      "kind": "novidade", "area": "Mídia Paga"
+    },
+    {
+      "title": "Ritmo de entrega na Carga de Produção",
+      "summary": "A Carga de Produção ganhou o gráfico \"Executadas por dia\" (por semana nos períodos longos), logo abaixo dos números do topo. Ele segue os mesmos filtros de cliente, pessoa e tipo.",
+      "body": "<p>Os dias 29/07 e 06/08 aparecem altos porque muitas tarefas foram fechadas de uma vez nessas datas, na arrumação do histórico.</p>",
+      "kind": "novidade", "area": "Produção"
+    },
+    {
+      "title": "Evolução do Diagnóstico de Atendimento com valores",
+      "summary": "Nos cards de evolução do Diagnóstico de Atendimento, a linha virou um gráfico de área: passe o mouse pra ver o valor de cada versão e o período dela.",
+      "body": "<p>O gráfico aparece quando a integração já tem duas versões ou mais do diagnóstico.</p>",
+      "kind": "melhoria", "area": "Atendimento"
+    }
+  ],
+  "ajuda": []
+}
