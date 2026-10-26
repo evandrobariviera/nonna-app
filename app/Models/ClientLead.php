@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PhoneKey;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,6 +30,18 @@ class ClientLead extends Model
         'first_contacted_at' => 'datetime',
         'last_contacted_at'  => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (ClientLead $lead) {
+            $lead->phone_key = PhoneKey::from($lead->phone);
+        });
+    }
+
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(ServiceConversation::class);
+    }
 
     public function client(): BelongsTo
     {

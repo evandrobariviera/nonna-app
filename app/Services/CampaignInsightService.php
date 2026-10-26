@@ -17,6 +17,10 @@ class CampaignInsightService
     private const BUDGET_IDLE_MIN_DAY = 10;
     private const CPA_SPIKE_ATENCAO_PCT = 30;
     private const CPA_SPIKE_CRITICO_PCT = 60;
+    // Manual de Otimização, "regra do volume": não julgar custo com menos de
+    // 10 resultados no período. Com ~5 conversões/semana (mediana das nossas
+    // campanhas), uma oscilação de 60% acontece por puro acaso.
+    private const MIN_CONVERSIONS_TO_JUDGE_COST = 10;
     private const ADSET_BUDGET_SHARE_ATENCAO_PCT = 40;
     private const CREATIVE_FATIGUE_CTR_WORSE_PCT = 50;
     private const CREATIVE_FATIGUE_MIN_IMPRESSIONS = 1000;
@@ -122,11 +126,15 @@ class CampaignInsightService
 
         $insights = [];
 
+        // Hoje (D-0) nunca tem snapshot, então (7,0) = D-7..D-1; a semana
+        // anterior começa em D-8 pra não repetir o D-7 nas duas.
         $last7d = ContextResolver::campaignMetrics($campaign, 7, 0);
-        $prev7d = ContextResolver::campaignMetrics($campaign, 14, 7);
+        $prev7d = ContextResolver::campaignMetrics($campaign, 14, 8);
+        $enoughVolume = $last7d['conversions'] >= self::MIN_CONVERSIONS_TO_JUDGE_COST;
 
         // CPA em alta
-        if ($last7d['cpa'] !== null && $prev7d['cpa'] !== null && $prev7d['cpa'] > 0) {
+        if ($enoughVolume && $prev7d['conversions'] >= self::MIN_CONVERSIONS_TO_JUDGE_COST
+            && $last7d['cpa'] !== null && $prev7d['cpa'] !== null && $prev7d['cpa'] > 0) {
             $deltaPct = (($last7d['cpa'] - $prev7d['cpa']) / $prev7d['cpa']) * 100;
 
             if ($deltaPct >= self::CPA_SPIKE_ATENCAO_PCT && !$this->hasRecentOpenInsight($client, 'cpa_spike', $campaign->id)) {
@@ -172,7 +180,7 @@ class CampaignInsightService
         // pra comparar. Reaproveita os mesmos limiares de severidade do CPA
         // em alta, só que o "antes" é a meta em vez do período anterior.
         $targetCostPerResult = $campaign->resolveTargetCostPerResult();
-        if ($targetCostPerResult !== null && $targetCostPerResult > 0
+        if ($enoughVolume && $targetCostPerResult !== null && $targetCostPerResult > 0
             && $last7d['cpa'] !== null && $last7d['cpa'] > $targetCostPerResult
             && !$this->hasRecentOpenInsight($client, 'cost_per_result_above_target', $campaign->id)) {
             $deltaPct = (($last7d['cpa'] - $targetCostPerResult) / $targetCostPerResult) * 100;

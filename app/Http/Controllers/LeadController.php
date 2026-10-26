@@ -111,7 +111,7 @@ class LeadController extends Controller
 
     public function show(ClientLeadOpportunity $lead)
     {
-        $lead->load(['lead.client', 'channel', 'source', 'assignedTo', 'createdBy', 'notes.user', 'notes.contact', 'notificationDispatches']);
+        $lead->load(['lead.client', 'channel', 'source', 'ad:id,name', 'campaign:id,name', 'conversation:id,message_count,last_message_at', 'assignedTo', 'createdBy', 'notes.user', 'notes.contact', 'notificationDispatches']);
 
         $users = User::orderBy('name')->get(['id', 'name']);
 

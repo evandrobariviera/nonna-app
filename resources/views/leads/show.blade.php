@@ -66,6 +66,22 @@
                     <div><span class="text-[var(--muted)]">Canal:</span> <span class="text-[var(--text)]">{{ $opportunity->channel?->kindLabel() ?? '—' }}</span></div>
                     <div><span class="text-[var(--muted)]">Fonte:</span> <span class="text-[var(--text)]">{{ $opportunity->source?->displayName() ?? '—' }}</span></div>
                     <div><span class="text-[var(--muted)]">Formulário:</span> <span class="text-[var(--text)]">{{ $opportunity->form_name ?? '—' }}</span></div>
+                    @if($opportunity->ad_campaign_id || $opportunity->ad_external_id)
+                        <div class="col-span-2">
+                            <span class="text-[var(--muted)]">Anúncio:</span>
+                            <span class="text-[var(--text)]">{{ $opportunity->ad?->name ?? "nº {$opportunity->ad_external_id}" }}</span>
+                            @if($opportunity->campaign)
+                                <span class="text-[var(--muted)]">· campanha</span>
+                                <a href="{{ route('campaigns.show', $opportunity->campaign) }}" class="text-[var(--purple)] hover:underline">{{ $opportunity->campaign->name }}</a>
+                            @endif
+                        </div>
+                    @endif
+                    @if($opportunity->conversation)
+                        <div class="col-span-2">
+                            <span class="text-[var(--muted)]">Conversa no WhatsApp:</span>
+                            <span class="text-[var(--text)]">{{ $opportunity->conversation->message_count }} mensagens · última em {{ $opportunity->conversation->last_message_at?->format('d/m/Y H:i') ?? '—' }}</span>
+                        </div>
+                    @endif
                     <div><span class="text-[var(--muted)]">UTM Source:</span> <span class="text-[var(--text)]">{{ $opportunity->utm_source ?? '—' }}</span></div>
                     <div><span class="text-[var(--muted)]">UTM Medium:</span> <span class="text-[var(--text)]">{{ $opportunity->utm_medium ?? '—' }}</span></div>
                     <div><span class="text-[var(--muted)]">UTM Campaign:</span> <span class="text-[var(--text)]">{{ $opportunity->utm_campaign ?? '—' }}</span></div>

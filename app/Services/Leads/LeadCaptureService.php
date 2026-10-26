@@ -2,12 +2,14 @@
 
 namespace App\Services\Leads;
 
+use App\Models\Client;
 use App\Models\ClientLead;
 use App\Models\ClientLeadOpportunity;
 use App\Models\ClientLeadSource;
 use App\Models\LeadChannel;
 use App\Models\Organization;
 use App\Services\NotificationDispatchService;
+use App\Support\PhoneKey;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -45,46 +47,83 @@ class LeadCaptureService
                     ->first();
             }
 
-            $client = $source?->client;
-            $receivedAt = isset($payload['received_at']) ? Carbon::parse($payload['received_at']) : now();
-
-            $lead = $this->resolveLead($client?->id, $channel?->id, $payload, $receivedAt);
-            [$opportunity, $isNew] = $this->resolveOpportunity($lead, $source, $channel, $payload, $receivedAt);
-
-            if ($isNew && $client) {
-                $this->notifications->send('lead_capturado', $client, [
-                    'lead_nome'          => $lead->name ?? '(sem nome)',
-                    'lead_telefone'      => $lead->phone ?? '—',
-                    'canal'              => $channel?->kindLabel() ?? $payload['source_channel'],
-                    'link_central_leads' => route('portal.leads.index'),
-                ], related: $opportunity);
-            }
-
-            return [
-                'client_lead_id'      => $lead->id,
-                'client_id'           => $client?->id,
-                'opportunity_id'      => $opportunity->id,
-                'opportunity_is_new'  => $isNew,
-                'stage'               => $opportunity->stage,
-            ];
+            return $this->store($source?->client, $source, $channel, $payload);
         });
+    }
+
+    /**
+     * Entrada de lead cujo Cliente já é conhecido de antemão — hoje, a conversa
+     * de WhatsApp que chega pelo número de atendimento do próprio cliente
+     * (WhatsappLeadLinker). Pula a resolução por client_lead_sources.
+     */
+    public function captureForClient(Client $client, string $channelKind, array $payload): array
+    {
+        return DB::connection('pgsql')->transaction(function () use ($client, $channelKind, $payload) {
+            $channel = LeadChannel::where('organization_id', $client->organization_id)
+                ->where('kind', $channelKind)
+                ->first();
+
+            return $this->store($client, null, $channel, $payload);
+        });
+    }
+
+    /**
+     * Só a pessoa, sem abrir entrada nova — pra conversa que o próprio cliente
+     * puxou e a pessoa respondeu: ela existe e conversou, mas não "chegou".
+     */
+    public function findOrCreateLead(Client $client, string $channelKind, array $payload, Carbon $at): ClientLead
+    {
+        $channelId = LeadChannel::where('organization_id', $client->organization_id)
+            ->where('kind', $channelKind)
+            ->value('id');
+
+        return $this->resolveLead($client->id, $channelId, $payload, $at);
+    }
+
+    private function store(?Client $client, ?ClientLeadSource $source, ?LeadChannel $channel, array $payload): array
+    {
+        $receivedAt = isset($payload['received_at']) ? Carbon::parse($payload['received_at']) : now();
+
+        $lead = $this->resolveLead($client?->id, $channel?->id, $payload, $receivedAt);
+        [$opportunity, $isNew] = $this->resolveOpportunity($lead, $source, $channel, $payload, $receivedAt);
+
+        // notify=false: entrada que o cliente já está vendo acontecer (a conversa
+        // de WhatsApp no número dele) ou carga retroativa — avisar seria ruído.
+        if ($isNew && $client && ($payload['notify'] ?? true)) {
+            $this->notifications->send('lead_capturado', $client, [
+                'lead_nome'          => $lead->name ?? '(sem nome)',
+                'lead_telefone'      => $lead->phone ?? '—',
+                'canal'              => $channel?->kindLabel() ?? $payload['source_channel'],
+                'link_central_leads' => route('portal.leads.index'),
+            ], related: $opportunity);
+        }
+
+        return [
+            'client_lead_id'      => $lead->id,
+            'client_id'           => $client?->id,
+            'opportunity_id'      => $opportunity->id,
+            'opportunity_is_new'  => $isNew,
+            'stage'               => $opportunity->stage,
+        ];
     }
 
     private function resolveLead(?string $clientId, ?string $channelId, array $payload, Carbon $receivedAt): ClientLead
     {
         $phone = $payload['phone'] ?? null;
         $email = $payload['email'] ?? null;
+        $phoneKey = PhoneKey::from($phone);
 
         // Dedup só faz sentido quando já sabemos de qual Cliente é o lead —
         // sem isso (triagem manual) cada conversão vira uma pessoa nova,
         // já que não há como saber se duas conversões "sem cliente" são a
-        // mesma pessoa em negócios diferentes.
+        // mesma pessoa em negócios diferentes. Telefone compara pela chave
+        // DDD + 8 dígitos (PhoneKey), não pelo texto cru.
         $existing = null;
-        if ($clientId) {
+        if ($clientId && ($phoneKey || $email)) {
             $existing = ClientLead::where('client_id', $clientId)
-                ->where(function ($q) use ($phone, $email) {
-                    if ($phone) {
-                        $q->orWhere('phone', $phone);
+                ->where(function ($q) use ($phoneKey, $email) {
+                    if ($phoneKey) {
+                        $q->orWhere('phone_key', $phoneKey);
                     }
                     if ($email) {
                         $q->orWhere('email', $email);
@@ -94,13 +133,15 @@ class LeadCaptureService
         }
 
         if ($existing) {
+            // Carga retroativa chega fora de ordem — first/last só alargam o intervalo.
             $existing->fill([
-                'name'              => $existing->name ?: ($payload['name'] ?? null),
-                'email'             => $existing->email ?: $email,
-                'phone'             => $existing->phone ?: $phone,
-                'city'              => $existing->city ?: ($payload['city'] ?? null),
-                'state'             => $existing->state ?: ($payload['state'] ?? null),
-                'last_contacted_at' => $receivedAt,
+                'name'               => $existing->name ?: ($payload['name'] ?? null),
+                'email'              => $existing->email ?: $email,
+                'phone'              => $existing->phone ?: $phone,
+                'city'               => $existing->city ?: ($payload['city'] ?? null),
+                'state'              => $existing->state ?: ($payload['state'] ?? null),
+                'first_contacted_at' => $existing->first_contacted_at?->lt($receivedAt) ? $existing->first_contacted_at : $receivedAt,
+                'last_contacted_at'  => $existing->last_contacted_at?->gt($receivedAt) ? $existing->last_contacted_at : $receivedAt,
             ]);
             $existing->save();
 
@@ -122,14 +163,21 @@ class LeadCaptureService
 
     private function resolveOpportunity(ClientLead $lead, ?ClientLeadSource $source, ?LeadChannel $channel, array $payload, Carbon $receivedAt): array
     {
+        // Janela medida pela data em que a entrada aconteceu (não por "agora") —
+        // assim a carga retroativa de conversas antigas agrupa igual ao tempo real.
         $reopenable = ClientLeadOpportunity::where('client_lead_id', $lead->id)
             ->whereNotIn('stage', ['ganho', 'perdido'])
-            ->where('created_at', '>=', now()->subHours(self::REOPEN_WINDOW_HOURS))
+            ->whereRaw('COALESCE(received_at, created_at) BETWEEN ? AND ?', [
+                $receivedAt->copy()->subHours(self::REOPEN_WINDOW_HOURS),
+                $receivedAt->copy()->addHours(self::REOPEN_WINDOW_HOURS),
+            ])
             ->orderByDesc('created_at')
             ->first();
 
         $answers = FormAnswers::normalize($payload['form_answers'] ?? null)
             ?: FormAnswers::fromRawPayload($payload['raw_payload'] ?? null);
+
+        $ad = AdAttribution::resolve($lead->client_id, $payload);
 
         if ($reopenable) {
             // O novo envio vira o conteúdo principal; o anterior vai pro histórico
@@ -156,8 +204,15 @@ class LeadCaptureService
                 'fbclid'           => $reopenable->fbclid ?: ($payload['fbclid'] ?? null),
                 'gclid'            => $reopenable->gclid ?: ($payload['gclid'] ?? null),
                 'ctwa_clid'        => $reopenable->ctwa_clid ?: ($payload['ctwa_clid'] ?? null),
+                // Primeiro anúncio da janela fica com o crédito; os outros toques
+                // continuam rastreáveis pela conversa/raw_payload.
+                'ad_external_id'          => $reopenable->ad_external_id ?: $ad['ad_external_id'],
+                'campaign_external_id'    => $reopenable->campaign_external_id ?: $ad['campaign_external_id'],
+                'ad_ad_id'                => $reopenable->ad_ad_id ?: $ad['ad_ad_id'],
+                'ad_campaign_id'          => $reopenable->ad_campaign_id ?: $ad['ad_campaign_id'],
+                'service_conversation_id' => $reopenable->service_conversation_id ?: ($payload['service_conversation_id'] ?? null),
                 'event_id'         => $payload['event_id'] ?? $reopenable->event_id,
-                'received_at'      => $receivedAt,
+                'received_at'      => $reopenable->received_at?->gt($receivedAt) ? $reopenable->received_at : $receivedAt,
                 'raw_payload'      => $payload['raw_payload'] ?? $reopenable->raw_payload,
             ]);
             $reopenable->save();
@@ -179,6 +234,8 @@ class LeadCaptureService
             'fbclid'                 => $payload['fbclid'] ?? null,
             'gclid'                  => $payload['gclid'] ?? null,
             'ctwa_clid'              => $payload['ctwa_clid'] ?? null,
+            ...$ad,
+            'service_conversation_id' => $payload['service_conversation_id'] ?? null,
             'event_id'               => $payload['event_id'] ?? null,
             'form_name'              => $payload['form_name'] ?? null,
             'received_at'            => $receivedAt,

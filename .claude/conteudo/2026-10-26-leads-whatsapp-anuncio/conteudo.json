@@ -1,0 +1,34 @@
+{
+  "novidades": [
+    {
+      "title": "Conversas do WhatsApp entram na Central de Leads",
+      "summary": "Quem chama no WhatsApp do Atendimento Assistido agora vira lead na Central sozinho, já com o anúncio de origem quando veio de anúncio — e a mesma pessoa do site e do WhatsApp é reconhecida como uma só.",
+      "body": "<p>A pessoa é reconhecida pelo telefone, mesmo escrito de jeitos diferentes (com ou sem 55, com ou sem o 9). Na ficha do lead, o bloco <strong>Atribuição</strong> mostra o anúncio e a campanha que trouxeram a pessoa, com link para a campanha. O cliente não recebe aviso de \"Lead Capturado\" pelo WhatsApp, porque já está vendo a conversa chegar.</p>",
+      "kind": "novidade", "area": "Central de Leads"
+    },
+    {
+      "title": "Lead ligado ao anúncio pelo número no link",
+      "summary": "Com o padrão de link novo nos anúncios (número do anúncio na UTM), o lead do site e do formulário do Facebook passa a mostrar exatamente qual anúncio e campanha o trouxe.",
+      "body": "<p>O padrão para Meta e Google está no capítulo da Central de Ajuda <strong>Central de Leads — de onde vem cada lead</strong>.</p>",
+      "kind": "melhoria", "area": "Central de Leads"
+    },
+    {
+      "title": "Números de campanha mais completos",
+      "summary": "O App agora relê todo dia os últimos 10 dias de cada campanha, porque Meta e Google continuam somando conversões depois do clique. Os números dos dias passados podem subir um pouco (nos testes, ~1,4% nas conversões e ~6% no gasto).",
+      "kind": "correcao", "area": "Campanhas"
+    },
+    {
+      "title": "Menos alarme falso de custo por resultado",
+      "summary": "O alerta de \"custo subiu\" só dispara quando a campanha teve pelo menos 10 resultados na semana. Com menos que isso, a oscilação é sorte e não sinal — é a regra do volume do Manual de Otimização.",
+      "kind": "melhoria", "area": "Campanhas"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Central de Leads — de onde vem cada lead",
+      "category": "Central de Leads",
+      "slug": "central-de-leads-de-onde-vem-cada-lead",
+      "body_file": "ajuda-central-leads-origem.html"
+    }
+  ]
+}

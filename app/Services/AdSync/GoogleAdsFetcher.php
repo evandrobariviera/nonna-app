@@ -59,15 +59,22 @@ class GoogleAdsFetcher
         return $accessToken;
     }
 
-    public function fetchCampaignsAndMetrics(ClientAdAccount $account, string $accessToken, array $googleCredentials, string $date): array
+    /**
+     * Campanhas + métricas diárias entre $since e $until (inclusive) — uma
+     * linha por campanha por dia, cada snapshot já com o seu snapshot_date.
+     * O sync diário relê os últimos dias porque o Google credita a conversão
+     * no dia do clique e o número de dias passados continua subindo.
+     */
+    public function fetchCampaignsAndMetrics(ClientAdAccount $account, string $accessToken, array $googleCredentials, string $since, ?string $until = null): array
     {
+        $until ??= $since;
         $customerId = preg_replace('/-/', '', $account->account_id);
         $loginCustomerId = preg_replace('/-/', '', $googleCredentials['login_customer_id'] ?? ($googleCredentials['customer_id'] ?? ''));
 
         $query = "SELECT campaign.id, campaign.name, campaign.status, campaign.advertising_channel_type, "
-            . "metrics.cost_micros, metrics.impressions, "
+            . "segments.date, metrics.cost_micros, metrics.impressions, "
             . "metrics.clicks, metrics.conversions, metrics.conversions_value "
-            . "FROM campaign WHERE segments.date = '{$date}'";
+            . "FROM campaign WHERE segments.date BETWEEN '{$since}' AND '{$until}'";
 
         $response = Http::timeout(15)->withHeaders([
             'Authorization'     => "Bearer {$accessToken}",
@@ -85,7 +92,8 @@ class GoogleAdsFetcher
 
         $rows = $response->json('results', []);
 
-        $campaigns = array_map(fn ($r) => [
+        // Mesma campanha aparece uma vez por dia — a ficha da campanha é uma só.
+        $campaigns = collect($rows)->keyBy(fn ($r) => (string) $r['campaign']['id'])->map(fn ($r) => [
             'external_id' => (string) $r['campaign']['id'],
             'name'        => $r['campaign']['name'],
             'status'      => self::mapStatus($r['campaign']['status'] ?? 'ENABLED'),
@@ -93,12 +101,13 @@ class GoogleAdsFetcher
             'start_date'  => $r['campaign']['startDate'] ?? null,
             'end_date'    => $r['campaign']['endDate'] ?? null,
             'raw_data'    => $r['campaign'],
-        ], $rows);
+        ])->values()->all();
 
         $snapshots = array_map(fn ($r) => [
-            'entity_level' => 'campaign',
-            'entity_id'    => (string) $r['campaign']['id'],
-            'entity_name'  => $r['campaign']['name'],
+            'entity_level'  => 'campaign',
+            'entity_id'     => (string) $r['campaign']['id'],
+            'entity_name'   => $r['campaign']['name'],
+            'snapshot_date' => $r['segments']['date'] ?? $since,
             'spend'        => ((int) ($r['metrics']['costMicros'] ?? 0)) / 1000000,
             'revenue'      => (float) ($r['metrics']['conversionsValue'] ?? 0),
             'impressions'  => (int) ($r['metrics']['impressions'] ?? 0),

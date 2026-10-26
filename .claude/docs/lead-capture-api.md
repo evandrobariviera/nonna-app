@@ -48,6 +48,19 @@ Validação (`LeadCaptureController::store()`):
 - `email` OU `phone` — pelo menos um dos dois é obrigatório (`required_without` cruzado).
 - `name`, `form_name`, `landing_page_url`, `utm_*`, `city`, `state`, `received_at`, `raw_payload` — todos opcionais.
 - `fbclid`, `gclid`, `ctwa_clid`, `event_id` — opcionais, existem desde o desenho do schema pensando em dedup com Meta CAPI/Google Ads.
+- `ad_id`, `campaign_id` — opcionais (desde 26/10/2026): ID do anúncio/campanha na plataforma. **No Lead Ads o n8n deve repassar o `ad_id`/`campaign_id` que vêm no aviso `leadgen` da Meta.** Sem eles, o App tenta pela UTM no padrão Nonna (`utm_content` = ID do anúncio, `utm_campaign` = ID da campanha — só vale se for número; nome de campanha não liga). Resolvido por `App\Services\Leads\AdAttribution` contra os anúncios já sincronizados das contas do próprio cliente → grava `ad_external_id`/`campaign_external_id` (sempre) e `ad_ad_id`/`ad_campaign_id` (quando o anúncio/campanha já foi sincronizado).
+- Telefone é comparado pela chave DDD + últimos 8 dígitos (`App\Support\PhoneKey`, coluna `client_leads.phone_key`) — `+55 49 9908-2184` e `5549999082184` são a mesma pessoa.
+- A janela de 72h de reabertura é medida pela data da entrada (`received_at`), não pelo momento em que o App recebeu.
+
+### Padrão de UTM (o número do anúncio no link)
+
+- **Meta** (campo *Parâmetros de URL* de cada anúncio): `utm_source={{site_source_name}}&utm_medium=paid&utm_campaign={{campaign.id}}&utm_term={{adset.id}}&utm_content={{ad.id}}`
+- **Google Ads** (*Sufixo do URL final* da conta, marcação automática ligada): `utm_source=google&utm_medium=paid&utm_campaign={campaignid}&utm_term={adgroupid}&utm_content={creative}`
+- O GTM do site guarda UTM + `fbclid`/`gclid` da primeira visita e manda junto com o formulário.
+
+### WhatsApp do Atendimento Assistido (sem n8n)
+
+Conversas que chegam pelo webhook uazapi (`UazapiMessageIngestor`) entram na Central sozinhas, via `App\Services\Leads\WhatsappLeadLinker` → `LeadCaptureService::captureForClient()` (canal `whatsapp`, Cliente = dono do número, sem aviso de "Lead Capturado"). Entrada = conversa que começa com mensagem da pessoa, clique em anúncio de WhatsApp (`externalAdReply.sourceID` vira `ad_id`) ou retorno depois de 30 dias de silêncio. Conversa puxada pelo cliente em que a pessoa respondeu só liga a pessoa (`service_conversations.client_lead_id`), sem cartão. Conversas antigas: `php artisan leads:link-whatsapp --dry` (simula) e sem `--dry` (grava).
 - `form_answers` — opcional: **todo o conteúdo do formulário** (assunto, mensagem, perguntas customizadas do Lead Ad). Aceita lista `[{label, value}]` (preferido, mantém a ordem e o texto original da pergunta) ou objeto `{pergunta: resposta}`. Se não vier, o App tenta extrair do `raw_payload` (`data` do trigger do Facebook, `body` de webhook, ou achatando o objeto e ignorando chaves técnicas/UTM/identidade — `App\Services\Leads\FormAnswers`). Campos com rótulo tipo assunto/mensagem/observação/dúvida aparecem em destaque na ficha do lead e como trecho no cartão do Kanban.
 - Se a mesma pessoa enviar de novo dentro da janela de 72h (cartão reaberto), o conteúdo anterior vai pra `previous_submissions` em vez de ser sobrescrito.
 

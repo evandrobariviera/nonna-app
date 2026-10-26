@@ -417,6 +417,7 @@ class ContextResolver
         return [
             'spend'       => $spend,
             'impressions' => $impressions,
+            'conversions' => $conversions,
             'cpa'         => $conversions > 0 ? $spend / $conversions : null,
             'ctr'         => $impressions > 0 ? round(($clicks / $impressions) * 100, 2) : null,
             'roas'        => $spend > 0 ? round($revenue / $spend, 2) : null,

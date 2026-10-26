@@ -6,8 +6,10 @@ use App\Models\ClientIntegration;
 use App\Models\ServiceConversation;
 use App\Models\ServiceMessage;
 use App\Services\AiService;
+use App\Services\Leads\WhatsappLeadLinker;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class UazapiMessageIngestor
 {
@@ -15,7 +17,7 @@ class UazapiMessageIngestor
     // no servidor dela - não precisamos lidar com a criptografia E2E do WhatsApp)
     private const AUDIO_MEDIA_TYPES = ['ptt', 'audio'];
 
-    public function __construct(private AiService $aiService)
+    public function __construct(private AiService $aiService, private WhatsappLeadLinker $leadLinker)
     {
     }
 
@@ -60,7 +62,11 @@ class UazapiMessageIngestor
             'external_thread_id'    => $threadId,
         ]);
 
-        if (!$conversation->exists) {
+        $isNewConversation = !$conversation->exists;
+        $previousMessageAt = $conversation->last_message_at;
+        $adReply = $message['content']['contextInfo']['externalAdReply'] ?? null;
+
+        if ($isNewConversation) {
             $conversation->client_id  = $integration->client_id;
             $conversation->started_at = $sentAt;
 
@@ -69,7 +75,6 @@ class UazapiMessageIngestor
             // Capturado só na criação de propósito: uma 2ª mensagem na mesma thread nunca
             // carrega esse bloco (ou carrega o de uma mensagem RESPONDIDA, que não é a
             // origem real da conversa) — sobrescrever depois estragaria a atribuição.
-            $adReply = $message['content']['contextInfo']['externalAdReply'] ?? null;
             if ($adReply) {
                 $conversation->ad_source_id = $adReply['sourceID'] ?? null;
                 $conversation->ad_title     = $adReply['title'] ?? null;
@@ -113,6 +118,35 @@ class UazapiMessageIngestor
 
         $conversation->increment('message_count');
         $integration->update(['last_synced_at' => now(), 'status' => 'connected']);
+
+        if (!($message['fromMe'] ?? false)) {
+            $this->linkLead($conversation, $sentAt, $isNewConversation, $previousMessageAt, $adReply);
+        }
+    }
+
+    /**
+     * Mensagem da pessoa → liga a conversa à Central de Leads (ver WhatsappLeadLinker).
+     * Só faz consulta quando há algo a decidir: entrada nova ou conversa ainda sem lead.
+     * Nunca derruba o webhook — a mensagem já foi gravada.
+     */
+    private function linkLead(ServiceConversation $conversation, Carbon $sentAt, bool $isNewConversation, ?Carbon $previousMessageAt, ?array $adReply): void
+    {
+        $isEntry = $isNewConversation
+            || $adReply
+            || ($previousMessageAt && $previousMessageAt->lt($sentAt->copy()->subDays(WhatsappLeadLinker::REENTRY_SILENCE_DAYS)));
+
+        if (!$isEntry && $conversation->client_lead_id) {
+            return;
+        }
+
+        try {
+            $this->leadLinker->link($conversation, $isEntry, $sentAt, $adReply);
+        } catch (\Throwable $e) {
+            Log::warning('UazapiMessageIngestor: falha ao ligar conversa à Central de Leads', [
+                'conversation_id' => $conversation->id,
+                'error'           => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

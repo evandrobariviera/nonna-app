@@ -30,6 +30,8 @@ class LeadCaptureController extends Controller
             'fbclid'            => ['nullable', 'string', 'max:255'],
             'gclid'             => ['nullable', 'string', 'max:255'],
             'ctwa_clid'         => ['nullable', 'string', 'max:255'],
+            'ad_id'             => ['nullable', 'string', 'max:64'],
+            'campaign_id'       => ['nullable', 'string', 'max:64'],
             'event_id'          => ['nullable', 'string', 'max:150'],
             'city'              => ['nullable', 'string', 'max:100'],
             'state'             => ['nullable', 'string', 'max:2'],

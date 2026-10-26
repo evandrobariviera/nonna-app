@@ -30,6 +30,11 @@ class ClientLeadOpportunity extends Model
         'fbclid',
         'gclid',
         'ctwa_clid',
+        'ad_external_id',
+        'campaign_external_id',
+        'ad_ad_id',
+        'ad_campaign_id',
+        'service_conversation_id',
         'event_id',
         'form_name',
         'received_at',
@@ -107,6 +112,21 @@ class ClientLeadOpportunity extends Model
     public function channel(): BelongsTo
     {
         return $this->belongsTo(LeadChannel::class, 'lead_channel_id');
+    }
+
+    public function ad(): BelongsTo
+    {
+        return $this->belongsTo(AdAd::class, 'ad_ad_id');
+    }
+
+    public function campaign(): BelongsTo
+    {
+        return $this->belongsTo(AdCampaign::class, 'ad_campaign_id');
+    }
+
+    public function conversation(): BelongsTo
+    {
+        return $this->belongsTo(ServiceConversation::class, 'service_conversation_id');
     }
 
     public function assignedTo(): BelongsTo

@@ -16,6 +16,7 @@ class ServiceConversation extends Model
     protected $fillable = [
         'client_id',
         'client_integration_id',
+        'client_lead_id',
         'external_thread_id',
         'contact_name',
         'contact_phone',
@@ -52,6 +53,12 @@ class ServiceConversation extends Model
     public function integration(): BelongsTo
     {
         return $this->belongsTo(ClientIntegration::class, 'client_integration_id');
+    }
+
+    /** A pessoa da Central de Leads por trás da conversa (ver WhatsappLeadLinker). */
+    public function lead(): BelongsTo
+    {
+        return $this->belongsTo(ClientLead::class, 'client_lead_id');
     }
 
     public function messages(): HasMany

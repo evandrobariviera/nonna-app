@@ -17,13 +17,19 @@ use Illuminate\Support\Facades\Log;
 
 class SyncAdPlatforms extends Command
 {
-    protected $signature = 'campaigns:sync-ad-platforms';
+    protected $signature = 'campaigns:sync-ad-platforms {--days=10 : Quantos dias para trás reler as métricas}';
 
-    protected $description = 'Busca campanhas e métricas de D-1 direto no Meta Ads e Google Ads e grava no App';
+    protected $description = 'Busca campanhas e métricas dos últimos dias direto no Meta Ads e Google Ads e grava no App';
 
+    // Por que reler e não só buscar D-1: Meta e Google creditam a conversão no
+    // dia do CLIQUE (Meta: janela de 7 dias + conversões modeladas atrasando
+    // até 3; Google: até ~5 dias pra estabilizar). O número de um dia passado
+    // continua subindo depois — gravado uma vez só, todo relatório ficava
+    // subcontado.
     public function handle(MetaAdsFetcher $meta, GoogleAdsFetcher $google, AdDataUpserter $upserter): int
     {
         $yesterday = now()->subDay()->toDateString();
+        $since = now()->subDays(max(1, (int) $this->option('days')))->toDateString();
         $organizations = Organization::whereIn('status', ['trial', 'active'])->get();
 
         $totalAccounts = 0;
@@ -59,10 +65,8 @@ class SyncAdPlatforms extends Command
                         $campaigns = $meta->fetchCampaigns($account, $metaToken);
                         $upserter->upsertCampaigns($organization->id, $account->id, 'meta', $campaigns);
 
-                        $snapshots = $meta->fetchInsights($account, $metaToken, $yesterday);
-                        if (!empty($snapshots)) {
-                            $upserter->upsertSnapshots($organization->id, $account->id, 'meta', $yesterday, $snapshots);
-                        }
+                        $snapshots = $meta->fetchInsightsRange($account, $metaToken, $since, $yesterday);
+                        $this->upsertByDate($upserter, $organization->id, $account->id, 'meta', $snapshots);
 
                         // Saldo só existe pra conta de anúncios de verdade (meta_ads),
                         // não pro Business Manager (meta_bm).
@@ -71,12 +75,16 @@ class SyncAdPlatforms extends Command
                             $upserter->upsertAccountBalance($account, $balanceData);
                         }
                     } elseif (str_starts_with($account->platform, 'google') && $googleToken) {
-                        $result = $google->fetchCampaignsAndMetrics($account, $googleToken, $googleIntegration->credentials, $yesterday);
+                        $result = $google->fetchCampaignsAndMetrics($account, $googleToken, $googleIntegration->credentials, $since, $yesterday);
                         $upserter->upsertCampaigns($organization->id, $account->id, 'google', $result['campaigns']);
-                        if (!empty($result['snapshots'])) {
-                            $upserter->upsertSnapshots($organization->id, $account->id, 'google', $yesterday, $result['snapshots']);
-                            $this->debitLedgerBalance($account, $result['snapshots']);
-                        }
+                        $this->upsertByDate($upserter, $organization->id, $account->id, 'google', $result['snapshots']);
+
+                        // Só o gasto de ontem desconta do livro-caixa — os dias
+                        // anteriores relidos já foram descontados quando eram "ontem".
+                        $this->debitLedgerBalance($account, array_filter(
+                            $result['snapshots'],
+                            fn ($s) => ($s['snapshot_date'] ?? null) === $yesterday
+                        ));
                     }
 
                     $account->applyAutomaticBudgetStatus();
@@ -101,6 +109,13 @@ class SyncAdPlatforms extends Command
         $this->info("Contas processadas: {$totalAccounts} (falhas: {$totalFailures}).");
 
         return self::SUCCESS;
+    }
+
+    private function upsertByDate(AdDataUpserter $upserter, string $organizationId, string $accountId, string $platform, array $snapshots): void
+    {
+        collect($snapshots)->groupBy('snapshot_date')->each(
+            fn ($dateSnapshots, $date) => $upserter->upsertSnapshots($organizationId, $accountId, $platform, $date, $dateSnapshots->all())
+        );
     }
 
     // Alerta determinístico de saldo baixo — não usa IA (diferente dos outros
