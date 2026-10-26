@@ -4,10 +4,10 @@
 >
 > Este arquivo é o mapa de trabalho. Atualize a seção **Progresso** ao fim de cada etapa.
 
-## ▶ Como retomar (estado em 2026-10-22, noite)
+## ▶ Como retomar (estado em 2026-10-26)
 
-**No ar (main 466e051):** etapas 1–4 + etapa 5 itens 1, 3, 4, 6, 7, 8 e 9 (um push por item, Novidade publicada em cada).
-**Falta:** item 2 (Evandro decidir a fonte de datas/números), item 5 (acabamento tela a tela — pedir prints do Evandro) e item 10 (conferir no celular).
+**No ar (main 4ee01d7):** etapas 1–4 + etapa 5 itens 1, 2, 3, 4 (com gráficos extras), 6, 7, 8 e 9 (um push por item, Novidade publicada em cada).
+**Falta (Evandro: "ajustes finos por último"):** item 5 (acabamento tela a tela — pedir prints do Evandro) e item 10 (conferir no celular).
 **Trabalho:** direto no `main` (Evandro autorizou subir ao fim de cada item; esperar o deploy anterior — CSS novo em /login — antes do próximo push).
 
 ### O que falta — etapa 5 (acabamento tela a tela)
@@ -15,7 +15,7 @@
 Ordem sugerida, cada item vira um commit/deploy próprio:
 
 1. [x] **Campos de formulário** — criar classe `.field` (borda `#e9e9e9`, raio 7px, foco roxo, sem halo) e trocar o estilo inline repetido `background:var(--s3); border:1px solid var(--border); border-radius:8px` (~306 lugares). Começar por create/edit de tarefa, reunião, cliente, planejamento.
-2. [ ] **Fonte de máquina de escrever** — `font-mono` sem `uppercase` ainda aparece em datas/números ("vence 23/10", "19%"). Uma regra em `.app-page/.portal-page` trocando por Outfit com `font-variant-numeric: tabular-nums` (Evandro já viu e não decidiu — perguntar ou incluir aqui).
+2. [x] **Fonte de máquina de escrever** — `font-mono` sem `uppercase` ainda aparece em datas/números ("vence 23/10", "19%"). Uma regra em `.app-page/.portal-page` trocando por Outfit com `font-variant-numeric: tabular-nums` (Evandro já viu e não decidiu — perguntar ou incluir aqui).
 3. [x] **Títulos dos blocos** (Equipe, Comentários, Pendências, Reuniões, Documento…) com `.card-title` (risquinho roxo) — hoje são `text-xs font-semibold uppercase tracking-widest` convertidos em texto normal pequeno.
 4. [x] **Cards de número antigos** `.stat-card` (11 lugares, linha degradê no topo) → `.kpi-card`; Produtividade e Carga de Produção com os KPIs de topo no mesmo padrão; considerar mais gráficos (Carga de Produção por período, Mídia Paga, Diagnóstico de Atendimento — etapa 4 deixou de fora).
 5. [ ] **Telas mais usadas, uma a uma:** Tarefa (`tasks/show`), Cliente (`clients/show`), Planejamento (`macroplans/edit`), Campanha/Projeto (`macroplans/project-show`), Reunião (`meetings/show`), Aprovações (Lista), Pendências, Sprint (Lista). Seções divididas no mesmo card (linhas finas) e áreas internas `.card-inset` como nos prints do Mirbal (tela Activities, "Savings This Month").
@@ -152,3 +152,5 @@ Cada etapa num ramo (`redesign/etapa-N`), Evandro confere em `nonna-app.test` (o
   - 5.6+5.9 `8eb3c01` — `.dd-hover` (hover roxo 8%) em 29 itens de menu que tinham hover cinza inline; janelas com 10px e `modal` com fundo do tema; balão `.nav-tip` com o nome do item no menu recolhido (Alpine `showNavTip` no `<html>`, posição fixa).
   - 5.7 `cb91f43` — Portal: menu 264px com logo, cliente em `.card-inset`, topo flutuante com contato+empresa (Minha Conta/Sair), caminho casa › página acima do título (páginas do Portal já têm h1 próprio; nada na inicial).
   - 5.8 `466e051` — páginas públicas: corpo Outfit, campos/botões 7px e rótulos normais via regra `body .pub-input…` em app.css.
+- 2026-10-26 — 5.2 `7341a4f` — Evandro aprovou: `.font-mono` (fora de code/pre/campos) e `.numeric` usam a fonte do corpo com `tabular-nums`; 58 `font-family:Arial…` inline viraram `font-variant-numeric:tabular-nums`.
+- 2026-10-26 — Gráficos extras `4ee01d7`: Mídia Paga (investimento/dia, 30 dias até ontem, nível campanha, contas de clientes ativos — 6 ms no índice), Carga de Produção (`ritmo()` no ProductionLoadService: executadas por dia, por semana acima de 45 dias, sem consulta nova — 29/07 e 06/08 têm fechamento em lote de 250/332 tarefas), Diagnóstico de Atendimento (SVG → `_line-chart` com tooltip por versão).
