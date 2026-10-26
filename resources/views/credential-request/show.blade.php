@@ -13,8 +13,8 @@
     @vite(['resources/css/app.css'])
     <style>
         body { background: var(--bg); color: var(--text); font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; font-size: 15px; min-height: 100vh; }
-        .mono { font-family:Arial,'Segoe UI',Tahoma,sans-serif; }
-        .label-sm { font-family:Arial,'Segoe UI',Tahoma,sans-serif; font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
+        .mono { font-variant-numeric:tabular-nums; }
+        .label-sm { font-variant-numeric:tabular-nums; font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
         .field-input { width: 100%; padding: 9px 12px; font-size: 13px; font-family: inherit; background: var(--s2); border: 1px solid var(--border2); color: var(--text); outline: none; box-sizing: border-box; }
         .field-input:focus { border-color: var(--purple); }
         .entry-card { background: var(--s1); border: 1px solid var(--border); padding: 16px; margin-bottom: 16px; position: relative; }

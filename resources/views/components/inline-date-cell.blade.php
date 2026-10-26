@@ -15,7 +15,7 @@
      @click.stop>
     <span x-show="!editing" @click="open()"
           class="text-xs cursor-pointer hover:underline {{ $overdue ? 'font-semibold' : '' }}"
-          style="color: {{ $overdue ? 'var(--red)' : 'var(--muted2)' }}; font-family:Arial,'Segoe UI',Tahoma,sans-serif"
+          style="color: {{ $overdue ? 'var(--red)' : 'var(--muted2)' }}; font-variant-numeric:tabular-nums"
           x-text="value ? new Date(value + 'T00:00:00').toLocaleDateString('pt-BR') : '—'"
           title="Clique para editar"></span>
     <input x-show="editing" x-cloak x-ref="input" x-model="value" type="date"

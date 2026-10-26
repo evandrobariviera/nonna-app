@@ -29,7 +29,7 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-semibold mb-1"
-                           style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">NOME DO AGENTE *</label>
+                           style="color:var(--muted); font-variant-numeric:tabular-nums; letter-spacing:.05em">NOME DO AGENTE *</label>
                     <input type="text" name="name"
                            value="{{ old('name', $agent?->name) }}"
                            placeholder="ex: Extrator de Kickoff"
@@ -38,7 +38,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold mb-1"
-                           style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">DESCRIÇÃO</label>
+                           style="color:var(--muted); font-variant-numeric:tabular-nums; letter-spacing:.05em">DESCRIÇÃO</label>
                     <input type="text" name="description"
                            value="{{ old('description', $agent?->description) }}"
                            placeholder="Para que serve este agente…"
@@ -49,7 +49,7 @@
             {{-- System Prompt --}}
             <div>
                 <label class="block text-xs font-semibold mb-1"
-                       style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">SYSTEM PROMPT (SKILL DO AGENTE) *</label>
+                       style="color:var(--muted); font-variant-numeric:tabular-nums; letter-spacing:.05em">SYSTEM PROMPT (SKILL DO AGENTE) *</label>
                 <div class="text-xs mb-2" style="color:var(--muted2)">
                     Defina o comportamento, especialidade e restrições do agente. Seja específico.
                     Variáveis disponíveis: <code style="font-family:monospace; color:var(--purple)">{client_name}</code>,
@@ -66,7 +66,7 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-semibold mb-1"
-                           style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">PROVIDER *</label>
+                           style="color:var(--muted); font-variant-numeric:tabular-nums; letter-spacing:.05em">PROVIDER *</label>
                     <select name="provider_id" required x-model="providerId"
                             class="field w-full px-3 py-2 text-sm">
                         <option value="">— selecione —</option>
@@ -80,7 +80,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold mb-1"
-                           style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">MODELO *</label>
+                           style="color:var(--muted); font-variant-numeric:tabular-nums; letter-spacing:.05em">MODELO *</label>
                     <select name="model" required
                             class="field w-full px-3 py-2 text-sm">
                         <option value="">— selecione o provider primeiro —</option>
@@ -104,7 +104,7 @@
             {{-- Chave de API específica --}}
             <div>
                 <label class="block text-xs font-semibold mb-1"
-                       style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">CHAVE DE API ESPECÍFICA <span style="font-weight:400">(opcional — usa a padrão do provider se vazio)</span></label>
+                       style="color:var(--muted); font-variant-numeric:tabular-nums; letter-spacing:.05em">CHAVE DE API ESPECÍFICA <span style="font-weight:400">(opcional — usa a padrão do provider se vazio)</span></label>
                 <select name="api_key_id"
                         class="field w-full px-3 py-2 text-sm">
                     <option value="">— usar chave padrão do provider —</option>
@@ -125,7 +125,7 @@
             <div class="grid grid-cols-3 gap-4">
                 <div>
                     <label class="block text-xs font-semibold mb-1"
-                           style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">TEMPERATURE</label>
+                           style="color:var(--muted); font-variant-numeric:tabular-nums; letter-spacing:.05em">TEMPERATURE</label>
                     <div class="text-xs mb-1" style="color:var(--muted2)">0 = determinístico · 1 = criativo · 2 = caótico</div>
                     <input type="number" name="temperature" step="0.05" min="0" max="2"
                            value="{{ old('temperature', $agent?->temperature ?? 0.70) }}"
@@ -134,7 +134,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold mb-1"
-                           style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">MAX TOKENS</label>
+                           style="color:var(--muted); font-variant-numeric:tabular-nums; letter-spacing:.05em">MAX TOKENS</label>
                     <div class="text-xs mb-1" style="color:var(--muted2)">Limite de tokens na resposta</div>
                     <input type="number" name="max_tokens" min="128" max="128000" step="128"
                            value="{{ old('max_tokens', $agent?->max_tokens ?? 4096) }}"
@@ -143,7 +143,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold mb-1"
-                           style="color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif; letter-spacing:.05em">CONTEXTO</label>
+                           style="color:var(--muted); font-variant-numeric:tabular-nums; letter-spacing:.05em">CONTEXTO</label>
                     <div class="text-xs mb-1" style="color:var(--muted2)">Escopo do contexto injetado</div>
                     <select name="context_scope" required
                             class="field w-full px-3 py-2 text-sm">

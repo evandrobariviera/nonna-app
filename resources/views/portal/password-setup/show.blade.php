@@ -12,8 +12,8 @@
     @vite(['resources/css/app.css'])
     <style>
         body { background: var(--bg); color: var(--text); font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; font-size: 15px; min-height: 100vh; display: flex; flex-direction: column; }
-        .mono { font-family:Arial,'Segoe UI',Tahoma,sans-serif; }
-        .label-sm { font-family:Arial,'Segoe UI',Tahoma,sans-serif; font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
+        .mono { font-variant-numeric:tabular-nums; }
+        .label-sm { font-variant-numeric:tabular-nums; font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
         .field-input { width: 100%; padding: 10px 12px; font-size: 13px; font-family: inherit; background: var(--s2); border: 1px solid var(--border2); color: var(--text); outline: none; box-sizing: border-box; }
         .field-input:focus { border-color: var(--purple); }
         .submit-btn { width: 100%; padding: 16px; font-family: inherit; font-size: 15px; font-weight: 800; background: var(--purple); color: #fff; border: none; cursor: pointer; letter-spacing: .04em; }

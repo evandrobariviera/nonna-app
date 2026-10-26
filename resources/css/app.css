@@ -115,7 +115,6 @@
     /* ── FONTE NUMÉRICA — KPIs, datas, horários, percentuais, colunas numéricas.
        Troca o IBM Plex Mono antigo (ver nonna_sistema_tipografico.html §2). ── */
     .numeric {
-        font-family: Arial, "Segoe UI", Tahoma, sans-serif;
         font-variant-numeric: tabular-nums lining-nums;
         font-feature-settings: "tnum" 1, "lnum" 1;
     }
@@ -768,6 +767,15 @@
 }
 .app-page .uppercase.text-xs,
 .portal-page .uppercase.text-xs { font-size: 13px; }
+
+/* Datas, horas, números e percentuais ("vence 23/10", "19%") usavam font-mono (máquina de
+ * escrever). Agora usam a fonte do App com algarismos de largura igual, pra colunas de
+ * número continuarem alinhadas. Código, campos de digitar e <pre> seguem em mono. */
+.app-page .font-mono:not(code, pre, input, textarea),
+.portal-page .font-mono:not(code, pre, input, textarea) {
+    font-family: inherit;
+    font-variant-numeric: tabular-nums;
+}
 
 /* ══ Páginas públicas (aprovação, cadastro, credenciais, senha do Portal) ══
  * Cada uma tem um <style> próprio, carregado depois deste arquivo; o "body" na frente

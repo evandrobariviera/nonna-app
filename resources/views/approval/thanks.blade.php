@@ -12,7 +12,7 @@
     @vite(['resources/css/app.css'])
     <style>
         body { background: var(--bg); color: var(--text); font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; font-size: 15px; min-height: 100vh; display: flex; flex-direction: column; }
-        .mono { font-family:Arial,'Segoe UI',Tahoma,sans-serif; }
+        .mono { font-variant-numeric:tabular-nums; }
     .file-link { display: flex; align-items: center; gap: 10px; padding: 14px; background: var(--s2); border: 1px solid var(--border); color: var(--text); text-decoration: none; font-size: 13px; text-align: left; }
     .file-link:hover { border-color: var(--purple); }
     .file-link + .file-link { border-top: 1px solid var(--border); }
@@ -60,7 +60,7 @@
                         <a href="{{ $file->downloadUrl() }}" class="file-link">
                             <span style="font-size:20px">{{ $file->icon() }}</span>
                             <span>{{ $file->filename }}</span>
-                            <span style="margin-left:auto; font-size:10px; color:var(--muted); font-family:Arial,'Segoe UI',Tahoma,sans-serif">⬇ baixar</span>
+                            <span style="margin-left:auto; font-size:10px; color:var(--muted); font-variant-numeric:tabular-nums">⬇ baixar</span>
                         </a>
                     @endforeach
                 </div>

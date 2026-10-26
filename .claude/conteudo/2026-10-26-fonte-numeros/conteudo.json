@@ -1,0 +1,11 @@
+{
+  "novidades": [
+    {
+      "title": "Datas e números com a fonte do App",
+      "summary": "Datas, horários, prazos e percentuais (\"vence 23/10\", \"19%\") saíram da fonte de máquina de escrever e usam a mesma letra do resto do App, com os números alinhados em coluna.",
+      "body": "<p>Só aparência: nenhum número ou data mudou.</p>",
+      "kind": "melhoria", "area": "Geral"
+    }
+  ],
+  "ajuda": []
+}
