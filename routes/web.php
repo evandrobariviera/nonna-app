@@ -641,6 +641,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::get('/aprovacoes/visao-cliente/{client}/avulsas', [\App\Http\Controllers\ApprovalPreviewController::class, 'loose'])
         ->name('approvals.preview.loose');
 
+    // ── Cronograma da agência (linhas do tempo de todos os planejamentos) ──
+    Route::get('/cronograma', [\App\Http\Controllers\CronogramaController::class, 'index'])
+        ->name('cronograma.index');
+
     // ── Dashboard global de projetos ──
     Route::get('/projetos', [ProjectController::class, 'dashboard'])
         ->name('projects.dashboard');

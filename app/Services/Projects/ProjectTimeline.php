@@ -27,7 +27,9 @@ class ProjectTimeline
         $byPhase   = $tasks->groupBy(fn ($t) => $t->project_phase_id ?? '');
         $phases    = $project->phases;
 
-        $rows = $phases->map(function (ProjectPhase $phase) use ($byPhase) {
+        // toBase(): sem fases, o map() de uma coleção Eloquent vazia continua Eloquent e o merge
+        // com arrays mais adiante (marcos fixos) quebra.
+        $rows = $phases->toBase()->map(function (ProjectPhase $phase) use ($byPhase) {
             $phaseTasks = $byPhase->get($phase->id, collect())->values();
             $status     = $phase->statusFrom($phaseTasks);
 

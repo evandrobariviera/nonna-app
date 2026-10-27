@@ -162,7 +162,7 @@
 </div>
 
 {{-- Fluxo --}}
-<div x-data="{ open: {{ request()->routeIs('macroplans.*') || request()->routeIs('projects.*') || request()->routeIs('fila.*') ? 'true' : 'false' }} }">
+<div x-data="{ open: {{ request()->routeIs('macroplans.*') || request()->routeIs('projects.*') || request()->routeIs('fila.*') || request()->routeIs('cronograma.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <x-icon name="folder-kanban" size="16" class="flex-shrink-0" />
@@ -174,6 +174,10 @@
         <a href="{{ route('macroplans.index') }}"
            class="nav-sub-item {{ request()->routeIs('macroplans.*') && !request()->routeIs('projects.*') ? 'active' : '' }}">
             Planejamentos (Roadmaps)
+        </a>
+        <a href="{{ route('cronograma.index') }}"
+           class="nav-sub-item {{ request()->routeIs('cronograma.*') ? 'active' : '' }}">
+            Cronograma
         </a>
         <a href="{{ route('projects.dashboard') }}"
            class="nav-sub-item {{ request()->routeIs('projects.*') ? 'active' : '' }}">

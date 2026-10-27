@@ -28,7 +28,7 @@ use Illuminate\Support\Collection;
 class MacroPlanTimeline
 {
     public const RENEWAL_DAYS = 30;
-    private const MEETING_TYPES = ['macroplanejamento', 'kickoff_estrategico'];
+    public const MEETING_TYPES = ['macroplanejamento', 'kickoff_estrategico'];
     // Reunião do ciclo: até 45 dias antes do início do período e até 20 depois (45, não mais,
     // pra não pegar o Briefing do ciclo anterior em ciclos curtos de 60 dias).
     private const MEETING_BEFORE = 45;
@@ -42,16 +42,24 @@ class MacroPlanTimeline
         'renovacao'  => ['label' => 'Renovação',  'hint' => 'últimos 30 dias: reunião do próximo ciclo'],
     ];
 
-    public static function for(MacroPlan $plan): array
+    /**
+     * @param Collection|null $clientMeetings reuniões Macro/Kick-off (não canceladas) do cliente, já
+     *                                        carregadas — o Cronograma passa pra não consultar por plano
+     * @param Collection|null $clientPlans    planejamentos do cliente, já carregados
+     */
+    public static function for(MacroPlan $plan, ?Collection $clientMeetings = null, ?Collection $clientPlans = null): array
     {
         $today   = now()->startOfDay();
         $start   = $plan->period_start->copy()->startOfDay();
         $end     = $plan->period_end->copy()->startOfDay();
-        $meeting = self::cycleMeeting($plan);
-        $nextMeeting = self::nextCycleMeeting($plan);
+        $clientMeetings ??= Meeting::whereIn('type', self::MEETING_TYPES)->where('status', '!=', 'cancelada')
+            ->where('client_id', $plan->client_id)->orderBy('scheduled_at')->get();
+        $meeting = self::cycleMeeting($plan, $clientMeetings);
+        $nextMeeting = self::nextCycleMeeting($plan, $clientMeetings);
         // Próximo planejamento já cadastrado (liberado na Renovação deste).
-        $nextPlan = MacroPlan::where('client_id', $plan->client_id)->where('id', '!=', $plan->id)
-            ->where('period_start', '>', $plan->period_start)->orderBy('period_start')->first();
+        $nextPlan = ($clientPlans ?? MacroPlan::where('client_id', $plan->client_id)->get())
+            ->filter(fn ($p) => $p->id !== $plan->id && $p->period_start->gt($plan->period_start))
+            ->sortBy('period_start')->first();
 
         // Renovação nunca começa antes do início (ciclo curto).
         $renewalStart = $end->copy()->subDays(self::RENEWAL_DAYS - 1)->max($start->copy()->addDay());
@@ -160,34 +168,26 @@ class MacroPlanTimeline
     // Reunião que deu origem ao ciclo: a ligada ao plano; senão a do cliente perto do início —
     // inclusive a que foi marcada ligada ao planejamento ANTERIOR, na Renovação dele (o Briefing
     // do novo ciclo acontece enquanto o anterior ainda está rodando).
-    private static function cycleMeeting(MacroPlan $plan): ?Meeting
+    // $meetings = reuniões Macro/Kick-off não canceladas do cliente (já em memória).
+    private static function cycleMeeting(MacroPlan $plan, Collection $meetings): ?Meeting
     {
-        $base = Meeting::whereIn('type', self::MEETING_TYPES)->where('status', '!=', 'cancelada');
+        $from = $plan->period_start->copy()->subDays(self::MEETING_BEFORE)->startOfDay();
+        $to   = $plan->period_start->copy()->addDays(self::MEETING_AFTER)->endOfDay();
 
-        return (clone $base)->where('macro_plan_id', $plan->id)->orderBy('scheduled_at')->first()
-            ?? (clone $base)->where('client_id', $plan->client_id)
-                ->where(fn ($q) => $q->whereNull('macro_plan_id')->orWhere('macro_plan_id', '!=', $plan->id))
-                ->whereBetween('scheduled_at', [
-                    $plan->period_start->copy()->subDays(self::MEETING_BEFORE)->startOfDay(),
-                    $plan->period_start->copy()->addDays(self::MEETING_AFTER)->endOfDay(),
-                ])
-                ->orderByDesc('scheduled_at')->first();
+        return $meetings->where('macro_plan_id', $plan->id)->sortBy('scheduled_at')->first()
+            ?? $meetings->filter(fn ($m) => $m->macro_plan_id !== $plan->id && $m->scheduled_at?->between($from, $to))
+                ->sortByDesc('scheduled_at')->first();
     }
 
     // Reunião do PRÓXIMO ciclo: do mesmo cliente, marcada dentro da Renovação ou depois do fim
     // (até 45 dias), que não seja a deste ciclo.
-    private static function nextCycleMeeting(MacroPlan $plan): ?Meeting
+    private static function nextCycleMeeting(MacroPlan $plan, Collection $meetings): ?Meeting
     {
-        return Meeting::whereIn('type', self::MEETING_TYPES)
-            ->where('status', '!=', 'cancelada')
-            ->where('client_id', $plan->client_id)
-            ->where(fn ($q) => $q->whereNull('macro_plan_id')->orWhere('macro_plan_id', '!=', $plan->id))
-            ->whereBetween('scheduled_at', [
-                $plan->period_end->copy()->subDays(self::RENEWAL_DAYS + 15)->startOfDay(),
-                $plan->period_end->copy()->addDays(45)->endOfDay(),
-            ])
-            ->orderBy('scheduled_at')
-            ->first();
+        $from = $plan->period_end->copy()->subDays(self::RENEWAL_DAYS + 15)->startOfDay();
+        $to   = $plan->period_end->copy()->addDays(45)->endOfDay();
+
+        return $meetings->filter(fn ($m) => $m->macro_plan_id !== $plan->id && $m->scheduled_at?->between($from, $to))
+            ->sortBy('scheduled_at')->first();
     }
 
     // Quando o plano virou "Em Execução" (histórico de status), se depois do início do período.

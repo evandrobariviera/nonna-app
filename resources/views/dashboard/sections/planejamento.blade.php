@@ -74,7 +74,13 @@
                 <x-icon name="calendar-range" size="14" /> Ciclos de planejamento
                 <span class="text-xs font-mono font-normal" style="color:var(--muted)">— {{ $p['rows']->count() }} clientes · mais urgentes no topo</span>
             </h3>
-            <button type="button" x-show="stage" x-cloak class="text-xs font-semibold" style="color:var(--purple)" @click="stage = null">✕ mostrar todas as etapas</button>
+            <div class="flex items-center gap-3">
+                <button type="button" x-show="stage" x-cloak class="text-xs font-semibold" style="color:var(--purple)" @click="stage = null">✕ mostrar todas as etapas</button>
+                {{-- Visão completa (etapas + campanhas/fases de cada cliente) --}}
+                <a href="{{ route('cronograma.index') }}" class="btn btn-ghost btn-xs flex items-center gap-1">
+                    <x-icon name="chart-gantt" size="12" /> Abrir Cronograma
+                </a>
+            </div>
         </div>
         <p class="text-xs mb-3 flex flex-wrap gap-x-3 gap-y-1" style="color:var(--muted2)">
             <span>A barra vai do início ao fim do ciclo e enche conforme o tempo passa.</span>
