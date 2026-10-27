@@ -2,7 +2,7 @@
   "novidades": [
     {
       "title": "Responsável pelo lead na Central de Leads",
-      "summary": "Cada lead pode ter um responsável — alguém da equipe do cliente ou da Nonna. Quem passa o lead para \"Em Contato\" vira o responsável automaticamente, se ainda não houver um.",
+      "summary": "Cada lead pode ter um responsável — alguém da equipe do cliente ou da Nonna —, com etiqueta de cor própria no quadro e na lista. Quem passa o lead para \"Em Contato\" vira o responsável automaticamente, se ainda não houver um.",
       "body": "<p>O responsável aparece no cartão do quadro, na lista e no topo da ficha do lead. No filtro novo <strong>Meus leads</strong> cada um vê só os seus. Toda troca de responsável fica registrada no histórico do lead.</p>",
       "kind": "novidade", "area": "Central de Leads"
     },
@@ -14,7 +14,7 @@
     },
     {
       "title": "Valor da negociação no lead",
-      "summary": "Cada lead tem agora um campo de valor da negociação, em destaque na ficha. O valor aparece no cartão e o quadro soma o total de cada coluna.",
+      "summary": "Cada lead tem agora um campo de valor da negociação, em destaque na ficha, que salva sozinho enquanto você digita. O valor aparece no cartão e o quadro soma o total de cada coluna.",
       "body": "<p>É o começo de medir o retorno dos anúncios: quanto cada lead virou em venda.</p>",
       "kind": "novidade", "area": "Central de Leads"
     },

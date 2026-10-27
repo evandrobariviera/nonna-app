@@ -164,6 +164,10 @@ class LeadController extends Controller
             $lead->update(['lost_reason' => $data['lost_reason'] ?? null]);
         }
 
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'deal_value' => $lead->deal_value]);
+        }
+
         return back()->with('success', 'Lead atualizado.');
     }
 

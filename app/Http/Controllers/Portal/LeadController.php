@@ -179,6 +179,10 @@ class LeadController extends Controller
             $lead->setDealValue(isset($data['deal_value']) ? (float) $data['deal_value'] : null, null, $this->contactId());
         }
 
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'deal_value' => $lead->deal_value]);
+        }
+
         return back()->with('success', 'Lead atualizado.');
     }
 

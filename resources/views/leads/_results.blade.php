@@ -55,8 +55,12 @@
                         {{ $opp->utm_source ?? '—' }}
                     </td>
                     @if($showAssignee)
-                        <td class="text-sm" style="color:var(--text)">
-                            {{ $opp->assigneeName($markNonna ?? false) ?? '—' }}
+                        <td class="text-sm" style="color:var(--muted)">
+                            @if($opp->isAssigned())
+                                @include('leads._assignee', ['opp' => $opp, 'markNonna' => $markNonna ?? false])
+                            @else
+                                —
+                            @endif
                         </td>
                     @endif
                     <td class="text-sm font-semibold" style="text-align:right; color:{{ $opp->deal_value !== null ? 'var(--green)' : 'var(--muted)' }}">

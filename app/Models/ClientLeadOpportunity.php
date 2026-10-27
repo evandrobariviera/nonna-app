@@ -109,6 +109,20 @@ class ClientLeadOpportunity extends Model
         return null;
     }
 
+    // Cor fixa por pessoa (mesmo responsável = mesma cor em qualquer tela), pra
+    // reconhecer de relance de quem é cada lead no quadro e na lista.
+    public function assigneeHue(): int
+    {
+        return crc32($this->assigneeKey()) % 360;
+    }
+
+    public function assigneeInitials(): string
+    {
+        $words = preg_split('/\s+/', trim((string) ($this->assignedContact?->name ?? $this->assignedTo?->name)));
+
+        return mb_strtoupper(mb_substr($words[0] ?? '', 0, 1) . (count($words) > 1 ? mb_substr(end($words), 0, 1) : ''));
+    }
+
     // Valor no select de responsável: "contact:{uuid}" ou "user:{id}".
     public function assigneeKey(): string
     {
@@ -155,13 +169,21 @@ class ClientLeadOpportunity extends Model
 
         $this->update(['deal_value' => $value]);
 
-        $this->notes()->create([
-            'user_id'    => $byUserId,
-            'contact_id' => $byContactId,
-            'body'       => $value !== null
-                ? 'Valor da negociação: R$ ' . number_format($value, 2, ',', '.') . '.'
-                : 'Tirou o valor da negociação.',
-        ]);
+        $body = $value !== null
+            ? 'Valor da negociação: R$ ' . number_format($value, 2, ',', '.') . '.'
+            : 'Tirou o valor da negociação.';
+
+        // O campo salva enquanto a pessoa digita — a mesma pessoa mexendo no valor
+        // em seguida atualiza a nota recente em vez de encher o histórico.
+        $recent = $this->notes()->reorder()->latest()
+            ->where('user_id', $byUserId)->where('contact_id', $byContactId)
+            ->where('created_at', '>=', now()->subMinutes(5))
+            ->where(fn ($q) => $q->where('body', 'like', 'Valor da negociação:%')->orWhere('body', 'Tirou o valor da negociação.'))
+            ->first();
+
+        $recent
+            ? $recent->update(['body' => $body])
+            : $this->notes()->create(['user_id' => $byUserId, 'contact_id' => $byContactId, 'body' => $body]);
     }
 
     public static function formatMoney(float|string|null $value): string

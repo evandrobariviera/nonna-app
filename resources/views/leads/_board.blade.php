@@ -61,11 +61,9 @@
 
                         <div class="kb-card-foot">
                             <span>{{ $opp->created_at->diffForHumans() }}</span>
-                            @if($name = $opp->assigneeName($markNonna))
-                                <span class="ml-auto inline-flex items-center gap-1 truncate" style="max-width:150px" title="Responsável: {{ $name }}">
-                                    <x-icon name="user" size="12" /> {{ $name }}
-                                </span>
-                            @endif
+                            <span class="ml-auto min-w-0" style="max-width:160px">
+                                @include('leads._assignee', ['opp' => $opp, 'markNonna' => $markNonna])
+                            </span>
                         </div>
                     </div>
                 @empty
