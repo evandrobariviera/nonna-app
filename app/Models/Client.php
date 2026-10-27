@@ -431,6 +431,18 @@ class Client extends Model
             ->withTimestamps();
     }
 
+    // Quem do time do cliente entra no Portal — são as pessoas que podem atender lead.
+    public function portalTeam(): \Illuminate\Support\Collection
+    {
+        return $this->contacts()->wherePivot('portal_access_enabled', true)
+            ->orderBy('contacts.name')->get(['contacts.id', 'contacts.name']);
+    }
+
+    public function isPrimaryContact(string $contactId): bool
+    {
+        return $this->contacts()->where('contacts.id', $contactId)->wherePivot('is_primary', true)->exists();
+    }
+
     public function adAccounts(): HasMany
     {
         return $this->hasMany(ClientAdAccount::class);

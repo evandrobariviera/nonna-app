@@ -19,9 +19,11 @@ class ClientModule extends Model
         'enabled_at',
         'enabled_by',
         'requested_at',
+        'settings',
     ];
 
     protected $casts = [
+        'settings'     => 'array',
         'enabled_at'   => 'datetime',
         'requested_at' => 'datetime',
     ];
@@ -49,6 +51,20 @@ class ClientModule extends Model
     public function isActive(): bool
     {
         return $this->status === 'ativo';
+    }
+
+    public function setting(string $key, mixed $default = null): mixed
+    {
+        return $this->settings[$key] ?? $default;
+    }
+
+    // Central de Leads: "lead atribuído some para os outros" — com a opção ligada,
+    // cada pessoa do cliente no Portal vê só os seus leads e os sem responsável;
+    // o contato principal e o time da Nonna continuam vendo todos.
+    public static function leadsHideAssigned(string $clientId): bool
+    {
+        return (bool) self::where('client_id', $clientId)->where('module_key', 'central_leads')
+            ->first()?->setting('hide_assigned', false);
     }
 
     public function client(): BelongsTo

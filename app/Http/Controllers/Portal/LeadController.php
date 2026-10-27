@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\LeadController as InternalLeads;
 use App\Models\Client;
 use App\Models\ClientLeadOpportunity;
 use App\Models\ClientLeadSource;
@@ -30,16 +31,19 @@ class LeadController extends Controller
 
         $view = $request->get('view', 'lista');
         $filterOptions = $this->filterOptions($client);
+        $showClosed = InternalLeads::showClosed($request);
+        $canConfigure = $client->isPrimaryContact($this->contactId());
+        $hideAssigned = ClientModule::leadsHideAssigned($client->id);
 
         if ($view === 'lista') {
             $leads = $this->filteredQuery($request, $client)->paginate(20)->withQueryString();
 
-            return view('portal.leads.index', array_merge(compact('view', 'leads', 'client'), $filterOptions));
+            return view('portal.leads.index', array_merge(compact('view', 'leads', 'client', 'showClosed', 'canConfigure', 'hideAssigned'), $filterOptions));
         }
 
         $board = $this->filteredQuery($request, $client)->get()->groupBy('stage');
 
-        return view('portal.leads.index', array_merge(compact('view', 'board', 'client'), $filterOptions));
+        return view('portal.leads.index', array_merge(compact('view', 'board', 'client', 'showClosed', 'canConfigure', 'hideAssigned'), $filterOptions));
     }
 
     public function results(Request $request)
@@ -50,9 +54,28 @@ class LeadController extends Controller
         return view('leads._results', [
             'leads'        => $leads,
             'showClient'   => false,
-            'showAssignee' => false,
+            'showAssignee' => true,
+            'markNonna'    => true,
             'showRoute'    => 'portal.leads.show',
         ]);
+    }
+
+    private function contactId(): string
+    {
+        return Auth::guard('portal')->id();
+    }
+
+    // Com "lead atribuído some para os outros" ligado, quem não é o contato
+    // principal vê só os leads dele e os sem responsável.
+    private function seesOnlyOwn(Client $client): bool
+    {
+        return ClientModule::leadsHideAssigned($client->id) && !$client->isPrimaryContact($this->contactId());
+    }
+
+    private function authorizeLead(ClientLeadOpportunity $lead, Client $client): void
+    {
+        abort_if($lead->lead->client_id !== $client->id, 403);
+        abort_if($this->seesOnlyOwn($client) && !$lead->isVisibleToContact($this->contactId()), 403);
     }
 
     // channels/sources escopados manualmente pelo Cliente do Portal — o guard
@@ -68,9 +91,19 @@ class LeadController extends Controller
 
     private function filteredQuery(Request $request, Client $client): Builder
     {
-        $query = ClientLeadOpportunity::with(['lead', 'channel', 'source'])
+        $query = ClientLeadOpportunity::with(['lead', 'channel', 'source', 'assignedTo', 'assignedContact'])
             ->whereHas('lead', fn ($q) => $q->where('client_id', $client->id))
+            ->hideClosedUnless(InternalLeads::showClosed($request))
+            ->when($this->seesOnlyOwn($client), fn ($q) => $q->visibleToContact($this->contactId()))
             ->orderByDesc('created_at');
+
+        if ($request->filled('responsavel')) {
+            match ($request->responsavel) {
+                'sem'   => $query->whereNull('assigned_to')->whereNull('assigned_contact_id'),
+                'eu'    => $query->where('assigned_contact_id', $this->contactId()),
+                default => null,
+            };
+        }
 
         if ($request->filled('stage')) {
             $query->where('stage', $request->stage);
@@ -110,17 +143,63 @@ class LeadController extends Controller
     public function show(ClientLeadOpportunity $lead)
     {
         $client = app('currentPortalClient');
-        abort_if($lead->lead->client_id !== $client->id, 403);
+        $this->authorizeLead($lead, $client);
 
-        $lead->load(['lead', 'channel', 'notes.user', 'notes.contact']);
+        $lead->load(['lead', 'channel', 'assignedTo', 'assignedContact', 'notes.user', 'notes.contact']);
 
-        return view('portal.leads.show', ['opportunity' => $lead, 'client' => $client]);
+        return view('portal.leads.show', [
+            'opportunity' => $lead,
+            'client'      => $client,
+            'clientTeam'  => $client->portalTeam(),
+        ]);
+    }
+
+    // Responsável e valor da negociação. No Portal só dá pra escolher alguém
+    // do próprio time; um responsável da Nonna aparece, mas não é escolhível.
+    public function update(Request $request, ClientLeadOpportunity $lead)
+    {
+        $client = app('currentPortalClient');
+        $this->authorizeLead($lead, $client);
+
+        $data = $request->validate([
+            'assignee'   => ['sometimes', 'nullable', 'string'],
+            'deal_value' => 'sometimes|nullable|numeric|min:0|max:9999999999',
+        ]);
+
+        if ($request->has('assignee') && ($data['assignee'] ?? '') !== $lead->assigneeKey()) {
+            $contactId = null;
+            if (!empty($data['assignee'])) {
+                $contactId = str_starts_with($data['assignee'], 'contact:') ? substr($data['assignee'], 8) : null;
+                abort_unless($contactId && $client->portalTeam()->contains('id', $contactId), 422);
+            }
+            $lead->assign(null, $contactId, null, $this->contactId());
+        }
+
+        if ($request->has('deal_value')) {
+            $lead->setDealValue(isset($data['deal_value']) ? (float) $data['deal_value'] : null, null, $this->contactId());
+        }
+
+        return back()->with('success', 'Lead atualizado.');
+    }
+
+    // Só o contato principal liga/desliga "lead atribuído some para os outros".
+    public function updateSettings(Request $request)
+    {
+        $client = app('currentPortalClient');
+        abort_unless($client->isPrimaryContact($this->contactId()), 403);
+
+        $module = ClientModule::where('client_id', $client->id)->where('module_key', self::MODULE_KEY)->firstOrFail();
+        $module->update(['settings' => array_merge($module->settings ?? [], ['hide_assigned' => $request->boolean('hide_assigned')])]);
+
+        return back()->with('success', $request->boolean('hide_assigned')
+            ? 'Pronto: cada pessoa passa a ver só os leads dela e os sem responsável.'
+            : 'Pronto: todo mundo volta a ver todos os leads.');
     }
 
     public function storeNote(Request $request, ClientLeadOpportunity $lead)
     {
         $client = app('currentPortalClient');
-        abort_if($lead->lead->client_id !== $client->id, 403);
+        $this->authorizeLead($lead, $client);
 
         $data = $request->validate([
             'body' => 'required|string|max:5000',
@@ -137,7 +216,7 @@ class LeadController extends Controller
     public function updateStage(Request $request, ClientLeadOpportunity $lead)
     {
         $client = app('currentPortalClient');
-        abort_if($lead->lead->client_id !== $client->id, 403);
+        $this->authorizeLead($lead, $client);
 
         $data = $request->validate([
             'stage' => 'required|in:' . implode(',', array_keys(ClientLeadOpportunity::$stages)),
@@ -155,7 +234,12 @@ class LeadController extends Controller
         $lead->update($updates);
 
         if ($fromStage !== $data['stage']) {
-            $lead->logStageChange($fromStage, $data['stage'], null, Auth::guard('portal')->id());
+            $lead->logStageChange($fromStage, $data['stage'], null, $this->contactId());
+        }
+
+        // Quem puxa o lead pra "Em Contato" passa a ser o responsável, se ainda não houver.
+        if ($data['stage'] === 'em_contato' && !$lead->isAssigned()) {
+            $lead->assign(null, $this->contactId(), null, $this->contactId());
         }
 
         if ($request->wantsJson()) {

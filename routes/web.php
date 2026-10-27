@@ -172,6 +172,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('clients.modules.enable');
     Route::patch('/clientes/{client}/modulos/{moduleKey}/desativar', [ClientModuleController::class, 'disable'])
         ->name('clients.modules.disable');
+    Route::patch('/clientes/{client}/modulos/{moduleKey}/configuracoes', [ClientModuleController::class, 'updateSettings'])
+        ->name('clients.modules.settings');
 
     // ── Números de Atendimento do cliente (client_integrations - uazapi/CRM) ──
     Route::post('/clientes/{client}/atendimento', [\App\Http\Controllers\ClientIntegrationController::class, 'store'])
@@ -1103,6 +1105,8 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
     Route::get('/central-de-leads/{lead}', [PortalLeads::class, 'show'])->name('leads.show');
     Route::post('/central-de-leads/{lead}/notas', [PortalLeads::class, 'storeNote'])->name('leads.notes.store');
     Route::patch('/central-de-leads/{lead}/stage', [PortalLeads::class, 'updateStage'])->name('leads.update-stage');
+    Route::patch('/central-de-leads/{lead}/dados', [PortalLeads::class, 'update'])->name('leads.update');
+    Route::patch('/central-de-leads-configuracoes', [PortalLeads::class, 'updateSettings'])->name('leads.settings');
     Route::post('/central-de-leads/contratar', [PortalLeads::class, 'requestModule'])->name('leads.request-module');
     Route::get('/campanhas', [PortalCampaigns::class, 'index'])->name('campaigns.index');
     Route::get('/campanhas/{campaign}', [PortalCampaigns::class, 'show'])->name('campaigns.show');

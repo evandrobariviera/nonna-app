@@ -28,6 +28,18 @@
     <div class="grid grid-cols-3 gap-6">
         <div class="col-span-2 space-y-6">
 
+            @if(session('success'))
+                <div class="px-4 py-3 text-sm border rounded-lg" style="background: rgba(52,211,153,.06); border-color: rgba(52,211,153,.25); color: #34d399;">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @include('leads._deal', [
+                'opportunity'     => $opportunity,
+                'updateRoute'     => route('portal.leads.update', $opportunity),
+                'assigneeOptions' => ['Sua equipe' => $clientTeam->mapWithKeys(fn ($c) => ["contact:{$c->id}" => $c->name])->all()],
+            ])
+
             <div class="card p-5">
                 <h3 class="card-title mb-4">Contato</h3>
                 <div class="flex items-center gap-4">

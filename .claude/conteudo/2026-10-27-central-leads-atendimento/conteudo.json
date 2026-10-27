@@ -1,0 +1,41 @@
+{
+  "novidades": [
+    {
+      "title": "Responsável pelo lead na Central de Leads",
+      "summary": "Cada lead pode ter um responsável — alguém da equipe do cliente ou da Nonna. Quem passa o lead para \"Em Contato\" vira o responsável automaticamente, se ainda não houver um.",
+      "body": "<p>O responsável aparece no cartão do quadro, na lista e no topo da ficha do lead. No filtro novo <strong>Meus leads</strong> cada um vê só os seus. Toda troca de responsável fica registrada no histórico do lead.</p>",
+      "kind": "novidade", "area": "Central de Leads"
+    },
+    {
+      "title": "Lead atribuído pode sumir para os outros",
+      "summary": "Nova opção por cliente: com ela ligada, cada pessoa da equipe do cliente vê no Portal só os leads dela e os sem responsável. O contato principal e a Nonna continuam vendo todos.",
+      "body": "<p>Liga e desliga em dois lugares: na ficha do cliente (aba onde se libera o módulo Central de Leads) e no próprio Portal, pelo contato principal do cliente.</p>",
+      "kind": "novidade", "area": "Central de Leads"
+    },
+    {
+      "title": "Valor da negociação no lead",
+      "summary": "Cada lead tem agora um campo de valor da negociação, em destaque na ficha. O valor aparece no cartão e o quadro soma o total de cada coluna.",
+      "body": "<p>É o começo de medir o retorno dos anúncios: quanto cada lead virou em venda.</p>",
+      "kind": "novidade", "area": "Central de Leads"
+    },
+    {
+      "title": "Mesma pessoa não abre cartão repetido",
+      "summary": "Quando alguém que já tem cartão em andamento entra de novo (pelo site, formulário ou WhatsApp), a entrada volta para o mesmo cartão com a nota \"Entrou de novo\". Cartão novo só se o anterior já foi Ganho ou Perdido.",
+      "body": "<p>A pessoa é reconhecida pelo telefone ou pelo e-mail. Os cartões repetidos que já existiam foram juntados.</p>",
+      "kind": "melhoria", "area": "Central de Leads"
+    },
+    {
+      "title": "Ganhos e perdidos escondidos por padrão",
+      "summary": "O quadro e a lista da Central de Leads mostram só os leads em andamento. Para ver os fechados, marque \"Mostrar ganhos e perdidos\" ou filtre pelo estágio.",
+      "kind": "melhoria", "area": "Central de Leads"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Central de Leads — atender e negociar",
+      "category": "Central de Leads",
+      "slug": "central-de-leads-atender-e-negociar",
+      "body_file": "ajuda-central-leads-atender.html"
+    }
+  ]
+}

@@ -32,6 +32,15 @@
         {{-- Main info --}}
         <div class="col-span-2 space-y-6">
 
+            @include('leads._deal', [
+                'opportunity' => $opportunity,
+                'updateRoute' => route('leads.update', $opportunity),
+                'assigneeOptions' => array_filter([
+                    'Equipe do cliente (Portal)' => $clientTeam->mapWithKeys(fn ($c) => ["contact:{$c->id}" => $c->name])->all(),
+                    'Nonna' => $users->mapWithKeys(fn ($u) => ["user:{$u->id}" => $u->name])->all(),
+                ]),
+            ])
+
             {{-- Contact card --}}
             <div class="card p-5">
                 <h3 class="card-title mb-4">Contato</h3>
@@ -107,33 +116,18 @@
                 @endif
             </div>
 
-            {{-- Assign / Lost reason --}}
-            <div class="card p-5">
-                <h3 class="card-title mb-3">Responsável</h3>
-                <form method="POST" action="{{ route('leads.update', $opportunity) }}" class="space-y-4">
-                    @csrf
-                    @method('PATCH')
-
-                    <div>
-                        <select name="assigned_to" onchange="this.form.submit()"
-                                class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-4 py-2.5 focus:outline-none focus:border-[var(--purple)]">
-                            <option value="">Sem responsável</option>
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}" {{ $opportunity->assigned_to == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    @if($opportunity->stage === 'perdido')
-                        <div>
-                            <label class="block text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Motivo da Perda</label>
-                            <textarea name="lost_reason" rows="2"
-                                      class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-4 py-2.5 focus:outline-none focus:border-[var(--red)] resize-none">{{ $opportunity->lost_reason }}</textarea>
-                            <button type="submit" class="btn btn-primary btn-sm mt-2">Salvar motivo</button>
-                        </div>
-                    @endif
-                </form>
-            </div>
+            @if($opportunity->stage === 'perdido')
+                <div class="card p-5">
+                    <h3 class="card-title mb-3">Motivo da perda</h3>
+                    <form method="POST" action="{{ route('leads.update', $opportunity) }}">
+                        @csrf
+                        @method('PATCH')
+                        <textarea name="lost_reason" rows="2"
+                                  class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-4 py-2.5 focus:outline-none focus:border-[var(--red)] resize-none">{{ $opportunity->lost_reason }}</textarea>
+                        <button type="submit" class="btn btn-primary btn-sm mt-2">Salvar motivo</button>
+                    </form>
+                </div>
+            @endif
 
             @include('leads._notes', ['opportunity' => $opportunity, 'notesStoreRoute' => route('leads.notes.store', $opportunity)])
 
@@ -202,7 +196,7 @@
                             @if($opportunity->created_at->lt(\App\Models\NotificationDispatch::LEAD_LINK_STARTED_AT))
                                 Sem registro — este lead chegou antes do App começar a guardar os avisos (21/10/2026).
                             @else
-                                Nenhum aviso disparado. Acontece quando a mesma pessoa converte de novo em até 72h:
+                                Nenhum aviso disparado. Acontece quando a mesma pessoa entra de novo com um cartão ainda em andamento:
                                 o lead volta pro mesmo cartão sem avisar de novo.
                             @endif
                         </p>
@@ -235,13 +229,6 @@
                     </div>
                 @endif
             </div>
-
-            @if($opportunity->assignedTo)
-                <div class="card p-4">
-                    <h3 class="card-title mb-2">Responsável</h3>
-                    <div class="text-sm text-[var(--text)]">{{ $opportunity->assignedTo->name }}</div>
-                </div>
-            @endif
 
         </div>
     </div>

@@ -50,7 +50,7 @@ Validação (`LeadCaptureController::store()`):
 - `fbclid`, `gclid`, `ctwa_clid`, `event_id` — opcionais, existem desde o desenho do schema pensando em dedup com Meta CAPI/Google Ads.
 - `ad_id`, `campaign_id` — opcionais (desde 26/10/2026): ID do anúncio/campanha na plataforma. **No Lead Ads o n8n deve repassar o `ad_id`/`campaign_id` que vêm no aviso `leadgen` da Meta.** Sem eles, o App tenta pela UTM no padrão Nonna (`utm_content` = ID do anúncio, `utm_campaign` = ID da campanha — só vale se for número; nome de campanha não liga). Resolvido por `App\Services\Leads\AdAttribution` contra os anúncios já sincronizados das contas do próprio cliente → grava `ad_external_id`/`campaign_external_id` (sempre) e `ad_ad_id`/`ad_campaign_id` (quando o anúncio/campanha já foi sincronizado).
 - Telefone é comparado pela chave DDD + últimos 8 dígitos (`App\Support\PhoneKey`, coluna `client_leads.phone_key`) — `+55 49 9908-2184` e `5549999082184` são a mesma pessoa.
-- A janela de 72h de reabertura é medida pela data da entrada (`received_at`), não pelo momento em que o App recebeu.
+- **Sem cartão duplicado (desde 27/10/2026):** se a pessoa (telefone ou e-mail) já tem cartão em andamento, a nova entrada volta pra ele, não importa quanto tempo passou, e ganha a nota "Entrou de novo pelo {canal}". Cartão novo só quando o último já está Ganho/Perdido. Cartões repetidos antigos: `php artisan leads:merge-duplicate-cards --dry`.
 
 ### Padrão de UTM (o número do anúncio no link)
 
@@ -62,7 +62,7 @@ Validação (`LeadCaptureController::store()`):
 
 Conversas que chegam pelo webhook uazapi (`UazapiMessageIngestor`) entram na Central sozinhas, via `App\Services\Leads\WhatsappLeadLinker` → `LeadCaptureService::captureForClient()` (canal `whatsapp`, Cliente = dono do número, sem aviso de "Lead Capturado"). **Cartão só para quem veio de anúncio** (clique em anúncio de WhatsApp — `externalAdReply.sourceID` vira `ad_id`, inclusive numa conversa antiga). Qualquer outra conversa em que a pessoa escreveu só liga a pessoa (`service_conversations.client_lead_id`), sem cartão — o WhatsApp do negócio tem aluno, fornecedor e curioso; cartão para conversa orgânica só quando a IA identificar interesse real (etapa de qualificação, ainda não feita). Conversas antigas: `php artisan leads:link-whatsapp --dry` (simula) e sem `--dry` (grava).
 - `form_answers` — opcional: **todo o conteúdo do formulário** (assunto, mensagem, perguntas customizadas do Lead Ad). Aceita lista `[{label, value}]` (preferido, mantém a ordem e o texto original da pergunta) ou objeto `{pergunta: resposta}`. Se não vier, o App tenta extrair do `raw_payload` (`data` do trigger do Facebook, `body` de webhook, ou achatando o objeto e ignorando chaves técnicas/UTM/identidade — `App\Services\Leads\FormAnswers`). Campos com rótulo tipo assunto/mensagem/observação/dúvida aparecem em destaque na ficha do lead e como trecho no cartão do Kanban.
-- Se a mesma pessoa enviar de novo dentro da janela de 72h (cartão reaberto), o conteúdo anterior vai pra `previous_submissions` em vez de ser sobrescrito.
+- Se a mesma pessoa enviar de novo com cartão em andamento (cartão reaberto), o conteúdo anterior vai pra `previous_submissions` em vez de ser sobrescrito.
 
 ## Canais (`source_channel`) e formato de `source_identifier`
 
@@ -82,7 +82,7 @@ Cadastro da fonte por Cliente: ficha do cliente → aba "Fontes de Lead" (`resou
 Em `LeadCaptureService::capture()`:
 1. Busca o `LeadChannel` da organização pelo `kind = source_channel`.
 2. Busca `ClientLeadSource` ativa (`is_active = true`) com `(lead_channel_id, external_id = source_identifier)`, do mesmo Cliente/Organização.
-3. Se achar → grava o lead **com** `client_id` resolvido, dedup por `(client_id, phone OU email)` dentro da janela de reabertura de 72h (`ClientLeadOpportunity::REOPEN_WINDOW_HOURS`).
+3. Se achar → grava o lead **com** `client_id` resolvido, dedup da pessoa por `(client_id, phone_key OU email)`; cartão reaproveitado se houver um em andamento.
 4. Se não achar (canal não existe na org, `external_id` sem match, ou fonte inativa) → grava o lead **sem** `client_id`/`client_lead_source_id` (cai em triagem manual na Central de Leads) — **o lead nunca é descartado**.
 
 Resposta:

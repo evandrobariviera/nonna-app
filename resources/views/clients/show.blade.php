@@ -2830,6 +2830,21 @@
                                         @endif
                                     @endif
                                 </p>
+                                @if($moduleKey === 'central_leads' && $mod?->isActive())
+                                    <form method="POST" action="{{ route('clients.modules.settings', [$client, $moduleKey]) }}" class="mt-3">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="hide_assigned" value="0">
+                                        <label class="flex items-start gap-2 text-xs cursor-pointer" style="color: var(--text)">
+                                            <input type="checkbox" name="hide_assigned" value="1" class="mt-0.5"
+                                                   {{ $mod->setting('hide_assigned') ? 'checked' : '' }} onchange="this.form.submit()">
+                                            <span>
+                                                Lead atribuído some para os outros
+                                                <span class="block" style="color: var(--muted)">No Portal, cada pessoa vê só os leads dela e os sem responsável. O contato principal e a Nonna continuam vendo todos.</span>
+                                            </span>
+                                        </label>
+                                    </form>
+                                @endif
                             </div>
                             @if($mod?->isActive())
                                 <form method="POST" action="{{ route('clients.modules.disable', [$client, $moduleKey]) }}"

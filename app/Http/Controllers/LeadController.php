@@ -23,16 +23,23 @@ class LeadController extends Controller
     {
         $view = $request->get('view', 'lista');
         $filterOptions = $this->filterOptions();
+        $showClosed = self::showClosed($request);
 
         if ($view === 'lista') {
             $leads = $this->filteredQuery($request)->paginate(30)->withQueryString();
 
-            return view('leads.index', array_merge(compact('view', 'leads'), $filterOptions));
+            return view('leads.index', array_merge(compact('view', 'leads', 'showClosed'), $filterOptions));
         }
 
         $board = $this->filteredQuery($request)->get()->groupBy('stage');
 
-        return view('leads.index', array_merge(compact('view', 'board'), $filterOptions));
+        return view('leads.index', array_merge(compact('view', 'board', 'showClosed'), $filterOptions));
+    }
+
+    // Ganhos e perdidos ficam escondidos, a menos que pedidos ou filtrados pelo estágio.
+    public static function showClosed(Request $request): bool
+    {
+        return $request->boolean('fechados') || in_array($request->stage, ClientLeadOpportunity::CLOSED_STAGES, true);
     }
 
     // Fragmento da listagem — chamado via fetch por live-filter.js conforme o
@@ -63,8 +70,17 @@ class LeadController extends Controller
 
     private function filteredQuery(Request $request): Builder
     {
-        $query = ClientLeadOpportunity::with(['lead.client', 'channel', 'source', 'assignedTo'])
+        $query = ClientLeadOpportunity::with(['lead.client', 'channel', 'source', 'assignedTo', 'assignedContact'])
+            ->hideClosedUnless(self::showClosed($request))
             ->orderByDesc('created_at');
+
+        if ($request->filled('responsavel')) {
+            match ($request->responsavel) {
+                'sem'   => $query->whereNull('assigned_to')->whereNull('assigned_contact_id'),
+                'eu'    => $query->where('assigned_to', Auth::id()),
+                default => null,
+            };
+        }
 
         if ($request->filled('client_id')) {
             if ($request->client_id === self::UNMATCHED_SENTINEL) {
@@ -111,26 +127,64 @@ class LeadController extends Controller
 
     public function show(ClientLeadOpportunity $lead)
     {
-        $lead->load(['lead.client', 'channel', 'source', 'ad:id,name', 'campaign:id,name', 'conversation:id,message_count,last_message_at', 'assignedTo', 'createdBy', 'notes.user', 'notes.contact', 'notificationDispatches']);
+        $lead->load(['lead.client', 'channel', 'source', 'ad:id,name', 'campaign:id,name', 'conversation:id,message_count,last_message_at', 'assignedTo', 'assignedContact', 'createdBy', 'notes.user', 'notes.contact', 'notificationDispatches']);
 
         $users = User::orderBy('name')->get(['id', 'name']);
+        $clientTeam = $lead->lead->client?->portalTeam() ?? collect();
 
         $clientWithoutSubscriber = $lead->lead->client_id
             && in_array($lead->lead->client_id, ClientLeadSource::clientIdsWithoutLeadSubscriber(), true);
 
-        return view('leads.show', ['opportunity' => $lead, 'users' => $users, 'clientWithoutSubscriber' => $clientWithoutSubscriber]);
+        return view('leads.show', [
+            'opportunity'             => $lead,
+            'users'                   => $users,
+            'clientTeam'              => $clientTeam,
+            'clientWithoutSubscriber' => $clientWithoutSubscriber,
+        ]);
     }
 
     public function update(Request $request, ClientLeadOpportunity $lead)
     {
         $data = $request->validate([
-            'assigned_to' => 'nullable|exists:users,id',
-            'lost_reason' => 'nullable|string|max:500',
+            'assignee'    => ['sometimes', 'nullable', 'string', 'regex:/^(user:\d+|contact:[0-9a-f-]{36})$/'],
+            'deal_value'  => 'sometimes|nullable|numeric|min:0|max:9999999999',
+            'lost_reason' => 'sometimes|nullable|string|max:500',
         ]);
 
-        $lead->update($data);
+        if ($request->has('assignee')) {
+            [$userId, $contactId] = $this->parseAssignee($data['assignee'] ?? null, $lead);
+            $lead->assign($userId, $contactId, Auth::id(), null);
+        }
+
+        if ($request->has('deal_value')) {
+            $lead->setDealValue(isset($data['deal_value']) ? (float) $data['deal_value'] : null, Auth::id(), null);
+        }
+
+        if ($request->has('lost_reason')) {
+            $lead->update(['lost_reason' => $data['lost_reason'] ?? null]);
+        }
 
         return back()->with('success', 'Lead atualizado.');
+    }
+
+    // "user:{id}" (time da Nonna) ou "contact:{uuid}" (time do cliente, só quem entra no Portal dele).
+    private function parseAssignee(?string $assignee, ClientLeadOpportunity $lead): array
+    {
+        if (!$assignee) {
+            return [null, null];
+        }
+
+        [$type, $id] = explode(':', $assignee, 2);
+
+        if ($type === 'user') {
+            abort_unless(User::whereKey($id)->exists(), 422);
+
+            return [(int) $id, null];
+        }
+
+        abort_unless($lead->lead->client?->portalTeam()->contains('id', $id), 422);
+
+        return [null, $id];
     }
 
     public function storeNote(Request $request, ClientLeadOpportunity $lead)
@@ -166,6 +220,11 @@ class LeadController extends Controller
 
         if ($fromStage !== $data['stage']) {
             $lead->logStageChange($fromStage, $data['stage'], Auth::id(), null);
+        }
+
+        // Quem puxa o lead pra "Em Contato" passa a ser o responsável, se ainda não houver.
+        if ($data['stage'] === 'em_contato' && !$lead->isAssigned()) {
+            $lead->assign(Auth::id(), null, Auth::id(), null);
         }
 
         if ($request->wantsJson()) {

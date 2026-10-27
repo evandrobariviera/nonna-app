@@ -15,11 +15,6 @@ use Illuminate\Support\Facades\DB;
 
 class LeadCaptureService
 {
-    // Janela de dedup por Contato: uma conversão nova (mesma pessoa) só reabre
-    // uma Oportunidade já aberta se ela tiver menos de 72h; passado isso, vira
-    // cartão novo no Kanban, sempre preso à mesma client_leads (decisão 19/08).
-    private const REOPEN_WINDOW_HOURS = 72;
-
     public function __construct(private NotificationDispatchService $notifications)
     {
     }
@@ -163,14 +158,10 @@ class LeadCaptureService
 
     private function resolveOpportunity(ClientLead $lead, ?ClientLeadSource $source, ?LeadChannel $channel, array $payload, Carbon $receivedAt): array
     {
-        // Janela medida pela data em que a entrada aconteceu (não por "agora") —
-        // assim a carga retroativa de conversas antigas agrupa igual ao tempo real.
+        // Pessoa que já tem cartão em andamento volta pra ele, não importa quanto
+        // tempo passou — cartão novo só depois de Ganho/Perdido (é uma nova compra).
         $reopenable = ClientLeadOpportunity::where('client_lead_id', $lead->id)
-            ->whereNotIn('stage', ['ganho', 'perdido'])
-            ->whereRaw('COALESCE(received_at, created_at) BETWEEN ? AND ?', [
-                $receivedAt->copy()->subHours(self::REOPEN_WINDOW_HOURS),
-                $receivedAt->copy()->addHours(self::REOPEN_WINDOW_HOURS),
-            ])
+            ->whereNotIn('stage', ClientLeadOpportunity::CLOSED_STAGES)
             ->orderByDesc('created_at')
             ->first();
 
@@ -215,7 +206,17 @@ class LeadCaptureService
                 'received_at'      => $reopenable->received_at?->gt($receivedAt) ? $reopenable->received_at : $receivedAt,
                 'raw_payload'      => $payload['raw_payload'] ?? $reopenable->raw_payload,
             ]);
+            $isLaterEntry = !$reopenable->received_at || $receivedAt->gt($reopenable->received_at->copy()->addHour());
             $reopenable->save();
+
+            // Quem está atendendo precisa ver que a pessoa voltou a procurar
+            // (a carga retroativa, com datas antigas, não gera essa nota).
+            if ($isLaterEntry) {
+                $reopenable->notes()->create([
+                    'body' => 'Entrou de novo' . ($channel ? " pelo {$channel->kindLabel()}" : '')
+                        . ' em ' . $receivedAt->copy()->setTimezone(config('app.timezone'))->format('d/m/Y H:i') . '.',
+                ]);
+            }
 
             return [$reopenable, false];
         }

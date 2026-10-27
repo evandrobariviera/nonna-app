@@ -1,7 +1,8 @@
 {{-- Visão em Lista da Central de Leads — compartilhado entre o app interno
      (LeadController::results()) e o Portal (Portal\LeadController::results()),
      chamado via fetch por live-filter.js. Espera $leads (paginator),
-     $showClient, $showAssignee, $showRoute (nome da rota de show). --}}
+     $showClient, $showAssignee, $showRoute (nome da rota de show) e, no Portal,
+     $markNonna (responsável da Nonna aparece como "Nonna · Fulano"). --}}
 <p class="text-sm text-right mb-2" style="color:var(--muted)">
     {{ $leads->total() }} lead{{ $leads->total() !== 1 ? 's' : '' }}
 </p>
@@ -16,7 +17,8 @@
                 <th style="width:130px">Estágio</th>
                 <th>Origem</th>
                 <th style="width:120px">UTM Source</th>
-                @if($showAssignee)<th style="width:130px">Responsável</th>@endif
+                @if($showAssignee)<th style="width:150px">Responsável</th>@endif
+                <th style="width:110px; text-align:right">Valor</th>
                 <th style="width:110px">Convertido em</th>
             </tr>
         </thead>
@@ -54,16 +56,19 @@
                     </td>
                     @if($showAssignee)
                         <td class="text-sm" style="color:var(--text)">
-                            {{ $opp->assignedTo?->name ?? '—' }}
+                            {{ $opp->assigneeName($markNonna ?? false) ?? '—' }}
                         </td>
                     @endif
+                    <td class="text-sm font-semibold" style="text-align:right; color:{{ $opp->deal_value !== null ? 'var(--green)' : 'var(--muted)' }}">
+                        {{ $opp->deal_value !== null ? \App\Models\ClientLeadOpportunity::formatMoney($opp->deal_value) : '—' }}
+                    </td>
                     <td class="text-xs" style="color:var(--muted)">
                         {{ ($opp->received_at ?? $opp->created_at)->format('d/m/Y') }}
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7">
+                    <td colspan="8">
                         <div class="tab-placeholder">
                             <div class="tab-placeholder-icon"><x-icon name="megaphone" size="32" /></div>
                             <div class="tab-placeholder-title">Nenhum lead encontrado</div>

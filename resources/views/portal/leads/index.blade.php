@@ -6,6 +6,24 @@
         <p class="text-sm mt-1" style="color: var(--muted)">
             Leads capturados pelo site, Meta e WhatsApp de {{ $client->company_name }}.
         </p>
+
+        @if($canConfigure)
+            <form method="POST" action="{{ route('portal.leads.settings') }}" class="mt-3">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="hide_assigned" value="0">
+                <label class="inline-flex items-start gap-2 text-xs cursor-pointer" style="color: var(--text)">
+                    <input type="checkbox" name="hide_assigned" value="1" class="mt-0.5"
+                           {{ $hideAssigned ? 'checked' : '' }} onchange="this.form.submit()">
+                    <span>
+                        Lead atribuído some para os outros
+                        <span class="block" style="color: var(--muted)">Cada pessoa da sua equipe vê só os leads dela e os sem responsável. Você, como contato principal, continua vendo todos.</span>
+                    </span>
+                </label>
+            </form>
+        @elseif($hideAssigned)
+            <p class="text-xs mt-2" style="color: var(--muted)">Você vê os leads que são seus e os que ainda não têm responsável.</p>
+        @endif
     </div>
 
     @if(session('success'))
@@ -30,63 +48,20 @@
             @include('leads._results', [
                 'leads'        => $leads,
                 'showClient'   => false,
-                'showAssignee' => false,
+                'showAssignee' => true,
+                'markNonna'    => true,
                 'showRoute'    => 'portal.leads.show',
             ])
         </div>
     @else
-        {{-- Quadro no padrão Mirbal (classes .kb-* em app.css) --}}
-        <div id="leads-board" class="kb-board" style="min-height:60vh"
-             data-kanban-board data-status-field="stage">
-
-            @foreach(\App\Models\ClientLeadOpportunity::$stages as $key => $s)
-                @php($cards = $board->get($key, collect()))
-                <div class="kb-col" style="--kb-bar: var(--{{ $s['color'] }}); width:280px" data-kanban-column data-status="{{ $key }}">
-
-                    <div class="kb-col-head">
-                        <h5 class="card-title truncate">{{ $s['label'] }}</h5>
-                        <span class="kb-count" data-kanban-count>{{ $cards->count() }}</span>
-                    </div>
-
-                    <div class="kb-list" data-kanban-list>
-                        @forelse($cards as $opp)
-                            <div class="kb-card cursor-pointer"
-                                 data-kanban-card data-id="{{ $opp->id }}" data-update-url="{{ route('portal.leads.update-stage', $opp) }}">
-
-                                @if($opp->channel)
-                                    <div class="kb-card-top">
-                                        <span class="badge tag-muted">{{ $opp->channel->kindLabel() }}</span>
-                                    </div>
-                                @endif
-
-                                <a href="{{ route('portal.leads.show', $opp) }}" class="kb-card-title hover:underline">
-                                    {{ $opp->lead->name ?: 'Sem nome' }}
-                                </a>
-                                <p class="kb-card-desc">{{ $opp->lead->phone ?: $opp->lead->email ?: '—' }}</p>
-
-                                @if($preview = $opp->messagePreview(90))
-                                    <p class="kb-card-desc italic" style="color:var(--muted2)">“{{ $preview }}”</p>
-                                @endif
-
-                                <div class="kb-card-foot">
-                                    <span>{{ $opp->created_at->diffForHumans() }}</span>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="kb-empty">Nenhum lead</div>
-                        @endforelse
-                    </div>
-                </div>
-            @endforeach
-
-        </div>
-
-        <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            if (document.getElementById('leads-board')) {
-                initKanbanDnd('#leads-board');
-            }
-        });
-        </script>
+        @include('leads._board', [
+            'board'            => $board,
+            'showClosed'       => $showClosed,
+            'updateStageRoute' => 'portal.leads.update-stage',
+            'showRoute'        => 'portal.leads.show',
+            'showClient'       => false,
+            'markNonna'        => true,
+            'closedUrl'        => route('portal.leads.index', array_merge(request()->query(), ['fechados' => 1])),
+        ])
     @endif
 </x-portal-layout>

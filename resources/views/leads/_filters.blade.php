@@ -3,7 +3,7 @@
      Espera: $view, $indexRoute, $resultsRoute, $resultsTarget, $showClientFilter,
      $clients (só quando $showClientFilter), $channels, $sources. --}}
 @php
-    $filterKeys = ['client_id', 'stage', 'channel_id', 'source_id', 'utm_source', 'date_from', 'date_to', 'q'];
+    $filterKeys = ['client_id', 'stage', 'channel_id', 'source_id', 'utm_source', 'date_from', 'date_to', 'q', 'responsavel', 'fechados'];
     $viewParams = fn ($v) => array_merge(request()->except(['view']), ['view' => $v]);
     $liveOrSubmit = $view === 'lista' ? "this.form._liveFilterRefresh && this.form._liveFilterRefresh()" : 'this.form.submit()';
 @endphp
@@ -62,6 +62,18 @@
             </option>
         @endforeach
     </select>
+
+    <select name="responsavel" @if($view !== 'lista') onchange="this.form.submit()" @endif class="filter-select">
+        <option value="">Qualquer responsável</option>
+        <option value="eu" {{ request('responsavel') === 'eu' ? 'selected' : '' }}>Meus leads</option>
+        <option value="sem" {{ request('responsavel') === 'sem' ? 'selected' : '' }}>Sem responsável</option>
+    </select>
+
+    <label class="inline-flex items-center gap-1.5 text-xs cursor-pointer" style="color:var(--muted)">
+        <input type="checkbox" name="fechados" value="1" {{ request()->boolean('fechados') ? 'checked' : '' }}
+               @if($view !== 'lista') onchange="this.form.submit()" @endif>
+        Mostrar ganhos e perdidos
+    </label>
 
     <input type="text" name="utm_source" value="{{ request('utm_source') }}" placeholder="UTM Source…"
            class="filter-select" style="cursor:text; min-width:130px">
