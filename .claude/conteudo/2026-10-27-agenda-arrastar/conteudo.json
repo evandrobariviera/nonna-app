@@ -1,0 +1,18 @@
+{
+  "novidades": [
+    {
+      "title": "Arrastar reuniões na Agenda do Dashboard",
+      "summary": "Na Agenda do Dashboard, dá pra arrastar uma reunião de uma coluna pra outra (ex.: de Agendada pra Pós-Reunião) e o status muda na hora — igual ao quadro da /agenda.",
+      "body": "<p>Clique simples continua abrindo a reunião. O arrasto funciona no computador; no celular, mude o status dentro da reunião.</p>",
+      "kind": "melhoria", "area": "Reuniões"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Fluxo de Reuniões com o Cliente — do agendamento à ATA",
+      "category": "Reuniões",
+      "slug": "fluxo-de-reunioes-e-agendamento-de-macroplanejamento",
+      "body_file": "ajuda-fluxo-reunioes.html"
+    }
+  ]
+}

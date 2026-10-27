@@ -446,21 +446,25 @@
                 @endforeach
             </select>
         </div>
-        <div class="auto-grid">
+        {{-- Arrastar uma reunião pra outra coluna muda o status (mesmo kanban-dnd.js e rota
+             meetings.update-status do quadro da /agenda). --}}
+        <div class="auto-grid" id="dashboard-agenda-board" data-kanban-board data-status-field="status">
             @foreach($agendaStatuses as $status)
                 @php $statusMeetings = $myMeetingsByStatus->get($status, collect()); @endphp
-                <div class="card px-5 py-4">
+                <div class="card px-5 py-4" data-kanban-column data-status="{{ $status }}">
                     <div class="flex items-center justify-between mb-3">
                         <h4 class="text-sm font-bold" style="color:var(--text)">
-                            {{ \App\Models\Meeting::$statuses[$status]['label'] }} (<span>{{ $statusMeetings->count() }}</span>)
+                            {{ \App\Models\Meeting::$statuses[$status]['label'] }} (<span data-kanban-count>{{ $statusMeetings->count() }}</span>)
                         </h4>
                         <a href="{{ route('meetings.index', ['status' => $status]) }}"
                            class="text-xs font-mono" style="color:var(--purple)">Ver agenda</a>
                     </div>
-                    <div class="flex flex-col gap-2" style="min-height:40px">
+                    <div class="flex flex-col gap-2" style="min-height:60px" data-kanban-list>
                         @forelse($statusMeetings as $meeting)
                             @php $isToday = $meeting->scheduled_at->isToday(); @endphp
                             <a href="{{ route('meetings.show', $meeting) }}"
+                               data-kanban-card data-id="{{ $meeting->id }}"
+                               data-update-url="{{ route('meetings.update-status', $meeting) }}"
                                x-show="!filterType || filterType === '{{ $meeting->type }}'"
                                class="flex items-center gap-2.5 px-3 py-2 transition-colors"
                                style="background:{{ $isToday ? 'rgba(52,211,153,.10)' : 'var(--s2)' }}; {{ $isToday ? 'border-left:2px solid var(--green)' : '' }}"
@@ -478,7 +482,7 @@
                                 </div>
                             </a>
                         @empty
-                            <p class="text-xs flex items-center gap-1.5" style="color:var(--muted)">
+                            <p class="text-xs flex items-center gap-1.5" style="color:var(--muted)" data-kanban-empty>
                             <x-icon name="party-popper" size="13" />
                             Nada por aqui.
                         </p>
@@ -488,6 +492,17 @@
             @endforeach
         </div>
     </div>
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Só no desktop (no toque conflita com a rolagem) e nunca no "Ver como" — a agenda é
+            // da outra pessoa, fica só pra olhar.
+            if (@json(! $viewingAs) && document.getElementById('dashboard-agenda-board') && window.matchMedia('(min-width: 768px)').matches) {
+                initKanbanDnd('#dashboard-agenda-board');
+            }
+        });
+    </script>
+    @endpush
     @endif
 
     {{-- ── Atendimento (seção destacada logo abaixo da Agenda) ── --}}

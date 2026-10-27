@@ -20,11 +20,26 @@ export function registerKanbanDnd() {
             const groupName = board.dataset.kanbanGroup || ('kanban-' + Math.random().toString(36).slice(2));
             board.dataset.kanbanGroup = groupName;
 
+            // Card que é um link inteiro (ex.: agenda do Dashboard): o clique que o navegador
+            // dispara ao soltar não pode abrir a página. Engole cliques logo após um arrasto.
+            if (!board.dataset.kanbanClickGuard) {
+                board.dataset.kanbanClickGuard = '1';
+                board.addEventListener('click', (e) => {
+                    const card = e.target.closest('[data-kanban-card]');
+                    if (card && Date.now() - Number(card.dataset.draggedAt || 0) < 400) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                }, true);
+            }
+
             board.querySelectorAll('[data-kanban-list]:not([data-kanban-ready])').forEach((list) => {
                 list.dataset.kanbanReady = '1';
                 new Sortable(list, {
                     group: groupName,
                     sort: false,
+                    // Só os cards arrastam — o aviso de coluna vazia (.kb-empty) fica parado.
+                    draggable: '[data-kanban-card]',
                     animation: 150,
                     ghostClass: 'kanban-ghost',
                     // forceFallback: SortableJS usa HTML5 drag nativo por padrão, que é
@@ -35,7 +50,11 @@ export function registerKanbanDnd() {
                     forceFallback: true,
                     fallbackClass: 'kanban-fallback',
                     fallbackOnBody: true,
+                    // Arrasto só começa depois de 3px de movimento — clique simples continua
+                    // sendo clique (abre o card), nunca vira um "arrasto parado".
+                    fallbackTolerance: 3,
                     onEnd(evt) {
+                        evt.item.dataset.draggedAt = String(Date.now());
                         if (evt.from === evt.to) return;
 
                         const card = evt.item;

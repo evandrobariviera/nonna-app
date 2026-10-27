@@ -580,6 +580,8 @@
     .kb-count { font-size: 12px; font-weight: 500; color: var(--muted); background: var(--s2); padding: 1px 8px; border-radius: 9999px; }
     .kb-list { display: flex; flex-direction: column; gap: 12px; padding: 0 12px 12px; min-height: 48px; }
     .kb-empty { padding: 18px 12px; text-align: center; font-size: 13px; color: var(--muted); border: 1px dashed var(--border2); border-radius: var(--radius-lg); }
+    /* Coluna que recebeu um card arrastado deixa de mostrar o aviso de vazia */
+    [data-kanban-list]:has([data-kanban-card]) > :is(.kb-empty, [data-kanban-empty]) { display: none; }
 
     .kb-card {
         position: relative;
