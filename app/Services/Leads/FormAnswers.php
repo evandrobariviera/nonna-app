@@ -17,6 +17,114 @@ class FormAnswers
 
     private const SKIP_CONTAINER_PATTERN = '/^(headers|params|query|cookies?|utms?|tracking|attribution|client|cliente|business|page|ad|adset|campaign|device|geo|session)$/';
 
+    // Chaves técnicas que o plugin de site/widget manda junto do formulário — não dizem nada
+    // sobre o lead (versão do plugin, cookie do Pixel, nome do evento...).
+    private const TECHNICAL_PATTERN = '/^(site|plugin|widget|fbp|fbc|event_name|country_code|consent_text)$/';
+
+    // Chaves em inglês que os formulários mandam (plugin nonna-leads, Elementor, Lead Ads)
+    // → rótulo em português. O plugin costuma mandar o mesmo campo duas vezes (chave em
+    // inglês + rótulo em português, mesmo valor); nesse caso a versão em inglês some.
+    private const LABELS_PT = [
+        'page_title'       => 'Página',
+        'consent'          => 'Consentimento',
+        'terms'            => 'Aceitou os termos',
+        'privacy'          => 'Privacidade',
+        'subject'          => 'Assunto',
+        'message'          => 'Mensagem',
+        'comment'          => 'Comentário',
+        'comments'         => 'Comentários',
+        'company'          => 'Empresa',
+        'company_name'     => 'Razão social',
+        'trade_name'       => 'Nome fantasia',
+        'address'          => 'Endereço',
+        'zip'              => 'CEP',
+        'zip_code'         => 'CEP',
+        'due_day'          => 'Dia de vencimento',
+        'contract_accept'  => 'Aceite do contrato',
+        'contract_version' => 'Versão do contrato',
+        'curriculum'       => 'Currículo',
+        'resume'           => 'Currículo',
+        'mark'             => 'Marcas que já representa',
+        'brands'           => 'Marcas',
+        'region'           => 'Região',
+        'arrived'          => 'Como chegou até nós',
+        'contact'          => 'Melhor forma de contato',
+        'network'          => 'Rede',
+        'pharmacy'         => 'Farmácia',
+        'role'             => 'Cargo',
+        'job_title'        => 'Cargo',
+        'stores'           => 'Lojas',
+        'ads_today'        => 'Anuncia hoje',
+        'ads_budget'       => 'Investimento em anúncios',
+        'budget'           => 'Orçamento',
+        'capital'          => 'Capital disponível',
+        'interest'         => 'Interesse',
+        'product'          => 'Produto',
+        'service'          => 'Serviço',
+        'country'          => 'País',
+        'investment'       => 'Investimento',
+        'resale'           => 'Revenda',
+        'enterprise'       => 'Empresa',
+        'inbox_url'        => 'Conversa no Facebook',
+    ];
+
+    // Lista [{label, value}] pronta pra tela: sem campos técnicos, rótulos em português,
+    // sem a cópia em inglês do mesmo campo. Pode rodar de novo no resultado (idempotente).
+    public static function present(array $answers): array
+    {
+        $answers = array_values(array_filter(
+            $answers,
+            fn ($a) => isset($a['label'], $a['value']) && !preg_match(self::TECHNICAL_PATTERN, self::key($a['label']))
+        ));
+
+        $nativeValues = [];
+        foreach ($answers as $a) {
+            if (!isset(self::LABELS_PT[self::key($a['label'])])) {
+                $nativeValues[(string) $a['value']] = true;
+            }
+        }
+
+        $out = [];
+        $seen = [];
+        foreach ($answers as $i => $a) {
+            $key = self::key($a['label']);
+
+            // Mesmo valor no campo seguinte = a cópia em português que o plugin manda logo
+            // depois da chave em inglês (fica a segunda). Sim/Não ficam: duas perguntas
+            // seguidas podem ter a mesma resposta curta.
+            $next = $answers[$i + 1]['value'] ?? null;
+            if ($next !== null && (string) $next === (string) $a['value'] && mb_strlen((string) $a['value']) > 3) {
+                continue;
+            }
+            $value = html_entity_decode((string) $a['value'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+            if (isset(self::LABELS_PT[$key])) {
+                if (isset($nativeValues[(string) $a['value']])) {
+                    continue;
+                }
+                $label = self::LABELS_PT[$key];
+            } elseif (preg_match('/^field_[a-z0-9]+$/', $key)) {
+                $label = 'Campo sem nome';
+            } else {
+                $label = Str::ucfirst(trim(str_replace('_', ' ', $a['label'])));
+            }
+
+            $value = match (Str::lower($value)) {
+                'on', 'yes', 'true' => 'Sim',
+                'off', 'no', 'false' => 'Não',
+                default => $value,
+            };
+
+            if (isset($seen[$label."\0".$value])) {
+                continue;
+            }
+            $seen[$label."\0".$value] = true;
+            $out[] = ['label' => $label, 'value' => $value];
+        }
+
+        return $out;
+    }
+
     public static function normalize(mixed $input): array
     {
         if (!is_array($input)) {

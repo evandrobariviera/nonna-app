@@ -1,0 +1,17 @@
+{
+  "novidades": [
+    {
+      "title": "Datas sempre em dd/mm/aaaa",
+      "summary": "Todo campo de data do App agora mostra e aceita dia/mês/ano (ex.: 27/10/2026), com calendário em português — antes alguns computadores mostravam mês/dia/ano, em inglês.",
+      "body": "<p>Ao clicar num campo de data, abre um calendário em português (Dom, Seg, Ter…), com o dia de hoje marcado em laranja. Também dá pra digitar direto, no formato 27/10/2026. Nos campos com hora (como o horário da reunião), a hora é de 0 a 23, sem AM/PM.</p>",
+      "kind": "melhoria", "area": "Geral"
+    },
+    {
+      "title": "Central de Leads toda em português",
+      "summary": "As respostas dos formulários do site aparecem com os nomes em português e sem repetição (ex.: \"Assunto\" em vez de \"Subject\" + \"Assunto\"), e a parte de atribuição ganhou nomes do dia a dia.",
+      "body": "<p>Campos técnicos que não dizem nada sobre o lead (versão do plugin, cookie do Pixel, nome do site) saíram da lista. Na atribuição: Origem (utm_source), Mídia (utm_medium), Campanha (utm_campaign), Anúncio (utm_content), Termo (utm_term) e Página de entrada.</p>",
+      "kind": "melhoria", "area": "Central de Leads"
+    }
+  ],
+  "ajuda": []
+}

@@ -53,7 +53,7 @@
                             {{ $sub['received_at'] ? \Carbon\Carbon::parse($sub['received_at'])->timezone(config('app.timezone'))->format('d/m/Y H:i') : '—' }}
                             @if($sub['form_name'] ?? null) · {{ $sub['form_name'] }} @endif
                         </div>
-                        @foreach($sub['answers'] ?? [] as $a)
+                        @foreach(\App\Services\Leads\FormAnswers::present($sub['answers'] ?? []) as $a)
                             <div class="text-sm mb-1" style="color: var(--text)">
                                 <span style="color: var(--muted)">{{ $a['label'] }}:</span>
                                 <span class="whitespace-pre-wrap">{{ $a['value'] }}</span>

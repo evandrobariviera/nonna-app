@@ -19,6 +19,7 @@ import { registerBrowserNotify } from './browser-notify.js';
 import { registerAiChatDrawer } from './ai-chat-drawer.js';
 import { registerChatWidget } from './chat-widget.js';
 import { registerCharts } from './charts.js';
+import { registerDatePicker } from './date-picker.js';
 
 window.Alpine = Alpine;
 
@@ -45,3 +46,6 @@ registerChatWidget(Alpine);
 registerCharts(Alpine);
 
 Alpine.start();
+
+// Depois do Alpine.start(): os x-model já gravaram o valor inicial nos campos de data.
+registerDatePicker();

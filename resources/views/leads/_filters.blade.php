@@ -75,7 +75,7 @@
         Mostrar ganhos e perdidos
     </label>
 
-    <input type="text" name="utm_source" value="{{ request('utm_source') }}" placeholder="UTM Source…"
+    <input type="text" name="utm_source" value="{{ request('utm_source') }}" placeholder="Origem (UTM)…"
            class="filter-select" style="cursor:text; min-width:130px">
 
     <div class="flex items-center gap-1">

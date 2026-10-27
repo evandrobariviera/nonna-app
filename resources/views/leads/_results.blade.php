@@ -16,7 +16,7 @@
                 @if($showClient)<th>Cliente</th>@endif
                 <th style="width:130px">Estágio</th>
                 <th>Origem</th>
-                <th style="width:120px">UTM Source</th>
+                <th style="width:120px">Origem (UTM)</th>
                 @if($showAssignee)<th style="width:150px">Responsável</th>@endif
                 <th style="width:110px; text-align:right">Valor</th>
                 <th style="width:110px">Convertido em</th>

@@ -91,19 +91,19 @@
                             <span class="text-[var(--text)]">{{ $opportunity->conversation->message_count }} mensagens · última em {{ $opportunity->conversation->last_message_at?->format('d/m/Y H:i') ?? '—' }}</span>
                         </div>
                     @endif
-                    <div><span class="text-[var(--muted)]">UTM Source:</span> <span class="text-[var(--text)]">{{ $opportunity->utm_source ?? '—' }}</span></div>
-                    <div><span class="text-[var(--muted)]">UTM Medium:</span> <span class="text-[var(--text)]">{{ $opportunity->utm_medium ?? '—' }}</span></div>
-                    <div><span class="text-[var(--muted)]">UTM Campaign:</span> <span class="text-[var(--text)]">{{ $opportunity->utm_campaign ?? '—' }}</span></div>
-                    <div><span class="text-[var(--muted)]">UTM Content:</span> <span class="text-[var(--text)]">{{ $opportunity->utm_content ?? '—' }}</span></div>
-                    <div><span class="text-[var(--muted)]">UTM Term:</span> <span class="text-[var(--text)]">{{ $opportunity->utm_term ?? '—' }}</span></div>
-                    @foreach(['fbclid' => 'FBCLID', 'gclid' => 'GCLID', 'ctwa_clid' => 'CTWA CLID', 'event_id' => 'Event ID'] as $field => $label)
+                    <div><span class="text-[var(--muted)]">Origem (utm_source):</span> <span class="text-[var(--text)]">{{ $opportunity->utm_source ?? '—' }}</span></div>
+                    <div><span class="text-[var(--muted)]">Mídia (utm_medium):</span> <span class="text-[var(--text)]">{{ $opportunity->utm_medium ?? '—' }}</span></div>
+                    <div><span class="text-[var(--muted)]">Campanha (utm_campaign):</span> <span class="text-[var(--text)]">{{ $opportunity->utm_campaign ?? '—' }}</span></div>
+                    <div><span class="text-[var(--muted)]">Anúncio (utm_content):</span> <span class="text-[var(--text)]">{{ $opportunity->utm_content ?? '—' }}</span></div>
+                    <div><span class="text-[var(--muted)]">Termo (utm_term):</span> <span class="text-[var(--text)]">{{ $opportunity->utm_term ?? '—' }}</span></div>
+                    @foreach(['fbclid' => 'Clique do Facebook (fbclid)', 'gclid' => 'Clique do Google (gclid)', 'ctwa_clid' => 'Clique pro WhatsApp (ctwa_clid)', 'event_id' => 'ID do evento'] as $field => $label)
                         @if($opportunity->$field)
                             <div class="col-span-2 break-all"><span class="text-[var(--muted)]">{{ $label }}:</span> <span class="text-[var(--text)]">{{ $opportunity->$field }}</span></div>
                         @endif
                     @endforeach
                     @if($opportunity->landing_page_url)
                         <div class="col-span-2">
-                            <span class="text-[var(--muted)]">Landing page:</span>
+                            <span class="text-[var(--muted)]">Página de entrada:</span>
                             <a href="{{ $opportunity->landing_page_url }}" target="_blank" class="text-[var(--purple)] hover:underline break-all">{{ $opportunity->landing_page_url }}</a>
                         </div>
                     @endif

@@ -213,9 +213,9 @@ class ClientLeadOpportunity extends Model
     // Leads anteriores ao campo form_answers caem no que der pra extrair do raw_payload.
     public function answers(): array
     {
-        return $this->form_answers
+        return FormAnswers::present($this->form_answers
             ? FormAnswers::withoutIdentity($this->form_answers)
-            : FormAnswers::fromRawPayload($this->raw_payload);
+            : FormAnswers::fromRawPayload($this->raw_payload));
     }
 
     public function messagePreview(int $limit = 120): ?string
