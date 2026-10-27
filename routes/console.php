@@ -17,3 +17,5 @@ Schedule::command('meetings:ata-pendencies')->everyFifteenMinutes()->withoutOver
 // "Seu foco" da Dashboard — cedo pra planejar o dia, meio-dia pra ajustar a tarde.
 Schedule::command('attention:generate-digests')->weekdays()->at('07:30')->withoutOverlapping();
 Schedule::command('attention:generate-digests')->weekdays()->at('12:00')->withoutOverlapping();
+// Central de Leads: IA avalia leads novos e conversas que andaram, pela régua de cada cliente.
+Schedule::command('leads:qualify')->hourly()->withoutOverlapping();

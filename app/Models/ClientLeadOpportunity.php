@@ -49,6 +49,16 @@ class ClientLeadOpportunity extends Model
         'assigned_contact_id',
         'assigned_at',
         'deal_value',
+        'ai_quality',
+        'ai_outcome',
+        'ai_outcome_value',
+        'ai_summary',
+        'ai_reason',
+        'ai_evaluated_at',
+        'quality',
+        'quality_confirmed_at',
+        'quality_confirmed_by',
+        'quality_confirmed_contact_id',
         'created_by',
     ];
 
@@ -61,9 +71,27 @@ class ClientLeadOpportunity extends Model
         'received_at'  => 'datetime',
         'assigned_at'  => 'datetime',
         'deal_value'   => 'decimal:2',
+        'ai_outcome_value'     => 'decimal:2',
+        'ai_evaluated_at'      => 'datetime',
+        'quality_confirmed_at' => 'datetime',
     ];
 
     public const CLOSED_STAGES = ['ganho', 'perdido'];
+
+    // Qualidade do lead pela régua do cliente — a IA sugere (ai_quality), quem
+    // atende confirma com um toque (quality). A confirmada sempre vence.
+    public static array $qualities = [
+        'bom'        => ['label' => 'Bom',        'color' => 'green'],
+        'fraco'      => ['label' => 'Fraco',      'color' => 'orange'],
+        'sem_perfil' => ['label' => 'Sem perfil', 'color' => 'red'],
+    ];
+
+    // Desfecho sugerido pela IA; o confirmado é o estágio (comprou = ganho, desistiu = perdido).
+    public static array $outcomes = [
+        'aberto'   => 'Em aberto',
+        'comprou'  => 'Comprou',
+        'desistiu' => 'Desistiu',
+    ];
 
     public static array $stages = [
         'novo'             => ['label' => 'Novo',             'color' => 'muted'],
@@ -88,6 +116,108 @@ class ClientLeadOpportunity extends Model
     public function isOpen(): bool
     {
         return !in_array($this->stage, self::CLOSED_STAGES);
+    }
+
+    public function effectiveQuality(): ?string
+    {
+        return $this->quality ?? $this->ai_quality;
+    }
+
+    public function qualityLabel(): ?string
+    {
+        return self::$qualities[$this->effectiveQuality()]['label'] ?? null;
+    }
+
+    public function qualityColor(): string
+    {
+        return self::$qualities[$this->effectiveQuality()]['color'] ?? 'muted';
+    }
+
+    public function isQualityConfirmed(): bool
+    {
+        return $this->quality !== null;
+    }
+
+    // IA vê compra/desistência que o quadro ainda não mostra — vira um "confirmar?" na ficha.
+    public function hasOutcomeSuggestion(): bool
+    {
+        return $this->isOpen() && in_array($this->ai_outcome, ['comprou', 'desistiu'], true);
+    }
+
+    public function qualityConfirmerName(): ?string
+    {
+        return $this->qualityConfirmedContact?->name ?? $this->qualityConfirmedBy?->name;
+    }
+
+    /** Confirma (ou desfaz, com null) a qualidade, com nota no histórico. */
+    public function confirmQuality(?string $quality, ?int $byUserId, ?string $byContactId): void
+    {
+        if ($quality === $this->quality) {
+            return;
+        }
+
+        $this->update([
+            'quality'                      => $quality,
+            'quality_confirmed_at'         => $quality ? now() : null,
+            'quality_confirmed_by'         => $quality ? $byUserId : null,
+            'quality_confirmed_contact_id' => $quality ? $byContactId : null,
+        ]);
+        $this->unsetRelation('qualityConfirmedBy')->unsetRelation('qualityConfirmedContact');
+
+        $this->notes()->create([
+            'user_id'    => $byUserId,
+            'contact_id' => $byContactId,
+            'body'       => $quality
+                ? 'Marcou o lead como "' . self::$qualities[$quality]['label'] . '"' . ($this->ai_quality && $this->ai_quality !== $quality ? ' (a IA tinha avaliado "' . self::$qualities[$this->ai_quality]['label'] . '").' : '.')
+                : 'Tirou a marcação de qualidade do lead.',
+        ]);
+    }
+
+    /**
+     * Muda o estágio com as datas de ganho/perda e a nota no histórico — mesmo
+     * caminho pro quadro, pro select da ficha e pro "confirmar desfecho" da IA.
+     */
+    public function moveToStage(string $stage, ?int $byUserId, ?string $byContactId): void
+    {
+        $from = $this->stage;
+        $updates = ['stage' => $stage];
+        if ($stage === 'ganho' && !$this->won_at) {
+            $updates['won_at'] = now();
+        }
+        if ($stage === 'perdido' && !$this->lost_at) {
+            $updates['lost_at'] = now();
+        }
+
+        $this->update($updates);
+
+        if ($from !== $stage) {
+            $this->logStageChange($from, $stage, $byUserId, $byContactId);
+        }
+    }
+
+    /**
+     * Resposta de quem atende à sugestão de desfecho da IA: comprou → Ganho (com
+     * valor, se veio), desistiu → Perdido, aberto → descarta a sugestão.
+     */
+    public function confirmOutcome(string $outcome, ?float $value, ?int $byUserId, ?string $byContactId): void
+    {
+        if ($outcome === 'aberto') {
+            $suggested = self::$outcomes[$this->ai_outcome] ?? '—';
+            $this->update(['ai_outcome' => 'aberto']);
+            $this->notes()->create([
+                'user_id'    => $byUserId,
+                'contact_id' => $byContactId,
+                'body'       => "Lead segue em aberto (a IA tinha sugerido \"{$suggested}\").",
+            ]);
+
+            return;
+        }
+
+        if ($outcome === 'comprou' && $value !== null) {
+            $this->setDealValue($value, $byUserId, $byContactId);
+        }
+
+        $this->moveToStage($outcome === 'comprou' ? 'ganho' : 'perdido', $byUserId, $byContactId);
     }
 
     public function isAssigned(): bool
@@ -205,6 +335,17 @@ class ClientLeadOpportunity extends Model
             ->orWhere(fn ($q) => $q->whereNull('assigned_contact_id')->whereNull('assigned_to')));
     }
 
+    // Filtro "Qualidade": bom/fraco/sem_perfil (confirmada, ou a da IA enquanto
+    // ninguém confirma) ou "confirmar" (IA avaliou, falta alguém confirmar).
+    public function scopeWithQuality(Builder $query, ?string $quality): Builder
+    {
+        return match (true) {
+            $quality === 'confirmar' => $query->whereNotNull('ai_quality')->whereNull('quality'),
+            array_key_exists((string) $quality, self::$qualities) => $query->whereRaw('COALESCE(quality, ai_quality) = ?', [$quality]),
+            default => $query,
+        };
+    }
+
     public function isVisibleToContact(string $contactId): bool
     {
         return $this->assigned_contact_id === $contactId || !$this->isAssigned();
@@ -265,6 +406,16 @@ class ClientLeadOpportunity extends Model
     public function assignedContact(): BelongsTo
     {
         return $this->belongsTo(Contact::class, 'assigned_contact_id');
+    }
+
+    public function qualityConfirmedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'quality_confirmed_by');
+    }
+
+    public function qualityConfirmedContact(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'quality_confirmed_contact_id');
     }
 
     public function createdBy(): BelongsTo

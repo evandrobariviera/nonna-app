@@ -1862,6 +1862,76 @@
                 close() { this.modal = false; this.editing = null; }
              }">
 
+            {{-- Régua de lead qualificado: a IA rascunha, a equipe revisa e salva — só então
+                 a IA passa a avaliar os leads deste cliente (leads:qualify, de hora em hora). --}}
+            <div class="card p-5 mb-8"
+                 x-data="{
+                    rule: @js($client->lead_rule ?? ''),
+                    drafting: false,
+                    error: '',
+                    async draft() {
+                        if (this.rule.trim() && !(await this.$store.confirmDialog.ask('Trocar o texto atual pelo rascunho da IA?'))) return;
+                        this.drafting = true; this.error = '';
+                        try {
+                            const res = await fetch(@js(route('clients.lead-rule.draft', $client)), {
+                                method: 'POST',
+                                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+                            });
+                            const body = await res.json();
+                            if (!res.ok) throw new Error(body.message || 'Não deu pra rascunhar agora.');
+                            this.rule = body.rule;
+                        } catch (e) { this.error = e.message; }
+                        this.drafting = false;
+                    },
+                 }">
+                <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+                    <div>
+                        <h3 class="text-sm font-bold flex items-center gap-2" style="color:var(--text)">
+                            <x-icon name="sparkles" size="15" style="color: var(--purple)" />
+                            Qualificação de leads
+                        </h3>
+                        <p class="text-xs mt-1" style="color:var(--muted)">
+                            A régua diz o que é lead bom, fraco e sem perfil <strong>pra este cliente</strong>. A IA lê cada formulário e cada
+                            conversa de WhatsApp por ela e sugere a qualidade; quem atende confirma com um toque na Central de Leads.
+                        </p>
+                    </div>
+                    @if($client->hasReviewedLeadRule())
+                        <span class="badge tag-green">Valendo · revisada{{ $client->leadRuleReviewedBy ? ' por ' . $client->leadRuleReviewedBy->name : '' }} em {{ $client->lead_rule_reviewed_at->format('d/m/Y') }}</span>
+                    @else
+                        <span class="badge tag-orange">Sem régua — a IA não avalia</span>
+                    @endif
+                </div>
+
+                <form method="POST" action="{{ route('clients.lead-rule.update', $client) }}" class="space-y-4">
+                    @csrf
+                    @method('PATCH')
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="lead_rule" class="block text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Régua de lead qualificado</label>
+                            <button type="button" @click="draft()" :disabled="drafting" class="btn btn-ghost btn-xs">
+                                <span x-text="drafting ? 'Rascunhando… (até 1 min)' : 'Rascunhar com IA'"></span>
+                            </button>
+                        </div>
+                        <textarea id="lead_rule" name="lead_rule" x-model="rule" rows="10" maxlength="5000"
+                                  placeholder="Lead bom&#10;- ...&#10;Lead fraco&#10;- ...&#10;Sem perfil&#10;- ..."
+                                  class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm px-4 py-2.5 focus:outline-none focus:border-[var(--purple)] font-mono" style="color:var(--text); line-height:1.6"></textarea>
+                        <p class="text-xs mt-1" x-show="error" x-text="error" x-cloak style="color:var(--red)"></p>
+                        <p class="text-xs mt-1" style="color:var(--muted)">
+                            O rascunho usa o briefing, o dossiê, o diagnóstico de atendimento e os últimos leads. Onde aparecer "[confirmar]", complete antes de salvar.
+                        </p>
+                    </div>
+                    <div class="flex items-end gap-4 flex-wrap">
+                        <div>
+                            <label for="average_ticket" class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Ticket médio (R$)</label>
+                            <input type="number" id="average_ticket" name="average_ticket" step="0.01" min="0" inputmode="decimal"
+                                   value="{{ $client->average_ticket !== null ? (float) $client->average_ticket : '' }}" placeholder="Valor médio de uma venda"
+                                   class="bg-[var(--s3)] border border-[var(--border2)] text-sm px-4 py-2.5 focus:outline-none focus:border-[var(--purple)]" style="color:var(--text); width:200px">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">Salvar régua e ticket</button>
+                    </div>
+                </form>
+            </div>
+
             <div class="flex items-center justify-between mb-4">
                 <div>
                     <h3 class="text-sm font-bold" style="color:var(--text)">Fontes de Lead</h3>

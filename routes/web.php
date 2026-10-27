@@ -133,6 +133,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::patch('/clientes/{client}/briefing', [ClientController::class, 'updateBriefing'])
         ->name('clients.update-briefing');
 
+    // Régua de lead qualificado + ticket médio (aba Leads); rascunho pela IA só preenche o campo.
+    Route::patch('/clientes/{client}/regua-de-lead', [\App\Http\Controllers\ClientLeadRuleController::class, 'update'])
+        ->name('clients.lead-rule.update');
+    Route::post('/clientes/{client}/regua-de-lead/rascunho', [\App\Http\Controllers\ClientLeadRuleController::class, 'draft'])
+        ->name('clients.lead-rule.draft');
+
     // Imagem colada/arrastada no editor rico do Briefing (mesmo padrão de tarefas/ajuda).
     Route::post('/clientes/{client}/editor-imagem', [\App\Http\Controllers\ClientEditorImageController::class, 'store'])
         ->name('clients.editor-image.store');

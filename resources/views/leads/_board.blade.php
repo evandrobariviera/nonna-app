@@ -57,8 +57,13 @@
                             <p class="kb-card-desc italic" style="color:var(--muted2)">“{{ $preview }}”</p>
                         @endif
 
-                        @if($opp->deal_value !== null)
-                            <p class="text-sm font-bold" style="color:var(--green)">{{ \App\Models\ClientLeadOpportunity::formatMoney($opp->deal_value) }}</p>
+                        @if($opp->deal_value !== null || $opp->qualityLabel())
+                            <div class="flex items-center gap-2 flex-wrap">
+                                @include('leads._quality', ['opp' => $opp])
+                                @if($opp->deal_value !== null)
+                                    <span class="text-sm font-bold" style="color:var(--green)">{{ \App\Models\ClientLeadOpportunity::formatMoney($opp->deal_value) }}</span>
+                                @endif
+                            </div>
                         @endif
 
                         <div class="kb-card-foot">

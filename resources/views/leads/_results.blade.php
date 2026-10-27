@@ -47,6 +47,9 @@
                     @endif
                     <td>
                         <span class="badge badge-{{ $opp->stageColor() }}">{{ $opp->stageLabel() }}</span>
+                        @if($opp->qualityLabel())
+                            <div class="mt-1">@include('leads._quality', ['opp' => $opp])</div>
+                        @endif
                     </td>
                     <td class="text-sm" style="color:var(--muted2)">
                         {{ $opp->source?->displayName() ?? $opp->channel?->kindLabel() ?? '—' }}

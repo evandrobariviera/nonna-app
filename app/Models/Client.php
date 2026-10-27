@@ -56,6 +56,11 @@ class Client extends Model
         // Interno
         'notes',
         'briefing',
+        // Qualificação de leads
+        'average_ticket',
+        'lead_rule',
+        'lead_rule_reviewed_at',
+        'lead_rule_reviewed_by',
         'registration_token',
         'registration_completed_at',
     ];
@@ -67,6 +72,8 @@ class Client extends Model
         'responsible_birthdate'     => 'date',
         'billing_day'               => 'integer',
         'is_internal'               => 'boolean',
+        'average_ticket'            => 'decimal:2',
+        'lead_rule_reviewed_at'     => 'datetime',
     ];
 
     public static array $statuses = [
@@ -441,6 +448,17 @@ class Client extends Model
     public function isPrimaryContact(string $contactId): bool
     {
         return $this->contacts()->where('contacts.id', $contactId)->wherePivot('is_primary', true)->exists();
+    }
+
+    // A IA só avalia leads de quem tem régua revisada por alguém da equipe.
+    public function hasReviewedLeadRule(): bool
+    {
+        return filled($this->lead_rule) && $this->lead_rule_reviewed_at !== null;
+    }
+
+    public function leadRuleReviewedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'lead_rule_reviewed_by');
     }
 
     public function adAccounts(): HasMany

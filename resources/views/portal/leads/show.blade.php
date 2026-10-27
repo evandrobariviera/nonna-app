@@ -40,6 +40,11 @@
                 'assigneeOptions' => ['Sua equipe' => $clientTeam->mapWithKeys(fn ($c) => ["contact:{$c->id}" => $c->name])->all()],
             ])
 
+            @include('leads._qualification', [
+                'opportunity' => $opportunity,
+                'updateRoute' => route('portal.leads.update', $opportunity),
+            ])
+
             <div class="card p-5">
                 <h3 class="card-title mb-4">Contato</h3>
                 <div class="flex items-center gap-4">

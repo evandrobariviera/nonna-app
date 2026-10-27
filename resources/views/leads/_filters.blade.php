@@ -3,7 +3,7 @@
      Espera: $view, $indexRoute, $resultsRoute, $resultsTarget, $showClientFilter,
      $clients (só quando $showClientFilter), $channels, $sources. --}}
 @php
-    $filterKeys = ['client_id', 'stage', 'channel_id', 'source_id', 'utm_source', 'date_from', 'date_to', 'q', 'responsavel', 'fechados'];
+    $filterKeys = ['client_id', 'stage', 'channel_id', 'source_id', 'utm_source', 'date_from', 'date_to', 'q', 'responsavel', 'qualidade', 'fechados'];
     $viewParams = fn ($v) => array_merge(request()->except(['view']), ['view' => $v]);
     $liveOrSubmit = $view === 'lista' ? "this.form._liveFilterRefresh && this.form._liveFilterRefresh()" : 'this.form.submit()';
 @endphp
@@ -67,6 +67,14 @@
         <option value="">Qualquer responsável</option>
         <option value="eu" {{ request('responsavel') === 'eu' ? 'selected' : '' }}>Meus leads</option>
         <option value="sem" {{ request('responsavel') === 'sem' ? 'selected' : '' }}>Sem responsável</option>
+    </select>
+
+    <select name="qualidade" @if($view !== 'lista') onchange="this.form.submit()" @endif class="filter-select">
+        <option value="">Qualquer qualidade</option>
+        @foreach(\App\Models\ClientLeadOpportunity::$qualities as $key => $q)
+            <option value="{{ $key }}" {{ request('qualidade') === $key ? 'selected' : '' }}>{{ $q['label'] }}</option>
+        @endforeach
+        <option value="confirmar" {{ request('qualidade') === 'confirmar' ? 'selected' : '' }}>Falta confirmar</option>
     </select>
 
     <label class="inline-flex items-center gap-1.5 text-xs cursor-pointer" style="color:var(--muted)">

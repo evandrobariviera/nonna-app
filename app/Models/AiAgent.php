@@ -25,6 +25,8 @@ class AiAgent extends Model
     public const SLUG_TASK_ASSISTANT = 'task-assistant';
     public const SLUG_ATTENTION_DIGEST = 'attention-digest'; // "Seu foco" da Dashboard
     public const SLUG_ATA = 'ata-estruturada'; // botão "Gerar ATA com IA" da reunião
+    public const SLUG_LEAD_QUALIFIER = 'lead-qualifier'; // avalia cada lead pela régua do cliente
+    public const SLUG_LEAD_RULE_DRAFTER = 'lead-rule-drafter'; // rascunha a régua de lead qualificado
 
     public static function bySlug(string $slug): ?self
     {

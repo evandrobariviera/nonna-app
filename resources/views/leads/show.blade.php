@@ -41,6 +41,12 @@
                 ]),
             ])
 
+            @include('leads._qualification', [
+                'opportunity' => $opportunity,
+                'updateRoute' => route('leads.update', $opportunity),
+                'ruleMissing' => !$opportunity->lead->client?->hasReviewedLeadRule(),
+            ])
+
             {{-- Contact card --}}
             <div class="card p-5">
                 <h3 class="card-title mb-4">Contato</h3>

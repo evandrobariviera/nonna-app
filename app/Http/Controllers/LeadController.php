@@ -82,6 +82,8 @@ class LeadController extends Controller
             };
         }
 
+        $query->withQuality($request->input('qualidade'));
+
         if ($request->filled('client_id')) {
             if ($request->client_id === self::UNMATCHED_SENTINEL) {
                 $query->whereHas('lead', fn ($q) => $q->whereNull('client_id'));
@@ -127,7 +129,7 @@ class LeadController extends Controller
 
     public function show(ClientLeadOpportunity $lead)
     {
-        $lead->load(['lead.client', 'channel', 'source', 'ad:id,name', 'campaign:id,name', 'conversation:id,message_count,last_message_at', 'assignedTo', 'assignedContact', 'createdBy', 'notes.user', 'notes.contact', 'notificationDispatches']);
+        $lead->load(['lead.client', 'channel', 'source', 'ad:id,name', 'campaign:id,name', 'conversation:id,message_count,last_message_at', 'assignedTo', 'assignedContact', 'createdBy', 'notes.user', 'notes.contact', 'notificationDispatches', 'qualityConfirmedBy:id,name', 'qualityConfirmedContact:id,name']);
 
         $users = User::orderBy('name')->get(['id', 'name']);
         $clientTeam = $lead->lead->client?->portalTeam() ?? collect();
@@ -149,6 +151,8 @@ class LeadController extends Controller
             'assignee'    => ['sometimes', 'nullable', 'string', 'regex:/^(user:\d+|contact:[0-9a-f-]{36})$/'],
             'deal_value'  => 'sometimes|nullable|numeric|min:0|max:9999999999',
             'lost_reason' => 'sometimes|nullable|string|max:500',
+            'quality'     => 'sometimes|nullable|in:' . implode(',', array_keys(ClientLeadOpportunity::$qualities)),
+            'outcome'     => 'sometimes|in:' . implode(',', array_keys(ClientLeadOpportunity::$outcomes)),
         ]);
 
         if ($request->has('assignee')) {
@@ -156,8 +160,14 @@ class LeadController extends Controller
             $lead->assign($userId, $contactId, Auth::id(), null);
         }
 
-        if ($request->has('deal_value')) {
+        if ($request->has('outcome')) {
+            $lead->confirmOutcome($data['outcome'], isset($data['deal_value']) ? (float) $data['deal_value'] : null, Auth::id(), null);
+        } elseif ($request->has('deal_value')) {
             $lead->setDealValue(isset($data['deal_value']) ? (float) $data['deal_value'] : null, Auth::id(), null);
+        }
+
+        if ($request->has('quality')) {
+            $lead->confirmQuality($data['quality'] ?? null, Auth::id(), null);
         }
 
         if ($request->has('lost_reason')) {
@@ -211,20 +221,7 @@ class LeadController extends Controller
             'stage' => 'required|in:' . implode(',', array_keys(ClientLeadOpportunity::$stages)),
         ]);
 
-        $fromStage = $lead->stage;
-        $updates   = ['stage' => $data['stage']];
-        if ($data['stage'] === 'ganho' && !$lead->won_at) {
-            $updates['won_at'] = now();
-        }
-        if ($data['stage'] === 'perdido' && !$lead->lost_at) {
-            $updates['lost_at'] = now();
-        }
-
-        $lead->update($updates);
-
-        if ($fromStage !== $data['stage']) {
-            $lead->logStageChange($fromStage, $data['stage'], Auth::id(), null);
-        }
+        $lead->moveToStage($data['stage'], Auth::id(), null);
 
         // Quem puxa o lead pra "Em Contato" passa a ser o responsável, se ainda não houver.
         if ($data['stage'] === 'em_contato' && !$lead->isAssigned()) {

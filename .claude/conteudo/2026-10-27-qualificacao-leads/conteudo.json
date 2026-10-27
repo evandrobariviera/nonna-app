@@ -1,0 +1,28 @@
+{
+  "novidades": [
+    {
+      "title": "IA avalia cada lead: bom, fraco ou sem perfil",
+      "summary": "A IA lê o formulário e a conversa de WhatsApp de cada lead e diz se ele é bom, fraco ou sem perfil para aquele cliente, com um resumo do que a pessoa procura. Quem atende confirma com um toque.",
+      "body": "<p>A etiqueta clara \"IA · Bom\" é a sugestão da IA; depois de confirmada, ela fica cheia com um ✓. A avaliação aparece no quadro, na lista e no topo da ficha do lead, e o filtro novo <strong>Qualidade</strong> mostra só os bons, os fracos ou os que <strong>faltam confirmar</strong>. A IA reavalia sozinha quando a conversa anda.</p>",
+      "kind": "novidade", "area": "Central de Leads"
+    },
+    {
+      "title": "Comprou ou desistiu com um toque",
+      "summary": "Na ficha do lead, os botões \"Comprou\" (com o valor da venda) e \"Desistiu\" fecham o lead sem precisar arrastar no quadro. Quando a conversa mostra que a pessoa comprou ou desistiu, a IA avisa e pergunta se confirma.",
+      "kind": "novidade", "area": "Central de Leads"
+    },
+    {
+      "title": "Régua de lead qualificado e ticket médio do cliente",
+      "summary": "Na ficha do cliente, aba Leads, fica a régua que diz o que é lead bom, fraco e sem perfil para aquele negócio — a IA rascunha, a equipe revisa e salva — e o ticket médio de uma venda. A IA só começa a avaliar os leads depois da régua salva.",
+      "kind": "novidade", "area": "Clientes"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Central de Leads — qualificação de leads com IA",
+      "category": "Central de Leads",
+      "slug": "central-de-leads-qualificacao",
+      "body_file": "ajuda-qualificacao-leads.html"
+    }
+  ]
+}

@@ -105,6 +105,8 @@ class LeadController extends Controller
             };
         }
 
+        $query->withQuality($request->input('qualidade'));
+
         if ($request->filled('stage')) {
             $query->where('stage', $request->stage);
         }
@@ -145,7 +147,7 @@ class LeadController extends Controller
         $client = app('currentPortalClient');
         $this->authorizeLead($lead, $client);
 
-        $lead->load(['lead', 'channel', 'assignedTo', 'assignedContact', 'notes.user', 'notes.contact']);
+        $lead->load(['lead', 'channel', 'assignedTo', 'assignedContact', 'notes.user', 'notes.contact', 'qualityConfirmedBy:id,name', 'qualityConfirmedContact:id,name']);
 
         return view('portal.leads.show', [
             'opportunity' => $lead,
@@ -164,6 +166,8 @@ class LeadController extends Controller
         $data = $request->validate([
             'assignee'   => ['sometimes', 'nullable', 'string'],
             'deal_value' => 'sometimes|nullable|numeric|min:0|max:9999999999',
+            'quality'    => 'sometimes|nullable|in:' . implode(',', array_keys(ClientLeadOpportunity::$qualities)),
+            'outcome'    => 'sometimes|in:' . implode(',', array_keys(ClientLeadOpportunity::$outcomes)),
         ]);
 
         if ($request->has('assignee') && ($data['assignee'] ?? '') !== $lead->assigneeKey()) {
@@ -175,8 +179,14 @@ class LeadController extends Controller
             $lead->assign(null, $contactId, null, $this->contactId());
         }
 
-        if ($request->has('deal_value')) {
+        if ($request->has('outcome')) {
+            $lead->confirmOutcome($data['outcome'], isset($data['deal_value']) ? (float) $data['deal_value'] : null, null, $this->contactId());
+        } elseif ($request->has('deal_value')) {
             $lead->setDealValue(isset($data['deal_value']) ? (float) $data['deal_value'] : null, null, $this->contactId());
+        }
+
+        if ($request->has('quality')) {
+            $lead->confirmQuality($data['quality'] ?? null, null, $this->contactId());
         }
 
         if ($request->wantsJson()) {
@@ -226,20 +236,7 @@ class LeadController extends Controller
             'stage' => 'required|in:' . implode(',', array_keys(ClientLeadOpportunity::$stages)),
         ]);
 
-        $fromStage = $lead->stage;
-        $updates   = ['stage' => $data['stage']];
-        if ($data['stage'] === 'ganho' && !$lead->won_at) {
-            $updates['won_at'] = now();
-        }
-        if ($data['stage'] === 'perdido' && !$lead->lost_at) {
-            $updates['lost_at'] = now();
-        }
-
-        $lead->update($updates);
-
-        if ($fromStage !== $data['stage']) {
-            $lead->logStageChange($fromStage, $data['stage'], null, $this->contactId());
-        }
+        $lead->moveToStage($data['stage'], null, $this->contactId());
 
         // Quem puxa o lead pra "Em Contato" passa a ser o responsável, se ainda não houver.
         if ($data['stage'] === 'em_contato' && !$lead->isAssigned()) {
