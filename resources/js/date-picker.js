@@ -36,8 +36,10 @@ function enhance(input) {
         // trocar a data) leria o x-model ainda com o valor antigo. Avisa o x-model antes.
         onChange: () => input.dispatchEvent(new Event('input', { bubbles: true })),
         // Quem fecha o editor no @blur (datas clicáveis da tarefa) fica sabendo quando o
-        // calendário fecha — o blur de verdade acontece no campo visível.
-        onClose: () => input.dispatchEvent(new Event('blur')),
+        // calendário fecha — o blur de verdade acontece no campo visível. Ao clicar num dia o
+        // flatpickr fecha ANTES do onChange: sem adiar, o @blur salvava a data antiga e o
+        // editor fechava, e a data nova era ignorada.
+        onClose: () => setTimeout(() => input.dispatchEvent(new Event('blur')), 0),
     });
 
     const alt = fp.altInput;

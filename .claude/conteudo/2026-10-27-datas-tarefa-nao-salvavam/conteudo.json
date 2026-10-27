@@ -1,0 +1,11 @@
+{
+  "novidades": [
+    {
+      "title": "Datas da tarefa voltam a salvar pelo calendário",
+      "summary": "Escolher Aprovação, Publicação ou Vencimento clicando num dia do calendário não estava salvando. Agora salva na hora, como antes.",
+      "body": "<p>Vale também para as datas editáveis direto nas listas (Fila, Sprint). Se alguma data ficou errada nos últimos dias, é só escolher de novo.</p>",
+      "kind": "correcao", "area": "Tarefas"
+    }
+  ],
+  "ajuda": []
+}
