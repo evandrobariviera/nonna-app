@@ -17,13 +17,15 @@
 
             <div class="kb-col-head">
                 <h5 class="card-title truncate">{{ $s['label'] }}</h5>
-                <span class="kb-count" data-kanban-count>{{ $cards->count() }}</span>
+                <span class="flex items-center gap-2 flex-shrink-0">
+                    @if($total > 0)
+                        <span class="text-xs font-semibold whitespace-nowrap" style="color:var(--green)" title="Soma do valor da negociação nesta coluna">
+                            {{ \App\Models\ClientLeadOpportunity::formatMoney($total) }}
+                        </span>
+                    @endif
+                    <span class="kb-count" data-kanban-count>{{ $cards->count() }}</span>
+                </span>
             </div>
-            @if($total > 0)
-                <div class="text-xs font-semibold px-1 pb-2" style="color:var(--{{ $s['color'] }})">
-                    {{ \App\Models\ClientLeadOpportunity::formatMoney($total) }}
-                </div>
-            @endif
 
             <div class="kb-list" data-kanban-list>
                 @forelse($cards as $opp)
