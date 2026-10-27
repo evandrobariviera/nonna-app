@@ -36,8 +36,8 @@ class ClientLeadOpportunityNote extends Model
         return $this->belongsTo(Contact::class);
     }
 
-    // Autor — sempre exatamente um dos dois (user_id XOR contact_id, garantido
-    // por constraint no banco), mesmo padrão de TaskComment::commenter().
+    // Autor — no máximo um dos dois (constraint no banco); null = nota
+    // automática do sistema ("Entrou de novo", "Juntou o cartão repetido").
     public function author(): User|Contact|null
     {
         return $this->user ?? $this->contact;

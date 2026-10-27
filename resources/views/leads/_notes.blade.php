@@ -15,12 +15,12 @@
             @foreach($opportunity->notes as $note)
                 @if($note->isStageChange())
                     <div class="py-2 text-xs text-center" style="color: var(--muted); border-bottom: 1px dashed var(--border)">
-                        {{ $note->author()?->name ?? '—' }} · {{ $note->body }} · {{ $note->created_at->format('d/m/Y H:i') }}
+                        {{ $note->author()?->name ?? 'Sistema' }} · {{ $note->body }} · {{ $note->created_at->format('d/m/Y H:i') }}
                     </div>
                 @else
                     <div class="py-3" style="border-bottom:1px solid var(--border2)">
                         <div class="flex items-baseline gap-3 mb-1 flex-wrap">
-                            <span class="text-sm font-semibold" style="color: var(--text)">{{ $note->author()?->name ?? '—' }}</span>
+                            <span class="text-sm font-semibold" style="color: var(--text)">{{ $note->author()?->name ?? 'Sistema' }}</span>
                             <span class="text-xs" style="color: var(--muted)">{{ $note->created_at->format('d/m/Y H:i') }}</span>
                         </div>
                         <div class="text-sm whitespace-pre-wrap" style="color: var(--text); line-height: 1.65">{{ $note->body }}</div>
