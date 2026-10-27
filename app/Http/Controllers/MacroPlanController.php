@@ -65,7 +65,14 @@ class MacroPlanController extends Controller
         $clients = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $users   = User::orderBy('name')->get(['id', 'name']);
 
-        return view('macroplans.create', compact('client', 'clients', 'users'));
+        // Ciclo fechado: quem já tem planejamento ativo (fora da Renovação) ou um em elaboração
+        // aparece bloqueado no seletor, com o motivo. Uma consulta pra todos os clientes.
+        $openByClient = MacroPlan::where('status', '!=', 'concluido')->get()->groupBy('client_id');
+        $blocked = $clients->mapWithKeys(fn ($c) => [
+            $c->id => MacroPlan::creationBlockReason($c->id, $openByClient->get($c->id, collect())),
+        ])->filter();
+
+        return view('macroplans.create', compact('client', 'clients', 'users', 'blocked'));
     }
 
     public function store(Request $request, MacroPlanDocumentService $documents)
@@ -82,6 +89,11 @@ class MacroPlanController extends Controller
             'document'       => 'nullable|file|mimes:html,htm|max:5120',
         ]);
         unset($data['document']);
+
+        // Ciclo fechado: um ativo por cliente; o próximo só na Renovação do atual.
+        if ($reason = MacroPlan::creationBlockReason($data['client_id'])) {
+            return back()->withInput()->withErrors(['client_id' => $reason]);
+        }
 
         if (!$hasDocument) {
             $plan = MacroPlan::create([
@@ -133,7 +145,7 @@ class MacroPlanController extends Controller
     public function edit(MacroPlan $macroplan, Request $request)
     {
         $macroplan->load([
-            'client.creativeLead:id,name,avatar_path,avatar_disk', 'responsible', 'projects.tasks', 'projects.members:users.id,users.name,users.avatar_path,users.avatar_disk',
+            'client.creativeLead:id,name,avatar_path,avatar_disk', 'responsible', 'projects.tasks', 'projects.phases', 'projects.members:users.id,users.name,users.avatar_path,users.avatar_disk',
             'projects.discussionMeetings:meetings.id,meetings.title,meetings.status,meetings.scheduled_at', 'attachments.uploadedBy', 'activities.user',
             'tasks' => fn ($q) => $q->whereNull('project_id')->orderByDesc('created_at'),
         ]);
@@ -144,7 +156,7 @@ class MacroPlanController extends Controller
         $mainDocument = $macroplan->mainDocument();
         $currentBlock = $request->get('bloco', 'documento');
 
-        if (!in_array($currentBlock, array_merge(['documento', 'bloco3', 'pendencias', 'meta'], $legacyBlocks), true)) {
+        if (!in_array($currentBlock, array_merge(['documento', 'linha-do-tempo', 'bloco3', 'pendencias', 'meta'], $legacyBlocks), true)) {
             $currentBlock = 'documento';
         }
 
@@ -155,7 +167,10 @@ class MacroPlanController extends Controller
             ->orderByDesc('scheduled_at')
             ->get();
 
-        return view('macroplans.edit', compact('macroplan', 'users', 'currentBlock', 'legacyBlocks', 'mainDocument', 'discussionItems', 'relatedMeetings'));
+        // Etapas do ciclo + campanhas/projetos na régua (usa projects.phases/tasks já carregados).
+        $planTimeline = \App\Services\Projects\MacroPlanTimeline::for($macroplan);
+
+        return view('macroplans.edit', compact('macroplan', 'users', 'currentBlock', 'legacyBlocks', 'mainDocument', 'discussionItems', 'relatedMeetings', 'planTimeline'));
     }
 
     public function update(Request $request, MacroPlan $macroplan)

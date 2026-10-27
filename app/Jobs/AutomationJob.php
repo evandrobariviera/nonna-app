@@ -437,6 +437,10 @@ class AutomationJob implements ShouldQueue
         if (!$entity->client_id) {
             throw new \RuntimeException('Reunião sem cliente vinculado — não é possível criar o Macroplanejamento.');
         }
+        // Ciclo fechado: um planejamento ativo por cliente; o próximo só na Renovação.
+        if ($reason = MacroPlan::creationBlockReason($entity->client_id)) {
+            return "Planejamento não criado: {$reason}";
+        }
 
         $entity->loadMissing('client');
 
@@ -637,6 +641,10 @@ class AutomationJob implements ShouldQueue
         if (!$entity->client_id) {
             throw new \RuntimeException('Reunião sem cliente vinculado — não é possível criar o Macroplanejamento.');
         }
+        // Ciclo fechado: um planejamento ativo por cliente; o próximo só na Renovação.
+        if ($reason = MacroPlan::creationBlockReason($entity->client_id)) {
+            return "Planejamento não criado: {$reason}";
+        }
 
         $entity->loadMissing('client');
 
@@ -704,6 +712,10 @@ class AutomationJob implements ShouldQueue
         }
         if (!$entity->client_id) {
             throw new \RuntimeException('Reunião sem cliente vinculado — não é possível montar o Macroplanejamento.');
+        }
+        // Ciclo fechado: um planejamento ativo por cliente; o próximo só na Renovação.
+        if ($reason = MacroPlan::creationBlockReason($entity->client_id)) {
+            return "Planejamento não criado: {$reason}";
         }
         if (empty($entity->ata) && empty($entity->transcricao)) {
             throw new \RuntimeException('Reunião sem ATA nem transcrição — nada pra processar.');

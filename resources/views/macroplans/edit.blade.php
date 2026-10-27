@@ -63,6 +63,7 @@
                 @php
                     $nav = [
                         'documento' => ['icon' => 'file-text',     'label' => 'Documento'],
+                        'linha-do-tempo' => ['icon' => 'chart-gantt', 'label' => 'Linha do tempo'],
                         'bloco3'    => ['icon' => 'folder-kanban', 'label' => 'Campanhas e Projetos', 'count' => $macroplan->projects->count()],
                         'pendencias' => ['icon' => 'hourglass',    'label' => 'Pendências', 'count' => $macroplan->pendencies()->open()->count()],
                     ];
@@ -511,6 +512,11 @@
                         </div>
                     @endif
                 </div>
+            </div>
+
+            {{-- ══ LINHA DO TEMPO — etapas do ciclo + campanhas/projetos (MacroPlanTimeline) ══ --}}
+            <div x-show="block === 'linha-do-tempo'" x-cloak>
+                @include('macroplans._timeline', ['macroplan' => $macroplan, 'planTimeline' => $planTimeline])
             </div>
 
             {{-- ══ BLOCO 3: PROJETOS ══ --}}

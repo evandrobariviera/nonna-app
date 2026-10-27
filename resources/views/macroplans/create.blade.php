@@ -40,20 +40,26 @@
                 </div>
 
                 {{-- Cliente --}}
-                <div>
+                <div x-data="{ reasons: @js($blocked) }">
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
                         Cliente <span style="color:var(--orange)">*</span>
                     </label>
                     <select name="client_id" required
+                        @change="$refs.blockMsg.textContent = reasons[$el.value] || ''"
                         class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                         <option value="">Selecione o cliente...</option>
                         @foreach($clients as $c)
-                            <option value="{{ $c->id }}"
+                            <option value="{{ $c->id }}" @disabled($blocked->has($c->id))
                                 {{ old('client_id', $client?->id) === $c->id ? 'selected' : '' }}>
-                                {{ $c->displayName() }}
+                                {{ $c->displayName() }}{{ $blocked->has($c->id) ? ' — já tem planejamento' : '' }}
                             </option>
                         @endforeach
                     </select>
+                    {{-- Um planejamento ativo por cliente; o próximo libera na Renovação (últimos 30 dias). --}}
+                    <p x-ref="blockMsg" class="text-xs mt-1.5" style="color:var(--orange)">{{ $client ? ($blocked[$client->id] ?? '') : '' }}</p>
+                    <p class="text-xs mt-1" style="color:var(--muted)">
+                        Cada cliente tem um planejamento ativo por vez. O próximo pode ser cadastrado quando o atual entra em Renovação (últimos 30 dias do ciclo).
+                    </p>
                 </div>
 
                 {{-- Nome é automático (MacroPlan::standardTitleFor): "Planejamento {apelido} ·

@@ -14,11 +14,19 @@ class MacroPlanObserver
     public function created(MacroPlan $macroPlan): void
     {
         MacroPlanActivity::log($macroPlan, 'created', null, null, Auth::id() ?? $macroPlan->created_by);
+
+        if ($macroPlan->status === 'em_execucao') {
+            $this->closePreviousCycles($macroPlan);
+        }
     }
 
     public function updated(MacroPlan $macroPlan): void
     {
         $this->logActivity($macroPlan);
+
+        if ($macroPlan->wasChanged('status') && $macroPlan->status === 'em_execucao') {
+            $this->closePreviousCycles($macroPlan);
+        }
 
         if ($macroPlan->wasChanged('status')) {
             AutomationEngine::evaluate('status_changed', $macroPlan, [
@@ -27,6 +35,17 @@ class MacroPlanObserver
                 'to'    => $macroPlan->status,
             ]);
         }
+    }
+
+    // Um planejamento ativo por cliente: o novo entrou em execução → os outros em execução do
+    // mesmo cliente (o ciclo que estava em Renovação) são concluídos, com histórico normal.
+    private function closePreviousCycles(MacroPlan $macroPlan): void
+    {
+        MacroPlan::where('client_id', $macroPlan->client_id)
+            ->where('id', '!=', $macroPlan->id)
+            ->where('status', 'em_execucao')
+            ->get()
+            ->each(fn (MacroPlan $old) => $old->update(['status' => 'concluido']));
     }
 
     // Histórico (MacroPlanActivity) — só AÇÃO: bloco de conteúdo vira

@@ -24,7 +24,14 @@
          clássico com redirect, não precisa integrar com o JSON da listagem. --}}
     <div x-data="{ addOpen: false }" @toggle-new-project.window="addOpen = !addOpen" class="mb-5">
         <div x-show="addOpen" x-cloak class="card px-5 py-5 space-y-4">
-            <form method="POST" action="{{ route('projects.storeDirect') }}" class="space-y-4">
+            <form method="POST" action="{{ route('projects.storeDirect') }}" class="space-y-4"
+                  x-data="{
+                      clientId: '{{ old('client_id') }}',
+                      plans: @js($newProjectPlans),
+                      withPlans: @js($clientsWithPlans),
+                      get clientPlans() { return this.plans.filter(p => p.client_id === this.clientId); },
+                      get onboarding() { return this.clientId && !this.withPlans.includes(this.clientId); },
+                  }">
                 @csrf
 
                 <div class="grid grid-cols-4 gap-3">
@@ -32,7 +39,7 @@
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
                             Cliente <span style="color:var(--orange)">*</span>
                         </label>
-                        <select name="client_id" required
+                        <select name="client_id" required x-model="clientId"
                             class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                             <option value="">Selecione...</option>
                             @foreach($clients as $c)
@@ -57,6 +64,23 @@
                             placeholder="Ex: Chamado — Ajuste na Landing Page"
                             class="field w-full px-3 py-2.5 text-sm focus:outline-none">
                     </div>
+                </div>
+
+                {{-- Planejamento: obrigatório (ciclo fechado). Só cliente em onboarding, que nunca
+                     teve planejamento, cria avulso. --}}
+                <div x-show="clientId" x-cloak>
+                    <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
+                        Planejamento <span x-show="!onboarding" style="color:var(--orange)">*</span>
+                    </label>
+                    <select name="macro_plan_id" :required="!onboarding" class="field w-full px-3 py-2.5 text-sm focus:outline-none">
+                        <template x-if="onboarding"><option value="">— sem planejamento (cliente em onboarding) —</option></template>
+                        <template x-for="p in clientPlans" :key="p.id">
+                            <option :value="p.id" x-text="p.title"></option>
+                        </template>
+                    </select>
+                    <p x-show="!onboarding && clientPlans.length === 0" class="text-xs mt-1.5" style="color:var(--orange)">
+                        Este cliente não tem planejamento aberto. Crie o planejamento do ciclo antes de lançar campanhas e projetos.
+                    </p>
                 </div>
 
                 <div>

@@ -181,6 +181,59 @@ class MacroPlan extends Model
         return $this->launched_at !== null;
     }
 
+    // ── Ciclo fechado (2026-10-26, decisão do Evandro) ──
+    // Um planejamento ativo por cliente. O próximo só pode ser cadastrado quando o atual entra
+    // em Renovação (últimos 30 dias) — é quando acontece o Briefing do próximo ciclo. Quando o
+    // novo vira Em Execução, o anterior é concluído sozinho (MacroPlanObserver).
+    public const RENEWAL_DAYS = 30;
+    public const DRAFT_STATUSES = ['em_planejamento', 'revisao_interna', 'aprovacao'];
+
+    public function renewalStartsAt(): \Carbon\Carbon
+    {
+        return $this->period_end->copy()->startOfDay()->subDays(self::RENEWAL_DAYS - 1);
+    }
+
+    public function isInRenewal(): bool
+    {
+        return $this->status === 'em_execucao' && today()->gte($this->renewalStartsAt());
+    }
+
+    /** Planejamentos ainda abertos (não concluídos) do cliente. */
+    public static function openForClient(string $clientId)
+    {
+        return self::where('client_id', $clientId)->where('status', '!=', 'concluido')->orderBy('period_start')->get();
+    }
+
+    /**
+     * Por que não dá pra cadastrar um planejamento novo pro cliente agora (null = pode).
+     * Pode quando: não há planejamento aberto, ou o único aberto está em execução e já
+     * entrou em Renovação (e ainda não existe o próximo em elaboração).
+     */
+    public static function creationBlockReason(string $clientId, $open = null): ?string
+    {
+        // $open: planejamentos abertos já carregados (tela de cadastro checa todos os clientes de uma vez).
+        $open ??= self::openForClient($clientId);
+
+        if ($draft = $open->first(fn ($p) => in_array($p->status, self::DRAFT_STATUSES, true))) {
+            return "Este cliente já tem um planejamento em elaboração ({$draft->title}). Continue nele em vez de criar outro.";
+        }
+        $active = $open->firstWhere('status', 'em_execucao');
+        if ($active && !$active->isInRenewal()) {
+            return "Este cliente já tem um planejamento ativo ({$active->title}). O próximo pode ser cadastrado quando ele entrar em Renovação, a partir de {$active->renewalStartsAt()->format('d/m/Y')}.";
+        }
+
+        return null;
+    }
+
+    /**
+     * Campanha/projeto precisa estar num planejamento. Exceção: cliente que ainda não teve
+     * nenhum planejamento (onboarding) — aí o projeto pode nascer avulso.
+     */
+    public static function clientRequiresPlanForProjects(string $clientId): bool
+    {
+        return self::where('client_id', $clientId)->exists();
+    }
+
     public function periodLabel(): string
     {
         return $this->period_start->format('d/m/Y') . ' a ' . $this->period_end->format('d/m/Y');

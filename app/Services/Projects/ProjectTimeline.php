@@ -95,7 +95,8 @@ class ProjectTimeline
     }
 
     // Marcações da régua: semanais (segundas) em períodos curtos, mensais nos longos.
-    private static function ticks(Carbon $from, Carbon $to, \Closure $pct): array
+    // Também usada pela linha do tempo do planejamento (MacroPlanTimeline).
+    public static function ticks(Carbon $from, Carbon $to, \Closure $pct): array
     {
         $ticks  = [];
         $weekly = $from->diffInDays($to) <= 60;

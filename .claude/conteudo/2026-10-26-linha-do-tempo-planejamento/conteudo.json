@@ -1,0 +1,24 @@
+{
+  "novidades": [
+    {
+      "title": "Linha do tempo no planejamento",
+      "summary": "O planejamento ganhou a aba Linha do tempo: as 4 etapas do ciclo (Briefing, Elaboração, Execução e Renovação) andam sozinhas, e embaixo aparece cada campanha/projeto com suas fases e marcos.",
+      "body": "<p>Na Renovação (últimos 30 dias), se a reunião do próximo ciclo ainda não estiver marcada, aparece um aviso. Campanhas sem datas ficam listadas embaixo pra alguém preencher.</p>",
+      "kind": "novidade", "area": "Planejamentos"
+    },
+    {
+      "title": "Um planejamento ativo por cliente",
+      "summary": "Cada cliente tem um planejamento por vez: o próximo só pode ser cadastrado na Renovação (últimos 30 dias) do atual, e quando ele entra em execução o anterior é concluído sozinho. Campanhas e projetos novos precisam ser criados dentro de um planejamento.",
+      "body": "<p>A exceção é o cliente que ainda não teve nenhum planejamento (onboarding): ele pode ter projeto avulso.</p>",
+      "kind": "melhoria", "area": "Planejamentos"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Linha do tempo de campanhas e projetos — fases e marcos",
+      "category": "Planejamentos",
+      "slug": "linha-do-tempo-fases-e-marcos",
+      "body_file": "ajuda-linha-do-tempo.html"
+    }
+  ]
+}

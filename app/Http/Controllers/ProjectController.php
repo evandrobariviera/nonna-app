@@ -122,7 +122,17 @@ class ProjectController extends Controller
             'campanhas'   => $data->where('type', 'campanha')->count(),
         ];
 
+        // Novo projeto/campanha nasce dentro de um planejamento aberto do cliente (ciclo
+        // fechado, 2026-10-26). Cliente sem nenhum planejamento ainda (onboarding) pode avulso.
+        $newProjectPlans = MacroPlan::where('status', '!=', 'concluido')
+            ->orderByRaw("CASE status WHEN 'em_execucao' THEN 0 ELSE 1 END")
+            ->orderBy('period_start')
+            ->get(['id', 'client_id', 'title', 'status'])
+            ->map(fn ($p) => ['id' => $p->id, 'client_id' => $p->client_id, 'title' => $p->title . ' · ' . $p->statusLabel()]);
+
         return view('projects.dashboard', [
+            'newProjectPlans'      => $newProjectPlans,
+            'clientsWithPlans'     => MacroPlan::distinct()->pluck('client_id'),
             'projectsJson'         => $data->values()->toJson(),
             'macroplansJson'       => $macroplans->toJson(),
             'clients'              => $clients,
@@ -294,9 +304,17 @@ class ProjectController extends Controller
     {
         $data = $request->validate(['macro_plan_id' => 'nullable|uuid|exists:pgsql.macro_plans,id']);
 
+        // Ciclo fechado: não dá pra tirar do planejamento (só cliente em onboarding fica avulso)
+        // nem colocar num planejamento já concluído.
+        if (!$data['macro_plan_id'] && $project->client_id && MacroPlan::clientRequiresPlanForProjects($project->client_id)) {
+            return back()->with('error', 'Toda campanha/projeto precisa estar num planejamento do cliente.');
+        }
         if ($data['macro_plan_id']) {
             $macroplan = MacroPlan::findOrFail($data['macro_plan_id']);
             abort_unless((string) $project->client_id === (string) $macroplan->client_id, 422, 'Esse planejamento é de outro cliente.');
+            if ($macroplan->status === 'concluido' && $project->macro_plan_id !== $macroplan->id) {
+                return back()->with('error', 'Esse planejamento já foi concluído — escolha o planejamento atual do cliente.');
+            }
         }
 
         $project->update(['macro_plan_id' => $data['macro_plan_id']]);
@@ -324,6 +342,10 @@ class ProjectController extends Controller
 
     public function store(Request $request, MacroPlan $macroplan)
     {
+        if ($macroplan->status === 'concluido') {
+            return back()->with('error', 'Este planejamento já foi concluído — lance a campanha/projeto no planejamento atual do cliente.');
+        }
+
         $data = $request->validate([
             'title'         => 'required|string|max:200',
             'type'          => 'nullable|in:projeto,campanha',
@@ -367,11 +389,15 @@ class ProjectController extends Controller
             'end_date'      => 'nullable|date',
             'disciplines'   => 'nullable|array',
             'disciplines.*' => 'in:criacao,web,trafego,setup,social,seo,email,estrategia,relacionamento',
+            'macro_plan_id' => 'nullable|uuid',
         ]);
+
+        $planId = $this->assertProjectPlan($data['client_id'], $data['macro_plan_id'] ?? null);
 
         $position = Project::where('client_id', $data['client_id'])->max('position') + 1;
 
         $project = Project::create([
+            'macro_plan_id' => $planId,
             'client_id'  => $data['client_id'],
             'position'   => $position,
             'title'      => $data['title'],
@@ -383,8 +409,34 @@ class ProjectController extends Controller
             'status'     => 'em_planejamento',
         ]);
 
-        return redirect()->route('projects.showDirect', $project)
+        return redirect()->to($planId
+                ? route('macroplans.projects.show', [$planId, $project])
+                : route('projects.showDirect', $project))
             ->with('success', 'Projeto criado.');
+    }
+
+    // Ciclo fechado: campanha/projeto mora num planejamento ABERTO do mesmo cliente. Cliente
+    // sem nenhum planejamento ainda (onboarding) pode ficar avulso (null).
+    private function assertProjectPlan(string $clientId, ?string $planId): ?string
+    {
+        if (!$planId) {
+            if (MacroPlan::clientRequiresPlanForProjects($clientId)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'macro_plan_id' => 'Escolha o planejamento — toda campanha/projeto precisa estar num planejamento do cliente.',
+                ]);
+            }
+            return null;
+        }
+
+        $plan = MacroPlan::find($planId);
+        if (!$plan || (string) $plan->client_id !== (string) $clientId) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['macro_plan_id' => 'Esse planejamento é de outro cliente.']);
+        }
+        if ($plan->status === 'concluido') {
+            throw \Illuminate\Validation\ValidationException::withMessages(['macro_plan_id' => 'Esse planejamento já foi concluído — use o planejamento atual do cliente.']);
+        }
+
+        return $plan->id;
     }
 
     public function update(Request $request, MacroPlan $macroplan, Project $project)
@@ -513,6 +565,17 @@ class ProjectController extends Controller
             'macro_plan_id' => 'nullable|uuid|exists:pgsql.macro_plans,id',
             'title'         => 'nullable|string|max:200',
         ]);
+
+        // Ciclo fechado: só planejamento aberto do mesmo cliente.
+        if (!empty($data['macro_plan_id']) && $data['macro_plan_id'] !== $project->macro_plan_id) {
+            $plan = MacroPlan::find($data['macro_plan_id']);
+            if ($project->client_id && (string) $plan->client_id !== (string) $project->client_id) {
+                return response()->json(['message' => 'Esse planejamento é de outro cliente.'], 422);
+            }
+            if ($plan->status === 'concluido') {
+                return response()->json(['message' => 'Esse planejamento já foi concluído — escolha o planejamento atual do cliente.'], 422);
+            }
+        }
 
         $project->update(array_filter($data, fn($v) => $v !== null));
 
