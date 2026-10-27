@@ -1,0 +1,18 @@
+{
+  "novidades": [
+    {
+      "title": "Cronograma: os planejamentos de todos os clientes numa tela",
+      "summary": "Nova tela em Planejamento → Cronograma: cada cliente numa linha com a etapa do ciclo, o próximo planejamento, os marcos das campanhas e os alertas (Renovação sem próximo ciclo, fases atrasadas, sem data). Abrindo o cliente aparecem as campanhas com as fases.",
+      "body": "<p>À direita fica a lista do que acontece nos próximos 14 dias. Também tem filtro por etapa, responsável e cliente, e janela de 2, 4 ou 8 meses. No Dashboard, o modo Planejamento ganhou o botão Abrir Cronograma.</p>",
+      "kind": "novidade", "area": "Planejamentos"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Linha do tempo de campanhas e projetos — fases e marcos",
+      "category": "Planejamentos",
+      "slug": "linha-do-tempo-fases-e-marcos",
+      "body_file": "ajuda-linha-do-tempo.html"
+    }
+  ]
+}
