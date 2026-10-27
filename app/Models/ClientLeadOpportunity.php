@@ -152,6 +152,8 @@ class ClientLeadOpportunity extends Model
     /** Confirma (ou desfaz, com null) a qualidade, com nota no histórico. */
     public function confirmQuality(?string $quality, ?int $byUserId, ?string $byContactId): void
     {
+        $quality = $quality ?: null;
+
         if ($quality === $this->quality) {
             return;
         }
