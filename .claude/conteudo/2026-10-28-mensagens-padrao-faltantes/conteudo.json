@@ -1,0 +1,11 @@
+{
+  "novidades": [
+    {
+      "title": "Redefinir senha do Portal volta a chegar no cliente",
+      "summary": "O link de nova senha do Portal não saía porque faltava o texto da mensagem. Agora vai por e-mail e WhatsApp.",
+      "body": "<p>Se você mandou \"Redefinir senha\" pra algum cliente nos últimos dias, mande de novo — aqueles pedidos não foram entregues. Também passaram a sair: aviso de material aprovado (e-mail e WhatsApp), lembrete de peças aguardando aprovação por e-mail e pedido de senhas/acessos (e-mail e WhatsApp). Os textos podem ser ajustados em Mensagens Padrão.</p>",
+      "kind": "correcao", "area": "Mensagens Padrão"
+    }
+  ],
+  "ajuda": []
+}
