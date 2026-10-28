@@ -116,11 +116,20 @@ class TaskAttachmentController extends Controller
         // rodada. Se precisa de uma versão nova, é só anexar o arquivo
         // corrigido; o antigo fica registrado na rodada em que foi enviado.
         if (DeliverableFeedback::where('attachment_id', $attachment->id)->exists()) {
-            return back()->with('warning', 'Esse arquivo já tem retorno do cliente registrado e não pode ser removido — anexe o material corrigido como um novo arquivo.');
+            $message = 'Esse arquivo já tem retorno do cliente registrado e não pode ser removido — anexe o material corrigido como um novo arquivo.';
+
+            return request()->expectsJson()
+                ? response()->json(['message' => $message], 422)
+                : back()->with('warning', $message);
         }
 
         Storage::disk($attachment->disk)->delete($attachment->disk_path);
         $attachment->delete();
+
+        // A tela da tarefa remove a linha via fetch, sem recarregar a página inteira.
+        if (request()->expectsJson()) {
+            return response()->json(['ok' => true]);
+        }
 
         return redirect()->route('tasks.show', $task)
             ->with('success', 'Anexo removido.');

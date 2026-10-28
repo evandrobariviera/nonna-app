@@ -60,8 +60,13 @@
         };
 
         // Lightbox de anexo — JS puro (sem Alpine store), pra ficar simples e
-        // independente de timing de inicialização do Alpine.
-        function openAttachmentLightbox(src, filename) {
+        // independente de timing de inicialização do Alpine. Vira carrossel: as setas
+        // (botões ou ← → do teclado) passam pelos arquivos da MESMA seção (Insumos ou
+        // Entregáveis), na ordem da tabela. Cada <tr data-attachment> traz o que precisa.
+        let lightboxItems = [];
+        let lightboxIndex = 0;
+
+        function openAttachmentLightbox(trigger) {
             // Reancora o modal como filho direto do <body>: como ele nasce dentro
             // do <main> (o container que realmente rola, já que o <body> é
             // overflow-hidden), "position:fixed" ficava relativo ao topo do
@@ -69,18 +74,91 @@
             const lightbox = document.getElementById('attachment-lightbox');
             if (lightbox.parentElement !== document.body) document.body.appendChild(lightbox);
 
-            document.getElementById('attachment-lightbox-img').src = src;
-            document.getElementById('attachment-lightbox-img').alt = filename;
-            document.getElementById('attachment-lightbox-filename').textContent = filename;
+            const row = trigger.closest('tr[data-attachment]');
+            lightboxItems = [...document.querySelectorAll(`tr[data-attachment][data-kind="${row.dataset.kind}"]`)];
+            lightboxIndex = Math.max(0, lightboxItems.indexOf(row));
+            showLightboxItem();
             lightbox.style.display = 'flex';
+        }
+        function showLightboxItem() {
+            const item = lightboxItems[lightboxIndex]?.dataset;
+            if (!item) return closeAttachmentLightbox();
+            const img   = document.getElementById('attachment-lightbox-img');
+            const video = document.getElementById('attachment-lightbox-video');
+            const file  = document.getElementById('attachment-lightbox-file');
+            video.pause();
+            img.style.display   = item.type === 'image' ? '' : 'none';
+            video.style.display = item.type === 'video' ? '' : 'none';
+            file.style.display  = item.type === 'file'  ? 'flex' : 'none';
+            img.src   = item.type === 'image' ? item.src : '';
+            img.alt   = item.filename;
+            if (item.type === 'video') video.src = item.src; else video.removeAttribute('src');
+            document.getElementById('attachment-lightbox-icon').textContent = item.icon;
+            document.getElementById('attachment-lightbox-open').href = item.src;
+            document.getElementById('attachment-lightbox-download').href = item.download;
+            document.getElementById('attachment-lightbox-filename').textContent = item.filename;
+
+            const many = lightboxItems.length > 1;
+            document.getElementById('attachment-lightbox-counter').textContent = many ? `${lightboxIndex + 1} / ${lightboxItems.length}` : '';
+            document.querySelectorAll('[data-lightbox-nav]').forEach((b) => b.style.display = many ? '' : 'none');
+        }
+        function stepAttachmentLightbox(delta) {
+            if (lightboxItems.length < 2) return;
+            lightboxIndex = (lightboxIndex + delta + lightboxItems.length) % lightboxItems.length;
+            showLightboxItem();
         }
         function closeAttachmentLightbox() {
             document.getElementById('attachment-lightbox').style.display = 'none';
             document.getElementById('attachment-lightbox-img').src = '';
+            const video = document.getElementById('attachment-lightbox-video');
+            video.pause();
+            video.removeAttribute('src');
         }
         document.addEventListener('keydown', function (e) {
+            if (document.getElementById('attachment-lightbox')?.style.display !== 'flex') return;
             if (e.key === 'Escape') closeAttachmentLightbox();
+            if (e.key === 'ArrowRight') { e.preventDefault(); stepAttachmentLightbox(1); }
+            if (e.key === 'ArrowLeft')  { e.preventDefault(); stepAttachmentLightbox(-1); }
         });
+
+        // Remover anexo sem recarregar a página (o reload da tarefa é pesado): DELETE via
+        // fetch, some a linha e o contador da seção acompanha.
+        async function removeAttachment(form) {
+            const row = form.closest('tr[data-attachment]');
+            const button = form.querySelector('button');
+            button.disabled = true;
+            try {
+                const res = await fetch(form.action, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+                if (!res.ok) {
+                    let json = null;
+                    try { json = await res.json(); } catch (e) { /* sem JSON */ }
+                    alert(json?.message || 'Não deu pra remover o anexo. Tente de novo.');
+                    button.disabled = false;
+                    return;
+                }
+            } catch (e) {
+                alert('Não deu pra remover o anexo. Verifique a conexão e tente de novo.');
+                button.disabled = false;
+                return;
+            }
+
+            const kind = row.dataset.kind;
+            const tbody = row.parentElement;
+            row.remove();
+            const left = document.querySelectorAll(`tr[data-attachment][data-kind="${kind}"]`).length;
+            document.querySelectorAll(`[data-attachment-count="${kind}"]`).forEach((el) => {
+                el.textContent = left;
+                if (!left) el.remove();
+            });
+            if (!tbody.children.length) tbody.closest('.overflow-x-auto')?.remove();
+        }
 
         document.addEventListener('alpine:init', () => {
             Alpine.store('ui', { chatOpen: false });
@@ -743,7 +821,7 @@
                     </span>
                     Insumos
                     @if($insumos->count() > 0)
-                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $insumos->count() }}</span>
+                        <span data-attachment-count="insumo" class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $insumos->count() }}</span>
                     @endif
                 </p>
                 <p class="text-xs mb-4" style="color:var(--muted2)">Referências, briefings e materiais recebidos — não entram na aprovação do cliente.</p>
@@ -912,7 +990,7 @@
                     </span>
                     Entregáveis
                     @if($entregaveis->count() > 0)
-                        <span class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $entregaveis->count() }}</span>
+                        <span data-attachment-count="entregavel" class="ml-1.5 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $entregaveis->count() }}</span>
                     @endif
                     @if($entregaveis->count() > 0)
                         <a href="{{ route('task-attachments.zip', $task) }}" class="ml-auto btn btn-ghost btn-xs flex items-center gap-1" style="text-transform:none; letter-spacing:normal; font-weight:600">
@@ -1615,10 +1693,28 @@
          onclick="if (event.target === this) closeAttachmentLightbox()"
          class="fixed inset-0 z-[60] items-center justify-center p-6"
          style="display:none; background:rgba(0,0,0,.75)">
-        <div class="flex flex-col items-center gap-3" style="max-width:90vw; max-height:90vh">
+        <button type="button" data-lightbox-nav onclick="stepAttachmentLightbox(-1)" title="Anterior (←)"
+                class="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center"
+                style="width:44px; height:44px; border-radius:999px; background:rgba(255,255,255,.15); color:#fff; font-size:22px">‹</button>
+        <button type="button" data-lightbox-nav onclick="stepAttachmentLightbox(1)" title="Próximo (→)"
+                class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center"
+                style="width:44px; height:44px; border-radius:999px; background:rgba(255,255,255,.15); color:#fff; font-size:22px">›</button>
+        <div class="flex flex-col items-center gap-3" style="max-width:85vw; max-height:90vh">
             <img id="attachment-lightbox-img" src="" alt=""
-                 style="max-width:90vw; max-height:80vh; object-fit:contain; border-radius:8px">
+                 style="max-width:85vw; max-height:80vh; object-fit:contain; border-radius:8px">
+            <video id="attachment-lightbox-video" controls preload="metadata"
+                   style="display:none; max-width:85vw; max-height:80vh; border-radius:8px; background:#000"></video>
+            {{-- PDF, zip etc.: não dá pra mostrar aqui dentro — oferece abrir/baixar. --}}
+            <div id="attachment-lightbox-file" class="flex-col items-center gap-4 px-10 py-8"
+                 style="display:none; background:rgba(255,255,255,.08); border-radius:12px; color:#fff">
+                <span id="attachment-lightbox-icon" style="font-size:48px"></span>
+                <div class="flex gap-2">
+                    <a id="attachment-lightbox-open" href="#" target="_blank" class="text-xs font-bold uppercase tracking-widest px-3 py-1.5" style="background:rgba(255,255,255,.15); color:#fff">Abrir em nova aba</a>
+                    <a id="attachment-lightbox-download" href="#" class="text-xs font-bold uppercase tracking-widest px-3 py-1.5" style="background:rgba(255,255,255,.15); color:#fff">↓ Baixar</a>
+                </div>
+            </div>
             <div class="flex items-center gap-4">
+                <span id="attachment-lightbox-counter" class="text-xs font-semibold" style="color:rgba(255,255,255,.7)"></span>
                 <span id="attachment-lightbox-filename" class="text-sm" style="color:#fff"></span>
                 <button type="button" onclick="closeAttachmentLightbox()"
                         class="text-xs font-bold uppercase tracking-widest px-3 py-1.5"

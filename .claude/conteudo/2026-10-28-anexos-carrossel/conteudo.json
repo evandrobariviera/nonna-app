@@ -1,0 +1,17 @@
+{
+  "novidades": [
+    {
+      "title": "Remover anexo sem recarregar a página",
+      "summary": "Na tarefa, apagar um Insumo ou Entregável (✕) tira o arquivo da lista na hora, sem esperar a página inteira carregar de novo.",
+      "body": "<p>Arquivo que já tem retorno do cliente continua protegido: aparece o aviso e ele fica na lista.</p>",
+      "kind": "melhoria", "area": "Tarefas"
+    },
+    {
+      "title": "Ver os anexos da tarefa em carrossel",
+      "summary": "Abriu um arquivo dos Entregáveis ou Insumos? Use as setas ← → do teclado (ou os botões ‹ ›) pra passar pro próximo, como num carrossel.",
+      "body": "<p>Exemplo: um carrossel de 8 artes — abre a primeira e vai apertando → até a última. Vídeos tocam ali mesmo; PDF e outros arquivos mostram os botões Abrir e Baixar. Esc fecha.</p>",
+      "kind": "melhoria", "area": "Tarefas"
+    }
+  ],
+  "ajuda": []
+}
