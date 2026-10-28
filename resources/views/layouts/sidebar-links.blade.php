@@ -145,7 +145,7 @@
 </div>
 
 {{-- Gestão de Clientes --}}
-<div x-data="{ open: {{ request()->routeIs('clients.onboarding.*') ? 'true' : 'false' }} }">
+<div x-data="{ open: {{ request()->routeIs('clients.onboarding.*') || request()->routeIs('clients.offboarding.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <x-icon name="users" size="16" class="flex-shrink-0" />
@@ -157,7 +157,8 @@
         <a href="{{ route('clients.onboarding.index') }}"
            class="nav-sub-item {{ request()->routeIs('clients.onboarding.*') ? 'active' : '' }}">Entrada (Onboarding)</a>
         <a href="#" class="nav-sub-item" style="opacity:.4; cursor:default" title="Em breve">Sucesso do Cliente (CS)</a>
-        <a href="#" class="nav-sub-item" style="opacity:.4; cursor:default" title="Em breve">Saída (Offboarding)</a>
+        <a href="{{ route('clients.offboarding.index') }}"
+           class="nav-sub-item {{ request()->routeIs('clients.offboarding.*') ? 'active' : '' }}">Saída (Offboarding)</a>
     </div>
 </div>
 

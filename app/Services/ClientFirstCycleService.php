@@ -78,13 +78,69 @@ class ClientFirstCycleService
     /** Projeto Onboarding do cliente (o mais recente, não cancelado) — feito pelo Playbook ou com esse nome. */
     public static function onboardingProject(Client $client): ?Project
     {
-        $playbookId = ProjectPlaybook::where('name', self::PLAYBOOK_NAME)->value('id');
+        return self::lifecycleProject($client, 'Onboarding', self::PLAYBOOK_NAME);
+    }
+
+    // ── Offboarding (2026-10-28): a saída do cliente também é um projeto, pelo Playbook ──
+    public const OFFBOARDING_PLAYBOOK = 'Offboarding de Cliente';
+
+    public static function offboardingProject(Client $client): ?Project
+    {
+        return self::lifecycleProject($client, 'Offboarding', self::OFFBOARDING_PLAYBOOK);
+    }
+
+    /**
+     * Inicia a saída: projeto "Offboarding" no planejamento aberto do cliente (exceção ao ciclo
+     * fechado: sem planejamento aberto, entra no mais recente — saída não espera ciclo novo).
+     * Devolve [projeto, erro].
+     */
+    public function startOffboarding(Client $client): array
+    {
+        if ($existing = self::offboardingProject($client)) {
+            return [$existing, null];
+        }
+
+        $plan = MacroPlan::where('client_id', $client->id)
+            ->orderByRaw("CASE status WHEN 'em_execucao' THEN 0 WHEN 'concluido' THEN 2 ELSE 1 END")
+            ->orderByDesc('period_start')
+            ->first();
+        if (!$plan) {
+            return [null, 'O cliente não tem planejamento — não há onde registrar o offboarding.'];
+        }
+
+        return [$this->createPlaybookProject($client, $plan, 'Offboarding', self::OFFBOARDING_PLAYBOOK,
+            'Saída do cliente: cobranças, cancelamento das cobranças futuras, distrato, encerrar campanhas/projetos, sair das contas e inativar.'), null];
+    }
+
+    private static function lifecycleProject(Client $client, string $title, string $playbookName): ?Project
+    {
+        $playbookId = ProjectPlaybook::where('name', $playbookName)->value('id');
 
         return Project::where('client_id', $client->id)
             ->where('status', '!=', 'cancelado')
-            ->where(fn ($q) => $q->where('title', 'Onboarding')->when($playbookId, fn ($w) => $w->orWhere('project_playbook_id', $playbookId)))
+            ->where(fn ($q) => $q->where('title', $title)->when($playbookId, fn ($w) => $w->orWhere('project_playbook_id', $playbookId)))
             ->orderByDesc('created_at')
             ->first();
+    }
+
+    private function createPlaybookProject(Client $client, MacroPlan $plan, string $title, string $playbookName, ?string $objective = null): Project
+    {
+        return DB::connection('pgsql')->transaction(function () use ($client, $plan, $title, $playbookName, $objective) {
+            $project = $plan->projects()->create([
+                'organization_id' => $client->organization_id,
+                'client_id'       => $client->id,
+                'position'        => (int) $plan->projects()->max('position') + 1,
+                'title'           => $title,
+                'type'            => 'projeto',
+                'status'          => 'em_execucao',
+                'objective'       => $objective,
+                'start_date'      => today(),
+            ]);
+            if ($playbook = ProjectPlaybook::where('name', $playbookName)->where('is_active', true)->first()) {
+                $this->drafts->applyPlaybook($project, $playbook, Auth::id());
+            }
+            return $project;
+        });
     }
 
     /**
@@ -107,23 +163,7 @@ class ClientFirstCycleService
             return [null, 'O cliente não tem planejamento aberto — cadastre o planejamento do ciclo antes.'];
         }
 
-        $project = DB::connection('pgsql')->transaction(function () use ($client, $plan) {
-            $project = $plan->projects()->create([
-                'organization_id' => $client->organization_id,
-                'client_id'       => $client->id,
-                'position'        => (int) $plan->projects()->max('position') + 1,
-                'title'           => 'Onboarding',
-                'type'            => 'projeto',
-                'status'          => 'em_execucao',
-                'start_date'      => today(),
-            ]);
-            if ($playbook = ProjectPlaybook::where('name', self::PLAYBOOK_NAME)->where('is_active', true)->first()) {
-                $this->drafts->applyPlaybook($project, $playbook, Auth::id());
-            }
-            return $project;
-        });
-
-        return [$project, null];
+        return [$this->createPlaybookProject($client, $plan, 'Onboarding', self::PLAYBOOK_NAME), null];
     }
 
     /**

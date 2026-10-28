@@ -103,6 +103,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // Idem — lista de clientes em onboarding (Gestão de Clientes > Entrada).
     Route::get('/clientes/onboarding', [\App\Http\Controllers\ClientOnboardingController::class, 'index'])
         ->name('clients.onboarding.index');
+    Route::get('/clientes/offboarding', [\App\Http\Controllers\ClientOnboardingController::class, 'offboardingIndex'])
+        ->name('clients.offboarding.index');
 
     Route::resource('clientes', ClientController::class)->parameters([
         'clientes' => 'client',
@@ -375,6 +377,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // Cria o projeto Onboarding pra cliente que não tem (o checklist antigo saiu da tela, 2026-10-28).
     Route::post('/clientes/{client}/onboarding', [\App\Http\Controllers\ClientOnboardingController::class, 'store'])
         ->name('clients.onboarding.store');
+    // Inicia a saída do cliente (projeto Offboarding pelo Playbook).
+    Route::post('/clientes/{client}/offboarding', [\App\Http\Controllers\ClientOnboardingController::class, 'startOffboarding'])
+        ->name('clients.offboarding.store');
 
     // ── Anexos do contrato ──
     Route::post('/contratos/{contract}/anexos', [ContractAttachmentController::class, 'store'])

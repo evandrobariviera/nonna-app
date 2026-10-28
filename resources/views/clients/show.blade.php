@@ -84,7 +84,7 @@
                 @endif
             </button>
             <button class="tab-btn" :class="{ active: tab === 'onboarding' }" @click="tab = 'onboarding'">
-                Onboarding
+                Onboarding / Saída
                 @if($onboardingProject && $onboardingTimeline['phases'])
                     <span class="tab-count">{{ $onboardingTimeline['done'] }}/{{ $onboardingTimeline['phases'] }}</span>
                 @endif
@@ -2118,9 +2118,10 @@
             @endif
         </div>
 
-        {{-- TAB: ONBOARDING — o projeto Onboarding do cliente (fases + tarefas). O checklist
-             antigo saiu da tela em 2026-10-28; a esteira automática conclui as tarefas sozinha. --}}
-        <div x-show="tab === 'onboarding'" x-cloak>
+        {{-- TAB: ONBOARDING / SAÍDA — os projetos de ciclo de vida do cliente (fases + tarefas).
+             O checklist antigo saiu da tela em 2026-10-28; a esteira automática conclui as
+             tarefas do Onboarding sozinha. Saída = projeto Offboarding. --}}
+        <div x-show="tab === 'onboarding'" x-cloak class="space-y-5">
             @if(!$onboardingProject)
                 <div class="tab-placeholder">
                     <div class="tab-placeholder-icon"><x-icon name="list-checks" size="32" /></div>
@@ -2135,49 +2136,26 @@
                     </form>
                 </div>
             @else
-                @php
-                    $obTl  = $onboardingTimeline;
-                    $obUrl = $onboardingProject->macro_plan_id
-                        ? route('macroplans.projects.show', [$onboardingProject->macro_plan_id, $onboardingProject])
-                        : route('projects.showDirect', $onboardingProject);
-                    $obHex = fn (?string $s) => \App\Models\Task::colorHex($s ? \App\Models\ProjectPhase::statusColor($s) : 'muted');
-                @endphp
-                <div class="card">
-                    <div class="px-5 py-4 flex items-center justify-between gap-3 flex-wrap" style="border-bottom:1px solid var(--border2)">
-                        <div>
-                            <p class="text-sm font-bold" style="color:var(--text)">Projeto Onboarding</p>
-                            <p class="text-xs mt-0.5" style="color:var(--muted)">
-                                @if($onboardingProject->status === 'concluido')
-                                    <span style="color:var(--green)">Concluído</span>
-                                @elseif($obTl['current'])
-                                    Agora: <span style="color:{{ $obHex($obTl['current']['status']) }}">{{ $obTl['current']['phase']->name }}</span>
-                                @endif
-                                · {{ $obTl['done'] }} de {{ $obTl['phases'] }} fases concluídas
-                                @if($obTl['late'])<span style="color:var(--red)"> · {{ $obTl['late'] }} atrasada(s)</span>@endif
-                            </p>
-                        </div>
-                        <a href="{{ $obUrl }}" class="btn btn-primary btn-sm">Abrir projeto →</a>
+                @include('clients._lifecycle-project', ['project' => $onboardingProject, 'timeline' => $onboardingTimeline, 'label' => 'Projeto Onboarding'])
+            @endif
+
+            {{-- Saída do cliente --}}
+            @if($offboardingProject)
+                @include('clients._lifecycle-project', ['project' => $offboardingProject, 'timeline' => $offboardingTimeline, 'label' => 'Projeto Offboarding (saída do cliente)'])
+            @else
+                <div class="card px-5 py-4 flex items-center justify-between gap-3 flex-wrap">
+                    <div class="min-w-0">
+                        <p class="text-sm font-bold" style="color:var(--text)">Saída do cliente (Offboarding)</p>
+                        <p class="text-xs mt-0.5" style="color:var(--muted2)">
+                            Cliente vai sair? O offboarding vira um projeto com as fases: financeiro (cobranças, cancelar cobranças futuras,
+                            distrato), encerrar campanhas e projetos, sair das contas e inativar no sistema.
+                        </p>
                     </div>
-                    @foreach($obTl['rows'] as $row)
-                        <div class="px-5 py-3 flex items-center gap-3 flex-wrap" style="border-bottom:1px solid var(--border2)">
-                            @if($row['phase']->is_milestone)
-                                <span class="flex-shrink-0" style="width:9px; height:9px; transform:rotate(45deg); background:{{ $obHex($row['status']) }}"></span>
-                            @else
-                                <span class="flex-shrink-0 rounded-full" style="width:9px; height:9px; background:{{ $obHex($row['status']) }}"></span>
-                            @endif
-                            <span class="text-sm font-semibold flex-1 min-w-0 truncate" style="color:var(--text)">{{ $row['phase']->name }}</span>
-                            <span class="text-xs" style="color:{{ $obHex($row['status']) }}">{{ \App\Models\ProjectPhase::statusLabel($row['status']) }}</span>
-                            @unless($row['phase']->is_milestone)
-                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $row['done'] }}/{{ $row['total'] }}</span>
-                            @endunless
-                            @if($row['end'])
-                                <span class="text-xs font-mono" style="color:var(--muted)">até {{ $row['end']->format('d/m') }}</span>
-                            @endif
-                        </div>
-                    @endforeach
-                    @if($obTl['rows']->isEmpty())
-                        <p class="px-5 py-4 text-xs" style="color:var(--muted)">O projeto ainda não tem fases — abra e aplique o Playbook "Onboarding de Cliente".</p>
-                    @endif
+                    <form method="POST" action="{{ route('clients.offboarding.store', $client) }}"
+                          @submit.prevent="if (await $store.confirmDialog.ask('Iniciar o offboarding de {{ addslashes($client->displayName()) }}? Isso cria o projeto Offboarding com as tarefas de saída (o cliente só é inativado no último passo).')) $el.submit()">
+                        @csrf
+                        <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--red); border-color:rgba(220,38,38,.35)">Iniciar offboarding</button>
+                    </form>
                 </div>
             @endif
         </div>

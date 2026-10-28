@@ -1,0 +1,18 @@
+{
+  "novidades": [
+    {
+      "title": "Saída do cliente agora é um projeto (Offboarding)",
+      "summary": "Na página do cliente, aba Onboarding / Saída, o botão Iniciar offboarding cria o projeto com as fases da saída: financeiro (cobranças, cancelar cobranças futuras, distrato), encerrar campanhas e projetos, sair das contas e inativar o cliente.",
+      "body": "<p>Todas as saídas em andamento ficam em Gestão de Clientes → Saída (Offboarding). As tarefas já vêm com o responsável pelo papel funcional (Financeiro, Tráfego, Gestor de Projetos, Atendimento).</p>",
+      "kind": "novidade", "area": "Clientes"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Linha do tempo de campanhas e projetos — fases e marcos",
+      "category": "Planejamentos",
+      "slug": "linha-do-tempo-fases-e-marcos",
+      "body_file": "ajuda-linha-do-tempo.html"
+    }
+  ]
+}

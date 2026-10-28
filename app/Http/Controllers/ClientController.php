@@ -133,9 +133,13 @@ class ClientController extends Controller
         $onboardingProject  = \App\Services\ClientFirstCycleService::onboardingProject($client)
             ?->load(['phases', 'tasks:id,project_id,project_phase_id,status,due_date,title']);
         $onboardingTimeline = $onboardingProject ? \App\Services\Projects\ProjectTimeline::for($onboardingProject) : null;
+        // Saída do cliente = projeto Offboarding (mesma aba).
+        $offboardingProject  = \App\Services\ClientFirstCycleService::offboardingProject($client)
+            ?->load(['phases', 'tasks:id,project_id,project_phase_id,status,due_date,title']);
+        $offboardingTimeline = $offboardingProject ? \App\Services\Projects\ProjectTimeline::for($offboardingProject) : null;
 
         return view('clients.show', [
-            ...compact('client', 'availableContacts', 'subscriptionsByContact', 'aiAgents', 'leadChannels', 'onboardingProject', 'onboardingTimeline'),
+            ...compact('client', 'availableContacts', 'subscriptionsByContact', 'aiAgents', 'leadChannels', 'onboardingProject', 'onboardingTimeline', 'offboardingProject', 'offboardingTimeline'),
             ...$production,
         ]);
     }

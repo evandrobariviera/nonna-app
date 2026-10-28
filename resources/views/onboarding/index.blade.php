@@ -1,6 +1,8 @@
-{{-- Entrada (Onboarding) — desde 2026-10-28 lista os PROJETOS Onboarding (fases + tarefas).
-     $emAndamento / $concluidos: [project, timeline (ProjectTimeline)]. --}}
+{{-- Entrada (Onboarding) e Saída (Offboarding) — desde 2026-10-28 listam os PROJETOS
+     (fases + tarefas). $kind = onboarding|offboarding; $emAndamento / $concluidos:
+     [project, timeline (ProjectTimeline)]. --}}
 @php
+    $isOff = ($kind ?? 'onboarding') === 'offboarding';
     $phaseHex = fn (?string $status) => \App\Models\Task::colorHex($status ? \App\Models\ProjectPhase::statusColor($status) : 'muted');
     $projUrl  = fn ($p) => $p->macro_plan_id ? route('macroplans.projects.show', [$p->macro_plan_id, $p]) : route('projects.showDirect', $p);
 @endphp
@@ -8,7 +10,7 @@
     <x-slot name="header">
         <div>
             <p class="text-xs font-mono text-[var(--muted)] uppercase tracking-widest mb-1">Gestão de Clientes</p>
-            <h1 class="text-2xl font-black text-[var(--text)]">Entrada — Onboarding</h1>
+            <h1 class="text-2xl font-black text-[var(--text)]">{{ $isOff ? 'Saída — Offboarding' : 'Entrada — Onboarding' }}</h1>
         </div>
     </x-slot>
 
@@ -20,10 +22,20 @@
             </div>
         @endif
 
+        @if(session('error'))
+            <div class="px-4 py-3 text-sm border" style="background: rgba(239,68,68,.06); border-color: rgba(239,68,68,.25); color: var(--red);">{{ session('error') }}</div>
+        @endif
+
         <p class="text-sm" style="color:var(--muted2)">
-            Cada cliente novo nasce com o projeto <strong>Onboarding</strong> dentro do primeiro planejamento de 90 dias.
-            Aqui ficam todos os onboardings: em que fase estão e o que está atrasado. Os passos automáticos (boas-vindas, cadastro,
-            contrato, Drive, grupo de WhatsApp) concluem as tarefas sozinhos.
+            @if($isOff)
+                A saída de um cliente é o projeto <strong>Offboarding</strong>: financeiro (cobranças, cancelar cobranças futuras, distrato),
+                encerrar campanhas e projetos, sair das contas e, por último, inativar o cliente. Pra iniciar, abra o cliente →
+                aba <strong>Onboarding / Saída</strong> → <strong>Iniciar offboarding</strong>.
+            @else
+                Cada cliente novo nasce com o projeto <strong>Onboarding</strong> dentro do primeiro planejamento de 90 dias.
+                Aqui ficam todos os onboardings: em que fase estão e o que está atrasado. Os passos automáticos (boas-vindas, cadastro,
+                contrato, Drive, grupo de WhatsApp) concluem as tarefas sozinhos.
+            @endif
         </p>
 
         {{-- EM ANDAMENTO --}}
@@ -33,8 +45,8 @@
             @if($emAndamento->isEmpty())
                 <div class="tab-placeholder">
                     <div class="tab-placeholder-icon"><x-icon name="list-checks" size="32" /></div>
-                    <div class="tab-placeholder-title">Nenhum cliente em onboarding</div>
-                    <div class="tab-placeholder-desc">O projeto Onboarding nasce sozinho quando um cliente Ativo é cadastrado.</div>
+                    <div class="tab-placeholder-title">{{ $isOff ? 'Nenhum cliente saindo' : 'Nenhum cliente em onboarding' }}</div>
+                    <div class="tab-placeholder-desc">{{ $isOff ? 'O offboarding começa pelo botão "Iniciar offboarding" na página do cliente.' : 'O projeto Onboarding nasce sozinho quando um cliente Ativo é cadastrado.' }}</div>
                 </div>
             @else
                 <div class="card overflow-x-auto">
@@ -60,6 +72,7 @@
                                 <tr>
                                     <td class="font-semibold text-[var(--text)]">
                                         <a href="{{ route('clients.show', $p->client) }}" class="hover:text-[var(--purple)] transition-colors">{{ $p->client?->displayName() ?? '—' }}</a>
+                                        @if($p->client?->status === 'inactive')<span class="text-xs font-normal" style="color:var(--muted)"> · inativo</span>@endif
                                     </td>
                                     <td class="text-sm">
                                         @if($tl['current'])
