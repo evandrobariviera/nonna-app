@@ -8,6 +8,9 @@
     De {{ $from->format('d/m/Y') }} a {{ $to->format('d/m/Y') }}. Escolha um cliente para ver campanha por campanha.
 </p>
 
+@include('leads._funnel-chart', ['t' => collect(['leads', 'evaluated', 'good', 'sold', 'sold_value'])
+    ->mapWithKeys(fn ($k) => [$k => array_sum(array_column($overview, $k))])->all()])
+
 <div class="card overflow-hidden">
 <div class="overflow-x-auto">
     <table class="nonna-table">

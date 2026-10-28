@@ -28,6 +28,8 @@
     @endforeach
 </div>
 
+@include('leads._funnel-chart', ['t' => $t])
+
 @php
     $notices = [];
     if (!$funnel['has_rule']) {

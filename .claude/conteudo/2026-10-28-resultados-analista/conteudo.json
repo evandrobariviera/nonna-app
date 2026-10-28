@@ -3,7 +3,7 @@
     {
       "title": "Aba Resultados na Central de Leads: do anúncio até a venda",
       "summary": "Nova aba Resultados mostra, campanha por campanha, quanto foi investido, quantos leads chegaram, quantos eram bons, quantos compraram e quanto voltou de cada R$ 1 investido. Sem cliente escolhido, mostra todos os clientes lado a lado.",
-      "body": "<p>O número que mais importa ali é o <strong>custo por lead bom</strong>: lead barato que não compra sai caro. Quando houver vendas marcadas, aparece o retorno de verdade; com ticket médio e algumas vendas no histórico, aparece também o retorno <strong>estimado</strong>. No Portal, a aba aparece para o cliente (quando ele vê todos os leads da equipe dele).</p>",
+      "body": "<p>No topo, um gráfico de funil mostra quantos leads chegaram, quantos a IA avaliou, quantos eram bons e quantos compraram. O número que mais importa ali é o <strong>custo por lead bom</strong>: lead barato que não compra sai caro. Quando houver vendas marcadas, aparece o retorno de verdade; com ticket médio e algumas vendas no histórico, aparece também o retorno <strong>estimado</strong>. No Portal, a aba aparece para o cliente (quando ele vê todos os leads da equipe dele).</p>",
       "kind": "novidade", "area": "Central de Leads"
     },
     {
