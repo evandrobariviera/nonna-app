@@ -2,11 +2,13 @@
     <x-slot name="header">
         <div class="flex items-center justify-between w-full">
             <div>
-                <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Rotina</p>
+                <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Performance</p>
                 <h1 class="text-xl font-black" style="color:var(--text)">Campanhas</h1>
             </div>
         </div>
     </x-slot>
+
+    @include('performance._tabs')
 
     @if(session('success'))
         <div class="mb-5 px-4 py-3 text-sm font-semibold"

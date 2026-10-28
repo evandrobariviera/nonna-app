@@ -426,6 +426,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::post('/oportunidades/{opportunity}/perder', [OpportunityController::class, 'lose'])
         ->name('opportunities.lose');
 
+    // ── Central de Performance: dashboard central + abas (Leads, Campanhas, Insights, Atendimento) ──
+    Route::get('/performance', [\App\Http\Controllers\PerformanceController::class, 'index'])
+        ->name('performance.index');
+    Route::get('/performance/insights', [\App\Http\Controllers\PerformanceController::class, 'insights'])
+        ->name('performance.insights');
+
     // ── CRM: Central de Leads (leads dos CLIENTES da Nonna, não o funil comercial acima) ──
     Route::get('/central-de-leads', [LeadController::class, 'index'])
         ->name('leads.index');

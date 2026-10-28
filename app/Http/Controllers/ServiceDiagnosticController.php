@@ -2,23 +2,34 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Client;
 use App\Models\ClientIntegration;
 use App\Models\ServiceConversation;
 use App\Models\ServiceDiagnostic;
 use App\Models\ServiceMessage;
 use App\Services\ServiceDiagnostics\ServiceDiagnosticGenerator;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
 class ServiceDiagnosticController extends Controller
 {
-    public function index()
+    // Aba Atendimento da Central de Performance — filtra pelo cliente escolhido
+    // nas outras abas e mostra a última conversa de cada número (número sem
+    // conversa há dias costuma ser conexão caída).
+    public function index(Request $request)
     {
         $integrations = ClientIntegration::with('client')
             ->withCount('diagnostics')
+            ->withMax('conversations', 'last_message_at')
+            ->when($request->filled('client_id'), fn ($q) => $q->where('client_id', $request->client_id))
             ->get()
             ->groupBy(fn ($integration) => $integration->client->company_name);
 
-        return view('service-diagnostics.index', compact('integrations'));
+        $clients = Client::whereIn('id', ClientIntegration::select('client_id'))
+            ->orderByRaw('COALESCE(nickname, company_name)')
+            ->get(['id', 'company_name', 'nickname']);
+
+        return view('service-diagnostics.index', compact('integrations', 'clients'));
     }
 
     public function integration(ClientIntegration $integration, ServiceDiagnosticGenerator $generator)

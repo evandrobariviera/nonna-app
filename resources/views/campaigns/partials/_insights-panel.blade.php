@@ -40,6 +40,7 @@
                                     <p class="text-sm mt-2 whitespace-pre-line" style="color:var(--muted2)">{{ $insight->summary }}</p>
                                 @endif
                             </div>
+                            @if(in_array($insight->status, ['novo', 'lido'], true))
                             <div class="flex items-center gap-2 flex-shrink-0">
                                 @if($insight->status === 'novo')
                                     <form method="POST" action="{{ route('campaign-insights.update-status', $insight) }}">
@@ -65,6 +66,7 @@
                                     </button>
                                 </form>
                             </div>
+                            @endif
                         </div>
                     </div>
                 @endforeach

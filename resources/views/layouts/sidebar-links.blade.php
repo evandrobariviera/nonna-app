@@ -58,16 +58,6 @@
     </span>
 </a>
 
-{{-- Leads dos CLIENTES da Nonna (site/Meta/WhatsApp) — diferente de Oportunidades acima --}}
-<a href="{{ route('leads.index') }}"
-   class="nav-group-trigger {{ request()->routeIs('leads.*') ? 'open' : '' }}"
-   style="{{ request()->routeIs('leads.*') ? 'color:var(--purple);' : '' }}">
-    <span class="flex items-center gap-3">
-        <x-icon name="megaphone" size="16" class="flex-shrink-0" />
-        Central de Leads
-    </span>
-</a>
-
 {{-- Cadastros --}}
 <div x-data="{ open: {{ request()->routeIs('clients.*') || request()->routeIs('contacts.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
@@ -80,6 +70,41 @@
     <div x-show="open" x-transition style="display:none">
         <a href="{{ route('contacts.index') }}" class="nav-sub-item {{ request()->routeIs('contacts.*') ? 'active' : '' }}">Contatos</a>
         <a href="{{ route('clients.index') }}" class="nav-sub-item {{ request()->routeIs('clients.*') ? 'active' : '' }}">Clientes</a>
+    </div>
+</div>
+
+{{-- ══ PERFORMANCE ══ — Central de Performance: dashboard + Leads (dos CLIENTES
+     da Nonna, diferente de Oportunidades), Campanhas, Insights e Atendimento --}}
+@php $_perfOpen = request()->routeIs('performance.*') || request()->routeIs('leads.*') || request()->routeIs('campaigns.*') || request()->routeIs('service-diagnostics.*'); @endphp
+<div class="nav-group-label" style="margin-top:8px">Performance</div>
+
+<div x-data="{ open: {{ $_perfOpen ? 'true' : 'false' }} }">
+    <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''"
+            style="{{ $_perfOpen ? 'color:var(--purple);' : '' }}">
+        <span class="flex items-center gap-3">
+            <x-icon name="trending-up" size="16" class="flex-shrink-0" />
+            Central de Performance
+        </span>
+        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" x-bind:class="open ? 'rotate-90' : ''" />
+    </button>
+    <div x-show="open" x-transition style="display:none">
+        <a href="{{ route('performance.index') }}" class="nav-sub-item {{ request()->routeIs('performance.index') ? 'active' : '' }}">Dashboard</a>
+        <a href="{{ route('leads.index') }}" class="nav-sub-item {{ request()->routeIs('leads.*') ? 'active' : '' }}">Leads</a>
+        <a href="{{ route('campaigns.index') }}" class="nav-sub-item {{ request()->routeIs('campaigns.*') ? 'active' : '' }}">Campanhas</a>
+        <a href="{{ route('performance.insights') }}" class="nav-sub-item {{ request()->routeIs('performance.insights') ? 'active' : '' }}">
+            <span class="flex items-center justify-between w-full">
+                <span>Insights</span>
+                @if($_campaignInsightsCount > 0)
+                    <span class="text-xs px-1.5 py-px rounded-full font-semibold"
+                          style="background:{{ request()->routeIs('performance.insights') ? 'rgba(100, 59, 142,.15)' : 'var(--s3)' }};
+                                 color:{{ request()->routeIs('performance.insights') ? 'var(--purple)' : 'var(--muted)' }};
+                                 border:1px solid {{ request()->routeIs('performance.insights') ? 'rgba(100, 59, 142,.25)' : 'var(--border2)' }}">
+                        {{ $_campaignInsightsCount }}
+                    </span>
+                @endif
+            </span>
+        </a>
+        <a href="{{ route('service-diagnostics.index') }}" class="nav-sub-item {{ request()->routeIs('service-diagnostics.*') ? 'active' : '' }}">Atendimento</a>
     </div>
 </div>
 
@@ -275,8 +300,8 @@
     @endif
 </a>
 
-{{-- Rotina --}}
-<div x-data="{ open: {{ request()->routeIs('campaigns.*') ? 'true' : 'false' }} }">
+{{-- Rotina (Campanhas mudou para a Central de Performance) --}}
+<div x-data="{ open: {{ request()->routeIs('orcamentos.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <x-icon name="refresh-cw" size="16" class="flex-shrink-0" />
@@ -285,19 +310,6 @@
         <x-icon name="chevron-right" size="14" class="transition-transform duration-200" x-bind:class="open ? 'rotate-90' : ''" />
     </button>
     <div x-show="open" x-transition style="display:none">
-        <a href="{{ route('campaigns.index') }}" class="nav-sub-item {{ request()->routeIs('campaigns.*') ? 'active' : '' }}">
-            <span class="flex items-center justify-between w-full">
-                <span>Campanhas</span>
-                @if($_campaignInsightsCount > 0)
-                    <span class="text-xs px-1.5 py-px rounded-full font-semibold"
-                          style="background:{{ request()->routeIs('campaigns.*') ? 'rgba(100, 59, 142,.15)' : 'var(--s3)' }};
-                                 color:{{ request()->routeIs('campaigns.*') ? 'var(--purple)' : 'var(--muted)' }};
-                                 border:1px solid {{ request()->routeIs('campaigns.*') ? 'rgba(100, 59, 142,.25)' : 'var(--border2)' }}">
-                        {{ $_campaignInsightsCount }}
-                    </span>
-                @endif
-            </span>
-        </a>
         <a href="{{ route('orcamentos.index') }}" class="nav-sub-item {{ request()->routeIs('orcamentos.*') ? 'active' : '' }}">
             <span class="flex items-center justify-between w-full">
                 <span>Orçamentos</span>
@@ -328,7 +340,7 @@
     </span>
 </a>
 
-<div x-data="{ open: {{ request()->routeIs('ai.*') || request()->routeIs('automations.*') || request()->routeIs('service-diagnostics.*') || request()->routeIs('playbooks.*') ? 'true' : 'false' }} }">
+<div x-data="{ open: {{ request()->routeIs('ai.*') || request()->routeIs('automations.*') || request()->routeIs('playbooks.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <x-icon name="sparkles" size="16" class="flex-shrink-0" />
@@ -348,10 +360,6 @@
         <a href="{{ route('ai.usage.index') }}"
            class="nav-sub-item {{ request()->routeIs('ai.usage.*') ? 'active' : '' }}">
             Uso & Custos
-        </a>
-        <a href="{{ route('service-diagnostics.index') }}"
-           class="nav-sub-item {{ request()->routeIs('service-diagnostics.*') ? 'active' : '' }}">
-            Atendimento Assistido
         </a>
         <a href="{{ route('automations.index') }}"
            class="nav-sub-item {{ request()->routeIs('automations.*') ? 'active' : '' }}">

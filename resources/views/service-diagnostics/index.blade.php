@@ -1,9 +1,23 @@
 <x-app-layout>
     <x-slot name="header">
-        <span class="text-sm font-semibold" style="color:var(--text)">Atendimento Assistido</span>
+        <div>
+            <p class="text-xs font-mono text-[var(--muted)] uppercase tracking-widest mb-1">Performance</p>
+            <h1 class="text-2xl font-black text-[var(--text)]">Atendimento</h1>
+        </div>
     </x-slot>
 
+    @include('performance._tabs')
+
     <div style="max-width:960px">
+
+        <form method="GET" action="{{ route('service-diagnostics.index') }}" class="flex flex-wrap items-end gap-3 mb-4">
+            <select name="client_id" onchange="this.form.submit()" class="filter-select">
+                <option value="">Todos os clientes</option>
+                @foreach($clients as $c)
+                    <option value="{{ $c->id }}" {{ request('client_id') === $c->id ? 'selected' : '' }}>{{ $c->displayName() }}</option>
+                @endforeach
+            </select>
+        </form>
 
         <p class="text-sm mb-6" style="color:var(--muted)">
             Selecione um cliente e um número de atendimento para ver os diagnósticos gerados a partir das conversas de WhatsApp.
@@ -34,6 +48,11 @@
                                           style="background: {{ $integration->isConnected() ? 'rgba(5,150,105,.1)' : 'var(--s3)' }};
                                                  color: {{ $integration->isConnected() ? 'var(--green)' : 'var(--muted)' }}">
                                         {{ $integration->statusLabel() }}
+                                    </span>
+                                    @php $lastAt = $integration->conversations_max_last_message_at ? \Illuminate\Support\Carbon::parse($integration->conversations_max_last_message_at) : null; @endphp
+                                    <span class="text-xs mt-2" style="color:{{ $lastAt && $lastAt->lt(now()->subDays(7)) ? 'var(--red)' : 'var(--muted)' }}"
+                                          @if($lastAt && $lastAt->lt(now()->subDays(7))) title="Nenhuma conversa nova há mais de 7 dias — confira se o número continua conectado" @endif>
+                                        {{ $lastAt ? 'Última conversa ' . $lastAt->format('d/m') : 'Nenhuma conversa' }}
                                     </span>
                                 </a>
                             @endforeach

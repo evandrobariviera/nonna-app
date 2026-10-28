@@ -1,0 +1,28 @@
+{
+  "novidades": [
+    {
+      "title": "Central de Performance: tudo de tráfego, leads e atendimento num lugar só",
+      "summary": "Novo item Performance no menu junta, em abas, o Dashboard, os Leads, as Campanhas, os Insights da IA e o Atendimento. O cliente escolhido vai junto de uma aba para a outra.",
+      "body": "<p>O <strong>Dashboard</strong> mostra, para um cliente ou para todos: investido, conversas no WhatsApp, leads, leads bons, vendas e retorno; o funil do anúncio à venda; os insights em aberto; a nota do último diagnóstico de atendimento e a evolução semana a semana. As telas de Leads, Campanhas e Atendimento continuam as mesmas, só mudaram de lugar no menu.</p>",
+      "kind": "novidade", "area": "Performance"
+    },
+    {
+      "title": "Aba Insights: alertas e análises da IA de todas as campanhas",
+      "summary": "Os alertas automáticos das campanhas e as análises \"Do anúncio à venda\" agora têm uma aba própria, com filtro por cliente, por tipo (alertas ou análises) e por situação (em aberto ou resolvidos).",
+      "kind": "melhoria", "area": "Performance"
+    },
+    {
+      "title": "Atendimento avisa quando um número para de receber conversa",
+      "summary": "Na aba Atendimento, cada número de WhatsApp mostra a data da última conversa. Se passar de 7 dias, fica em vermelho — sinal de que vale conferir se o número continua conectado.",
+      "kind": "melhoria", "area": "Performance"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Central de Performance — o painel de tráfego, leads e atendimento",
+      "category": "Performance",
+      "slug": "central-de-performance",
+      "body_file": "ajuda-central-performance.html"
+    }
+  ]
+}

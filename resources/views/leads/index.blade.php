@@ -1,12 +1,13 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-xs font-mono text-[var(--muted)] uppercase tracking-widest mb-1">CRM</p>
+            <p class="text-xs font-mono text-[var(--muted)] uppercase tracking-widest mb-1">Performance</p>
             <h1 class="text-2xl font-black text-[var(--text)]">Central de Leads</h1>
         </div>
     </x-slot>
 
     <div class="py-8 px-6">
+        @include('performance._tabs')
 
         @if(session('success'))
             <div class="mb-6 px-4 py-3 text-sm border" style="background: rgba(52,211,153,.06); border-color: rgba(52,211,153,.25); color: #34d399;">

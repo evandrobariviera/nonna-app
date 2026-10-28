@@ -230,6 +230,20 @@ class LeadFunnel
     }
 
     /**
+     * Soma da visão geral para o gráfico de funil. Só entra o investimento de
+     * quem tem lead na Central — cliente que investe mas não usa a Central
+     * inflaria o custo por lead.
+     */
+    public static function overviewTotals(array $overview): array
+    {
+        $withLeads = array_filter($overview, fn ($r) => $r['leads'] > 0);
+
+        return collect(['spend', 'leads', 'evaluated', 'good', 'weak', 'no_profile', 'sold', 'sold_value'])
+            ->mapWithKeys(fn ($k) => [$k => array_sum(array_column($withLeads, $k))])
+            ->all();
+    }
+
+    /**
      * Das pessoas marcadas como lead bom nos últimos 180 dias e já resolvidas
      * (ganho ou perdido), quantas compraram. Null sem histórico suficiente.
      */
