@@ -65,6 +65,7 @@
                         'documento' => ['icon' => 'file-text',     'label' => 'Documento'],
                         'linha-do-tempo' => ['icon' => 'chart-gantt', 'label' => 'Linha do tempo'],
                         'bloco3'    => ['icon' => 'folder-kanban', 'label' => 'Campanhas e Projetos', 'count' => $macroplan->projects->count()],
+                        'discussao' => ['icon' => 'messages-square', 'label' => 'Discussão', 'count' => $macroplan->comments->count()],
                         'pendencias' => ['icon' => 'hourglass',    'label' => 'Pendências', 'count' => $macroplan->pendencies()->open()->count()],
                     ];
                 @endphp
@@ -517,6 +518,78 @@
             {{-- ══ LINHA DO TEMPO — etapas do ciclo + campanhas/projetos (MacroPlanTimeline) ══ --}}
             <div x-show="block === 'linha-do-tempo'" x-cloak>
                 @include('macroplans._timeline', ['macroplan' => $macroplan, 'planTimeline' => $planTimeline])
+            </div>
+
+            {{-- ══ DISCUSSÃO — comentários do time sobre o planejamento (MacroPlanCommentController).
+                 Mesmo jeito dos comentários da campanha/projeto; comentário novo avisa todo
+                 mundo envolvido (MacroPlan::discussionRecipientIds). Só interno. ══ --}}
+            <div x-show="block === 'discussao'" x-cloak>
+                <div class="card px-5 py-4" x-data="{ editId: null }">
+                    <p class="card-title mb-1 flex items-center gap-2">
+                        <x-icon name="messages-square" size="12" /> Discussão do planejamento
+                    </p>
+                    <p class="text-xs mb-3" style="color:var(--muted)">Pra conversar sobre o planejamento como um todo. Assunto de uma campanha ou projeto fica nos comentários dela.</p>
+
+                    <form method="POST" action="{{ route('macroplan-comments.store', $macroplan) }}" class="flex flex-col gap-2 mb-2">
+                        @csrf
+                        <x-rich-editor name="comment_body" min-height="90px" :upload-url="route('macroplans.editor-image.store', $macroplan)" />
+                        @error('comment_body')<p class="text-xs" style="color:var(--red)">{{ $message }}</p>@enderror
+                        <div class="flex items-start justify-between gap-3">
+                            <span class="text-xs" style="color:var(--muted2)">
+                                @if($discussionRecipients->isNotEmpty())
+                                    Avisa: {{ $discussionRecipients->join(', ', ' e ') }}.
+                                @else
+                                    Ninguém pra avisar ainda — defina o responsável ou a equipe das campanhas.
+                                @endif
+                            </span>
+                            <button type="submit" class="btn btn-primary btn-xs flex-shrink-0">Comentar</button>
+                        </div>
+                    </form>
+
+                    <div class="flex flex-col">
+                        @forelse($macroplan->comments as $comment)
+                            <div class="flex gap-2.5 py-3" style="border-top:1px solid var(--border2)">
+                                <x-user-avatar :user="$comment->user" size="7" class="mt-0.5" />
+                                <div class="flex-1 min-w-0">
+                                    <div x-show="editId !== '{{ $comment->id }}'">
+                                        <div class="flex items-baseline gap-2 mb-1 flex-wrap">
+                                            <span class="text-sm font-semibold" style="color:var(--text)">{{ $comment->user?->name ?? '—' }}</span>
+                                            <span class="text-xs" style="color:var(--muted2)" title="{{ $comment->created_at->format('d/m/Y H:i') }}">{{ $comment->created_at->diffForHumans() }}</span>
+                                            @if($comment->updated_at->ne($comment->created_at))
+                                                <span class="text-xs" style="color:var(--muted2)">(editado)</span>
+                                            @endif
+                                        </div>
+                                        <x-rich-content :value="$comment->body" class="text-sm" style="color:var(--text); line-height:1.6" />
+                                        @if($comment->user_id === auth()->id())
+                                            <div class="flex items-center gap-3 mt-1.5">
+                                                <button type="button" @click="editId = '{{ $comment->id }}'" class="text-xs font-mono" style="color:var(--muted)">Editar</button>
+                                                <form method="POST" action="{{ route('macroplan-comments.destroy', [$macroplan, $comment]) }}"
+                                                      @submit.prevent="if (await $store.confirmDialog.ask('Remover comentário?')) $el.submit()">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="text-xs font-mono" style="color:var(--red)">Remover</button>
+                                                </form>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    @if($comment->user_id === auth()->id())
+                                        <template x-if="editId === '{{ $comment->id }}'">
+                                            <form method="POST" action="{{ route('macroplan-comments.update', [$macroplan, $comment]) }}" class="flex flex-col gap-2">
+                                                @csrf @method('PATCH')
+                                                <x-rich-editor name="comment_body" min-height="80px" :value="$comment->body" :upload-url="route('macroplans.editor-image.store', $macroplan)" />
+                                                <div class="flex gap-2">
+                                                    <button type="submit" class="btn btn-primary btn-xs">Salvar</button>
+                                                    <button type="button" @click="editId = null" class="btn btn-ghost btn-xs">Cancelar</button>
+                                                </div>
+                                            </form>
+                                        </template>
+                                    @endif
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-xs py-3" style="color:var(--muted); border-top:1px solid var(--border2)">Nenhum comentário ainda.</p>
+                        @endforelse
+                    </div>
+                </div>
             </div>
 
             {{-- ══ BLOCO 3: PROJETOS ══ --}}

@@ -53,6 +53,7 @@ class InternalNotification extends Model
         'meeting_transcribe_failed' => 'mic',
         'pendencia'                => 'hourglass',
         'project_comment'          => 'message-circle',
+        'macro_plan_comment'       => 'messages-square',
         'ajuste_cliente'           => 'rotate-ccw',
         self::KIND_ATA             => 'book-open',
     ];

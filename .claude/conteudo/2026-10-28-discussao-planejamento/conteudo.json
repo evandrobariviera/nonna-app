@@ -1,0 +1,18 @@
+{
+  "novidades": [
+    {
+      "title": "Discussão no planejamento",
+      "summary": "A página do planejamento ganhou a aba Discussão, para conversar sobre o planejamento como um todo. Cada comentário novo avisa no sino todo mundo envolvido: responsáveis, equipes das campanhas e quem tem tarefa no plano.",
+      "body": "<p>Embaixo do campo aparece \"Avisa: …\" com o nome de cada pessoa que vai receber o aviso. Assunto de uma campanha específica continua nos comentários da campanha. É interno: o cliente não vê.</p>",
+      "kind": "novidade", "area": "Planejamentos"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Planejamento, campanhas e reunião de discussão — como funciona",
+      "category": "Planejamentos",
+      "slug": "planejamento-campanhas-e-reuniao-de-discussao-como-funciona",
+      "body_file": "ajuda-planejamento-discussao.html"
+    }
+  ]
+}

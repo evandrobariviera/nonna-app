@@ -350,6 +350,37 @@ class MacroPlan extends Model
         return $this->hasMany(Meeting::class)->orderBy('scheduled_at');
     }
 
+    /** Discussão do planejamento — mais recente primeiro (MacroPlanCommentController). */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(MacroPlanComment::class)->latest();
+    }
+
+    /**
+     * Quem é avisado de comentário novo na discussão: responsável do planejamento, responsável
+     * do cliente, equipe das campanhas/projetos ativos, quem tem tarefa aberta no planejamento
+     * (executor, responsável ou observador) e quem já comentou. Equipe sozinha não basta —
+     * a maioria dos projetos não tem equipe preenchida (17 de 53 em 28/10).
+     */
+    public function discussionRecipientIds(): \Illuminate\Support\Collection
+    {
+        $projectIds = Project::where('macro_plan_id', $this->id)
+            ->whereNotIn('status', ['concluido', 'cancelado'])
+            ->pluck('id');
+
+        $openTasks = Task::whereNotIn('status', ['concluido', 'cancelado'])
+            ->where(fn ($q) => $q->where('macro_plan_id', $this->id)->orWhereIn('project_id', $projectIds));
+
+        return collect([$this->responsible_id, Client::whereKey($this->client_id)->value('creative_lead_id')])
+            ->merge(\Illuminate\Support\Facades\DB::connection('pgsql')->table('project_members')->whereIn('project_id', $projectIds)->pluck('user_id'))
+            ->merge((clone $openTasks)->whereNotNull('executor_id')->pluck('executor_id'))
+            ->merge(\Illuminate\Support\Facades\DB::connection('pgsql')->table('task_executors')->whereIn('task_id', $openTasks->select('id'))->pluck('user_id'))
+            ->merge($this->comments()->reorder()->whereNotNull('user_id')->pluck('user_id'))
+            ->filter()
+            ->unique()
+            ->values();
+    }
+
     // Anexo HTML original do planejamento (import via skill externa) — quem prefere
     // ver o documento fonte em vez da versão renderizada no App usa esse link.
     public function htmlAttachment(): ?MacroPlanAttachment

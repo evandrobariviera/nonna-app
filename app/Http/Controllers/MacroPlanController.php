@@ -146,7 +146,7 @@ class MacroPlanController extends Controller
     {
         $macroplan->load([
             'client.creativeLead:id,name,avatar_path,avatar_disk', 'responsible', 'projects.tasks', 'projects.phases', 'projects.members:users.id,users.name,users.avatar_path,users.avatar_disk',
-            'projects.discussionMeetings:meetings.id,meetings.title,meetings.status,meetings.scheduled_at', 'attachments.uploadedBy', 'activities.user',
+            'projects.discussionMeetings:meetings.id,meetings.title,meetings.status,meetings.scheduled_at', 'attachments.uploadedBy', 'activities.user', 'comments.user:id,name,avatar_path,avatar_disk',
             'tasks' => fn ($q) => $q->whereNull('project_id')->orderByDesc('created_at'),
         ]);
         $users          = User::orderBy('name')->get(['id', 'name', 'avatar_path', 'avatar_disk']);
@@ -156,7 +156,7 @@ class MacroPlanController extends Controller
         $mainDocument = $macroplan->mainDocument();
         $currentBlock = $request->get('bloco', 'documento');
 
-        if (!in_array($currentBlock, array_merge(['documento', 'linha-do-tempo', 'bloco3', 'pendencias', 'meta'], $legacyBlocks), true)) {
+        if (!in_array($currentBlock, array_merge(['documento', 'linha-do-tempo', 'bloco3', 'discussao', 'pendencias', 'meta'], $legacyBlocks), true)) {
             $currentBlock = 'documento';
         }
 
@@ -170,7 +170,10 @@ class MacroPlanController extends Controller
         // Etapas do ciclo + campanhas/projetos na régua (usa projects.phases/tasks já carregados).
         $planTimeline = \App\Services\Projects\MacroPlanTimeline::for($macroplan);
 
-        return view('macroplans.edit', compact('macroplan', 'users', 'currentBlock', 'legacyBlocks', 'mainDocument', 'discussionItems', 'relatedMeetings', 'planTimeline'));
+        // Quem a discussão avisa — aparece embaixo do campo de comentário.
+        $discussionRecipients = User::whereIn('id', $macroplan->discussionRecipientIds())->orderBy('name')->pluck('name');
+
+        return view('macroplans.edit', compact('macroplan', 'users', 'currentBlock', 'legacyBlocks', 'mainDocument', 'discussionItems', 'relatedMeetings', 'planTimeline', 'discussionRecipients'));
     }
 
     public function update(Request $request, MacroPlan $macroplan)

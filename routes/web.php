@@ -524,6 +524,17 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('macroplans.update');
     Route::patch('/planejamentos/{macroplan}/status', [MacroPlanController::class, 'updateStatus'])
         ->name('macroplans.update-status');
+    // ── Discussão do planejamento ──
+    Route::post('/planejamentos/{macroplan}/comentarios', [\App\Http\Controllers\MacroPlanCommentController::class, 'store'])
+        ->name('macroplan-comments.store');
+    Route::patch('/planejamentos/{macroplan}/comentarios/{comment}', [\App\Http\Controllers\MacroPlanCommentController::class, 'update'])
+        ->name('macroplan-comments.update');
+    Route::delete('/planejamentos/{macroplan}/comentarios/{comment}', [\App\Http\Controllers\MacroPlanCommentController::class, 'destroy'])
+        ->name('macroplan-comments.destroy');
+    Route::post('/planejamentos/{macroplan}/editor-imagem', [\App\Http\Controllers\MacroPlanEditorImageController::class, 'store'])
+        ->name('macroplans.editor-image.store');
+    Route::get('/planejamentos/{macroplan}/editor-imagem/{filename}', [\App\Http\Controllers\MacroPlanEditorImageController::class, 'show'])
+        ->name('macroplans.editor-image.show');
     Route::post('/planejamentos/{macroplan}/reuniao-discussao', [MacroPlanController::class, 'scheduleDiscussion'])
         ->name('macroplans.discussion.store');
     Route::delete('/planejamentos/{macroplan}', [MacroPlanController::class, 'destroy'])
