@@ -20,7 +20,7 @@
     </x-slot>
 
     {{-- ── KPIs ── --}}
-    <div class="grid gap-3 mb-6" style="grid-template-columns: repeat(4, 1fr)">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <div class="card px-4 py-4 text-left">
             <div class="text-2xl font-black mb-1" style="color:{{ $currentMonth['saldo_previsto'] >= 0 ? 'var(--text)' : 'var(--red)' }}">
                 R$ {{ number_format($currentMonth['saldo_previsto'], 2, ',', '.') }}

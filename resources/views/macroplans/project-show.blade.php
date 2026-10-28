@@ -25,12 +25,12 @@
             <span style="color:var(--border2)">/</span>
             <span style="color:var(--text)">{{ $project->title }}</span>
         </div>
-        <div class="flex items-center gap-3">
-            <form method="POST" action="{{ route('projects.update-macroplan', $project) }}" class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-3">
+            <form method="POST" action="{{ route('projects.update-macroplan', $project) }}" class="flex items-center gap-2 max-w-full min-w-0">
                 @csrf @method('PATCH')
                 <label class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted)">Planejamento</label>
                 <select name="macro_plan_id" onchange="this.form.submit()"
-                    class="field px-2 py-1.5 text-xs focus:outline-none">
+                    class="field min-w-0 flex-1 px-2 py-1.5 text-xs focus:outline-none">
                     <option value="">— nenhum —</option>
                     @foreach($clientMacroplans as $mp)
                         <option value="{{ $mp->id }}" {{ $project->macro_plan_id === $mp->id ? 'selected' : '' }}>
@@ -85,7 +85,7 @@
     {{-- 2 colunas (2026-10): documento à esquerda, detalhes/portal/anexos/campanhas numa
          coluna lateral fixa — o HTML é estreito e sozinho na largura toda sobrava cinza. --}}
     @php $projectClient = $project->client ?? $macroplan?->client; @endphp
-    <div class="grid gap-5 mb-6 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_460px] items-start">
+    <div class="grid grid-cols-1 gap-5 mb-6 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_460px] items-start">
     <div class="min-w-0">
 
     {{-- DOCUMENTO — o HTML da campanha/projeto (campo próprio document_attachment_id). É onde mora o

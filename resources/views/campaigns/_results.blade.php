@@ -3,7 +3,7 @@
      stats + insights + tabela mudam todos juntos com o filtro (mesmo escopo). --}}
 
 {{-- ── STATS ── --}}
-<div class="grid gap-3 mb-6" style="grid-template-columns: repeat(4, 1fr)">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
     <div class="card px-4 py-4 text-left">
         <div class="text-2xl font-black mb-1" style="color:var(--text)">
             R$ {{ number_format($stats['period_spend'], 2, ',', '.') }}
@@ -45,6 +45,7 @@
             <p class="text-sm">Nenhuma campanha encontrada.</p>
         </div>
     @else
+        <div class="overflow-x-auto">
         <table class="nonna-table">
             <thead>
                 <tr>
@@ -72,5 +73,6 @@
                 </tbody>
             @endif
         </table>
+        </div>
     @endif
 </div>

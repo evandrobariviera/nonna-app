@@ -1003,6 +1003,20 @@ body .pub-label, body .label-sm {
    "Nonna OS no Celular"). Fase 0: grids fluidos, barra inferior, touch.
    ══════════════════════════════════════════════════════════════════════ */
 
+/* ── TEXTO LONGO NÃO EMPURRA A TELA ─────────────────────────────────────
+   Link, e-mail ou código sem espaço (ex.: https://drive.google.com/drive/folders/1AbC…)
+   não cabia no card e criava rolagem lateral. Texto quebra a palavra que não couber;
+   links quebram em qualquer ponto, inclusive dentro de flex/grid. Tabelas ficam fora
+   (a coluna espremeria letra por letra — elas já rolam dentro do próprio contêiner).
+   Select com opção comprida ("Todos os clientes" + razão social) não passa da largura. */
+.app-page, .portal-page { overflow-wrap: break-word; }
+.app-page a, .portal-page a,
+.app-page .whitespace-pre-wrap, .portal-page .whitespace-pre-wrap,
+.app-page .ProseMirror, .portal-page .ProseMirror,
+.app-page .comment-body, .portal-page .comment-body { overflow-wrap: anywhere; }
+.app-page table a, .portal-page table a { overflow-wrap: break-word; }
+.app-page select, .portal-page select { max-width: 100%; }
+
 /* ── GRIDS FLUIDOS ──────────────────────────────────────────────────────
    As colunas se reorganizam sozinhas conforme a largura, sem breakpoint.
    Substituem os style="grid-template-columns: repeat(N,1fr)" inline, que o

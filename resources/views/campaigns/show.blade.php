@@ -108,7 +108,7 @@
 
             {{-- DADOS — resultado, com comparativo vs período anterior (mesmo princípio já
                  usado na listagem de campanhas) --}}
-            <div class="grid gap-3" style="grid-template-columns: repeat(4, 1fr)">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 <div class="card px-4 py-4 text-left">
                     <div class="text-2xl font-black mb-1" style="color:var(--text)">R$ {{ number_format($stats->spend, 2, ',', '.') }}</div>
                     <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Gasto ({{ $periodLabel }})</div>
@@ -153,7 +153,7 @@
 
             {{-- DADOS — gráficos de área (gasto e resultados por dia, padrão Mirbal) --}}
             @if($dailyStats->count() > 1)
-                <div class="grid gap-3" style="grid-template-columns: repeat(2, 1fr)">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div class="card px-4 py-4">
                         <p class="card-title mb-3">Gasto por dia</p>
                         @include('partials._line-chart', [
@@ -176,7 +176,7 @@
             @endif
 
             {{-- DADOS — alcance e engajamento, com comparativo vs período anterior --}}
-            <div class="grid gap-3" style="grid-template-columns: repeat(5, 1fr)">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                 <div class="card px-4 py-4 text-left">
                     <div class="text-xl font-black mb-1" style="color:var(--text)">{{ number_format($stats->impressions, 0, ',', '.') }}</div>
                     <div class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Impressões</div>

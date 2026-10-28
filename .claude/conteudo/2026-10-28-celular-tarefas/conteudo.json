@@ -1,0 +1,11 @@
+{
+  "novidades": [
+    {
+      "title": "Tarefas no celular sem rolar pro lado",
+      "summary": "A página da tarefa, a lista de Tarefas e a lista da Sprint agora se ajustam à tela do celular — e links compridos quebram dentro do card em vez de esticar a tela.",
+      "body": "<p>Na tarefa, as colunas ficam uma embaixo da outra (os dados, datas e pendências descem pro fim). Em /tarefas e na lista da Sprint, cada tarefa vira um cartão, como já era nas Filas. Links do Drive, do servidor e de sites quebram dentro do card. Também foram ajustados no celular: Dashboard (Suas pendências), Projeto, Projetos, Campanhas, Oportunidades, Pendências, Contratos e Financeiro. Tabelas grandes continuam rolando pro lado, mas só dentro do próprio quadro.</p>",
+      "kind": "melhoria", "area": "Tarefas"
+    }
+  ],
+  "ajuda": []
+}

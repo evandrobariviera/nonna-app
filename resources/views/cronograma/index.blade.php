@@ -73,7 +73,7 @@
         <input type="search" x-model="q" placeholder="Buscar cliente…" class="field px-3 py-1.5 text-xs focus:outline-none" style="width:180px">
     </div>
 
-    <div class="grid gap-5 items-start xl:grid-cols-[minmax(0,1fr)_300px]">
+    <div class="grid grid-cols-1 gap-5 items-start xl:grid-cols-[minmax(0,1fr)_300px]">
 
     {{-- ── GANTT ── --}}
     <div class="card overflow-hidden min-w-0">

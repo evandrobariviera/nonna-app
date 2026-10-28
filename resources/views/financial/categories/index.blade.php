@@ -45,7 +45,7 @@
         </form>
     </div>
 
-    <div class="grid gap-4" style="grid-template-columns: repeat(2, 1fr)">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         @foreach(\App\Models\FinancialCategory::$types as $typeKey => $typeLabel)
             <div class="card card-body">
                 <p class="card-title mb-3">{{ $typeLabel }}</p>

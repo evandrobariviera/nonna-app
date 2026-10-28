@@ -9,7 +9,7 @@
     </x-slot>
 
     {{-- ── STATS ── --}}
-    <div class="grid gap-3 mb-6" style="grid-template-columns: repeat(4, 1fr)">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <a href="{{ route('contracts.index') }}"
            class="card px-4 py-4 text-left transition-all"
            style="{{ !request()->hasAny(['status', 'vencidos']) ? 'border-color:var(--purple); box-shadow:0 0 0 1px var(--purple)' : '' }}">

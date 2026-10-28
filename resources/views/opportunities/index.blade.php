@@ -124,6 +124,7 @@
             <div class="mt-10">
                 <h2 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-4">Encerradas recentemente</h2>
                 <div class="card">
+                    <div class="overflow-x-auto">
                     <table class="nonna-table">
                         <thead>
                             <tr>
@@ -169,6 +170,7 @@
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         @endif

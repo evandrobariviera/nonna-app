@@ -2,7 +2,7 @@
      página: lista à esquerda e conversa à direita. No celular, uma coisa por vez. --}}
 <x-app-layout>
     <div x-data="chatWidget({ mode: 'page', openConversation: @js($openConversation) })"
-         class="grid md:grid-cols-[320px_1fr] overflow-hidden"
+         class="grid grid-cols-1 md:grid-cols-[320px_1fr] overflow-hidden"
          style="height:calc(100vh - 8rem); background:var(--s1); border:1px solid var(--border2)">
 
         <div class="min-h-0 flex-col" style="border-right:1px solid var(--border2)"

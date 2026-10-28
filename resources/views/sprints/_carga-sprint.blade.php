@@ -5,7 +5,7 @@
     </h3>
 
     {{-- Avatares por executor: total + breakdown por status, reage aos filtros acima --}}
-    <div class="grid gap-4 mb-5" style="grid-template-columns: repeat(4, 1fr)">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-5">
         @forelse($sprintTasksByExecutor as $group)
             <div class="card px-4 py-4 flex flex-col items-center text-center">
                 @if($group['executor'])

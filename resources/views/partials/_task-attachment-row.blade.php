@@ -27,7 +27,7 @@
                 </span>
             @endif
             <div class="min-w-0 flex items-center gap-2 flex-wrap">
-                <span class="font-medium truncate" style="color:var(--text)">{{ $attachment->filename }}</span>
+                <span class="font-medium [overflow-wrap:anywhere] sm:truncate" style="color:var(--text)">{{ $attachment->filename }}</span>
                 @if($attachment->is_deliverable)
                     <span class="px-1.5 py-0.5 text-xs font-semibold flex-shrink-0"
                           style="background:rgba(100, 59, 142,.12); color:var(--purple)">
@@ -37,9 +37,9 @@
             </div>
         </div>
     </td>
-    <td style="color:var(--muted2)">{{ $attachment->sizeForHumans() }}</td>
-    <td style="color:var(--muted2)">{{ $attachment->uploaderName() ?? '—' }}</td>
-    <td style="color:var(--muted2)">{{ $attachment->created_at->format('d/m/Y H:i') }}</td>
+    <td class="hidden sm:table-cell" style="color:var(--muted2)">{{ $attachment->sizeForHumans() }}</td>
+    <td class="hidden sm:table-cell" style="color:var(--muted2)">{{ $attachment->uploaderName() ?? '—' }}</td>
+    <td class="hidden sm:table-cell" style="color:var(--muted2)">{{ $attachment->created_at->format('d/m/Y H:i') }}</td>
     <td class="text-right">
         <div class="flex items-center justify-end gap-3">
             <button type="button" title="Visualizar" class="btn btn-ghost btn-xs"

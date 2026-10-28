@@ -14,7 +14,7 @@
             </p>
         </div>
 
-        <div class="grid md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-xs font-semibold mb-1" style="color:var(--muted); letter-spacing:.05em">TIPO *</label>
                 <select name="kind" required

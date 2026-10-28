@@ -13,6 +13,7 @@
             <p class="text-xs" style="color:var(--muted)">Nenhum conjunto de anúncios sincronizado ainda.</p>
         </div>
     @else
+        <div class="overflow-x-auto">
         <table class="nonna-table">
             <thead>
                 <tr>
@@ -108,5 +109,6 @@
                 </tbody>
             @endforeach
         </table>
+        </div>
     @endif
 </div>

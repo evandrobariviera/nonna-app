@@ -93,7 +93,7 @@
             @endif
 
             {{-- Ações --}}
-            <div class="flex items-center gap-2 mt-2">
+            <div class="flex flex-wrap items-center gap-2 mt-2">
                 @if($open)
                     <button type="button" class="btn btn-xs btn-ghost" style="color:var(--green); border-color:rgba(16,185,129,.35)" @click="resolving = !resolving">
                         ✓ Resolver

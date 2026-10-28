@@ -28,7 +28,7 @@
             </template>
 
             {{-- Ações da sprint --}}
-            <div class="flex items-center gap-2" x-show="!editing">
+            <div class="flex flex-wrap items-center gap-2" x-show="!editing">
                 <button type="button" @click="editing = true" class="btn btn-ghost btn-sm">
                     ✎ Editar
                 </button>

@@ -8,8 +8,21 @@
 
     @include('partials._task-bulk-bar')
 
+    {{-- CELULAR: cards (mesmo partial de Filas/Tickets) no lugar da tabela de 9 colunas --}}
+    <div class="card overflow-hidden md:hidden">
+        @forelse($tasks as $task)
+            @include('partials._task-card', ['task' => $task, 'context' => 'lista'])
+        @empty
+            <div class="tab-placeholder">
+                <div class="tab-placeholder-icon"><x-icon name="clipboard-list" size="32" /></div>
+                <div class="tab-placeholder-title">Nenhuma tarefa encontrada</div>
+                <div class="tab-placeholder-desc">Ajuste os filtros ou crie um novo ticket.</div>
+            </div>
+        @endforelse
+    </div>
+
     {{-- TABELA ESTILO MONDAY --}}
-    <div class="card overflow-hidden">
+    <div class="card overflow-hidden hidden md:block">
     <div class="overflow-x-auto">
         <table class="nonna-table">
             <thead>

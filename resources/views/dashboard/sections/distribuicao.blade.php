@@ -74,7 +74,7 @@
         </div>
     @endif
 
-    <div class="grid gap-4 items-start {{ $hasInbox ? 'lg:grid-cols-[300px_1fr]' : '' }}">
+    <div class="grid grid-cols-1 gap-4 items-start {{ $hasInbox ? 'lg:grid-cols-[300px_1fr]' : '' }}">
 
         {{-- ── A DISTRIBUIR (só aparece como coluna quando tem algo) ── --}}
         @if($hasInbox)

@@ -118,7 +118,7 @@
     >
 
         {{-- ── STATS ──────────────────────────────────────────────────────────── --}}
-        <div class="grid gap-3 mb-6" style="grid-template-columns: repeat(7, 1fr)">
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
 
             <button @click="filterType = ''; filterStatus = ''; filterOverdue = false; filterNotStarted = false; applyFilters()"
                 class="card px-4 py-4 text-left transition-all"
@@ -213,9 +213,9 @@
 
             <div class="h-5" style="border-left:1px solid var(--border2)"></div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 <span class="text-xs font-mono" style="color:var(--muted)">Ordenar:</span>
-                <div class="flex gap-1">
+                <div class="flex flex-wrap gap-1">
                     <template x-for="opt in sortOptions" :key="opt.key">
                         <button @click="sortBy = opt.key; applyFilters()"
                             class="px-3 py-1.5 text-xs font-mono transition-all"
@@ -228,7 +228,7 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 <span class="text-xs font-mono" style="color:var(--muted)">Agrupar:</span>
                 <select x-model="groupBy"
                     class="field px-3 py-2 text-xs focus:outline-none">

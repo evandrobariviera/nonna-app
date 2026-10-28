@@ -201,7 +201,7 @@
     @endif
 
     @if($show('sprint') || $show('cadastro'))
-    <div class="grid gap-4 mb-6 md:grid-cols-[7fr_3fr] items-stretch">
+    <div class="grid grid-cols-1 gap-4 mb-6 md:grid-cols-[7fr_3fr] items-stretch">
 
         {{-- Coluna 1: Sprint --}}
         <div class="card px-5 py-4">
@@ -345,7 +345,7 @@
                 </h3>
                 <a href="{{ route('pendencies.index', ['responsavel' => 'meus']) }}" class="text-xs font-semibold" style="color:var(--purple)">Ver na Central →</a>
             </div>
-            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 @foreach([
                     ['title' => 'Para entregar', 'hint' => 'esperam isso de você', 'items' => $pendenciesToDeliver, 'empty' => 'Nada esperando por você.'],
                     ['title' => 'Para cobrar', 'hint' => 'você vai atrás', 'items' => $pendenciesToChase, 'empty' => 'Nada pra cobrar.'],
@@ -386,7 +386,7 @@
          atrasado comigo na sprint. Some quando não há nada (o modo cuida do resto). ── --}}
     @if($myMeetingsToday->isNotEmpty() || $myOverdueTasks->isNotEmpty())
         <div class="card px-5 py-4 mb-6">
-            <div class="grid gap-4 md:grid-cols-2">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                     <h3 class="text-sm font-bold flex items-center gap-1.5 mb-2" style="color:var(--text)">
                         <x-icon name="calendar" size="14" /> Reuniões de hoje ({{ $myMeetingsToday->count() }})
@@ -763,7 +763,7 @@
                 </p>
             @endif
 
-            <div class="grid gap-3 md:grid-cols-5">
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-5">
                 @foreach($weekDays as $dia)
                     @php $hoje = $dia['data']->isToday(); @endphp
                     <div class="flex flex-col gap-2 min-w-0" style="{{ $hoje ? 'padding:6px; border-radius:10px; border:2px solid var(--green); background:rgba(52,211,153,.05)' : '' }}">

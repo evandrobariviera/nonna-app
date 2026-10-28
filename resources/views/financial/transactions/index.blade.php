@@ -25,7 +25,7 @@
     </div>
 
     {{-- ── KPIs ── --}}
-    <div class="grid gap-3 mb-6" style="grid-template-columns: repeat(4, 1fr)">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <div class="card px-4 py-4 text-left">
             <div class="text-2xl font-black mb-1" style="color:var(--green)">
                 R$ {{ number_format($stats['entradas_previstas'], 2, ',', '.') }}
@@ -59,8 +59,8 @@
         </button>
 
         <div x-show="open" x-cloak class="card px-5 py-5">
-            <form method="POST" action="{{ route('financial-transactions.store') }}" class="grid gap-3"
-                  style="grid-template-columns: repeat(4, 1fr)" x-data="{ repeatMode: 'none' }">
+            <form method="POST" action="{{ route('financial-transactions.store') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
+                  x-data="{ repeatMode: 'none' }">
                 @csrf
                 <div>
                     <label class="text-xs font-mono uppercase tracking-widest mb-1 block" style="color:var(--muted)">Tipo</label>

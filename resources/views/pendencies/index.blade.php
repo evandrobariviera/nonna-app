@@ -33,7 +33,7 @@
                 Pendência é <strong style="color:var(--text)">algo que alguém precisa entregar pra o trabalho andar</strong>: fotos do cliente, um acesso, uma data, uma decisão.
                 Se é trabalho nosso, é tarefa. Se estamos <em>esperando chegar</em>, é pendência.
             </p>
-            <div class="grid gap-3 md:grid-cols-4 text-xs" style="color:var(--muted2)">
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-4 text-xs" style="color:var(--muted2)">
                 <div>
                     <p class="font-bold mb-0.5" style="color:var(--text)">1. Registre</p>
                     Dentro da tarefa, projeto ou planejamento (bloco <strong>Pendências → + Nova</strong>), ou aqui em <strong>+ Nova pendência</strong>. Coloque prazo.

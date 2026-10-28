@@ -35,7 +35,7 @@
             </form>
         </div>
 
-        <div class="grid gap-3 md:grid-cols-2">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div class="px-4 py-3" style="background:var(--s2); border-radius:10px">
                 <p class="text-xs font-bold mb-1.5" style="color:var(--purple)">1. Quanto vale cada tarefa</p>
                 <p class="text-xs" style="color:var(--muted2); line-height:1.7">

@@ -27,7 +27,7 @@
         </div>
     </div>
 
-    <div class="grid gap-5 lg:grid-cols-[minmax(240px,320px)_1fr]">
+    <div class="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(240px,320px)_1fr]">
 
         {{-- ── Esquerda: os meus pontos + a agência ── --}}
         <div class="flex flex-col gap-4">

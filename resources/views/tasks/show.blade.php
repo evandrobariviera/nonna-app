@@ -303,12 +303,13 @@
         });
     </script>
 
-    <div class="flex gap-5" style="align-items: start;">
+    {{-- Celular: colunas uma embaixo da outra (lateral depois); lg+: lado a lado. --}}
+    <div class="flex flex-col lg:flex-row gap-4 lg:gap-5" style="align-items: start;">
 
         {{-- ══════════════════════════════════════════════════════════
              COLUNA PRINCIPAL
         ══════════════════════════════════════════════════════════ --}}
-        <div class="flex-1 min-w-0 flex flex-col gap-4">
+        <div class="flex-1 min-w-0 w-full flex flex-col gap-4">
 
             {{-- CABEÇALHO — "Trava" (liga/desliga, só aviso) mora aqui: x-data no card pra
                  o selo da linha de badges e o botão da direita andarem juntos. --}}
@@ -324,8 +325,8 @@
                          if (ok) { this.blocker = !this.blocker; } else { alert(message || 'Não foi possível mudar a Trava.'); }
                      },
                  }">
-                <div class="flex items-start justify-between gap-4 mb-3">
-                    <div class="flex-1 min-w-0">
+                <div class="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4 mb-3">
+                    <div class="flex-1 min-w-0 w-full">
                         <div class="flex items-center gap-2 mb-2 flex-wrap">
                             <span class="badge badge-{{ $task->statusColor() }}">{{ $task->statusLabel() }}</span>
                             <span x-show="blocker" x-cloak class="badge flex items-center gap-1" style="background:rgba(239,68,68,.1); color:var(--red); border-color:rgba(239,68,68,.35)"
@@ -347,7 +348,7 @@
                                    class="text-2xl w-full focus:outline-none" style="color:var(--text); font-weight:700; letter-spacing:-0.02em; background:var(--s3); border:1px solid var(--purple); border-radius:6px; padding:2px 6px">
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 flex-shrink-0">
+                    <div class="flex items-center gap-2 flex-shrink-0 flex-wrap">
                         <button type="button" @click="toggleBlocker()" :disabled="savingBlocker"
                                 class="btn btn-xs flex items-center gap-1.5"
                                 :class="blocker ? '' : 'btn-ghost'"
@@ -484,8 +485,9 @@
                      },
                  }">
                 <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Status</p>
-                <div class="flex items-center gap-1.5">
-                    <div class="flex flex-1 min-w-0" style="overflow-x:auto">
+                <div class="flex flex-wrap sm:flex-nowrap items-center gap-1.5">
+                    {{-- Celular: corrente ocupa a linha toda (arrasta pro lado) e Cancelado desce --}}
+                    <div class="flex w-full sm:w-auto sm:flex-1 min-w-0" style="overflow-x:auto">
                         @foreach($flowStatuses as $key => $s)
                             @php
                                 $clip = $loop->first
@@ -546,10 +548,10 @@
                         },
                     }">
                     <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Situação</p>
-                    <div class="grid grid-cols-7 gap-1.5">
+                    <div class="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
                         @foreach(\App\Models\Task::$situations as $key => $label)
                             <button type="button" @click="set('{{ $key }}')"
-                                class="w-full h-full px-2 py-2.5 text-xs font-semibold text-center leading-tight transition-colors rounded-lg"
+                                class="w-full h-full px-2 py-2.5 text-xs font-semibold text-center leading-tight [overflow-wrap:normal] transition-colors rounded-lg"
                                 :style="'letter-spacing:.01em;cursor:pointer;' + (situacaoKey === '{{ $key }}'
                                     ? 'background:' + (colors['{{ $key }}'] || 'var(--muted2)') + ';color:#fff;'
                                     : 'background:var(--s2);color:var(--muted2);border:1px solid var(--border);')"
@@ -566,7 +568,7 @@
             {{-- CAMPOS (sem título — some espaço): Sprint/Tipo em cima, Origem/Destino
                  embaixo, Solicitante por último (só ticket com nome preenchido). --}}
             <div class="card card-body-lg">
-                <div class="grid grid-cols-2 gap-x-10 gap-y-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:var(--muted); letter-spacing:.08em">Sprint</p>
                         <div class="flex items-center gap-1.5"
@@ -632,7 +634,7 @@
                  TaskController::updateClient()). --}}
             <div class="card card-body-lg flex flex-col gap-5">
                 <p class="card-title">Cliente / Planejamento / Projeto{{ $task->meeting ? ' / Reunião' : '' }}</p>
-                <div class="grid {{ $task->meeting ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-3' }} gap-4">
+                <div class="grid {{ $task->meeting ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-4' : 'grid-cols-1 sm:grid-cols-3' }} gap-4">
                     <div x-data="{
                             value: @js($task->client_id),
                             saving: false,
@@ -721,7 +723,7 @@
                  salva a cada chip adicionado/removido. Nenhum dos três depende de "Salvar". --}}
             <div class="card card-body-lg flex flex-col gap-5">
                 <p class="card-title">Pessoas</p>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-widest mb-1.5" style="color:var(--muted); letter-spacing:.08em">Responsável</label>
                         <select x-data="selectField({ url: '{{ route('tasks.update-responsavel', $task) }}', payloadKey: 'responsavel_id', value: @js($task->responsibles->first()?->id) })"
@@ -852,9 +854,9 @@
                             <thead>
                                 <tr>
                                     <th>Nome do Arquivo</th>
-                                    <th>Tamanho</th>
-                                    <th>Enviado por</th>
-                                    <th>Data</th>
+                                    <th class="hidden sm:table-cell">Tamanho</th>
+                                    <th class="hidden sm:table-cell">Enviado por</th>
+                                    <th class="hidden sm:table-cell">Data</th>
                                     <th class="text-right">Ações</th>
                                 </tr>
                             </thead>
@@ -1027,9 +1029,9 @@
                             <thead>
                                 <tr>
                                     <th>Nome do Arquivo</th>
-                                    <th>Tamanho</th>
-                                    <th>Enviado por</th>
-                                    <th>Data</th>
+                                    <th class="hidden sm:table-cell">Tamanho</th>
+                                    <th class="hidden sm:table-cell">Enviado por</th>
+                                    <th class="hidden sm:table-cell">Data</th>
                                     <th class="text-right">Ações</th>
                                 </tr>
                             </thead>
@@ -1217,7 +1219,7 @@
         {{-- ══════════════════════════════════════════════════════════
              SIDEBAR DIREITA
         ══════════════════════════════════════════════════════════ --}}
-        <div class="flex flex-col gap-4" style="width:320px; flex-shrink:0">
+        <div class="flex flex-col gap-4 w-full lg:w-[320px] flex-shrink-0">
 
             {{-- FAZ PARTE DE — campanha/projeto da tarefa em destaque (2026-10): a ideia é a
                  pessoa enxergar o contexto e ir visitar o projeto a partir da tarefa. Progresso
