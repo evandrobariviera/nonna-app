@@ -194,6 +194,8 @@ class LeadFunnel
                 COUNT(o.ad_campaign_id) AS attributed,
                 COUNT(COALESCE(o.quality, o.ai_quality)) AS evaluated,
                 COUNT(*) FILTER (WHERE COALESCE(o.quality, o.ai_quality) = 'bom') AS good,
+                COUNT(*) FILTER (WHERE COALESCE(o.quality, o.ai_quality) = 'fraco') AS weak,
+                COUNT(*) FILTER (WHERE COALESCE(o.quality, o.ai_quality) = 'sem_perfil') AS no_profile,
                 COUNT(*) FILTER (WHERE o.stage = 'ganho') AS sold,
                 COALESCE(SUM(o.deal_value) FILTER (WHERE o.stage = 'ganho'), 0) AS sold_value")
             ->get()
@@ -216,6 +218,8 @@ class LeadFunnel
                 'attributed'    => (int) ($l->attributed ?? 0),
                 'evaluated'     => (int) ($l->evaluated ?? 0),
                 'good'          => $good,
+                'weak'          => (int) ($l->weak ?? 0),
+                'no_profile'    => (int) ($l->no_profile ?? 0),
                 'sold'          => (int) ($l->sold ?? 0),
                 'sold_value'    => round($soldValue, 2),
                 'has_rule'      => $client->hasReviewedLeadRule(),

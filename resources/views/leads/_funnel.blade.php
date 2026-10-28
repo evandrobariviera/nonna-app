@@ -85,20 +85,20 @@
                             <div class="text-xs" style="color:var(--muted)">{{ ucfirst($r['platform']) }}{{ $r['status'] && $r['status'] !== 'active' ? ' · pausada' : '' }}</div>
                         @endif
                     </td>
-                    <td style="text-align:right">{{ $r['spend'] > 0 ? $money($r['spend']) : '—' }}</td>
-                    <td style="text-align:right; color:var(--muted)">{{ $r['platform_results'] ?: '—' }}</td>
-                    <td style="text-align:right">{{ $r['leads'] ?: '—' }}</td>
-                    <td style="text-align:right">
+                    <td style="white-space:nowrap; text-align:right">{{ $r['spend'] > 0 ? $money($r['spend']) : '—' }}</td>
+                    <td style="white-space:nowrap; text-align:right; color:var(--muted)">{{ $r['platform_results'] ?: '—' }}</td>
+                    <td style="white-space:nowrap; text-align:right">{{ $r['leads'] ?: '—' }}</td>
+                    <td style="white-space:nowrap; text-align:right">
                         {{ $r['good'] ?: ($r['evaluated'] ? 0 : '—') }}
                         @if($r['good_pct'] !== null)<span class="text-xs" style="color:var(--muted)">({{ $r['good_pct'] }}%)</span>@endif
                     </td>
-                    <td style="text-align:right">{{ $money($r['cost_per_lead']) }}</td>
-                    <td style="text-align:right; font-weight:600">{{ $money($r['cost_per_good']) }}</td>
-                    <td style="text-align:right">
+                    <td style="white-space:nowrap; text-align:right">{{ $money($r['cost_per_lead']) }}</td>
+                    <td style="white-space:nowrap; text-align:right; font-weight:600">{{ $money($r['cost_per_good']) }}</td>
+                    <td style="white-space:nowrap; text-align:right">
                         {{ $r['sold'] ?: '—' }}
                         @if($r['sold'])<div class="text-xs" style="color:var(--muted)">{{ $money($r['sold_value']) }}</div>@endif
                     </td>
-                    <td style="text-align:right">
+                    <td style="white-space:nowrap; text-align:right">
                         {{ $money($r['return']) }}
                         @if($r['return_estimated'] && $r['return_estimated'] !== $r['return'])
                             <div class="text-xs" style="color:var(--muted)">estimado {{ $money($r['return_estimated']) }}</div>

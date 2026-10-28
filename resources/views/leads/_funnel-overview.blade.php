@@ -8,8 +8,11 @@
     De {{ $from->format('d/m/Y') }} a {{ $to->format('d/m/Y') }}. Escolha um cliente para ver campanha por campanha.
 </p>
 
-@include('leads._funnel-chart', ['t' => collect(['leads', 'evaluated', 'good', 'sold', 'sold_value'])
-    ->mapWithKeys(fn ($k) => [$k => array_sum(array_column($overview, $k))])->all()])
+{{-- Custos do funil só com o investimento de quem tem lead na Central —
+     cliente que investe mas não usa a Central inflaria o custo por lead. --}}
+@php($withLeads = array_filter($overview, fn ($r) => $r['leads'] > 0))
+@include('leads._funnel-chart', ['t' => collect(['spend', 'leads', 'evaluated', 'good', 'weak', 'no_profile', 'sold', 'sold_value'])
+    ->mapWithKeys(fn ($k) => [$k => array_sum(array_column($withLeads, $k))])->all()])
 
 <div class="card overflow-hidden">
 <div class="overflow-x-auto">
@@ -35,18 +38,18 @@
                             <div class="text-xs" style="color:var(--muted)">sem régua de lead — IA não avalia</div>
                         @endunless
                     </td>
-                    <td style="text-align:right">{{ $r['spend'] > 0 ? $money($r['spend']) : '—' }}</td>
-                    <td style="text-align:right">
+                    <td style="white-space:nowrap; text-align:right">{{ $r['spend'] > 0 ? $money($r['spend']) : '—' }}</td>
+                    <td style="white-space:nowrap; text-align:right">
                         {{ $r['leads'] ?: '—' }}
                         @if($r['leads'])<span class="text-xs" style="color:var(--muted)">({{ $r['attributed'] }})</span>@endif
                     </td>
-                    <td style="text-align:right">{{ $r['evaluated'] ? $r['good'] : '—' }}</td>
-                    <td style="text-align:right; font-weight:600">{{ $money($r['cost_per_good']) }}</td>
-                    <td style="text-align:right">
+                    <td style="white-space:nowrap; text-align:right">{{ $r['evaluated'] ? $r['good'] : '—' }}</td>
+                    <td style="white-space:nowrap; text-align:right; font-weight:600">{{ $money($r['cost_per_good']) }}</td>
+                    <td style="white-space:nowrap; text-align:right">
                         {{ $r['sold'] ?: '—' }}
                         @if($r['sold'])<div class="text-xs" style="color:var(--muted)">{{ $money($r['sold_value']) }}</div>@endif
                     </td>
-                    <td style="text-align:right">{{ $money($r['return']) }}</td>
+                    <td style="white-space:nowrap; text-align:right">{{ $money($r['return']) }}</td>
                 </tr>
             @empty
                 <tr><td colspan="7" class="text-center py-8" style="color:var(--muted)">Nenhum investimento nem lead neste período.</td></tr>
