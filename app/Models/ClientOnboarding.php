@@ -137,13 +137,48 @@ class ClientOnboarding extends Model
         foreach (['fase1', 'fase2', 'fase3', 'fase4', 'fase5'] as $phase) {
             $checklist = $this->{$phase . '_checklist'} ?? self::$defaultChecklists[$phase];
             if (array_key_exists($key, $checklist)) {
+                $wasDone = (bool) ($checklist[$key] ?? false);
                 $checklist[$key] = $done;
                 $this->{$phase . '_checklist'} = $checklist;
                 $this->save();
+                if ($done && !$wasDone) {
+                    $this->completeProjectTask($key);
+                }
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * 2026-10-28: o controle de onboarding é o PROJETO Onboarding (fases + tarefas). Este
+     * registro virou só a memória da esteira automática (n8n: boas-vindas, cadastro, contrato,
+     * Drive, grupo) — e cada passo que a esteira confirma conclui a tarefa equivalente do projeto.
+     * Chave do checklist → título da tarefa no Playbook "Onboarding de Cliente".
+     */
+    public const PROJECT_TASK_FOR_STEP = [
+        'whatsapp_boas_vindas'   => 'Conferir WhatsApp de boas-vindas enviado',
+        'cadastro_preenchido'    => 'Enviar link de cadastro e conferir preenchimento',
+        'ticket_contrato_aberto' => 'Gerar contrato e abrir ticket "Contrato em análise"',
+        'pasta_drive_criada'     => 'Criar pasta do cliente no Drive',
+        'grupo_whatsapp_criado'  => 'Criar grupo de WhatsApp do cliente',
+        'acessos_coletados'      => 'Coletar acessos e senhas (Ficha de Acessos)',
+    ];
+
+    private function completeProjectTask(string $key): void
+    {
+        $title = self::PROJECT_TASK_FOR_STEP[$key] ?? null;
+        if (!$title || !$this->client) {
+            return;
+        }
+
+        try {
+            $project = \App\Services\ClientFirstCycleService::onboardingProject($this->client);
+            $project?->tasks()->where('title', $title)->whereNotIn('status', ['concluido', 'cancelado'])
+                ->get()->each(fn ($task) => $task->update(['status' => 'concluido']));
+        } catch (\Throwable $e) {
+            report($e); // nunca atrapalha a esteira
+        }
     }
 
     public function markDone(string ...$keys): void

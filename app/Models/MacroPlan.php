@@ -36,9 +36,11 @@ class MacroPlan extends Model
         'clickup_task_id',
         'clickup_attachments',
         'launched_at',
+        'auto_created', // primeiro ciclo criado junto com o cliente (ClientFirstCycleService)
     ];
 
     protected $casts = [
+        'auto_created'        => 'boolean',
         'period_start'        => 'date',
         'period_end'          => 'date',
         'launched_at'         => 'datetime',

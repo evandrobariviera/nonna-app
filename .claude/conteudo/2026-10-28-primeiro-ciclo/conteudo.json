@@ -1,0 +1,24 @@
+{
+  "novidades": [
+    {
+      "title": "Cliente novo já nasce com o primeiro planejamento e o Onboarding",
+      "summary": "Ao cadastrar um cliente Ativo (à mão ou pelo Ganho da oportunidade), o App cria sozinho um planejamento de 90 dias com o projeto Onboarding dentro, já com as 5 fases e as tarefas do Playbook.",
+      "body": "<p>O planejamento do kick-off entra nesse mesmo ciclo: envie o HTML da skill em \"Enviar documento\" na página do planejamento, e as campanhas e projetos são acrescentados, sem duplicar.</p>",
+      "kind": "novidade", "area": "Planejamentos"
+    },
+    {
+      "title": "Onboarding agora é só pelo projeto",
+      "summary": "O checklist de onboarding da página do cliente saiu: a aba Onboarding e a tela Entrada (Onboarding) mostram o projeto Onboarding (fases e tarefas). Os passos automáticos (boas-vindas, cadastro, contrato, Drive, grupo de WhatsApp, acessos) concluem as tarefas sozinhos.",
+      "body": "<p>Cliente antigo sem projeto Onboarding: na aba Onboarding do cliente tem o botão Criar projeto Onboarding.</p>",
+      "kind": "melhoria", "area": "Clientes"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Linha do tempo de campanhas e projetos — fases e marcos",
+      "category": "Planejamentos",
+      "slug": "linha-do-tempo-fases-e-marcos",
+      "body_file": "ajuda-linha-do-tempo.html"
+    }
+  ]
+}

@@ -372,10 +372,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('clients.contracts.destroy');
 
     // ── Onboarding do cliente ──
+    // Cria o projeto Onboarding pra cliente que não tem (o checklist antigo saiu da tela, 2026-10-28).
     Route::post('/clientes/{client}/onboarding', [\App\Http\Controllers\ClientOnboardingController::class, 'store'])
         ->name('clients.onboarding.store');
-    Route::patch('/clientes/{client}/onboarding/item', [\App\Http\Controllers\ClientOnboardingController::class, 'toggle'])
-        ->name('clients.onboarding.toggle');
 
     // ── Anexos do contrato ──
     Route::post('/contratos/{contract}/anexos', [ContractAttachmentController::class, 'store'])

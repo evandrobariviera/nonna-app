@@ -1,3 +1,9 @@
+{{-- Entrada (Onboarding) — desde 2026-10-28 lista os PROJETOS Onboarding (fases + tarefas).
+     $emAndamento / $concluidos: [project, timeline (ProjectTimeline)]. --}}
+@php
+    $phaseHex = fn (?string $status) => \App\Models\Task::colorHex($status ? \App\Models\ProjectPhase::statusColor($status) : 'muted');
+    $projUrl  = fn ($p) => $p->macro_plan_id ? route('macroplans.projects.show', [$p->macro_plan_id, $p]) : route('projects.showDirect', $p);
+@endphp
 <x-app-layout>
     <x-slot name="header">
         <div>
@@ -14,57 +20,69 @@
             </div>
         @endif
 
+        <p class="text-sm" style="color:var(--muted2)">
+            Cada cliente novo nasce com o projeto <strong>Onboarding</strong> dentro do primeiro planejamento de 90 dias.
+            Aqui ficam todos os onboardings: em que fase estão e o que está atrasado. Os passos automáticos (boas-vindas, cadastro,
+            contrato, Drive, grupo de WhatsApp) concluem as tarefas sozinhos.
+        </p>
+
         {{-- EM ANDAMENTO --}}
         <div>
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)]">
-                    Em andamento ({{ $emAndamento->count() }})
-                </h2>
-            </div>
+            <h2 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-4">Em andamento ({{ $emAndamento->count() }})</h2>
 
             @if($emAndamento->isEmpty())
                 <div class="tab-placeholder">
                     <div class="tab-placeholder-icon"><x-icon name="list-checks" size="32" /></div>
                     <div class="tab-placeholder-title">Nenhum cliente em onboarding</div>
-                    <div class="tab-placeholder-desc">A esteira começa sozinha quando uma oportunidade "Novo Cliente" é fechada como ganha.</div>
+                    <div class="tab-placeholder-desc">O projeto Onboarding nasce sozinho quando um cliente Ativo é cadastrado.</div>
                 </div>
             @else
-                <div class="card">
+                <div class="card overflow-x-auto">
                     <table class="nonna-table">
                         <thead>
                             <tr>
                                 <th>Cliente</th>
-                                <th style="width:200px">Fase</th>
-                                <th style="width:160px">Progresso</th>
-                                <th>Responsável</th>
-                                <th style="width:130px">Última mudança</th>
+                                <th style="width:260px">Fase atual</th>
+                                <th style="width:170px">Tarefas</th>
+                                <th style="width:120px">Fases</th>
+                                <th style="width:110px">Desde</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($emAndamento as $o)
+                            @foreach($emAndamento as $r)
+                                @php
+                                    $p = $r['project']; $tl = $r['timeline'];
+                                    $total = $tl['rows']->sum('total') + $tl['unphased']->count();
+                                    $done  = $tl['rows']->sum('done') + $tl['unphased']->where('status', 'concluido')->count();
+                                    $pct   = $total ? (int) round($done / $total * 100) : 0;
+                                @endphp
                                 <tr>
                                     <td class="font-semibold text-[var(--text)]">
-                                        <a href="{{ route('clients.show', $o->client) }}?tab=onboarding"
-                                           class="hover:text-[var(--purple)] transition-colors">
-                                            {{ $o->client?->displayName() ?? '—' }}
-                                        </a>
+                                        <a href="{{ route('clients.show', $p->client) }}" class="hover:text-[var(--purple)] transition-colors">{{ $p->client?->displayName() ?? '—' }}</a>
                                     </td>
-                                    <td class="text-sm text-[var(--muted2)]">{{ $o->phaseLabel() }}</td>
+                                    <td class="text-sm">
+                                        @if($tl['current'])
+                                            <span style="color:{{ $phaseHex($tl['current']['status']) }}">{{ $tl['current']['phase']->name }}</span>
+                                        @else
+                                            <span style="color:var(--muted)">{{ $tl['phases'] ? 'todas concluídas' : 'sem fases' }}</span>
+                                        @endif
+                                        @if($tl['late'])
+                                            <span class="text-xs font-semibold ml-1" style="color:var(--red)">· {{ $tl['late'] }} atrasada(s)</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         <div class="flex items-center gap-2">
                                             <div class="flex-1 h-1.5 rounded" style="background: var(--s3);">
-                                                <div class="h-1.5 rounded" style="background: var(--green); width: {{ $o->progressPercent() }}%;"></div>
+                                                <div class="h-1.5 rounded" style="background: var(--green); width: {{ $pct }}%;"></div>
                                             </div>
-                                            <span class="text-xs font-mono text-[var(--muted)]">{{ $o->progressPercent() }}%</span>
+                                            <span class="text-xs font-mono text-[var(--muted)]">{{ $done }}/{{ $total }}</span>
                                         </div>
                                     </td>
-                                    <td class="text-sm text-[var(--muted2)]">{{ $o->responsible?->name ?? '—' }}</td>
-                                    <td class="text-xs font-mono text-[var(--muted)]">{{ $o->updated_at->diffForHumans() }}</td>
+                                    <td class="text-xs font-mono text-[var(--muted)]">{{ $tl['done'] }}/{{ $tl['phases'] }}</td>
+                                    <td class="text-xs font-mono text-[var(--muted)]">{{ ($p->start_date ?? $p->created_at)->format('d/m/Y') }}</td>
                                     <td class="text-right">
-                                        <a href="{{ route('clients.show', $o->client) }}?tab=onboarding" class="btn btn-ghost btn-xs">
-                                            Abrir →
-                                        </a>
+                                        <a href="{{ $projUrl($p) }}" class="btn btn-ghost btn-xs">Abrir →</a>
                                     </td>
                                 </tr>
                             @endforeach
@@ -78,27 +96,18 @@
         @if($concluidos->isNotEmpty())
             <div>
                 <h2 class="text-xs font-mono uppercase tracking-widest text-[var(--muted)] mb-4">Concluídos recentemente</h2>
-                <div class="card">
+                <div class="card overflow-x-auto">
                     <table class="nonna-table">
                         <thead>
-                            <tr>
-                                <th>Cliente</th>
-                                <th>Responsável</th>
-                                <th style="width:130px">Concluído em</th>
-                                <th></th>
-                            </tr>
+                            <tr><th>Cliente</th><th style="width:130px">Concluído em</th><th></th></tr>
                         </thead>
                         <tbody>
-                            @foreach($concluidos as $o)
+                            @foreach($concluidos as $r)
+                                @php $p = $r['project']; @endphp
                                 <tr>
-                                    <td class="font-semibold text-[var(--text)]">{{ $o->client?->displayName() ?? '—' }}</td>
-                                    <td class="text-sm text-[var(--muted2)]">{{ $o->responsible?->name ?? '—' }}</td>
-                                    <td class="text-xs font-mono text-[var(--muted)]">{{ $o->completed_at->format('d/m/Y') }}</td>
-                                    <td class="text-right">
-                                        <a href="{{ route('clients.show', $o->client) }}?tab=onboarding" class="btn btn-ghost btn-xs">
-                                            Ver →
-                                        </a>
-                                    </td>
+                                    <td class="font-semibold text-[var(--text)]">{{ $p->client?->displayName() ?? '—' }}</td>
+                                    <td class="text-xs font-mono text-[var(--muted)]">{{ $p->updated_at->format('d/m/Y') }}</td>
+                                    <td class="text-right"><a href="{{ $projUrl($p) }}" class="btn btn-ghost btn-xs">Ver →</a></td>
                                 </tr>
                             @endforeach
                         </tbody>

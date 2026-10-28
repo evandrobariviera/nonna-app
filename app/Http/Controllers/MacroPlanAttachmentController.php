@@ -38,8 +38,9 @@ class MacroPlanAttachmentController extends Controller
 
     /**
      * Envia/troca o DOCUMENTO do planejamento (só HTML) — campo próprio, separado dos anexos.
-     * A versão anterior continua na lista de anexos. Não recria campanhas/projetos: isso só
-     * acontece ao criar o planejamento a partir do documento.
+     * A versão anterior continua na lista de anexos. Se o HTML for da skill, acrescenta as
+     * campanhas/projetos que ainda não existem no planejamento (2026-10-28 — o primeiro ciclo
+     * nasce vazio com o cliente e recebe o planejamento do kick-off assim). Não duplica.
      */
     public function storeDocument(Request $request, MacroPlan $macroplan, MacroPlanDocumentService $documents)
     {
@@ -49,10 +50,23 @@ class MacroPlanAttachmentController extends Controller
             'document.mimes' => 'O documento do planejamento precisa ser o arquivo HTML gerado pela skill.',
         ]);
 
+        $added = 0;
+        $warnings = [];
+        if ($macroplan->status !== 'concluido') {
+            try {
+                $parsed   = $documents->parse($request->file('document'));
+                $added    = $documents->importIntoPlan($macroplan, $parsed);
+                $warnings = $parsed['warnings'] ?? [];
+            } catch (\InvalidArgumentException) {
+                // HTML que não é da skill: só vira o documento, como antes.
+            }
+        }
+
         $documents->setDocument($macroplan, $request->file('document'));
 
-        return redirect()->route('macroplans.edit', [$macroplan, 'bloco' => 'documento'])
-            ->with('success', 'Documento do planejamento atualizado.');
+        return redirect()->route('macroplans.edit', [$macroplan, 'bloco' => $added ? 'bloco3' : 'documento'])
+            ->with('success', 'Documento do planejamento atualizado.' . ($added ? " {$added} campanha(s)/projeto(s) novos entraram no planejamento." : ''))
+            ->with('import_warnings', $warnings);
     }
 
     public function destroy(MacroPlan $macroplan, MacroPlanAttachment $attachment)

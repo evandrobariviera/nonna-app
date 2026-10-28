@@ -88,6 +88,52 @@ class MacroPlanDocumentService
         return [$plan, $warnings];
     }
 
+    /**
+     * HTML enviado num planejamento que JÁ existe (ex.: o primeiro ciclo, criado junto com o
+     * cliente, recebendo o planejamento do kick-off): acrescenta as campanhas/projetos que
+     * ainda não estão nele (mesmo nome = já existe, então reenviar não duplica) e preenche
+     * blocos/disciplinas vazios. Período e status do planejamento não mudam.
+     *
+     * @return int quantas campanhas/projetos entraram
+     */
+    public function importIntoPlan(MacroPlan $plan, array $parsed): int
+    {
+        $key      = fn ($title) => Str::lower(Str::squish((string) $title));
+        $existing = $plan->projects()->pluck('title')->map($key);
+        $position = (int) $plan->projects()->max('position');
+        $added    = 0;
+
+        DB::connection('pgsql')->transaction(function () use ($plan, $parsed, $key, &$existing, &$position, &$added) {
+            foreach ($parsed['projects'] ?? [] as $projectData) {
+                $k = $key($projectData['title'] ?? '');
+                if ($k === '' || $existing->contains($k)) {
+                    continue;
+                }
+                $projectData['client_id']  = $plan->client_id;
+                $projectData['position']   = ++$position;
+                $projectData['created_by'] = Auth::id();
+                $plan->projects()->create($projectData);
+                $existing->push($k);
+                $added++;
+            }
+
+            $fill = [];
+            foreach (['bloco1', 'bloco2', 'bloco4', 'bloco5'] as $block) {
+                if (empty($plan->$block) && !empty($parsed[$block])) {
+                    $fill[$block] = $parsed[$block];
+                }
+            }
+            if (empty($plan->disciplines) && !empty($parsed['disciplines'])) {
+                $fill['disciplines'] = $parsed['disciplines'];
+            }
+            if ($fill) {
+                $plan->update($fill);
+            }
+        });
+
+        return $added;
+    }
+
     /** Sobe o HTML e marca como o documento do planejamento (o anterior fica nos anexos). */
     public function setDocument(MacroPlan $plan, UploadedFile $file): MacroPlanAttachment
     {

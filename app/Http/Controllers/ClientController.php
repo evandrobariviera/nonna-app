@@ -107,7 +107,7 @@ class ClientController extends Controller
 
     public function show(Client $client)
     {
-        $client->load(['credentials', 'adAccounts', 'dossiers', 'contacts', 'macroplans.projects', 'contracts', 'adBudgets.createdBy', 'integrations', 'leadSources.channel', 'onboarding.responsible']);
+        $client->load(['credentials', 'adAccounts', 'dossiers', 'contacts', 'macroplans.projects', 'contracts', 'adBudgets.createdBy', 'integrations', 'leadSources.channel']);
 
         $leadChannels = \App\Models\LeadChannel::active()->orderBy('name')->get();
 
@@ -129,8 +129,13 @@ class ClientController extends Controller
 
         $production = $this->productionData(request(), $client);
 
+        // Aba Onboarding = o projeto Onboarding (fases/tarefas), não mais o checklist antigo.
+        $onboardingProject  = \App\Services\ClientFirstCycleService::onboardingProject($client)
+            ?->load(['phases', 'tasks:id,project_id,project_phase_id,status,due_date,title']);
+        $onboardingTimeline = $onboardingProject ? \App\Services\Projects\ProjectTimeline::for($onboardingProject) : null;
+
         return view('clients.show', [
-            ...compact('client', 'availableContacts', 'subscriptionsByContact', 'aiAgents', 'leadChannels'),
+            ...compact('client', 'availableContacts', 'subscriptionsByContact', 'aiAgents', 'leadChannels', 'onboardingProject', 'onboardingTimeline'),
             ...$production,
         ]);
     }
@@ -387,6 +392,8 @@ class ClientController extends Controller
             Storage::disk($client->logo_disk)->delete($client->logo_path);
         }
 
+        // Primeiro ciclo automático intocado (planejamento + Onboarding sem trabalho) sai junto.
+        \App\Services\ClientFirstCycleService::deleteUntouched($client);
         $client->delete();
 
         return redirect()->route('clients.index')->with('success', 'Cliente excluído.');

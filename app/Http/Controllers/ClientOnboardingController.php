@@ -3,82 +3,46 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
-use App\Models\ClientOnboarding;
-use App\Services\ClientOnboardingService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Project;
+use App\Models\ProjectPlaybook;
+use App\Services\ClientFirstCycleService;
+use App\Services\Projects\ProjectTimeline;
 
+// "Gestão de Clientes > Entrada (Onboarding)" — desde 2026-10-28 o controle de onboarding é o
+// PROJETO Onboarding (fases + tarefas, ClientFirstCycleService). O checklist antigo
+// (ClientOnboarding) ficou só como memória da esteira automática do n8n, sem tela.
 class ClientOnboardingController extends Controller
 {
-    // Lista de clientes em onboarding — "Gestão de Clientes > Entrada (Onboarding)".
-    public function index(Request $request)
+    public function index()
     {
-        $emAndamento = ClientOnboarding::with('client', 'responsible')
-            ->whereNull('completed_at')
+        $playbookId = ProjectPlaybook::where('name', ClientFirstCycleService::PLAYBOOK_NAME)->value('id');
+
+        $projects = Project::with(['client:id,nickname,company_name,status', 'macroPlan:id,title', 'phases', 'tasks:id,project_id,project_phase_id,status,due_date'])
+            ->where('status', '!=', 'cancelado')
+            ->where(fn ($q) => $q->where('title', 'Onboarding')->when($playbookId, fn ($w) => $w->orWhere('project_playbook_id', $playbookId)))
             ->whereHas('client', fn ($q) => $q->where('status', '!=', 'inactive'))
+            ->orderByDesc('created_at')
             ->get()
-            ->sortBy(fn ($o) => $o->client?->displayName())
-            ->values();
+            ->map(fn (Project $p) => ['project' => $p, 'timeline' => ProjectTimeline::for($p)]);
 
-        $concluidos = ClientOnboarding::with('client', 'responsible')
-            ->whereNotNull('completed_at')
-            ->orderByDesc('completed_at')
-            ->limit(15)
-            ->get();
+        [$concluidos, $emAndamento] = $projects->partition(fn ($r) => $r['project']->status === 'concluido');
 
-        return view('onboarding.index', compact('emAndamento', 'concluidos'));
-    }
-
-    // Cria a esteira de onboarding pra um cliente que não tem (ex: fechado
-    // antes dessa feature existir, ou cadastro feito por fora).
-    public function store(Client $client, ClientOnboardingService $service)
-    {
-        $service->createRecord($client, Auth::id());
-
-        return back()->with('success', 'Onboarding iniciado.');
-    }
-
-    // Liga/desliga um item de checklist (passos humanos das fases 2-5, ou
-    // correção manual dos passos automáticos).
-    public function toggle(Request $request, Client $client)
-    {
-        $data = $request->validate([
-            'key'  => 'required|string|in:' . implode(',', array_keys(ClientOnboarding::$checklistLabels)),
-            'done' => 'required|boolean',
+        return view('onboarding.index', [
+            'emAndamento' => $emAndamento->values(),
+            'concluidos'  => $concluidos->take(15)->values(),
         ]);
-
-        $onboarding = $client->onboarding;
-        abort_unless($onboarding, 404);
-
-        $onboarding->setChecklistItem($data['key'], $data['done']);
-
-        $this->syncPhaseCompletion($onboarding);
-
-        return back();
     }
 
-    // Marca fase_completed_at / avança current_phase conforme os checklists
-    // ficam 100% — mantém o progresso coerente sem uma tela de gestão de fase.
-    private function syncPhaseCompletion(ClientOnboarding $onboarding): void
+    // Cliente antigo sem projeto Onboarding: cria (no planejamento aberto, ou o primeiro ciclo).
+    public function store(Client $client, ClientFirstCycleService $service)
     {
-        $phases = $onboarding->phaseKeys();
-        $current = 'concluido';
+        [$project, $error] = $service->ensureOnboardingProject($client);
 
-        foreach ($phases as $i => $phase) {
-            $checklist = $onboarding->{$phase . '_checklist'} ?? [];
-            $allDone = $checklist !== [] && !in_array(false, $checklist, true);
-
-            $onboarding->{$phase . '_completed_at'} = $allDone
-                ? ($onboarding->{$phase . '_completed_at'} ?? now())
-                : null;
-
-            if (!$allDone && $current === 'concluido') {
-                $current = $phase;
-            }
+        if (!$project) {
+            return back()->with('error', $error);
         }
 
-        $onboarding->current_phase = $current;
-        $onboarding->completed_at = $current === 'concluido' ? ($onboarding->completed_at ?? now()) : null;
-        $onboarding->save();
+        return redirect()->route('macroplans.projects.show', [$project->macro_plan_id, $project])
+            ->with('success', 'Projeto Onboarding pronto.');
     }
 }

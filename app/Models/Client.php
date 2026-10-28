@@ -576,13 +576,19 @@ class Client extends Model
     // sem método hasMany dedicado) — checados por query direta.
     public function blockingAssociations(): array
     {
+        // Primeiro ciclo automático (planejamento + Onboarding) que ninguém tocou não conta —
+        // é apagado junto (ClientController::destroy). Com trabalho, vira histórico e trava.
+        $auto = \App\Services\ClientFirstCycleService::untouched($this);
+        $autoProjects = $auto ? Project::where('macro_plan_id', $auto->id)->pluck('id') : collect();
+
         $checks = [
             'contratos'                    => $this->contracts()->count(),
             'contas de anúncio'            => $this->adAccounts()->count(),
             'orçamentos de anúncios'       => $this->adBudgets()->count(),
-            'planejamentos'                => $this->macroplans()->count(),
-            'projetos'                     => Project::where('client_id', $this->id)->count(),
-            'tarefas'                      => Task::where('client_id', $this->id)->count(),
+            'planejamentos'                => $this->macroplans()->count() - ($auto ? 1 : 0),
+            'projetos'                     => Project::where('client_id', $this->id)->whereNotIn('id', $autoProjects)->count(),
+            'tarefas'                      => Task::where('client_id', $this->id)
+                ->where(fn ($q) => $q->whereNull('project_id')->orWhereNotIn('project_id', $autoProjects))->count(),
             'dossiês de marca'             => $this->dossiers()->count(),
             'oportunidades'                => $this->opportunities()->count(),
             'contatos vinculados'          => $this->contacts()->count(),
