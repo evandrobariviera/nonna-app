@@ -8,6 +8,7 @@ use App\Models\AdCampaign;
 use App\Models\AiAgent;
 use App\Models\CampaignInsight;
 use App\Models\Client;
+use App\Services\Leads\CampaignFunnelAnalyst;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 
@@ -36,9 +37,10 @@ class CampaignInsightService
         'roas_drop',
         'cpa_spike',
         'cost_per_result_above_target',
+        'lead_funnel',
     ];
 
-    public function __construct(private AiService $aiService)
+    public function __construct(private AiService $aiService, private CampaignFunnelAnalyst $funnelAnalyst)
     {
     }
 
@@ -71,11 +73,37 @@ class CampaignInsightService
                 $created = array_merge($created, $this->checkCampaign($client, $campaign));
                 $created = array_merge($created, $this->checkAdsetsAndAds($client, $campaign));
 
+                if ($funnelInsight = $this->checkLeadFunnel($client, $campaign)) {
+                    $created[] = $funnelInsight;
+                }
+
                 $campaign->update(['last_insight_checked_at' => now()]);
             }
         }
 
         return $created;
+    }
+
+    /**
+     * Agente analista: o funil anúncio → lead bom → venda da campanha, no
+     * mesmo momento de otimização. Falha da IA não derruba os outros alertas.
+     */
+    private function checkLeadFunnel(Client $client, AdCampaign $campaign): ?CampaignInsight
+    {
+        if ($campaign->optimization_locked_reason) {
+            return null;
+        }
+
+        try {
+            return $this->funnelAnalyst->analyzeIfDue($client, $campaign);
+        } catch (\Throwable $e) {
+            Log::warning('CampaignInsightService: falha na análise do funil', [
+                'error'       => $e->getMessage(),
+                'campaign_id' => $campaign->id,
+            ]);
+
+            return null;
+        }
     }
 
     private function checkBudget(Client $client): ?CampaignInsight

@@ -1,8 +1,10 @@
 {{-- Filtros + toggle Kanban/Lista compartilhados entre a Central de Leads
      interna (leads/index.blade.php) e a do Portal (portal/leads/index.blade.php).
      Espera: $view, $indexRoute, $resultsRoute, $resultsTarget, $showClientFilter,
-     $clients (só quando $showClientFilter), $channels, $sources. --}}
+     $clients (só quando $showClientFilter), $channels, $sources e, opcional,
+     $showResultsTab (aba Resultados; padrão true). --}}
 @php
+    $showResultsTab = $showResultsTab ?? true;
     $filterKeys = ['client_id', 'stage', 'channel_id', 'source_id', 'utm_source', 'date_from', 'date_to', 'q', 'responsavel', 'qualidade', 'fechados'];
     $viewParams = fn ($v) => array_merge(request()->except(['view']), ['view' => $v]);
     $liveOrSubmit = $view === 'lista' ? "this.form._liveFilterRefresh && this.form._liveFilterRefresh()" : 'this.form.submit()';
@@ -19,8 +21,38 @@
        @if($view === 'lista') style="background:var(--purple); color:#fff" @endif>
         Lista
     </a>
+    @if($showResultsTab)
+        <a href="{{ route($indexRoute, $viewParams('resultados')) }}"
+           class="btn btn-sm {{ $view === 'resultados' ? '' : 'btn-ghost' }}"
+           @if($view === 'resultados') style="background:var(--purple); color:#fff" @endif>
+            Resultados
+        </a>
+    @endif
 </div>
 
+@if($view === 'resultados')
+    {{-- Resultados só filtram por cliente e período (padrão: últimos 30 dias). --}}
+    <form method="GET" action="{{ route($indexRoute) }}" class="flex flex-wrap items-end gap-3 mb-5">
+        <input type="hidden" name="view" value="resultados">
+        @if($showClientFilter)
+            <select name="client_id" onchange="this.form.submit()" class="filter-select">
+                <option value="">Todos os clientes</option>
+                @foreach($clients as $c)
+                    <option value="{{ $c->id }}" {{ request('client_id') === $c->id ? 'selected' : '' }}>{{ $c->displayName() }}</option>
+                @endforeach
+            </select>
+        @endif
+        <div class="flex items-center gap-1">
+            <label class="text-xs" style="color:var(--muted)">de</label>
+            <input type="date" name="date_from" value="{{ $from->toDateString() }}" onchange="this.form.submit()" class="filter-select" style="padding:6px 8px">
+            <label class="text-xs" style="color:var(--muted)">até</label>
+            <input type="date" name="date_to" value="{{ $to->toDateString() }}" onchange="this.form.submit()" class="filter-select" style="padding:6px 8px">
+        </div>
+        @if(request()->hasAny(['client_id', 'date_from', 'date_to']))
+            <a href="{{ route($indexRoute, ['view' => 'resultados']) }}" class="btn btn-ghost btn-sm">✕ Limpar</a>
+        @endif
+    </form>
+@else
 <form method="GET" action="{{ route($indexRoute) }}" class="flex flex-wrap items-end gap-3 mb-5"
       @if($view === 'lista')
           data-live-filter data-results-url="{{ route($resultsRoute) }}" data-target="{{ $resultsTarget }}"
@@ -101,3 +133,4 @@
         <a href="{{ route($indexRoute, ['view' => $view]) }}" class="btn btn-ghost btn-sm">✕ Limpar</a>
     @endif
 </form>
+@endif

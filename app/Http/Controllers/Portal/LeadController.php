@@ -10,6 +10,7 @@ use App\Models\ClientLeadSource;
 use App\Models\ClientModule;
 use App\Models\LeadChannel;
 use App\Models\User;
+use App\Services\Leads\LeadFunnel;
 use App\Services\SystemNotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -34,16 +35,28 @@ class LeadController extends Controller
         $showClosed = InternalLeads::showClosed($request);
         $canConfigure = $client->isPrimaryContact($this->contactId());
         $hideAssigned = ClientModule::leadsHideAssigned($client->id);
+        // Resultados somam todos os leads — com "lead atribuído some para os
+        // outros" ligado, só o contato principal vê.
+        $canSeeResults = !$this->seesOnlyOwn($client);
+
+        if ($view === 'resultados' && $canSeeResults) {
+            [$from, $to] = InternalLeads::period($request);
+            $funnel = LeadFunnel::forClient($client, $from, $to);
+
+            return view('portal.leads.index', array_merge(compact('view', 'client', 'showClosed', 'canConfigure', 'hideAssigned', 'canSeeResults', 'funnel', 'from', 'to'), $filterOptions));
+        }
+
+        $view = $view === 'resultados' ? 'lista' : $view;
 
         if ($view === 'lista') {
             $leads = $this->filteredQuery($request, $client)->paginate(20)->withQueryString();
 
-            return view('portal.leads.index', array_merge(compact('view', 'leads', 'client', 'showClosed', 'canConfigure', 'hideAssigned'), $filterOptions));
+            return view('portal.leads.index', array_merge(compact('view', 'leads', 'client', 'showClosed', 'canConfigure', 'hideAssigned', 'canSeeResults'), $filterOptions));
         }
 
         $board = $this->filteredQuery($request, $client)->get()->groupBy('stage');
 
-        return view('portal.leads.index', array_merge(compact('view', 'board', 'client', 'showClosed', 'canConfigure', 'hideAssigned'), $filterOptions));
+        return view('portal.leads.index', array_merge(compact('view', 'board', 'client', 'showClosed', 'canConfigure', 'hideAssigned', 'canSeeResults'), $filterOptions));
     }
 
     public function results(Request $request)

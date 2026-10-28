@@ -25,7 +25,17 @@
             'sources'          => $sources,
         ])
 
-        @if($view === 'lista')
+        @if($view === 'resultados')
+            @if($funnel)
+                @include('leads._funnel', [
+                    'funnel'        => $funnel,
+                    'campaignRoute' => 'campaigns.show',
+                    'ruleUrl'       => route('clients.show', [$client, 'tab' => 'leads']),
+                ])
+            @else
+                @include('leads._funnel-overview', ['overview' => $overview, 'from' => $from, 'to' => $to])
+            @endif
+        @elseif($view === 'lista')
             <div id="leads-results">
                 @include('leads._results', [
                     'leads'        => $leads,

@@ -49,6 +49,7 @@ class CampaignInsight extends Model
         'creative_fatigue'           => 'Fadiga de criativo',
         'adset_budget_concentration' => 'Conjunto concentrando verba',
         'cost_per_result_above_target' => 'Custo por resultado acima da meta',
+        'lead_funnel'                  => 'Do anúncio à venda',
     ];
 
     public static array $severities = [

@@ -41,9 +41,12 @@
         'clients'          => null,
         'channels'         => $channels,
         'sources'          => $sources,
+        'showResultsTab'   => $canSeeResults,
     ])
 
-    @if($view === 'lista')
+    @if($view === 'resultados')
+        @include('leads._funnel', ['funnel' => $funnel, 'campaignRoute' => 'portal.campaigns.show'])
+    @elseif($view === 'lista')
         <div id="leads-results">
             @include('leads._results', [
                 'leads'        => $leads,

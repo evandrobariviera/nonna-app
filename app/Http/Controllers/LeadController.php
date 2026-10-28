@@ -7,6 +7,8 @@ use App\Models\ClientLeadOpportunity;
 use App\Models\ClientLeadSource;
 use App\Models\LeadChannel;
 use App\Models\User;
+use App\Services\Leads\LeadFunnel;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,6 +27,16 @@ class LeadController extends Controller
         $filterOptions = $this->filterOptions();
         $showClosed = self::showClosed($request);
 
+        if ($view === 'resultados') {
+            [$from, $to] = self::period($request);
+            $client = $request->filled('client_id') ? Client::find($request->client_id) : null;
+
+            return view('leads.index', array_merge(compact('view', 'showClosed', 'client', 'from', 'to'), $filterOptions, [
+                'funnel'   => $client ? LeadFunnel::forClient($client, $from, $to) : null,
+                'overview' => $client ? null : LeadFunnel::overview($from, $to),
+            ]));
+        }
+
         if ($view === 'lista') {
             $leads = $this->filteredQuery($request)->paginate(30)->withQueryString();
 
@@ -40,6 +52,15 @@ class LeadController extends Controller
     public static function showClosed(Request $request): bool
     {
         return $request->boolean('fechados') || in_array($request->stage, ClientLeadOpportunity::CLOSED_STAGES, true);
+    }
+
+    // Período da aba Resultados: o escolhido nos filtros ou os últimos 30 dias.
+    public static function period(Request $request): array
+    {
+        $to = $request->filled('date_to') ? Carbon::parse($request->date_to) : now();
+        $from = $request->filled('date_from') ? Carbon::parse($request->date_from) : $to->copy()->subDays(29);
+
+        return [$from->startOfDay(), $to->endOfDay()];
     }
 
     // Fragmento da listagem — chamado via fetch por live-filter.js conforme o

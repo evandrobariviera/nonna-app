@@ -1,0 +1,24 @@
+{
+  "novidades": [
+    {
+      "title": "Aba Resultados na Central de Leads: do anúncio até a venda",
+      "summary": "Nova aba Resultados mostra, campanha por campanha, quanto foi investido, quantos leads chegaram, quantos eram bons, quantos compraram e quanto voltou de cada R$ 1 investido. Sem cliente escolhido, mostra todos os clientes lado a lado.",
+      "body": "<p>O número que mais importa ali é o <strong>custo por lead bom</strong>: lead barato que não compra sai caro. Quando houver vendas marcadas, aparece o retorno de verdade; com ticket médio e algumas vendas no histórico, aparece também o retorno <strong>estimado</strong>. No Portal, a aba aparece para o cliente (quando ele vê todos os leads da equipe dele).</p>",
+      "kind": "novidade", "area": "Central de Leads"
+    },
+    {
+      "title": "Analista de campanhas olha até o lead bom e a venda",
+      "summary": "Na hora de otimizar uma campanha que recebe leads, a IA analisa anúncio por anúncio quanto custou cada lead bom e quantos compraram, diz o que fazer com cada anúncio e escreve um resumo simples para o cliente.",
+      "body": "<p>A análise aparece nos <strong>Insights</strong> da página da campanha como \"Do anúncio à venda\", com diagnóstico e \"O que fazer\". O cliente vê a versão em linguagem simples em \"Como está indo\", no Portal. Ela olha os últimos 14 dias (comparando com os 14 anteriores), roda no máximo uma vez por semana por campanha e só quando a campanha teve pelo menos 5 leads.</p>",
+      "kind": "novidade", "area": "Campanhas"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Central de Leads — Resultados e o analista de campanhas",
+      "category": "Central de Leads",
+      "slug": "central-de-leads-resultados",
+      "body_file": "ajuda-resultados.html"
+    }
+  ]
+}

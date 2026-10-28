@@ -37,7 +37,7 @@
                                     · {{ $insight->generated_at->format('d/m/Y H:i') }}
                                 </p>
                                 @if($insight->summary)
-                                    <p class="text-sm mt-2" style="color:var(--muted2)">{{ $insight->summary }}</p>
+                                    <p class="text-sm mt-2 whitespace-pre-line" style="color:var(--muted2)">{{ $insight->summary }}</p>
                                 @endif
                             </div>
                             <div class="flex items-center gap-2 flex-shrink-0">
