@@ -2,7 +2,7 @@
   "novidades": [
     {
       "title": "Cards do Dashboard num padrão só, com ↗ pra abrir em nova aba",
-      "summary": "Pendências, reuniões, planejamentos e tarefas do Dashboard agora usam o mesmo card: a cor do ícone diz o que é e a barrinha à esquerda diz se precisa de atenção. O ↗ no canto abre em nova aba.",
+      "summary": "Avisos, Seu foco, pendências, reuniões, planejamentos e tarefas do Dashboard agora usam o mesmo card: a cor do ícone diz o que é e a barrinha à esquerda diz se precisa de atenção. O ↗ no canto abre em nova aba.",
       "body": "<p>Roxo = tarefa, azul = reunião, ciano = pendência, índigo = planejamento, rosa = campanha. Barrinha vermelha = venceu, laranja = vence logo, verde = acontecendo agora. Sem barrinha, está em dia. Passe o mouse no card e clique no ↗ (ou use Ctrl + clique) pra abrir sem sair do Dashboard.</p>",
       "kind": "melhoria", "area": "Dashboard"
     }
