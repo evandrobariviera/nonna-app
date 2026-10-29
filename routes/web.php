@@ -546,6 +546,13 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Documento do planejamento (HTML, campo próprio — MacroPlanDocumentService) ──
     Route::post('/planejamentos/{macroplan}/documento', [MacroPlanAttachmentController::class, 'storeDocument'])
         ->name('macroplans.document.store');
+    // Editor do documento dentro do App (texto + bloco de dados; cada salvar = versão nova).
+    Route::get('/planejamentos/{macroplan}/documento/editar', [\App\Http\Controllers\DocumentEditController::class, 'editPlan'])
+        ->name('macroplans.document.edit');
+    Route::post('/planejamentos/{macroplan}/documento/salvar', [\App\Http\Controllers\DocumentEditController::class, 'savePlan'])
+        ->name('macroplans.document.save');
+    Route::post('/planejamentos/{macroplan}/documento/versoes/{version}/restaurar', [\App\Http\Controllers\DocumentEditController::class, 'restorePlan'])
+        ->name('macroplans.document.restore');
 
     // ── Anexos do macroplanejamento ──
     Route::post('/planejamentos/{macroplan}/anexos', [MacroPlanAttachmentController::class, 'store'])
@@ -719,6 +726,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('project-attachments.destroy');
     Route::post('/projetos/{project}/documento', [ProjectAttachmentController::class, 'storeDocument'])
         ->name('project-attachments.document');
+    Route::get('/projetos/{project}/documento/editar', [\App\Http\Controllers\DocumentEditController::class, 'editProject'])
+        ->name('projects.document.edit');
+    Route::post('/projetos/{project}/documento/salvar', [\App\Http\Controllers\DocumentEditController::class, 'saveProject'])
+        ->name('projects.document.save');
+    Route::post('/projetos/{project}/documento/versoes/{version}/restaurar', [\App\Http\Controllers\DocumentEditController::class, 'restoreProject'])
+        ->name('projects.document.restore');
     Route::post('/projetos/{project}/tarefas', [TaskController::class, 'storeStandalone'])
         ->name('tasks.storeStandalone');
 

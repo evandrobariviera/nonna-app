@@ -189,6 +189,9 @@
                                 <a href="{{ $mainDocument->url() }}" target="_blank" rel="noopener" class="btn btn-ghost btn-xs flex items-center gap-1">
                                     <x-icon name="external-link" size="12" /> Abrir em nova aba
                                 </a>
+                                <a href="{{ route('macroplans.document.edit', $macroplan) }}" class="btn btn-ghost btn-xs flex items-center gap-1">
+                                    <x-icon name="pencil" size="12" /> Editar documento
+                                </a>
                             @endif
                             {{-- Campo próprio do documento (só HTML) — anexos diversos na lateral
                                  nunca trocam o que aparece aqui. Versão anterior fica nos anexos. --}}

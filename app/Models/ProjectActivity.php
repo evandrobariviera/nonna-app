@@ -40,6 +40,8 @@ class ProjectActivity extends Model
         'disciplines_changed'     => 'Disciplinas alteradas',
         'briefing_updated'        => 'Briefing editado',
         'phases_updated'          => 'Linha do tempo editada',
+        'document_edited'         => 'Documento editado',
+        'document_restored'       => 'Versão do documento restaurada',
     ];
 
     public function project(): BelongsTo

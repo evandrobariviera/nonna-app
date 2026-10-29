@@ -1,0 +1,24 @@
+{
+  "novidades": [
+    {
+      "title": "Editar o documento do planejamento, da campanha e do projeto no App",
+      "summary": "Botão Editar documento no card Documento: clique no texto para corrigir uma frase ou data, ajuste as datas no painel lateral (elas mudam também no App) e salve. Cada salvar vira uma versão nova, e dá para voltar a qualquer uma.",
+      "body": "<p>Não precisa mais voltar na skill para corrigir detalhe. Ao mudar uma data no painel <strong>Dados do documento</strong>, o App procura a data antiga no texto e oferece trocar em todos os lugares de uma vez. No planejamento, a verba mensal mudada ali também atualiza o Orçamento do cliente. Qualquer pessoa da equipe pode editar, e fica no histórico quem editou e o que mudou.</p>",
+      "kind": "novidade", "area": "Planejamentos"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Editar o documento dentro do App",
+      "category": "Planejamentos",
+      "slug": "editar-documento-dentro-do-app",
+      "body_file": "ajuda-editar-documento.html"
+    },
+    {
+      "title": "Planejamento, campanhas e reunião de discussão — como funciona",
+      "category": "Planejamentos",
+      "slug": "planejamento-campanhas-e-reuniao-de-discussao-como-funciona",
+      "body_file": "ajuda-planejamento-discussao.html"
+    }
+  ]
+}

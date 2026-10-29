@@ -40,6 +40,8 @@ class MacroPlanActivity extends Model
         'block_updated'       => 'Bloco editado',
         'project_added'       => 'Projeto adicionado',
         'project_removed'     => 'Projeto removido',
+        'document_edited'     => 'Documento editado',
+        'document_restored'   => 'Versão do documento restaurada',
     ];
 
     public function macroPlan(): BelongsTo

@@ -241,45 +241,12 @@ class MacroPlanController extends Controller
      */
     private function syncAdBudget(MacroPlan $macroplan, ?string $verbaTotalRaw): void
     {
-        $newValue = $this->parseMoneyValue($verbaTotalRaw);
-        if ($newValue === null) {
-            return;
-        }
-
-        $client = $macroplan->client ?? Client::find($macroplan->client_id);
-        $current = $client->currentAdBudget();
-
-        if ($current && abs((float) $current->monthly_budget - $newValue) < 0.01) {
-            return;
-        }
-
-        $client->adBudgets()->create([
-            'monthly_budget' => $newValue,
-            'start_date'     => now()->toDateString(),
-            'notes'          => "Atualizado ao salvar o Bloco 01 do planejamento \"{$macroplan->title}\".",
-            'created_by'     => Auth::id(),
-        ]);
+        \App\Services\MacroPlanBudgetSync::sync($macroplan, $this->parseMoneyValue($verbaTotalRaw), 'ao salvar o planejamento');
     }
 
     private function parseMoneyValue(?string $raw): ?float
     {
-        if ($raw === null || trim($raw) === '') {
-            return null;
-        }
-
-        $clean = preg_replace('/[^0-9.,]/', '', $raw);
-        if ($clean === '') {
-            return null;
-        }
-
-        if (str_contains($clean, ',') && str_contains($clean, '.')) {
-            $clean = str_replace('.', '', $clean);
-            $clean = str_replace(',', '.', $clean);
-        } elseif (str_contains($clean, ',')) {
-            $clean = str_replace(',', '.', $clean);
-        }
-
-        return is_numeric($clean) ? (float) $clean : null;
+        return \App\Services\MacroPlanBudgetSync::parseMoney($raw);
     }
 
     public function destroy(MacroPlan $macroplan)
