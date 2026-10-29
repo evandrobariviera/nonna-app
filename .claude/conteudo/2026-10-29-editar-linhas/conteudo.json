@@ -1,0 +1,18 @@
+{
+  "novidades": [
+    {
+      "title": "Editor de documento: criar, duplicar, mover e excluir linhas",
+      "summary": "No Editar documento, passe o mouse numa linha de tabela, item de lista, fase ou cartão: aparece uma barrinha para criar uma linha nova abaixo, duplicar, subir/descer ou excluir (com Desfazer).",
+      "body": "<p>A linha nova nasce com o mesmo visual e os campos em branco, marcados com \"escreva aqui\". Na campanha, a tabela de peças passa a ser quem manda: a peça criada, excluída ou com data mudada ali entra na lista de peças do documento ao salvar. Por isso a data de cada peça saiu do painel lateral e se muda direto na tabela.</p>",
+      "kind": "melhoria", "area": "Planejamentos"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Editar o documento dentro do App",
+      "category": "Planejamentos",
+      "slug": "editar-documento-dentro-do-app",
+      "body_file": "ajuda-editar-documento.html"
+    }
+  ]
+}

@@ -33,6 +33,11 @@
 
     <p class="text-sm mb-3 px-4 py-2 rounded-lg" style="background:var(--red-bg, rgba(220,38,38,.08)); color:var(--red)" x-show="error" x-cloak x-text="error"></p>
 
+    <div class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 card px-4 py-2 flex items-center gap-3 shadow-lg" x-show="removed" x-cloak x-transition>
+        <span class="text-sm" style="color:var(--text)">Item excluído.</span>
+        <button type="button" class="btn btn-ghost btn-xs flex items-center gap-1" @click="undoRemove()"><x-icon name="rotate-ccw" size="12" /> Desfazer</button>
+    </div>
+
     <div class="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_360px] items-start">
         <div class="card overflow-hidden min-w-0">
             <iframe x-ref="frame" srcdoc="{{ $html }}" sandbox="allow-same-origin" title="Documento em edição"
@@ -56,6 +61,14 @@
                     </div>
                 </div>
             </template>
+
+            <div class="card p-4">
+                <h2 class="card-title mb-1">Linhas e itens</h2>
+                <p class="text-xs" style="color:var(--muted)">
+                    Passe o mouse numa linha de tabela, item de lista ou item da linha do tempo: aparece uma barrinha para
+                    <b>criar linha abaixo</b>, <b>duplicar</b>, <b>subir/descer</b> ou <b>excluir</b>.
+                </p>
+            </div>
 
             <div class="card p-4">
                 <h2 class="card-title mb-1">Dados do documento</h2>
@@ -134,19 +147,12 @@
                             </label>
                         @endif
 
-                        <template x-if="(data.pecas || []).length">
-                            <div class="mt-4">
-                                <p class="text-xs font-semibold mb-1" style="color:var(--muted)">Peças</p>
-                                <div class="space-y-1">
-                                    <template x-for="(peca, i) in data.pecas" :key="i">
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-xs flex-1 min-w-0 truncate" style="color:var(--text)" :title="peca.nome" x-text="peca.nome + (peca.quantidade ? ' (' + peca.quantidade + ')' : '')"></span>
-                                            <input type="date" class="field px-2 py-1 text-xs" style="width:150px" :value="peca.data" @change="setDate(['pecas', i, 'data'], $event.target.value)">
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-                        </template>
+                        @if($isCampaign)
+                            <p class="text-xs mt-3" style="color:var(--muted)">
+                                <b style="color:var(--text)">Peças:</b> mude nome, quantidade ou data direto na tabela de peças do documento,
+                                e crie ou exclua linhas por lá — ao salvar, a lista de peças acompanha a tabela.
+                            </p>
+                        @endif
                     @endif
                 @endif
             </div>
@@ -184,6 +190,11 @@
     window.docEditor = function (config) {
         const EDIT_STYLE_ID = 'nonna-edit-style';
         const SKIP = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'SVG', 'IFRAME']);
+        const EMPTY_OK = new Set(['TD', 'TH', 'LI', 'P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
+        const TOOLS_ID = 'nonna-row-tools';
+        const HOVER_CLASS = 'nonna-row-hover';
+        const squish = s => (s || '').replace(/\s+/g, ' ').trim();
+        const cls = el => squish(String(el.className).replace(HOVER_CLASS, ''));
         const brDate = iso => { const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}`; };
         const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const fmtBRL = (v, decimals) => Number(v).toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
@@ -195,6 +206,8 @@
             error: '',
             suggestions: [],
             seq: 0,
+            removed: null,
+            removedTimer: null,
 
             get doc() { return this.$refs.frame.contentDocument; },
 
@@ -213,14 +226,21 @@
                 style.id = EDIT_STYLE_ID;
                 style.textContent = '[data-nonna-edit]{cursor:text;border-radius:2px}' +
                     '[data-nonna-edit]:hover{outline:1px dashed rgba(100,59,142,.6);outline-offset:2px}' +
-                    '[data-nonna-edit]:focus{outline:2px solid #643B8E;outline-offset:2px;background:rgba(100,59,142,.06)}';
+                    '[data-nonna-edit]:focus{outline:2px solid #643B8E;outline-offset:2px;background:rgba(100,59,142,.06)}' +
+                    '[data-nonna-edit]:empty::before{content:"escreva aqui";color:#b4adc6;font-style:italic}' +
+                    '.' + HOVER_CLASS + '{outline:2px dashed rgba(238,121,25,.7) !important;outline-offset:3px}' +
+                    '#' + TOOLS_ID + '{position:absolute;z-index:99999;display:none;gap:2px;padding:3px;background:#fff;border:1px solid #ddd6ea;border-radius:8px;box-shadow:0 4px 14px rgba(40,20,70,.15);font:600 12px/1 Inter,system-ui,sans-serif}' +
+                    '#' + TOOLS_ID + ' button{all:unset;cursor:pointer;padding:5px 7px;border-radius:5px;color:#4b3f63;white-space:nowrap}' +
+                    '#' + TOOLS_ID + ' button:hover{background:#f1ecf8;color:#643B8E}' +
+                    '#' + TOOLS_ID + ' button[data-act=remove]:hover{background:#fdecec;color:#c0392b}';
                 doc.head.appendChild(style);
 
                 const walk = el => {
                     for (const child of el.children) {
                         if (SKIP.has(child.tagName.toUpperCase())) continue;
                         const ownText = [...child.childNodes].some(n => n.nodeType === 3 && n.textContent.trim());
-                        if (ownText) {
+                        // Célula/item vazio também edita (senão uma linha nova nasceria sem onde escrever).
+                        if (ownText || (!child.children.length && EMPTY_OK.has(child.tagName.toUpperCase()))) {
                             child.setAttribute('contenteditable', 'true');
                             child.setAttribute('data-nonna-edit', '');
                         } else {
@@ -229,6 +249,7 @@
                     }
                 };
                 walk(doc.body);
+                this.prepareRowTools(doc);
 
                 doc.addEventListener('input', () => this.dirty = true);
                 doc.addEventListener('click', e => { if (e.target.closest('a')) e.preventDefault(); });
@@ -245,11 +266,144 @@
                 });
             },
 
+            // ── Linhas e itens: criar, duplicar, mover, excluir ──
+            // "Item" = linha de tabela (fora do cabeçalho), item de lista, ou bloco com classe que
+            // se repete entre irmãos (fase da linha do tempo, marco, cartão). Bloco com título de
+            // seção (h1/h2) não entra: seção inteira nova é trabalho da skill.
+            itemFrom(node) {
+                const body = this.doc.body;
+                for (let el = node?.nodeType === 1 ? node : node?.parentElement; el && el !== body; el = el.parentElement) {
+                    const tag = el.tagName;
+                    if (tag === 'TR') {
+                        if (el.parentElement.tagName !== 'THEAD' && !el.querySelector('th:only-child, th + th')) return el;
+                        continue;
+                    }
+                    if (tag === 'LI') return el;
+                    if ((tag === 'DIV' || tag === 'ARTICLE') && cls(el) && el.parentElement !== body && !el.querySelector('h1, h2')) {
+                        const twins = [...el.parentElement.children].filter(s => s.tagName === tag && cls(s) === cls(el));
+                        if (twins.length >= 2) return el;
+                    }
+                }
+                return null;
+            },
+
+            prepareRowTools(doc) {
+                const tools = doc.createElement('div');
+                tools.id = TOOLS_ID;
+                tools.innerHTML = [
+                    ['add', '+ abaixo', 'Criar uma linha nova, em branco, logo abaixo'],
+                    ['dup', 'Duplicar', 'Copiar esta linha logo abaixo'],
+                    ['up', '↑', 'Subir'],
+                    ['down', '↓', 'Descer'],
+                    ['remove', '✕ Excluir', 'Excluir esta linha'],
+                ].map(([act, label, title]) => `<button type="button" data-act="${act}" title="${title}">${label}</button>`).join('');
+                tools.setAttribute('contenteditable', 'false');
+                doc.body.appendChild(tools);
+
+                let current = null;
+                const hide = () => {
+                    current?.classList.remove(HOVER_CLASS);
+                    current = null;
+                    tools.style.display = 'none';
+                };
+                const show = item => {
+                    if (item === current) return;
+                    current?.classList.remove(HOVER_CLASS);
+                    current = item;
+                    item.classList.add(HOVER_CLASS);
+                    tools.style.display = 'flex';
+                    const r = item.getBoundingClientRect(), win = doc.defaultView;
+                    const w = tools.offsetWidth, h = tools.offsetHeight;
+                    // Linha de tabela/lista: colada à direita (ao lado não tem nada). Cartão/fase:
+                    // no canto de cima, por dentro — à direita estaria o cartão vizinho.
+                    const outside = (item.tagName === 'TR' || item.tagName === 'LI') && r.right + w <= doc.documentElement.clientWidth;
+                    tools.style.left = (win.scrollX + (outside ? r.right - 2 : r.right - w - 4)) + 'px';
+                    tools.style.top = (win.scrollY + (outside ? r.top + (r.height - h) / 2 : r.top - h / 2)) + 'px';
+                };
+                // Some com um respiro, pra dar tempo de levar o mouse até a barrinha.
+                let hideTimer = null;
+                const hideSoon = () => { clearTimeout(hideTimer); hideTimer = setTimeout(hide, 300); };
+
+                doc.addEventListener('mouseover', e => {
+                    clearTimeout(hideTimer);
+                    if (tools.contains(e.target)) return;
+                    const item = this.itemFrom(e.target);
+                    item ? show(item) : hideSoon();
+                });
+                doc.documentElement.addEventListener('mouseleave', hideSoon);
+                tools.addEventListener('mousedown', e => e.preventDefault());
+                tools.addEventListener('click', e => {
+                    const act = e.target.closest('button')?.dataset.act;
+                    if (!act || !current) return;
+                    const item = current;
+                    hide();
+                    this.rowAction(act, item);
+                });
+            },
+
+            rowAction(act, item) {
+                this.dirty = true;
+                // Só troca de lugar com outro item do mesmo tipo (não pula pra cima de um título, por ex.).
+                const twin = s => s && s.tagName === item.tagName && (item.tagName === 'TR' || item.tagName === 'LI' || cls(s) === cls(item));
+                if (act === 'add' || act === 'dup') {
+                    const clone = item.cloneNode(true);
+                    clone.classList.remove(HOVER_CLASS);
+                    if (act === 'add') {
+                        [clone, ...clone.querySelectorAll('[data-nonna-edit]')]
+                            .filter(el => el.hasAttribute('data-nonna-edit'))
+                            .forEach(el => el.textContent = '');
+                    }
+                    item.after(clone);
+                    const first = clone.hasAttribute('data-nonna-edit') ? clone : clone.querySelector('[data-nonna-edit]');
+                    first?.focus();
+                } else if (act === 'up' && twin(item.previousElementSibling)) {
+                    item.previousElementSibling.before(item);
+                } else if (act === 'down' && twin(item.nextElementSibling)) {
+                    item.nextElementSibling.after(item);
+                } else if (act === 'remove') {
+                    this.removed = { node: item, parent: item.parentElement, next: item.nextSibling };
+                    item.remove();
+                    clearTimeout(this.removedTimer);
+                    this.removedTimer = setTimeout(() => this.removed = null, 8000);
+                }
+            },
+
+            undoRemove() {
+                const { node, parent, next } = this.removed;
+                parent.insertBefore(node, next && next.parentNode === parent ? next : null);
+                this.removed = null;
+            },
+
+            // Tabela de peças da campanha (cabeçalho começa com "Peça") → lista "pecas" do bloco
+            // de dados. A tabela é quem manda: linha criada/excluída/editada lá vale ao salvar.
+            pecasFromTable() {
+                const table = [...this.doc.querySelectorAll('table')].find(t => /^pe[çc]as?\b/i.test(squish(t.querySelector('th')?.textContent)));
+                if (!table) return null;
+                const heads = [...table.querySelectorAll('thead th, tr:first-child th')].map(th => squish(th.textContent).toLowerCase());
+                const col = re => heads.findIndex(h => re.test(h));
+                const [cFormato, cQtd, cData] = [col(/formato/), col(/qtd|quant/), col(/pronta|data|prazo/)];
+                const old = new Map((this.data.pecas || []).map(p => [squish(p.nome).toLowerCase(), p]));
+
+                return [...table.querySelectorAll('tbody tr')]
+                    .map(tr => [...tr.children].map(td => squish(td.textContent)))
+                    .filter(cells => cells.length === heads.length && cells[0])
+                    .map(cells => {
+                        const m = cData >= 0 ? cells[cData].match(/(\d{2})\/(\d{2})\/(\d{4})/) : null;
+                        const qtd = cQtd >= 0 ? parseInt(cells[cQtd], 10) : NaN;
+                        return Object.assign({}, old.get(cells[0].toLowerCase()) || {}, {
+                            nome: cells[0],
+                            formato: cFormato >= 0 ? cells[cFormato] : null,
+                            quantidade: isNaN(qtd) ? null : qtd,
+                            data: m ? `${m[3]}-${m[2]}-${m[1]}` : null,
+                        });
+                    });
+            },
+
             // Nós de texto do documento (fora de script/style).
             textNodes() {
                 const doc = this.doc;
                 const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, {
-                    acceptNode: n => n.parentElement && n.parentElement.closest('script,style,noscript,template') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
+                    acceptNode: n => n.parentElement && n.parentElement.closest('script,style,noscript,template,#' + TOOLS_ID) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
                 });
                 const nodes = [];
                 while (walker.nextNode()) nodes.push(walker.currentNode);
@@ -327,9 +481,14 @@
             serialize() {
                 const clone = this.doc.documentElement.cloneNode(true);
                 clone.querySelector('#' + EDIT_STYLE_ID)?.remove();
+                clone.querySelector('#' + TOOLS_ID)?.remove();
                 clone.querySelectorAll('[data-nonna-edit]').forEach(el => {
                     el.removeAttribute('contenteditable');
                     el.removeAttribute('data-nonna-edit');
+                });
+                clone.querySelectorAll('.' + HOVER_CLASS).forEach(el => {
+                    el.classList.remove(HOVER_CLASS);
+                    if (!el.classList.length) el.removeAttribute('class');
                 });
                 return (this.doc.doctype ? '<!DOCTYPE html>\n' : '') + clone.outerHTML;
             },
@@ -337,6 +496,9 @@
             async save() {
                 this.saving = true;
                 this.error = '';
+                if (this.data && Array.isArray(this.data.pecas)) {
+                    this.data.pecas = this.pecasFromTable() ?? this.data.pecas;
+                }
                 try {
                     const res = await fetch(config.saveUrl, {
                         method: 'POST',
