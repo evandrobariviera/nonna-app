@@ -2811,16 +2811,22 @@
             <div class="max-w-lg mt-8" style="border-top:1px solid var(--border2); padding-top:24px">
                 <h2 class="text-sm font-bold mb-1" style="color: var(--text)">Módulos do Portal</h2>
                 <p class="text-xs mb-5" style="color: var(--muted)">
-                    Módulos extras que o cliente pode contratar por dentro do Portal — libere aqui depois de fechar a venda.
+                    As abas da Central de Performance no Portal. Libere aqui depois de fechar a venda; o que não estiver liberado aparece para o cliente como vitrine ("Quero contratar").
                 </p>
                 <div class="space-y-3">
                     @foreach(\App\Models\ClientModule::$modules as $moduleKey => $moduleLabel)
-                        @php $mod = $client->modules->firstWhere('module_key', $moduleKey); @endphp
+                        @php
+                            $mod = $client->modules->firstWhere('module_key', $moduleKey);
+                            $auto = $client->portalModuleIsAutomatic($moduleKey);
+                        @endphp
                         <div class="card p-4 flex items-center justify-between flex-wrap gap-3">
                             <div>
                                 <p class="text-sm font-semibold" style="color: var(--text)">{{ $moduleLabel }}</p>
                                 <p class="text-xs" style="color: var(--muted)">
-                                    @if($mod?->isActive())
+                                    @if($auto)
+                                        <span style="color: var(--green)">Ativo</span>
+                                        · automático ({{ $moduleKey === 'atendimento' ? 'tem número de WhatsApp cadastrado' : 'tem conta de anúncio cadastrada' }})
+                                    @elseif($mod?->isActive())
                                         <span style="color: var(--green)">Ativo</span>
                                         @if($mod->enabledBy)
                                             · liberado por {{ $mod->enabledBy->name }} em {{ $mod->enabled_at->format('d/m/Y') }}
@@ -2848,7 +2854,7 @@
                                     </form>
                                 @endif
                             </div>
-                            @if($mod?->isActive())
+                            @if($auto || $mod?->isActive())
                                 <form method="POST" action="{{ route('clients.modules.disable', [$client, $moduleKey]) }}"
                                       @submit.prevent="if (await $store.confirmDialog.ask('Desativar o módulo {{ addslashes($moduleLabel) }} pra este cliente?')) $el.submit()">
                                     @csrf

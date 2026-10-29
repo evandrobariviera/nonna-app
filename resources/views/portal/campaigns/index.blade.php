@@ -1,6 +1,8 @@
 <x-portal-layout>
     <x-slot name="title">Campanhas</x-slot>
 
+    @include('portal.performance._tabs')
+
     <div class="mb-6">
         <h1 class="text-2xl font-black" style="color: var(--text)">Campanhas</h1>
         <p class="text-sm mt-1" style="color: var(--muted)">

@@ -13,6 +13,8 @@ use Illuminate\View\View;
 
 class CampaignController extends Controller
 {
+    use RequiresPortalModule;
+
     public static array $periods = [
         '7d'  => 'Últimos 7 dias',
         '15d' => 'Últimos 15 dias',
@@ -28,6 +30,7 @@ class CampaignController extends Controller
 
     public function index(Request $request): View
     {
+        $this->requirePortalModule('trafego');
         $client = app('currentPortalClient');
         $adAccountIds = $client->adAccounts()->pluck('id');
 
@@ -121,7 +124,9 @@ class CampaignController extends Controller
         // "Como está indo" — insights gerados por IA, só os kinds seguros pra
         // mostrar ao cliente (client_summary já vem em linguagem de resultado,
         // sem jargão), agrupados por campanha.
+        // Só com o módulo Análises com IA liberado.
         $insightsByCampaign = CampaignInsight::where('client_id', $client->id)
+            ->when(!$client->portalModuleActive('analises_ia'), fn ($q) => $q->whereRaw('false'))
             ->whereIn('kind', CampaignInsightService::CLIENT_VISIBLE_KINDS)
             ->whereIn('status', ['novo', 'lido'])
             ->whereNotNull('client_summary')
@@ -153,6 +158,7 @@ class CampaignController extends Controller
 
     public function show(Request $request, AdCampaign $campaign): View
     {
+        $this->requirePortalModule('trafego');
         $client = app('currentPortalClient');
         $campaign->load('adAccount', 'adsets.ads');
 
@@ -235,6 +241,7 @@ class CampaignController extends Controller
         // kinds liberados), agora restrito a essa campanha.
         $insights = CampaignInsight::where('client_id', $client->id)
             ->where('ad_campaign_id', $campaign->id)
+            ->when(!$client->portalModuleActive('analises_ia'), fn ($q) => $q->whereRaw('false'))
             ->whereIn('kind', CampaignInsightService::CLIENT_VISIBLE_KINDS)
             ->whereIn('status', ['novo', 'lido'])
             ->whereNotNull('client_summary')

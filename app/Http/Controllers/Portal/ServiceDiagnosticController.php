@@ -9,8 +9,11 @@ use Illuminate\View\View;
 
 class ServiceDiagnosticController extends Controller
 {
+    use RequiresPortalModule;
+
     public function index(): View
     {
+        $this->requirePortalModule('atendimento');
         $client = app('currentPortalClient');
 
         $integrations = $client->integrations()
@@ -28,6 +31,7 @@ class ServiceDiagnosticController extends Controller
 
     public function integration(ClientIntegration $integration): View
     {
+        $this->requirePortalModule('atendimento');
         $client = app('currentPortalClient');
         abort_unless($integration->client_id === $client->id, 403);
 
@@ -38,6 +42,7 @@ class ServiceDiagnosticController extends Controller
 
     public function show(ClientIntegration $integration, ServiceDiagnostic $diagnostic): View
     {
+        $this->requirePortalModule('atendimento');
         $client = app('currentPortalClient');
 
         abort_unless($integration->client_id === $client->id, 403);

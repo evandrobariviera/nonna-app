@@ -1,17 +1,19 @@
 {{-- Evolução semana a semana (PerformanceDashboard::weekly): investido e leads
      em dois gráficos separados (escalas diferentes não dividem eixo). A semana
-     atual ainda está incompleta e aparece mais clara. Espera $weekly. --}}
+     atual ainda está incompleta e aparece mais clara. Espera $weekly e, opcional,
+     $charts (['spend', 'leads'] por padrão). --}}
 @php
     $maxSpend = max(1, max(array_column($weekly, 'spend')));
     $maxLeads = max(1, max(array_column($weekly, 'leads')));
+    $charts = $charts ?? ['spend', 'leads'];
     $short = fn ($v) => $v >= 1000 ? number_format($v / 1000, 1, ',', '.') . ' mil' : number_format($v, 0, ',', '.');
 @endphp
 
 <div class="grid gap-4 mb-5" style="grid-template-columns:repeat(auto-fit, minmax(300px, 1fr))">
-    @foreach([
+    @foreach(array_filter([
         ['Investido por semana', 'spend', $maxSpend, null],
         ['Leads por semana', 'leads', $maxLeads, 'good'],
-    ] as [$title, $key, $max, $inner])
+    ], fn ($c) => in_array($c[1], $charts, true)) as [$title, $key, $max, $inner])
         <div class="card px-5 py-4">
             <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
                 <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">{{ $title }}</p>

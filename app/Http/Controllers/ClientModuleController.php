@@ -40,9 +40,12 @@ class ClientModuleController extends Controller
         abort_if($client->organization_id !== app('currentOrganization')->id, 403);
         abort_unless(array_key_exists($moduleKey, ClientModule::$modules), 404);
 
-        ClientModule::where('client_id', $client->id)
-            ->where('module_key', $moduleKey)
-            ->update(['status' => 'nao_contratado', 'enabled_at' => null, 'enabled_by' => null]);
+        // updateOrCreate: módulo ligado só pela regra automática (sem linha)
+        // também precisa poder ser desligado.
+        ClientModule::updateOrCreate(
+            ['client_id' => $client->id, 'module_key' => $moduleKey],
+            ['status' => 'nao_contratado', 'enabled_at' => null, 'enabled_by' => null],
+        );
 
         return back()->with('success', 'Módulo desativado.');
     }

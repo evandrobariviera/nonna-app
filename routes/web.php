@@ -1126,6 +1126,11 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
     Route::post('/aprovacoes/{round}/decidir', [PortalApprovals::class, 'decide'])->name('approvals.decide');
     Route::get('/materiais-aprovados', [PortalMaterials::class, 'index'])->name('materials.index');
     Route::get('/producao', [PortalProduction::class, 'index'])->name('production.index');
+    // Central de Performance: dashboard + abas, cada uma liberada pelo módulo contratado.
+    Route::get('/performance', [\App\Http\Controllers\Portal\PerformanceController::class, 'index'])->name('performance.index');
+    Route::get('/performance/insights', [\App\Http\Controllers\Portal\PerformanceController::class, 'insights'])->name('performance.insights');
+    Route::get('/performance/conhecer/{moduleKey}', [\App\Http\Controllers\Portal\PerformanceController::class, 'showcase'])->name('performance.showcase');
+    Route::post('/performance/contratar/{moduleKey}', [\App\Http\Controllers\Portal\PerformanceController::class, 'requestModule'])->name('performance.request-module');
     Route::get('/central-de-leads', [PortalLeads::class, 'index'])->name('leads.index');
     // Precisa vir ANTES do {lead} — senão "resultados" colide com o wildcard.
     Route::get('/central-de-leads/resultados', [PortalLeads::class, 'results'])->name('leads.results');
@@ -1134,7 +1139,6 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
     Route::patch('/central-de-leads/{lead}/stage', [PortalLeads::class, 'updateStage'])->name('leads.update-stage');
     Route::patch('/central-de-leads/{lead}/dados', [PortalLeads::class, 'update'])->name('leads.update');
     Route::patch('/central-de-leads-configuracoes', [PortalLeads::class, 'updateSettings'])->name('leads.settings');
-    Route::post('/central-de-leads/contratar', [PortalLeads::class, 'requestModule'])->name('leads.request-module');
     Route::get('/campanhas', [PortalCampaigns::class, 'index'])->name('campaigns.index');
     Route::get('/campanhas/{campaign}', [PortalCampaigns::class, 'show'])->name('campaigns.show');
     Route::get('/boletos', [PortalBilling::class, 'index'])->name('boletos.index');

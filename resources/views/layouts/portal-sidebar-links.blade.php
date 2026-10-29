@@ -13,8 +13,6 @@
         ->where('status', 'em_execucao')
         ->orderByDesc('period_start')
         ->first();
-
-    $_leadsModuleActive = $_portalClient->moduleStatus('central_leads') === 'ativo';
 @endphp
 
 @if(app(\App\Services\PortalMagicAccess::class)->active())
@@ -72,42 +70,8 @@
     </span>
 </a>
 
-{{-- ══ INTELIGÊNCIA ══ --}}
-<div class="nav-group-label" style="margin-top:8px">Inteligência</div>
-
-<a href="{{ route('portal.service-diagnostics.index') }}"
-   class="nav-group-trigger {{ request()->routeIs('portal.service-diagnostics.*') ? 'open' : '' }}"
-   style="{{ request()->routeIs('portal.service-diagnostics.*') ? 'color:var(--purple);' : '' }}">
-    <span class="flex items-center gap-3">
-        <x-icon name="sparkles" size="16" class="flex-shrink-0" />
-        Atendimento Assistido
-    </span>
-</a>
-
-<span class="nav-group-trigger" style="opacity:.45; cursor:not-allowed">
-    <span class="flex items-center gap-3">
-        <x-icon name="sparkles" size="16" class="flex-shrink-0" />
-        Campanhas
-    </span>
-    <span class="badge badge-muted" style="font-size:9px; padding:1px 6px; white-space:nowrap; flex-shrink:0">Em breve</span>
-</span>
-
 {{-- ══ ESTRATÉGICO ══ --}}
 <div class="nav-group-label" style="margin-top:8px">Estratégico</div>
-
-<a href="{{ route('portal.leads.index') }}"
-   class="nav-group-trigger {{ request()->routeIs('portal.leads.*') ? 'open' : '' }}"
-   style="{{ request()->routeIs('portal.leads.*') ? 'color:var(--purple);' : '' }}">
-    <span class="flex items-center gap-3">
-        <x-icon name="megaphone" size="16" class="flex-shrink-0" />
-        <span class="flex items-center justify-between w-full">
-            <span>Central de Leads</span>
-            @unless($_leadsModuleActive)
-                <span class="badge badge-muted" style="font-size:9px; padding:1px 6px; white-space:nowrap; flex-shrink:0">Contratar</span>
-            @endunless
-        </span>
-    </span>
-</a>
 
 <span class="nav-group-trigger" style="opacity:.45; cursor:not-allowed">
     <span class="flex items-center gap-3">
@@ -173,15 +137,16 @@
     </span>
 </a>
 
-{{-- ══ DESEMPENHO ══ --}}
-<div class="nav-group-label" style="margin-top:8px">Desempenho</div>
+{{-- ══ PERFORMANCE ══ --}}
+<div class="nav-group-label" style="margin-top:8px">Performance</div>
 
-<a href="{{ route('portal.campaigns.index') }}"
-   class="nav-group-trigger {{ request()->routeIs('portal.campaigns.*') ? 'open' : '' }}"
-   style="{{ request()->routeIs('portal.campaigns.*') ? 'color:var(--purple);' : '' }}">
+@php $_perfActive = request()->routeIs('portal.performance.*') || request()->routeIs('portal.leads.*') || request()->routeIs('portal.campaigns.*') || request()->routeIs('portal.service-diagnostics.*'); @endphp
+<a href="{{ route('portal.performance.index') }}"
+   class="nav-group-trigger {{ $_perfActive ? 'open' : '' }}"
+   style="{{ $_perfActive ? 'color:var(--purple);' : '' }}">
     <span class="flex items-center gap-3">
-        <x-icon name="chart-no-axes-column-increasing" size="16" class="flex-shrink-0" />
-        Campanhas de Tráfego
+        <x-icon name="trending-up" size="16" class="flex-shrink-0" />
+        Central de Performance
     </span>
 </a>
 

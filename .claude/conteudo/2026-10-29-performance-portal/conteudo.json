@@ -1,0 +1,23 @@
+{
+  "novidades": [
+    {
+      "title": "Central de Performance chega ao Portal do cliente",
+      "summary": "No Portal, o cliente agora tem a Central de Performance: um dashboard com investimento, contatos, leads com perfil de compra, vendas e a nota do atendimento, e as abas Campanhas, Leads, Insights e Atendimento.",
+      "body": "<p>Cada aba é um módulo: <strong>Campanhas de Tráfego</strong>, <strong>Central de Leads</strong>, <strong>Atendimento</strong> e <strong>Análises com IA</strong>. O que o cliente não contratou aparece como vitrine, com o botão <strong>Quero contratar</strong> — o pedido avisa a Direção Geral. No menu do Portal, Campanhas de Tráfego, Central de Leads e Atendimento Assistido viraram uma entrada só: Central de Performance.</p>",
+      "kind": "novidade", "area": "Portal do Cliente"
+    },
+    {
+      "title": "Módulos do Portal: liberar e desligar na ficha do cliente",
+      "summary": "Na ficha do cliente, aba Portal, os quatro módulos da Central de Performance podem ser liberados ou desligados. Quem já tinha conta de anúncio ou número de WhatsApp continua vendo o que via antes, automaticamente.",
+      "kind": "melhoria", "area": "Clientes"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Central de Performance — o painel de tráfego, leads e atendimento",
+      "category": "Performance",
+      "slug": "central-de-performance",
+      "body_file": "ajuda-central-performance.html"
+    }
+  ]
+}

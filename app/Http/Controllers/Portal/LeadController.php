@@ -9,9 +9,7 @@ use App\Models\ClientLeadOpportunity;
 use App\Models\ClientLeadSource;
 use App\Models\ClientModule;
 use App\Models\LeadChannel;
-use App\Models\User;
 use App\Services\Leads\LeadFunnel;
-use App\Services\SystemNotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,9 +23,7 @@ class LeadController extends Controller
         $client = app('currentPortalClient');
 
         if ($client->moduleStatus(self::MODULE_KEY) !== 'ativo') {
-            $module = ClientModule::where('client_id', $client->id)->where('module_key', self::MODULE_KEY)->first();
-
-            return view('portal.leads.upsell', compact('client', 'module'));
+            return redirect()->route('portal.performance.showcase', self::MODULE_KEY);
         }
 
         $view = $request->get('view', 'lista');
@@ -261,37 +257,5 @@ class LeadController extends Controller
         }
 
         return back()->with('success', 'Estágio atualizado.');
-    }
-
-    // Vitrine → "Quero contratar": não ativa nada sozinho (decisão de venda
-    // continua manual do lado Nonna) — só registra o pedido e avisa a
-    // Direção Geral, que decide e ativa o módulo pra esse Cliente.
-    public function requestModule()
-    {
-        $client = app('currentPortalClient');
-
-        $module = ClientModule::firstOrCreate(
-            ['client_id' => $client->id, 'module_key' => self::MODULE_KEY],
-            ['status' => 'nao_contratado']
-        );
-
-        if ($module->status !== 'ativo') {
-            $module->update(['requested_at' => now()]);
-
-            $users = User::whereHas('functionalRoles', fn ($q) => $q->where('key', 'direcao_geral'))->get();
-            app(SystemNotificationService::class)->send(
-                'portal.modulo_solicitado',
-                $users,
-                [
-                    'client_name'  => $client->displayName(),
-                    'module_label' => $module->moduleLabel(),
-                ],
-                route('leads.index', ['client_id' => $client->id]),
-                $module,
-                $client->organization_id,
-            );
-        }
-
-        return back()->with('success', 'Pedido enviado! Nosso time vai entrar em contato.');
     }
 }

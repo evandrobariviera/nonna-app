@@ -569,6 +569,35 @@ class Client extends Model
         return $this->modules()->where('module_key', $moduleKey)->value('status') ?? 'nao_contratado';
     }
 
+    /**
+     * Módulo da Central de Performance liberado no Portal? Vale o que a Nonna
+     * marcou na ficha (ativo / não contratado); sem marcação, vale o que o
+     * cliente já tinha antes dos módulos existirem — Campanhas e Análises com
+     * conta de anúncio, Atendimento com número de WhatsApp.
+     */
+    public function portalModuleActive(string $moduleKey): bool
+    {
+        $row = $this->modules->firstWhere('module_key', $moduleKey);
+
+        return $row ? $row->isActive() : $this->portalModuleIsAutomatic($moduleKey);
+    }
+
+    /** Liberado só pela regra automática (sem marcação na ficha). */
+    public function portalModuleIsAutomatic(string $moduleKey): bool
+    {
+        if ($this->modules->contains('module_key', $moduleKey)) {
+            return false;
+        }
+
+        return $this->portalModuleDefaults[$moduleKey] ??= match ($moduleKey) {
+            'trafego', 'analises_ia' => $this->adAccounts()->exists(),
+            'atendimento'            => $this->integrations()->exists(),
+            default                  => false,
+        };
+    }
+
+    private array $portalModuleDefaults = [];
+
     // Delete de verdade só é permitido quando não sobra NENHUMA associação —
     // devolve um mapa label => contagem só com o que estiver bloqueando
     // (array vazio = seguro apagar). Usado por ClientController::destroy().
