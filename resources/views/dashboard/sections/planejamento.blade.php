@@ -46,13 +46,17 @@
                     </div>
                     <div class="flex flex-col gap-1.5">
                         @forelse($list as $m)
-                            @php $isToday = $m->scheduled_at?->isToday(); $late = $m->status === 'agendada' && $m->scheduled_at?->isPast() && ! $isToday; @endphp
+                            @php
+                                [$mState, $mHint] = $m->cardState();
+                                $mColor = ['now' => 'var(--green)', 'late' => 'var(--red)', 'soon' => 'var(--orange)'][$mState] ?? 'var(--muted)';
+                            @endphp
                             <x-item-card kind="reuniao" :icon="$m->typeIcon()" :title="$m->title"
-                                         :state="$isToday ? 'now' : ($late ? 'late' : null)" :href="route('meetings.show', $m)">
+                                         :state="$mState" :href="route('meetings.show', $m)">
                                 <x-slot:meta>
                                     <span class="truncate" style="color:var(--purple)">{{ $m->client?->displayName() ?? '—' }}</span>
                                     <span>{{ $m->typeLabel() === 'Kick-off Estratégico' ? 'Kick-off' : 'Macro' }}</span>
-                                    @if($m->scheduled_at)<span style="color:{{ $late ? 'var(--red)' : ($isToday ? 'var(--green)' : 'var(--muted)') }}">{{ $m->scheduled_at->format('d/m H:i') }}</span>@endif
+                                    @if($m->scheduled_at)<span style="color:{{ $mColor }}">{{ $m->scheduled_at->format('d/m H:i') }}</span>@endif
+                                    @if($mHint)<span class="font-semibold" style="color:{{ $mColor }}">{{ $mHint }}</span>@endif
                                     @if($m->organizer)<span>{{ explode(' ', $m->organizer->name)[0] }}</span>@endif
                                 </x-slot:meta>
                             </x-item-card>

@@ -1,0 +1,11 @@
+{
+  "novidades": [
+    {
+      "title": "Reuniões atrasadas aparecem em vermelho na Agenda",
+      "summary": "Na Agenda do Dashboard, reunião com data passada que ainda está como Agendada, Pós-Reunião sem ATA há 2+ dias ou Revisão Interna parada há 3+ dias fica com fundo avermelhado e o motivo escrito no card.",
+      "body": "<p>Ex.: <em>sem ATA há 8 dias</em>, <em>data passou</em>, <em>em revisão há 21 dias</em>. Todo card atrasado do Dashboard ganhou o mesmo fundo avermelhado, e os avisos \"ATA pronta\" voltaram a ter um fundo laranja suave pra não se confundir com pendência.</p>",
+      "kind": "melhoria", "area": "Reuniões"
+    }
+  ],
+  "ajuda": []
+}

@@ -1155,7 +1155,10 @@ span.flatpickr-weekday { color: var(--muted); font-weight: 500; font-size: 12px;
     background: var(--ic-accent);
 }
 .item-card:hover { border-color: rgba(100, 59, 142, .35); box-shadow: var(--shadow); }
-.item-card.is-late { --ic-accent: var(--red); }
+/* Atrasado é o único estado que tinge o card: fundo e borda avermelhados além da barrinha —
+   precisa saltar aos olhos numa lista em que o resto é branco. */
+.item-card.is-late { --ic-accent: var(--red); background: rgba(220, 38, 38, .045); border-color: rgba(220, 38, 38, .28); }
+.item-card.is-late:hover { border-color: rgba(220, 38, 38, .5); }
 .item-card.is-soon { --ic-accent: var(--orange); }
 .item-card.is-now  { --ic-accent: var(--green); background: rgba(16, 185, 129, .06); }
 .item-card.is-done { opacity: .6; }
@@ -1167,7 +1170,8 @@ span.flatpickr-weekday { color: var(--muted); font-weight: 500; font-size: 12px;
 .item-card.ic-planejamento { --ic-kind: #4F46E5; }
 .item-card.ic-campanha     { --ic-kind: #DB2777; }
 .item-card.ic-cliente      { --ic-kind: var(--slate); }
-.item-card.ic-aviso        { --ic-kind: var(--orange); }
+/* Aviso "pra você" (ATA pronta…) leva um fundo laranja bem suave — não se confunde com pendência. */
+.item-card.ic-aviso        { --ic-kind: var(--orange); background: rgba(238, 121, 25, .05); border-color: rgba(238, 121, 25, .28); }
 .dark .item-card.ic-planejamento { --ic-kind: #818CF8; }
 
 .ic-chip {

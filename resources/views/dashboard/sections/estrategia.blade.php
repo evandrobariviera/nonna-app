@@ -83,11 +83,13 @@
         @else
             <div class="flex flex-col gap-2">
                 @foreach($meetingsPosReuniao as $meeting)
-                    <x-item-card kind="reuniao" :icon="$meeting->typeIcon()" :title="$meeting->title" state="soon"
+                    @php [$mState, $mHint] = $meeting->cardState(); @endphp
+                    <x-item-card kind="reuniao" :icon="$meeting->typeIcon()" :title="$meeting->title" :state="$mState"
                                  :href="route('meetings.show', $meeting)">
                         <x-slot:meta>
-                            <span class="truncate">{{ $meeting->client?->displayName() ?? '—' }}</span>
                             <span>{{ $meeting->scheduled_at->format('d/m') }}</span>
+                            @if($mHint)<span class="font-semibold" style="color:{{ $mState === 'late' ? 'var(--red)' : 'var(--orange)' }}">{{ $mHint }}</span>@endif
+                            <span class="truncate">{{ $meeting->client?->displayName() ?? '—' }}</span>
                         </x-slot:meta>
                     </x-item-card>
                 @endforeach

@@ -265,6 +265,37 @@ class Meeting extends Model
         return $this->morphMany(Pendency::class, 'pendable');
     }
 
+    /**
+     * Estado do card (<x-item-card>) nas listas por status: 'now' (é hoje), 'late' / 'soon'
+     * (parada além da conta na etapa) ou null (em dia). Junto vem um lembrete curto do porquê.
+     * Agendada com data passada = esqueceram de mudar o status; Pós-Reunião = falta a ATA
+     * (2+ dias atrasada, desde ontem vence logo); Revisão Interna = ATA pronta e time sem
+     * fechar a leitura (3+ dias).
+     *
+     * @return array{0: ?string, 1: ?string}
+     */
+    public function cardState(): array
+    {
+        if (! $this->scheduled_at) {
+            return [null, null];
+        }
+        if ($this->scheduled_at->isToday()) {
+            return ['now', null];
+        }
+
+        $days = (int) $this->scheduled_at->copy()->startOfDay()->diffInDays(today(), false);
+
+        return match ($this->status) {
+            'agendada'    => $days > 0 ? ['late', 'data passou'] : [null, null],
+            'pos_reuniao' => $days >= 2 ? ['late', "sem ATA há {$days} dias"] : ($days === 1 ? ['soon', 'ATA até hoje'] : [null, null]),
+            'revisao_ata' => (function () {
+                $since = (int) ($this->ata_recorded_at ?? $this->scheduled_at)->copy()->startOfDay()->diffInDays(today());
+                return $since >= 3 ? ['late', "em revisão há {$since} dias"] : [null, null];
+            })(),
+            default       => [null, null],
+        };
+    }
+
     /** Fim previsto da reunião (sem duração cadastrada, 1 hora). */
     public function endsAt(): \Illuminate\Support\Carbon
     {

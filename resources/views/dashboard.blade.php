@@ -473,14 +473,18 @@
                     </div>
                     <div class="flex flex-col gap-2" style="min-height:60px" data-kanban-list>
                         @forelse($statusMeetings as $meeting)
-                            @php $isToday = $meeting->scheduled_at->isToday(); @endphp
+                            @php
+                                [$mState, $mHint] = $meeting->cardState();
+                                $mColor = ['now' => 'var(--green)', 'late' => 'var(--red)', 'soon' => 'var(--orange)'][$mState] ?? 'var(--blue)';
+                            @endphp
                             <x-item-card kind="reuniao" :icon="$meeting->typeIcon()" :title="$meeting->title"
-                                         :state="$isToday ? 'now' : null" :href="route('meetings.show', $meeting)"
+                                         :state="$mState" :href="route('meetings.show', $meeting)"
                                          data-kanban-card data-id="{{ $meeting->id }}"
                                          data-update-url="{{ route('meetings.update-status', $meeting) }}"
                                          x-show="!filterType || filterType === '{{ $meeting->type }}'">
                                 <x-slot:meta>
-                                    <span class="font-semibold" style="color:{{ $isToday ? 'var(--green)' : 'var(--blue)' }}">{{ $isToday ? 'Hoje ' . $meeting->scheduled_at->format('H:i') : $meeting->scheduled_at->format('d/m H:i') }}</span>
+                                    <span class="font-semibold" style="color:{{ $mColor }}">{{ $mState === 'now' ? 'Hoje ' . $meeting->scheduled_at->format('H:i') : $meeting->scheduled_at->format('d/m H:i') }}</span>
+                                    @if($mHint)<span class="font-semibold" style="color:{{ $mColor }}">{{ $mHint }}</span>@endif
                                     <span class="truncate">{{ $meeting->client?->displayName() ?? '—' }}</span>
                                 </x-slot:meta>
                             </x-item-card>
