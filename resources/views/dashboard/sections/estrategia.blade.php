@@ -83,16 +83,7 @@
         @else
             <div class="flex flex-col gap-2">
                 @foreach($meetingsPosReuniao as $meeting)
-                    @php [$mState, $mHint] = $meeting->cardState(); @endphp
-                    <x-item-card kind="reuniao" :icon="$meeting->typeIcon()" :title="$meeting->title" :state="$mState"
-                                 :href="route('meetings.show', $meeting)">
-                        <x-slot:meta>
-                            <span>{{ $meeting->scheduled_at->format('d/m') }}</span>
-                            @if($mHint)<span class="font-semibold" style="color:{{ $mState === 'late' ? 'var(--red)' : 'var(--orange)' }}">{{ $mHint }}</span>@endif
-                            <span class="truncate">{{ $meeting->client?->displayName() ?? '—' }}</span>
-                            <span class="inline-flex gap-1"><x-meeting-checks :meeting="$meeting" /></span>
-                        </x-slot:meta>
-                    </x-item-card>
+                    <x-meeting-card :meeting="$meeting" />
                 @endforeach
             </div>
         @endif
@@ -109,14 +100,7 @@
         @else
             <div class="flex flex-col gap-2">
                 @foreach($meetingsRealizadas as $meeting)
-                    <x-item-card kind="reuniao" :icon="$meeting->typeIcon()" :title="$meeting->title"
-                                 :href="route('meetings.show', $meeting)">
-                        <x-slot:meta>
-                            <span class="truncate">{{ $meeting->client?->displayName() ?? '—' }}</span>
-                            <span>{{ $meeting->scheduled_at->format('d/m') }}</span>
-                            <span class="inline-flex gap-1"><x-meeting-checks :meeting="$meeting" /></span>
-                        </x-slot:meta>
-                    </x-item-card>
+                    <x-meeting-card :meeting="$meeting" />
                 @endforeach
             </div>
         @endif

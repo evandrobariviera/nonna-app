@@ -1,0 +1,24 @@
+{
+  "novidades": [
+    {
+      "title": "Reunião: faixa de Status igual à da tarefa e cards com o cliente em destaque",
+      "summary": "Na página da reunião, o Status virou a faixa em setas da tarefa (mostra onde ela está e muda com um clique). Nos cards de reunião, o nome do cliente vem em destaque, o título embaixo, e os selos Pauta/ATA sempre na última linha.",
+      "body": "<p>Antes eram botões \"Mover para\" que não mostravam o status atual. Nos cards, a ordem agora é sempre a mesma: cliente · título · data (e o motivo, se estiver atrasada) · selos Pauta e ATA — dá pra ler a coluna inteira de cima a baixo como uma tabela.</p>",
+      "kind": "melhoria", "area": "Reuniões"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Fluxo de Reuniões com o Cliente — do agendamento à ATA",
+      "category": "Reuniões",
+      "slug": "fluxo-de-reunioes-e-agendamento-de-macroplanejamento",
+      "body_file": "ajuda-fluxo-reunioes.html"
+    },
+    {
+      "title": "Como ler os cards (cores e abrir em nova aba)",
+      "category": "Primeiros passos",
+      "slug": "como-ler-os-cards",
+      "body_file": "../2026-10-29-cards-padrao/ajuda-como-ler-os-cards.html"
+    }
+  ]
+}

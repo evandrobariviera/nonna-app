@@ -402,15 +402,7 @@
                     </h3>
                     <div class="flex flex-col gap-1.5">
                         @forelse($myMeetingsToday as $meeting)
-                            @php $mNow = now()->between($meeting->scheduled_at, $meeting->endsAt()); @endphp
-                            <x-item-card kind="reuniao" :icon="$meeting->typeIcon()" :title="$meeting->title"
-                                         :state="$mNow ? 'now' : null" :href="route('meetings.show', $meeting)">
-                                <x-slot:meta>
-                                    <span class="font-semibold" style="color:{{ $mNow ? 'var(--green)' : 'var(--blue)' }}">{{ $meeting->scheduled_at->format('H:i') }}{{ $mNow ? ' · agora' : '' }}</span>
-                                    @if($meeting->client)<span class="truncate">{{ $meeting->client->displayName() }}</span>@endif
-                                    <span class="inline-flex gap-1"><x-meeting-checks :meeting="$meeting" /></span>
-                                </x-slot:meta>
-                            </x-item-card>
+                            <x-meeting-card :meeting="$meeting" />
                         @empty
                             <p class="text-xs" style="color:var(--muted)">Nenhuma reunião hoje.</p>
                         @endforelse
@@ -474,22 +466,10 @@
                     </div>
                     <div class="flex flex-col gap-2" style="min-height:60px" data-kanban-list>
                         @forelse($statusMeetings as $meeting)
-                            @php
-                                [$mState, $mHint] = $meeting->cardState();
-                                $mColor = ['now' => 'var(--green)', 'late' => 'var(--red)', 'soon' => 'var(--orange)'][$mState] ?? 'var(--blue)';
-                            @endphp
-                            <x-item-card kind="reuniao" :icon="$meeting->typeIcon()" :title="$meeting->title"
-                                         :state="$mState" :href="route('meetings.show', $meeting)"
-                                         data-kanban-card data-id="{{ $meeting->id }}"
-                                         data-update-url="{{ route('meetings.update-status', $meeting) }}"
-                                         x-show="!filterType || filterType === '{{ $meeting->type }}'">
-                                <x-slot:meta>
-                                    <span class="font-semibold" style="color:{{ $mColor }}">{{ $mState === 'now' ? 'Hoje ' . $meeting->scheduled_at->format('H:i') : $meeting->scheduled_at->format('d/m H:i') }}</span>
-                                    @if($mHint)<span class="font-semibold" style="color:{{ $mColor }}">{{ $mHint }}</span>@endif
-                                    <span class="truncate">{{ $meeting->client?->displayName() ?? '—' }}</span>
-                                    <span class="inline-flex gap-1"><x-meeting-checks :meeting="$meeting" /></span>
-                                </x-slot:meta>
-                            </x-item-card>
+                            <x-meeting-card :meeting="$meeting"
+                                            data-kanban-card data-id="{{ $meeting->id }}"
+                                            data-update-url="{{ route('meetings.update-status', $meeting) }}"
+                                            x-show="!filterType || filterType === '{{ $meeting->type }}'" />
                         @empty
                             <p class="text-xs flex items-center gap-1.5" style="color:var(--muted)" data-kanban-empty>
                             <x-icon name="party-popper" size="13" />

@@ -307,7 +307,7 @@ class Meeting extends Model
         return match ($this->status) {
             'agendada'    => $days > 0 ? ['late', 'data passou'] : [null, null],
             // ATA já feita e a reunião ainda parada em Pós-Reunião = só falta andar o status.
-            'pos_reuniao' => $this->hasAta() ? ['soon', 'ATA feita — avance o status']
+            'pos_reuniao' => $this->hasAta() ? ['soon', 'avance o status']
                 : ($days >= 2 ? ['late', "sem ATA há {$days} dias"] : ($days === 1 ? ['soon', 'ATA até hoje'] : [null, null])),
             'revisao_ata' => (function () {
                 $since = (int) ($this->ata_recorded_at ?? $this->scheduled_at)->copy()->startOfDay()->diffInDays(today());

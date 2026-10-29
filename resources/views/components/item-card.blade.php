@@ -19,7 +19,8 @@
     - popup  true = clique simples abre a tarefa na janela por cima ($store.taskPopup)
              em vez de navegar (Ctrl/Cmd/botão do meio continuam abrindo em aba)
     - done   true = item concluído (riscado e apagado)
-    Slots: $meta (linha de baixo: cliente, data…), $badge (antes do título, ex.: TRAVA).
+    Slots: $sub (linha logo abaixo do título, mais discreta), $meta (linha de baixo: cliente,
+    data…), $badge (antes do título, ex.: TRAVA).
     Atributos extras (data-kanban-*, x-show…) vão pro <a>.
 --}}
 @props([
@@ -56,6 +57,9 @@
         <span class="ic-title">
             @isset($badge){{ $badge }}@endisset{{ $title }}
         </span>
+        @isset($sub)
+            <span class="ic-sub">{{ $sub }}</span>
+        @endisset
         @isset($meta)
             <span class="ic-meta">{{ $meta }}</span>
         @endisset

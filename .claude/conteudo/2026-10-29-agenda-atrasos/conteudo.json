@@ -3,7 +3,7 @@
     {
       "title": "Reuniões: atrasadas em vermelho e selos de Pauta e ATA no card",
       "summary": "Os cards de reunião mostram se já têm Pauta e ATA (✓ verde = feito, ○ = falta), e as atrasadas ficam em vermelho com o motivo escrito — sem precisar abrir a reunião.",
-      "body": "<p>Fica vermelha: Agendada com a data passada (<em>data passou</em>), Pós-Reunião sem ATA há 2 dias ou mais (<em>sem ATA há 8 dias</em>) e Revisão Interna parada há 3 dias ou mais. Se a ATA já foi feita e a reunião continua em Pós-Reunião, o card fica laranja: <em>ATA feita — avance o status</em>. Vale pra Agenda do Dashboard, Estratégia, modo Planejamento e a /agenda (Lista e Quadros). Todo card atrasado do Dashboard ganhou fundo avermelhado, e os avisos \"ATA pronta\" voltaram a ter fundo laranja suave.</p>",
+      "body": "<p>Fica vermelha: Agendada com a data passada (<em>data passou</em>), Pós-Reunião sem ATA há 2 dias ou mais (<em>sem ATA há 8 dias</em>) e Revisão Interna parada há 3 dias ou mais. Se a ATA já foi feita e a reunião continua em Pós-Reunião, o card fica laranja: <em>avance o status</em>. Vale pra Agenda do Dashboard, Estratégia, modo Planejamento e a /agenda (Lista e Quadros). Todo card atrasado do Dashboard ganhou fundo avermelhado, e os avisos \"ATA pronta\" voltaram a ter fundo laranja suave.</p>",
       "kind": "melhoria", "area": "Reuniões"
     }
   ],
