@@ -408,6 +408,7 @@
                                 <x-slot:meta>
                                     <span class="font-semibold" style="color:{{ $mNow ? 'var(--green)' : 'var(--blue)' }}">{{ $meeting->scheduled_at->format('H:i') }}{{ $mNow ? ' · agora' : '' }}</span>
                                     @if($meeting->client)<span class="truncate">{{ $meeting->client->displayName() }}</span>@endif
+                                    <span class="inline-flex gap-1"><x-meeting-checks :meeting="$meeting" /></span>
                                 </x-slot:meta>
                             </x-item-card>
                         @empty
@@ -486,6 +487,7 @@
                                     <span class="font-semibold" style="color:{{ $mColor }}">{{ $mState === 'now' ? 'Hoje ' . $meeting->scheduled_at->format('H:i') : $meeting->scheduled_at->format('d/m H:i') }}</span>
                                     @if($mHint)<span class="font-semibold" style="color:{{ $mColor }}">{{ $mHint }}</span>@endif
                                     <span class="truncate">{{ $meeting->client?->displayName() ?? '—' }}</span>
+                                    <span class="inline-flex gap-1"><x-meeting-checks :meeting="$meeting" /></span>
                                 </x-slot:meta>
                             </x-item-card>
                         @empty

@@ -108,9 +108,27 @@ class Meeting extends Model
         return self::$statuses[$this->status]['color'] ?? 'muted';
     }
 
+    // ATA vazia do editor ("<p></p>") não conta como ATA.
     public function hasAta(): bool
     {
-        return !empty($this->ata);
+        return trim(strip_tags((string) $this->ata)) !== '';
+    }
+
+    // Pauta = texto da pauta OU algum item citado (planejamento/campanha/tarefa). Os itens
+    // só contam quando a consulta trouxe a flag (scopeWithAgendaFlag) — sem consulta por card.
+    public function hasPauta(): bool
+    {
+        return trim(strip_tags((string) $this->agenda)) !== '' || (bool) ($this->has_agenda_items ?? false);
+    }
+
+    /** Traz has_agenda_items (algum item citado na pauta) na mesma consulta das reuniões. */
+    public function scopeWithAgendaFlag(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        if (is_null($query->getQuery()->columns)) {
+            $query->select($this->getTable() . '.*');
+        }
+
+        return $query->selectRaw('exists(select 1 from meeting_agenda_items mai where mai.meeting_id = ' . $this->getTable() . '.id) as has_agenda_items');
     }
 
     public function client(): BelongsTo
@@ -269,6 +287,7 @@ class Meeting extends Model
      * Estado do card (<x-item-card>) nas listas por status: 'now' (é hoje), 'late' / 'soon'
      * (parada além da conta na etapa) ou null (em dia). Junto vem um lembrete curto do porquê.
      * Agendada com data passada = esqueceram de mudar o status; Pós-Reunião = falta a ATA
+     * (se a ATA já existe, laranja: só falta avançar o status)
      * (2+ dias atrasada, desde ontem vence logo); Revisão Interna = ATA pronta e time sem
      * fechar a leitura (3+ dias).
      *
@@ -287,7 +306,9 @@ class Meeting extends Model
 
         return match ($this->status) {
             'agendada'    => $days > 0 ? ['late', 'data passou'] : [null, null],
-            'pos_reuniao' => $days >= 2 ? ['late', "sem ATA há {$days} dias"] : ($days === 1 ? ['soon', 'ATA até hoje'] : [null, null]),
+            // ATA já feita e a reunião ainda parada em Pós-Reunião = só falta andar o status.
+            'pos_reuniao' => $this->hasAta() ? ['soon', 'ATA feita — avance o status']
+                : ($days >= 2 ? ['late', "sem ATA há {$days} dias"] : ($days === 1 ? ['soon', 'ATA até hoje'] : [null, null])),
             'revisao_ata' => (function () {
                 $since = (int) ($this->ata_recorded_at ?? $this->scheduled_at)->copy()->startOfDay()->diffInDays(today());
                 return $since >= 3 ? ['late', "em revisão há {$since} dias"] : [null, null];

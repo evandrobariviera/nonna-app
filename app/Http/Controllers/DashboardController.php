@@ -207,7 +207,7 @@ class DashboardController extends Controller
         // também conta, é o status padrão de uma reunião recém-criada), agrupados
         // por status pro quadro "Agenda" do dashboard. Sem limite: é um recorte
         // pessoal (organizador ou participante), tende a ficar pequeno.
-        $myMeetingsAgenda = Meeting::where(function ($q) use ($userId) {
+        $myMeetingsAgenda = Meeting::withAgendaFlag()->where(function ($q) use ($userId) {
                 $q->where('organized_by', $userId)
                   ->orWhereHas('participants', fn ($q2) => $q2->where('users.id', $userId));
             })
@@ -317,10 +317,10 @@ class DashboardController extends Controller
 
         // ── Seção "Estratégia" ──
         if ($show('estrategia')) {
-            $meetingsPosReuniao = Meeting::where('status', 'pos_reuniao')
+            $meetingsPosReuniao = Meeting::withAgendaFlag()->where('status', 'pos_reuniao')
                 ->with('client')->orderBy('scheduled_at')->limit(8)->get();
 
-            $meetingsRealizadas = Meeting::where('status', 'realizada')
+            $meetingsRealizadas = Meeting::withAgendaFlag()->where('status', 'realizada')
                 ->with('client')->orderByDesc('scheduled_at')->limit(8)->get();
 
             // Cliente ativo, com Tráfego Pago ou Consultoria Estratégica contratado, cujo

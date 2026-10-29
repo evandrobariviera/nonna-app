@@ -47,7 +47,7 @@ class PlanningCockpit
         $today = today();
 
         $plans = MacroPlan::with('responsible:id,name')->orderBy('period_end')->get()->groupBy('client_id');
-        $meetings = Meeting::whereIn('type', self::MEETING_TYPES)
+        $meetings = Meeting::withAgendaFlag()->whereIn('type', self::MEETING_TYPES)
             ->where('status', '!=', 'cancelada')
             ->with(['client', 'organizer:id,name'])
             ->orderBy('scheduled_at')

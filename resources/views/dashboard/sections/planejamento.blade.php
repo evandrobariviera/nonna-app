@@ -57,6 +57,7 @@
                                     <span>{{ $m->typeLabel() === 'Kick-off Estratégico' ? 'Kick-off' : 'Macro' }}</span>
                                     @if($m->scheduled_at)<span style="color:{{ $mColor }}">{{ $m->scheduled_at->format('d/m H:i') }}</span>@endif
                                     @if($mHint)<span class="font-semibold" style="color:{{ $mColor }}">{{ $mHint }}</span>@endif
+                                    <span class="inline-flex gap-1"><x-meeting-checks :meeting="$m" /></span>
                                     @if($m->organizer)<span>{{ explode(' ', $m->organizer->name)[0] }}</span>@endif
                                 </x-slot:meta>
                             </x-item-card>

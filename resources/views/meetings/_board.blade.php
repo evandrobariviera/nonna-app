@@ -37,6 +37,7 @@
                             <span class="inline-flex items-center gap-1">
                                 <x-icon name="calendar" size="13" /> {{ $meeting->scheduled_at->format('d/m/Y H:i') }}
                             </span>
+                            <span class="inline-flex gap-1"><x-meeting-checks :meeting="$meeting" /></span>
                         </div>
                     </div>
                 @empty

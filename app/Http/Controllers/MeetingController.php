@@ -54,7 +54,7 @@ class MeetingController extends Controller
 
     private function filteredMeetings(Request $request)
     {
-        $query = Meeting::with(['client', 'organizer', 'participants'])
+        $query = Meeting::withAgendaFlag()->with(['client', 'organizer', 'participants'])
             ->orderBy('scheduled_at', 'desc');
 
         $this->applyFilters($query, $request);
@@ -112,7 +112,7 @@ class MeetingController extends Controller
     // segmentação), só type/client_id.
     private function buildBoard(Request $request)
     {
-        $query = Meeting::with(['client', 'organizer'])
+        $query = Meeting::withAgendaFlag()->with(['client', 'organizer'])
             ->orderBy('scheduled_at');
 
         if ($request->filled('type')) {

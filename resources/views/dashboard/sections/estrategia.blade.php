@@ -90,6 +90,7 @@
                             <span>{{ $meeting->scheduled_at->format('d/m') }}</span>
                             @if($mHint)<span class="font-semibold" style="color:{{ $mState === 'late' ? 'var(--red)' : 'var(--orange)' }}">{{ $mHint }}</span>@endif
                             <span class="truncate">{{ $meeting->client?->displayName() ?? '—' }}</span>
+                            <span class="inline-flex gap-1"><x-meeting-checks :meeting="$meeting" /></span>
                         </x-slot:meta>
                     </x-item-card>
                 @endforeach
@@ -113,6 +114,7 @@
                         <x-slot:meta>
                             <span class="truncate">{{ $meeting->client?->displayName() ?? '—' }}</span>
                             <span>{{ $meeting->scheduled_at->format('d/m') }}</span>
+                            <span class="inline-flex gap-1"><x-meeting-checks :meeting="$meeting" /></span>
                         </x-slot:meta>
                     </x-item-card>
                 @endforeach

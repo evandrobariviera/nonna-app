@@ -1174,6 +1174,16 @@ span.flatpickr-weekday { color: var(--muted); font-weight: 500; font-size: 12px;
 .item-card.ic-aviso        { --ic-kind: var(--orange); background: rgba(238, 121, 25, .05); border-color: rgba(238, 121, 25, .28); }
 .dark .item-card.ic-planejamento { --ic-kind: #818CF8; }
 
+/* Selinhos Pauta / ATA da reunião (<x-meeting-checks>) */
+.mchk {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 0 6px; height: 18px;
+    font-size: 11px; font-weight: 600; line-height: 1;
+    border: 1px solid var(--border); border-radius: 999px;
+    color: var(--muted); background: var(--s1);
+}
+.mchk.is-ok { color: var(--green); border-color: rgba(16, 185, 129, .35); background: rgba(16, 185, 129, .08); }
+
 .ic-chip {
     width: 30px; height: 30px;
     flex-shrink: 0;

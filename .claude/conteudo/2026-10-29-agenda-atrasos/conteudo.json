@@ -1,11 +1,18 @@
 {
   "novidades": [
     {
-      "title": "Reuniões atrasadas aparecem em vermelho na Agenda",
-      "summary": "Na Agenda do Dashboard, reunião com data passada que ainda está como Agendada, Pós-Reunião sem ATA há 2+ dias ou Revisão Interna parada há 3+ dias fica com fundo avermelhado e o motivo escrito no card.",
-      "body": "<p>Ex.: <em>sem ATA há 8 dias</em>, <em>data passou</em>, <em>em revisão há 21 dias</em>. Todo card atrasado do Dashboard ganhou o mesmo fundo avermelhado, e os avisos \"ATA pronta\" voltaram a ter um fundo laranja suave pra não se confundir com pendência.</p>",
+      "title": "Reuniões: atrasadas em vermelho e selos de Pauta e ATA no card",
+      "summary": "Os cards de reunião mostram se já têm Pauta e ATA (✓ verde = feito, ○ = falta), e as atrasadas ficam em vermelho com o motivo escrito — sem precisar abrir a reunião.",
+      "body": "<p>Fica vermelha: Agendada com a data passada (<em>data passou</em>), Pós-Reunião sem ATA há 2 dias ou mais (<em>sem ATA há 8 dias</em>) e Revisão Interna parada há 3 dias ou mais. Se a ATA já foi feita e a reunião continua em Pós-Reunião, o card fica laranja: <em>ATA feita — avance o status</em>. Vale pra Agenda do Dashboard, Estratégia, modo Planejamento e a /agenda (Lista e Quadros). Todo card atrasado do Dashboard ganhou fundo avermelhado, e os avisos \"ATA pronta\" voltaram a ter fundo laranja suave.</p>",
       "kind": "melhoria", "area": "Reuniões"
     }
   ],
-  "ajuda": []
+  "ajuda": [
+    {
+      "title": "Como ler os cards (cores e abrir em nova aba)",
+      "category": "Primeiros passos",
+      "slug": "como-ler-os-cards",
+      "body_file": "../2026-10-29-cards-padrao/ajuda-como-ler-os-cards.html"
+    }
+  ]
 }

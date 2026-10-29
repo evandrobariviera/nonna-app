@@ -20,9 +20,7 @@
                         <div class="flex items-start justify-between gap-2">
                             <p class="font-semibold text-sm leading-snug" style="color:var(--text)">
                                 {{ $meeting->title }}
-                                @if($meeting->hasAta())
-                                    <span class="badge badge-green ml-1">ATA</span>
-                                @endif
+                                <span class="inline-flex gap-1 ml-1 align-middle"><x-meeting-checks :meeting="$meeting" /></span>
                             </p>
                             <span class="badge badge-{{ $meeting->statusColor() }} flex-shrink-0">{{ $meeting->statusLabel() }}</span>
                         </div>
@@ -70,9 +68,7 @@
                                            class="font-semibold text-sm hover:underline" style="color:var(--text)">
                                             {{ $meeting->title }}
                                         </a>
-                                        @if($meeting->hasAta())
-                                            <span class="badge badge-green ml-1">ATA</span>
-                                        @endif
+                                        <span class="inline-flex gap-1 ml-1 align-middle"><x-meeting-checks :meeting="$meeting" /></span>
                                     </div>
                                 </div>
                             </td>
