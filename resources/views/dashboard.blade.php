@@ -104,7 +104,7 @@
             'pendencia_vencida' => ['label' => 'Pendência', 'color' => 'var(--orange)'],
         ];
     @endphp
-    <div class="card px-5 py-4 mb-4" style="border-left:4px solid var(--purple)"
+    <div class="card px-5 py-4 mb-4"
          x-data="{
              loading: false,
              error: '',
@@ -150,11 +150,18 @@
             @if(! empty($attentionDigest->focus))
                 <ol class="flex flex-col gap-1.5">
                     @foreach($attentionDigest->focus as $i => $f)
-                        @php $k = $focusKinds[$f['kind'] ?? ''] ?? $focusKinds['pendencia']; @endphp
+                        @php
+                            $k = $focusKinds[$f['kind'] ?? ''] ?? $focusKinds['pendencia'];
+                            $fState = match ($f['kind'] ?? '') {
+                                'trava', 'atrasada' => 'is-late',
+                                'hoje', 'pendencia_vencida' => 'is-soon',
+                                default => '',
+                            };
+                        @endphp
                         <li>
-                            <a href="{{ $f['url'] }}" class="flex items-start gap-3 px-3 py-2 transition-colors"
-                               style="background:var(--s2)" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                                <span class="text-sm font-black flex-shrink-0" style="color:var(--purple); min-width:14px">{{ $i + 1 }}</span>
+                            {{-- Mesmo card do <x-item-card>; o número da ordem ocupa o lugar do ícone. --}}
+                            <a href="{{ $f['url'] }}" class="item-card {{ $fState }}">
+                                <span class="ic-chip text-sm font-black" style="--ic-kind:var(--purple)">{{ $i + 1 }}</span>
                                 <span class="min-w-0 flex-1">
                                     <span class="flex items-center gap-2 flex-wrap">
                                         <span class="text-sm font-semibold" style="color:var(--text)">{{ $f['title'] }}</span>
@@ -262,28 +269,29 @@
          DashboardController::index(), filtra status=novo) — de propósito chamativa,
          largura cheia, pra não passar batido igual um card discreto a mais. ── --}}
     @if($myNotifications->isNotEmpty())
-        <div class="mb-6 flex flex-col gap-3">
+        <div class="mb-6 flex flex-col gap-2">
             @foreach($myNotifications as $notification)
-                <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 px-5 py-4"
-                     style="background:rgba(238, 121, 25,.06); border:1px solid rgba(238, 121, 25,.3); border-left:4px solid var(--orange)">
-                    <x-icon-chip :icon="$notification->kindIcon()" color="orange" size="40" />
+                {{-- Mesmo desenho do <x-item-card> (natureza "aviso" = laranja, barrinha = pede ação),
+                     mas <div>: tem formulários dentro. Botões descem pra linha de baixo no celular. --}}
+                <div class="item-card ic-aviso is-soon flex-wrap" style="padding:12px 16px; gap:10px 14px">
+                    <span class="ic-chip" style="width:36px; height:36px"><x-icon :name="$notification->kindIcon()" size="18" /></span>
                     @if($notification->link)
-                        <a href="{{ $notification->link }}" class="flex-1 min-w-0">
-                            <p class="text-sm font-bold" style="color:var(--text)">{{ $notification->title }}</p>
+                        <a href="{{ $notification->link }}" class="ic-body" style="min-width:200px">
+                            <span class="ic-title" style="font-size:14px">{{ $notification->title }}</span>
                             @if($notification->body)
-                                <p class="text-xs mt-0.5" style="color:var(--muted2)">{{ $notification->body }}</p>
+                                <span class="ic-meta">{{ $notification->body }}</span>
                             @endif
                         </a>
                     @else
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-bold" style="color:var(--text)">{{ $notification->title }}</p>
+                        <div class="ic-body" style="min-width:200px">
+                            <span class="ic-title" style="font-size:14px">{{ $notification->title }}</span>
                             @if($notification->body)
-                                <p class="text-xs mt-0.5" style="color:var(--muted2)">{{ $notification->body }}</p>
+                                <span class="ic-meta">{{ $notification->body }}</span>
                             @endif
                         </div>
                     @endif
                     {{-- No "Ver como" a pendência é da outra pessoa — resolver aqui sumiria com ela da tela dela. --}}
-                    <div class="flex items-center gap-2 flex-shrink-0" @if($viewingAs) style="display:none" @endif>
+                    <div class="flex items-center gap-2 flex-shrink-0 ml-auto" @if($viewingAs) style="display:none" @endif>
                         @if($notification->canDiscard())
                             <form method="POST" action="{{ route('notifications.update-status', $notification) }}">
                                 @csrf @method('PATCH')
@@ -309,7 +317,7 @@
     {{-- ── TRAVAS — fixa em qualquer modo, acima do "Hoje": tarefas marcadas como Trava
          (outras pessoas esperando) em que executo ou sou Responsável. Some sem nada. ── --}}
     @if($myBlockers->isNotEmpty())
-        <div class="mb-6 px-5 py-4" style="background:rgba(239,68,68,.05); border:1px solid rgba(239,68,68,.3); border-left:4px solid var(--red)">
+        <div class="card mb-6 px-5 py-4" style="border-color:rgba(220,38,38,.35)">
             <h3 class="text-sm font-bold flex items-center gap-1.5 mb-1" style="color:var(--red)">
                 <x-icon name="octagon-alert" size="14" /> Travando o time ({{ $myBlockers->count() }})
             </h3>
@@ -321,15 +329,14 @@
                         $since = $days === 0 ? 'desde hoje' : ($days === 1 ? 'há 1 dia' : "há {$days} dias");
                         $iAmExecutor = (string) $task->executor_id === (string) $subjectUserId;
                     @endphp
-                    <a href="{{ route('tasks.show', $task) }}" class="flex items-center gap-2 px-3 py-2 text-xs transition-colors"
-                       style="background:var(--s1)" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s1)'">
-                        <span class="font-mono flex-shrink-0 font-semibold" style="color:var(--red); min-width:70px">{{ $since }}</span>
-                        <span class="font-semibold truncate" style="color:var(--text)">{{ $task->title }}</span>
-                        <span class="truncate" style="color:var(--muted)">{{ $task->client?->displayName() }}</span>
-                        @if(! $iAmExecutor && $task->executor)
-                            <span class="ml-auto flex-shrink-0" style="color:var(--muted)">com {{ $task->executor->name }}</span>
-                        @endif
-                    </a>
+                    <x-item-card kind="tarefa" :icon="$task->typeIcon()" :title="$task->title" state="late"
+                                 :href="route('tasks.show', $task)" popup>
+                        <x-slot:meta>
+                            <span class="font-semibold" style="color:var(--red)">travando {{ $since }}</span>
+                            @if($task->client)<span class="truncate">{{ $task->client->displayName() }}</span>@endif
+                            @if(! $iAmExecutor && $task->executor)<span>com {{ $task->executor->name }}</span>@endif
+                        </x-slot:meta>
+                    </x-item-card>
                 @endforeach
             </div>
         </div>
@@ -338,7 +345,7 @@
     {{-- ── SUAS PENDÊNCIAS — fixa em qualquer modo: o que eu devo entregar (o time espera
          de mim) e o que eu cobro (cliente/terceiro/time). Some sem nada. Ver Pendency. ── --}}
     @if($pendenciesToDeliver->isNotEmpty() || $pendenciesToChase->isNotEmpty() || $pendenciesWaiting->isNotEmpty())
-        <div class="card px-5 py-4 mb-6" style="border-left:4px solid var(--orange)">
+        <div class="card px-5 py-4 mb-6">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-bold flex items-center gap-1.5" style="color:var(--text)">
                     <x-icon name="hourglass" size="14" /> Suas pendências
