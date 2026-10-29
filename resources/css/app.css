@@ -1127,6 +1127,83 @@ span.flatpickr-weekday { color: var(--muted); font-weight: 500; font-size: 12px;
 .numInputWrapper span.arrowUp::after { border-bottom-color: var(--muted2); }
 .numInputWrapper span.arrowDown::after { border-top-color: var(--muted2); }
 
+/* ══ Card padrão de item (<x-item-card>) — tarefa, reunião, pendência, planejamento, cliente ══
+   Natureza = cor do quadradinho do ícone (--ic-kind). Estado = barrinha à esquerda
+   (--ic-accent): vermelho venceu, laranja vence logo, verde é agora. Card em dia = limpo. */
+.item-card {
+    --ic-kind: var(--purple);
+    --ic-accent: transparent;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 9px 12px;
+    background: var(--s1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    text-decoration: none;
+    transition: border-color .15s, box-shadow .15s;
+}
+.item-card::before {
+    content: '';
+    position: absolute;
+    left: -1px; top: -1px; bottom: -1px;
+    width: 3px;
+    border-radius: var(--radius) 0 0 var(--radius);
+    background: var(--ic-accent);
+}
+.item-card:hover { border-color: rgba(100, 59, 142, .35); box-shadow: var(--shadow); }
+.item-card.is-late { --ic-accent: var(--red); }
+.item-card.is-soon { --ic-accent: var(--orange); }
+.item-card.is-now  { --ic-accent: var(--green); background: rgba(16, 185, 129, .06); }
+.item-card.is-done { opacity: .6; }
+.item-card.is-done .ic-title { text-decoration: line-through; }
+
+.item-card.ic-tarefa       { --ic-kind: var(--purple); }
+.item-card.ic-reuniao      { --ic-kind: var(--blue); }
+.item-card.ic-pendencia    { --ic-kind: var(--cyan); }
+.item-card.ic-planejamento { --ic-kind: #4F46E5; }
+.item-card.ic-campanha     { --ic-kind: #DB2777; }
+.item-card.ic-cliente      { --ic-kind: var(--slate); }
+.dark .item-card.ic-planejamento { --ic-kind: #818CF8; }
+
+.ic-chip {
+    width: 30px; height: 30px;
+    flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    color: var(--ic-kind);
+    background: color-mix(in srgb, var(--ic-kind) 12%, transparent);
+}
+.ic-body { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.ic-title {
+    font-size: 13px; font-weight: 600; line-height: 1.35;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ic-meta {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px;
+    margin-top: 2px;
+    font-size: 12px; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+.ic-meta > * { min-width: 0; }
+.ic-newtab {
+    flex-shrink: 0;
+    align-self: flex-start;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; margin: -4px -6px 0 0;
+    border-radius: 6px;
+    color: var(--muted);
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity .15s, background .15s, color .15s;
+}
+.item-card:hover .ic-newtab, .ic-newtab:focus-visible { opacity: 1; }
+.ic-newtab:hover { background: var(--s2); color: var(--purple); }
+@media (hover: none) { .ic-newtab { opacity: .7; } }
+
 /* ══ Kanban drag-and-drop (SortableJS, ver resources/js/kanban-dnd.js) ══ */
 .kanban-ghost {
     opacity: .35;

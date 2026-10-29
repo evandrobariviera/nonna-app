@@ -15,20 +15,15 @@
         @else
             <div class="flex flex-col gap-2">
                 @foreach($headsTickets as $ticket)
-                    <a href="{{ route('tasks.show', $ticket) }}"
-                       class="flex items-center gap-2.5 px-3 py-2 transition-colors" style="background:var(--s2); {{ $ticket->isOverdue() ? 'border-left:2px solid var(--red)' : '' }}"
-                       onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <x-icon-chip :icon="$ticket->typeIcon()" :color="$ticket->statusColor()" size="32" />
-                        <div class="min-w-0">
-                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $ticket->title }}</p>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $ticket->client?->displayName() ?? '—' }}</span>
-                                @if($ticket->due_date)
-                                    <span class="text-xs font-mono" style="color:{{ $ticket->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">{{ $ticket->due_date->format('d/m') }}</span>
-                                @endif
-                            </div>
-                        </div>
-                    </a>
+                    <x-item-card kind="tarefa" :icon="$ticket->typeIcon()" :title="$ticket->title" :state="$ticket->isOverdue() ? 'late' : null"
+                                 :href="route('tasks.show', $ticket)">
+                        <x-slot:meta>
+                            <span>{{ $ticket->client?->displayName() ?? '—' }}</span>
+                            @if($ticket->due_date)
+                            <span style="color:{{ $ticket->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">{{ $ticket->due_date->format('d/m') }}</span>
+                            @endif
+                        </x-slot:meta>
+                    </x-item-card>
                 @endforeach
             </div>
         @endif

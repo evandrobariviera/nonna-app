@@ -254,6 +254,17 @@ class Pendency extends Model
         return $days <= 3 ? 'var(--green)' : ($days <= 7 ? 'var(--orange)' : 'var(--red)');
     }
 
+    // Estado pro <x-item-card> (barrinha à esquerda): mesma régua de agingColor(),
+    // mas "em dia" fica sem barra (card limpo).
+    public function agingState(): ?string
+    {
+        return match ($this->agingColor()) {
+            'var(--red)'    => 'late',
+            'var(--orange)' => 'soon',
+            default         => null,
+        };
+    }
+
     /** "venceu há 2 dias" / "vence hoje" / "vence 24/10" / "aberta há 5 dias". */
     public function whenText(): string
     {

@@ -47,17 +47,15 @@
                     <div class="flex flex-col gap-1.5">
                         @forelse($list as $m)
                             @php $isToday = $m->scheduled_at?->isToday(); $late = $m->status === 'agendada' && $m->scheduled_at?->isPast() && ! $isToday; @endphp
-                            <a href="{{ route('meetings.show', $m) }}" class="px-3 py-2 transition-colors"
-                               style="background:{{ $isToday ? 'rgba(52,211,153,.10)' : 'var(--s1)' }}; border:1px solid var(--border2); {{ $late ? 'border-left:3px solid var(--red)' : '' }}"
-                               onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='{{ $isToday ? 'rgba(52,211,153,.10)' : 'var(--s1)' }}'">
-                                <p class="text-xs font-mono truncate" style="color:var(--purple)">{{ $m->client?->displayName() ?? '—' }}</p>
-                                <p class="text-xs font-semibold leading-snug mt-0.5" style="color:var(--text)">{{ $m->title }}</p>
-                                <p class="text-xs font-mono mt-1" style="color:var(--muted)">
-                                    {{ $m->typeLabel() === 'Kick-off Estratégico' ? 'Kick-off' : 'Macro' }}
-                                    @if($m->scheduled_at) · <span style="color:{{ $late ? 'var(--red)' : 'var(--muted)' }}">{{ $m->scheduled_at->format('d/m H:i') }}</span>@endif
-                                    @if($m->organizer) · {{ explode(' ', $m->organizer->name)[0] }}@endif
-                                </p>
-                            </a>
+                            <x-item-card kind="reuniao" :icon="$m->typeIcon()" :title="$m->title"
+                                         :state="$isToday ? 'now' : ($late ? 'late' : null)" :href="route('meetings.show', $m)">
+                                <x-slot:meta>
+                                    <span class="truncate" style="color:var(--purple)">{{ $m->client?->displayName() ?? '—' }}</span>
+                                    <span>{{ $m->typeLabel() === 'Kick-off Estratégico' ? 'Kick-off' : 'Macro' }}</span>
+                                    @if($m->scheduled_at)<span style="color:{{ $late ? 'var(--red)' : ($isToday ? 'var(--green)' : 'var(--muted)') }}">{{ $m->scheduled_at->format('d/m H:i') }}</span>@endif
+                                    @if($m->organizer)<span>{{ explode(' ', $m->organizer->name)[0] }}</span>@endif
+                                </x-slot:meta>
+                            </x-item-card>
                         @empty
                             <p class="text-xs px-1" style="color:var(--muted)">Nada aqui.</p>
                         @endforelse

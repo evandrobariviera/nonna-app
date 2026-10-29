@@ -1,4 +1,5 @@
-{{-- Seção "Estratégia" do dashboard — macroplanejamentos + reuniões em acompanhamento --}}
+{{-- Seção "Estratégia" do dashboard — macroplanejamentos + reuniões em acompanhamento.
+     Cards no padrão <x-item-card>: cor do ícone = natureza, barrinha = estado. --}}
 <div class="auto-grid mb-4">
 
     {{-- Clientes sem planejamento ativo --}}
@@ -15,12 +16,10 @@
         @else
             <div class="flex flex-col gap-2">
                 @foreach($clientsWithoutActivePlan as $client)
-                    <a href="{{ route('clients.show', [$client, 'tab' => 'planejamentos']) }}"
-                       class="flex items-center gap-2 px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--red)"
-                       onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <x-icon-chip icon="building-2" :color="$client->statusColor()" size="24" />
-                        <p class="text-xs font-semibold" style="color:var(--text)">{{ $client->displayName() }}</p>
-                    </a>
+                    <x-item-card kind="cliente" :title="$client->displayName()" state="late"
+                                 :href="route('clients.show', [$client, 'tab' => 'planejamentos'])">
+                        <x-slot:meta><span style="color:var(--red)">sem ciclo em execução</span></x-slot:meta>
+                    </x-item-card>
                 @endforeach
             </div>
         @endif
@@ -38,17 +37,12 @@
             <div class="flex flex-col gap-2">
                 @foreach($plansExpiringSoon as $plan)
                     @php $daysLeft = today()->diffInDays($plan->period_end, false); @endphp
-                    <a href="{{ route('macroplans.edit', $plan) }}"
-                       class="flex items-center gap-2 px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--orange)"
-                       onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <x-icon-chip icon="compass" :color="$plan->statusColor()" size="24" />
-                        <div class="min-w-0">
-                            <p class="text-xs font-semibold" style="color:var(--text)">{{ $plan->client?->displayName() ?? '—' }}</p>
-                            <p class="text-xs font-mono mt-0.5" style="color:var(--orange)">
-                                {{ $daysLeft <= 0 ? 'vence hoje' : $daysLeft . ' dia' . ($daysLeft !== 1 ? 's' : '') }} · {{ $plan->period_end->format('d/m') }}
-                            </p>
-                        </div>
-                    </a>
+                    <x-item-card kind="planejamento" :title="$plan->client?->displayName() ?? '—'" state="soon"
+                                 :href="route('macroplans.edit', $plan)">
+                        <x-slot:meta>
+                            <span class="font-semibold" style="color:var(--orange)">{{ $daysLeft <= 0 ? 'vence hoje' : $daysLeft . ' dia' . ($daysLeft !== 1 ? 's' : '') }} · {{ $plan->period_end->format('d/m') }}</span>
+                        </x-slot:meta>
+                    </x-item-card>
                 @endforeach
             </div>
         @endif
@@ -65,15 +59,10 @@
         @else
             <div class="flex flex-col gap-2">
                 @foreach($activePlans as $plan)
-                    <a href="{{ route('macroplans.edit', $plan) }}"
-                       class="flex items-center gap-2 px-3 py-2 transition-colors" style="background:var(--s2)"
-                       onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <x-icon-chip icon="compass" :color="$plan->statusColor()" size="24" />
-                        <div class="min-w-0">
-                            <p class="text-xs font-semibold" style="color:var(--text)">{{ $plan->client?->displayName() ?? '—' }}</p>
-                            <p class="text-xs font-mono mt-0.5" style="color:var(--muted)">{{ $plan->periodLabel() }}</p>
-                        </div>
-                    </a>
+                    <x-item-card kind="planejamento" :title="$plan->client?->displayName() ?? '—'"
+                                 :href="route('macroplans.edit', $plan)">
+                        <x-slot:meta><span>{{ $plan->periodLabel() }}</span></x-slot:meta>
+                    </x-item-card>
                 @endforeach
             </div>
         @endif
@@ -94,18 +83,13 @@
         @else
             <div class="flex flex-col gap-2">
                 @foreach($meetingsPosReuniao as $meeting)
-                    <a href="{{ route('meetings.show', $meeting) }}"
-                       class="flex items-center gap-2 px-3 py-2 transition-colors" style="background:var(--s2); border-left:2px solid var(--orange)"
-                       onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <x-icon-chip :icon="$meeting->typeIcon()" :color="$meeting->statusColor()" size="24" />
-                        <div class="min-w-0">
-                            <p class="text-xs font-semibold" style="color:var(--text)">{{ $meeting->title }}</p>
-                            <div class="flex items-center gap-2 mt-0.5">
-                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->displayName() ?? '—' }}</span>
-                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->scheduled_at->format('d/m') }}</span>
-                            </div>
-                        </div>
-                    </a>
+                    <x-item-card kind="reuniao" :icon="$meeting->typeIcon()" :title="$meeting->title" state="soon"
+                                 :href="route('meetings.show', $meeting)">
+                        <x-slot:meta>
+                            <span class="truncate">{{ $meeting->client?->displayName() ?? '—' }}</span>
+                            <span>{{ $meeting->scheduled_at->format('d/m') }}</span>
+                        </x-slot:meta>
+                    </x-item-card>
                 @endforeach
             </div>
         @endif
@@ -113,26 +97,22 @@
 
     {{-- Reuniões Realizadas --}}
     <div class="card px-5 py-4">
-        <h4 class="text-sm font-bold mb-3" style="color:var(--text)">
-            ✔ Finalizadas recentemente ({{ $meetingsRealizadas->count() }})
+        <h4 class="text-sm font-bold mb-3 flex items-center gap-1.5" style="color:var(--text)">
+            <x-icon name="circle-check" size="14" />
+            Finalizadas recentemente ({{ $meetingsRealizadas->count() }})
         </h4>
         @if($meetingsRealizadas->isEmpty())
             <p class="text-xs" style="color:var(--muted)">Nenhuma reunião finalizada recentemente.</p>
         @else
             <div class="flex flex-col gap-2">
                 @foreach($meetingsRealizadas as $meeting)
-                    <a href="{{ route('meetings.show', $meeting) }}"
-                       class="flex items-center gap-2 px-3 py-2 transition-colors" style="background:var(--s2)"
-                       onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                        <x-icon-chip :icon="$meeting->typeIcon()" :color="$meeting->statusColor()" size="24" />
-                        <div class="min-w-0">
-                            <p class="text-xs font-semibold" style="color:var(--text)">{{ $meeting->title }}</p>
-                            <div class="flex items-center gap-2 mt-0.5">
-                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->displayName() ?? '—' }}</span>
-                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->scheduled_at->format('d/m') }}</span>
-                            </div>
-                        </div>
-                    </a>
+                    <x-item-card kind="reuniao" :icon="$meeting->typeIcon()" :title="$meeting->title"
+                                 :href="route('meetings.show', $meeting)">
+                        <x-slot:meta>
+                            <span class="truncate">{{ $meeting->client?->displayName() ?? '—' }}</span>
+                            <span>{{ $meeting->scheduled_at->format('d/m') }}</span>
+                        </x-slot:meta>
+                    </x-item-card>
                 @endforeach
             </div>
         @endif

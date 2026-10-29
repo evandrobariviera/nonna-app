@@ -356,22 +356,24 @@
                             {{ $col['title'] }} ({{ $col['items']->count() }})
                             <span class="font-normal" style="color:var(--muted)">· {{ $col['hint'] }}</span>
                         </p>
-                        <div class="flex flex-col gap-1.5" style="max-height:220px; overflow-y:auto">
+                        <div class="flex flex-col gap-1.5" style="max-height:260px; overflow-y:auto">
                             @forelse($col['items'] as $p)
-                                @php $origin = $p->originLink(); @endphp
-                                <a href="{{ $origin ? $origin['url'] . '#pendencias' : route('pendencies.index', ['client_id' => $p->client_id]) }}"
-                                   class="flex items-center gap-2 px-3 py-1.5 text-xs transition-colors"
-                                   style="background:var(--s2); border-left:2px solid {{ $p->agingColor() }}"
-                                   onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                                    <span class="font-mono flex-shrink-0 font-semibold" style="color:{{ $p->agingColor() }}; min-width:96px">{{ $p->whenText() }}</span>
-                                    <span class="font-semibold truncate" style="color:var(--text)">{{ $p->title }}</span>
-                                    <span class="truncate" style="color:var(--muted)">{{ $p->client?->displayName() }}</span>
-                                    @if($col['title'] === 'Para cobrar')
-                                        <span class="ml-auto flex-shrink-0" style="color:var(--muted)">deve: {{ $p->owedName() }}</span>
-                                    @elseif($col['title'] === 'Aguardando para mim')
-                                        <span class="ml-auto flex-shrink-0" style="color:var(--muted)">cobra: {{ \Illuminate\Support\Str::of($p->owner?->name ?? '—')->explode(' ')->first() }}{{ $p->nudge_count ? ' · ' . $p->nudge_count . 'x' : '' }}</span>
-                                    @endif
-                                </a>
+                                @php
+                                    $origin = $p->originLink();
+                                    $pState = $p->agingState();
+                                @endphp
+                                <x-item-card kind="pendencia" :title="$p->title" :state="$pState"
+                                             :href="$origin ? $origin['url'] . '#pendencias' : route('pendencies.index', ['client_id' => $p->client_id])">
+                                    <x-slot:meta>
+                                        <span class="font-semibold" style="color:{{ $pState ? $p->agingColor() : 'var(--muted2)' }}">{{ $p->whenText() }}</span>
+                                        @if($p->client)<span class="truncate">{{ $p->client->displayName() }}</span>@endif
+                                        @if($col['title'] === 'Para cobrar')
+                                            <span>deve: {{ $p->owedName() }}</span>
+                                        @elseif($col['title'] === 'Aguardando para mim')
+                                            <span>cobra: {{ \Illuminate\Support\Str::of($p->owner?->name ?? '—')->explode(' ')->first() }}{{ $p->nudge_count ? ' · ' . $p->nudge_count . 'x' : '' }}</span>
+                                        @endif
+                                    </x-slot:meta>
+                                </x-item-card>
                             @empty
                                 <p class="text-xs" style="color:var(--muted)">{{ $col['empty'] }}</p>
                             @endforelse
@@ -393,12 +395,14 @@
                     </h3>
                     <div class="flex flex-col gap-1.5">
                         @forelse($myMeetingsToday as $meeting)
-                            <a href="{{ route('meetings.show', $meeting) }}" class="flex items-center gap-2 px-3 py-1.5 text-xs transition-colors"
-                               style="background:var(--s2)" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                                <span class="font-mono flex-shrink-0" style="color:var(--purple)">{{ $meeting->scheduled_at->format('H:i') }}</span>
-                                <span class="font-semibold truncate" style="color:var(--text)">{{ $meeting->title }}</span>
-                                <span class="truncate" style="color:var(--muted)">{{ $meeting->client?->displayName() }}</span>
-                            </a>
+                            @php $mNow = now()->between($meeting->scheduled_at, $meeting->endsAt()); @endphp
+                            <x-item-card kind="reuniao" :icon="$meeting->typeIcon()" :title="$meeting->title"
+                                         :state="$mNow ? 'now' : null" :href="route('meetings.show', $meeting)">
+                                <x-slot:meta>
+                                    <span class="font-semibold" style="color:{{ $mNow ? 'var(--green)' : 'var(--blue)' }}">{{ $meeting->scheduled_at->format('H:i') }}{{ $mNow ? ' · agora' : '' }}</span>
+                                    @if($meeting->client)<span class="truncate">{{ $meeting->client->displayName() }}</span>@endif
+                                </x-slot:meta>
+                            </x-item-card>
                         @empty
                             <p class="text-xs" style="color:var(--muted)">Nenhuma reunião hoje.</p>
                         @endforelse
@@ -410,12 +414,13 @@
                     </h3>
                     <div class="flex flex-col gap-1.5" style="max-height:180px; overflow-y:auto">
                         @forelse($myOverdueTasks as $task)
-                            <a href="{{ route('tasks.show', $task) }}" class="flex items-center gap-2 px-3 py-1.5 text-xs transition-colors"
-                               style="background:var(--s2); border-left:2px solid var(--red)" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-                                <span class="font-mono flex-shrink-0" style="color:var(--red)">{{ $task->approval_date->format('d/m') }}</span>
-                                <span class="font-semibold truncate" style="color:var(--text)">{{ $task->title }}</span>
-                                <span class="truncate" style="color:var(--muted)">{{ $task->client?->displayName() }}</span>
-                            </a>
+                            <x-item-card kind="tarefa" :icon="$task->typeIcon()" :title="$task->title" state="late"
+                                         :href="route('tasks.show', $task)" popup>
+                                <x-slot:meta>
+                                    <span class="inline-flex items-center gap-1 font-semibold" style="color:var(--red)"><x-icon name="calendar" size="12" /> {{ $task->approval_date->format('d/m') }}</span>
+                                    @if($task->client)<span class="truncate">{{ $task->client->displayName() }}</span>@endif
+                                </x-slot:meta>
+                            </x-item-card>
                         @empty
                             <p class="text-xs" style="color:var(--muted)">Nada atrasado com você na sprint.</p>
                         @endforelse
@@ -462,25 +467,16 @@
                     <div class="flex flex-col gap-2" style="min-height:60px" data-kanban-list>
                         @forelse($statusMeetings as $meeting)
                             @php $isToday = $meeting->scheduled_at->isToday(); @endphp
-                            <a href="{{ route('meetings.show', $meeting) }}"
-                               data-kanban-card data-id="{{ $meeting->id }}"
-                               data-update-url="{{ route('meetings.update-status', $meeting) }}"
-                               x-show="!filterType || filterType === '{{ $meeting->type }}'"
-                               class="flex items-center gap-2.5 px-3 py-2 transition-colors"
-                               style="background:{{ $isToday ? 'rgba(52,211,153,.10)' : 'var(--s2)' }}; {{ $isToday ? 'border-left:2px solid var(--green)' : '' }}"
-                               onmouseover="this.style.background='var(--s3)'"
-                               onmouseout="this.style.background='{{ $isToday ? 'rgba(52,211,153,.10)' : 'var(--s2)' }}'">
-                                <x-icon-chip :icon="$meeting->typeIcon()" :color="$meeting->statusColor()" size="32" />
-                                <div class="min-w-0">
-                                    <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $meeting->title }}</p>
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <span class="text-xs font-mono" style="color:var(--muted)">{{ $meeting->client?->displayName() ?? '—' }}</span>
-                                        <span class="text-xs font-mono" style="color:var(--purple)">
-                                            {{ $meeting->scheduled_at->format('d/m H:i') }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </a>
+                            <x-item-card kind="reuniao" :icon="$meeting->typeIcon()" :title="$meeting->title"
+                                         :state="$isToday ? 'now' : null" :href="route('meetings.show', $meeting)"
+                                         data-kanban-card data-id="{{ $meeting->id }}"
+                                         data-update-url="{{ route('meetings.update-status', $meeting) }}"
+                                         x-show="!filterType || filterType === '{{ $meeting->type }}'">
+                                <x-slot:meta>
+                                    <span class="font-semibold" style="color:{{ $isToday ? 'var(--green)' : 'var(--blue)' }}">{{ $isToday ? 'Hoje ' . $meeting->scheduled_at->format('H:i') : $meeting->scheduled_at->format('d/m H:i') }}</span>
+                                    <span class="truncate">{{ $meeting->client?->displayName() ?? '—' }}</span>
+                                </x-slot:meta>
+                            </x-item-card>
                         @empty
                             <p class="text-xs flex items-center gap-1.5" style="color:var(--muted)" data-kanban-empty>
                             <x-icon name="party-popper" size="13" />
@@ -672,32 +668,26 @@
                             // Atrasada = antes de HOJE (isPast() pegava o próprio dia — vence hoje aparecia como atrasada).
                             $isApprovalOverdue = \App\Services\Tasks\ExecutorQueue::isOverdue($task);
                         @endphp
-                        <div data-kanban-card data-id="{{ $task->id }}" data-update-url="{{ $statusUrl }}"
-                             class="kb-card flex items-center gap-2.5 {{ $isApprovalOverdue ? 'kb-card-overdue' : '' }}" style="cursor:pointer; padding:10px 12px"
-                             onclick="window.location='{{ route('tasks.show', $task) }}'">
-                            <x-icon-chip :icon="$task->typeIcon()" :color="$task->statusColor()" size="30" />
-                            <div class="min-w-0">
-                                <p class="text-sm font-semibold leading-snug" style="color:var(--text)">
-                                    @if($task->blocker_at)
-                                        {{-- Trava = urgência (tem gente esperando) — sobe pro topo da coluna (ExecutorQueue::prioritized). --}}
-                                        <span class="font-bold mr-1 px-1.5" style="font-size:10px; color:#fff; background:var(--red); border-radius:5px; vertical-align:1px">TRAVA</span>
-                                    @endif
-                                    {{ $task->title }}
-                                </p>
-                                <div class="flex items-center gap-2 mt-1 text-xs" style="color:var(--muted)">
-                                    <span class="truncate">{{ $task->client?->displayName() ?? '—' }}</span>
-                                    @if(! empty($q['review']))
-                                        @php $autor = $task->executors->firstWhere('pivot.role', 'executor')?->name ?? $task->executor?->name; @endphp
-                                        @if($autor)<span style="color:var(--purple)">por {{ explode(' ', $autor)[0] }}</span>@endif
-                                    @endif
-                                    @if($task->approval_date)
-                                        <span class="inline-flex items-center gap-1 flex-shrink-0" style="color:{{ $isApprovalOverdue ? 'var(--red)' : 'var(--muted)' }}">
-                                            <x-icon name="calendar" size="12" /> {{ $task->approval_date->format('d/m') }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
+                        <x-item-card kind="tarefa" :icon="$task->typeIcon()" :title="$task->title"
+                                     :state="$isApprovalOverdue ? 'late' : null" :href="route('tasks.show', $task)"
+                                     data-kanban-card data-id="{{ $task->id }}" data-update-url="{{ $statusUrl }}">
+                            @if($task->blocker_at)
+                                {{-- Trava = urgência (tem gente esperando) — sobe pro topo da coluna (ExecutorQueue::prioritized). --}}
+                                <x-slot:badge><span class="font-bold mr-1 px-1.5" style="font-size:10px; color:#fff; background:var(--red); border-radius:5px; vertical-align:1px">TRAVA</span></x-slot:badge>
+                            @endif
+                            <x-slot:meta>
+                                <span class="truncate">{{ $task->client?->displayName() ?? '—' }}</span>
+                                @if(! empty($q['review']))
+                                    @php $autor = $task->executors->firstWhere('pivot.role', 'executor')?->name ?? $task->executor?->name; @endphp
+                                    @if($autor)<span style="color:var(--purple)">por {{ explode(' ', $autor)[0] }}</span>@endif
+                                @endif
+                                @if($task->approval_date)
+                                    <span class="inline-flex items-center gap-1" style="color:{{ $isApprovalOverdue ? 'var(--red)' : 'var(--muted)' }}">
+                                        <x-icon name="calendar" size="12" /> {{ $task->approval_date->format('d/m') }}
+                                    </span>
+                                @endif
+                            </x-slot:meta>
+                        </x-item-card>
                     @empty
                         <div class="kb-empty flex items-center justify-center gap-1.5">
                             <x-icon name="party-popper" size="13" />
@@ -729,7 +719,6 @@
          a data é decisão de quem distribui. ── --}}
     @if($show('minha_semana'))
         @php
-            $corRgb = ['green' => '16,185,129', 'purple' => '100,59,142', 'orange' => '238,121,25', 'red' => '220,38,38', 'muted' => '152,161,178', 'blue' => '46,144,250'];
             $weekTotal = collect($weekDays)->sum(fn ($d) => $d['tasks']->count());
             $weekPoints = collect($weekDays)->sum(fn ($d) => $d['tasks']->sum(fn ($t) => $t->sprint_points ?? 1));
             $weekDone  = collect($weekDays)->sum(fn ($d) => $d['tasks']->where('status', 'concluido')->count());
@@ -779,23 +768,19 @@
                                 @php
                                     $done = $task->status === 'concluido';
                                     $late = ! $done && $task->approval_date->lt(today());
-                                    $rgb  = $corRgb[$task->statusColor()] ?? $corRgb['muted'];
                                 @endphp
-                                <div class="px-3 py-2.5" style="cursor:pointer; background:rgba({{ $rgb }}, {{ $done ? '.08' : '.18' }}); border:1px solid var(--border2); {{ $late ? 'border-left:3px solid var(--red);' : '' }} {{ $done ? 'opacity:.6' : '' }}"
-                                     @click="$store.taskPopup.open('{{ route('tasks.show', $task) }}')">
-                                    @if(! $task->sprint_id)
-                                        <p class="text-xs font-mono truncate" style="color:var(--orange)">Fila</p>
-                                    @endif
-                                    <p class="text-xs font-mono truncate" style="color:var(--purple)">{{ $task->client?->displayName() ?? '—' }}</p>
-                                    <p class="text-sm font-semibold leading-snug mt-1" style="color:var(--text); {{ $done ? 'text-decoration:line-through' : '' }}">{{ $task->title }}</p>
-                                    <div class="flex items-center gap-1 mt-1.5 flex-wrap">
-                                        <span class="badge badge-{{ $task->statusColor() }}" style="font-size:8px; padding:1px 5px">{{ $task->statusLabel() }}</span>
-                                        <span class="text-xs font-mono" style="color:var(--muted)">{{ $task->sprint_points ?? 1 }} pts</span>
+                                <x-item-card kind="tarefa" :icon="$task->typeIcon()" :title="$task->title" :state="$late ? 'late' : null"
+                                             :done="$done" :href="route('tasks.show', $task)" popup>
+                                    <x-slot:meta>
+                                        <span class="truncate" style="color:var(--purple)">{{ $task->client?->displayName() ?? '—' }}</span>
+                                        @if(! $task->sprint_id)<span style="color:var(--orange)">Fila</span>@endif
+                                        <span class="badge badge-{{ $task->statusColor() }}" style="font-size:9px; padding:1px 5px">{{ $task->statusLabel() }}</span>
+                                        <span>{{ $task->sprint_points ?? 1 }} pts</span>
                                         @if($task->situation && ! $done)
-                                            <span class="badge" style="font-size:8px; padding:1px 5px; background:{{ $task->situationColor() }}; color:#fff; border-color:transparent">{{ $task->situationLabel() }}</span>
+                                            <span class="badge" style="font-size:9px; padding:1px 5px; background:{{ $task->situationColor() }}; color:#fff; border-color:transparent">{{ $task->situationLabel() }}</span>
                                         @endif
-                                    </div>
-                                </div>
+                                    </x-slot:meta>
+                                </x-item-card>
                             @empty
                                 <p class="text-xs px-1 py-2" style="color:var(--muted)">Nada lançado.</p>
                             @endforelse
