@@ -19,11 +19,13 @@
             @if($macroplan->focus)<span class="text-xs" style="color:var(--muted2)">— {{ $macroplan->focus }}</span>@endif
         </div>
         <div class="flex items-center gap-2">
-            <x-status-dropdown-inline :options="\App\Models\MacroPlan::$statuses" :current="$macroplan->status"
-                :action="route('macroplans.update-status', $macroplan)" />
             <span class="text-xs font-mono" style="color:var(--muted)">{{ $macroplan->periodLabel() }}</span>
         </div>
     </div>
+
+    <x-status-flow class="mb-5" :options="\App\Models\MacroPlan::$statuses" :current="$macroplan->status"
+        :action="route('macroplans.update-status', $macroplan)"
+        hint="Em Execução avisa o cliente depois de 1 hora." />
 
     @if(session('success'))
         <div class="mb-5 px-4 py-3 text-sm font-semibold"
@@ -1102,7 +1104,7 @@
                             </div>
                         </div>
 
-                        {{-- Responsável + Status --}}
+                        {{-- Status muda pela corrente no topo da página (<x-status-flow>). --}}
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Responsável</label>
@@ -1111,15 +1113,6 @@
                                     <option value="">— sem responsável —</option>
                                     @foreach($users as $u)
                                         <option value="{{ $u->id }}" {{ $macroplan->responsible_id == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Status</label>
-                                <select name="status" required
-                                    class="field w-full px-4 py-2.5 text-sm focus:outline-none">
-                                    @foreach(\App\Models\MacroPlan::$statuses as $key => $s)
-                                        <option value="{{ $key }}" {{ $macroplan->status === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
                                     @endforeach
                                 </select>
                             </div>

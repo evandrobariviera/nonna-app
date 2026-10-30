@@ -248,6 +248,7 @@ class Task extends Model
             'red'    => '#DC2626',
             'yellow' => '#F59E0B',
             'teal'   => '#0d9488',
+            'cyan'   => '#06B6D4',
             default  => '#98A1B2',
         };
     }

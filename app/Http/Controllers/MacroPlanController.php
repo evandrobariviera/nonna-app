@@ -188,7 +188,6 @@ class MacroPlanController extends Controller
                 'period_start'   => 'required|date',
                 'period_end'     => 'required|date|after:period_start',
                 'responsible_id' => 'nullable|exists:users,id',
-                'status'         => 'required|in:' . implode(',', array_keys(MacroPlan::$statuses)),
                 'disciplines'    => 'nullable|array',
                 'disciplines.*'  => 'string',
                 'verba_mensal'   => 'nullable|string|max:30',
@@ -295,6 +294,10 @@ class MacroPlanController extends Controller
         ]);
 
         $macroplan->update($data);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->back()->with('success', 'Status atualizado.');
     }

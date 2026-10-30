@@ -459,6 +459,22 @@ class ProjectController extends Controller
             ->with('success', 'Projeto atualizado.');
     }
 
+    // Corrente de status da página (<x-status-flow>).
+    public function updateStatus(Request $request, Project $project)
+    {
+        $data = $request->validate([
+            'status' => 'required|in:' . implode(',', array_keys(Project::$statuses)),
+        ]);
+
+        $project->update($data);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->back()->with('success', 'Status atualizado.');
+    }
+
     private function applyUpdate(Request $request, Project $project): void
     {
         $data = $request->validate([
@@ -476,7 +492,6 @@ class ProjectController extends Controller
             'briefing_email'    => 'nullable|string',
             'briefing_estrategia'     => 'nullable|string',
             'briefing_relacionamento' => 'nullable|string',
-            'status'            => 'required|in:' . implode(',', array_keys(Project::$statuses)),
             'tags'              => 'nullable|array',
             'tags.*'            => 'nullable|string|max:100',
             'content_ideas'     => 'nullable|array',

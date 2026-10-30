@@ -39,7 +39,6 @@
                     @endforeach
                 </select>
             </form>
-            <span class="badge badge-{{ $project->statusColor() }}">{{ $project->statusLabel() }}</span>
             <button type="button" @click="$store.taskAssistant.open = true" class="btn btn-ghost btn-xs flex items-center gap-1.5">
                 <x-icon name="sparkles" size="14" style="color:var(--purple)" />
                 Assistente de Tarefas
@@ -65,6 +64,12 @@
         ])
     </div>
     </div>
+
+    {{-- Stand By fica fora da corrente: é pausa. Cancelado só existe vindo do ClickUp. --}}
+    <x-status-flow class="mb-5" :current="$project->status" :action="route('projects.update-status', $project)"
+        :options="collect(\App\Models\Project::$statuses)->except($project->status === 'cancelado' ? [] : ['cancelado'])->all()"
+        :exits="['stand_by', 'cancelado']"
+        hint="Em Execução avisa o cliente depois de 1 hora." />
 
     @if(session('success'))
         <div class="mb-5 px-4 py-3 text-sm font-semibold"
@@ -186,7 +191,7 @@
                 <div class="min-w-0">
                     <p id="project-progress-text" class="text-sm font-bold" style="color:var(--text)">{{ $doneTasks }} de {{ $totalTasks }} tarefa{{ $totalTasks !== 1 ? 's' : '' }}</p>
                     <p class="text-xs" style="color:var(--muted)">concluídas {{ $isCampaign ? 'na campanha' : 'no projeto' }}</p>
-                    <p class="text-xs mt-1 font-semibold" style="color:{{ \App\Models\Task::colorHex($project->statusColor()) }}">{{ $project->statusLabel() }}</p>
+                    <p class="text-xs mt-1 font-semibold" x-data="{ label: @js($project->statusLabel()), color: @js(\App\Models\Task::colorHex($project->statusColor())) }" @status-changed.window="label = $event.detail.label; color = $event.detail.color" :style="'color:' + color" x-text="label" style="color:{{ \App\Models\Task::colorHex($project->statusColor()) }}">{{ $project->statusLabel() }}</p>
                 </div>
             </div>
 

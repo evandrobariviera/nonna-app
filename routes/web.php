@@ -726,6 +726,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('projects.editor-image.show');
     Route::patch('/projetos/{project}/editar', [ProjectController::class, 'updateDirect'])
         ->name('projects.updateDirect');
+    Route::patch('/projetos/{project}/status', [ProjectController::class, 'updateStatus'])
+        ->name('projects.update-status');
     Route::post('/projetos/{project}/anexos', [ProjectAttachmentController::class, 'store'])
         ->name('project-attachments.store');
     Route::delete('/projetos/{project}/anexos/{attachment}', [ProjectAttachmentController::class, 'destroy'])

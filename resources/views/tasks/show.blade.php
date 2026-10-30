@@ -449,78 +449,10 @@
             {{-- Divergência entre a data de aprovação e a sprint — some sozinho quando resolve. --}}
             <x-sprint-date-alert :task="$task" />
 
-            {{-- BARRA DE STATUS: fluxo em flecha (clip-path) com os 7 status que avançam pra
-                 frente, acende na cor real do status ativo. "Cancelado" fica de fora da corrente
-                 de propósito — é saída/exceção, não uma estação do fluxo — e vira um botão à
-                 parte, menor, ao lado. Clique já salva via fetch (tasks.update-status-direct),
-                 sem reload — statusKey local decide a cor de cada botão a partir daqui pra baixo. --}}
-            @php
-                $statusShort = [
-                    'backlog'              => 'Backlog',
-                    'em_producao'          => 'Produção',
-                    'revisao_interna'      => 'Revisão',
-                    'ajuste_alteracao'     => 'Ajuste',
-                    'aprovacao'            => 'Aprovação',
-                    'despacho_agendamento' => 'Agendamento',
-                    'concluido'            => 'Concluído',
-                ];
-                $flowStatuses     = collect(\App\Models\Task::$statuses)->except('cancelado');
-                $chevronPt        = 9;
-                // Traço de 1px branco ao redor da forma já recortada pelo clip-path (border
-                // normal ignora o clip-path) — só pra marcar a subdivisão entre as flechas,
-                // inclusive na ponta.
-                $chevronOutline   = "filter:drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff);";
-            @endphp
-            <div class="card card-body"
-                 x-data="{
-                     statusKey: @js($task->status),
-                     saving: false,
-                     colors: @js(collect(\App\Models\Task::$statuses)->map(fn($s) => $s['color'])),
-                     async set(key) {
-                         if (this.statusKey === key || this.saving) return;
-                         this.saving = true;
-                         const { ok, message, cancelled } = await window.inlinePatch('{{ route('tasks.update-status-direct', $task) }}', { status: key });
-                         this.saving = false;
-                         if (ok) { this.statusKey = key; } else if (!cancelled) { alert(message || 'Não foi possível mudar o status.'); }
-                     },
-                 }">
-                <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Status</p>
-                <div class="flex flex-wrap sm:flex-nowrap items-center gap-1.5">
-                    {{-- Celular: corrente ocupa a linha toda (arrasta pro lado) e Cancelado desce --}}
-                    <div class="flex w-full sm:w-auto sm:flex-1 min-w-0" style="overflow-x:auto">
-                        @foreach($flowStatuses as $key => $s)
-                            @php
-                                $clip = $loop->first
-                                    ? "polygon(0 0, calc(100% - {$chevronPt}px) 0, 100% 50%, calc(100% - {$chevronPt}px) 100%, 0 100%)"
-                                    : ($loop->last
-                                        ? "polygon(0 0, 100% 0, 100% 100%, 0 100%, {$chevronPt}px 50%)"
-                                        : "polygon(0 0, calc(100% - {$chevronPt}px) 0, 100% 50%, calc(100% - {$chevronPt}px) 100%, 0 100%, {$chevronPt}px 50%)");
-                                // JS string literal ('...') não pode conter quebra de linha crua —
-                                // Blade não some com os \n do template, então o :style precisa ficar
-                                // montado numa string PHP de uma linha só antes de ir pro atributo
-                                // (foi exatamente isso que quebrou o Alpine: SyntaxError silencioso
-                                // que travava TODO o resto da página, não só a barra de Status).
-                                $staticStyle = "clip-path:{$clip};min-width:82px;{$chevronOutline}cursor:pointer;padding-left:" . ($loop->first ? '13px' : '15px') . ';padding-right:' . ($loop->last ? '13px' : '15px') . ';margin-left:' . ($loop->first ? '0' : '-' . $chevronPt . 'px') . ';letter-spacing:.01em;';
-                            @endphp
-                            <button type="button" @click="set('{{ $key }}')"
-                                class="flex-shrink-0 py-3 text-[13px] font-semibold text-center transition-colors"
-                                :style="'{{ $staticStyle }}' + (statusKey === '{{ $key }}' ? 'background:var(--' + colors['{{ $key }}'] + ');color:#fff;' : 'background:var(--s2);color:var(--muted2);')"
-                                @mouseover="if (statusKey !== '{{ $key }}') $el.style.background = 'var(--s3)'"
-                                @mouseout="if (statusKey !== '{{ $key }}') $el.style.background = 'var(--s2)'">
-                                {{ $statusShort[$key] ?? $s['label'] }}
-                            </button>
-                        @endforeach
-                    </div>
-
-                    {{-- Cancelado — separado da corrente, mesma mecânica de sempre --}}
-                    <button type="button" @click="set('cancelado')" class="flex-shrink-0 px-4 py-3 text-[13px] font-semibold transition-colors"
-                        :style="'letter-spacing:.01em;cursor:pointer;' + (statusKey === 'cancelado' ? 'border:1px solid var(--' + colors.cancelado + ');background:var(--' + colors.cancelado + ');color:#fff;' : 'border:1px solid var(--border2);background:transparent;color:var(--muted2);')"
-                        @mouseover="if (statusKey !== 'cancelado') $el.style.background = 'var(--s2)'"
-                        @mouseout="if (statusKey !== 'cancelado') $el.style.background = 'transparent'">
-                        Cancelado
-                    </button>
-                </div>
-            </div>
+            {{-- "Cancelado" fica fora da corrente: é saída, não uma estação do fluxo. --}}
+            <x-status-flow :options="\App\Models\Task::$statuses" :current="$task->status"
+                :action="route('tasks.update-status-direct', $task)" :exits="['cancelado']"
+                :short="['em_producao' => 'Produção', 'revisao_interna' => 'Revisão', 'ajuste_alteracao' => 'Ajuste', 'despacho_agendamento' => 'Agendamento']" />
 
             {{-- Situação — mesma mecânica de edição de sempre (mesmo endpoint). Prioridade saiu
                  daqui e foi pro card Datas da lateral (primeiro item) — fazia mais sentido junto

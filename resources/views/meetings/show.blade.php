@@ -33,56 +33,9 @@
         </div>
     @endif
 
-    {{-- STATUS — mesma corrente em setas da página da tarefa: etapa atual pintada com a cor
-         dela, clique em outra muda (mesma rota de sempre, recarrega a página). Cancelada fica
-         separada, fora da corrente. No celular a corrente arrasta pro lado. --}}
-    @php
-        $mtgFlow    = collect(\App\Models\Meeting::$statuses)->except('cancelada');
-        $mtgChevron = 9;
-        $mtgOutline = 'filter:drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff);';
-    @endphp
-    <div class="card card-body mb-5">
-        <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">Status</p>
-        <div class="flex flex-wrap sm:flex-nowrap items-center gap-1.5">
-            <div class="flex w-full sm:w-auto sm:flex-1 min-w-0" style="overflow-x:auto">
-                @foreach($mtgFlow as $key => $s)
-                    @php
-                        $clip = $loop->first
-                            ? "polygon(0 0, calc(100% - {$mtgChevron}px) 0, 100% 50%, calc(100% - {$mtgChevron}px) 100%, 0 100%)"
-                            : ($loop->last
-                                ? "polygon(0 0, 100% 0, 100% 100%, 0 100%, {$mtgChevron}px 50%)"
-                                : "polygon(0 0, calc(100% - {$mtgChevron}px) 0, 100% 50%, calc(100% - {$mtgChevron}px) 100%, 0 100%, {$mtgChevron}px 50%)");
-                        $current = $meeting->status === $key;
-                    @endphp
-                    <form method="POST" action="{{ route('meetings.update-status', $meeting) }}" class="flex-shrink-0"
-                          style="margin-left:{{ $loop->first ? '0' : '-' . $mtgChevron . 'px' }}">
-                        @csrf @method('PATCH')
-                        <input type="hidden" name="status" value="{{ $key }}">
-                        <button type="submit" @disabled($current)
-                            class="py-3 text-[13px] font-semibold text-center transition-colors"
-                            style="clip-path:{{ $clip }}; min-width:96px; {{ $mtgOutline }} padding-left:{{ $loop->first ? '13px' : '17px' }}; padding-right:{{ $loop->last ? '13px' : '17px' }}; letter-spacing:.01em; {{ $current ? 'background:var(--' . $s['color'] . '); color:#fff; cursor:default' : 'background:var(--s2); color:var(--muted2); cursor:pointer' }}"
-                            @unless($current)
-                                onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'"
-                            @endunless>
-                            {{ $s['label'] }}
-                        </button>
-                    </form>
-                @endforeach
-            </div>
-            @php $isCanceled = $meeting->status === 'cancelada'; @endphp
-            <form method="POST" action="{{ route('meetings.update-status', $meeting) }}" class="flex-shrink-0">
-                @csrf @method('PATCH')
-                <input type="hidden" name="status" value="cancelada">
-                <button type="submit" @disabled($isCanceled) class="px-4 py-3 text-[13px] font-semibold transition-colors"
-                    style="letter-spacing:.01em; {{ $isCanceled ? 'border:1px solid var(--red); background:var(--red); color:#fff; cursor:default' : 'border:1px solid var(--border2); background:transparent; color:var(--muted2); cursor:pointer' }}"
-                    @unless($isCanceled)
-                        onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'"
-                    @endunless>
-                    Cancelada
-                </button>
-            </form>
-        </div>
-    </div>
+    {{-- Recarrega porque botões e blocos da página dependem do status. --}}
+    <x-status-flow class="mb-5" :options="\App\Models\Meeting::$statuses" :current="$meeting->status"
+        :action="route('meetings.update-status', $meeting)" :exits="['cancelada']" reload />
 
     <div class="flex flex-col lg:flex-row gap-5 lg:items-start">
 

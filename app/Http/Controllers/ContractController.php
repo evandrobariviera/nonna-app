@@ -74,7 +74,6 @@ class ContractController extends Controller
     {
         $data = $request->validate([
             'title'               => 'required|string|max:255',
-            'status'              => 'required|in:' . implode(',', array_keys(Contract::$statuses)),
             'start_date'          => 'nullable|date',
             'end_date'            => 'nullable|date|after_or_equal:start_date',
             'signed_at'           => 'nullable|date',
@@ -116,6 +115,10 @@ class ContractController extends Controller
         ]);
 
         $contract->update($data);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->back()->with('success', 'Status atualizado.');
     }

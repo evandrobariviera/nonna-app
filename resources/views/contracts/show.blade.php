@@ -10,10 +10,10 @@
             <span style="color:var(--border2)">/</span>
             <span class="text-xs font-semibold" style="color:var(--text)">{{ $contract->title }}</span>
         </div>
-        <div class="flex items-center gap-2">
-            <span class="badge badge-{{ $contract->statusColor() }}">{{ $contract->statusLabel() }}</span>
-        </div>
     </div>
+
+    <x-status-flow class="mb-5" :options="\App\Models\Contract::$statuses" :current="$contract->status"
+        :action="route('clients.contracts.update-status', [$client, $contract])" :exits="['cancelado']" />
 
     @if(session('success'))
         <div class="mb-5 px-4 py-3 text-sm font-semibold"
@@ -61,14 +61,6 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Status</label>
-                        <select name="status" class="w-full bg-[var(--s3)] border border-[var(--border2)] text-sm text-[var(--text)] px-3 py-2.5 focus:outline-none focus:border-[var(--purple)]">
-                            @foreach(\App\Models\Contract::$statuses as $key => $s)
-                                <option value="{{ $key }}" {{ $contract->status === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
-                            @endforeach
-                        </select>
-                    </div>
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Assinado em</label>
                         <input type="date" name="signed_at" value="{{ $contract->signed_at?->format('Y-m-d') }}"

@@ -1,0 +1,10 @@
+{
+  "novidades": [
+    {
+      "title": "Status em setas no planejamento, campanha, projeto e contrato",
+      "summary": "Agora o status muda igual na tarefa e na reunião: um clique na faixa de setas, no topo da página, e já salva.",
+      "body": "<p>Antes o status do planejamento era um seletor no topo, e o da campanha e do projeto ficava escondido em Editar. Agora tudo passa pela faixa de setas, que mostra em que etapa o trabalho está. O status saiu dos formulários de edição, então editar um planejamento, campanha ou contrato não muda mais o status por engano.</p>",
+      "kind": "melhoria", "area": "Planejamentos"
+    }
+  ]
+}

@@ -13,7 +13,7 @@
 <form method="POST" action="{{ $formAction }}" class="px-5 py-5 space-y-4">
     @csrf @method('PATCH')
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div class="md:col-span-2">
             <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
                 Nome <span style="color:var(--orange)">*</span>
@@ -25,15 +25,6 @@
             <select name="type" x-model="tipo" class="{{ $field }}" style="{{ $fieldStyle }}">
                 @foreach(\App\Models\Project::$types as $key => $t)
                     <option value="{{ $key }}" {{ $project->type === $key ? 'selected' : '' }}>{{ $t['label'] }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div>
-            <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Status</label>
-            <select name="status" class="{{ $field }}" style="{{ $fieldStyle }}">
-                @foreach(\App\Models\Project::$statuses as $key => $s)
-                    @continue($key === 'cancelado' && $project->status !== 'cancelado')
-                    <option value="{{ $key }}" {{ $project->status === $key ? 'selected' : '' }}>{{ $s['label'] }}</option>
                 @endforeach
             </select>
         </div>
