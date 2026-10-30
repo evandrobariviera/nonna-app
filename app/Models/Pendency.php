@@ -106,6 +106,11 @@ class Pendency extends Model
         return $this->hasMany(PendencyNudge::class)->orderByDesc('created_at');
     }
 
+    public function attachments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PendencyAttachment::class)->orderBy('created_at');
+    }
+
     /** Botão de cobrança: só quem cobra (ou admin, cobrindo alguém). */
     public function canChase(?int $userId, bool $isAdmin = false): bool
     {

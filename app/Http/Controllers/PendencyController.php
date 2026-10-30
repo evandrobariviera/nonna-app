@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\ClientContact;
 use App\Models\Pendency;
+use App\Models\PendencyAttachment;
 use App\Models\Task;
 use App\Models\TaskComment;
 use App\Models\User;
@@ -18,6 +19,12 @@ use Illuminate\Validation\Rule;
 // Planejamento). Regras em PendencyService.
 class PendencyController extends Controller
 {
+    // Mesmo limite dos anexos de tarefa. Ao criar e ao resolver o anexo é opcional.
+    private const FILE_RULES = [
+        'files'   => 'nullable|array',
+        'files.*' => 'file|max:153600', // 150 MB
+    ];
+
     public function __construct(private PendencyService $service) {}
 
     public function index(Request $request)
@@ -56,6 +63,7 @@ class PendencyController extends Controller
             'owedUser:id,name',
             'owner:id,name,avatar_path,avatar_disk',
             'resolvedBy:id,name',
+            'attachments',
         ]);
 
         if ($view === 'abertas') {
@@ -112,7 +120,7 @@ class PendencyController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validateWithBag('pendency', $this->rules() + [
+        $data = $request->validateWithBag('pendency', $this->rules() + self::FILE_RULES + [
             'pendable_type' => ['nullable', Rule::in(array_keys(Pendency::PENDABLE_TYPES))],
             'pendable_id'   => 'nullable|required_with:pendable_type|uuid',
             'client_id'     => 'nullable|required_without:pendable_type|uuid|exists:pgsql.clients,id',
@@ -125,11 +133,36 @@ class PendencyController extends Controller
             $class    = Pendency::PENDABLE_TYPES[$data['pendable_type']];
             $pendable = $class::findOrFail($data['pendable_id']);
         }
-        unset($data['pendable_type'], $data['pendable_id']);
+        unset($data['pendable_type'], $data['pendable_id'], $data['files']);
 
-        $this->service->create($data, $pendable, Auth::id());
+        $pendency = $this->service->create($data, $pendable, Auth::id());
+        $this->service->attach($pendency, $request->file('files', []), Auth::id());
 
         return $this->done($request, 'Pendência registrada.');
+    }
+
+    public function storeAttachments(Request $request, Pendency $pendency)
+    {
+        $request->validateWithBag('pendency', ['files' => 'required|array|min:1'] + self::FILE_RULES);
+        $this->service->attach($pendency, $request->file('files'), Auth::id());
+
+        return $this->done($request, count($request->file('files')) > 1 ? 'Arquivos anexados.' : 'Arquivo anexado.');
+    }
+
+    /** Abre o anexo: link assinado gerado só no clique, não um por cartão ao montar a tela. */
+    public function showAttachment(Pendency $pendency, PendencyAttachment $attachment)
+    {
+        abort_unless($attachment->pendency_id === $pendency->id, 404);
+
+        return redirect()->away($attachment->url());
+    }
+
+    public function destroyAttachment(Request $request, Pendency $pendency, PendencyAttachment $attachment)
+    {
+        abort_unless($attachment->pendency_id === $pendency->id, 404);
+        $this->service->removeAttachment($attachment);
+
+        return $this->done($request, 'Anexo removido.');
     }
 
     /** Comentário da tarefa vira pendência num clique (substitui o antigo "Item de ação"). */
@@ -193,7 +226,9 @@ class PendencyController extends Controller
 
     public function resolve(Request $request, Pendency $pendency)
     {
-        $data = $request->validate(['resolution_note' => 'nullable|string|max:2000']);
+        $data = $request->validateWithBag('pendency', ['resolution_note' => 'nullable|string|max:2000'] + self::FILE_RULES);
+        // Anexa antes de resolver: se o envio falhar, a pendência continua aberta.
+        $this->service->attach($pendency, $request->file('files', []), Auth::id());
         $this->service->resolve($pendency, Auth::id(), $data['resolution_note'] ?? null);
 
         return $this->done($request, 'Pendência resolvida.');

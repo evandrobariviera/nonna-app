@@ -1,0 +1,18 @@
+{
+  "novidades": [
+    {
+      "title": "Pendências: agora dá para anexar arquivos",
+      "summary": "Anexe o que explica o pedido ao criar a pendência, a qualquer momento pelo botão Anexar, ou o que chegou na hora de resolver. Clique no nome para abrir.",
+      "body": "<p>Antes, o arquivo ficava perdido no WhatsApp ou no e-mail. Agora ele mora na própria pendência: por exemplo, o Alisson recebe o contrato assinado, clica em ✓ Resolver e anexa o PDF, e quem pediu abre direto dali. Vale em Tarefa, Ticket, Projeto, Planejamento e na Central de Pendências, com vários arquivos de até 150 MB cada.</p>",
+      "kind": "melhoria", "area": "Pendências"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Central de Pendências — como funciona",
+      "category": "Pendências",
+      "slug": "central-de-pendencias-como-funciona",
+      "body_file": "ajuda-central-de-pendencias.html"
+    }
+  ]
+}

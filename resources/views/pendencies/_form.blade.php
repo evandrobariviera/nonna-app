@@ -19,6 +19,7 @@
           clientId: '{{ $pendency->client_id ?? '' }}',
           contactsByClient: @js($avulsa ? ($newFormContacts ?? (object) []) : (object) []),
       }"
+      enctype="multipart/form-data"
       class="flex flex-col gap-3">
     @csrf
     @if(!empty($returnTo))<input type="hidden" name="return_to" value="{{ $returnTo }}">@endif
@@ -130,6 +131,14 @@
         <label style="{{ $lbl }}">Detalhes (opcional)</label>
         <textarea name="description" rows="2" maxlength="5000" style="{{ $inp }}; resize:vertical">{{ $pendency->description ?? '' }}</textarea>
     </div>
+
+    {{-- Na edição, anexar/remover fica na própria pendência (botão "Anexar"). --}}
+    @unless($isEdit)
+        <div>
+            <label style="{{ $lbl }}">Anexos (opcional, até 150 MB cada)</label>
+            <input type="file" name="files[]" multiple class="text-xs" style="color:var(--muted2); max-width:100%">
+        </div>
+    @endunless
 
     <div class="flex items-center gap-2">
         <button type="submit" class="btn btn-primary btn-sm">{{ $isEdit ? 'Salvar' : 'Registrar pendência' }}</button>

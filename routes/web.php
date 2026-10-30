@@ -639,6 +639,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('pendencies.reopen');
     Route::delete('/pendencias/{pendency}', [\App\Http\Controllers\PendencyController::class, 'destroy'])
         ->name('pendencies.destroy');
+    Route::post('/pendencias/{pendency}/anexos', [\App\Http\Controllers\PendencyController::class, 'storeAttachments'])
+        ->name('pendencies.attachments.store');
+    Route::get('/pendencias/{pendency}/anexos/{attachment}', [\App\Http\Controllers\PendencyController::class, 'showAttachment'])
+        ->name('pendencies.attachments.show');
+    Route::delete('/pendencias/{pendency}/anexos/{attachment}', [\App\Http\Controllers\PendencyController::class, 'destroyAttachment'])
+        ->name('pendencies.attachments.destroy');
 
     // ── Submissão para aprovação (autenticado — designer/gestor) ──
     Route::post('/tarefas/{task}/aprovacao', [TaskApprovalController::class, 'store'])

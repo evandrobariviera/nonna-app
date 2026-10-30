@@ -61,6 +61,31 @@
                 @endif
             </div>
 
+            {{-- Anexos — o nome abre o arquivo (link assinado só no clique, ver showAttachment) --}}
+            <div class="flex flex-wrap items-center gap-1.5 mt-1.5 text-xs">
+                @foreach($p->attachments as $a)
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5" style="background:var(--s3); border-radius:6px; max-width:100%">
+                        <a href="{{ route('pendencies.attachments.show', [$p, $a]) }}" target="_blank" rel="noopener" class="truncate hover:underline"
+                           style="color:var(--text); max-width:190px" title="{{ $a->filename }} · {{ $a->sizeForHumans() }}">{{ $a->icon() }} {{ $a->filename }}</a>
+                        <form method="POST" action="{{ route('pendencies.attachments.destroy', [$p, $a]) }}"
+                              @submit.prevent="if (await $store.confirmDialog.ask('Remover este anexo?')) $el.submit()">
+                            @csrf @method('DELETE')
+                            @if(!empty($returnTo))<input type="hidden" name="return_to" value="{{ $returnTo }}">@endif
+                            <button type="submit" title="Remover anexo" style="color:var(--muted2)">✕</button>
+                        </form>
+                    </span>
+                @endforeach
+                <form method="POST" action="{{ route('pendencies.attachments.store', $p) }}" enctype="multipart/form-data" x-data="{ sending: false }">
+                    @csrf
+                    @if(!empty($returnTo))<input type="hidden" name="return_to" value="{{ $returnTo }}">@endif
+                    <label class="inline-flex items-center gap-1 cursor-pointer" style="color:var(--muted2)" title="Anexar arquivos (até 150 MB cada)">
+                        <x-icon name="paperclip" size="12" />
+                        <span x-text="sending ? 'Enviando…' : 'Anexar'">Anexar</span>
+                        <input type="file" name="files[]" multiple class="hidden" @change="sending = true; $el.closest('form').submit()">
+                    </label>
+                </form>
+            </div>
+
             @if($p->nudge_count > 0)
                 @php $history = $p->relationLoaded('nudges') ? $p->nudges : collect(); @endphp
                 <div class="text-xs mt-1" x-data="{ hist: false }">
@@ -194,13 +219,16 @@
             </div>
 
             @if($open)
-                <form x-show="resolving" x-cloak method="POST" action="{{ route('pendencies.resolve', $p) }}" class="mt-2 flex items-center gap-2">
+                <form x-show="resolving" x-cloak method="POST" action="{{ route('pendencies.resolve', $p) }}" enctype="multipart/form-data" class="mt-2 flex flex-col gap-1.5">
                     @csrf @method('PATCH')
                     @if(!empty($returnTo))<input type="hidden" name="return_to" value="{{ $returnTo }}">@endif
-                    <input type="text" name="resolution_note" maxlength="2000" placeholder="O que chegou? (opcional)"
-                           class="field flex-1 min-w-0"
-                           style="padding:5px 9px; font-size:12px; outline:none">
-                    <button type="submit" class="btn btn-xs btn-success">Confirmar</button>
+                    <div class="flex items-center gap-2">
+                        <input type="text" name="resolution_note" maxlength="2000" placeholder="O que chegou? (opcional)"
+                               class="field flex-1 min-w-0"
+                               style="padding:5px 9px; font-size:12px; outline:none">
+                        <button type="submit" class="btn btn-xs btn-success">Confirmar</button>
+                    </div>
+                    <input type="file" name="files[]" multiple class="text-xs" style="color:var(--muted2); max-width:100%" title="Anexe o que chegou (opcional)">
                 </form>
             @endif
         </div>

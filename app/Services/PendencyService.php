@@ -5,9 +5,12 @@ namespace App\Services;
 use App\Models\Contact;
 use App\Models\InternalNotification;
 use App\Models\Pendency;
+use App\Models\PendencyAttachment;
 use App\Models\User;
+use App\Support\UploadOptions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Regras das Pendências (ver App\Models\Pendency). O controller só valida; aqui fica
@@ -181,7 +184,38 @@ class PendencyService
     public function delete(Pendency $pendency): void
     {
         $this->closeNotifications($pendency);
+        // O banco apaga as linhas em cascata; os arquivos no storage, só aqui.
+        $pendency->attachments->each(fn (PendencyAttachment $a) => Storage::disk($a->disk)->delete($a->disk_path));
         $pendency->delete();
+    }
+
+    /**
+     * Anexa arquivos à pendência (ao criar, depois ou ao resolver).
+     *
+     * @param array<int, \Illuminate\Http\UploadedFile> $files
+     */
+    public function attach(Pendency $pendency, array $files, int $userId): void
+    {
+        $disk = config('filesystems.default', 'r2');
+
+        foreach ($files as $file) {
+            $mimeType = $file->getMimeType() ?? 'application/octet-stream';
+
+            $pendency->attachments()->create([
+                'filename'    => $file->getClientOriginalName(),
+                'disk_path'   => $file->store("pendencies/{$pendency->id}", UploadOptions::forStore($mimeType, $disk)),
+                'disk'        => $disk,
+                'mime_type'   => $mimeType,
+                'size'        => $file->getSize(),
+                'uploaded_by' => $userId,
+            ]);
+        }
+    }
+
+    public function removeAttachment(PendencyAttachment $attachment): void
+    {
+        Storage::disk($attachment->disk)->delete($attachment->disk_path);
+        $attachment->delete();
     }
 
     /** Avisa quem passou a cobrar e/ou a dever a pendência — nunca quem fez a ação. */
@@ -242,7 +276,7 @@ class PendencyService
     public function panelData(Model $pendable): array
     {
         $pendencies = $pendable->pendencies()
-            ->with(['owedContact:id,name,whatsapp,phone', 'owedUser:id,name,avatar_path,avatar_disk', 'owner:id,name,avatar_path,avatar_disk', 'requester:id,name', 'resolvedBy:id,name', 'nudges.user:id,name'])
+            ->with(['owedContact:id,name,whatsapp,phone', 'owedUser:id,name,avatar_path,avatar_disk', 'owner:id,name,avatar_path,avatar_disk', 'requester:id,name', 'resolvedBy:id,name', 'nudges.user:id,name', 'attachments'])
             ->orderByRaw("CASE WHEN status IN ('aberta','cobrada') THEN 0 ELSE 1 END")
             ->orderByRaw('due_date IS NULL')
             ->orderBy('due_date')
