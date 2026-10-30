@@ -425,9 +425,9 @@ class SprintController extends Controller
     {
         abort_if($sprint->status === 'closed', 403, 'Sprint encerrada.');
 
-        if ($task->isPendente()) {
+        if ($missing = $task->missingFields()) {
             throw ValidationException::withMessages([
-                'pendencia' => "Tarefa \"{$task->title}\" tem pendências de cadastro e não pode ser adicionada à sprint. Corrija-a antes de adicioná-la.",
+                'pendencia' => "Para enviar \"{$task->title}\" à sprint, falta preencher: " . Task::joinFields($missing) . '.',
             ]);
         }
 

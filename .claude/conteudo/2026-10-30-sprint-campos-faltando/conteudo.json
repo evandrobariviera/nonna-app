@@ -1,0 +1,10 @@
+{
+  "novidades": [
+    {
+      "title": "Sprint: o aviso agora diz o que falta preencher",
+      "summary": "Quando uma tarefa não pode entrar na Sprint, o aviso mostra quais campos estão vazios, como Destino ou Vencimento, em vez de só dizer que falta informação.",
+      "body": "<p>Antes o aviso só dizia que a tarefa tinha pendências de cadastro, e cada um precisava caçar o campo vazio. Agora vem assim: \"falta preencher: Destino e Aprovação\". Vale para o botão → Sprint, para a troca de Sprint dentro da tarefa e para o envio de várias tarefas de uma vez, em que cada tarefa pulada mostra o que falta nela.</p>",
+      "kind": "melhoria", "area": "Sprint"
+    }
+  ]
+}

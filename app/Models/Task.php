@@ -565,6 +565,38 @@ class Task extends Model
     }
 
     /**
+     * O que falta preencher, com os nomes que aparecem na tela da tarefa. Mesma regra
+     * de scopePendente(): ao mudar um, mudar o outro. Custa até 2 queries por chamada.
+     *
+     * @return array<int, string>
+     */
+    public function missingFields(): array
+    {
+        if (in_array($this->status, ['concluido', 'cancelado'], true)) {
+            return [];
+        }
+
+        $hasExecutor = $this->executor_id !== null
+            || $this->executors()->where('task_executors.role', 'executor')->exists();
+
+        return array_keys(array_filter([
+            'Destino'             => $this->destination === null,
+            'Situação'            => in_array($this->situation, [null, ''], true),
+            'Vencimento'          => $this->due_date === null,
+            'Aprovação'           => $this->approval_date === null,
+            'Origem'              => $this->origin === null,
+            'Briefing / Descrição' => in_array($this->description, [null, ''], true),
+            'Executor'            => !$hasExecutor,
+            'Responsável'         => !$this->responsibles()->exists(),
+        ]));
+    }
+
+    public static function joinFields(array $fields): string
+    {
+        return collect($fields)->join(', ', ' e ');
+    }
+
+    /**
      * Agrupamento padrão usado nas telas de lista de tarefas (Filas, Sprint) —
      * mesma regra em todo o sistema pra dar consistência de uso.
      *

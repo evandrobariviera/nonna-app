@@ -698,8 +698,8 @@ class TaskController extends Controller
             $sprint = Sprint::findOrFail($data['sprint_id']);
             if ($sprint->status === 'closed') {
                 $error = 'Essa sprint está encerrada.';
-            } elseif ($task->isPendente()) {
-                $error = 'Essa tarefa tem pendências de cadastro e não pode ser adicionada à sprint. Corrija-a antes.';
+            } elseif ($missing = $task->missingFields()) {
+                $error = 'Para enviar à sprint, falta preencher: ' . Task::joinFields($missing) . '.';
             }
         }
 
@@ -1034,8 +1034,8 @@ class TaskController extends Controller
                 // Mesma regra de SprintController::addTask() — tarefa com pendência de
                 // cadastro não entra em sprint nem individualmente nem em massa.
                 foreach ($tasks as $task) {
-                    if ($task->isPendente()) {
-                        $skipped[] = ['id' => $task->id, 'title' => $task->title, 'reason' => 'pendência de cadastro'];
+                    if ($missing = $task->missingFields()) {
+                        $skipped[] = ['id' => $task->id, 'title' => $task->title, 'reason' => 'falta: ' . Task::joinFields($missing)];
                         continue;
                     }
                     $task->update(['sprint_id' => $sprint->id]);
