@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Controller;
 use App\Models\Meeting;
 use App\Models\Task;
+use App\Services\PortalDiscussionFeed;
 use Carbon\Carbon;
 use Illuminate\View\View;
 
@@ -66,6 +67,8 @@ class DashboardController extends Controller
         }
         $volume = $client->productionUsage($mesVolume);
 
-        return view('portal.dashboard', compact('client', 'activePlan', 'stats', 'activePlanStats', 'nextMeeting', 'openTicketsCount', 'pendingApprovalsCount', 'volume', 'mesVolume'));
+        $discussions = app(PortalDiscussionFeed::class)->for($client);
+
+        return view('portal.dashboard', compact('client', 'activePlan', 'stats', 'activePlanStats', 'nextMeeting', 'openTicketsCount', 'pendingApprovalsCount', 'volume', 'mesVolume', 'discussions'));
     }
 }

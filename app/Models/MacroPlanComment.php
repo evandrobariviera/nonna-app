@@ -7,14 +7,18 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-// Comentário da discussão do planejamento (ver MacroPlanCommentController). Só interno.
+// Comentário da discussão do planejamento (ver MacroPlanCommentController). Nasce interno; a equipe pode marcar "Visível pro cliente".
 class MacroPlanComment extends Model
 {
     use HasUuids, Tenantable;
 
     protected $connection = 'pgsql';
 
-    protected $fillable = ['organization_id', 'macro_plan_id', 'user_id', 'body'];
+    protected $fillable = ['organization_id', 'macro_plan_id', 'user_id', 'body', 'visible_to_client'];
+
+    protected $casts = [
+        'visible_to_client' => 'boolean',
+    ];
 
     public function macroPlan(): BelongsTo
     {

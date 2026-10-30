@@ -17,6 +17,9 @@
         </span>
     </div>
 
+    <div class="flex flex-col lg:flex-row gap-6 items-start">
+    <div class="flex-1 min-w-0 w-full">
+
     {{-- Volume do mês — o combinado com a Nonna × o que já foi pedido × o que já foi
          entregue. Primeira coisa que o cliente vê: deixa claro quanto ainda cabe no mês.
          Só aparece se o cliente tem limite mensal configurado (ficha do cliente). --}}
@@ -195,7 +198,7 @@
                 {{-- Header do plano --}}
                 <div class="flex items-start justify-between mb-5">
                     <div>
-                        <p class="text-lg font-black" style="color: var(--text)">{{ $activePlan->title }}</p>
+                        <p class="text-lg font-black" style="color: var(--text)">{{ $activePlan->clientTitle() }}</p>
                         <p class="text-xs mt-0.5" style="color: var(--muted)">
                             {{ $activePlan->period_start?->format('d/m/Y') }} —
                             {{ $activePlan->period_end?->format('d/m/Y') }}
@@ -252,5 +255,10 @@
             <p class="text-xs mt-1" style="color: var(--muted)">Em breve seu próximo ciclo estratégico aparecerá aqui.</p>
         </div>
     @endif
+
+    </div>
+
+    @include('portal.partials._discussions')
+    </div>
 
 </x-portal-layout>

@@ -27,6 +27,7 @@ class MacroPlanCommentController extends Controller
             'organization_id' => $macroplan->organization_id,
             'user_id'         => Auth::id(),
             'body'            => $body,
+            'visible_to_client' => $request->boolean('visible_to_client'),
         ]);
 
         $this->notifyTeam($macroplan, $body, $notifications);

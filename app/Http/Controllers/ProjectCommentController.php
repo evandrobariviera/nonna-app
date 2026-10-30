@@ -27,6 +27,7 @@ class ProjectCommentController extends Controller
             'organization_id' => $project->organization_id,
             'user_id'         => Auth::id(),
             'body'            => $body,
+            'visible_to_client' => $request->boolean('visible_to_client'),
         ]);
 
         $this->notifyTeam($project, $body, $notifications);

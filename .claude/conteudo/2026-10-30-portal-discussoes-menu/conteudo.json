@@ -1,0 +1,30 @@
+{
+  "novidades": [
+    {
+      "title": "Portal: coluna de Discussões na entrada",
+      "summary": "O cliente vê na entrada do Portal as conversas de tarefas, chamados, campanhas, projetos e planejamentos que foram marcadas como visíveis.",
+      "body": "<p>A ideia é o cliente perceber que a agência está sempre pensando no trabalho dele. Só aparece o que a equipe marcar: o comentário continua interno se a caixinha ficar desmarcada, e nenhum comentário antigo foi liberado.</p>",
+      "kind": "novidade", "area": "Portal do Cliente"
+    },
+    {
+      "title": "Comentários: \"Visível pro cliente\" em campanhas, projetos e planejamentos",
+      "summary": "A caixinha que já existia na tarefa agora também aparece nos comentários de campanha, projeto e na Discussão do planejamento.",
+      "body": "<p>Cada comentário mostra um selo: Interno ou Visível pro cliente. Se a caixinha ficar desmarcada, o comentário continua só para o time.</p>",
+      "kind": "melhoria", "area": "Planejamentos"
+    },
+    {
+      "title": "Portal: menu novo",
+      "summary": "A Central de Performance subiu para o topo do menu, e o Portal ficou organizado em Resultados, Seu trabalho, Atendimento e Financeiro.",
+      "body": "<p>Roadmaps e Projetos e Campanhas viraram um item só: Planejamentos e Campanhas. O item Início entrou no menu e o Dossiê de Marca saiu.</p>",
+      "kind": "melhoria", "area": "Portal do Cliente"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Comentários visíveis ao cliente e a coluna Discussões",
+      "category": "Primeiros passos",
+      "slug": "comentarios-visiveis-ao-cliente",
+      "body_file": "ajuda-comentarios-visiveis.html"
+    }
+  ]
+}

@@ -341,6 +341,10 @@
             @error('comment_body')<p class="text-xs" style="color:var(--red)">{{ $message }}</p>@enderror
             <div class="flex items-center justify-between gap-2">
                 <span class="text-xs" style="color:var(--muted2)">A equipe é avisada.</span>
+                <label class="flex items-center gap-2 text-xs ml-auto" style="color:var(--muted)">
+                    <input type="checkbox" name="visible_to_client" value="1">
+                    Visível pro cliente
+                </label>
                 <button type="submit" class="btn btn-primary btn-xs">Comentar</button>
             </div>
         </form>
@@ -357,6 +361,7 @@
                                 @if($comment->updated_at->ne($comment->created_at))
                                     <span class="text-xs" style="color:var(--muted2)">(editado)</span>
                                 @endif
+                                <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full" style="{{ $comment->visible_to_client ? 'background:rgba(5,150,105,.1); color:var(--green)' : 'background:var(--s3); color:var(--muted)' }}">{{ $comment->visible_to_client ? 'Visível pro cliente' : 'Interno' }}</span>
                             </div>
                             <x-rich-content :value="$comment->body" class="text-sm" style="color:var(--text); line-height:1.6" />
                             @if($comment->user_id === auth()->id())
