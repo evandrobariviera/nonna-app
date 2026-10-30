@@ -36,7 +36,7 @@ class ClientItemNoticeService
 
         // Falha aqui nunca pode impedir o time de mudar o status.
         try {
-            ClientItemNotice::firstOrCreate(
+            $notice = ClientItemNotice::firstOrCreate(
                 ['item_type' => $item->getMorphClass(), 'item_id' => $item->id],
                 [
                     'organization_id' => $item->organization_id,
@@ -45,6 +45,13 @@ class ClientItemNoticeService
                     'due_at'          => now()->addMinutes(ClientItemNotice::DELAY_MINUTES),
                 ],
             );
+
+            // A espera recomeça pra toda a fila do cliente: é o que faz sair uma mensagem só.
+            if ($notice->wasRecentlyCreated) {
+                ClientItemNotice::where('client_id', $item->client_id)
+                    ->whereNull('sent_at')
+                    ->update(['due_at' => $notice->due_at]);
+            }
         } catch (\Throwable $e) {
             Log::warning("ClientItemNoticeService: não agendei o aviso de {$item->id}: {$e->getMessage()}");
         }

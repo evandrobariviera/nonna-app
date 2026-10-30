@@ -16,7 +16,7 @@ class ClientItemNotice extends Model
 
     protected $connection = 'pgsql';
 
-    public const DELAY_MINUTES = 15;
+    public const DELAY_MINUTES = 60;
 
     protected $fillable = ['organization_id', 'client_id', 'item_type', 'item_id', 'token', 'due_at', 'sent_at'];
 

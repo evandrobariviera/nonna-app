@@ -3,7 +3,7 @@
     {
       "title": "Cliente avisado quando o trabalho entra em execução",
       "summary": "Ao passar um planejamento, campanha ou projeto para Em Execução, o cliente recebe uma mensagem com a duração, o resumo e o link do documento.",
-      "body": "<p>O aviso sai sozinho 15 minutos depois da mudança de status, por WhatsApp e e-mail. Se você clicar errado, é só voltar o status nesse intervalo que nada é enviado. Se o planejamento e as campanhas entrarem juntos, o cliente recebe uma mensagem só. A campanha e o projeto dizem a qual planejamento pertencem, e toda mensagem lembra que tudo fica organizado no Portal do Cliente.</p>",
+      "body": "<p>O aviso sai sozinho 1 hora depois da última mudança de status daquele cliente, por WhatsApp e e-mail. Se você clicar errado, é só voltar o status nesse intervalo que nada é enviado. Se o planejamento e as campanhas entrarem juntos, o cliente recebe uma mensagem só. A campanha e o projeto dizem a qual planejamento pertencem, e toda mensagem lembra que tudo fica organizado no Portal do Cliente.</p>",
       "kind": "novidade", "area": "Planejamentos"
     },
     {
