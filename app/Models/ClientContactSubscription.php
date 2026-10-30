@@ -36,6 +36,8 @@ class ClientContactSubscription extends Model
         'reuniao_lembrete'       => 'Lembrete de Reunião',
         'aprovacao'              => 'Aprovação de Materiais',
         'lead_capturado'         => 'Lead Capturado (Central de Leads)',
+        'planejamento_ativo'     => 'Planejamento em Execução',
+        'item_ativo'             => 'Campanha/Projeto em Execução',
         'financeiro'             => 'Financeiro (Notas de Anúncios)',
         'cobranca'               => 'Cobrança / Faturamento',
         'cs_survey'              => 'Pesquisa de Satisfação (CS)',

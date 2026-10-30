@@ -7,6 +7,7 @@ use App\Models\MacroPlan;
 use App\Models\MacroPlanActivity;
 use App\Models\User;
 use App\Services\AutomationEngine;
+use App\Services\ClientItemNoticeService;
 use Illuminate\Support\Facades\Auth;
 
 class MacroPlanObserver
@@ -29,11 +30,24 @@ class MacroPlanObserver
         }
 
         if ($macroPlan->wasChanged('status')) {
+            $this->noticeClient($macroPlan);
+
             AutomationEngine::evaluate('status_changed', $macroPlan, [
                 'field' => 'status',
                 'from'  => $macroPlan->getOriginal('status'),
                 'to'    => $macroPlan->status,
             ]);
+        }
+    }
+
+    private function noticeClient(MacroPlan $macroPlan): void
+    {
+        $notices = app(ClientItemNoticeService::class);
+
+        if ($macroPlan->status === 'em_execucao') {
+            $notices->schedule($macroPlan);
+        } elseif ($macroPlan->getOriginal('status') === 'em_execucao') {
+            $notices->cancel($macroPlan);
         }
     }
 

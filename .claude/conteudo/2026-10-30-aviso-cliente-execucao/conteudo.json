@@ -1,0 +1,24 @@
+{
+  "novidades": [
+    {
+      "title": "Cliente avisado quando o trabalho entra em execução",
+      "summary": "Ao passar um planejamento, campanha ou projeto para Em Execução, o cliente recebe uma mensagem com a duração, o resumo e o link do documento.",
+      "body": "<p>O aviso sai sozinho 15 minutos depois da mudança de status, por WhatsApp e e-mail. Se você clicar errado, é só voltar o status nesse intervalo que nada é enviado. Se o planejamento e as campanhas entrarem juntos, o cliente recebe uma mensagem só. A campanha e o projeto dizem a qual planejamento pertencem, e toda mensagem lembra que tudo fica organizado no Portal do Cliente.</p>",
+      "kind": "novidade", "area": "Planejamentos"
+    },
+    {
+      "title": "Portal: documento do planejamento e das campanhas",
+      "summary": "O cliente agora lê no Portal o documento do planejamento e abre o documento de cada campanha e projeto.",
+      "body": "<p>Antes o Portal mostrava só a lista de tarefas. Agora o documento do planejamento aparece no topo da página, e cada campanha ou projeto com documento tem o link Ver documento.</p>",
+      "kind": "melhoria", "area": "Portal do Cliente"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Avisos automáticos ao cliente: planejamento, campanha e projeto",
+      "category": "Planejamentos",
+      "slug": "avisos-automaticos-ao-cliente-execucao",
+      "body_file": "ajuda-avisos-cliente.html"
+    }
+  ]
+}

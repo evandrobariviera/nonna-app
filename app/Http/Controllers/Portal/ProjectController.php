@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\MacroPlan;
+use App\Models\Project;
 use App\Models\Task;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class ProjectController extends Controller
@@ -29,7 +31,20 @@ class ProjectController extends Controller
 
         $macroplan->load(['projects.tasks' => fn($q) => $q->orderBy('created_at')]);
 
-        return view('portal.projects.show', compact('client', 'macroplan'));
+        $document = $macroplan->mainDocument();
+
+        return view('portal.projects.show', compact('client', 'macroplan', 'document'));
+    }
+
+    // Link assinado gerado só no clique: abrir o card não pede um link por campanha.
+    public function document(Project $project): RedirectResponse
+    {
+        abort_if($project->client_id !== app('currentPortalClient')->id, 403);
+
+        $document = $project->mainDocument();
+        abort_unless($document, 404);
+
+        return redirect()->away($document->url());
     }
 
     public function showTask(Task $task): View

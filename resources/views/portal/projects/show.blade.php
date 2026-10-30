@@ -1,5 +1,5 @@
 <x-portal-layout>
-    <x-slot name="title">{{ $macroplan->title }}</x-slot>
+    <x-slot name="title">{{ $macroplan->clientTitle() }}</x-slot>
 
     <div class="mb-8">
         <a href="{{ route('portal.projects.index') }}"
@@ -7,11 +7,19 @@
            style="color: var(--muted)">
             ← Planejamentos
         </a>
-        <h1 class="text-2xl font-black" style="color: var(--text)">{{ $macroplan->title }}</h1>
+        <h1 class="text-2xl font-black" style="color: var(--text)">{{ $macroplan->clientTitle() }}</h1>
         <p class="text-sm mt-1" style="color: var(--muted)">
             {{ $macroplan->period_start?->format('d/m/Y') }} — {{ $macroplan->period_end?->format('d/m/Y') }}
         </p>
     </div>
+
+    @if($document)
+        <div class="card mb-5 overflow-hidden">
+            <iframe src="{{ $document->url() }}" title="Documento do planejamento"
+                    sandbox="allow-scripts allow-popups" loading="lazy"
+                    style="width:100%; height:78vh; border:0; background:#fff; display:block"></iframe>
+        </div>
+    @endif
 
     @forelse($macroplan->projects as $project)
         @php
@@ -34,6 +42,12 @@
                 </div>
                 @if($project->objective)
                     <p class="text-xs mt-3" style="color: var(--muted)">{{ $project->objective }}</p>
+                @endif
+                @if($project->document_attachment_id)
+                    <a href="{{ route('portal.projects.document', $project) }}" target="_blank" rel="noopener"
+                       class="text-xs font-semibold inline-block mt-3" style="color: var(--purple)">
+                        Ver documento {{ $project->type === 'campanha' ? 'da campanha' : 'do projeto' }} →
+                    </a>
                 @endif
             </div>
 

@@ -14,6 +14,8 @@ Schedule::command('financial:generate-contract-transactions')->dailyAt('06:00');
 Schedule::command('automations:check-date-triggers')->dailyAt('07:00');
 // Reunião terminou sem ATA → pendência "Registrar a ATA" pro organizador.
 Schedule::command('meetings:ata-pendencies')->everyFifteenMinutes()->withoutOverlapping();
+// Planejamento/campanha/projeto entrou em execução → aviso ao cliente, depois da espera.
+Schedule::command('client-notices:send')->everyFiveMinutes()->withoutOverlapping();
 // "Seu foco" da Dashboard — cedo pra planejar o dia, meio-dia pra ajustar a tarde.
 Schedule::command('attention:generate-digests')->weekdays()->at('07:30')->withoutOverlapping();
 Schedule::command('attention:generate-digests')->weekdays()->at('12:00')->withoutOverlapping();

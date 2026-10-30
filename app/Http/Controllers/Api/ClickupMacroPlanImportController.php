@@ -74,6 +74,8 @@ class ClickupMacroPlanImportController extends Controller
         ?string $organizationId,
         array &$result
     ): void {
+        \App\Services\ClientItemNoticeService::mute();
+
         $clickupTaskId = $row['clickup_task_id'] ?? null;
 
         if (!$clickupTaskId) {

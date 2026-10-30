@@ -7,6 +7,7 @@ use App\Models\MacroPlan;
 use App\Models\MacroPlanActivity;
 use App\Models\Project;
 use App\Models\ProjectActivity;
+use App\Services\ClientItemNoticeService;
 
 // Histórico do Projeto (ProjectActivity) + entrada/saída de projeto no
 // histórico do Planejamento (MacroPlanActivity). Mesma régua do TaskObserver:
@@ -59,6 +60,13 @@ class ProjectObserver
             ProjectActivity::log($project, 'status_changed',
                 Project::$statuses[$project->getOriginal('status')]['label'] ?? $project->getOriginal('status'),
                 $project->statusLabel());
+
+            $notices = app(ClientItemNoticeService::class);
+            if ($project->status === 'em_execucao') {
+                $notices->schedule($project);
+            } elseif ($project->getOriginal('status') === 'em_execucao') {
+                $notices->cancel($project);
+            }
         }
         if ($project->wasChanged('type')) {
             ProjectActivity::log($project, 'type_changed',

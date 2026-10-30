@@ -35,6 +35,8 @@ class NotificationTemplate extends Model
         'solicitante_aviso'      => 'Atualização pro Solicitante (terceiro do ticket)',
         'credenciais_solicitadas' => 'Solicitação de Senhas/Acessos',
         'portal_definir_senha'   => 'Portal — Cliente Cria a Própria Senha',
+        'planejamento_ativo'     => 'Planejamento em Execução',
+        'item_ativo'             => 'Campanha/Projeto em Execução',
     ];
 
     public static array $channels = [
@@ -62,6 +64,8 @@ class NotificationTemplate extends Model
         'solicitante_aviso'      => ['{{contato}}', '{{tarefa}}', '{{etapa}}', '{{mensagem}}'],
         'credenciais_solicitadas' => ['{{cliente}}', '{{contato}}', '{{link_credenciais}}'],
         'portal_definir_senha'   => ['{{cliente}}', '{{contato}}', '{{email}}', '{{link_definir_senha}}'],
+        'planejamento_ativo'     => ['{{cliente}}', '{{contato}}', '{{planejamento}}', '{{periodo}}', '{{lista_itens}}', '{{link_documento}}', '{{link_portal}}'],
+        'item_ativo'             => ['{{cliente}}', '{{contato}}', '{{lista_itens}}', '{{link_portal}}'],
     ];
 
     public function organization(): BelongsTo
