@@ -174,6 +174,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('clients.credentials.destroy');
     Route::post('/clientes/{client}/solicitar-senhas', [ClientCredentialRequestController::class, 'store'])
         ->name('clients.credential-requests.store');
+    Route::post('/clientes/{client}/cadastro/reenviar', [\App\Http\Controllers\ClientRegistrationResendController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('clients.registration.resend');
 
     // ── Módulos vendáveis do Portal (ex: Central de Leads) ──
     Route::patch('/clientes/{client}/modulos/{moduleKey}/ativar', [ClientModuleController::class, 'enable'])

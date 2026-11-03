@@ -402,7 +402,15 @@
                         <div class="card-header">
                             <h3 class="text-sm font-bold" style="color:var(--text)">Link de Cadastro</h3>
                         </div>
-                        <div class="p-5">
+                        <div class="p-5" x-data="{ resend: {{ $errors->registrationResend->any() ? 'true' : 'false' }} }">
+                            @if(session('registration_resend'))
+                                @php $rr = session('registration_resend'); @endphp
+                                <p class="text-xs mb-3 px-3 py-2"
+                                   style="background:{{ $rr['ok'] ? 'rgba(52,211,153,.08)' : 'rgba(238,121,25,.08)' }}; border:1px solid {{ $rr['ok'] ? 'rgba(52,211,153,.25)' : 'rgba(238,121,25,.3)' }}; color:{{ $rr['ok'] ? 'var(--green)' : 'var(--orange)' }}">
+                                    {{ $rr['text'] }}
+                                </p>
+                            @endif
+
                             @if($client->registration_completed_at)
                                 <span class="badge badge-green mb-3 block w-fit">Cadastro concluído</span>
                                 <p class="text-xs" style="color:var(--muted)">
@@ -431,6 +439,66 @@
                                         Gerar Link de Cadastro
                                     </button>
                                 </form>
+                            @endif
+
+                            {{-- Reenvio do link pros contatos (WhatsApp + e-mail, Mensagem Padrão "cadastro_reenvio") --}}
+                            <button type="button" @click="resend = !resend"
+                                class="w-full mt-2 py-2 text-xs font-bold"
+                                style="border:1px solid var(--border2); color:var(--purple)">
+                                {{ $client->registration_completed_at ? 'Reabrir e reenviar ao cliente' : 'Reenviar ao cliente' }}
+                            </button>
+
+                            <div x-show="resend" x-cloak class="mt-3 pt-3" style="border-top:1px solid var(--border)">
+                                @if($client->contacts->isEmpty())
+                                    <p class="text-xs" style="color:var(--muted)">
+                                        Este cliente ainda não tem contatos. Cadastre na aba Contatos pra poder reenviar.
+                                    </p>
+                                @else
+                                    <p class="text-xs mb-3" style="color:var(--muted)">
+                                        @if($client->registration_completed_at)
+                                            O cadastro volta a ficar aberto e o contato recebe o link por WhatsApp e e-mail. O formulário já vem preenchido: ele só corrige o que precisar. O contrato não é criado de novo.
+                                        @else
+                                            O contato recebe o mesmo link por WhatsApp e e-mail.
+                                        @endif
+                                    </p>
+                                    <form method="POST" action="{{ route('clients.registration.resend', $client) }}" class="space-y-3">
+                                        @csrf
+                                        <div class="space-y-2">
+                                            @foreach($client->contacts as $contact)
+                                                <label class="flex items-start gap-2 text-xs cursor-pointer">
+                                                    <input type="checkbox" name="contact_ids[]" value="{{ $contact->id }}" class="accent-[var(--purple)] mt-0.5"
+                                                           @checked($client->contacts->count() === 1)>
+                                                    <span>
+                                                        <span class="font-semibold block" style="color:var(--text)">{{ $contact->name }}</span>
+                                                        <span style="color:var(--muted)">{{ $contact->whatsapp ?: 'sem WhatsApp' }} · {{ $contact->email ?: 'sem e-mail' }}</span>
+                                                    </span>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                        @error('contact_ids', 'registrationResend')
+                                            <p class="text-xs" style="color:var(--red)">{{ $message }}</p>
+                                        @enderror
+                                        <button type="submit" class="w-full py-2 text-xs font-bold text-white" style="background:var(--grad)">
+                                            Enviar link
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+
+                            @php
+                                $registrationSends = \App\Models\NotificationDispatch::where('client_id', $client->id)
+                                    ->where('type', 'cadastro_reenvio')->where('status', 'sent')
+                                    ->latest()->limit(3)->get();
+                            @endphp
+                            @if($registrationSends->isNotEmpty())
+                                <div class="mt-3 space-y-1">
+                                    <p class="stat-label">Últimos reenvios</p>
+                                    @foreach($registrationSends as $send)
+                                        <p class="text-xs" style="color:var(--muted)">
+                                            {{ $send->created_at->format('d/m H:i') }} · {{ $send->contact_name }} ({{ \App\Models\NotificationTemplate::$channels[$send->channel] ?? $send->channel }})
+                                        </p>
+                                    @endforeach
+                                </div>
                             @endif
                         </div>
                     </div>

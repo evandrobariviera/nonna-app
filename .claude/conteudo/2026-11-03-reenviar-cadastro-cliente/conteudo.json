@@ -1,0 +1,18 @@
+{
+  "novidades": [
+    {
+      "title": "Reenviar o cadastro ao cliente",
+      "summary": "No card Link de Cadastro do cliente, o botão Reenviar ao cliente manda o link de novo por WhatsApp e e-mail. Se o cadastro já foi feito, ele reabre para o cliente corrigir os dados.",
+      "body": "<p>Cliente perdeu a mensagem ou preencheu algo errado? Na página do cliente, aba <strong>Geral</strong>, card <strong>Link de Cadastro</strong>, clique em <strong>Reenviar ao cliente</strong>, marque o contato e envie. O link vai por WhatsApp e e-mail, e o card mostra os últimos reenvios. Se o cadastro já estava concluído, o botão vira <strong>Reabrir e reenviar ao cliente</strong>: o formulário volta preenchido, o cliente corrige o que precisar e você recebe um aviso no sino quando ele enviar. O contrato não é criado de novo. O texto da mensagem fica em Configurações → Mensagens Padrão → <strong>Cadastro Inicial — Reenvio do Link</strong>.</p>",
+      "kind": "novidade", "area": "Onboarding"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Reenviar o cadastro ao cliente",
+      "category": "Primeiros passos",
+      "slug": "reenviar-o-cadastro-ao-cliente",
+      "body_file": "ajuda-reenviar-cadastro.html"
+    }
+  ]
+}

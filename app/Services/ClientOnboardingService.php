@@ -97,8 +97,10 @@ class ClientOnboardingService
         $onboarding = $client->onboarding
             ?? $this->createRecord($client, $opportunity?->assigned_to ?? $opportunity?->created_by);
 
-        // Idempotência — cadastro pode ser re-submetido; não recria contrato/ticket.
+        // Idempotência — cadastro pode ser re-submetido (reaberto pelo "Reenviar ao
+        // cliente"); não recria contrato/ticket, só avisa que os dados mudaram.
         if ($onboarding->fase1_checklist['cadastro_preenchido'] ?? false) {
+            $this->notifyRegistrationUpdated($client, $onboarding);
             return;
         }
 
@@ -245,6 +247,23 @@ class ClientOnboardingService
             ['client_name' => $client->displayName()],
             route('tasks.show', $ticket),
             $ticket,
+            $client->organization_id,
+        );
+    }
+
+    // Responsável do onboarding; sem responsável, o time todo (como o aviso do contrato).
+    private function notifyRegistrationUpdated(Client $client, ClientOnboarding $onboarding): void
+    {
+        $users = $onboarding->responsible_id
+            ? \App\Models\User::whereKey($onboarding->responsible_id)->get()
+            : \App\Models\User::all();
+
+        app(SystemNotificationService::class)->send(
+            'onboarding.cadastro_atualizado',
+            $users,
+            ['client_name' => $client->displayName()],
+            route('clients.show', $client),
+            $client,
             $client->organization_id,
         );
     }

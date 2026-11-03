@@ -32,6 +32,14 @@ class SystemNotificationService
             'body'    => 'Cliente concluiu o cadastro. Contrato gerado (rascunho) e ticket aberto para conferência.',
             'kind'    => 'contrato_analise',
         ],
+        'onboarding.cadastro_atualizado' => [
+            'group'   => 'Onboarding',
+            'label'   => 'Cliente atualizou o cadastro (link reenviado)',
+            'context' => 'client',
+            'title'   => 'Cadastro atualizado — {client_name}',
+            'body'    => 'O cliente revisou e enviou de novo o cadastro. Confira os dados na página do cliente.',
+            'kind'    => 'cadastro_atualizado',
+        ],
         'meeting.transcricao_ok' => [
             'group'   => 'Reuniões',
             'label'   => 'Transcrição de áudio concluída',
