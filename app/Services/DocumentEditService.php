@@ -64,20 +64,21 @@ class DocumentEditService
      *
      * @return array<int, string>
      */
-    public function save(MacroPlan|Project $owner, string $html, ?array $data, int $userId): array
+    public function save(MacroPlan|Project $owner, string $html, ?array $data, int $userId, string $action = 'document_edited', ?string $note = null): array
     {
         if ($data !== null) {
             $html = $this->writeData($html, $data);
         }
 
-        return DB::connection('pgsql')->transaction(function () use ($owner, $html, $data, $userId) {
+        return DB::connection('pgsql')->transaction(function () use ($owner, $html, $data, $userId, $action, $note) {
             $previous   = $owner->mainDocument();
             $before     = $previous ? $this->readData(Storage::disk($previous->disk)->get($previous->disk_path) ?? '') : null;
             $attachment = $this->storeVersion($owner, $html, $previous?->filename, $userId);
             $owner->update(['document_attachment_id' => $attachment->id]);
 
             $changes = $data !== null ? $this->applyData($owner, $data, $before) : [];
-            $this->log($owner, 'document_edited', $previous?->filename, $changes ? implode(' · ', $changes) : 'texto', $userId);
+            $summary = $changes ? implode(' · ', $changes) : 'texto';
+            $this->log($owner, $action, $previous?->filename, $note ? $note . ' · ' . $summary : $summary, $userId);
 
             return $changes;
         });

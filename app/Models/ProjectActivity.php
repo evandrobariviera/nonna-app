@@ -42,6 +42,7 @@ class ProjectActivity extends Model
         'phases_updated'          => 'Linha do tempo editada',
         'document_edited'         => 'Documento editado',
         'document_restored'       => 'Versão do documento restaurada',
+        'document_ai_updated'     => 'Documento atualizado com reunião (IA)',
     ];
 
     public function project(): BelongsTo

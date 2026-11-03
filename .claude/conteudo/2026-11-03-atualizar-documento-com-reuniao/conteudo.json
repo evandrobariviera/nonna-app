@@ -1,0 +1,24 @@
+{
+  "novidades": [
+    {
+      "title": "Atualizar o documento com uma reunião (IA)",
+      "summary": "Botão Atualizar com reunião no card Documento: a IA lê a ATA e a transcrição, confere o planejamento, a campanha ou o projeto e sugere as mudanças. Você aceita uma a uma.",
+      "body": "<p>Depois da reunião não precisa mais caçar no documento cada lugar onde a data aparece. A IA mostra cada mudança com o motivo, a frase da reunião que a justifica e o antes → depois, e escreve seguindo as mesmas regras das skills de planejamento, campanha e projeto. O que foi conversado mas não decidido aparece em <strong>Pontos para conferir</strong>. Ao aplicar, o documento ganha uma versão nova (a anterior fica guardada), e datas e verba mudam também no App. Dá para começar pela reunião: <strong>Atualizar documentos com esta reunião</strong>, no card da ATA.</p>",
+      "kind": "novidade", "area": "Planejamentos"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Atualizar o documento com uma reunião",
+      "category": "Planejamentos",
+      "slug": "atualizar-o-documento-com-uma-reuniao",
+      "body_file": "ajuda-atualizar-com-reuniao.html"
+    },
+    {
+      "title": "Editar o documento dentro do App",
+      "category": "Planejamentos",
+      "slug": "editar-documento-dentro-do-app",
+      "body_file": "ajuda-editar-documento.html"
+    }
+  ]
+}

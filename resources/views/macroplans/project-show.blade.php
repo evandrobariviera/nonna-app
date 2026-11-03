@@ -112,6 +112,10 @@
                     <a href="{{ route('projects.document.edit', $project) }}" class="btn btn-ghost btn-xs flex items-center gap-1">
                         <x-icon name="pencil" size="12" /> Editar documento
                     </a>
+                    <a href="{{ route('projects.document.update-start', $project) }}" class="btn btn-ghost btn-xs flex items-center gap-1"
+                       title="A IA confere o documento com a ATA/transcrição de uma reunião e sugere as mudanças">
+                        <x-icon name="sparkles" size="12" /> Atualizar com reunião
+                    </a>
                 @endif
                 {{-- Campo próprio do documento (só HTML) — "Anexos" abaixo nunca troca o que
                      aparece aqui. Versão anterior fica nos anexos. --}}

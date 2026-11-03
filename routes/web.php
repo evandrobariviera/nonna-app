@@ -490,6 +490,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('meetings.ata.generate');
     Route::get('/agenda/{meeting}/ata-status', [MeetingController::class, 'ataStatus'])
         ->name('meetings.ata.status');
+    Route::get('/agenda/{meeting}/atualizar-documentos', [\App\Http\Controllers\DocumentUpdateController::class, 'fromMeeting'])
+        ->name('meetings.update-documents');
     Route::post('/agenda/{meeting}/editor-imagem', [\App\Http\Controllers\MeetingEditorImageController::class, 'store'])
         ->name('meetings.editor-image.store');
     Route::get('/agenda/{meeting}/editor-imagem/{filename}', [\App\Http\Controllers\MeetingEditorImageController::class, 'show'])
@@ -553,6 +555,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('macroplans.document.save');
     Route::post('/planejamentos/{macroplan}/documento/versoes/{version}/restaurar', [\App\Http\Controllers\DocumentEditController::class, 'restorePlan'])
         ->name('macroplans.document.restore');
+    // Atualizar o documento com uma reunião (IA sugere, equipe aceita — DocumentUpdateService).
+    Route::get('/planejamentos/{macroplan}/documento/atualizar', [\App\Http\Controllers\DocumentUpdateController::class, 'startPlan'])
+        ->name('macroplans.document.update-start');
+    Route::post('/planejamentos/{macroplan}/documento/atualizar', [\App\Http\Controllers\DocumentUpdateController::class, 'storePlan'])
+        ->middleware('throttle:10,1')
+        ->name('macroplans.document.update-store');
 
     // ── Anexos do macroplanejamento ──
     Route::post('/planejamentos/{macroplan}/anexos', [MacroPlanAttachmentController::class, 'store'])
@@ -740,6 +748,19 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('projects.document.save');
     Route::post('/projetos/{project}/documento/versoes/{version}/restaurar', [\App\Http\Controllers\DocumentEditController::class, 'restoreProject'])
         ->name('projects.document.restore');
+    Route::get('/projetos/{project}/documento/atualizar', [\App\Http\Controllers\DocumentUpdateController::class, 'startProject'])
+        ->name('projects.document.update-start');
+    Route::post('/projetos/{project}/documento/atualizar', [\App\Http\Controllers\DocumentUpdateController::class, 'storeProject'])
+        ->middleware('throttle:10,1')
+        ->name('projects.document.update-store');
+    Route::get('/atualizacoes-documento/{run}', [\App\Http\Controllers\DocumentUpdateController::class, 'show'])
+        ->name('document-updates.show');
+    Route::get('/atualizacoes-documento/{run}/status', [\App\Http\Controllers\DocumentUpdateController::class, 'status'])
+        ->name('document-updates.status');
+    Route::post('/atualizacoes-documento/{run}/aplicar', [\App\Http\Controllers\DocumentUpdateController::class, 'apply'])
+        ->name('document-updates.apply');
+    Route::post('/atualizacoes-documento/{run}/descartar', [\App\Http\Controllers\DocumentUpdateController::class, 'discard'])
+        ->name('document-updates.discard');
     Route::post('/projetos/{project}/tarefas', [TaskController::class, 'storeStandalone'])
         ->name('tasks.storeStandalone');
 

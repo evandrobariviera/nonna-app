@@ -194,6 +194,10 @@
                                 <a href="{{ route('macroplans.document.edit', $macroplan) }}" class="btn btn-ghost btn-xs flex items-center gap-1">
                                     <x-icon name="pencil" size="12" /> Editar documento
                                 </a>
+                                <a href="{{ route('macroplans.document.update-start', $macroplan) }}" class="btn btn-ghost btn-xs flex items-center gap-1"
+                                   title="A IA confere o documento com a ATA/transcrição de uma reunião e sugere as mudanças">
+                                    <x-icon name="sparkles" size="12" /> Atualizar com reunião
+                                </a>
                             @endif
                             {{-- Campo próprio do documento (só HTML) — anexos diversos na lateral
                                  nunca trocam o que aparece aqui. Versão anterior fica nos anexos. --}}

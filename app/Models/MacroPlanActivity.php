@@ -42,6 +42,7 @@ class MacroPlanActivity extends Model
         'project_removed'     => 'Projeto removido',
         'document_edited'     => 'Documento editado',
         'document_restored'   => 'Versão do documento restaurada',
+        'document_ai_updated' => 'Documento atualizado com reunião (IA)',
     ];
 
     public function macroPlan(): BelongsTo

@@ -310,6 +310,12 @@
                                 Ver ATA formatada →
                             </a>
                         @endif
+                        @if($meeting->client_id && ($meeting->hasAta() || $hasTranscript))
+                            {{-- A IA confere o documento do planejamento/campanha/projeto com esta reunião (DocumentUpdateService). --}}
+                            <a href="{{ route('meetings.update-documents', $meeting) }}" class="btn btn-ghost btn-xs flex items-center gap-1">
+                                <x-icon name="sparkles" size="12" /> Atualizar documentos com esta reunião
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>
