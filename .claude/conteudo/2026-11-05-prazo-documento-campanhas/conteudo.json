@@ -1,0 +1,11 @@
+{
+  "novidades": [
+    {
+      "title": "Prazo e documento visíveis na lista de Campanhas e Projetos",
+      "summary": "No planejamento, cada campanha/projeto agora mostra se já tem o documento (HTML) anexado e uma barra de tempo com quantos dias passaram, quantos faltam ou há quanto tempo está atrasado.",
+      "body": "<p>Na aba <strong>Campanhas e Projetos</strong> do planejamento, ao lado do status de cada item aparece <strong>Documento</strong> (verde) quando o HTML principal já está anexado, ou <strong>Sem documento</strong> (tracejado) quando ainda falta — sem precisar abrir a campanha ou o projeto.</p><p>À direita, a nova barra <strong>Tempo</strong> funciona como um relógio do período: \"Dia 5 de 92 · faltam 87 dias\". Ela fica <strong>laranja</strong> quando faltam 7 dias ou menos (ou quando o tempo está correndo bem à frente das tarefas concluídas) e <strong>vermelha</strong> com \"Atrasado há X dias\" quando passou do prazo. Itens que ainda não começaram mostram \"Começa em X dias\". Logo abaixo fica a barra <strong>Tarefas</strong>, pra comparar tempo gasto com trabalho entregue.</p>",
+      "kind": "melhoria", "area": "Planejamentos"
+    }
+  ],
+  "ajuda": []
+}

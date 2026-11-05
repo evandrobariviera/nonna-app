@@ -817,6 +817,40 @@
                                         && $project->end_date->isPast()
                                         && !in_array($project->status, ['concluido', 'cancelado']);
                                     $typeColor = $project->type === 'campanha' ? 'var(--green)' : 'var(--purple)';
+                                    $hasDocument = (bool) $project->document_attachment_id;
+
+                                    // Controle temporal: quantos dias passaram / faltam do período.
+                                    $time = null;
+                                    if ($project->end_date) {
+                                        $today    = now()->startOfDay();
+                                        $start    = $project->start_date?->copy()->startOfDay();
+                                        $end      = $project->end_date->copy()->startOfDay();
+                                        $finished = in_array($project->status, ['concluido', 'cancelado']);
+                                        $totalDays = $start && $end->gte($start) ? (int) $start->diffInDays($end) + 1 : null;
+                                        $left      = (int) $today->diffInDays($end, false); // negativo = passou do prazo
+
+                                        if ($finished) {
+                                            $time = ['label' => $project->status === 'cancelado' ? 'Cancelado' : 'Encerrado', 'color' => 'var(--muted)', 'pct' => 100, 'bar' => 'var(--border)'];
+                                        } elseif ($start && $today->lt($start)) {
+                                            $in = (int) $today->diffInDays($start);
+                                            $time = ['label' => 'Começa em ' . $in . ' ' . ($in === 1 ? 'dia' : 'dias'), 'color' => 'var(--muted)', 'pct' => 0, 'bar' => 'var(--border)'];
+                                        } elseif ($left < 0) {
+                                            $late = abs($left);
+                                            $time = ['label' => 'Atrasado há ' . $late . ' ' . ($late === 1 ? 'dia' : 'dias'), 'color' => 'var(--red)', 'pct' => 100, 'bar' => 'var(--red)'];
+                                        } else {
+                                            $elapsed = $totalDays ? min($totalDays, (int) $start->diffInDays($today) + 1) : null;
+                                            $timePct = $totalDays ? (int) round($elapsed / $totalDays * 100) : null;
+                                            // Laranja quando falta pouco (≤ 7 dias) ou o tempo corre bem à frente das tarefas.
+                                            $tight = $left <= 7 || ($timePct !== null && $total > 0 && $timePct - $pct >= 25);
+                                            $leftLabel = $left === 0 ? 'termina hoje' : 'faltam ' . $left . ' ' . ($left === 1 ? 'dia' : 'dias');
+                                            $time = [
+                                                'label' => ($elapsed ? 'Dia ' . $elapsed . ' de ' . $totalDays . ' · ' : '') . $leftLabel,
+                                                'color' => $tight ? 'var(--orange)' : 'var(--muted)',
+                                                'pct'   => $timePct ?? 0,
+                                                'bar'   => $tight ? 'var(--orange)' : 'var(--purple)',
+                                            ];
+                                        }
+                                    }
                                 @endphp
                                 <div x-show="editId !== '{{ $project->id }}'" class="px-5 py-4">
 
@@ -832,9 +866,19 @@
                                                 {{ $project->title }}
                                             </a>
                                             <span class="badge badge-{{ $project->statusColor() }} flex-shrink-0">{{ $project->statusLabel() }}</span>
-                                            @if($isOverdueDeadline)
-                                                <span class="text-xs font-mono px-2 py-0.5 rounded-full flex-shrink-0"
-                                                      style="background:rgba(220,38,38,.1); color:var(--red)">prazo vencido</span>
+                                            @if($hasDocument)
+                                                <a href="{{ route('macroplans.projects.show', [$macroplan, $project]) }}"
+                                                   class="text-xs px-2 py-0.5 rounded-full flex items-center gap-1 flex-shrink-0"
+                                                   style="background:rgba(22,163,74,.1); color:var(--green)"
+                                                   title="O documento principal (HTML) já está anexado">
+                                                    <x-icon name="file-text" size="11" /> Documento
+                                                </a>
+                                            @else
+                                                <span class="text-xs px-2 py-0.5 rounded-full flex items-center gap-1 flex-shrink-0"
+                                                      style="border:1px dashed var(--border); color:var(--muted)"
+                                                      title="Ainda não tem o documento principal (HTML) anexado">
+                                                    <x-icon name="file" size="11" /> Sem documento
+                                                </span>
                                             @endif
                                         </div>
                                         <div class="flex items-center gap-3 flex-shrink-0">
@@ -888,17 +932,31 @@
                                                 @endforeach
                                             </div>
                                         @endif
-                                        @if($total > 0)
-                                            <div class="flex items-center gap-2 ml-auto">
-                                                <div class="h-1.5 rounded-full overflow-hidden" style="background:var(--border2); width:100px">
-                                                    <div class="h-1.5 rounded-full"
-                                                         style="width:{{ $pct }}%; background:{{ $pct >= 100 ? 'var(--green)' : 'var(--grad)' }}"></div>
+                                        <div class="flex flex-col items-end gap-1 ml-auto">
+                                            @if($time)
+                                                <div class="flex items-center gap-2" title="Tempo do período (início → fim)">
+                                                    <span class="text-xs" style="color:var(--muted); width:46px; text-align:right">Tempo</span>
+                                                    <div class="h-1.5 rounded-full overflow-hidden" style="background:var(--border2); width:100px">
+                                                        <div class="h-1.5 rounded-full" style="width:{{ $time['pct'] }}%; background:{{ $time['bar'] }}"></div>
+                                                    </div>
+                                                    <span class="text-xs font-mono font-semibold" style="color:{{ $time['color'] }}; min-width:150px">{{ $time['label'] }}</span>
                                                 </div>
-                                                <span class="text-xs font-mono" style="color:var(--muted)">{{ $done }}/{{ $total }} · {{ $pct }}%</span>
-                                            </div>
-                                        @else
-                                            <span class="text-xs font-mono ml-auto" style="color:var(--muted)">Sem tarefas</span>
-                                        @endif
+                                            @else
+                                                <span class="text-xs font-mono" style="color:var(--muted)">Sem data de fim</span>
+                                            @endif
+                                            @if($total > 0)
+                                                <div class="flex items-center gap-2" title="Tarefas concluídas">
+                                                    <span class="text-xs" style="color:var(--muted); width:46px; text-align:right">Tarefas</span>
+                                                    <div class="h-1.5 rounded-full overflow-hidden" style="background:var(--border2); width:100px">
+                                                        <div class="h-1.5 rounded-full"
+                                                             style="width:{{ $pct }}%; background:{{ $pct >= 100 ? 'var(--green)' : 'var(--grad)' }}"></div>
+                                                    </div>
+                                                    <span class="text-xs font-mono" style="color:var(--muted); min-width:150px">{{ $done }}/{{ $total }} · {{ $pct }}%</span>
+                                                </div>
+                                            @else
+                                                <span class="text-xs font-mono" style="color:var(--muted)">Sem tarefas</span>
+                                            @endif
+                                        </div>
                                     </div>
 
                                 </div>
