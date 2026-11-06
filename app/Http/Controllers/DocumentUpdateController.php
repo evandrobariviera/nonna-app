@@ -7,14 +7,11 @@ use App\Models\MacroPlan;
 use App\Models\Meeting;
 use App\Models\Pendency;
 use App\Models\Project;
-use App\Models\User;
 use App\Services\DocumentEditService;
 use App\Services\DocumentUpdate\DocumentUpdateService;
-use App\Services\PendencyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 // "Atualizar documento com reunião" — escolher a reunião, acompanhar a análise da IA e
 // aplicar as sugestões aceitas (ver DocumentUpdateService).
@@ -71,42 +68,38 @@ class DocumentUpdateController extends Controller
             'editUrl'   => $owner instanceof MacroPlan ? route('macroplans.document.edit', $owner) : route('projects.document.edit', $owner),
             'stale'     => $run->isReady() && $owner->document_attachment_id !== $run->base_attachment_id,
             'dataDiff'  => $this->dataDiff($run, $owner),
-            ...$this->pendencyData($run, $owner),
+            ...$this->pendencyData($run),
         ]);
     }
 
-    /**
-     * Pendências e demandas da reunião → formulário de Pendência já preenchido, ligado ao
-     * projeto/planejamento. "quem" da IA vira a pessoa do time ou o contato quando o nome bate.
-     */
-    private function pendencyData(DocumentUpdateRun $run, MacroPlan|Project $owner): array
+    /** "Dispensar" sugestão de pendência (painel Pendências da campanha/projeto/planejamento). */
+    public function dismissPendency(Request $request, DocumentUpdateRun $run)
     {
-        $items = app(DocumentUpdateService::class)->pendencyItems($run);
-        if (!$items) {
-            return ['pendencyItems' => [], 'pendencyUsers' => collect(), 'pendencyContacts' => collect(), 'pendencyStatus' => collect()];
+        $key = (string) $request->input('key');
+        $all = $key === 'all';
+        if ($all || preg_match('/^[a-f0-9]{12}$/', $key)) {
+            $this->updates->dismissPendency($run, $key);
         }
 
-        $users = User::whereNull('client_id')->orderBy('name')->get(['id', 'name']);
-        $clientId = $owner->client_id ?? ($owner instanceof Project ? $owner->macroPlan?->client_id : null);
-        $contacts = $clientId ? app(PendencyService::class)->clientContacts($clientId) : collect();
-        $findByName = function ($people, ?string $name) {
-            $name = Str::lower(trim((string) $name));
-            if ($name === '') {
-                return null;
-            }
-            // nome inteiro dentro do cadastro, ou o primeiro nome do cadastro como palavra no "quem"
-            return $people->first(fn ($p) => Str::contains(Str::lower($p->name), $name)
-                || preg_match('/\b' . preg_quote(Str::lower(Str::before(trim($p->name), ' ')), '/') . '\b/u', $name))?->id;
-        };
+        $to = (string) $request->input('return_to');
+        $redirect = $to !== '' && str_starts_with($to, url('/') . '/') ? redirect()->to($to) : back();
+        if (!$all) {
+            $redirect->with('pendency_suggestions_open', $run->id); // continua aberto pra seguir na lista
+        }
 
-        $items = collect($items)->map(fn ($i) => $i + [
-            'user_id'    => $i['quem_deve'] === 'agencia' ? $findByName($users, $i['quem']) : null,
-            'contact_id' => $i['quem_deve'] === 'cliente' ? $findByName($contacts, $i['quem']) : null,
-        ])->all();
+        return $redirect->with('success', $all ? 'Sugestões dispensadas.' : 'Sugestão dispensada.');
+    }
 
-        $status = Pendency::whereIn('id', collect($items)->pluck('pendency_id')->filter())->pluck('status', 'id');
+    /**
+     * Pendências e demandas da reunião: aqui só o resumo (o que já virou pendência e o que falta).
+     * Registrar/dispensar é no painel Pendências da campanha/projeto/planejamento.
+     */
+    private function pendencyData(DocumentUpdateRun $run): array
+    {
+        $items = app(DocumentUpdateService::class)->pendencyItems($run);
+        $status = $items ? Pendency::whereIn('id', collect($items)->pluck('pendency_id')->filter())->pluck('status', 'id') : collect();
 
-        return ['pendencyItems' => $items, 'pendencyUsers' => $users, 'pendencyContacts' => $contacts, 'pendencyStatus' => $status];
+        return ['pendencyItems' => $items, 'pendencyStatus' => $status];
     }
 
     /** Campos do bloco de dados que a IA mudou: [[campo, antes, depois]] em texto. */
@@ -161,6 +154,16 @@ class DocumentUpdateController extends Controller
         }
         if ($result['failed']) {
             $message .= ' Não deu para aplicar (o trecho mudou no documento): ' . implode('; ', $result['failed']) . '. Ajuste pelo editor.';
+        }
+
+        // Sobrou pendência da reunião para registrar → vai direto ao painel Pendências da
+        // campanha/projeto/planejamento (é lá que se registra). Se algo falhou, fica na análise.
+        $toRegister = collect($this->updates->pendencyItems($run->fresh()))->whereNull('pendency_id')->where('dismissed', false)->count();
+        $owner = $run->owner();
+        if ($toRegister && !$result['failed'] && $owner) {
+            return redirect()->to($this->ownerUrl($owner) . '#pendencias')
+                ->with('pendency_suggestions_open', $run->id)
+                ->with('success', $message . " A reunião deixou {$toRegister} pendência(s) sugerida(s): registre ou dispense aqui no painel Pendências.");
         }
 
         return redirect()->route('document-updates.show', $run)->with('success', $message);

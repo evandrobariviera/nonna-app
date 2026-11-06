@@ -506,15 +506,85 @@ class DocumentUpdateService
         }
 
         $created = $review['pendencias_criadas'] ?? [];
+        $dismissed = $review['pendencias_dispensadas'] ?? [];
 
         return collect($items)
-            ->map(function ($i) use ($created) {
+            ->map(function ($i) use ($created, $dismissed) {
                 $key = self::pendencyKey($i['titulo']);
-                return $i + ['quem' => null, 'key' => $key, 'pendency_id' => $created[$key] ?? null];
+                return $i + ['quem' => null, 'key' => $key, 'pendency_id' => $created[$key] ?? null, 'dismissed' => in_array($key, $dismissed, true)];
             })
             ->unique('key')
             ->values()
             ->all();
+    }
+
+    /** Janela das sugestões no painel Pendências: análise mais velha que isso não insiste mais. */
+    public const SUGGESTION_DAYS = 30;
+
+    /**
+     * Sugestões de pendência das reuniões para o painel Pendências da campanha/projeto/planejamento
+     * (pedido 06/11: criar lá, depois de aplicar o documento — é onde o time volta pra trabalhar).
+     * Só análises prontas/aplicadas dos últimos SUGGESTION_DAYS dias; tira o já registrado e o dispensado.
+     *
+     * @return Collection<int, array{run: DocumentUpdateRun, items: array}>
+     */
+    public function suggestedPendencies(MacroPlan|Project $owner): Collection
+    {
+        return DocumentUpdateRun::query()
+            ->where('owner_type', self::ownerType($owner))
+            ->where('owner_id', $owner->id)
+            ->whereIn('status', ['pronto', 'aplicado'])
+            ->where('created_at', '>=', now()->subDays(self::SUGGESTION_DAYS))
+            ->with('meeting:id,title,scheduled_at')
+            ->latest()
+            ->get()
+            ->map(fn (DocumentUpdateRun $run) => [
+                'run'   => $run,
+                'items' => collect($this->pendencyItems($run))->whereNull('pendency_id')->where('dismissed', false)->values()->all(),
+            ])
+            ->filter(fn ($g) => $g['items'])
+            ->values();
+    }
+
+    /** "Dispensar": item que não pede ação deixa de aparecer como sugestão. */
+    public function dismissPendency(DocumentUpdateRun $run, string $key): void
+    {
+        $items = collect($this->pendencyItems($run));
+        // "all" = Dispensar todas (o que ainda não virou pendência)
+        $keys = $key === 'all' ? $items->whereNull('pendency_id')->pluck('key')->all() : ($items->contains('key', $key) ? [$key] : []);
+        if (!$keys) {
+            return;
+        }
+
+        $review = $run->strategic_review ?? [];
+        $review['pendencias_dispensadas'] = array_values(array_unique([...($review['pendencias_dispensadas'] ?? []), ...$keys]));
+        $run->update(['strategic_review' => $review]);
+    }
+
+    /**
+     * Valores do formulário de pendência para um item: "quem" da IA vira a pessoa do time ou o
+     * contato do cliente quando o nome bate (nome inteiro, ou o primeiro nome como palavra).
+     */
+    public static function pendencyPrefill(array $item, DocumentUpdateRun $run, Collection $users, Collection $contacts): array
+    {
+        $find = function (Collection $people, ?string $name) {
+            $name = Str::lower(trim((string) $name));
+            if ($name === '') {
+                return null;
+            }
+            return $people->first(fn ($p) => Str::contains(Str::lower($p->name), $name)
+                || preg_match('/\b' . preg_quote(Str::lower(Str::before(trim($p->name), ' ')), '/') . '\b/u', $name))?->id;
+        };
+
+        return [
+            'title'           => $item['titulo'],
+            'kind'            => $item['tipo'],
+            'owed_by'         => $item['quem_deve'],
+            'owed_user_id'    => $item['quem_deve'] === 'agencia' ? $find($users, $item['quem']) : null,
+            'owed_contact_id' => $item['quem_deve'] === 'cliente' ? $find($contacts, $item['quem']) : null,
+            'owed_party'      => $item['quem_deve'] === 'terceiro' ? $item['quem'] : null,
+            'description'     => trim(($item['contexto'] ?? '') . "\n\nDa reunião: " . ($run->meeting?->title ?? '—')),
+        ];
     }
 
     public static function pendencyKey(string $title): string

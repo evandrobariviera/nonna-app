@@ -768,6 +768,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->whereNumber('suggestion')->name('document-updates.suggestion');
     Route::post('/atualizacoes-documento/{run}/revisar', [\App\Http\Controllers\DocumentUpdateController::class, 'revise'])
         ->name('document-updates.revise');
+    Route::post('/atualizacoes-documento/{run}/pendencias/dispensar', [\App\Http\Controllers\DocumentUpdateController::class, 'dismissPendency'])
+        ->name('document-updates.pendency-dismiss');
     Route::post('/projetos/{project}/tarefas', [TaskController::class, 'storeStandalone'])
         ->name('tasks.storeStandalone');
 

@@ -146,6 +146,7 @@ class PendencyController extends Controller
             $run = DocumentUpdateRun::find($request->input('document_update_run'));
             if ($run && $pendable && $run->owner_id === $pendable->getKey()) {
                 app(DocumentUpdateService::class)->markPendency($run, (string) $request->input('document_update_item'), $pendency->id);
+                session()->flash('pendency_suggestions_open', $run->id); // segue na lista de sugeridas
             }
         }
 

@@ -7,9 +7,9 @@
       "kind": "melhoria", "area": "Planejamentos"
     },
     {
-      "title": "Pendências e demandas da reunião viram pendência num clique",
-      "summary": "No Atualizar com reunião, o que ficou para depois (pedir material, confirmar algo, decidir) aparece num card próprio e vira pendência do projeto ou planejamento, com quem deve e quem cobra.",
-      "body": "<p>Antes, os pontos em aberto, as demandas novas e o que era \"fora deste documento\" ficavam só na tela da análise: aplicava o documento e ninguém mais via. Agora a IA separa tudo que alguém precisa <strong>fazer, entregar, confirmar ou decidir</strong> no card <strong>Pendências e demandas da reunião</strong>, já dizendo o tipo e quem deve entregar.</p><p>Clique em <strong>Virar pendência</strong>, confira o formulário já preenchido, escolha quem cobra e registre. A pendência aparece no painel <strong>Pendências</strong> do projeto ou do planejamento, na Central de Pendências e no Seu foco, e o item fica marcado na análise para não ser registrado duas vezes.</p>",
+      "title": "Pendências sugeridas pela reunião no painel da campanha",
+      "summary": "Depois do Atualizar com reunião, o que ficou para alguém fazer (pedir material, confirmar algo, decidir) aparece como sugestão no painel Pendências da campanha, projeto ou planejamento: registrar ou dispensar.",
+      "body": "<p>Antes, os pontos em aberto, as demandas novas e o que era \"fora deste documento\" ficavam só na tela da análise: aplicava o documento e ninguém mais via. Agora a IA separa tudo que alguém precisa <strong>fazer, entregar, confirmar ou decidir</strong>, já com o tipo e quem deve entregar.</p><p>Ao clicar em <strong>Aplicar no documento</strong>, o App leva você ao painel <strong>Pendências</strong> da campanha, do projeto ou do planejamento, onde aparecem as <strong>pendências sugeridas pela reunião</strong>. Em cada uma: <strong>Registrar</strong> (formulário já preenchido, você escolhe quem cobra) ou <strong>Dispensar</strong>. A pendência registrada vai para a Central de Pendências e para o Seu foco de quem cobra.</p>",
       "kind": "novidade", "area": "Planejamentos"
     }
   ],
