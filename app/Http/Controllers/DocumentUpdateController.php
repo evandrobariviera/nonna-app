@@ -158,7 +158,7 @@ class DocumentUpdateController extends Controller
 
         // Sobrou pendência da reunião para registrar → vai direto ao painel Pendências da
         // campanha/projeto/planejamento (é lá que se registra). Se algo falhou, fica na análise.
-        $toRegister = collect($this->updates->pendencyItems($run->fresh()))->whereNull('pendency_id')->where('dismissed', false)->count();
+        $toRegister = collect($this->updates->pendencyItems($run->fresh()))->whereNull('pendency_id')->whereNull('task_id')->where('dismissed', false)->count();
         $owner = $run->owner();
         if ($toRegister && !$result['failed'] && $owner) {
             return redirect()->to($this->ownerUrl($owner) . '#pendencias')

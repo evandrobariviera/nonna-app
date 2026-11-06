@@ -1,0 +1,14 @@
+{
+  "novidades": [
+    {
+      "title": "Sugestões da reunião: tarefa ou pendência",
+      "summary": "No painel Pendências, cada item sugerido pela reunião vem marcado como Tarefa ou Pendência, com os botões Criar tarefa e Registrar pendência — e a regra para decidir agora está na tela.",
+      "body": "<p>As sugestões do <strong>Atualizar com reunião</strong> no painel <strong>Pendências</strong> agora vêm marcadas: <strong>Tarefa</strong> quando a gente produz algo (peça, texto, proposta, ajuste no site) e <strong>Pendência</strong> quando é esperar ou cobrar algo de alguém (enviar, confirmar, liberar, decidir).</p><p><strong>Criar tarefa</strong> abre o formulário de Nova Tarefa da campanha já preenchido; <strong>Registrar pendência</strong> abre o de pendência. A IA marca, mas você escolhe. A regra, com os casos que confundem, está no capítulo Central de Pendências da Ajuda.</p>",
+      "kind": "melhoria", "area": "Planejamentos"
+    }
+  ],
+  "ajuda": [
+    { "title": "Atualizar o documento com uma reunião", "category": "Planejamentos", "slug": "atualizar-o-documento-com-uma-reuniao", "body_file": "ajuda-atualizar-com-reuniao.html" },
+    { "title": "Central de Pendências — como funciona", "category": "Pendências", "slug": "central-de-pendencias-como-funciona", "body_file": "ajuda-central-de-pendencias.html" }
+  ]
+}

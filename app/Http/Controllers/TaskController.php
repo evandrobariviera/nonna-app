@@ -332,6 +332,7 @@ class TaskController extends Controller
 
         TaskExecutorSync::sync($task, $data);
         $this->storeAttachments($task, $request);
+        $this->markFromMeeting($request, $project, $task);
 
         return redirect()->route('macroplans.projects.show', [$macroplan, $project])
             ->with('success', 'Tarefa criada.');
@@ -360,6 +361,7 @@ class TaskController extends Controller
 
         TaskExecutorSync::sync($task, $data);
         $this->storeAttachments($task, $request);
+        $this->markFromMeeting($request, $project, $task);
 
         return redirect()->route('projects.showDirect', $project)
             ->with('success', 'Tarefa criada.');
@@ -1077,6 +1079,21 @@ class TaskController extends Controller
 
         return redirect()->route('projects.showDirect', $project)
             ->with('success', 'Tarefa removida.');
+    }
+
+    /** Tarefa criada de uma sugestão da reunião (painel Pendências → "Criar tarefa"): marca o item na análise. */
+    private function markFromMeeting(Request $request, Project $project, Task $task): void
+    {
+        $runId = (string) $request->input('document_update_run');
+        if (!\Illuminate\Support\Str::isUuid($runId) || !$request->filled('document_update_item')) {
+            return;
+        }
+
+        $run = \App\Models\DocumentUpdateRun::find($runId);
+        if ($run && $run->owner_id === $project->id) {
+            app(\App\Services\DocumentUpdate\DocumentUpdateService::class)->markTask($run, (string) $request->input('document_update_item'), $task->id);
+            session()->flash('pendency_suggestions_open', $run->id);
+        }
     }
 
     private function storeRules(): array

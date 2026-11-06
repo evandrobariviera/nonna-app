@@ -219,8 +219,10 @@ class DocumentUpdateService
 
         // Revisão: o que já virou pendência continua marcado (a chave é o título).
         $review = $this->strategicReview($response);
-        if ($review !== null && !empty($run->strategic_review['pendencias_criadas'])) {
-            $review['pendencias_criadas'] = $run->strategic_review['pendencias_criadas'];
+        foreach (['pendencias_criadas', 'tarefas_criadas', 'pendencias_dispensadas'] as $keep) {
+            if ($review !== null && !empty($run->strategic_review[$keep])) {
+                $review[$keep] = $run->strategic_review[$keep];
+            }
         }
 
         $run->update([
@@ -464,6 +466,7 @@ class DocumentUpdateService
                 'quem_deve' => array_key_exists($p['quem_deve'] ?? '', Pendency::$owedBy) ? $p['quem_deve'] : 'agencia',
                 'quem'      => $str($p['quem'] ?? null, 120),
                 'origem'    => in_array($p['origem'] ?? null, self::PENDENCY_ORIGINS, true) ? $p['origem'] : 'aberto',
+                'natureza'  => in_array($p['natureza'] ?? null, ['tarefa', 'pendencia'], true) ? $p['natureza'] : null,
                 'contexto'  => $str($p['contexto'] ?? null, 600),
             ])
             ->take(20)
@@ -506,12 +509,14 @@ class DocumentUpdateService
         }
 
         $created = $review['pendencias_criadas'] ?? [];
+        $tasks = $review['tarefas_criadas'] ?? [];
         $dismissed = $review['pendencias_dispensadas'] ?? [];
 
         return collect($items)
-            ->map(function ($i) use ($created, $dismissed) {
+            ->map(function ($i) use ($created, $tasks, $dismissed) {
                 $key = self::pendencyKey($i['titulo']);
-                return $i + ['quem' => null, 'key' => $key, 'pendency_id' => $created[$key] ?? null, 'dismissed' => in_array($key, $dismissed, true)];
+                $i['natureza'] = ($i['natureza'] ?? null) ?: self::guessNature($i);
+                return $i + ['quem' => null, 'key' => $key, 'pendency_id' => $created[$key] ?? null, 'task_id' => $tasks[$key] ?? null, 'dismissed' => in_array($key, $dismissed, true)];
             })
             ->unique('key')
             ->values()
@@ -540,7 +545,7 @@ class DocumentUpdateService
             ->get()
             ->map(fn (DocumentUpdateRun $run) => [
                 'run'   => $run,
-                'items' => collect($this->pendencyItems($run))->whereNull('pendency_id')->where('dismissed', false)->values()->all(),
+                'items' => collect($this->pendencyItems($run))->whereNull('pendency_id')->whereNull('task_id')->where('dismissed', false)->values()->all(),
             ])
             ->filter(fn ($g) => $g['items'])
             ->values();
@@ -551,7 +556,7 @@ class DocumentUpdateService
     {
         $items = collect($this->pendencyItems($run));
         // "all" = Dispensar todas (o que ainda não virou pendência)
-        $keys = $key === 'all' ? $items->whereNull('pendency_id')->pluck('key')->all() : ($items->contains('key', $key) ? [$key] : []);
+        $keys = $key === 'all' ? $items->whereNull('pendency_id')->whereNull('task_id')->pluck('key')->all() : ($items->contains('key', $key) ? [$key] : []);
         if (!$keys) {
             return;
         }
@@ -590,6 +595,35 @@ class DocumentUpdateService
     public static function pendencyKey(string $title): string
     {
         return substr(md5(Str::lower(Str::squish($title))), 0, 12);
+    }
+
+    /**
+     * Tarefa x Pendência (regra combinada em 20/10, exposta na tela em 06/11):
+     * TAREFA = a agência PRODUZ algo (peça, texto, vídeo, análise, proposta, ajuste no site).
+     * PENDÊNCIA = esperar/cobrar algo de alguém (enviar, confirmar, liberar, decidir, aprovar).
+     * A IA classifica ("natureza"); análise antiga cai neste palpite pelo verbo + quem deve.
+     */
+    public static function guessNature(array $item): string
+    {
+        if (($item['quem_deve'] ?? 'agencia') !== 'agencia') {
+            return 'pendencia';
+        }
+
+        $produce = '/^(criar|elaborar|produzir|fazer|desenvolver|montar|gravar|editar|escrever|redigir|revisar|ajustar|atualizar|preparar|desenhar|planejar|programar|configurar|implementar|subir|propor|levantar|criação|elaboração|produção|revisão)\b/u';
+
+        return preg_match($produce, Str::lower(trim($item['titulo'] ?? ''))) ? 'tarefa' : 'pendencia';
+    }
+
+    /** Lembra que o item da análise virou tarefa (não oferecer de novo). */
+    public function markTask(DocumentUpdateRun $run, string $key, string $taskId): void
+    {
+        if (!collect($this->pendencyItems($run))->contains('key', $key)) {
+            return;
+        }
+
+        $review = $run->strategic_review ?? [];
+        $review['tarefas_criadas'][$key] = $taskId;
+        $run->update(['strategic_review' => $review]);
     }
 
     /** Lembra que o item da análise virou pendência (não oferecer de novo). */

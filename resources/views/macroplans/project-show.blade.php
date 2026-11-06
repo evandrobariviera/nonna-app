@@ -560,8 +560,20 @@
     {{-- TAREFAS: Quadro (Kanban) ou Fila (lista) — recolhido quando há documento (a lateral
          já mostra a fila por status); aberto quando não há, pra página não ficar vazia.
          O "+ Nova" da lateral dispara open-new-task e abre o formulário aqui. --}}
-    <div x-data="{ addCol: null, editTaskId: null, showDone: false, view: 'quadro', phaseMoved: false, boardOpen: {{ $mainDocument ? 'false' : 'true' }} }"
-         @open-new-task.window="addCol = 'backlog'; $nextTick(() => $refs.newTaskForm.scrollIntoView({ behavior: 'smooth', block: 'start' }))">
+    {{-- fromMeeting: "Criar tarefa" de uma pendência sugerida pela reunião (painel Pendências) —
+         abre este formulário com título/descrição preenchidos e marca o item na análise ao salvar. --}}
+    <div x-data="{ addCol: null, editTaskId: null, showDone: false, view: 'quadro', phaseMoved: false, boardOpen: {{ $mainDocument ? 'false' : 'true' }}, fromMeeting: null }"
+         @open-new-task.window="fromMeeting = null; addCol = 'backlog'; $nextTick(() => $refs.newTaskForm.scrollIntoView({ behavior: 'smooth', block: 'start' }))"
+         @task-from-meeting.window="fromMeeting = $event.detail; addCol = 'backlog'; $nextTick(() => {
+             $refs.newTaskTitle.value = fromMeeting.title;
+             const ed = $refs.newTaskForm.querySelector('.rich-wrapper');
+             const data = ed && Alpine.$data(ed);
+             if (data && data.editor) { data.editor.commands.setContent(fromMeeting.html, { emitUpdate: true }); }
+             const input = $refs.newTaskForm.querySelector('input[name=description]');
+             if (input) { input.value = fromMeeting.html; }
+             $refs.newTaskForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+             $refs.newTaskTitle.focus();
+         })">
 
         <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
             <button type="button" @click="boardOpen = !boardOpen" class="flex items-center gap-2 text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
@@ -595,7 +607,7 @@
                         : 'border:1px solid var(--border2); color:var(--muted)'">
                     <span x-text="showDone ? '⊙ Ocultar finalizadas' : '○ Mostrar finalizadas'"></span>
                 </button>
-                <button @click="addCol = addCol === 'backlog' ? null : 'backlog'" class="btn btn-primary btn-sm">
+                <button @click="fromMeeting = null; addCol = addCol === 'backlog' ? null : 'backlog'" class="btn btn-primary btn-sm">
                     + Nova Tarefa
                 </button>
             </div>
@@ -608,13 +620,16 @@
                   enctype="multipart/form-data"
                   class="grid grid-cols-2 gap-4 md:grid-cols-4">
                 @csrf
+                <input type="hidden" name="document_update_run" :value="fromMeeting ? fromMeeting.run : ''">
+                <input type="hidden" name="document_update_item" :value="fromMeeting ? fromMeeting.item : ''">
+                <p x-show="fromMeeting" x-cloak class="col-span-2 md:col-span-4 text-xs -mt-1" style="color:var(--orange)">Tarefa sugerida pela reunião. Confira o título, escolha o tipo, a fase e quem executa.</p>
 
                 {{-- Título --}}
                 <div class="col-span-2 md:col-span-4">
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1.5" style="color:var(--muted)">
                         Título <span style="color:var(--orange)">*</span>
                     </label>
-                    <input type="text" name="title" required placeholder="O que precisa ser feito?"
+                    <input type="text" name="title" required placeholder="O que precisa ser feito?" x-ref="newTaskTitle"
                         class="field w-full px-4 py-2.5 text-sm focus:outline-none"
                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                 </div>
@@ -775,7 +790,7 @@
                         style="background:var(--purple)">
                         Criar Tarefa
                     </button>
-                    <button type="button" @click="addCol = null"
+                    <button type="button" @click="addCol = null; fromMeeting = null"
                         class="text-xs font-mono transition-colors" style="color:var(--muted)">
                         Cancelar
                     </button>

@@ -486,7 +486,7 @@
             @if(!empty($pendencyItems))
                 @php
                     $origins = ['aberto' => 'Ponto em aberto', 'nova_demanda' => 'Nova demanda', 'fora' => 'Fora deste documento'];
-                    $toRegister = collect($pendencyItems)->whereNull('pendency_id')->where('dismissed', false)->count();
+                    $toRegister = collect($pendencyItems)->whereNull('pendency_id')->whereNull('task_id')->where('dismissed', false)->count();
                 @endphp
                 <div class="card p-5 mb-5 mt-5" id="pendencias-reuniao" style="border-left:3px solid var(--orange)">
                     <div class="flex items-center justify-between gap-3 flex-wrap mb-1">
@@ -497,7 +497,7 @@
                     </div>
                     <p class="text-xs mb-3" style="color:var(--muted)">
                         O que alguém precisa fazer, entregar ou confirmar depois da reunião. Não muda o documento:
-                        {{ $toRegister ? 'aparece como sugestão no painel Pendências ' . ($isPlan ? 'do planejamento' : 'da ' . $kindLabel) . ', onde você registra (com quem deve e quem cobra) ou dispensa.' : 'tudo já foi registrado ou dispensado.' }}
+                        {{ $toRegister ? 'aparece como sugestão no painel Pendências ' . ($isPlan ? 'do planejamento' : 'da ' . $kindLabel) . ', onde você cria a tarefa, registra a pendência ou dispensa.' : 'tudo já foi registrado ou dispensado.' }}
                     </p>
                     <ul class="flex flex-col text-sm">
                         @foreach($pendencyItems as $item)
@@ -505,10 +505,12 @@
                             <li class="py-2 flex items-start justify-between gap-3 {{ $loop->last ? '' : 'border-b' }}" style="border-color:var(--border)">
                                 <span class="min-w-0" style="color:{{ $item['dismissed'] ? 'var(--muted2)' : 'var(--text)' }}">
                                     {{ $item['titulo'] }}
-                                    <span class="text-[11px]" style="color:var(--muted)"> · {{ $origins[$item['origem']] ?? '' }}</span>
+                                    <span class="text-[11px]" style="color:var(--muted)"> · {{ $item['natureza'] === 'tarefa' ? 'Tarefa' : 'Pendência' }} · {{ $origins[$item['origem']] ?? '' }}</span>
                                 </span>
-                                <span class="text-xs shrink-0" style="color:{{ $item['pendency_id'] ? 'var(--green, #16a34a)' : 'var(--muted)' }}">
-                                    @if($item['pendency_id'])
+                                <span class="text-xs shrink-0" style="color:{{ $item['pendency_id'] || $item['task_id'] ? 'var(--green, #16a34a)' : 'var(--muted)' }}">
+                                    @if($item['task_id'])
+                                        <a href="{{ route('tasks.show', $item['task_id']) }}" class="underline">Virou tarefa</a>
+                                    @elseif($item['pendency_id'])
                                         {{ $pStatus ? 'Pendência ' . (\App\Models\Pendency::$statuses[$pStatus]['label'] ?? $pStatus) : 'Pendência excluída' }}
                                     @elseif($item['dismissed'])
                                         Dispensada

@@ -58,7 +58,7 @@
             </summary>
             <div class="flex items-center justify-between gap-2 flex-wrap mt-2 mb-1">
                 <p class="text-[11px]" style="color:var(--muted)">
-                    O que ficou para alguém fazer. Registre o que pede ação; dispense o resto.
+                    O que ficou para alguém fazer. <b>Tarefa</b> = a gente produz algo (peça, texto, proposta, ajuste). <b>Pendência</b> = esperar ou cobrar algo de alguém (enviar, confirmar, liberar, decidir). O que não pede ação, dispense.
                     <a href="{{ route('document-updates.show', $group['run']) }}" class="underline">ver análise</a>
                 </p>
                 <form method="POST" action="{{ route('document-updates.pendency-dismiss', $group['run']) }}">
@@ -70,18 +70,35 @@
             </div>
             <ul class="flex flex-col">
                 @foreach($group['items'] as $item)
+                    @php
+                        $isTask  = $item['natureza'] === 'tarefa';
+                        $canTask = $alias === 'project'; // tarefa mora em campanha/projeto (no planejamento, crie na campanha certa)
+                        $taskDetail = ['title' => \Illuminate\Support\Str::limit($item['titulo'], 300, ''), 'html' => '<p>' . e($item['contexto'] ?? '') . '</p><p>Da reunião: ' . e($group['run']->meeting?->title ?? '—') . '</p>', 'run' => $group['run']->id, 'item' => $item['key']];
+                    @endphp
                     <li class="py-2 {{ $loop->last ? '' : 'border-b' }}" style="border-color:var(--border)" x-data="{ open: false }" @pendency-form-close.stop="open = false">
                         <div class="flex items-start justify-between gap-2">
                             <div class="min-w-0">
-                                <p class="text-sm" style="color:var(--text)">{{ $item['titulo'] }}</p>
+                                <p class="text-sm" style="color:var(--text)">
+                                    <span class="text-[10px] font-semibold uppercase px-1.5 py-0.5 mr-1 align-middle"
+                                          style="border-radius:5px; {{ $isTask ? 'background:rgba(100,59,142,.12); color:var(--purple)' : 'background:rgba(238,121,25,.12); color:var(--orange)' }}">{{ $isTask ? 'Tarefa' : 'Pendência' }}</span>
+                                    {{ $item['titulo'] }}
+                                </p>
                                 <p class="text-[11px] mt-0.5" style="color:var(--muted)">
-                                    {{ \App\Models\Pendency::$kinds[$item['tipo']]['label'] ?? 'Outro' }}
-                                    · deve: {{ \App\Models\Pendency::$owedBy[$item['quem_deve']]['label'] ?? '—' }}{{ $item['quem'] ? ' (' . $item['quem'] . ')' : '' }}
-                                    @if($item['contexto']) · {{ $item['contexto'] }} @endif
+                                    @unless($isTask)
+                                        {{ \App\Models\Pendency::$kinds[$item['tipo']]['label'] ?? 'Outro' }}
+                                        · deve: {{ \App\Models\Pendency::$owedBy[$item['quem_deve']]['label'] ?? '—' }}{{ $item['quem'] ? ' (' . $item['quem'] . ')' : '' }}
+                                        @if($item['contexto']) · @endif
+                                    @endunless
+                                    {{ $item['contexto'] }}
+                                    @if($isTask && !$canTask) · <i>crie dentro da campanha ou projeto certo</i> @endif
                                 </p>
                             </div>
-                            <div class="flex items-center gap-1 shrink-0" x-show="!open">
-                                <button type="button" class="btn btn-ghost btn-sm" @click="open = true">Registrar</button>
+                            <div class="flex items-center gap-1 shrink-0 flex-wrap justify-end" x-show="!open">
+                                @if($canTask)
+                                    <button type="button" class="btn btn-sm {{ $isTask ? 'btn-primary' : 'btn-ghost' }}"
+                                            @click="$dispatch('task-from-meeting', @js($taskDetail))">{{ $isTask ? 'Criar tarefa' : 'Tarefa' }}</button>
+                                @endif
+                                <button type="button" class="btn btn-sm {{ $isTask && $canTask ? 'btn-ghost' : 'btn-primary' }}" @click="open = true">{{ $isTask && $canTask ? 'Pendência' : 'Registrar pendência' }}</button>
                                 <form method="POST" action="{{ route('document-updates.pendency-dismiss', $group['run']) }}">
                                     @csrf
                                     <input type="hidden" name="key" value="{{ $item['key'] }}">
