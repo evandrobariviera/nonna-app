@@ -92,9 +92,9 @@
          (pendências, tarefas, comentários). Em tela média a coluna de ação desce pra baixo do documento (a esquerda ocupa as duas linhas — sticky no grid invadia a linha de baixo),
          em duas colunas; no celular fica tudo empilhado. --}}
     @php $projectClient = $project->client ?? $macroplan?->client; @endphp
-    <div class="grid grid-cols-1 gap-5 mb-6 lg:grid-cols-[320px_minmax(0,1fr)] min-[1600px]:grid-cols-[300px_minmax(0,1fr)_360px] items-start">
+    <div class="grid grid-cols-1 gap-5 mb-6 lg:grid-cols-[320px_minmax(0,1fr)] min-[100rem]:grid-cols-[300px_minmax(0,1fr)_360px] items-start">
 
-    <aside class="min-w-0 lg:row-span-2 min-[1600px]:row-span-1 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
+    <aside class="min-w-0 lg:row-span-2 min-[100rem]:row-span-1 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
     {{-- PROGRESSO + DETALHES — mesmo visual do "Faz parte de" da tarefa (tasks/show): rosca,
          datas e régua do período. Contadores data-stat-count são atualizados ao vivo pelo
          drag do quadro (script no fim do arquivo). --}}
@@ -335,6 +335,58 @@
         </div>
     @endif
 
+
+    {{-- HISTÓRICO — só ações (status, datas, planejamento, "briefing editado"), nunca o
+         conteúdo (ver ProjectObserver). Antes ficava no fim da página, depois do quadro. --}}
+    <x-activity-history :activities="$project->activities" class="card px-5 py-4 mb-5" max-height="320px" />
+
+    {{-- PÁGINA DO CLIENTE — o que aparece no topo da Página do Projeto no
+         Portal (Central de Aprovações). Texto separado do objetivo/briefings,
+         que são internos. Destaque é opcional. --}}
+    <div class="card px-5 py-4 mb-5" x-data="{ open: false }">
+        <button type="button" @click="open = !open" class="w-full flex items-center justify-between gap-3 text-left">
+            <span class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
+                Página do cliente (Portal)
+            </span>
+            <span class="text-xs" style="color:var(--muted2)">
+                @if($project->client_description || $project->highlight_task_id)
+                    Configurada
+                @else
+                    Sem descrição
+                @endif
+                <span x-text="open ? '▴' : '▾'"></span>
+            </span>
+        </button>
+        <form x-show="open" x-cloak method="POST" action="{{ route('projects.client-page.update', $project) }}" class="mt-4 flex flex-col gap-4">
+            @csrf @method('PATCH')
+            <div>
+                <label class="block text-xs font-semibold mb-1.5" style="color:var(--text)">Descrição para o cliente</label>
+                <textarea name="client_description" rows="3" maxlength="2000"
+                    placeholder="Texto curto explicando a ideia do projeto, na linguagem do cliente."
+                    class="field w-full px-3 py-2 text-sm focus:outline-none"
+                    style="resize:vertical">{{ old('client_description', $project->client_description) }}</textarea>
+                <p class="text-xs mt-1" style="color:var(--muted)">O cliente lê isso no topo da página do projeto. Objetivo e briefings continuam só internos.</p>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1.5" style="color:var(--text)">Tarefa em destaque</label>
+                <select name="highlight_task_id" class="field w-full px-3 py-2 text-sm focus:outline-none">
+                    <option value="">— nenhuma —</option>
+                    @foreach($project->tasks->where('status', '!=', 'cancelado') as $t)
+                        <option value="{{ $t->id }}" @selected($project->highlight_task_id === $t->id)>{{ $t->title }}</option>
+                    @endforeach
+                </select>
+                <p class="text-xs mt-1" style="color:var(--muted)">Ex.: o conceito da campanha ou o layout da home. Aparece em destaque no topo, depois que passar pela aprovação.</p>
+            </div>
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+                <a href="{{ route('approvals.preview.project', $project) }}" target="_blank" rel="noopener"
+                   class="btn btn-ghost btn-xs flex items-center gap-1" title="Abrir a página deste projeto como o cliente vê no Portal (só consulta)">
+                    <x-icon name="eye" size="12" /> Ver como o cliente vê
+                </a>
+                <button type="submit" class="btn btn-primary btn-xs">Salvar</button>
+            </div>
+        </form>
+    </div>
+
     </aside>{{-- /contexto --}}
 
     <div class="min-w-0">
@@ -390,7 +442,7 @@
     </div>
     </div>{{-- /documento --}}
 
-    <aside class="min-w-0 lg:col-start-2 min-[1600px]:col-start-3 min-[1600px]:row-start-1 grid grid-cols-1 gap-x-5 xl:grid-cols-2 min-[1600px]:grid-cols-1 items-start min-[1600px]:sticky min-[1600px]:top-4 min-[1600px]:max-h-[calc(100vh-2rem)] min-[1600px]:overflow-y-auto">
+    <aside class="min-w-0 lg:col-start-2 min-[100rem]:col-start-3 min-[100rem]:row-start-1 grid grid-cols-1 gap-x-5 xl:grid-cols-2 min-[100rem]:grid-cols-1 items-start min-[100rem]:sticky min-[100rem]:top-4 min-[100rem]:max-h-[calc(100vh-2rem)] min-[100rem]:overflow-y-auto">
     <div class="min-w-0">
     {{-- PENDÊNCIAS — o que o projeto/campanha está esperando (insumo do cliente, acesso,
          data...). Ver <x-pendencies-panel>. --}}
@@ -398,44 +450,47 @@
         <x-pendencies-panel :pendable="$project" alias="project" :users="$users" />
     </div>
 
-    {{-- TAREFAS (resumo) — só as abertas, do status mais avançado ao backlog; o quadro completo
-         (arrastar cartões) continua embaixo. "+ Nova" abre o formulário de lá (open-new-task). --}}
-    @php
-        $openTasks = collect(array_reverse(array_keys(\App\Models\Task::$statuses)))
-            ->reject(fn ($s) => in_array($s, ['concluido', 'cancelado'], true))
-            ->flatMap(fn ($s) => $kanban[$s] ?? collect());
-    @endphp
-    <div class="card px-5 py-4 mb-5" id="tarefas-resumo">
-        <div class="flex items-center justify-between gap-2 mb-3">
-            <p class="card-title flex items-center gap-2">
-                <span class="icon-badge"><x-icon name="list-checks" size="16" /></span>
-                Tarefas
-                @if($openTasks->isNotEmpty())
-                    <span class="ml-1 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted)">{{ $openTasks->count() }} aberta{{ $openTasks->count() !== 1 ? 's' : '' }}</span>
-                @endif
-            </p>
-            <button type="button" class="text-xs font-semibold" style="color:var(--purple)" @click="$dispatch('open-new-task')">+ Nova</button>
+
+    {{-- TAREFAS EM FILA, AGRUPADAS POR STATUS — leitura rápida ao lado do documento.
+         Concluídas começam fechadas. O quadro completo (arrastar, editar) fica abaixo. --}}
+    <div class="card mb-5 overflow-hidden" x-data>
+        <div class="px-5 py-3 flex items-center justify-between gap-2" style="border-bottom:1px solid var(--border2)">
+            <span class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
+                Tarefas <span style="color:var(--muted2)">{{ $totalTasks }}</span>
+            </span>
+            <button type="button" @click="$dispatch('open-new-task')" class="btn btn-primary btn-xs">+ Nova</button>
         </div>
-        @if($openTasks->isEmpty())
-            <p class="text-xs" style="color:var(--muted)">Nenhuma tarefa aberta{{ $totalTasks ? ' — todas concluídas' : '' }}.</p>
-        @else
-            <ul class="flex flex-col">
-                @foreach($openTasks->take(10) as $t)
-                    @php $person = $t->executors->first() ?? $t->executor; $meta = \App\Models\Task::$statuses[$t->status] ?? null; @endphp
-                    <li class="flex items-center gap-2 py-1.5 {{ $loop->last ? '' : 'border-b' }}" style="border-color:var(--border)">
-                        <span class="w-2 h-2 rounded-full shrink-0" title="{{ $meta['label'] ?? $t->status }}" style="background:{{ \App\Models\Task::colorHex($meta['color'] ?? 'muted') }}"></span>
-                        <a href="{{ route('tasks.show', $t) }}" class="text-xs truncate flex-1 hover:underline" style="color:var(--text)" title="{{ $t->title }}">{{ $t->title }}</a>
-                        @if($t->due_date)
-                            <span class="text-[11px] shrink-0" style="color:{{ $t->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">{{ $t->due_date->format('d/m') }}</span>
-                        @endif
-                        @if($person)<x-user-avatar :user="$person" size="5" />@endif
-                    </li>
-                @endforeach
-            </ul>
-            <button type="button" class="text-xs mt-2" style="color:var(--muted2)" @click="$dispatch('open-board')">
-                {{ $openTasks->count() > 10 ? 'Ver as ' . $openTasks->count() . ' no quadro completo' : 'Abrir o quadro completo' }}
-            </button>
+        @if($totalTasks === 0)
+            <p class="px-5 py-4 text-xs" style="color:var(--muted)">Nenhuma tarefa ainda.</p>
         @endif
+        @foreach(\App\Models\Task::$statuses as $statusKey => $meta)
+            @continue($statusKey === 'cancelado')
+            @php $group = $kanban[$statusKey]; $hex = \App\Models\Task::colorHex($meta['color']); @endphp
+            @continue($group->isEmpty())
+            <div x-data="{ open: {{ $statusKey === 'concluido' ? 'false' : 'true' }} }" style="border-bottom:1px solid var(--border2)">
+                <button type="button" @click="open = !open" class="w-full px-5 py-2 flex items-center justify-between gap-2 text-left" style="background:var(--s2)">
+                    <span class="flex items-center gap-2 text-xs font-bold" style="color:{{ $hex }}">
+                        <span class="rounded-full" style="width:8px; height:8px; background:{{ $hex }}"></span>
+                        {{ $meta['label'] }}
+                    </span>
+                    <span class="text-xs" style="color:var(--muted)">{{ $group->count() }} <span x-text="open ? '▴' : '▾'"></span></span>
+                </button>
+                <div x-show="open" x-cloak>
+                    @foreach($group as $t)
+                        @php $late = $t->due_date && $t->due_date->lt($today) && $statusKey !== 'concluido'; @endphp
+                        <a href="{{ route('tasks.show', $t) }}" class="dd-hover block px-5 py-2 transition-colors" style="border-top:1px solid var(--border2)">
+                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $t->title }} <x-pendency-badge :task="$t" class="ml-1" /></p>
+                            <p class="text-xs mt-0.5 flex items-center gap-2" style="color:var(--muted); font-size:11px">
+                                <span class="truncate">{{ $t->executors->map(fn ($u) => \Illuminate\Support\Str::before($u->name, ' '))->join(', ') ?: 'Sem executor' }}</span>
+                                @if($t->due_date)
+                                    <span class="flex-shrink-0 font-mono" style="color:{{ $late ? 'var(--red)' : 'var(--muted)' }}">{{ $t->due_date->format('d/m') }}</span>
+                                @endif
+                            </p>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        @endforeach
     </div>
     </div>
     <div class="min-w-0">
@@ -505,99 +560,6 @@
                 </div>
             @endforeach
         </div>
-    </div>
-
-    {{-- HISTÓRICO — só ações (status, datas, planejamento, "briefing editado"), nunca o
-         conteúdo (ver ProjectObserver). Antes ficava no fim da página, depois do quadro. --}}
-    <x-activity-history :activities="$project->activities" class="card px-5 py-4 mb-5" max-height="320px" />
-
-    {{-- TAREFAS EM FILA, AGRUPADAS POR STATUS — leitura rápida ao lado do documento.
-         Concluídas começam fechadas. O quadro completo (arrastar, editar) fica abaixo. --}}
-    <div class="card mb-5 overflow-hidden" x-data>
-        <div class="px-5 py-3 flex items-center justify-between gap-2" style="border-bottom:1px solid var(--border2)">
-            <span class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
-                Tarefas <span style="color:var(--muted2)">{{ $totalTasks }}</span>
-            </span>
-            <button type="button" @click="$dispatch('open-new-task')" class="btn btn-primary btn-xs">+ Nova</button>
-        </div>
-        @if($totalTasks === 0)
-            <p class="px-5 py-4 text-xs" style="color:var(--muted)">Nenhuma tarefa ainda.</p>
-        @endif
-        @foreach(\App\Models\Task::$statuses as $statusKey => $meta)
-            @continue($statusKey === 'cancelado')
-            @php $group = $kanban[$statusKey]; $hex = \App\Models\Task::colorHex($meta['color']); @endphp
-            @continue($group->isEmpty())
-            <div x-data="{ open: {{ $statusKey === 'concluido' ? 'false' : 'true' }} }" style="border-bottom:1px solid var(--border2)">
-                <button type="button" @click="open = !open" class="w-full px-5 py-2 flex items-center justify-between gap-2 text-left" style="background:var(--s2)">
-                    <span class="flex items-center gap-2 text-xs font-bold" style="color:{{ $hex }}">
-                        <span class="rounded-full" style="width:8px; height:8px; background:{{ $hex }}"></span>
-                        {{ $meta['label'] }}
-                    </span>
-                    <span class="text-xs" style="color:var(--muted)">{{ $group->count() }} <span x-text="open ? '▴' : '▾'"></span></span>
-                </button>
-                <div x-show="open" x-cloak>
-                    @foreach($group as $t)
-                        @php $late = $t->due_date && $t->due_date->lt($today) && $statusKey !== 'concluido'; @endphp
-                        <a href="{{ route('tasks.show', $t) }}" class="dd-hover block px-5 py-2 transition-colors" style="border-top:1px solid var(--border2)">
-                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $t->title }} <x-pendency-badge :task="$t" class="ml-1" /></p>
-                            <p class="text-xs mt-0.5 flex items-center gap-2" style="color:var(--muted); font-size:11px">
-                                <span class="truncate">{{ $t->executors->map(fn ($u) => \Illuminate\Support\Str::before($u->name, ' '))->join(', ') ?: 'Sem executor' }}</span>
-                                @if($t->due_date)
-                                    <span class="flex-shrink-0 font-mono" style="color:{{ $late ? 'var(--red)' : 'var(--muted)' }}">{{ $t->due_date->format('d/m') }}</span>
-                                @endif
-                            </p>
-                        </a>
-                    @endforeach
-                </div>
-            </div>
-        @endforeach
-    </div>
-
-    {{-- PÁGINA DO CLIENTE — o que aparece no topo da Página do Projeto no
-         Portal (Central de Aprovações). Texto separado do objetivo/briefings,
-         que são internos. Destaque é opcional. --}}
-    <div class="card px-5 py-4 mb-5" x-data="{ open: false }">
-        <button type="button" @click="open = !open" class="w-full flex items-center justify-between gap-3 text-left">
-            <span class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
-                Página do cliente (Portal)
-            </span>
-            <span class="text-xs" style="color:var(--muted2)">
-                @if($project->client_description || $project->highlight_task_id)
-                    Configurada
-                @else
-                    Sem descrição
-                @endif
-                <span x-text="open ? '▴' : '▾'"></span>
-            </span>
-        </button>
-        <form x-show="open" x-cloak method="POST" action="{{ route('projects.client-page.update', $project) }}" class="mt-4 flex flex-col gap-4">
-            @csrf @method('PATCH')
-            <div>
-                <label class="block text-xs font-semibold mb-1.5" style="color:var(--text)">Descrição para o cliente</label>
-                <textarea name="client_description" rows="3" maxlength="2000"
-                    placeholder="Texto curto explicando a ideia do projeto, na linguagem do cliente."
-                    class="field w-full px-3 py-2 text-sm focus:outline-none"
-                    style="resize:vertical">{{ old('client_description', $project->client_description) }}</textarea>
-                <p class="text-xs mt-1" style="color:var(--muted)">O cliente lê isso no topo da página do projeto. Objetivo e briefings continuam só internos.</p>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold mb-1.5" style="color:var(--text)">Tarefa em destaque</label>
-                <select name="highlight_task_id" class="field w-full px-3 py-2 text-sm focus:outline-none">
-                    <option value="">— nenhuma —</option>
-                    @foreach($project->tasks->where('status', '!=', 'cancelado') as $t)
-                        <option value="{{ $t->id }}" @selected($project->highlight_task_id === $t->id)>{{ $t->title }}</option>
-                    @endforeach
-                </select>
-                <p class="text-xs mt-1" style="color:var(--muted)">Ex.: o conceito da campanha ou o layout da home. Aparece em destaque no topo, depois que passar pela aprovação.</p>
-            </div>
-            <div class="flex items-center justify-between gap-3 flex-wrap">
-                <a href="{{ route('approvals.preview.project', $project) }}" target="_blank" rel="noopener"
-                   class="btn btn-ghost btn-xs flex items-center gap-1" title="Abrir a página deste projeto como o cliente vê no Portal (só consulta)">
-                    <x-icon name="eye" size="12" /> Ver como o cliente vê
-                </a>
-                <button type="submit" class="btn btn-primary btn-xs">Salvar</button>
-            </div>
-        </form>
     </div>
     </div>
     </aside>{{-- /o que falta fazer --}}

@@ -2,8 +2,8 @@
   "novidades": [
     {
       "title": "Campanha e projeto em três colunas: contexto, documento e o que falta fazer",
-      "summary": "A página da campanha/projeto agora se lê da esquerda pra direita: resumo e equipe, o documento no meio, e pendências, tarefas abertas e comentários à direita.",
-      "body": "<p>A página de cada campanha e projeto foi reorganizada para responder duas perguntas logo de cara: <strong>do que se trata?</strong> e <strong>o que falta fazer?</strong></p><ul><li><p><strong>Esquerda — o que é:</strong> progresso, datas, objetivo, equipe, reuniões que citaram, anexos e campanhas de anúncio.</p></li><li><p><strong>Centro — o plano:</strong> o documento.</p></li><li><p><strong>Direita — o que falta fazer:</strong> Pendências (com as sugeridas pela reunião), um resumo das <strong>tarefas abertas</strong> com prazo e executor (+ Nova e atalho para o quadro completo) e os comentários.</p></li></ul><p>Em telas menores, a coluna da direita desce para baixo do documento. O quadro completo de tarefas continua no fim da página.</p>",
+      "summary": "A página da campanha/projeto agora se lê da esquerda pra direita: resumo e equipe, o documento no meio, e pendências, tarefas e comentários à direita.",
+      "body": "<p>A página de cada campanha e projeto foi reorganizada para responder duas perguntas logo de cara: <strong>do que se trata?</strong> e <strong>o que falta fazer?</strong></p><ul><li><p><strong>Esquerda — o que é:</strong> progresso, datas, objetivo, equipe, reuniões que citaram, anexos, campanhas de anúncio, histórico e o texto da página do cliente.</p></li><li><p><strong>Centro — o plano:</strong> o documento.</p></li><li><p><strong>Direita — o que falta fazer:</strong> Pendências (com as sugeridas pela reunião), a fila de <strong>tarefas</strong> por status (com + Nova) e os comentários.</p></li></ul><p>Em telas menores, a coluna da direita desce para baixo do documento. O quadro completo de tarefas continua no fim da página.</p>",
       "kind": "melhoria", "area": "Projetos"
     }
   ],
