@@ -1,0 +1,36 @@
+{
+  "novidades": [
+    {
+      "title": "Atualizar com reunião agora é fiscal e secretário",
+      "summary": "A IA deixou de comparar textos: diz se a reunião manteve a linha, mudou a rota ou está desviando, pega demandas novas e mudanças criativas, e mostra para onde foi cada assunto da reunião.",
+      "body": "<p>Ao usar <strong>Atualizar com reunião</strong> num planejamento, campanha ou projeto, a IA primeiro entende o que sustenta o documento (objetivo, público, posicionamento, mensagem, tom, linha criativa, prioridades) e confere o que a reunião fez com isso. O resultado abre com um veredito: <strong>Na linha</strong>, <strong>Ajustes e novidades</strong>, <strong>Mudança de rota</strong> ou <strong>Risco de desvio</strong>. Depois vêm os movimentos: mudança de rota, desvio, <strong>nova demanda</strong>, <strong>criativo</strong> (formatos, abordagem, estética dos conteúdos), ajuste e reforço. A nova <strong>Pauta coberta</strong> lista todos os assuntos da reunião com o destino de cada um, para nada se perder. Campanha ou projeto novo aceito no planejamento já vira card no App. Desvios viram alerta, não mudança no documento, e a IA não mexe mais no que a reunião simplesmente não mencionou.</p>",
+      "kind": "melhoria", "area": "Planejamentos"
+    },
+    {
+      "title": "Uma reunião, uma ATA — e o botão Marcar continuação",
+      "summary": "A IA gera a ATA uma vez por reunião. Precisou atualizar? Marcar continuação cria outra reunião com as mesmas pessoas e a ATA anterior como pauta.",
+      "body": "<p>Cada reunião tem uma ATA, e a IA gera essa ATA <strong>uma vez</strong> (depois aparece <em>ATA gerada pela IA em…</em> no lugar do botão). Correção pontual é feita à mão, em Editar ATA. Se o assunto continua ou algo precisa ser revisto, é <strong>outra reunião</strong>: na reunião que já tem ATA, clique em <strong>Marcar continuação</strong>. Abre uma reunião nova com o mesmo cliente, participantes, contatos e itens citados, e com a <strong>ATA anterior já na pauta</strong>. O mesmo vale para <strong>Conferir documento com a IA</strong>: uma vez por documento com cada reunião (depois aparece <em>Já conferido · ver análise</em>). Se a IA der erro e não entregar nada, dá para tentar de novo. Dica: só gere a ATA com a transcrição completa.</p>",
+      "kind": "novidade", "area": "Reuniões"
+    },
+    {
+      "title": "Botão Transcrever áudio saiu das reuniões",
+      "summary": "O botão de transcrever áudio anexado à reunião foi retirado, porque o time não usava. A transcrição continua sendo colada em Editar.",
+      "body": "<p>O botão <strong>Transcrever</strong> que aparecia nos áudios anexados à reunião foi retirado, porque o time não usava. Os anexos continuam iguais (dá para anexar, baixar e remover). Para gerar a ATA com a IA, cole a transcrição da call em <strong>Editar</strong>, como já é o costume.</p>",
+      "kind": "melhoria", "area": "Reuniões"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Atualizar o documento com uma reunião",
+      "category": "Planejamentos",
+      "slug": "atualizar-o-documento-com-uma-reuniao",
+      "body_file": "ajuda-atualizar-com-reuniao.html"
+    },
+    {
+      "title": "Fluxo de Reuniões com o Cliente — do agendamento à ATA",
+      "category": "Reuniões",
+      "slug": "fluxo-de-reunioes-e-agendamento-de-macroplanejamento",
+      "body_file": "ajuda-fluxo-reunioes.html"
+    }
+  ]
+}

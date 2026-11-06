@@ -9,6 +9,28 @@
     $retryUrl = $isPlan ? route('macroplans.document.update-store', $owner) : route('projects.document.update-store', $owner);
     $tipoLabel = ['alterar' => 'Alterar', 'incluir' => 'Incluir', 'remover' => 'Remover'];
     $tipoColor = ['alterar' => 'purple', 'incluir' => 'green', 'remover' => 'red'];
+    $verdicts = [
+        'alinhado'        => ['label' => 'Na linha', 'icon' => 'circle-check', 'color' => 'var(--green)', 'bg' => 'rgba(52,211,153,.12)',
+                              'hint' => 'A reunião mantém a estratégia e a comunicação do documento.'],
+        'ajustes'         => ['label' => 'Ajustes e novidades', 'icon' => 'wrench', 'color' => 'var(--purple)', 'bg' => 'rgba(100,59,142,.1)',
+                              'hint' => 'A estratégia continua a mesma; entram ajustes de execução, demandas novas ou mudanças criativas que cabem na linha.'],
+        'mudanca_de_rota' => ['label' => 'Mudança de rota', 'icon' => 'compass', 'color' => 'var(--orange)', 'bg' => 'rgba(238,121,25,.12)',
+                              'hint' => 'O time decidiu mudar algo central (objetivo, público, mensagem, tom ou prioridade). Atualize o documento e avise quem executa.'],
+        'risco_de_desvio' => ['label' => 'Risco de desvio', 'icon' => 'triangle-alert', 'color' => 'var(--red)', 'bg' => 'rgba(248,113,113,.12)',
+                              'hint' => 'A conversa puxou a comunicação para fora da linha sem ninguém decidir isso. Volte à linha ou assuma a mudança de forma explícita.'],
+    ];
+    $moveTypes = [
+        'mudanca_de_rota' => ['label' => 'Mudança de rota', 'icon' => 'compass', 'color' => 'var(--orange)', 'bg' => 'rgba(238,121,25,.06)', 'border' => 'rgba(238,121,25,.3)'],
+        'desvio'          => ['label' => 'Desvio', 'icon' => 'triangle-alert', 'color' => 'var(--red)', 'bg' => 'rgba(248,113,113,.06)', 'border' => 'rgba(248,113,113,.3)'],
+        'nova_demanda'    => ['label' => 'Nova demanda', 'icon' => 'plus', 'color' => 'var(--blue)', 'bg' => 'rgba(59,130,246,.05)', 'border' => 'rgba(59,130,246,.3)'],
+        'criativo'        => ['label' => 'Criativo', 'icon' => 'palette', 'color' => 'var(--purple)', 'bg' => 'rgba(100,59,142,.05)', 'border' => 'rgba(100,59,142,.25)'],
+        'ajuste'          => ['label' => 'Ajuste', 'icon' => 'wrench', 'color' => 'var(--purple)', 'bg' => 'transparent', 'border' => 'var(--border2)'],
+        'reforco'         => ['label' => 'Reforça a linha', 'icon' => 'circle-check', 'color' => 'var(--green)', 'bg' => 'transparent', 'border' => 'var(--border2)'],
+    ];
+    $lineLabels = [
+        'objetivo' => 'Objetivo', 'publico' => 'Público', 'posicionamento' => 'Posicionamento',
+        'mensagem_central' => 'Mensagem central', 'tom' => 'Tom', 'linha_criativa' => 'Linha criativa', 'mecanica_canais' => 'Mecânica / canais', 'prioridades' => 'Prioridades',
+    ];
 @endphp
 <x-app-layout>
     <x-slot name="header">Atualizar com reunião: {{ $owner->title }}</x-slot>
@@ -85,11 +107,132 @@
             </div>
 
         @else
-            {{-- Resumo da IA --}}
-            <div class="card p-5 mb-5" style="border-left:3px solid var(--purple)">
-                <h2 class="card-title mb-2 flex items-center gap-1"><x-icon name="sparkles" size="14" /> O que a reunião muda</h2>
+            {{-- Leitura do guardião da linha: veredito + resumo --}}
+            @php
+                $review  = $run->strategic_review ?? [];
+                $verdict = $verdicts[$review['veredito'] ?? ''] ?? null;
+                $moves   = collect($review['movimentos'] ?? []);
+                $line    = $review['linha_estrategica'] ?? [];
+            @endphp
+            <div class="card p-5 mb-5" style="border-left:3px solid {{ $verdict['color'] ?? 'var(--purple)' }}">
+                <div class="flex items-center justify-between gap-3 flex-wrap mb-2">
+                    <h2 class="card-title flex items-center gap-1"><x-icon name="shield-check" size="14" /> Leitura estratégica da reunião</h2>
+                    @if($verdict)
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1"
+                              style="background:{{ $verdict['bg'] }}; color:{{ $verdict['color'] }}">
+                            <x-icon :name="$verdict['icon']" size="12" /> {{ $verdict['label'] }}
+                        </span>
+                    @endif
+                </div>
                 <p class="text-sm whitespace-pre-line" style="color:var(--text)">{{ $run->summary ?: '—' }}</p>
+                @if($verdict)
+                    <p class="text-xs mt-2" style="color:var(--muted)">{{ $verdict['hint'] }}</p>
+                @endif
             </div>
+
+            {{-- Movimentos: o que a reunião fez com a linha (mudança de rota e desvio primeiro) --}}
+            @if($moves->isNotEmpty())
+                <div class="card p-5 mb-5">
+                    <h2 class="card-title mb-1">O que a reunião fez com a linha</h2>
+                    <p class="text-xs mb-4" style="color:var(--muted)">Não é comparação de texto: é para onde a estratégia e a comunicação estão indo.</p>
+                    <div class="space-y-3">
+                        @foreach($moves as $m)
+                            @php $mt = $moveTypes[$m['tipo']]; @endphp
+                            <div class="px-4 py-3 rounded-lg" style="background:{{ $mt['bg'] }}; border:1px solid {{ $mt['border'] }}">
+                                <div class="flex items-center gap-2 flex-wrap mb-1">
+                                    <span class="text-xs font-bold flex items-center gap-1" style="color:{{ $mt['color'] }}">
+                                        <x-icon :name="$mt['icon']" size="12" /> {{ $mt['label'] }}
+                                    </span>
+                                    <span class="text-sm font-semibold" style="color:var(--text)">{{ $m['titulo'] }}</span>
+                                </div>
+                                @if($m['tipo'] !== 'reforco' && ($m['documento_diz'] || $m['reuniao_indica']))
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 text-xs">
+                                        @if($m['documento_diz'])
+                                            <p style="color:var(--muted2)"><b style="color:var(--muted)">O documento define:</b> {{ $m['documento_diz'] }}</p>
+                                        @endif
+                                        @if($m['reuniao_indica'])
+                                            <p style="color:var(--muted2)"><b style="color:var(--muted)">A reunião trouxe:</b> {{ $m['reuniao_indica'] }}</p>
+                                        @endif
+                                    </div>
+                                @elseif($m['reuniao_indica'])
+                                    <p class="text-xs mt-1" style="color:var(--muted2)">{{ $m['reuniao_indica'] }}</p>
+                                @endif
+                                @if($m['por_que_importa'])
+                                    <p class="text-xs mt-2" style="color:var(--text)"><b>Por que importa:</b> {{ $m['por_que_importa'] }}</p>
+                                @endif
+                                @if($m['recomendacao'])
+                                    <p class="text-xs mt-1 font-semibold" style="color:{{ $mt['color'] }}">→ {{ $m['recomendacao'] }}</p>
+                                @endif
+                                @if($m['evidencia'])
+                                    <p class="text-xs mt-2 flex items-start gap-1.5 italic" style="color:var(--muted)">
+                                        <x-icon name="quote" size="12" class="mt-0.5 flex-shrink-0" /> {{ $m['evidencia'] }}
+                                    </p>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Secretário: todos os assuntos da reunião com o destino de cada um (nada se perde) --}}
+            @php $agenda = collect($review['pauta_coberta'] ?? []); @endphp
+            @if($agenda->isNotEmpty())
+                @php
+                    $destinos = [
+                        'documento' => ['label' => 'No documento', 'badge' => 'green'],
+                        'aberto'    => ['label' => 'Em aberto', 'badge' => 'yellow'],
+                        'alerta'    => ['label' => 'Alerta', 'badge' => 'red'],
+                        'fora'      => ['label' => 'Fora deste documento', 'badge' => 'blue'],
+                        'ja_esta'   => ['label' => 'Já estava', 'badge' => 'muted'],
+                    ];
+                    $counts = $agenda->countBy('destino');
+                @endphp
+                <details class="card p-5 mb-5" @if($agenda->where('destino', 'fora')->isNotEmpty()) open @endif>
+                    <summary class="cursor-pointer flex items-center justify-between gap-3 flex-wrap">
+                        <span class="card-title flex items-center gap-1"><x-icon name="list-checks" size="14" /> Pauta coberta · {{ $agenda->count() }} assunto(s)</span>
+                        <span class="flex items-center gap-1 flex-wrap">
+                            @foreach($destinos as $key => $d)
+                                @if($counts->get($key))
+                                    <span class="badge badge-{{ $d['badge'] }}">{{ $counts->get($key) }} {{ Str::lower($d['label']) }}</span>
+                                @endif
+                            @endforeach
+                        </span>
+                    </summary>
+                    <p class="text-xs mt-2 mb-3" style="color:var(--muted)">Tudo o que foi tratado na reunião e para onde foi. Confira se nada importante ficou de fora — os "Fora deste documento" precisam de alguém para levar adiante.</p>
+                    <ul class="space-y-2">
+                        @foreach($agenda as $p)
+                            @php $d = $destinos[$p['destino']] ?? $destinos['aberto']; @endphp
+                            <li class="flex items-start gap-2 text-sm">
+                                <span class="badge badge-{{ $d['badge'] }} flex-shrink-0">{{ $d['label'] }}</span>
+                                <span style="color:var(--text)">{{ $p['assunto'] }}
+                                    @if($p['observacao'])<span class="text-xs" style="color:var(--muted)"> — {{ $p['observacao'] }}</span>@endif
+                                </span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </details>
+            @endif
+
+            {{-- Linha estratégica que a IA leu no documento (referência, fechada por padrão) --}}
+            @if($line)
+                <details class="card p-5 mb-5">
+                    <summary class="card-title cursor-pointer flex items-center gap-1"><x-icon name="compass" size="14" /> Linha estratégica do documento</summary>
+                    <p class="text-xs mt-2 mb-3" style="color:var(--muted)">É contra isto que a reunião foi conferida. Se algo aqui estiver errado, a leitura também estará.</p>
+                    <dl class="grid grid-cols-1 md:grid-cols-[160px_1fr] gap-x-4 gap-y-2 text-sm">
+                        @foreach($lineLabels as $key => $label)
+                            @if(!empty($line[$key]))
+                                <dt class="text-xs font-mono uppercase" style="color:var(--muted)">{{ $label }}</dt>
+                                <dd style="color:var(--text)">{{ $line[$key] }}</dd>
+                            @endif
+                        @endforeach
+                    </dl>
+                </details>
+            @endif
+
+            @if($suggestions->isNotEmpty())
+                <h2 class="card-title mb-1 mt-2">Mudanças sugeridas no documento</h2>
+                <p class="text-xs mb-3" style="color:var(--muted)">Só o que a reunião decidiu mudar. Desvios não viram sugestão: o documento segue valendo até o time decidir.</p>
+            @endif
 
             @if($stale)
                 <div class="mb-5 px-4 py-3 text-sm flex items-start gap-2" style="background:rgba(238,121,25,.08); border:1px solid rgba(238,121,25,.3); color:var(--orange); border-radius:var(--radius)">
@@ -117,7 +260,7 @@
 
                 @if($suggestions->isEmpty() && empty($dataDiff))
                     <div class="card p-5 text-sm" style="color:var(--muted)">
-                        A IA não encontrou nada nesta reunião que mude o documento.
+                        Nada nesta reunião pede mudança no documento.
                     </div>
                 @endif
 
@@ -134,6 +277,13 @@
                             @endif
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-center gap-2 flex-wrap mb-1">
+                                    @if(($s['impacto'] ?? null) === 'estrategico')
+                                        <span class="badge badge-orange">Estratégica</span>
+                                    @elseif(($s['impacto'] ?? null) === 'criativo')
+                                        <span class="badge badge-purple">Criativa</span>
+                                    @elseif(isset($s['impacto']))
+                                        <span class="badge badge-muted">Tática</span>
+                                    @endif
                                     <span class="badge badge-{{ $tipoColor[$s['tipo']] ?? 'purple' }}">{{ $tipoLabel[$s['tipo']] ?? 'Alterar' }}</span>
                                     @if($s['secao'])<span class="text-xs font-mono uppercase" style="color:var(--muted)">{{ $s['secao'] }}</span>@endif
                                     @if($applied === 'aplicada')<span class="badge badge-green">Aplicada</span>@endif

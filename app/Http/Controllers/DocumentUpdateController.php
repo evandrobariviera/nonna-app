@@ -48,6 +48,8 @@ class DocumentUpdateController extends Controller
         return view('documents.update-from-meeting', [
             'meeting' => $meeting,
             'owners'  => $this->updates->ownersFor($meeting),
+            // Trava de custo: documentos já conferidos com esta reunião → owner_id => run id
+            'usedRuns' => DocumentUpdateService::usedRunsQuery()->where('meeting_id', $meeting->id)->latest()->pluck('id', 'owner_id'),
         ]);
     }
 
@@ -142,6 +144,12 @@ class DocumentUpdateController extends Controller
             'selected'  => $request->query('reuniao'),
             'storeUrl'  => $storeUrl,
             'backUrl'   => $backUrl,
+            // Trava de custo: reuniões já conferidas com este documento → meeting_id => run id
+            'usedRuns'  => DocumentUpdateService::usedRunsQuery()
+                ->where('owner_type', DocumentUpdateService::ownerType($owner))
+                ->where('owner_id', $owner->id)
+                ->latest()
+                ->pluck('id', 'meeting_id'),
             'recent'    => DocumentUpdateRun::where('owner_type', DocumentUpdateService::ownerType($owner))
                 ->where('owner_id', $owner->id)
                 ->with('meeting:id,title,scheduled_at', 'requestedBy:id,name')
@@ -159,6 +167,16 @@ class DocumentUpdateController extends Controller
         ]);
 
         $meeting = Meeting::findOrFail($data['meeting_id']);
+
+        // Trava de custo: já conferido com esta reunião → abre a análise que existe.
+        if ($existing = $this->updates->existingRun($owner, $meeting)) {
+            return redirect()->route('document-updates.show', $existing)
+                ->with('error', 'Este documento já foi conferido com esta reunião — cada reunião é analisada uma vez só. Esta é a análise feita.');
+        }
+        // Duplo clique: o segundo envio chega antes do primeiro gravar a análise.
+        if (!\Illuminate\Support\Facades\Cache::add('doc-update-start:' . $owner->id . ':' . $meeting->id, Auth::id(), now()->addSeconds(30))) {
+            return back()->with('error', 'A conferência deste documento com esta reunião já está sendo criada.');
+        }
 
         try {
             $run = $this->updates->start($owner, $meeting, $data['instruction'] ?? null, (int) Auth::id());

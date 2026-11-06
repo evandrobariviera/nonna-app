@@ -941,6 +941,11 @@ class AutomationJob implements ShouldQueue
             throw new \RuntimeException('structure_ata só funciona com entidade Reunião.');
         }
 
+        // Trava de custo: a IA gera a ATA de cada reunião uma vez só.
+        if ($entity->ata_ai_generated_at) {
+            return 'ATA já gerada pela IA em ' . $entity->ata_ai_generated_at->format('d/m/Y H:i') . ' — não gerou de novo.';
+        }
+
         $agentId = $config['agent_id'] ?? throw new \RuntimeException('structure_ata sem agente de IA configurado.');
         $agent = AiAgent::findOrFail($agentId);
 

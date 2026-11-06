@@ -55,6 +55,10 @@ class MeetingAtaService
         if (blank($meeting->transcricao)) {
             throw new \RuntimeException('Reunião sem Transcrição preenchida — não é possível gerar a ATA.');
         }
+        // Trava de custo (2026-11-06): a IA gera a ATA de cada reunião uma vez só.
+        if ($meeting->ata_ai_generated_at) {
+            throw new \DomainException('A ATA desta reunião já foi gerada pela IA em ' . $meeting->ata_ai_generated_at->format('d/m/Y H:i') . '. Correção pontual é à mão; assunto novo vira outra reunião (Marcar continuação).');
+        }
 
         $meeting->loadMissing('client');
         $isNew = blank($meeting->ata);
@@ -79,8 +83,9 @@ class MeetingAtaService
         );
 
         $meeting->update([
-            'ata'             => MeetingText::fromAi(self::stripAgenda($response)),
-            'ata_recorded_at' => now(),
+            'ata'                 => MeetingText::fromAi(self::stripAgenda($response)),
+            'ata_recorded_at'     => now(),
+            'ata_ai_generated_at' => now(),
         ]);
 
         return $isNew;

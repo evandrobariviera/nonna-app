@@ -42,8 +42,13 @@ class AnalyzeDocumentUpdateJob implements ShouldQueue
 
         try {
             $service->analyze($run);
-            $title = 'Sugestões prontas para o documento';
-            $body = count($run->suggestions ?? []) . ' sugestão(ões) a partir da reunião — confira e aplique.';
+            $title = match ($run->strategic_review['veredito'] ?? null) {
+                'risco_de_desvio' => 'Reunião com risco de desvio da linha',
+                'mudanca_de_rota' => 'Reunião mudou a rota do documento',
+                'alinhado'        => 'Reunião na linha do documento',
+                default           => 'Leitura da reunião pronta',
+            };
+            $body = count($run->suggestions ?? []) . ' sugestão(ões) para o documento — confira a leitura estratégica e aplique.';
         } catch (\Throwable $e) {
             $run->update(['status' => 'erro', 'error' => mb_substr($e->getMessage(), 0, 1000)]);
             $title = 'Não foi possível analisar o documento';

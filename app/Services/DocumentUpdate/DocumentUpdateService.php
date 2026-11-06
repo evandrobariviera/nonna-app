@@ -107,11 +107,36 @@ class DocumentUpdateService
         return $plans->concat($projects)->sortByDesc('cited')->values();
     }
 
+    /**
+     * Trava de custo (2026-11-06): cada documento é conferido com cada reunião UMA vez. Conta a
+     * análise em andamento, pronta, aplicada ou descartada depois de pronta; a que deu erro (a
+     * IA não entregou) não conta, dá pra tentar de novo.
+     */
+    public static function usedRunsQuery()
+    {
+        return DocumentUpdateRun::query()->where(fn ($q) => $q
+            ->whereIn('status', ['processando', 'pronto', 'aplicado'])
+            ->orWhere(fn ($q) => $q->where('status', 'descartado')->whereNotNull('suggestions')));
+    }
+
+    public function existingRun(MacroPlan|Project $owner, Meeting $meeting): ?DocumentUpdateRun
+    {
+        return self::usedRunsQuery()
+            ->where('owner_type', self::ownerType($owner))
+            ->where('owner_id', $owner->id)
+            ->where('meeting_id', $meeting->id)
+            ->latest()
+            ->first();
+    }
+
     /** Cria a análise e manda pra fila (a IA leva alguns minutos com documento + transcrição). */
     public function start(MacroPlan|Project $owner, Meeting $meeting, ?string $instruction, int $userId): DocumentUpdateRun
     {
         if (!$owner->document_attachment_id) {
             throw new DomainException('Este item ainda não tem documento.');
+        }
+        if ($this->existingRun($owner, $meeting)) {
+            throw new DomainException('Este documento já foi conferido com esta reunião — cada reunião é analisada uma vez só.');
         }
         if (blank($meeting->ata) && blank($meeting->transcricao)) {
             throw new DomainException('A reunião não tem ATA nem transcrição.');
@@ -152,12 +177,15 @@ class DocumentUpdateService
 
         $suggestions = collect($response['sugestoes'] ?? [])
             ->filter(fn ($s) => is_array($s) && filled($s['trecho_atual'] ?? null))
+            // estratégicas, depois criativas, depois táticas (sortBy é estável: mantém a ordem da IA no grupo)
+            ->sortBy(fn ($s) => ($rank = array_search($s['impacto'] ?? null, self::IMPACTOS, true)) === false ? 2 : $rank)
             ->values()
             ->map(function (array $s, int $i) use ($html) {
                 $new = preg_replace('~<script\b[^>]*>.*?</script>~is', '', (string) ($s['trecho_novo'] ?? ''));
 
                 return [
                     'id'           => $i + 1,
+                    'impacto'      => in_array($s['impacto'] ?? null, self::IMPACTOS, true) ? $s['impacto'] : 'tatico',
                     'secao'        => Str::limit((string) ($s['secao'] ?? ''), 120),
                     'tipo'         => in_array($s['tipo'] ?? null, ['alterar', 'incluir', 'remover'], true) ? $s['tipo'] : 'alterar',
                     'titulo'       => Str::limit((string) ($s['titulo'] ?? 'Mudança'), 140),
@@ -178,11 +206,64 @@ class DocumentUpdateService
         $run->update([
             'status'      => 'pronto',
             'summary'     => (string) ($response['resumo'] ?? ''),
+            'strategic_review' => $this->strategicReview($response),
             'suggestions' => $suggestions,
             'data_after'  => $dataAfter,
             'data_reason' => $dataAfter ? ($response['dados_motivo'] ?? null) : null,
             'open_points' => array_values(array_filter((array) ($response['pontos_em_aberto'] ?? []), 'is_string')),
         ]);
+    }
+
+    public const VERDICTS = ['alinhado', 'ajustes', 'mudanca_de_rota', 'risco_de_desvio'];
+    public const MOVES    = ['mudanca_de_rota', 'desvio', 'nova_demanda', 'criativo', 'ajuste', 'reforco'];
+    public const DESTINOS = ['documento', 'aberto', 'alerta', 'fora', 'ja_esta'];
+    public const IMPACTOS = ['estrategico', 'criativo', 'tatico'];
+
+    /**
+     * Leitura de fiscal + secretário: a espinha dorsal do documento, o que a reunião fez com ela
+     * (rota, desvio, demanda nova, criativo, ajuste, reforço) e a pauta coberta. Normaliza o que a IA devolveu.
+     */
+    private function strategicReview(array $response): ?array
+    {
+        $line = collect((array) ($response['linha_estrategica'] ?? []))
+            ->only(['objetivo', 'publico', 'posicionamento', 'mensagem_central', 'tom', 'linha_criativa', 'mecanica_canais', 'prioridades'])
+            ->filter(fn ($v) => is_string($v) && trim($v) !== '')
+            ->map(fn ($v) => Str::limit(trim($v), 400))
+            ->all();
+
+        $str = fn ($v, int $max = 600) => is_string($v) && trim($v) !== '' ? Str::limit(trim($v), $max) : null;
+        $moves = collect($response['movimentos'] ?? [])
+            ->filter(fn ($m) => is_array($m) && in_array($m['tipo'] ?? null, self::MOVES, true) && filled($m['titulo'] ?? null))
+            ->map(fn ($m) => [
+                'tipo'            => $m['tipo'],
+                'titulo'          => Str::limit((string) $m['titulo'], 140),
+                'documento_diz'   => $str($m['documento_diz'] ?? null),
+                'reuniao_indica'  => $str($m['reuniao_indica'] ?? null),
+                'por_que_importa' => $str($m['por_que_importa'] ?? null),
+                'recomendacao'    => $str($m['recomendacao'] ?? null),
+                'evidencia'       => $str($m['evidencia'] ?? null, 400),
+            ])
+            ->sortBy(fn ($m) => array_search($m['tipo'], self::MOVES, true))
+            ->values()
+            ->all();
+
+        // Secretário: todos os assuntos da reunião, cada um com seu destino — o time confere que nada se perdeu.
+        $agenda = collect($response['pauta_coberta'] ?? [])
+            ->filter(fn ($p) => is_array($p) && filled($p['assunto'] ?? null))
+            ->map(fn ($p) => [
+                'assunto'    => Str::limit(trim((string) $p['assunto']), 160),
+                'destino'    => in_array($p['destino'] ?? null, self::DESTINOS, true) ? $p['destino'] : 'aberto',
+                'observacao' => $str($p['observacao'] ?? null, 300),
+            ])
+            ->values()
+            ->all();
+
+        $verdict = in_array($response['veredito'] ?? null, self::VERDICTS, true) ? $response['veredito'] : null;
+        if (!$verdict && !$line && !$moves && !$agenda) {
+            return null;
+        }
+
+        return ['veredito' => $verdict, 'linha_estrategica' => $line, 'movimentos' => $moves, 'pauta_coberta' => $agenda];
     }
 
     /**
@@ -307,6 +388,8 @@ class DocumentUpdateService
             . ($data !== null ? json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '(o documento não tem bloco de dados — devolva "dados_novos": null)') . "\n\n"
             . "=== DOCUMENTO ATUAL (HTML) ===\n"
             . HtmlPatch::forAi($html) . "\n\n"
-            . 'Confira o documento contra a reunião e responda no formato JSON definido.';
+            . 'Primeiro extraia a linha do documento, depois levante TODOS os assuntos da reunião e o que cada um '
+            . 'faz com a linha (rota, desvio, demanda nova, criativo, ajuste, reforço); proponha as mudanças que importam '
+            . 'e preste contas de cada assunto na pauta coberta. Não compare redação. Responda no formato JSON definido.';
     }
 }

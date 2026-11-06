@@ -215,17 +215,23 @@
 
                 <div>
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Transcrição</label>
-                    <p class="text-xs mb-2" style="color:var(--muted)">Cole aqui a transcrição bruta da call (gravação/Whisper) e use <strong>Salvar e gerar ATA com IA</strong>. Se a reunião teve uma continuação, troque o texto pela transcrição nova e gere de novo: a IA acrescenta o que é novo sem apagar a ATA.</p>
+                    @if($meeting->ata_ai_generated_at)
+                        <p class="text-xs mb-2" style="color:var(--muted)">A ATA desta reunião já foi gerada pela IA em {{ $meeting->ata_ai_generated_at->format('d/m/Y H:i') }} (uma reunião, uma ATA). Correção pontual é à mão, no campo da ATA; assunto novo vira outra reunião: use <strong>Marcar continuação</strong> na página da reunião.</p>
+                    @else
+                        <p class="text-xs mb-2" style="color:var(--muted)">Cole aqui a transcrição <strong>completa</strong> da call (gravação/Whisper) e use <strong>Salvar e gerar ATA com IA</strong>. A IA gera a ATA <strong>uma vez por reunião</strong>: confira se a transcrição está inteira antes.</p>
+                    @endif
                     <textarea name="transcricao" rows="10"
                         placeholder="Cole a transcrição da reunião..."
                         class="field w-full px-4 py-2.5 text-sm focus:outline-none resize-none"
                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">{{ old('transcricao', $meeting->transcricao) }}</textarea>
                     {{-- type="button": um submit aqui viraria o padrão do Enter no form e geraria ATA sem querer. --}}
                     <input type="hidden" name="generate_ata" value="0">
-                    <button type="button" class="btn btn-primary btn-xs mt-2"
-                            onclick="const f = this.form; f.querySelector('[name=generate_ata]').value = '1'; f.requestSubmit();">
-                        <x-icon name="sparkles" size="12" /> Salvar e gerar ATA com IA
-                    </button>
+                    @unless($meeting->ata_ai_generated_at)
+                        <button type="button" class="btn btn-primary btn-xs mt-2"
+                                onclick="const f = this.form; f.querySelector('[name=generate_ata]').value = '1'; f.requestSubmit();">
+                            <x-icon name="sparkles" size="12" /> Salvar e gerar ATA com IA
+                        </button>
+                    @endunless
                 </div>
 
                 <div>

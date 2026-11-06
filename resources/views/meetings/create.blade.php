@@ -20,8 +20,15 @@
             </div>
         @endif
 
+        @if(!empty($prefill))
+            {{-- "Marcar continuação": uma reunião = uma ATA; a continuação começa da ATA anterior. --}}
+            <div class="mb-5 px-4 py-3 text-sm" style="background:rgba(100,59,142,.08); border:1px solid rgba(100,59,142,.25); color:var(--purple); border-radius:8px">
+                Continuação de reunião: cliente, participantes, contatos e itens citados vieram da reunião anterior, e a <strong>ATA anterior já está na pauta</strong>. Só falta escolher a data.
+            </div>
+        @endif
+
         <form method="POST" action="{{ route('meetings.store') }}"
-              x-data="{ modality: '{{ old('modality','online') }}', clientId: '{{ old('client_id', request('client_id')) }}' }">
+              x-data="{ modality: '{{ old('modality', $prefill['modality'] ?? 'online') }}', clientId: '{{ old('client_id', $prefill['client_id'] ?? request('client_id')) }}' }">
             @csrf
 
             <div class="card p-6 space-y-5">
@@ -31,7 +38,7 @@
                     <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
                         Título <span style="color:var(--orange)">*</span>
                     </label>
-                    <input type="text" name="title" value="{{ old('title') }}" required
+                    <input type="text" name="title" value="{{ old('title', $prefill['title'] ?? '') }}" required
                         class="field w-full px-4 py-2.5 text-sm focus:outline-none"
                         onfocus="this.style.borderColor='var(--purple)'" onblur="this.style.borderColor='var(--border)'">
                 </div>
@@ -46,7 +53,7 @@
                             class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                             <option value="">Selecione...</option>
                             @foreach(\App\Models\Meeting::$types as $key => $label)
-                                <option value="{{ $key }}" {{ old('type') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                                <option value="{{ $key }}" {{ old('type', $prefill['type'] ?? null) === $key ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -57,7 +64,7 @@
                         <select name="modality" x-model="modality" required
                             class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                             @foreach(\App\Models\Meeting::$modalities as $key => $label)
-                                <option value="{{ $key }}" {{ old('modality','online') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                                <option value="{{ $key }}" {{ old('modality', $prefill['modality'] ?? 'online') === $key ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -124,7 +131,7 @@
                             class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                             <option value="">— sem cliente —</option>
                             @foreach($clients as $c)
-                                <option value="{{ $c->id }}" {{ old('client_id', request('client_id')) === $c->id ? 'selected' : '' }}>{{ $c->displayName() }}</option>
+                                <option value="{{ $c->id }}" {{ old('client_id', $prefill['client_id'] ?? request('client_id')) === $c->id ? 'selected' : '' }}>{{ $c->displayName() }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -136,7 +143,7 @@
                             class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                             <option value="">— sem oportunidade —</option>
                             @foreach($opportunities as $o)
-                                <option value="{{ $o->id }}" {{ old('opportunity_id') === $o->id ? 'selected' : '' }}>{{ $o->title }}</option>
+                                <option value="{{ $o->id }}" {{ old('opportunity_id', $prefill['opportunity_id'] ?? null) === $o->id ? 'selected' : '' }}>{{ $o->title }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -150,7 +157,7 @@
                     <select name="organized_by" required
                         class="field w-full px-4 py-2.5 text-sm focus:outline-none">
                         @foreach($users as $u)
-                            <option value="{{ $u->id }}" {{ old('organized_by', auth()->id()) == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
+                            <option value="{{ $u->id }}" {{ old('organized_by', $prefill['organized_by'] ?? auth()->id()) == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -164,7 +171,7 @@
                         @foreach($users as $u)
                             <label class="flex items-center gap-2 text-sm cursor-pointer py-1" style="color:var(--text)">
                                 <input type="checkbox" name="participants[]" value="{{ $u->id }}"
-                                    {{ in_array($u->id, old('participants', [])) ? 'checked' : '' }}
+                                    {{ in_array($u->id, old('participants', $prefill['participants'] ?? [])) ? 'checked' : '' }}
                                     class="rounded"
                                     style="accent-color:var(--purple)">
                                 {{ $u->name }}
@@ -183,7 +190,7 @@
                             <label class="flex items-center gap-2 text-sm cursor-pointer py-1" style="color:var(--text)"
                                 x-show="!clientId || [{{ $c->clients->pluck('id')->map(fn ($id) => "'{$id}'")->implode(',') }}].includes(clientId)">
                                 <input type="checkbox" name="contacts[]" value="{{ $c->id }}"
-                                    {{ in_array($c->id, old('contacts', [])) ? 'checked' : '' }}
+                                    {{ in_array($c->id, old('contacts', $prefill['contacts'] ?? [])) ? 'checked' : '' }}
                                     style="accent-color:var(--purple)">
                                 {{ $c->name }}
                             </label>
@@ -198,10 +205,10 @@
                     </label>
                     {{-- Sem envio de imagem aqui: a reunião ainda não existe pra guardar o arquivo
                          (imagem colada ficaria embutida no texto). Dá pra pôr imagem ao editar. --}}
-                    <x-rich-editor name="agenda" min-height="140px" :value="old('agenda', '')" />
+                    <x-rich-editor name="agenda" min-height="140px" :value="old('agenda', $prefill['agenda'] ?? '')" />
                 </div>
 
-                @include('meetings._agenda-picker', ['items' => []])
+                @include('meetings._agenda-picker', ['items' => $agendaItems ?? []])
 
             </div>
 

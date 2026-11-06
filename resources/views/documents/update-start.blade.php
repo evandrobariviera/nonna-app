@@ -16,9 +16,10 @@
 
         <div class="card p-5 mb-5">
             <p class="text-sm" style="color:var(--text)">
-                A IA lê a <b>ATA</b> e a <b>transcrição</b> da reunião, confere o documento <b>{{ $owner->title }}</b> e sugere
-                o que mudar, cada mudança com o motivo e o trecho da reunião que a justifica. Ela escreve seguindo as mesmas
-                regras usadas para criar {{ $kindLabel === 'planejamento' ? 'o planejamento' : 'a ' . $kindLabel }}.
+                A IA funciona como <b>fiscal e secretária</b>: lê a <b>ATA</b> e a <b>transcrição</b> da reunião e confere se ela
+                mantém, ajusta ou muda o rumo de <b>{{ $owner->title }}</b> (objetivo, público, mensagem, tom, linha criativa). Ela avisa
+                as <b>mudanças de rota</b> e os <b>desvios</b> que ninguém assumiu, pega <b>demandas novas</b> e <b>mudanças criativas</b>,
+                mostra para onde foi cada assunto da reunião e só sugere mexer no documento no que importa (não compara redação). Escreve seguindo as mesmas regras usadas para criar {{ $kindLabel === 'planejamento' ? 'o planejamento' : 'a ' . $kindLabel }}.
             </p>
             <p class="text-xs mt-2" style="color:var(--muted)">
                 Nada muda sozinho: você confere as sugestões, escolhe quais aceitar e só então o documento ganha uma versão nova.
@@ -26,11 +27,27 @@
             </p>
         </div>
 
-        <form method="POST" action="{{ $storeUrl }}" class="card p-5" x-data="{ meeting: @js($selected ?? $meetings->first()?->id), sending: false }" @submit="sending = true">
+        @php
+            // Trava de custo: reunião já conferida com este documento não pode ser escolhida de novo.
+            $firstFree = $meetings->first(fn ($m) => !$usedRuns->has($m->id))?->id;
+            $initial = ($selected && !$usedRuns->has($selected)) ? $selected : $firstFree;
+        @endphp
+        <form method="POST" action="{{ $storeUrl }}" class="card p-5" x-data="{ meeting: @js($initial), sending: false }" @submit="sending = true">
             @csrf
-            <h2 class="card-title mb-3">Qual reunião?</h2>
+            <h2 class="card-title mb-1">Qual reunião?</h2>
+            <p class="text-xs mb-3" style="color:var(--muted)">Cada reunião é conferida com este documento uma vez só.</p>
 
             @forelse($meetings as $m)
+                @if($usedRunId = $usedRuns->get($m->id))
+                    <div class="flex items-start justify-between gap-3 px-3 py-2.5 mb-2 rounded-lg" style="border:1px solid var(--border2); opacity:.7">
+                        <span class="min-w-0">
+                            <span class="text-sm font-semibold block" style="color:var(--text)">{{ $m->title }}</span>
+                            <span class="text-xs" style="color:var(--muted)">{{ $m->scheduled_at->format('d/m/Y') }} · {{ $m->typeLabel() }} · já conferida</span>
+                        </span>
+                        <a href="{{ route('document-updates.show', $usedRunId) }}" class="btn btn-ghost btn-xs flex-shrink-0">Ver análise →</a>
+                    </div>
+                    @continue
+                @endif
                 <label class="flex items-start gap-3 px-3 py-2.5 mb-2 cursor-pointer rounded-lg"
                        :style="meeting === @js($m->id) ? 'background:rgba(100,59,142,.08); border:1px solid rgba(100,59,142,.35)' : 'border:1px solid var(--border2)'">
                     <input type="radio" name="meeting_id" value="{{ $m->id }}" x-model="meeting" class="mt-1">

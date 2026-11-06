@@ -18,6 +18,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class MeetingController extends Controller
 {
@@ -125,7 +126,7 @@ class MeetingController extends Controller
         return $query->get()->groupBy('status');
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $users        = User::orderBy('name')->get(['id', 'name']);
         $clients      = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
@@ -135,7 +136,28 @@ class MeetingController extends Controller
         // client_id pode mudar sem recarregar a página.
         $contacts = Contact::with('clients:id')->orderBy('name')->get(['id', 'name']);
 
-        return view('meetings.create', compact('users', 'clients', 'opportunities', 'contacts'));
+        // "Marcar continuação" (2026-11-06): uma reunião = uma ATA. Precisou atualizar, é outra
+        // reunião, com a ATA anterior como pauta e as mesmas pessoas/itens citados.
+        $prefill = [];
+        $agendaItems = [];
+        if ($request->filled('continuacao') && ($previous = Meeting::with('participants:users.id', 'contacts:contacts.id')->find($request->query('continuacao')))) {
+            $prefill = [
+                'title'          => Str::limit('Continuação — ' . $previous->title, 200, ''),
+                'type'           => $previous->type,
+                'modality'       => $previous->modality,
+                'client_id'      => $previous->client_id,
+                'opportunity_id' => $previous->opportunity_id,
+                'organized_by'   => $previous->organized_by,
+                'participants'   => $previous->participants->pluck('id')->all(),
+                'contacts'       => $previous->contacts->pluck('id')->all(),
+                'agenda'         => '<p><strong>Continuação da reunião "' . e($previous->title) . '" de ' . $previous->scheduled_at->format('d/m/Y')
+                    . '.</strong> Pauta: a ATA anterior, abaixo — o que ficou em aberto e o que precisa ser revisto.</p>'
+                    . (filled($previous->ata) ? '<hr>' . MeetingText::toHtml($previous->ata) : ''),
+            ];
+            $agendaItems = app(MeetingAgendaService::class)->formItems($previous);
+        }
+
+        return view('meetings.create', compact('users', 'clients', 'opportunities', 'contacts', 'prefill', 'agendaItems'));
     }
 
     public function store(Request $request)
@@ -239,7 +261,11 @@ class MeetingController extends Controller
     {
         if (blank($meeting->transcricao)) {
             return redirect()->route('meetings.show', $meeting)
-                ->with('warning', 'Cole a transcrição (ou transcreva um áudio anexado) antes de gerar a ATA.');
+                ->with('warning', 'Cole a transcrição antes de gerar a ATA.');
+        }
+        if ($meeting->ata_ai_generated_at) {
+            return redirect()->route('meetings.show', $meeting)
+                ->with('warning', 'A ATA desta reunião já foi gerada pela IA. Correção pontual é à mão, em Editar ATA; assunto novo vira outra reunião (Marcar continuação).');
         }
 
         $this->dispatchAta($meeting);
@@ -334,7 +360,8 @@ class MeetingController extends Controller
         }
 
         // Botão "Salvar e gerar ATA com IA" (ao lado da Transcrição, na edição).
-        if ($request->boolean('generate_ata') && filled($meeting->transcricao)) {
+        // Trava de custo: a IA gera a ATA uma vez por reunião (o botão nem aparece depois).
+        if ($request->boolean('generate_ata') && filled($meeting->transcricao) && !$meeting->ata_ai_generated_at) {
             $this->dispatchAta($meeting);
 
             return redirect()->route('meetings.show', $meeting)

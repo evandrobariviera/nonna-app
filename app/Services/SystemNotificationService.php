@@ -40,22 +40,6 @@ class SystemNotificationService
             'body'    => 'O cliente revisou e enviou de novo o cadastro. Confira os dados na página do cliente.',
             'kind'    => 'cadastro_atualizado',
         ],
-        'meeting.transcricao_ok' => [
-            'group'   => 'Reuniões',
-            'label'   => 'Transcrição de áudio concluída',
-            'context' => 'meeting',
-            'title'   => 'Transcrição concluída',
-            'body'    => 'O áudio "{attachment_name}" foi transcrito e preenchido na reunião "{meeting_title}".',
-            'kind'    => 'meeting_transcribed',
-        ],
-        'meeting.transcricao_falhou' => [
-            'group'   => 'Reuniões',
-            'label'   => 'Falha na transcrição de áudio',
-            'context' => 'meeting',
-            'title'   => 'Falha na transcrição',
-            'body'    => 'Não foi possível transcrever "{attachment_name}" — verifique se o áudio abre normalmente e tente de novo.',
-            'kind'    => 'meeting_transcribe_failed',
-        ],
         'meeting.lembrete_manual' => [
             'group'   => 'Reuniões',
             'label'   => 'Lembrete de reunião (botão "Notificar")',

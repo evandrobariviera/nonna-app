@@ -53,10 +53,19 @@
                                     @if($item['cited']) · <span style="color:var(--purple)">citado nesta reunião</span>@endif
                                 </p>
                             </div>
-                            <button type="button" class="btn btn-ghost btn-xs flex items-center gap-1" @click="open = open === @js($o->id) ? null : @js($o->id)">
-                                <x-icon name="sparkles" size="12" /> Conferir com a IA
-                            </button>
+                            @if($usedRunId = $usedRuns->get($o->id))
+                                {{-- Trava de custo: já conferido com esta reunião → só abre a análise --}}
+                                <a href="{{ route('document-updates.show', $usedRunId) }}" class="btn btn-ghost btn-xs flex items-center gap-1"
+                                   title="Cada documento é conferido com cada reunião uma vez só">
+                                    <x-icon name="check" size="12" /> Já conferido · ver análise
+                                </a>
+                            @else
+                                <button type="button" class="btn btn-ghost btn-xs flex items-center gap-1" @click="open = open === @js($o->id) ? null : @js($o->id)">
+                                    <x-icon name="sparkles" size="12" /> Conferir com a IA
+                                </button>
+                            @endif
                         </div>
+                        @unless($usedRuns->has($o->id))
                         <form method="POST" action="{{ $storeUrl }}" x-show="open === @js($o->id)" x-cloak class="mt-3" x-data="{ sending: false }" @submit="sending = true">
                             @csrf
                             <input type="hidden" name="meeting_id" value="{{ $meeting->id }}">
@@ -67,7 +76,9 @@
                                     <x-icon name="sparkles" size="12" /> <span x-text="sending ? 'Enviando…' : 'Conferir documento'"></span>
                                 </button>
                             </div>
+                            <p class="text-xs mt-1 text-right" style="color:var(--muted)">Cada documento é conferido com cada reunião uma vez só.</p>
                         </form>
+                        @endunless
                     </div>
                 @endforeach
             </div>

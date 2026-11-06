@@ -38,6 +38,7 @@ class Meeting extends Model
         'ata',
         'transcricao',
         'transcricao_updated_at',
+        'ata_ai_generated_at',
         'next_steps',
         'ata_recorded_at',
     ];
@@ -46,6 +47,7 @@ class Meeting extends Model
         'scheduled_at'           => 'datetime',
         'ata_recorded_at'        => 'datetime',
         'transcricao_updated_at' => 'datetime',
+        'ata_ai_generated_at'    => 'datetime',
         'duration_minutes'       => 'integer',
     ];
 

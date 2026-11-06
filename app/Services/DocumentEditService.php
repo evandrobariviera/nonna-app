@@ -197,9 +197,26 @@ class DocumentEditService
         $key = fn ($title) => Str::lower(Str::squish((string) $title));
         $projects = $owner->projects()->get()->keyBy(fn ($p) => $key($p->title));
         $oldItems = $before === null ? null : collect($before['itens'] ?? [])->keyBy(fn ($i) => $key($i['nome'] ?? ''));
+        $newItems = [];
         foreach ($data['itens'] ?? [] as $item) {
             $project = $projects->get($key($item['nome'] ?? ''));
             if (!$project) {
+                // Item que ENTROU no documento agora (não estava na versão anterior) vira card no
+                // planejamento — ex.: nova demanda da reunião aceita pela equipe. Item antigo sem
+                // card não é recriado: pode ter sido removido de propósito na tela.
+                if ($oldItems !== null && is_array($item) && trim((string) ($item['nome'] ?? '')) !== ''
+                    && !$oldItems->has($key($item['nome']))) {
+                    $newItems[] = [
+                        'organization_id' => $owner->organization_id, // não depender do tenant da requisição
+                        'title'        => Str::limit(trim($item['nome']), 250, ''),
+                        'type'         => ($item['tipo'] ?? '') === 'projeto' ? 'projeto' : 'campanha',
+                        'status'       => 'em_planejamento',
+                        'objective'    => is_string($item['objetivo'] ?? null) ? $item['objetivo'] : null,
+                        'start_date'   => $this->date($item['inicio'] ?? null),
+                        'end_date'     => $this->date($item['fim'] ?? null),
+                        'brief_status' => 'basico',
+                    ];
+                }
                 continue;
             }
             $itemUpdate = [];
@@ -212,6 +229,12 @@ class DocumentEditService
             if ($itemUpdate) {
                 $project->update($itemUpdate);
                 $changes[] = $project->title . ' ' . collect($itemUpdate)->map(fn ($d) => Carbon::parse($d)->format('d/m/Y'))->implode(' → ');
+            }
+        }
+
+        if ($newItems && app(MacroPlanDocumentService::class)->importIntoPlan($owner, ['projects' => $newItems]) > 0) {
+            foreach ($newItems as $item) {
+                $changes[] = ($item['type'] === 'projeto' ? 'novo projeto: ' : 'nova campanha: ') . $item['title'];
             }
         }
 

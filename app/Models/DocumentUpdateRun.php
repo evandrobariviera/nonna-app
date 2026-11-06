@@ -23,12 +23,13 @@ class DocumentUpdateRun extends Model
 
     protected $fillable = [
         'organization_id', 'owner_type', 'owner_id', 'meeting_id', 'base_attachment_id', 'instruction',
-        'status', 'summary', 'suggestions', 'data_after', 'data_reason', 'open_points', 'error',
+        'status', 'summary', 'strategic_review', 'suggestions', 'data_after', 'data_reason', 'open_points', 'error',
         'applied_attachment_id', 'requested_by', 'applied_by', 'applied_at',
     ];
 
     protected $casts = [
         'suggestions' => 'array',
+        'strategic_review' => 'array',
         'data_after'  => 'array',
         'open_points' => 'array',
         'applied_at'  => 'datetime',

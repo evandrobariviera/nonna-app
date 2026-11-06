@@ -287,15 +287,22 @@
                         <p class="text-sm mb-4" style="color:var(--muted)">
                             Nenhuma ATA registrada ainda.
                             @unless($hasTranscript)
-                                Cole a transcrição em <strong>Editar</strong> (ou transcreva um áudio anexado) e gere a ATA com a IA — ou escreva à mão.
+                                Cole a transcrição em <strong>Editar</strong> e gere a ATA com a IA — ou escreva à mão.
                             @endunless
                         </p>
                     @endif
 
                     <div class="mt-4 flex gap-3 flex-wrap items-center">
-                        @if($hasTranscript)
+                        @if($meeting->ata_ai_generated_at)
+                            {{-- Trava de custo: a IA gera a ATA uma vez por reunião. --}}
+                            <span class="text-xs flex items-center gap-1" style="color:var(--muted)" title="Uma reunião, uma ATA. Correção pontual é à mão; assunto novo vira outra reunião (Marcar continuação).">
+                                <x-icon name="sparkles" size="12" /> ATA gerada pela IA em {{ $meeting->ata_ai_generated_at->format('d/m H:i') }}
+                            </span>
+                        @elseif($hasTranscript)
                             <form method="POST" action="{{ route('meetings.ata.generate', $meeting) }}"
-                                  @submit.prevent="if (!@js($meeting->hasAta()) || await $store.confirmDialog.ask('Atualizar a ATA com a transcrição? A IA acrescenta o que é novo sem apagar o que já está na ATA, e os participantes são avisados de novo.')) $el.submit()">
+                                  @submit.prevent="if (await $store.confirmDialog.ask(@js($meeting->hasAta()
+                                      ? 'Atualizar a ATA com a transcrição? A IA acrescenta o que é novo sem apagar o que já está na ATA, e os participantes são avisados de novo. Isso só pode ser feito UMA vez por reunião: confira se a transcrição está completa.'
+                                      : 'Gerar a ATA com a IA? Isso só pode ser feito UMA vez por reunião: confira se a transcrição está completa antes.'))) $el.submit()">
                                 @csrf
                                 <button type="submit" class="btn btn-primary btn-xs" :disabled="generating">
                                     <x-icon name="sparkles" size="12" /> {{ $meeting->hasAta() ? 'Atualizar ATA com a transcrição' : 'Gerar ATA com IA' }}
@@ -308,6 +315,11 @@
                         @if($meeting->hasAta())
                             <a href="{{ route('meetings.ata-print', $meeting) }}" target="_blank" class="btn btn-ghost btn-xs">
                                 Ver ATA formatada →
+                            </a>
+                            {{-- Uma reunião = uma ATA: precisou atualizar, é outra reunião com a ATA anterior como pauta. --}}
+                            <a href="{{ route('meetings.create', ['continuacao' => $meeting->id]) }}" class="btn btn-ghost btn-xs flex items-center gap-1"
+                               title="Nova reunião com a mesma turma e a ATA desta como pauta">
+                                <x-icon name="calendar-plus" size="12" /> Marcar continuação
                             </a>
                         @endif
                         @if($meeting->client_id && ($meeting->hasAta() || $hasTranscript))
@@ -574,13 +586,6 @@
                                         </a>
                                     </div>
                                     <div class="flex items-center gap-1.5 flex-shrink-0">
-                                        @if(str_starts_with($attachment->mime_type ?? '', 'audio/') || str_starts_with($attachment->mime_type ?? '', 'video/'))
-                                            <form method="POST" action="{{ route('meeting-attachments.transcribe', [$meeting, $attachment]) }}"
-                                                  @submit.prevent="if (await $store.confirmDialog.ask('Transcrever este áudio via IA e substituir a Transcrição atual da reunião?')) $el.submit()">
-                                                @csrf
-                                                <button type="submit" class="btn btn-ghost btn-xs" title="Transcrever via IA">🎙️ Transcrever</button>
-                                            </form>
-                                        @endif
                                         <a href="{{ route('meeting-attachments.download', [$meeting, $attachment]) }}"
                                            class="btn btn-ghost btn-xs" title="Baixar arquivo">⬇</a>
                                         <form method="POST" action="{{ route('meeting-attachments.destroy', [$meeting, $attachment]) }}"
