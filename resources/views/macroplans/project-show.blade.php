@@ -89,12 +89,12 @@
 
     {{-- 3 colunas (06/11, pedido do Evandro) — lida da esquerda pra direita:
          O QUE É (resumo, equipe, reuniões, anexos) · O PLANO (documento) · O QUE FALTA FAZER
-         (pendências, tarefas, comentários). Em tela média a coluna de ação desce pra baixo do documento (a esquerda ocupa as duas linhas — sticky no grid invadia a linha de baixo),
+         (pendências, tarefas, comentários). Em tela média a coluna de ação desce pra baixo do documento (a esquerda ocupa as duas linhas). Sem colunas presas ao rolar (pedido 06/11: o documento já rola sozinho),
          em duas colunas; no celular fica tudo empilhado. --}}
     @php $projectClient = $project->client ?? $macroplan?->client; @endphp
     <div class="grid grid-cols-1 gap-5 mb-6 lg:grid-cols-[320px_minmax(0,1fr)] min-[100rem]:grid-cols-[300px_minmax(0,1fr)_360px] items-start">
 
-    <aside class="min-w-0 lg:row-span-2 min-[100rem]:row-span-1 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
+    <aside class="min-w-0 lg:row-span-2 min-[100rem]:row-span-1">
     {{-- PROGRESSO + DETALHES — mesmo visual do "Faz parte de" da tarefa (tasks/show): rosca,
          datas e régua do período. Contadores data-stat-count são atualizados ao vivo pelo
          drag do quadro (script no fim do arquivo). --}}
@@ -442,7 +442,7 @@
     </div>
     </div>{{-- /documento --}}
 
-    <aside class="min-w-0 lg:col-start-2 min-[100rem]:col-start-3 min-[100rem]:row-start-1 grid grid-cols-1 gap-x-5 xl:grid-cols-2 min-[100rem]:grid-cols-1 items-start min-[100rem]:sticky min-[100rem]:top-4 min-[100rem]:max-h-[calc(100vh-2rem)] min-[100rem]:overflow-y-auto">
+    <aside class="min-w-0 lg:col-start-2 min-[100rem]:col-start-3 min-[100rem]:row-start-1 grid grid-cols-1 gap-x-5 xl:grid-cols-2 min-[100rem]:grid-cols-1 items-start">
     <div class="min-w-0">
     {{-- PENDÊNCIAS — o que o projeto/campanha está esperando (insumo do cliente, acesso,
          data...). Ver <x-pendencies-panel>. --}}
