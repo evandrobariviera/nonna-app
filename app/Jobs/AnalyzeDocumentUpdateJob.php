@@ -51,6 +51,9 @@ class AnalyzeDocumentUpdateJob implements ShouldQueue
             };
             $body = count($run->suggestions ?? []) . ' sugestão(ões) para o documento — confira a leitura estratégica e aplique.';
         } catch (\Throwable $e) {
+            // Query nova, não $run->update(): se o erro veio do próprio save do analyze(), o
+            // $run ainda carrega os atributos sujos e a gravação do "erro" falharia junto.
+            $run = $run->fresh();
             $run->update(['status' => 'erro', 'error' => mb_substr($e->getMessage(), 0, 1000)]);
             $title = 'Não foi possível analisar o documento';
             $body = mb_substr($e->getMessage(), 0, 300);

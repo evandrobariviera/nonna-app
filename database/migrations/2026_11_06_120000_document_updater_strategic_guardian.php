@@ -144,7 +144,8 @@ PROMPT;
 
         DB::connection('pgsql')->table('ai_agents')->where('slug', 'document-updater')->update([
             'name'          => 'Documentos — Fiscal e Secretário da Reunião',
-            'description'   => 'Lê a reunião inteira e confere se ela mantém, ajusta ou muda a linha estratégica, de comunicação e criativa do planejamento, campanha ou projeto. Aponta mudanças de rota, desvios não assumidos, novas demandas e mudanças criativas; presta contas de todos os assuntos da reunião e sugere atualizar o documento no que importa (a equipe aceita uma a uma).',
+            // ai_agents.description é varchar(255) — texto maior derrubava a migration no deploy
+            'description'   => 'Confere se a reunião mantém ou muda a linha do planejamento, campanha ou projeto: aponta mudanças de rota, desvios, novas demandas e mudanças criativas, e sugere atualizar o documento (a equipe aceita uma a uma).',
             'system_prompt' => self::PROMPT,
             'updated_at'    => now(),
         ]);
