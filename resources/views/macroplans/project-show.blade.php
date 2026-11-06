@@ -87,66 +87,14 @@
 
     @include('projects._timeline', ['project' => $project, 'timeline' => $timeline])
 
-    {{-- 2 colunas (2026-10): documento à esquerda, detalhes/portal/anexos/campanhas numa
-         coluna lateral fixa — o HTML é estreito e sozinho na largura toda sobrava cinza. --}}
+    {{-- 3 colunas (06/11, pedido do Evandro) — lida da esquerda pra direita:
+         O QUE É (resumo, equipe, reuniões, anexos) · O PLANO (documento) · O QUE FALTA FAZER
+         (pendências, tarefas, comentários). Em tela média a coluna de ação desce pra baixo,
+         em duas colunas; no celular fica tudo empilhado. --}}
     @php $projectClient = $project->client ?? $macroplan?->client; @endphp
-    <div class="grid grid-cols-1 gap-5 mb-6 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_460px] items-start">
-    <div class="min-w-0">
-
-    {{-- DOCUMENTO — o HTML da campanha/projeto (campo próprio document_attachment_id). É onde mora o
-         briefing, as peças e a mecânica (2026-10), e o que o Assistente de Tarefas lê. --}}
-    @php $mainDocument = $project->mainDocument(); @endphp
-    <div class="card overflow-hidden" x-data="{ open: {{ $mainDocument ? 'true' : 'false' }} }">
-        <div class="px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
-            <button type="button" @click="open = !open" class="flex items-center gap-2 text-left min-w-0">
-                <x-icon name="file-text" size="14" style="color:var(--purple)" />
-                <span class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Documento</span>
-                <span class="text-xs truncate" style="color:var(--text)">{{ $mainDocument?->filename ?? 'nenhum HTML anexado' }}</span>
-                @if($mainDocument)<span class="text-xs" style="color:var(--muted)" x-text="open ? '▴' : '▾'"></span>@endif
-            </button>
-            <div class="flex items-center gap-2 flex-wrap">
-                @if($mainDocument)
-                    <a href="{{ $mainDocument->url() }}" target="_blank" rel="noopener" class="btn btn-ghost btn-xs flex items-center gap-1">
-                        <x-icon name="external-link" size="12" /> Abrir em nova aba
-                    </a>
-                    <a href="{{ route('projects.document.edit', $project) }}" class="btn btn-ghost btn-xs flex items-center gap-1">
-                        <x-icon name="pencil" size="12" /> Editar documento
-                    </a>
-                    <a href="{{ route('projects.document.update-start', $project) }}" class="btn btn-ghost btn-xs flex items-center gap-1"
-                       title="A IA confere o documento com a ATA/transcrição de uma reunião e sugere as mudanças">
-                        <x-icon name="sparkles" size="12" /> Atualizar com reunião
-                    </a>
-                @endif
-                {{-- Campo próprio do documento (só HTML) — "Anexos" abaixo nunca troca o que
-                     aparece aqui. Versão anterior fica nos anexos. --}}
-                <form method="POST" action="{{ route('project-attachments.document', $project) }}" enctype="multipart/form-data">
-                    @csrf
-                    <label class="btn btn-primary btn-xs cursor-pointer flex items-center gap-1">
-                        <x-icon name="upload" size="12" /> {{ $mainDocument ? 'Trocar documento' : 'Enviar documento (HTML)' }}
-                        <input type="file" name="document" accept=".html,.htm" class="hidden" @change="$el.closest('form').submit()">
-                    </label>
-                </form>
-            </div>
-        </div>
-        @error('document')
-            <p class="px-5 pb-3 text-xs" style="color:var(--red)">{{ $message }}</p>
-        @enderror
-        @if($mainDocument)
-            <iframe x-show="open" x-cloak src="{{ $mainDocument->url() }}" title="Documento {{ $project->type === 'campanha' ? 'da campanha' : 'do projeto' }}"
-                    sandbox="allow-scripts allow-popups" loading="lazy"
-                    style="width:100%; height:calc(100vh - 140px); min-height:560px; border:0; border-top:1px solid var(--border2); background:#fff; display:block"></iframe>
-        @else
-            <p class="px-5 pb-4 text-xs" style="color:var(--muted)">
-                Envie o HTML {{ $project->type === 'campanha' ? 'da campanha (skill de campanha)' : 'do projeto (skill de projeto)' }} pelo botão
-                "Enviar documento (HTML)" — ele aparece aqui e o Assistente de Tarefas passa a ler. Arquivos em "Anexos" não aparecem aqui.
-            </p>
-        @endif
-    </div>
-
-    </div>{{-- /coluna documento --}}
+    <div class="grid grid-cols-1 gap-5 mb-6 lg:grid-cols-[340px_minmax(0,1fr)] min-[1800px]:grid-cols-[320px_minmax(0,1fr)_400px] items-start">
 
     <aside class="min-w-0 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
-
     {{-- PROGRESSO + DETALHES — mesmo visual do "Faz parte de" da tarefa (tasks/show): rosca,
          datas e régua do período. Contadores data-stat-count são atualizados ao vivo pelo
          drag do quadro (script no fim do arquivo). --}}
@@ -262,12 +210,6 @@
         </div>
     </div>
 
-    {{-- PENDÊNCIAS — o que o projeto/campanha está esperando (insumo do cliente, acesso,
-         data...). Ver <x-pendencies-panel>. --}}
-    <div class="mb-5">
-        <x-pendencies-panel :pendable="$project" alias="project" :users="$users" />
-    </div>
-
     {{-- EQUIPE — quem participa desta campanha/projeto (muda de um item pro outro). O
          responsável do cliente é a referência; aqui entram os demais. Também é montada no
          agendamento da reunião de discussão, pelo planejamento. --}}
@@ -334,6 +276,169 @@
         <x-related-meetings :meetings="$relatedMeetings" :context="$project" empty="Nenhuma reunião citou este item ainda." />
     </div>
 
+    {{-- ANEXOS --}}
+    <div class="card px-5 py-4 mb-5">
+        <p class="card-title mb-3">
+            Anexos
+            @if($project->attachments->count() > 0)
+                <span class="ml-1 px-1.5 py-0.5" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $project->attachments->count() }}</span>
+            @endif
+        </p>
+        <form method="POST" action="{{ route('project-attachments.store', $project) }}"
+              enctype="multipart/form-data" class="mb-2">
+            @csrf
+            <label class="flex items-center justify-center w-full py-3 cursor-pointer text-center transition-colors"
+                   style="border:1px dashed var(--border2); color:var(--muted); font-size:11px">
+                + Anexar arquivo
+                <input type="file" name="file" class="hidden" @change="$el.closest('form').submit()">
+            </label>
+        </form>
+        @foreach($project->attachments as $attachment)
+            <div class="flex items-center justify-between gap-2 px-2 py-1.5 text-xs" style="background:var(--s2)">
+                <a href="{{ $attachment->url() }}" target="_blank" class="truncate hover:underline" style="color:var(--text)">
+                    {{ $attachment->icon() }} {{ $attachment->filename }}
+                </a>
+                @if($attachment->id === $project->document_attachment_id)
+                    <span class="badge badge-purple flex-shrink-0" style="font-size:10px" title="É o que aparece no card Documento">documento</span>
+                @endif
+                <form method="POST" action="{{ route('project-attachments.destroy', [$project, $attachment]) }}"
+                      @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="btn btn-danger btn-xs">✕</button>
+                </form>
+            </div>
+        @endforeach
+    </div>
+
+    {{-- CAMPANHAS VINCULADAS — campanhas de anúncio (Meta/Google) correlacionadas
+         a este projeto. Vínculo é feito na própria página da campanha
+         (Projeto Vinculado → campanhas.update-project). --}}
+    @if($project->adCampaigns->isNotEmpty())
+        <div class="card px-5 py-4 mb-5">
+            <p class="card-title mb-3">
+                Campanhas Vinculadas ({{ $project->adCampaigns->count() }})
+            </p>
+            <div class="flex flex-col gap-2">
+                @foreach($project->adCampaigns as $campaign)
+                    <a href="{{ route('campaigns.show', $campaign) }}"
+                       class="flex items-center justify-between gap-3 px-3 py-2.5 transition-colors"
+                       style="background:var(--s2); border:1px solid var(--border2)"
+                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold truncate" style="color:var(--text)">{{ $campaign->name }}</p>
+                            <p class="text-xs mt-0.5" style="color:var(--muted)">{{ $campaign->platform }} · {{ $campaign->adAccount?->account_name ?? $campaign->adAccount?->account_id }}</p>
+                        </div>
+                        <span class="badge badge-{{ $campaign->managementStatusColor() }} flex-shrink-0">{{ $campaign->managementStatusLabel() }}</span>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    </aside>{{-- /contexto --}}
+
+    <div class="min-w-0">
+
+    {{-- DOCUMENTO — o HTML da campanha/projeto (campo próprio document_attachment_id). É onde mora o
+         briefing, as peças e a mecânica (2026-10), e o que o Assistente de Tarefas lê. --}}
+    @php $mainDocument = $project->mainDocument(); @endphp
+    <div class="card overflow-hidden" x-data="{ open: {{ $mainDocument ? 'true' : 'false' }} }">
+        <div class="px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
+            <button type="button" @click="open = !open" class="flex items-center gap-2 text-left min-w-0">
+                <x-icon name="file-text" size="14" style="color:var(--purple)" />
+                <span class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">Documento</span>
+                <span class="text-xs truncate" style="color:var(--text)">{{ $mainDocument?->filename ?? 'nenhum HTML anexado' }}</span>
+                @if($mainDocument)<span class="text-xs" style="color:var(--muted)" x-text="open ? '▴' : '▾'"></span>@endif
+            </button>
+            <div class="flex items-center gap-2 flex-wrap">
+                @if($mainDocument)
+                    <a href="{{ $mainDocument->url() }}" target="_blank" rel="noopener" class="btn btn-ghost btn-xs flex items-center gap-1">
+                        <x-icon name="external-link" size="12" /> Abrir em nova aba
+                    </a>
+                    <a href="{{ route('projects.document.edit', $project) }}" class="btn btn-ghost btn-xs flex items-center gap-1">
+                        <x-icon name="pencil" size="12" /> Editar documento
+                    </a>
+                    <a href="{{ route('projects.document.update-start', $project) }}" class="btn btn-ghost btn-xs flex items-center gap-1"
+                       title="A IA confere o documento com a ATA/transcrição de uma reunião e sugere as mudanças">
+                        <x-icon name="sparkles" size="12" /> Atualizar com reunião
+                    </a>
+                @endif
+                {{-- Campo próprio do documento (só HTML) — "Anexos" abaixo nunca troca o que
+                     aparece aqui. Versão anterior fica nos anexos. --}}
+                <form method="POST" action="{{ route('project-attachments.document', $project) }}" enctype="multipart/form-data">
+                    @csrf
+                    <label class="btn btn-primary btn-xs cursor-pointer flex items-center gap-1">
+                        <x-icon name="upload" size="12" /> {{ $mainDocument ? 'Trocar documento' : 'Enviar documento (HTML)' }}
+                        <input type="file" name="document" accept=".html,.htm" class="hidden" @change="$el.closest('form').submit()">
+                    </label>
+                </form>
+            </div>
+        </div>
+        @error('document')
+            <p class="px-5 pb-3 text-xs" style="color:var(--red)">{{ $message }}</p>
+        @enderror
+        @if($mainDocument)
+            <iframe x-show="open" x-cloak src="{{ $mainDocument->url() }}" title="Documento {{ $project->type === 'campanha' ? 'da campanha' : 'do projeto' }}"
+                    sandbox="allow-scripts allow-popups" loading="lazy"
+                    style="width:100%; height:calc(100vh - 140px); min-height:560px; border:0; border-top:1px solid var(--border2); background:#fff; display:block"></iframe>
+        @else
+            <p class="px-5 pb-4 text-xs" style="color:var(--muted)">
+                Envie o HTML {{ $project->type === 'campanha' ? 'da campanha (skill de campanha)' : 'do projeto (skill de projeto)' }} pelo botão
+                "Enviar documento (HTML)" — ele aparece aqui e o Assistente de Tarefas passa a ler. Arquivos em "Anexos" não aparecem aqui.
+            </p>
+        @endif
+    </div>
+    </div>{{-- /documento --}}
+
+    <aside class="min-w-0 lg:col-span-2 min-[1800px]:col-span-1 grid grid-cols-1 gap-x-5 lg:grid-cols-2 min-[1800px]:grid-cols-1 items-start min-[1800px]:sticky min-[1800px]:top-4 min-[1800px]:max-h-[calc(100vh-2rem)] min-[1800px]:overflow-y-auto">
+    <div class="min-w-0">
+    {{-- PENDÊNCIAS — o que o projeto/campanha está esperando (insumo do cliente, acesso,
+         data...). Ver <x-pendencies-panel>. --}}
+    <div class="mb-5">
+        <x-pendencies-panel :pendable="$project" alias="project" :users="$users" />
+    </div>
+
+    {{-- TAREFAS (resumo) — só as abertas, do status mais avançado ao backlog; o quadro completo
+         (arrastar cartões) continua embaixo. "+ Nova" abre o formulário de lá (open-new-task). --}}
+    @php
+        $openTasks = collect(array_reverse(array_keys(\App\Models\Task::$statuses)))
+            ->reject(fn ($s) => in_array($s, ['concluido', 'cancelado'], true))
+            ->flatMap(fn ($s) => $kanban[$s] ?? collect());
+    @endphp
+    <div class="card px-5 py-4 mb-5" id="tarefas-resumo">
+        <div class="flex items-center justify-between gap-2 mb-3">
+            <p class="card-title flex items-center gap-2">
+                <span class="icon-badge"><x-icon name="list-checks" size="16" /></span>
+                Tarefas
+                @if($openTasks->isNotEmpty())
+                    <span class="ml-1 px-1.5 py-0.5 text-xs" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted)">{{ $openTasks->count() }} aberta{{ $openTasks->count() !== 1 ? 's' : '' }}</span>
+                @endif
+            </p>
+            <button type="button" class="text-xs font-semibold" style="color:var(--purple)" @click="$dispatch('open-new-task')">+ Nova</button>
+        </div>
+        @if($openTasks->isEmpty())
+            <p class="text-xs" style="color:var(--muted)">Nenhuma tarefa aberta{{ $totalTasks ? ' — todas concluídas' : '' }}.</p>
+        @else
+            <ul class="flex flex-col">
+                @foreach($openTasks->take(10) as $t)
+                    @php $person = $t->executors->first() ?? $t->executor; $meta = \App\Models\Task::$statuses[$t->status] ?? null; @endphp
+                    <li class="flex items-center gap-2 py-1.5 {{ $loop->last ? '' : 'border-b' }}" style="border-color:var(--border)">
+                        <span class="w-2 h-2 rounded-full shrink-0" title="{{ $meta['label'] ?? $t->status }}" style="background:{{ \App\Models\Task::colorHex($meta['color'] ?? 'muted') }}"></span>
+                        <a href="{{ route('tasks.show', $t) }}" class="text-xs truncate flex-1 hover:underline" style="color:var(--text)" title="{{ $t->title }}">{{ $t->title }}</a>
+                        @if($t->due_date)
+                            <span class="text-[11px] shrink-0" style="color:{{ $t->isOverdue() ? 'var(--red)' : 'var(--muted)' }}">{{ $t->due_date->format('d/m') }}</span>
+                        @endif
+                        @if($person)<x-user-avatar :user="$person" size="5" />@endif
+                    </li>
+                @endforeach
+            </ul>
+            <button type="button" class="text-xs mt-2" style="color:var(--muted2)" @click="$dispatch('open-board')">
+                {{ $openTasks->count() > 10 ? 'Ver as ' . $openTasks->count() . ' no quadro completo' : 'Abrir o quadro completo' }}
+            </button>
+        @endif
+    </div>
+    </div>
+    <div class="min-w-0">
     {{-- COMENTÁRIOS — observações do time sobre a campanha/projeto (ProjectCommentController).
          Mesmo jeito dos comentários da tarefa; comentário novo avisa a equipe. Só interno. --}}
     <div class="card px-5 py-4 mb-5" id="comentarios" x-data="{ editId: null }" style="scroll-margin-top:16px">
@@ -494,68 +599,9 @@
             </div>
         </form>
     </div>
-
-    {{-- ANEXOS --}}
-    <div class="card px-5 py-4 mb-5">
-        <p class="card-title mb-3">
-            Anexos
-            @if($project->attachments->count() > 0)
-                <span class="ml-1 px-1.5 py-0.5" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $project->attachments->count() }}</span>
-            @endif
-        </p>
-        <form method="POST" action="{{ route('project-attachments.store', $project) }}"
-              enctype="multipart/form-data" class="mb-2">
-            @csrf
-            <label class="flex items-center justify-center w-full py-3 cursor-pointer text-center transition-colors"
-                   style="border:1px dashed var(--border2); color:var(--muted); font-size:11px">
-                + Anexar arquivo
-                <input type="file" name="file" class="hidden" @change="$el.closest('form').submit()">
-            </label>
-        </form>
-        @foreach($project->attachments as $attachment)
-            <div class="flex items-center justify-between gap-2 px-2 py-1.5 text-xs" style="background:var(--s2)">
-                <a href="{{ $attachment->url() }}" target="_blank" class="truncate hover:underline" style="color:var(--text)">
-                    {{ $attachment->icon() }} {{ $attachment->filename }}
-                </a>
-                @if($attachment->id === $project->document_attachment_id)
-                    <span class="badge badge-purple flex-shrink-0" style="font-size:10px" title="É o que aparece no card Documento">documento</span>
-                @endif
-                <form method="POST" action="{{ route('project-attachments.destroy', [$project, $attachment]) }}"
-                      @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-xs">✕</button>
-                </form>
-            </div>
-        @endforeach
     </div>
-
-    {{-- CAMPANHAS VINCULADAS — campanhas de anúncio (Meta/Google) correlacionadas
-         a este projeto. Vínculo é feito na própria página da campanha
-         (Projeto Vinculado → campanhas.update-project). --}}
-    @if($project->adCampaigns->isNotEmpty())
-        <div class="card px-5 py-4 mb-5">
-            <p class="card-title mb-3">
-                Campanhas Vinculadas ({{ $project->adCampaigns->count() }})
-            </p>
-            <div class="flex flex-col gap-2">
-                @foreach($project->adCampaigns as $campaign)
-                    <a href="{{ route('campaigns.show', $campaign) }}"
-                       class="flex items-center justify-between gap-3 px-3 py-2.5 transition-colors"
-                       style="background:var(--s2); border:1px solid var(--border2)"
-                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
-                        <div class="min-w-0">
-                            <p class="text-sm font-semibold truncate" style="color:var(--text)">{{ $campaign->name }}</p>
-                            <p class="text-xs mt-0.5" style="color:var(--muted)">{{ $campaign->platform }} · {{ $campaign->adAccount?->account_name ?? $campaign->adAccount?->account_id }}</p>
-                        </div>
-                        <span class="badge badge-{{ $campaign->managementStatusColor() }} flex-shrink-0">{{ $campaign->managementStatusLabel() }}</span>
-                    </a>
-                @endforeach
-            </div>
-        </div>
-    @endif
-
-    </aside>
-    </div>{{-- /grid documento + lateral --}}
+    </aside>{{-- /o que falta fazer --}}
+    </div>{{-- /grid 3 colunas --}}
 
     {{-- TAREFAS: Quadro (Kanban) ou Fila (lista) — recolhido quando há documento (a lateral
          já mostra a fila por status); aberto quando não há, pra página não ficar vazia.
@@ -563,6 +609,7 @@
     {{-- fromMeeting: "Criar tarefa" de uma pendência sugerida pela reunião (painel Pendências) —
          abre este formulário com título/descrição preenchidos e marca o item na análise ao salvar. --}}
     <div x-data="{ addCol: null, editTaskId: null, showDone: false, view: 'quadro', phaseMoved: false, boardOpen: {{ $mainDocument ? 'false' : 'true' }}, fromMeeting: null }"
+         @open-board.window="boardOpen = true; $nextTick(() => $el.scrollIntoView({ behavior: 'smooth', block: 'start' }))"
          @open-new-task.window="fromMeeting = null; addCol = 'backlog'; $nextTick(() => $refs.newTaskForm.scrollIntoView({ behavior: 'smooth', block: 'start' }))"
          @task-from-meeting.window="fromMeeting = $event.detail; addCol = 'backlog'; $nextTick(() => {
              $refs.newTaskTitle.value = fromMeeting.title;
