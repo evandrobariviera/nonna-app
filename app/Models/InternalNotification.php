@@ -57,6 +57,7 @@ class InternalNotification extends Model
         'project_comment'          => 'message-circle',
         'macro_plan_comment'       => 'messages-square',
         'ajuste_cliente'           => 'rotate-ccw',
+        'ia_conta'                 => 'triangle-alert', // crédito/chave da IA (AiService::guard)
         self::KIND_ATA             => 'book-open',
     ];
 

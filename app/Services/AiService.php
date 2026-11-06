@@ -5,8 +5,13 @@ namespace App\Services;
 use App\Models\AiAgent;
 use App\Models\AiProvider;
 use App\Models\AiTokenUsage;
+use App\Models\User;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class AiService
 {
@@ -65,7 +70,7 @@ class AiService
         }
 
         $systemPrompt = $this->buildChatSystemPrompt($agent->system_prompt, $context);
-        [$responseText, $usage] = $this->dispatchChat($agent, $apiKey->getApiKey(), $systemPrompt, $history, false);
+        [$responseText, $usage] = $this->guard($agent, fn () => $this->dispatchChat($agent, $apiKey->getApiKey(), $systemPrompt, $history, false));
         $this->logUsage($agent, $usage, $userId, $clientId, 'chat');
 
         return $responseText;
@@ -95,7 +100,7 @@ class AiService
         $systemPrompt = $this->buildChatSystemPrompt($agent->system_prompt, $context);
         $systemPrompt .= "\n\n---\nIMPORTANTE: responda ESTRITAMENTE com um único objeto JSON válido, sem markdown, sem texto antes ou depois, sem \`\`\`. Se não conseguir preencher um campo, use null - nunca invente dado.";
 
-        [$responseText, $usage] = $this->dispatchChat($agent, $apiKey->getApiKey(), $systemPrompt, $history, true);
+        [$responseText, $usage] = $this->guard($agent, fn () => $this->dispatchChat($agent, $apiKey->getApiKey(), $systemPrompt, $history, true));
         $this->logUsage($agent, $usage, $userId, $clientId, 'chat_structured');
 
         return $this->parseJsonResponse($responseText, $agent);
@@ -303,7 +308,7 @@ class AiService
 
         $systemPrompt = $this->injectContext($agent->system_prompt, $context);
 
-        [$responseText, $usage] = $this->dispatch($agent, $apiKey->getApiKey(), $systemPrompt, $userMessage);
+        [$responseText, $usage] = $this->guard($agent, fn () => $this->dispatch($agent, $apiKey->getApiKey(), $systemPrompt, $userMessage));
 
         $this->logUsage($agent, $usage, $userId, $clientId, $trigger);
 
@@ -445,7 +450,7 @@ class AiService
         $systemPrompt = $this->injectContext($agent->system_prompt, $context);
         $systemPrompt .= "\n\n---\nIMPORTANTE: responda ESTRITAMENTE com um único objeto JSON válido, sem markdown, sem texto antes ou depois, sem \`\`\`. Se não conseguir preencher um campo, use null - nunca invente dado.";
 
-        [$responseText, $usage] = $this->dispatchStructured($agent, $apiKey->getApiKey(), $systemPrompt, $userMessage);
+        [$responseText, $usage] = $this->guard($agent, fn () => $this->dispatchStructured($agent, $apiKey->getApiKey(), $systemPrompt, $userMessage));
 
         $this->logUsage($agent, $usage, $userId, $clientId, $trigger);
 
@@ -559,6 +564,76 @@ class AiService
             "Agente '{$agent->name}': resposta não é um JSON válido. Início da resposta: " .
             mb_substr($responseText, 0, 200)
         );
+    }
+
+    /**
+     * Crédito acabou / chave recusada (2026-11-06): antes cada recurso falhava calado — áudio
+     * sem transcrição, "Seu foco" pelas regras, análise de documento com erro técnico — e
+     * ninguém sabia que era só recarregar a conta. Agora: erro com texto claro pra quem
+     * clicou + aviso no sino dos super admins (no máx. 1 a cada 6h por provedor). Limite de
+     * ritmo comum (429 sem ser de cobrança) e erro de rede seguem como antes.
+     */
+    private function guard(AiAgent $agent, callable $call): array
+    {
+        try {
+            return $call();
+        } catch (RequestException $e) {
+            $problem = $this->accountProblem($e->response);
+            if ($problem === null) {
+                throw $e;
+            }
+
+            $provider = $agent->provider->name ?? $agent->provider->slug;
+            $message = $problem === 'credito'
+                ? "A conta da {$provider} está sem crédito — a IA volta a funcionar assim que a conta for recarregada."
+                : "A chave de API da {$provider} foi recusada (inválida ou desativada) — troque em Agentes & IA → Provedores.";
+
+            $this->alertAdmins($agent, $problem, $message);
+
+            throw new \RuntimeException($message, $e->response->status(), $e);
+        }
+    }
+
+    /** 'credito' | 'chave' | null (qualquer outro erro). */
+    private function accountProblem(Response $response): ?string
+    {
+        $status = $response->status();
+        $body = Str::lower($response->body());
+
+        if (in_array($status, [401, 403], true)) {
+            return 'chave';
+        }
+        if ($status === 402 || Str::contains($body, ['insufficient_quota', 'credit balance', 'billing'])) {
+            return 'credito';
+        }
+
+        return null;
+    }
+
+    private function alertAdmins(AiAgent $agent, string $problem, string $message): void
+    {
+        try {
+            if (!Cache::add("ai-account-alert:{$agent->provider->slug}:{$problem}", true, now()->addHours(6))) {
+                return;
+            }
+
+            $admins = User::where('is_super_admin', true)->get();
+            if ($admins->isEmpty()) {
+                return;
+            }
+
+            app(NotificationService::class)->notifyUsers(
+                $admins,
+                'ia_conta',
+                $problem === 'credito' ? 'IA parada: acabou o crédito da ' . ($agent->provider->name ?? $agent->provider->slug) : 'IA parada: chave de API recusada',
+                $message . " Primeiro recurso afetado: {$agent->name}. Enquanto isso, ATA, Seu foco, avaliação de leads e as demais análises com IA ficam sem funcionar.",
+                route('ai.providers.index'),
+                null,
+                $admins->first()->organizations()->value('organizations.id'),
+            );
+        } catch (\Throwable $e) {
+            Log::warning('AiService: não conseguiu avisar sobre a conta da IA', ['error' => $e->getMessage()]);
+        }
     }
 
     private function logUsage(AiAgent $agent, array $usage, ?int $userId, ?string $clientId, ?string $trigger): void

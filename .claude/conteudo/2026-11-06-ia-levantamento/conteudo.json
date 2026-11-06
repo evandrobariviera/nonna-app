@@ -1,0 +1,12 @@
+{
+  "novidades": [
+    {
+      "title": "IA: aviso quando a conta para e análises mais completas",
+      "summary": "Se o crédito da IA acabar, o App avisa na hora em vez de falhar calado; o Diagnóstico de Atendimento não corta mais conversa longa e os alertas de campanha usam o modelo novo.",
+      "body": "<p>Fizemos um levantamento de todo o uso de IA do App. Custa poucos dólares por mês, então o foco foi deixar tudo mais confiável:</p><ul><li><p><strong>Crédito acabou? Agora aparece.</strong> Antes, quando a conta da IA ficava sem crédito, cada recurso falhava calado (ATA, Seu foco, avaliação de leads). Agora quem clicou vê a mensagem \"A conta está sem crédito\" e a administração recebe um aviso no sino para recarregar.</p></li><li><p><strong>Diagnóstico de Atendimento</strong> com conversas muito longas não sai mais cortado no meio.</p></li><li><p><strong>Alertas de campanha e Pauta da Reunião Interna</strong> passaram para o modelo de IA atual, o mesmo dos outros recursos.</p></li></ul>",
+      "kind": "melhoria", "area": "Sistema"
+    }
+  ],
+  "ajuda": []
+}
+
