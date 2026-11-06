@@ -1,0 +1,11 @@
+{
+  "novidades": [
+    {
+      "title": "Coluna Pendências no painel de Projetos",
+      "summary": "No painel de Projetos e Campanhas, a nova coluna Pendências mostra quantas estão abertas (do projeto e das tarefas dele) e quantas venceram. Passe o mouse para ver quais.",
+      "body": "<p>Em <strong>Projetos</strong>, a tabela ganhou a coluna <strong>Pendências</strong>, logo depois de Tarefas. Ela conta as pendências <strong>abertas</strong> do próprio projeto ou campanha <strong>e das tarefas dele</strong>. Fica <strong>laranja</strong> quando há pendência aberta e <strong>vermelha</strong> quando alguma já passou do prazo (\"2 abertas · 1 vencida\"). Passando o mouse, aparece a lista: o que é, quem deve entregar e até quando. Clicar abre o projeto.</p>",
+      "kind": "melhoria", "area": "Projetos"
+    }
+  ],
+  "ajuda": []
+}

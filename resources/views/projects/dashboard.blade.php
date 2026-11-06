@@ -293,13 +293,14 @@
                             <th>Status</th>
                             <th>Progresso</th>
                             <th>Tarefas</th>
+                            <th>Pendências</th>
                             <th></th>
                         </tr>
                     </thead>
                     <template x-for="group in displayGroups()" :key="group.key">
                         <tbody>
                                 <tr x-show="group.label">
-                                    <td colspan="8" class="text-xs font-bold font-mono uppercase tracking-widest"
+                                    <td colspan="9" class="text-xs font-bold font-mono uppercase tracking-widest"
                                         style="background:var(--s2); color:var(--muted)"
                                         x-text="group.label + ' (' + group.items.length + ')'"></td>
                                 </tr>
@@ -354,6 +355,40 @@
                                         </div>
                                     </td>
                                     <td class="text-xs font-mono" style="color:var(--muted)" x-text="p.done_tasks + '/' + p.total_tasks"></td>
+                                    {{-- Pendências abertas do projeto + das tarefas dele; passar o mouse lista quais. --}}
+                                    <td style="min-width:110px">
+                                        <template x-if="p.pendencies_open === 0">
+                                            <span class="text-xs font-mono" style="color:var(--muted2)">—</span>
+                                        </template>
+                                        <template x-if="p.pendencies_open > 0">
+                                            <div class="inline-block" x-data="{ show: false, style: '' }"
+                                                 @mouseenter="show = true; style = dropdownStyle($el, 'bottom-right')" @mouseleave="show = false">
+                                                <a :href="p.url" class="text-xs font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-1"
+                                                   :style="p.pendencies_overdue > 0
+                                                       ? 'background:rgba(220,38,38,.1); color:var(--red)'
+                                                       : 'background:rgba(238,121,25,.1); color:var(--orange)'">
+                                                    <x-icon name="hourglass" size="11" />
+                                                    <span x-text="p.pendencies_open + (p.pendencies_open === 1 ? ' aberta' : ' abertas')"></span>
+                                                    <span x-show="p.pendencies_overdue > 0" x-text="'· ' + p.pendencies_overdue + ' vencida' + (p.pendencies_overdue === 1 ? '' : 's')"></span>
+                                                </a>
+                                                <template x-teleport="body">
+                                                    <div x-show="show" x-cloak class="p-3 rounded-lg shadow-lg text-left"
+                                                         :style="style + 'width:300px; background:var(--s1); border:1px solid var(--border2); pointer-events:none'">
+                                                        <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">Pendências abertas</p>
+                                                        <template x-for="(pd, i) in p.pendencies_list" :key="i">
+                                                            <div class="py-1.5 text-xs" style="border-top:1px solid var(--border2)">
+                                                                <p class="font-semibold" style="color:var(--text)" x-text="pd.title"></p>
+                                                                <p :style="pd.late ? 'color:var(--red)' : 'color:var(--muted)'"
+                                                                   x-text="pd.who + (pd.when ? ' · até ' + pd.when : '') + (pd.late ? ' · vencida' : '')"></p>
+                                                            </div>
+                                                        </template>
+                                                        <p x-show="p.pendencies_open > p.pendencies_list.length" class="text-xs mt-1" style="color:var(--muted)"
+                                                           x-text="'+ ' + (p.pendencies_open - p.pendencies_list.length) + ' — abra o projeto para ver todas'"></p>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </td>
                                     <td class="row-actions">
                                         <div class="flex items-center gap-2 justify-end">
                                             <button @click="openEdit(p)" class="btn btn-ghost btn-xs" title="Editar">

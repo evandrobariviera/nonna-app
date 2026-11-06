@@ -24,7 +24,20 @@ class ProjectController extends Controller
 
         $today = now()->toDateString();
 
-        $data = $projects->map(function (Project $p) use ($today) {
+        // Pendências abertas de cada projeto: as do próprio projeto + as das tarefas dele.
+        // Uma consulta só pra lista inteira (tarefas já vieram carregadas).
+        $taskProject = $projects->flatMap(fn ($p) => $p->tasks->mapWithKeys(fn ($t) => [$t->id => $p->id]));
+        $pendenciesByProject = \App\Models\Pendency::open()
+            ->where(fn ($q) => $q
+                ->where(fn ($q) => $q->where('pendable_type', 'project')->whereIn('pendable_id', $projects->pluck('id')))
+                ->orWhere(fn ($q) => $q->where('pendable_type', 'task')->whereIn('pendable_id', $taskProject->keys())))
+            ->with(['owedUser:id,name', 'owedContact:id,name'])
+            ->orderBy('due_date')
+            ->get()
+            ->groupBy(fn ($pd) => $pd->pendable_type === 'project' ? $pd->pendable_id : $taskProject->get($pd->pendable_id));
+
+        $data = $projects->map(function (Project $p) use ($today, $pendenciesByProject) {
+            $pendencies = $pendenciesByProject->get($p->id, collect());
             $tasks        = $p->tasks;
             $activeTasks  = $tasks->whereNotIn('status', ['cancelado']);
             $total        = $activeTasks->count();
@@ -97,6 +110,14 @@ class ProjectController extends Controller
                 'done_tasks'       => $done,
                 'overdue_tasks'    => $overdue,
                 'col_counts'       => $colCounts,
+                'pendencies_open'    => $pendencies->count(),
+                'pendencies_overdue' => $pendencies->filter->isOverdue()->count(),
+                'pendencies_list'    => $pendencies->take(8)->map(fn ($pd) => [
+                    'title' => $pd->title,
+                    'who'   => $pd->owedName(),
+                    'when'  => $pd->due_date?->format('d/m'),
+                    'late'  => $pd->isOverdue(),
+                ])->values()->all(),
                 'has_overdue'      => $overdue > 0,
                 'not_started'      => $total === 0,
                 'url'              => $hasPlan
