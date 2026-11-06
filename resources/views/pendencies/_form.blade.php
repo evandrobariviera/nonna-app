@@ -8,6 +8,8 @@
     $isEdit        = (bool) $pendency;
     $pendableAlias = $pendableAlias ?? null;
     $avulsa        = !$isEdit && !$pendableAlias;
+    $prefill       = $prefill ?? []; // valores sugeridos (ex.: item do Atualizar com reunião)
+    $extraHidden   = $extraHidden ?? []; // campos escondidos extras: name => value
     $inp = 'width:100%; background:var(--s3); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:7px 10px; font-size:13px; outline:none';
     $lbl = 'display:block; font-size:11px; font-weight:600; color:var(--muted); margin-bottom:4px';
 @endphp
@@ -15,7 +17,7 @@
 <form method="POST"
       action="{{ $isEdit ? route('pendencies.update', $pendency) : route('pendencies.store') }}"
       x-data="{
-          owedBy: '{{ $pendency->owed_by ?? 'cliente' }}',
+          owedBy: '{{ $pendency->owed_by ?? $prefill['owed_by'] ?? 'cliente' }}',
           clientId: '{{ $pendency->client_id ?? '' }}',
           contactsByClient: @js($avulsa ? ($newFormContacts ?? (object) []) : (object) []),
       }"
@@ -24,6 +26,9 @@
     @csrf
     @if(!empty($returnTo))<input type="hidden" name="return_to" value="{{ $returnTo }}">@endif
     @if($isEdit) @method('PATCH') @endif
+    @foreach($extraHidden as $hName => $hValue)
+        <input type="hidden" name="{{ $hName }}" value="{{ $hValue }}">
+    @endforeach
     @if($pendableAlias)
         <input type="hidden" name="pendable_type" value="{{ $pendableAlias }}">
         <input type="hidden" name="pendable_id" value="{{ $pendableId }}">
@@ -43,7 +48,7 @@
 
     <div>
         <label style="{{ $lbl }}">O que está pendente</label>
-        <input type="text" name="title" required maxlength="500" value="{{ $pendency->title ?? '' }}"
+        <input type="text" name="title" required maxlength="500" value="{{ $pendency->title ?? $prefill['title'] ?? '' }}"
                placeholder="Ex.: Fotos dos produtos novos" style="{{ $inp }}">
     </div>
 
@@ -52,7 +57,7 @@
             <label style="{{ $lbl }}">Tipo</label>
             <select name="kind" style="{{ $inp }}">
                 @foreach(\App\Models\Pendency::$kinds as $key => $k)
-                    <option value="{{ $key }}" @selected(($pendency->kind ?? 'insumo') === $key)>{{ $k['label'] }}</option>
+                    <option value="{{ $key }}" @selected(($pendency->kind ?? $prefill['kind'] ?? 'insumo') === $key)>{{ $k['label'] }}</option>
                 @endforeach
             </select>
         </div>
@@ -87,7 +92,7 @@
                 <select name="owed_contact_id" style="{{ $inp }}" :disabled="owedBy !== 'cliente'">
                     <option value="">Contato (opcional)</option>
                     @foreach($contacts ?? [] as $ct)
-                        <option value="{{ $ct->id }}" @selected(($pendency->owed_contact_id ?? null) === $ct->id)>{{ $ct->name }}</option>
+                        <option value="{{ $ct->id }}" @selected(($pendency->owed_contact_id ?? $prefill['owed_contact_id'] ?? null) === $ct->id)>{{ $ct->name }}</option>
                     @endforeach
                 </select>
             @endif
@@ -96,12 +101,12 @@
             <select name="owed_user_id" style="{{ $inp }}" :disabled="owedBy !== 'agencia'">
                 <option value="">Quem do time (opcional)</option>
                 @foreach($users as $u)
-                    <option value="{{ $u->id }}" @selected(($pendency->owed_user_id ?? null) == $u->id)>{{ $u->name }}</option>
+                    <option value="{{ $u->id }}" @selected(($pendency->owed_user_id ?? $prefill['owed_user_id'] ?? null) == $u->id)>{{ $u->name }}</option>
                 @endforeach
             </select>
         </div>
         <div x-show="owedBy === 'terceiro'" x-cloak>
-            <input type="text" name="owed_party" maxlength="255" value="{{ $pendency->owed_party ?? '' }}"
+            <input type="text" name="owed_party" maxlength="255" value="{{ $pendency->owed_party ?? $prefill['owed_party'] ?? '' }}"
                    placeholder="Ex.: Gráfica, fornecedor, Meta…" style="{{ $inp }}" :disabled="owedBy !== 'terceiro'">
         </div>
     </div>
@@ -129,7 +134,7 @@
 
     <div>
         <label style="{{ $lbl }}">Detalhes (opcional)</label>
-        <textarea name="description" rows="2" maxlength="5000" style="{{ $inp }}; resize:vertical">{{ $pendency->description ?? '' }}</textarea>
+        <textarea name="description" rows="2" maxlength="5000" style="{{ $inp }}; resize:vertical">{{ $pendency->description ?? $prefill['description'] ?? '' }}</textarea>
     </div>
 
     {{-- Na edição, anexar/remover fica na própria pendência (botão "Anexar"). --}}

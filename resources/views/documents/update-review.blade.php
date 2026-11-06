@@ -481,6 +481,83 @@
                 <form id="discard-form" method="POST" action="{{ route('document-updates.discard', $run) }}">@csrf</form>
             @endif
 
+            {{-- Pendências e demandas da reunião → Pendência do projeto/planejamento num clique
+                 (antes ficavam só nesta tela e se perdiam depois de aplicar). --}}
+            @if(!empty($pendencyItems))
+                @php
+                    $origins = ['aberto' => ['Ponto em aberto', 'var(--muted)'], 'nova_demanda' => ['Nova demanda', 'var(--blue, #3b82f6)'], 'fora' => ['Fora deste documento', 'var(--orange)']];
+                    $pendencyCount = collect($pendencyItems)->whereNotNull('pendency_id')->count();
+                    $returnTo = route('document-updates.show', $run) . '#pendencias-reuniao';
+                @endphp
+                <div class="card p-5 mb-5 mt-5" id="pendencias-reuniao" style="border-left:3px solid var(--orange)">
+                    <div class="flex items-center justify-between gap-3 flex-wrap mb-1">
+                        <h2 class="card-title flex items-center gap-1"><x-icon name="hourglass" size="14" /> Pendências e demandas da reunião</h2>
+                        <span class="text-xs" style="color:var(--muted)">{{ $pendencyCount }} de {{ count($pendencyItems) }} registrada(s)</span>
+                    </div>
+                    <p class="text-xs mb-3" style="color:var(--muted)">
+                        O que alguém precisa fazer, entregar ou confirmar depois da reunião. Não muda o documento: vira <b>pendência</b>
+                        {{ $isPlan ? 'do planejamento' : 'da ' . $kindLabel }}, com quem deve e quem cobra, e aparece no painel Pendências, na Central e no Seu foco.
+                    </p>
+                    @if($errors->pendency->any())
+                        <p class="text-xs mb-2 px-3 py-2" style="background:rgba(220,38,38,.06); border:1px solid rgba(220,38,38,.25); color:var(--red); border-radius:6px">{{ $errors->pendency->first() }}</p>
+                    @endif
+                    <ul class="flex flex-col">
+                        @foreach($pendencyItems as $item)
+                            @php
+                                [$originLabel, $originColor] = $origins[$item['origem']] ?? $origins['aberto'];
+                                $pStatus = $item['pendency_id'] ? ($pendencyStatus[$item['pendency_id']] ?? null) : null;
+                            @endphp
+                            <li class="py-3 {{ $loop->last ? '' : 'border-b' }}" style="border-color:var(--border)" x-data="{ open: false }" @pendency-form-close="open = false">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <p class="text-sm" style="color:var(--text)">{{ $item['titulo'] }}</p>
+                                        <p class="text-xs mt-0.5" style="color:var(--muted)">
+                                            <span style="color:{{ $originColor }}">{{ $originLabel }}</span>
+                                            · {{ \App\Models\Pendency::$kinds[$item['tipo']]['label'] ?? 'Outro' }}
+                                            · deve: {{ \App\Models\Pendency::$owedBy[$item['quem_deve']]['label'] ?? '—' }}{{ $item['quem'] ? ' (' . $item['quem'] . ')' : '' }}
+                                        </p>
+                                        @if($item['contexto'])
+                                            <p class="text-xs mt-1" style="color:var(--muted2)">{{ $item['contexto'] }}</p>
+                                        @endif
+                                    </div>
+                                    @if($item['pendency_id'])
+                                        <a href="{{ $backUrl }}#pendencias" class="text-xs font-semibold shrink-0 flex items-center gap-1" style="color:var(--green, #16a34a)">
+                                            <x-icon name="check" size="12" />
+                                            {{ $pStatus ? 'Pendência ' . (\App\Models\Pendency::$statuses[$pStatus]['label'] ?? $pStatus) : 'Pendência excluída' }}
+                                        </a>
+                                    @else
+                                        <button type="button" class="btn btn-ghost btn-sm shrink-0 flex items-center gap-1" x-show="!open" @click="open = true">
+                                            <x-icon name="hourglass" size="12" /> Virar pendência
+                                        </button>
+                                    @endif
+                                </div>
+                                @unless($item['pendency_id'])
+                                    <div x-show="open" x-cloak class="mt-3 p-3" style="background:var(--s2); border:1px solid var(--border2); border-radius:8px">
+                                        @include('pendencies._form', [
+                                            'users'         => $pendencyUsers,
+                                            'contacts'      => $pendencyContacts,
+                                            'pendableAlias' => $run->owner_type,
+                                            'pendableId'    => $run->owner_id,
+                                            'returnTo'      => $returnTo,
+                                            'prefill'       => [
+                                                'title'           => $item['titulo'],
+                                                'kind'            => $item['tipo'],
+                                                'owed_by'         => $item['quem_deve'],
+                                                'owed_user_id'    => $item['user_id'],
+                                                'owed_contact_id' => $item['contact_id'],
+                                                'owed_party'      => $item['quem_deve'] === 'terceiro' ? $item['quem'] : null,
+                                                'description'     => trim(($item['contexto'] ?? '') . "\n\nDa reunião: " . ($run->meeting?->title ?? '—')),
+                                            ],
+                                            'extraHidden'   => ['document_update_run' => $run->id, 'document_update_item' => $item['key']],
+                                        ])
+                                    </div>
+                                @endunless
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             @if($run->status === 'aplicado')
                 <div class="card px-5 py-4 flex items-center justify-between gap-3 flex-wrap">
                     <p class="text-xs" style="color:var(--muted)">

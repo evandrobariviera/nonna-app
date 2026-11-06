@@ -4,15 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\ClientContact;
+use App\Models\DocumentUpdateRun;
 use App\Models\Pendency;
 use App\Models\PendencyAttachment;
 use App\Models\Task;
 use App\Models\TaskComment;
 use App\Models\User;
+use App\Services\DocumentUpdate\DocumentUpdateService;
 use App\Services\PendencyService;
 use App\Support\RichTextSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 // Central de Pendências + ações do bloco "Pendências" (Tarefa/Ticket, Projeto,
@@ -137,6 +140,14 @@ class PendencyController extends Controller
 
         $pendency = $this->service->create($data, $pendable, Auth::id());
         $this->service->attach($pendency, $request->file('files', []), Auth::id());
+
+        // Veio do "Atualizar com reunião": a análise lembra que o item virou pendência.
+        if (Str::isUuid((string) $request->input('document_update_run')) && $request->filled('document_update_item')) {
+            $run = DocumentUpdateRun::find($request->input('document_update_run'));
+            if ($run && $pendable && $run->owner_id === $pendable->getKey()) {
+                app(DocumentUpdateService::class)->markPendency($run, (string) $request->input('document_update_item'), $pendency->id);
+            }
+        }
 
         return $this->done($request, 'Pendência registrada.');
     }

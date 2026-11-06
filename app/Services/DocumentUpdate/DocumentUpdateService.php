@@ -7,7 +7,9 @@ use App\Models\AiAgent;
 use App\Models\DocumentUpdateRun;
 use App\Models\MacroPlan;
 use App\Models\Meeting;
+use App\Models\Pendency;
 use App\Models\Project;
+use App\Models\User;
 use App\Services\AiService;
 use App\Services\DocumentEditService;
 use App\Services\MeetingText;
@@ -215,10 +217,16 @@ class DocumentUpdateService
             ? $response['dados_novos']
             : null;
 
+        // Revisão: o que já virou pendência continua marcado (a chave é o título).
+        $review = $this->strategicReview($response);
+        if ($review !== null && !empty($run->strategic_review['pendencias_criadas'])) {
+            $review['pendencias_criadas'] = $run->strategic_review['pendencias_criadas'];
+        }
+
         $run->update([
             'status'      => 'pronto',
             'summary'     => (string) ($response['resumo'] ?? ''),
-            'strategic_review' => $this->strategicReview($response),
+            'strategic_review' => $review,
             'suggestions' => $suggestions,
             'data_after'  => $dataAfter,
             'data_reason' => $dataAfter ? ($response['dados_motivo'] ?? null) : null,
@@ -373,6 +381,7 @@ class DocumentUpdateService
             'resumo'           => $previous['summary'] ?? null,
             'movimentos'       => $moves,
             'pauta_coberta'    => $review['pauta_coberta'] ?? [],
+            'pendencias'       => $review['pendencias'] ?? [], // o que vira pendência no App
             'sugestoes'        => collect($suggestions)->map(fn ($s) => [
                 'id'                   => $s['id'],
                 'impacto'              => $s['impacto'] ?? null,
@@ -446,12 +455,83 @@ class DocumentUpdateService
             ->values()
             ->all();
 
+        // O que alguém precisa fazer/entregar/confirmar depois da reunião → vira Pendência num clique.
+        $pendencies = collect($response['pendencias'] ?? [])
+            ->filter(fn ($p) => is_array($p) && filled($p['titulo'] ?? null))
+            ->map(fn ($p) => [
+                'titulo'    => Str::limit(trim((string) $p['titulo']), 300),
+                'tipo'      => array_key_exists($p['tipo'] ?? '', Pendency::$kinds) ? $p['tipo'] : 'outro',
+                'quem_deve' => array_key_exists($p['quem_deve'] ?? '', Pendency::$owedBy) ? $p['quem_deve'] : 'agencia',
+                'quem'      => $str($p['quem'] ?? null, 120),
+                'origem'    => in_array($p['origem'] ?? null, self::PENDENCY_ORIGINS, true) ? $p['origem'] : 'aberto',
+                'contexto'  => $str($p['contexto'] ?? null, 600),
+            ])
+            ->take(20)
+            ->values()
+            ->all();
+
         $verdict = in_array($response['veredito'] ?? null, self::VERDICTS, true) ? $response['veredito'] : null;
-        if (!$verdict && !$line && !$moves && !$agenda) {
+        if (!$verdict && !$line && !$moves && !$agenda && !$pendencies) {
             return null;
         }
 
-        return ['veredito' => $verdict, 'linha_estrategica' => $line, 'movimentos' => $moves, 'pauta_coberta' => $agenda];
+        return ['veredito' => $verdict, 'linha_estrategica' => $line, 'movimentos' => $moves, 'pauta_coberta' => $agenda, 'pendencias' => $pendencies];
+    }
+
+    public const PENDENCY_ORIGINS = ['aberto', 'nova_demanda', 'fora'];
+
+    /**
+     * Pendências e demandas da reunião (2026-11-06): antes os pontos em aberto, as demandas e o
+     * que era "fora deste documento" ficavam só nesta tela — aplicava, e ninguém mais via. Agora
+     * cada item vira Pendência do projeto/planejamento num clique (painel Pendências, Central,
+     * Seu foco). Análise antiga (sem "pendencias" da IA) monta a lista com pontos em aberto,
+     * novas demandas e pauta "fora". A chave é o título normalizado: sobrevive à revisão.
+     *
+     * @return array<int, array{key: string, titulo: string, tipo: string, quem_deve: string, quem: ?string, origem: string, contexto: ?string, pendency_id: ?string}>
+     */
+    public function pendencyItems(DocumentUpdateRun $run): array
+    {
+        $review = $run->strategic_review ?? [];
+
+        if (array_key_exists('pendencias', $review)) {
+            $items = $review['pendencias'];
+        } else {
+            $items = collect($run->open_points ?? [])
+                ->map(fn ($t) => ['titulo' => $t, 'tipo' => 'informacao', 'quem_deve' => 'agencia', 'origem' => 'aberto', 'contexto' => null])
+                ->merge(collect($review['movimentos'] ?? [])->where('tipo', 'nova_demanda')
+                    ->map(fn ($m) => ['titulo' => $m['titulo'], 'tipo' => 'outro', 'quem_deve' => 'agencia', 'origem' => 'nova_demanda', 'contexto' => $m['recomendacao'] ?? null]))
+                ->merge(collect($review['pauta_coberta'] ?? [])->where('destino', 'fora')
+                    ->map(fn ($p) => ['titulo' => $p['assunto'], 'tipo' => 'outro', 'quem_deve' => 'agencia', 'origem' => 'fora', 'contexto' => $p['observacao'] ?? null]))
+                ->all();
+        }
+
+        $created = $review['pendencias_criadas'] ?? [];
+
+        return collect($items)
+            ->map(function ($i) use ($created) {
+                $key = self::pendencyKey($i['titulo']);
+                return $i + ['quem' => null, 'key' => $key, 'pendency_id' => $created[$key] ?? null];
+            })
+            ->unique('key')
+            ->values()
+            ->all();
+    }
+
+    public static function pendencyKey(string $title): string
+    {
+        return substr(md5(Str::lower(Str::squish($title))), 0, 12);
+    }
+
+    /** Lembra que o item da análise virou pendência (não oferecer de novo). */
+    public function markPendency(DocumentUpdateRun $run, string $key, string $pendencyId): void
+    {
+        if (!collect($this->pendencyItems($run))->contains('key', $key)) {
+            return;
+        }
+
+        $review = $run->strategic_review ?? [];
+        $review['pendencias_criadas'][$key] = $pendencyId;
+        $run->update(['strategic_review' => $review]);
     }
 
     /**
@@ -559,9 +639,13 @@ class DocumentUpdateService
 
         $ata = MeetingText::toMarkdown($meeting->ata);
 
+        // Para "quem_deve" das pendências: a IA não sabe quem é da agência (pôs o Evandro como cliente).
+        $team = User::whereNull('client_id')->orderBy('name')->pluck('name')->implode(', ');
+
         return "TIPO DO DOCUMENTO: {$kind}\n"
             . "Título: {$owner->title}\n"
             . 'Cliente: ' . ($client?->displayName() ?? '—') . "\n"
+            . "Equipe da agência (Nonna) — pendência destas pessoas é quem_deve \"agencia\": {$team}\n"
             . "{$facts}\n\n"
             . "=== REGRAS DA SKILL ({$skill}) ===\n"
             . (file_get_contents(resource_path("ai/skills/{$skill}.md")) ?: '') . "\n\n"

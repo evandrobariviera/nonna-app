@@ -5,12 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\DocumentUpdateRun;
 use App\Models\MacroPlan;
 use App\Models\Meeting;
+use App\Models\Pendency;
 use App\Models\Project;
+use App\Models\User;
 use App\Services\DocumentEditService;
 use App\Services\DocumentUpdate\DocumentUpdateService;
+use App\Services\PendencyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 // "Atualizar documento com reunião" — escolher a reunião, acompanhar a análise da IA e
 // aplicar as sugestões aceitas (ver DocumentUpdateService).
@@ -67,7 +71,42 @@ class DocumentUpdateController extends Controller
             'editUrl'   => $owner instanceof MacroPlan ? route('macroplans.document.edit', $owner) : route('projects.document.edit', $owner),
             'stale'     => $run->isReady() && $owner->document_attachment_id !== $run->base_attachment_id,
             'dataDiff'  => $this->dataDiff($run, $owner),
+            ...$this->pendencyData($run, $owner),
         ]);
+    }
+
+    /**
+     * Pendências e demandas da reunião → formulário de Pendência já preenchido, ligado ao
+     * projeto/planejamento. "quem" da IA vira a pessoa do time ou o contato quando o nome bate.
+     */
+    private function pendencyData(DocumentUpdateRun $run, MacroPlan|Project $owner): array
+    {
+        $items = app(DocumentUpdateService::class)->pendencyItems($run);
+        if (!$items) {
+            return ['pendencyItems' => [], 'pendencyUsers' => collect(), 'pendencyContacts' => collect(), 'pendencyStatus' => collect()];
+        }
+
+        $users = User::whereNull('client_id')->orderBy('name')->get(['id', 'name']);
+        $clientId = $owner->client_id ?? ($owner instanceof Project ? $owner->macroPlan?->client_id : null);
+        $contacts = $clientId ? app(PendencyService::class)->clientContacts($clientId) : collect();
+        $findByName = function ($people, ?string $name) {
+            $name = Str::lower(trim((string) $name));
+            if ($name === '') {
+                return null;
+            }
+            // nome inteiro dentro do cadastro, ou o primeiro nome do cadastro como palavra no "quem"
+            return $people->first(fn ($p) => Str::contains(Str::lower($p->name), $name)
+                || preg_match('/\b' . preg_quote(Str::lower(Str::before(trim($p->name), ' ')), '/') . '\b/u', $name))?->id;
+        };
+
+        $items = collect($items)->map(fn ($i) => $i + [
+            'user_id'    => $i['quem_deve'] === 'agencia' ? $findByName($users, $i['quem']) : null,
+            'contact_id' => $i['quem_deve'] === 'cliente' ? $findByName($contacts, $i['quem']) : null,
+        ])->all();
+
+        $status = Pendency::whereIn('id', collect($items)->pluck('pendency_id')->filter())->pluck('status', 'id');
+
+        return ['pendencyItems' => $items, 'pendencyUsers' => $users, 'pendencyContacts' => $contacts, 'pendencyStatus' => $status];
     }
 
     /** Campos do bloco de dados que a IA mudou: [[campo, antes, depois]] em texto. */
