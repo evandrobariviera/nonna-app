@@ -35,7 +35,7 @@
 <x-app-layout>
     <x-slot name="header">Atualizar com reunião: {{ $owner->title }}</x-slot>
 
-    <div class="max-w-4xl"
+    <div class="max-w-4xl xl:max-w-[80rem] xl:grid xl:grid-cols-[minmax(0,1fr)_22rem] xl:gap-6 xl:items-start"
          x-data="{
              status: @js($run->status),
              comments: @js((object) ($run->comments ?? [])),
@@ -75,6 +75,9 @@
                  }, 5000);
              },
          }">
+    {{-- Desktop largo: conteúdo à esquerda + caixa de comentários fixa à direita (pedido 06/11:
+         comentar sem ficar rolando até o fim). Abaixo de xl vira uma coluna, como antes. --}}
+    <div class="min-w-0">
 
         <a href="{{ $backUrl }}" class="text-xs font-semibold flex items-center gap-1 mb-3" style="color:var(--muted)">
             <x-icon name="arrow-left" size="12" /> Voltar para {{ $isPlan ? 'o planejamento' : 'a ' . $kindLabel }}
@@ -478,38 +481,6 @@
                 <form id="discard-form" method="POST" action="{{ route('document-updates.discard', $run) }}">@csrf</form>
             @endif
 
-            {{-- Rodada de comentários: geral + o que foi comentado nos itens → a IA refaz (limite de rodadas) --}}
-            @php $maxRevisions = \App\Services\DocumentUpdate\DocumentUpdateService::MAX_REVISIONS; @endphp
-            @if($run->isReady())
-                <div class="card p-5 mb-5" style="border-left:3px solid var(--purple)">
-                    <div class="flex items-center justify-between gap-3 flex-wrap mb-1">
-                        <h2 class="card-title flex items-center gap-1"><x-icon name="message-circle" size="14" /> Comentários para a IA refazer</h2>
-                        <span class="text-xs" style="color:var(--muted)">{{ $maxRevisions - $run->revision }} de {{ $maxRevisions }} revisão(ões) disponível(is)</span>
-                    </div>
-                    <p class="text-xs mb-3" style="color:var(--muted)">
-                        Comente os itens acima (botão <b>Comentar</b> / <b>Responder</b>) e, se quiser, deixe uma orientação geral aqui.
-                        A IA refaz a análise levando tudo em conta, e o que você não comentou fica igual. Para trocar só uma frase, é mais rápido editar a sugestão direto.
-                    </p>
-                    <textarea rows="3" maxlength="3000" class="field w-full px-3 py-2 text-sm"
-                              x-model="comments['geral']" @input.debounce.800ms="saveComment('geral')" @blur="saveComment('geral')"
-                              placeholder="Ex.: o público distante não entra nesta campanha, fica para o planejamento de 2027. Não mexa no tráfego pago."></textarea>
-                    <div class="flex items-center justify-between gap-3 flex-wrap mt-2">
-                        <p class="text-[11px]" style="color:var(--muted)" x-text="saveState['geral'] || (commentCount + ' comentário(s) para a IA')"></p>
-                        @if($run->revision < $maxRevisions)
-                            <form method="POST" action="{{ route('document-updates.revise', $run) }}" x-data="{ sending: false }" @submit.prevent="sending = true; await flushComments(); $el.submit()">
-                                @csrf
-                                <button type="submit" class="btn btn-primary btn-sm flex items-center gap-1" :disabled="sending || commentCount === 0"
-                                        :title="commentCount === 0 ? 'Escreva pelo menos um comentário' : ''">
-                                    <x-icon name="refresh-cw" size="14" /> <span x-text="sending ? 'Enviando…' : 'Refazer com meus comentários'"></span>
-                                </button>
-                            </form>
-                        @else
-                            <span class="text-xs" style="color:var(--muted)">As {{ $maxRevisions }} revisões já foram usadas. Edite as sugestões ou use o editor do documento.</span>
-                        @endif
-                    </div>
-                </div>
-            @endif
-
             @if($run->status === 'aplicado')
                 <div class="card px-5 py-4 flex items-center justify-between gap-3 flex-wrap">
                     <p class="text-xs" style="color:var(--muted)">
@@ -523,5 +494,40 @@
                 </div>
             @endif
         @endif
+    </div>
+
+    {{-- Lateral fixa (xl): comentário geral + "Refazer" sempre à mão enquanto rola --}}
+    @if($run->isReady())
+        <aside class="min-w-0 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto">
+        @php $maxRevisions = \App\Services\DocumentUpdate\DocumentUpdateService::MAX_REVISIONS; @endphp
+            <div class="card p-5 mb-5 xl:mb-0" style="border-left:3px solid var(--purple)">
+                <div class="flex items-center justify-between gap-3 flex-wrap mb-1">
+                    <h2 class="card-title flex items-center gap-1"><x-icon name="message-circle" size="14" /> Comentários para a IA refazer</h2>
+                    <span class="text-xs" style="color:var(--muted)">{{ $maxRevisions - $run->revision }} de {{ $maxRevisions }} revisão(ões) disponível(is)</span>
+                </div>
+                <p class="text-xs mb-3" style="color:var(--muted)">
+                    Comente cada item (botão <b>Comentar</b> / <b>Responder</b>) e, se quiser, deixe uma orientação geral aqui.
+                    A IA refaz a análise levando tudo em conta, e o que você não comentou fica igual. Para trocar só uma frase, é mais rápido editar a sugestão direto.
+                </p>
+                <textarea rows="3" maxlength="3000" class="field w-full px-3 py-2 text-sm xl:min-h-[9rem]"
+                          x-model="comments['geral']" @input.debounce.800ms="saveComment('geral')" @blur="saveComment('geral')"
+                          placeholder="Ex.: o público distante não entra nesta campanha, fica para o planejamento de 2027. Não mexa no tráfego pago."></textarea>
+                <div class="flex items-center justify-between gap-3 flex-wrap mt-2">
+                    <p class="text-[11px]" style="color:var(--muted)" x-text="saveState['geral'] || (commentCount + ' comentário(s) para a IA')"></p>
+                    @if($run->revision < $maxRevisions)
+                        <form method="POST" action="{{ route('document-updates.revise', $run) }}" x-data="{ sending: false }" @submit.prevent="sending = true; await flushComments(); $el.submit()">
+                            @csrf
+                            <button type="submit" class="btn btn-primary btn-sm flex items-center gap-1" :disabled="sending || commentCount === 0"
+                                    :title="commentCount === 0 ? 'Escreva pelo menos um comentário' : ''">
+                                <x-icon name="refresh-cw" size="14" /> <span x-text="sending ? 'Enviando…' : 'Refazer com meus comentários'"></span>
+                            </button>
+                        </form>
+                    @else
+                        <span class="text-xs" style="color:var(--muted)">As {{ $maxRevisions }} revisões já foram usadas. Edite as sugestões ou use o editor do documento.</span>
+                    @endif
+                </div>
+            </div>
+        </aside>
+    @endif
     </div>
 </x-app-layout>

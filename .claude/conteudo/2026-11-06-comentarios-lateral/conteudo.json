@@ -1,0 +1,18 @@
+{
+  "novidades": [
+    {
+      "title": "Atualizar com reunião: comentários fixos na lateral",
+      "summary": "No computador, a caixa \"Comentários para a IA refazer\" fica fixa à direita enquanto você rola a análise — não precisa mais descer até o fim para comentar.",
+      "body": "<p>Na análise de <strong>Atualizar com reunião</strong>, a caixa <strong>Comentários para a IA refazer</strong> (com o botão <strong>Refazer com meus comentários</strong>) agora acompanha você na lateral direita enquanto rola a página. Dá para ler as sugestões e escrever a orientação geral ao mesmo tempo. Em telas menores e no celular, ela continua no fim da página.</p>",
+      "kind": "melhoria", "area": "Planejamentos"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Atualizar o documento com uma reunião",
+      "category": "Planejamentos",
+      "slug": "atualizar-o-documento-com-uma-reuniao",
+      "body_file": "ajuda-atualizar-com-reuniao.html"
+    }
+  ]
+}
