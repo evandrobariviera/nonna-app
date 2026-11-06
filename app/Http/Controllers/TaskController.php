@@ -1090,7 +1090,7 @@ class TaskController extends Controller
         }
 
         $run = \App\Models\DocumentUpdateRun::find($runId);
-        if ($run && $run->owner_id === $project->id) {
+        if ($run && \App\Services\DocumentUpdate\DocumentUpdateService::runCovers($run, $project)) {
             app(\App\Services\DocumentUpdate\DocumentUpdateService::class)->markTask($run, (string) $request->input('document_update_item'), $task->id);
             session()->flash('pendency_suggestions_open', $run->id);
         }

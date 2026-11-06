@@ -569,11 +569,16 @@
     {{-- TAREFAS: Quadro (Kanban) ou Fila (lista) — recolhido quando há documento (a lateral
          já mostra a fila por status); aberto quando não há, pra página não ficar vazia.
          O "+ Nova" da lateral dispara open-new-task e abre o formulário aqui. --}}
+    @php
+        // Veio do painel Pendências do PLANEJAMENTO ("Criar tarefa" → escolheu esta campanha): abre o Nova Tarefa preenchido.
+        $meetingTask = app(\App\Services\DocumentUpdate\DocumentUpdateService::class)->taskDetailFor($project, request('reuniao_run'), request('reuniao_item'));
+    @endphp
     {{-- fromMeeting: "Criar tarefa" de uma pendência sugerida pela reunião (painel Pendências) —
          abre este formulário com título/descrição preenchidos e marca o item na análise ao salvar. --}}
     <div x-data="{ addCol: null, editTaskId: null, showDone: false, view: 'quadro', phaseMoved: false, boardOpen: {{ $mainDocument ? 'false' : 'true' }}, fromMeeting: null }"
          @open-board.window="boardOpen = true; $nextTick(() => $el.scrollIntoView({ behavior: 'smooth', block: 'start' }))"
          @open-new-task.window="fromMeeting = null; addCol = 'backlog'; $nextTick(() => $refs.newTaskForm.scrollIntoView({ behavior: 'smooth', block: 'start' }))"
+         @if($meetingTask) x-init="setTimeout(() => window.dispatchEvent(new CustomEvent('task-from-meeting', { detail: @js($meetingTask) })), 300)" @endif
          @task-from-meeting.window="fromMeeting = $event.detail; addCol = 'backlog'; $nextTick(() => {
              $refs.newTaskTitle.value = fromMeeting.title;
              const ed = $refs.newTaskForm.querySelector('.rich-wrapper');

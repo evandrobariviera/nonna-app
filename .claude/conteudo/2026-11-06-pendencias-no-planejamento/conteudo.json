@@ -1,0 +1,13 @@
+{
+  "novidades": [
+    {
+      "title": "Planejamento: sugestões da reunião no bloco Pendências",
+      "summary": "No planejamento, o menu mostra \"+N sugeridas\" em Pendências e o Aplicar leva direto pra lá; tarefa sugerida pergunta em qual campanha entra e abre o formulário dela preenchido.",
+      "body": "<p>Depois do <strong>Atualizar com reunião</strong> num planejamento, o App leva você direto ao bloco <strong>Pendências</strong>, e o menu da esquerda mostra <strong>+N sugeridas</strong> enquanto houver sugestão para resolver.</p><p>Para as marcadas como <strong>Tarefa</strong>, o botão <strong>Criar tarefa</strong> pergunta em qual campanha ou projeto do planejamento ela entra e abre o formulário de <strong>Nova Tarefa</strong> de lá já preenchido com o título e a descrição.</p>",
+      "kind": "melhoria", "area": "Planejamentos"
+    }
+  ],
+  "ajuda": [
+    { "title": "Atualizar o documento com uma reunião", "category": "Planejamentos", "slug": "atualizar-o-documento-com-uma-reuniao", "body_file": "ajuda-atualizar-com-reuniao.html" }
+  ]
+}

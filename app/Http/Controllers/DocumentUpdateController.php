@@ -65,6 +65,7 @@ class DocumentUpdateController extends Controller
             'owner'     => $owner,
             'kindLabel' => DocumentUpdateService::kindLabel($owner),
             'backUrl'   => $this->ownerUrl($owner),
+            'pendenciesUrl' => $this->pendenciesUrl($owner),
             'editUrl'   => $owner instanceof MacroPlan ? route('macroplans.document.edit', $owner) : route('projects.document.edit', $owner),
             'stale'     => $run->isReady() && $owner->document_attachment_id !== $run->base_attachment_id,
             'dataDiff'  => $this->dataDiff($run, $owner),
@@ -161,7 +162,7 @@ class DocumentUpdateController extends Controller
         $toRegister = collect($this->updates->pendencyItems($run->fresh()))->whereNull('pendency_id')->whereNull('task_id')->where('dismissed', false)->count();
         $owner = $run->owner();
         if ($toRegister && !$result['failed'] && $owner) {
-            return redirect()->to($this->ownerUrl($owner) . '#pendencias')
+            return redirect()->to($this->pendenciesUrl($owner))
                 ->with('pendency_suggestions_open', $run->id)
                 ->with('success', $message . " A reunião deixou {$toRegister} pendência(s) sugerida(s): registre ou dispense aqui no painel Pendências.");
         }
@@ -285,6 +286,14 @@ class DocumentUpdateController extends Controller
         }
 
         return redirect()->route('document-updates.show', $run);
+    }
+
+    /** Onde ficam as pendências: no planejamento é um bloco próprio (não o do documento). */
+    private function pendenciesUrl(MacroPlan|Project $owner): string
+    {
+        return $owner instanceof MacroPlan
+            ? route('macroplans.edit', [$owner, 'bloco' => 'pendencias'])
+            : $this->projectUrl($owner) . '#pendencias';
     }
 
     private function ownerUrl(MacroPlan|Project $owner): string

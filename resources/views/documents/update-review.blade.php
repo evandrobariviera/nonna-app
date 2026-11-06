@@ -491,7 +491,7 @@
                 <div class="card p-5 mb-5 mt-5" id="pendencias-reuniao" style="border-left:3px solid var(--orange)">
                     <div class="flex items-center justify-between gap-3 flex-wrap mb-1">
                         <h2 class="card-title flex items-center gap-1"><x-icon name="hourglass" size="14" /> Pendências e demandas da reunião</h2>
-                        <a href="{{ $backUrl }}#pendencias" class="btn btn-ghost btn-sm flex items-center gap-1">
+                        <a href="{{ $pendenciesUrl }}" class="btn btn-ghost btn-sm flex items-center gap-1">
                             Registrar {{ $isPlan ? 'no planejamento' : 'na ' . $kindLabel }} <x-icon name="chevron-right" size="12" />
                         </a>
                     </div>

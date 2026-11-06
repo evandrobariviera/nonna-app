@@ -614,6 +614,44 @@ class DocumentUpdateService
         return preg_match($produce, Str::lower(trim($item['titulo'] ?? ''))) ? 'tarefa' : 'pendencia';
     }
 
+    /** O que o "Criar tarefa" preenche no formulário de Nova Tarefa da campanha/projeto (evento task-from-meeting). */
+    public static function taskDetail(array $item, DocumentUpdateRun $run): array
+    {
+        return [
+            'title' => Str::limit($item['titulo'], 300, ''),
+            'html'  => '<p>' . e($item['contexto'] ?? '') . '</p><p>Da reunião: ' . e($run->meeting?->title ?? '—') . '</p>',
+            'run'   => $run->id,
+            'item'  => $item['key'],
+        ];
+    }
+
+    /**
+     * Sugestão de tarefa vinda da análise de um planejamento, aberta numa campanha/projeto dele
+     * (?reuniao_run=&reuniao_item=). Só vale se a análise é do próprio projeto ou do planejamento dele.
+     */
+    public function taskDetailFor(Project $project, ?string $runId, ?string $key): ?array
+    {
+        if (!Str::isUuid((string) $runId) || !$key) {
+            return null;
+        }
+
+        $run = DocumentUpdateRun::with('meeting:id,title')->find($runId);
+        if (!$run || !self::runCovers($run, $project)) {
+            return null;
+        }
+
+        $item = collect($this->pendencyItems($run))->firstWhere('key', $key);
+
+        return $item && !$item['task_id'] && !$item['pendency_id'] ? self::taskDetail($item, $run) : null;
+    }
+
+    /** A análise é deste projeto ou do planejamento dele (tarefa sugerida no planejamento nasce numa campanha). */
+    public static function runCovers(DocumentUpdateRun $run, Project $project): bool
+    {
+        return $run->owner_id === $project->id
+            || ($run->owner_type === 'macro_plan' && $project->macro_plan_id && $run->owner_id === $project->macro_plan_id);
+    }
+
     /** Lembra que o item da análise virou tarefa (não oferecer de novo). */
     public function markTask(DocumentUpdateRun $run, string $key, string $taskId): void
     {

@@ -72,10 +72,14 @@
                 @foreach($group['items'] as $item)
                     @php
                         $isTask  = $item['natureza'] === 'tarefa';
-                        $canTask = $alias === 'project'; // tarefa mora em campanha/projeto (no planejamento, crie na campanha certa)
-                        $taskDetail = ['title' => \Illuminate\Support\Str::limit($item['titulo'], 300, ''), 'html' => '<p>' . e($item['contexto'] ?? '') . '</p><p>Da reunião: ' . e($group['run']->meeting?->title ?? '—') . '</p>', 'run' => $group['run']->id, 'item' => $item['key']];
+                        $canTask = $alias === 'project'; // tarefa mora em campanha/projeto
+                        $taskDetail = \App\Services\DocumentUpdate\DocumentUpdateService::taskDetail($item, $group['run']);
+                        // No planejamento: escolhe a campanha/projeto e abre o Nova Tarefa de lá já preenchido.
+                        $planTargets = $alias === 'macro_plan'
+                            ? $pendable->projects->map(fn ($p) => ['title' => $p->title, 'url' => route('macroplans.projects.show', [$pendable, $p]) . '?' . http_build_query(['reuniao_run' => $group['run']->id, 'reuniao_item' => $item['key']])])->values()
+                            : collect();
                     @endphp
-                    <li class="py-2 {{ $loop->last ? '' : 'border-b' }}" style="border-color:var(--border)" x-data="{ open: false }" @pendency-form-close.stop="open = false">
+                    <li class="py-2 {{ $loop->last ? '' : 'border-b' }}" style="border-color:var(--border)" x-data="{ open: false, pick: false, target: '' }" @pendency-form-close.stop="open = false">
                         <div class="flex items-start justify-between gap-2">
                             <div class="min-w-0">
                                 <p class="text-sm" style="color:var(--text)">
@@ -90,15 +94,16 @@
                                         @if($item['contexto']) · @endif
                                     @endunless
                                     {{ $item['contexto'] }}
-                                    @if($isTask && !$canTask) · <i>crie dentro da campanha ou projeto certo</i> @endif
                                 </p>
                             </div>
                             <div class="flex items-center gap-1 shrink-0 flex-wrap justify-end" x-show="!open">
                                 @if($canTask)
                                     <button type="button" class="btn btn-sm {{ $isTask ? 'btn-primary' : 'btn-ghost' }}"
                                             @click="$dispatch('task-from-meeting', @js($taskDetail))">{{ $isTask ? 'Criar tarefa' : 'Tarefa' }}</button>
+                                @elseif($planTargets->isNotEmpty())
+                                    <button type="button" class="btn btn-sm {{ $isTask ? 'btn-primary' : 'btn-ghost' }}" @click="pick = !pick">{{ $isTask ? 'Criar tarefa' : 'Tarefa' }}</button>
                                 @endif
-                                <button type="button" class="btn btn-sm {{ $isTask && $canTask ? 'btn-ghost' : 'btn-primary' }}" @click="open = true">{{ $isTask && $canTask ? 'Pendência' : 'Registrar pendência' }}</button>
+                                <button type="button" class="btn btn-sm {{ $isTask && ($canTask || $planTargets->isNotEmpty()) ? 'btn-ghost' : 'btn-primary' }}" @click="open = true">{{ $isTask && ($canTask || $planTargets->isNotEmpty()) ? 'Pendência' : 'Registrar pendência' }}</button>
                                 <form method="POST" action="{{ route('document-updates.pendency-dismiss', $group['run']) }}">
                                     @csrf
                                     <input type="hidden" name="key" value="{{ $item['key'] }}">
@@ -107,6 +112,19 @@
                                 </form>
                             </div>
                         </div>
+                        @if($planTargets->isNotEmpty())
+                            <div x-show="pick" x-cloak class="mt-2 p-3 flex items-center gap-2 flex-wrap" style="background:var(--s2); border:1px solid var(--border2); border-radius:8px">
+                                <span class="text-xs" style="color:var(--muted)">Em qual campanha ou projeto?</span>
+                                <select x-model="target" class="field text-xs px-2 py-1.5 flex-1 min-w-0">
+                                    <option value="">Escolha…</option>
+                                    @foreach($planTargets as $t)
+                                        <option value="{{ $t['url'] }}">{{ $t['title'] }}</option>
+                                    @endforeach
+                                </select>
+                                <button type="button" class="btn btn-primary btn-sm" :disabled="!target" @click="window.location = target">Abrir o formulário</button>
+                                <button type="button" class="btn btn-ghost btn-sm" @click="pick = false">Cancelar</button>
+                            </div>
+                        @endif
                         <div x-show="open" x-cloak class="mt-2 p-3" style="background:var(--s2); border:1px solid var(--border2); border-radius:8px">
                             @include('pendencies._form', [
                                 'users'         => $users,

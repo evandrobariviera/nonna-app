@@ -70,6 +70,9 @@
                         'discussao' => ['icon' => 'messages-square', 'label' => 'Discussão', 'count' => $macroplan->comments->count()],
                         'pendencias' => ['icon' => 'hourglass',    'label' => 'Pendências', 'count' => $macroplan->pendencies()->open()->count()],
                     ];
+                    // Sugeridas pela reunião ainda não resolvidas: sem isso o bloco mostrava "0" e ninguém abria.
+                    $suggestedCount = app(\App\Services\DocumentUpdate\DocumentUpdateService::class)
+                        ->suggestedPendencies($macroplan)->sum(fn ($g) => count($g['items']));
                 @endphp
                 @foreach($nav as $key => $item)
                     <button type="button"
@@ -81,9 +84,13 @@
                                 : 'color:var(--muted2)'">
                         <span class="opacity-60" style="display:inline-flex"><x-icon :name="$item['icon']" size="13" /></span>
                         <span class="text-xs font-semibold leading-tight">{{ $item['label'] }}</span>
-                        @isset($item['count'])
+                        @if($key === 'pendencias' && $suggestedCount)
+                            <span class="ml-auto text-[10px] font-semibold px-1.5 py-0.5" title="{{ $suggestedCount }} sugerida(s) pela reunião para registrar ou dispensar"
+                                  style="background:rgba(238,121,25,.12); color:var(--orange); border-radius:6px">+{{ $suggestedCount }} sugerida{{ $suggestedCount !== 1 ? 's' : '' }}</span>
+                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $item['count'] }}</span>
+                        @elseif(isset($item['count']))
                             <span class="ml-auto text-xs font-mono" style="color:var(--muted)">{{ $item['count'] }}</span>
-                        @endisset
+                        @endif
                     </button>
                 @endforeach
 
