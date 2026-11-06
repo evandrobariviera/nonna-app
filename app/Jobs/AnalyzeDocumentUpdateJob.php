@@ -9,6 +9,7 @@ use App\Services\NotificationService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
+use Illuminate\Queue\TimeoutExceededException;
 
 // "Atualizar documento com reunião" (DocumentUpdateService): a IA lê documento + skill +
 // ATA + transcrição — leva alguns minutos. A página da análise pergunta o status e recarrega;
@@ -56,6 +57,30 @@ class AnalyzeDocumentUpdateJob implements ShouldQueue
             report($e);
         }
 
+        $this->notify($run, $notifications, $title, $body);
+    }
+
+    // Só o estouro do timeout próprio (600s) marca erro aqui. O MaxAttemptsExceeded "puro"
+    // aparece quando outro worker re-reserva o job depois do retry_after (90s) — o worker
+    // original segue rodando e conclui. Worker morto no meio (deploy) é coberto por
+    // DocumentUpdateRun::releaseIfStuck().
+    public function failed(?\Throwable $e): void
+    {
+        if (!$e instanceof TimeoutExceededException) {
+            return;
+        }
+
+        $run = DocumentUpdateRun::withoutGlobalScopes()->find($this->runId);
+        if (!$run || !$run->isProcessing()) {
+            return;
+        }
+
+        $run->update(['status' => 'erro', 'error' => 'A IA passou de 10 minutos sem responder e a análise foi cancelada. Tente de novo.']);
+        $this->notify($run, app(NotificationService::class), 'Não foi possível analisar o documento', $run->error);
+    }
+
+    private function notify(DocumentUpdateRun $run, NotificationService $notifications, string $title, string $body): void
+    {
         $user = User::find($run->requested_by);
         if ($user) {
             $notifications->notifyUsers(

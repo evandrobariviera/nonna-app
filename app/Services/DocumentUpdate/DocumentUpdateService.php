@@ -115,7 +115,10 @@ class DocumentUpdateService
     public static function usedRunsQuery()
     {
         return DocumentUpdateRun::query()->where(fn ($q) => $q
-            ->whereIn('status', ['processando', 'pronto', 'aplicado'])
+            ->whereIn('status', ['pronto', 'aplicado'])
+            // "processando" preso (worker morreu) não trava: ver DocumentUpdateRun::isStuck()
+            ->orWhere(fn ($q) => $q->where('status', 'processando')
+                ->where('created_at', '>=', now()->subMinutes(DocumentUpdateRun::STUCK_AFTER_MINUTES)))
             ->orWhere(fn ($q) => $q->where('status', 'descartado')->whereNotNull('suggestions')));
     }
 

@@ -57,9 +57,29 @@ class DocumentUpdateRun extends Model
         return $this->belongsTo(User::class, 'applied_by');
     }
 
+    // Job tem timeout de 600s: "processando" há mais que isso = o worker morreu no meio
+    // (ex.: deploy reiniciou o container) e ninguém vai concluir a análise.
+    public const STUCK_AFTER_MINUTES = 15;
+
     public function isProcessing(): bool
     {
         return $this->status === 'processando';
+    }
+
+    public function isStuck(): bool
+    {
+        return $this->isProcessing() && $this->created_at?->lt(now()->subMinutes(self::STUCK_AFTER_MINUTES));
+    }
+
+    /** Análise presa vira "erro" — libera o "Tentar de novo" (a trava de custo não conta erro). */
+    public function releaseIfStuck(): void
+    {
+        if ($this->isStuck()) {
+            $this->update([
+                'status' => 'erro',
+                'error'  => 'A análise foi interrompida no meio (o sistema reiniciou enquanto a IA trabalhava) e não chegou a terminar. É só tentar de novo.',
+            ]);
+        }
     }
 
     public function isReady(): bool

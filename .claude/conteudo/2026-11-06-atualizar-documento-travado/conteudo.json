@@ -1,0 +1,11 @@
+{
+  "novidades": [
+    {
+      "title": "“Atualizar com reunião” não fica mais travado em “processando”",
+      "summary": "Se o sistema reiniciar enquanto a IA confere o documento, a análise agora vira erro com o botão “Tentar de novo”, em vez de ficar carregando para sempre.",
+      "body": "<p>Quando o App era atualizado bem na hora em que a IA estava conferindo um documento com a reunião, a análise ficava presa em <strong>“processando”</strong> sem terminar nunca, e ainda bloqueava uma nova tentativa (cada reunião só é conferida uma vez).</p><p>Agora, se a análise passar de 15 minutos sem resposta, ela é marcada como <strong>erro</strong> e aparece o botão <strong>Tentar de novo</strong>. A tentativa que deu erro não conta na trava de “uma vez por reunião”.</p>",
+      "kind": "correcao", "area": "Planejamentos"
+    }
+  ],
+  "ajuda": []
+}

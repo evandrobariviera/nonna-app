@@ -56,6 +56,7 @@ class DocumentUpdateController extends Controller
     public function show(DocumentUpdateRun $run)
     {
         $owner = $run->owner() ?? abort(404);
+        $run->releaseIfStuck();
         $run->load('meeting', 'requestedBy:id,name', 'appliedBy:id,name');
 
         return view('documents.update-review', [
@@ -96,6 +97,8 @@ class DocumentUpdateController extends Controller
 
     public function status(DocumentUpdateRun $run)
     {
+        $run->releaseIfStuck();
+
         return response()->json(['status' => $run->status]);
     }
 
