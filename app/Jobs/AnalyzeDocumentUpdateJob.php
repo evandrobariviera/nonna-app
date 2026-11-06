@@ -49,13 +49,15 @@ class AnalyzeDocumentUpdateJob implements ShouldQueue
                 'alinhado'        => 'Reunião na linha do documento',
                 default           => 'Leitura da reunião pronta',
             };
+            if ($run->revision > 0) {
+                $title = 'Revisão com seus comentários pronta';
+            }
             $body = count($run->suggestions ?? []) . ' sugestão(ões) para o documento — confira a leitura estratégica e aplique.';
         } catch (\Throwable $e) {
-            // Query nova, não $run->update(): se o erro veio do próprio save do analyze(), o
+            // failRound() recarrega do banco: se o erro veio do próprio save do analyze(), o
             // $run ainda carrega os atributos sujos e a gravação do "erro" falharia junto.
-            $run = $run->fresh();
-            $run->update(['status' => 'erro', 'error' => mb_substr($e->getMessage(), 0, 1000)]);
-            $title = 'Não foi possível analisar o documento';
+            $run->failRound($e->getMessage());
+            $title = $run->isReady() ? 'A revisão com seus comentários não terminou' : 'Não foi possível analisar o documento';
             $body = mb_substr($e->getMessage(), 0, 300);
             report($e);
         }
@@ -78,8 +80,8 @@ class AnalyzeDocumentUpdateJob implements ShouldQueue
             return;
         }
 
-        $run->update(['status' => 'erro', 'error' => 'A IA passou de 10 minutos sem responder e a análise foi cancelada. Tente de novo.']);
-        $this->notify($run, app(NotificationService::class), 'Não foi possível analisar o documento', $run->error);
+        $run->failRound('A IA passou de 10 minutos sem responder e a análise foi cancelada. Tente de novo.');
+        $this->notify($run, app(NotificationService::class), 'Não foi possível analisar o documento', (string) $run->error);
     }
 
     private function notify(DocumentUpdateRun $run, NotificationService $notifications, string $title, string $body): void

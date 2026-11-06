@@ -762,6 +762,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('document-updates.apply');
     Route::post('/atualizacoes-documento/{run}/descartar', [\App\Http\Controllers\DocumentUpdateController::class, 'discard'])
         ->name('document-updates.discard');
+    Route::post('/atualizacoes-documento/{run}/comentario', [\App\Http\Controllers\DocumentUpdateController::class, 'comment'])
+        ->name('document-updates.comment');
+    Route::post('/atualizacoes-documento/{run}/sugestoes/{suggestion}', [\App\Http\Controllers\DocumentUpdateController::class, 'editSuggestion'])
+        ->whereNumber('suggestion')->name('document-updates.suggestion');
+    Route::post('/atualizacoes-documento/{run}/revisar', [\App\Http\Controllers\DocumentUpdateController::class, 'revise'])
+        ->name('document-updates.revise');
     Route::post('/projetos/{project}/tarefas', [TaskController::class, 'storeStandalone'])
         ->name('tasks.storeStandalone');
 

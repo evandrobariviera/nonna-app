@@ -1,0 +1,24 @@
+{
+  "novidades": [
+    {
+      "title": "Atualizar com reunião: edite as sugestões e comente para a IA refazer",
+      "summary": "Antes de aplicar, dá para editar o texto de cada sugestão, comentar os itens, responder os pontos em aberto e pedir para a IA refazer com os seus comentários (até 2 vezes).",
+      "body": "<p>Na análise de <strong>Atualizar com reunião</strong>, você não fica mais só com aceitar ou recusar:</p><ul><li><p><strong>Editar:</strong> no quadro <strong>Depois</strong> de cada sugestão, clique em <strong>Editar</strong>, ajuste o texto e salve. É esse texto que entra no documento.</p></li><li><p><strong>Comentar:</strong> cada movimento e cada sugestão tem <strong>Comentar</strong>, cada ponto em aberto tem <strong>Responder</strong>, e no fim da página há um campo para orientação geral.</p></li><li><p><strong>Refazer com meus comentários:</strong> a IA refaz a análise tratando seus comentários como decisão do time. O que você não comentou fica igual, e o que você editou é mantido. São até 2 revisões por análise.</p></li></ul>",
+      "kind": "novidade", "area": "Planejamentos"
+    },
+    {
+      "title": "IA do Atualizar com reunião mexe só no que foi decidido",
+      "summary": "Ao sugerir uma mudança, a IA agora mantém o resto do trecho igual e não apaga dado (verba, metragem, data) que a reunião não decidiu tirar.",
+      "body": "<p>Na primeira análise real, a IA reescrevia blocos inteiros: para tirar um argumento, levava junto parágrafos e dados que ninguém tinha contestado. Agora ela troca só a parte decidida e mantém o resto palavra por palavra. Quando alguém lê o planejamento em voz alta na reunião, isso conta como confirmação. E o que a ATA marcar como \"inconsistência\" vira ponto em aberto, nunca motivo para apagar algo do documento.</p>",
+      "kind": "melhoria", "area": "Planejamentos"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Atualizar o documento com uma reunião",
+      "category": "Planejamentos",
+      "slug": "atualizar-o-documento-com-uma-reuniao",
+      "body_file": "ajuda-atualizar-com-reuniao.html"
+    }
+  ]
+}

@@ -127,6 +127,61 @@ class DocumentUpdateController extends Controller
         return redirect()->route('document-updates.show', $run)->with('success', $message);
     }
 
+    /** Salva um comentário da rodada (autosave da tela). Chave: geral | s:{id} | m:{i} | p:{i}. */
+    public function comment(Request $request, DocumentUpdateRun $run)
+    {
+        $data = $this->validateJson($request, [
+            'key'  => ['required', 'string', 'regex:/^(geral|[smp]:\d{1,3})$/'],
+            'text' => 'nullable|string|max:3000',
+        ]);
+
+        try {
+            $this->updates->saveComment($run, $data['key'], (string) ($data['text'] ?? ''));
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
+    /** Edição manual do "depois" de uma sugestão. */
+    public function editSuggestion(Request $request, DocumentUpdateRun $run, int $suggestion)
+    {
+        $data = $this->validateJson($request, ['html' => 'present|nullable|string|max:60000']);
+
+        try {
+            $readable = $this->updates->editSuggestion($run, $suggestion, (string) ($data['html'] ?? ''));
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['ok' => true, 'readable' => $readable]);
+    }
+
+    public function revise(DocumentUpdateRun $run)
+    {
+        try {
+            $this->updates->requestRevision($run);
+        } catch (\DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('document-updates.show', $run);
+    }
+
+    // validate() em rota web chamada via fetch vira 302 (bootstrap/app.php) — aqui 422 em JSON.
+    private function validateJson(Request $request, array $rules): array
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            throw new \Illuminate\Http\Exceptions\HttpResponseException(
+                response()->json(['message' => $validator->errors()->first()], 422)
+            );
+        }
+
+        return $validator->validated();
+    }
+
     public function discard(DocumentUpdateRun $run)
     {
         if ($run->isReady() || $run->status === 'erro') {

@@ -38,6 +38,33 @@
     <div class="max-w-4xl"
          x-data="{
              status: @js($run->status),
+             comments: @js((object) ($run->comments ?? [])),
+             saved: @js((object) ($run->comments ?? [])),
+             saveState: {},
+             get commentCount() { return Object.values(this.comments).filter(c => (c || '').trim() !== '').length },
+             async post(url, body) {
+                 const res = await fetch(url, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+                     body: JSON.stringify(body),
+                 });
+                 const json = await res.json().catch(() => ({}));
+                 if (!res.ok) throw new Error(json.message || 'Não foi possível salvar.');
+                 return json;
+             },
+             async saveComment(key) {
+                 const text = (this.comments[key] || '').trim();
+                 if ((this.saved[key] || '') === text) return;
+                 this.saveState[key] = 'Salvando…';
+                 try {
+                     await this.post(@js(route('document-updates.comment', $run)), { key, text });
+                     this.saved[key] = text;
+                     this.saveState[key] = text ? 'Salvo.' : 'Comentário removido.';
+                 } catch (e) { this.saveState[key] = e.message; }
+             },
+             async flushComments() {
+                 for (const key of Object.keys(this.comments)) await this.saveComment(key);
+             },
              init() {
                  if (this.status !== 'processando') return;
                  const timer = setInterval(async () => {
@@ -89,7 +116,14 @@
         @if($run->isProcessing())
             <div class="card p-6 text-sm flex items-center gap-3" style="color:var(--purple)">
                 <x-icon name="sparkles" size="16" class="animate-pulse" />
-                <span>A IA está lendo a reunião e conferindo o documento… costuma levar de 1 a 4 minutos. A página atualiza sozinha (e você recebe um aviso no sino).</span>
+                <span>
+                    @if($run->revision > 0)
+                        A IA está refazendo a análise com os seus comentários (revisão {{ $run->revision }} de {{ \App\Services\DocumentUpdate\DocumentUpdateService::MAX_REVISIONS }})…
+                    @else
+                        A IA está lendo a reunião e conferindo o documento…
+                    @endif
+                    costuma levar de 1 a 4 minutos. A página atualiza sozinha (e você recebe um aviso no sino).
+                </span>
             </div>
 
         @elseif($run->status === 'erro')
@@ -107,6 +141,16 @@
             </div>
 
         @else
+            @if($run->isReady() && $run->error)
+                <div class="mb-5 px-4 py-3 text-sm flex items-start gap-2" style="background:rgba(238,121,25,.08); border:1px solid rgba(238,121,25,.3); color:var(--orange); border-radius:var(--radius)">
+                    <x-icon name="triangle-alert" size="14" class="mt-0.5 flex-shrink-0" /><span>{{ $run->error }}</span>
+                </div>
+            @endif
+            @if($run->revision > 0)
+                <p class="text-xs mb-3 flex items-center gap-1" style="color:var(--muted)">
+                    <x-icon name="history" size="12" /> Esta é a versão {{ $run->revision + 1 }}: a IA já refez {{ $run->revision }} vez(es) com os comentários da equipe.
+                </p>
+            @endif
             {{-- Leitura do guardião da linha: veredito + resumo --}}
             @php
                 $review  = $run->strategic_review ?? [];
@@ -168,6 +212,14 @@
                                         <x-icon name="quote" size="12" class="mt-0.5 flex-shrink-0" /> {{ $m['evidencia'] }}
                                     </p>
                                 @endif
+                                @include('documents._update-comment', [
+                                    'key' => 'm:' . $loop->index,
+                                    'placeholder' => match ($m['tipo']) {
+                                        'nova_demanda' => 'Ex.: são só 2 cards, entrega até 20/11 — ou: isso fica para o próximo ciclo.',
+                                        'desvio'       => 'Ex.: não é desvio, foi decidido — pode assumir a mudança.',
+                                        default        => 'Ex.: a leitura está certa, mas o motivo foi outro… / não foi bem isso que decidimos.',
+                                    },
+                                ])
                             </div>
                         @endforeach
                     </div>
@@ -244,14 +296,19 @@
             @if(!empty($run->open_points))
                 <div class="card p-5 mb-5">
                     <h2 class="card-title mb-2">Pontos para conferir</h2>
-                    <p class="text-xs mb-2" style="color:var(--muted)">Conversados na reunião, mas sem decisão clara. Não viraram sugestão.</p>
-                    <ul class="text-sm space-y-1" style="color:var(--text)">
+                    <p class="text-xs mb-2" style="color:var(--muted)">Conversados na reunião, mas sem decisão clara. Não viraram sugestão. Se você já sabe a resposta, responda aqui: na revisão, a IA leva para o documento.</p>
+                    <ul class="text-sm space-y-3" style="color:var(--text)">
                         @foreach($run->open_points as $point)
-                            <li>• {{ $point }}</li>
+                            <li>
+                                • {{ $point }}
+                                @include('documents._update-comment', ['key' => 'p:' . $loop->index, 'label' => 'Responder',
+                                    'placeholder' => 'Ex.: confirmado com o cliente — verba de R$ 36/dia no Meta e R$ 30/dia no Google.'])
+                            </li>
                         @endforeach
                     </ul>
                 </div>
             @endif
+
 
             <form method="POST" action="{{ route('document-updates.apply', $run) }}"
                   x-data="{ accepted: @js($suggestions->filter(fn ($s) => $s['aplicavel'])->pluck('id')->values()), withData: @js((bool) $dataDiff), sending: false }"
@@ -301,10 +358,68 @@
                                     <div class="px-3 py-2 text-xs whitespace-pre-line rounded-lg" style="background:rgba(248,113,113,.06); border:1px solid rgba(248,113,113,.2); color:var(--text)">
                                         <p class="font-mono uppercase mb-1" style="color:var(--red)">Antes</p>{{ HtmlPatch::readable($s['trecho_atual']) ?: '—' }}
                                     </div>
-                                    <div class="px-3 py-2 text-xs whitespace-pre-line rounded-lg" style="background:rgba(52,211,153,.06); border:1px solid rgba(52,211,153,.25); color:var(--text)">
-                                        <p class="font-mono uppercase mb-1" style="color:var(--green)">Depois</p>{{ $s['trecho_novo'] === '' ? '(removido)' : (HtmlPatch::readable($s['trecho_novo']) ?: '—') }}
+                                    {{-- "Depois" editável: editor visual (o HTML do trecho, sem o estilo do documento) ou código --}}
+                                    <div class="px-3 py-2 text-xs rounded-lg" style="background:rgba(52,211,153,.06); border:1px solid rgba(52,211,153,.25); color:var(--text)"
+                                         :class="editing && 'md:col-span-2'"
+                                         x-data="{
+                                             editing: false, code: false, saving: false, err: '',
+                                             edited: @js((bool) ($s['editada'] ?? false)),
+                                             html: @js($s['trecho_novo']),
+                                             readable: @js($s['trecho_novo'] === '' ? '(removido)' : (HtmlPatch::readable($s['trecho_novo']) ?: '—')),
+                                             start() { this.editing = true; this.code = false; this.err = ''; this.$nextTick(() => this.$refs.ed.innerHTML = this.html) },
+                                             toggleCode() {
+                                                 if (!this.code) { this.html = this.$refs.ed.innerHTML; this.code = true }
+                                                 else { this.code = false; this.$nextTick(() => this.$refs.ed.innerHTML = this.html) }
+                                             },
+                                             async save() {
+                                                 if (!this.code) this.html = this.$refs.ed.innerHTML;
+                                                 this.saving = true; this.err = '';
+                                                 try {
+                                                     const r = await post(@js(route('document-updates.suggestion', [$run, $s['id']])), { html: this.html });
+                                                     this.readable = r.readable || '(removido)'; this.edited = true; this.editing = false;
+                                                 } catch (e) { this.err = e.message }
+                                                 this.saving = false;
+                                             },
+                                         }">
+                                        <div class="flex items-center justify-between gap-2 mb-1">
+                                            <p class="font-mono uppercase flex items-center gap-1.5" style="color:var(--green)">
+                                                Depois <span x-show="edited" x-cloak class="badge badge-purple normal-case font-sans">editado pela equipe</span>
+                                            </p>
+                                            @if($run->isReady())
+                                                <button type="button" x-show="!editing" @click="start()" class="text-xs font-semibold flex items-center gap-1" style="color:var(--purple)">
+                                                    <x-icon name="pencil" size="12" /> Editar
+                                                </button>
+                                            @endif
+                                        </div>
+                                        <div x-show="!editing" class="whitespace-pre-line" x-text="readable"></div>
+                                        @if($run->isReady())
+                                            <div x-show="editing" x-cloak>
+                                                <div x-show="!code" x-ref="ed" contenteditable="true"
+                                                     class="px-3 py-2 rounded-lg text-sm space-y-2 focus:outline-none"
+                                                     style="background:var(--surface, #fff); border:1px solid var(--border2); min-height:80px; color:var(--text)"></div>
+                                                <textarea x-show="code" x-model="html" rows="8" class="field w-full px-3 py-2 text-xs font-mono" spellcheck="false"></textarea>
+                                                <p class="text-[11px] mt-1" style="color:var(--muted)">
+                                                    Escreva direto no texto. A formatação final segue o estilo do documento. Para apagar o trecho todo, deixe vazio.
+                                                </p>
+                                                <p x-show="err" x-text="err" class="text-xs mt-1" style="color:var(--red)"></p>
+                                                <div class="flex items-center justify-between gap-2 mt-2">
+                                                    <button type="button" @click="toggleCode()" class="text-xs flex items-center gap-1" style="color:var(--muted)">
+                                                        <x-icon name="code" size="12" /> <span x-text="code ? 'Voltar ao texto' : 'Ver código HTML'"></span>
+                                                    </button>
+                                                    <div class="flex items-center gap-2">
+                                                        <button type="button" @click="editing = false" class="btn btn-ghost btn-xs">Cancelar</button>
+                                                        <button type="button" @click="save()" :disabled="saving" class="btn btn-primary btn-xs flex items-center gap-1">
+                                                            <x-icon name="save" size="12" /> <span x-text="saving ? 'Salvando…' : 'Salvar'"></span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
+
+                                @include('documents._update-comment', ['key' => 's:' . $s['id'],
+                                    'placeholder' => 'Ex.: mantenha os 70 m do parque e o parágrafo da chuva — tire só os 4 anos.'])
 
                                 @if(!$s['aplicavel'] && $run->isReady())
                                     <p class="text-xs mt-2" style="color:var(--orange)">
@@ -361,6 +476,38 @@
 
             @if($run->isReady())
                 <form id="discard-form" method="POST" action="{{ route('document-updates.discard', $run) }}">@csrf</form>
+            @endif
+
+            {{-- Rodada de comentários: geral + o que foi comentado nos itens → a IA refaz (limite de rodadas) --}}
+            @php $maxRevisions = \App\Services\DocumentUpdate\DocumentUpdateService::MAX_REVISIONS; @endphp
+            @if($run->isReady())
+                <div class="card p-5 mb-5" style="border-left:3px solid var(--purple)">
+                    <div class="flex items-center justify-between gap-3 flex-wrap mb-1">
+                        <h2 class="card-title flex items-center gap-1"><x-icon name="message-circle" size="14" /> Comentários para a IA refazer</h2>
+                        <span class="text-xs" style="color:var(--muted)">{{ $maxRevisions - $run->revision }} de {{ $maxRevisions }} revisão(ões) disponível(is)</span>
+                    </div>
+                    <p class="text-xs mb-3" style="color:var(--muted)">
+                        Comente os itens acima (botão <b>Comentar</b> / <b>Responder</b>) e, se quiser, deixe uma orientação geral aqui.
+                        A IA refaz a análise levando tudo em conta, e o que você não comentou fica igual. Para trocar só uma frase, é mais rápido editar a sugestão direto.
+                    </p>
+                    <textarea rows="3" maxlength="3000" class="field w-full px-3 py-2 text-sm"
+                              x-model="comments['geral']" @input.debounce.800ms="saveComment('geral')" @blur="saveComment('geral')"
+                              placeholder="Ex.: o público distante não entra nesta campanha, fica para o planejamento de 2027. Não mexa no tráfego pago."></textarea>
+                    <div class="flex items-center justify-between gap-3 flex-wrap mt-2">
+                        <p class="text-[11px]" style="color:var(--muted)" x-text="saveState['geral'] || (commentCount + ' comentário(s) para a IA')"></p>
+                        @if($run->revision < $maxRevisions)
+                            <form method="POST" action="{{ route('document-updates.revise', $run) }}" x-data="{ sending: false }" @submit.prevent="sending = true; await flushComments(); $el.submit()">
+                                @csrf
+                                <button type="submit" class="btn btn-primary btn-sm flex items-center gap-1" :disabled="sending || commentCount === 0"
+                                        :title="commentCount === 0 ? 'Escreva pelo menos um comentário' : ''">
+                                    <x-icon name="refresh-cw" size="14" /> <span x-text="sending ? 'Enviando…' : 'Refazer com meus comentários'"></span>
+                                </button>
+                            </form>
+                        @else
+                            <span class="text-xs" style="color:var(--muted)">As {{ $maxRevisions }} revisões já foram usadas. Edite as sugestões ou use o editor do documento.</span>
+                        @endif
+                    </div>
+                </div>
             @endif
 
             @if($run->status === 'aplicado')

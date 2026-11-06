@@ -53,6 +53,28 @@ class HtmlPatch
         return [$matches[0][0][1], strlen($matches[0][0][0])];
     }
 
+    /**
+     * Trecho novo (da IA ou editado pela equipe) antes de gravar: sem script/estilo/iframe, sem
+     * atributo de evento (onclick, onerror…) e sem link javascript:. A tela de edição põe esse
+     * HTML num editor visual — não pode carregar nada executável.
+     */
+    public static function sanitize(string $html): string
+    {
+        $html = preg_replace('~<(script|style|iframe|object|embed)\b[^>]*>.*?</\1>~is', '', $html);
+        $html = preg_replace('~<(script|style|iframe|object|embed|link|meta)\b[^>]*/?>~i', '', $html);
+        // Só dentro das tags (texto como "siga @perfil" fica): eventos (onclick…), diretivas Alpine
+        // (x-init, @click, :attr — a tela de revisão injeta esse HTML numa página com Alpine) e javascript:.
+        $html = preg_replace_callback('~<[a-z][a-z0-9-]*\b[^>]*>~i', function ($tag) {
+            // pula valores entre aspas (class="btn online" não pode perder o "online")
+            $t = preg_replace_callback('~("[^"]*"|\'[^\']*\')|\s+(on[a-z]+|x-[\w:.-]+|@[\w:.-]+|:[\w.-]+)\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)~i',
+                fn ($m) => $m[1] !== '' ? $m[0] : '', $tag[0]);
+
+            return preg_replace('~\b(href|src)\s*=\s*(["\']?)\s*javascript:[^"\'>\s]*\2~i', '$1="#"', $t);
+        }, $html);
+
+        return trim($html);
+    }
+
     /** Trecho de HTML como texto pra tela de revisão (antes → depois), sem tag nenhuma. */
     public static function readable(string $html): string
     {

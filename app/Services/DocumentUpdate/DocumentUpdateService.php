@@ -118,7 +118,7 @@ class DocumentUpdateService
             ->whereIn('status', ['pronto', 'aplicado'])
             // "processando" preso (worker morreu) não trava: ver DocumentUpdateRun::isStuck()
             ->orWhere(fn ($q) => $q->where('status', 'processando')
-                ->where('created_at', '>=', now()->subMinutes(DocumentUpdateRun::STUCK_AFTER_MINUTES)))
+                ->where('updated_at', '>=', now()->subMinutes(DocumentUpdateRun::STUCK_AFTER_MINUTES)))
             ->orWhere(fn ($q) => $q->where('status', 'descartado')->whereNotNull('suggestions')));
     }
 
@@ -170,9 +170,14 @@ class DocumentUpdateService
 
         [, $html, $data] = $this->documents->load($owner);
 
+        $message = $this->buildMessage($owner, $meeting, $html, $data, $run->instruction);
+        if ($run->revision > 0 && $run->history) {
+            $message .= "\n\n" . $this->revisionBlock($run);
+        }
+
         $response = $this->ai->runStructured(
             agent: $agent,
-            userMessage: $this->buildMessage($owner, $meeting, $html, $data, $run->instruction),
+            userMessage: $message,
             userId: $run->requested_by,
             clientId: $owner->client_id ?? ($owner instanceof Project ? $owner->macroPlan?->client_id : null),
             trigger: 'documento:atualizar_com_reuniao',
@@ -184,7 +189,7 @@ class DocumentUpdateService
             ->sortBy(fn ($s) => ($rank = array_search($s['impacto'] ?? null, self::IMPACTOS, true)) === false ? 2 : $rank)
             ->values()
             ->map(function (array $s, int $i) use ($html) {
-                $new = preg_replace('~<script\b[^>]*>.*?</script>~is', '', (string) ($s['trecho_novo'] ?? ''));
+                $new = HtmlPatch::sanitize((string) ($s['trecho_novo'] ?? ''));
 
                 return [
                     'id'           => $i + 1,
@@ -202,6 +207,10 @@ class DocumentUpdateService
             })
             ->all();
 
+        if ($run->revision > 0 && $run->history) {
+            $suggestions = $this->keepTeamEdits($suggestions, collect($run->history)->last());
+        }
+
         $dataAfter = is_array($response['dados_novos'] ?? null) && $data !== null && $response['dados_novos'] != $data
             ? $response['dados_novos']
             : null;
@@ -214,7 +223,183 @@ class DocumentUpdateService
             'data_after'  => $dataAfter,
             'data_reason' => $dataAfter ? ($response['dados_motivo'] ?? null) : null,
             'open_points' => array_values(array_filter((array) ($response['pontos_em_aberto'] ?? []), 'is_string')),
+            // comentários já foram usados nesta rodada (ficam guardados no history)
+            'comments'    => null,
+            'error'       => null,
         ]);
+    }
+
+    /**
+     * Garantia além do prompt: sugestão que a equipe editou à mão e não comentou volta com a
+     * edição da equipe, mesmo que a IA tenha reescrito (casa pelo mesmo trecho_atual).
+     */
+    private function keepTeamEdits(array $suggestions, array $previous): array
+    {
+        $norm = fn (string $h) => preg_replace('/\s+/u', ' ', trim($h));
+        $comments = $previous['comments'] ?? [];
+        $edited = collect($previous['suggestions'] ?? [])
+            ->filter(fn ($s) => !empty($s['editada']) && blank($comments['s:' . $s['id']] ?? null))
+            ->keyBy(fn ($s) => $norm((string) $s['trecho_atual']));
+
+        return array_map(function (array $s) use ($edited, $norm) {
+            if ($old = $edited->get($norm($s['trecho_atual']))) {
+                $s['trecho_novo'] = $old['trecho_novo'];
+                $s['editada'] = true;
+            }
+
+            return $s;
+        }, $suggestions);
+    }
+
+    /** Rodadas de revisão com comentários por análise (cada uma custa uma chamada de IA). */
+    public const MAX_REVISIONS = 2;
+
+    public function saveComment(DocumentUpdateRun $run, string $key, string $text): void
+    {
+        if (!$run->isReady()) {
+            throw new DomainException('Essa análise não está mais aberta para comentários.');
+        }
+
+        $comments = $run->comments ?? [];
+        $text = Str::limit(trim($text), 3000, '');
+        if ($text === '') {
+            unset($comments[$key]);
+        } else {
+            $comments[$key] = $text;
+        }
+
+        $run->update(['comments' => $comments ?: null]);
+    }
+
+    /** Edição manual do "depois" de uma sugestão. Devolve o texto legível pra tela. */
+    public function editSuggestion(DocumentUpdateRun $run, int $id, string $html): string
+    {
+        if (!$run->isReady()) {
+            throw new DomainException('Essas sugestões já foram aplicadas ou descartadas.');
+        }
+
+        $html = HtmlPatch::sanitize($html);
+        $suggestions = $run->suggestions ?? [];
+        $found = false;
+        foreach ($suggestions as &$s) {
+            if ((int) $s['id'] === $id) {
+                $s['trecho_novo'] = $html;
+                $s['editada'] = true;
+                $found = true;
+            }
+        }
+        unset($s);
+
+        if (!$found) {
+            throw new DomainException('Sugestão não encontrada.');
+        }
+
+        $run->update(['suggestions' => $suggestions]);
+
+        return HtmlPatch::readable($html);
+    }
+
+    /** Guarda a rodada atual no histórico e manda a IA refazer com os comentários. */
+    public function requestRevision(DocumentUpdateRun $run): void
+    {
+        if (!$run->isReady()) {
+            throw new DomainException('Essa análise não está mais aberta para revisão.');
+        }
+        if ($run->revision >= self::MAX_REVISIONS) {
+            throw new DomainException('Esta análise já usou as ' . self::MAX_REVISIONS . ' revisões com comentários. Ajuste o que faltar editando as sugestões ou pelo editor do documento.');
+        }
+        if (!$run->hasComments()) {
+            throw new DomainException('Escreva pelo menos um comentário para a IA levar em conta.');
+        }
+
+        $history = $run->history ?? [];
+        $history[] = [
+            'revision'         => $run->revision,
+            'summary'          => $run->summary,
+            'strategic_review' => $run->strategic_review,
+            'suggestions'      => $run->suggestions,
+            'data_after'       => $run->data_after,
+            'data_reason'      => $run->data_reason,
+            'open_points'      => $run->open_points,
+            'comments'         => $run->comments,
+            'at'               => now()->toIso8601String(),
+        ];
+
+        $run->update([
+            'status'   => 'processando',
+            'revision' => $run->revision + 1,
+            'history'  => $history,
+            'error'    => null,
+        ]);
+
+        AnalyzeDocumentUpdateJob::dispatch($run->id);
+    }
+
+    /**
+     * Pra rodada de revisão: a análise anterior + os comentários da equipe. Os comentários são
+     * correção/decisão do time e valem mais que a leitura anterior da IA.
+     */
+    private function revisionBlock(DocumentUpdateRun $run): string
+    {
+        $previous = collect($run->history)->last();
+        $comments = $previous['comments'] ?? [];
+        $review = $previous['strategic_review'] ?? [];
+        $moves = $review['movimentos'] ?? [];
+        $points = $previous['open_points'] ?? [];
+        $suggestions = $previous['suggestions'] ?? [];
+
+        $lines = [];
+        if (filled($comments['geral'] ?? null)) {
+            $lines[] = "- COMENTÁRIO GERAL: {$comments['geral']}";
+        }
+        foreach ($suggestions as $s) {
+            if (filled($c = $comments['s:' . $s['id']] ?? null)) {
+                $lines[] = "- Sobre a SUGESTÃO {$s['id']} (\"{$s['titulo']}\"): {$c}";
+            }
+        }
+        foreach ($moves as $i => $m) {
+            if (filled($c = $comments["m:{$i}"] ?? null)) {
+                $lines[] = "- Sobre o MOVIMENTO \"{$m['titulo']}\" ({$m['tipo']}): {$c}";
+            }
+        }
+        foreach ($points as $i => $p) {
+            if (filled($c = $comments["p:{$i}"] ?? null)) {
+                $lines[] = "- Resposta ao PONTO EM ABERTO \"{$p}\": {$c}";
+            }
+        }
+
+        $prev = [
+            'veredito'         => $review['veredito'] ?? null,
+            'resumo'           => $previous['summary'] ?? null,
+            'movimentos'       => $moves,
+            'pauta_coberta'    => $review['pauta_coberta'] ?? [],
+            'sugestoes'        => collect($suggestions)->map(fn ($s) => [
+                'id'                   => $s['id'],
+                'impacto'              => $s['impacto'] ?? null,
+                'secao'                => $s['secao'] ?? null,
+                'tipo'                 => $s['tipo'] ?? null,
+                'titulo'               => $s['titulo'] ?? null,
+                'motivo'               => $s['motivo'] ?? null,
+                'evidencia'            => $s['evidencia'] ?? null,
+                'trecho_atual'         => $s['trecho_atual'] ?? null,
+                'trecho_novo'          => $s['trecho_novo'] ?? null,
+                'editada_pela_equipe'  => (bool) ($s['editada'] ?? false),
+            ])->values()->all(),
+            'dados_novos'      => $previous['data_after'] ?? null,
+            'pontos_em_aberto' => $points,
+        ];
+
+        return "=== RODADA DE REVISÃO ({$run->revision} de " . self::MAX_REVISIONS . ") ===\n"
+            . "A equipe leu a sua análise anterior (abaixo) e deixou comentários. Refaça a análise COMPLETA, no mesmo formato JSON, levando os comentários em conta:\n"
+            . "- Comentário da equipe é correção ou decisão: vale mais que a sua leitura anterior e que a ATA.\n"
+            . "- Resposta a ponto em aberto é decisão: se mexe no documento, vira sugestão; e o ponto sai de \"pontos_em_aberto\".\n"
+            . "- Comentário numa sugestão ajusta aquela sugestão (ou a retira, se a equipe disser que não é para mudar).\n"
+            . "- O que não foi comentado continua como estava: mesmas sugestões, mesma redação.\n"
+            . "- Sugestão \"editada_pela_equipe\": devolva o \"trecho_novo\" EXATAMENTE como está, a não ser que um comentário peça mudança nela.\n"
+            . "- \"trecho_atual\" continua sendo copiado do DOCUMENTO ATUAL acima.\n\n"
+            . "COMENTÁRIOS DA EQUIPE:\n" . implode("\n", $lines) . "\n\n"
+            . "SUA ANÁLISE ANTERIOR (JSON):\n"
+            . json_encode($prev, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
     public const VERDICTS = ['alinhado', 'ajustes', 'mudanca_de_rota', 'risco_de_desvio'];
