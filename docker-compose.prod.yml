@@ -8,6 +8,10 @@ services:
   app:
     image: ghcr.io/evandrobariviera/nonna-app:latest
     restart: unless-stopped
+    # Deploy (start-first) derruba o container antigo com SIGTERM. O padrão de 10s matava
+    # job de IA no meio (agente de documento/ATA levam minutos) e a análise se perdia.
+    # Com folga, o queue:work termina o job atual antes de sair (supervisord: stopwaitsecs).
+    stop_grace_period: 11m
     environment:
       APP_NAME: "Nonna App"
       APP_ENV: production
