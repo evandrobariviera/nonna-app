@@ -30,6 +30,9 @@
                             <div class="flex items-center gap-2 mb-1 flex-wrap">
                                 <span class="badge badge-{{ $n->statusColor() }}">{{ $n->statusLabel() }}</span>
                                 <a href="{{ $n->link ?? '#' }}" class="font-bold text-sm" style="color:var(--text)">{{ $n->title }}</a>
+                                @if(($n->repeat_count ?? 1) > 1)
+                                    <span class="text-xs font-mono px-1.5 rounded-full" style="background:rgba(100,59,142,.1); color:var(--purple)" title="{{ $n->repeat_count }} avisos sobre o mesmo item, juntados">{{ $n->repeat_count }}×</span>
+                                @endif
                             </div>
                             <p class="text-xs font-mono mb-1" style="color:var(--muted)">
                                 {{ $n->generated_at->format('d/m/Y H:i') }}

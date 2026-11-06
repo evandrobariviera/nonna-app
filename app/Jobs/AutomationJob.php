@@ -194,10 +194,25 @@ class AutomationJob implements ShouldQueue
         // organização atual pra herdar sozinho — resolve explicitamente aqui, priorizando a
         // organização da própria entidade que disparou a automação.
         $organizationId = $entity->organization_id ?? $this->automation->createdBy?->organizations()->value('organizations.id');
+        $title = $this->interpolate($config['title'] ?? 'Nova tarefa', $context);
+
+        // Não duplica (2026-11-06, mesma regra do createPendency): já existindo uma tarefa
+        // automática ABERTA com o mesmo título pro mesmo cliente, não cria outra — o gatilho
+        // costuma disparar de novo (executor tirado e posto, status indo e voltando) e gerava
+        // "Agendar Reunião de Macroplanejamento" em dobro no mesmo minuto.
+        $existing = Task::withoutGlobalScopes()
+            ->where('origin', 'automation')
+            ->where('title', $title)
+            ->where('client_id', $clientId)
+            ->whereNotIn('status', ['concluido', 'cancelado'])
+            ->first(['id']);
+        if ($existing) {
+            return "Não criado: já existe a tarefa aberta \"{$title}\" pra este cliente ({$existing->id}).";
+        }
 
         $task = Task::create([
             'organization_id' => $organizationId,
-            'title'       => $this->interpolate($config['title'] ?? 'Nova tarefa', $context),
+            'title'       => $title,
             'description' => $this->interpolate($config['description'] ?? '', $context),
             'task_type'   => $config['task_type'] ?? 'estrategia',
             'situation'   => $config['situation'] ?? null,

@@ -337,8 +337,18 @@ class TaskApprovalService
             'reviewed_at'     => now(),
         ]);
 
-        $this->tryResolveRound($token->round()->with('tokens')->first());
+        // Quem fecha a rodada pelo link já vê os arquivos pra baixar na página de agradecimento
+        // (approval/thanks) — não precisa da mensagem "Material Aprovado" logo em seguida.
+        $this->closingTokenId = $token->id;
+        try {
+            $this->tryResolveRound($token->round()->with('tokens')->first());
+        } finally {
+            $this->closingTokenId = null;
+        }
     }
+
+    /** Token cuja decisão (pelo link público) está fechando a rodada agora — ver notifyApproved. */
+    private ?string $closingTokenId = null;
 
     /**
      * Marca manualmente a decisão de um aprovador que ainda não respondeu —
@@ -523,6 +533,11 @@ class TaskApprovalService
         $round->loadMissing('tokens.contact');
 
         foreach ($round->tokens->where('will_notify', true) as $token) {
+            // Atenção eficiente (2026-11-06): quem acabou de aprovar pelo link já baixa ali mesmo;
+            // a mensagem vai só pros demais contatos (eles precisam do link pra baixar).
+            if ($this->closingTokenId !== null && $token->id === $this->closingTokenId) {
+                continue;
+            }
             $this->renewLink($token);
             $this->dispatchWebhook($round, $token, $token->contact, 'aprovacao_concluida');
         }

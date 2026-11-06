@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
 
 // Comentários da campanha/projeto — mesmo jeito dos comentários da tarefa
 // (TaskCommentController): editor rico, só quem escreveu edita/remove. Comentário novo
-// avisa a equipe do item (Project::members + responsável do cliente), menos quem escreveu.
+// avisa quem está na conversa (ver notifyTeam), menos quem escreveu.
 class ProjectCommentController extends Controller
 {
     public function store(Request $request, Project $project, NotificationService $notifications)
@@ -67,10 +67,30 @@ class ProjectCommentController extends Controller
         return trim(strip_tags($body)) === '' && !str_contains($body, '<img') ? null : $body;
     }
 
+    /**
+     * Atenção eficiente (2026-11-06): antes avisava TODOS os membros a cada comentário — 30% de
+     * todo o sino, e quem só executa nem abria. Agora avisa quem está na conversa:
+     *  - o responsável criativo do cliente;
+     *  - quem já comentou neste projeto/campanha;
+     *  - membro citado no texto (@Nome ou o nome completo).
+     * Os demais membros veem na aba de comentários. Repetições viram um aviso só (NotificationService).
+     */
     private function notifyTeam(Project $project, string $body, NotificationService $notifications): void
     {
         $leadId = $project->client?->creative_lead_id ?? $project->macroPlan?->client?->creative_lead_id;
-        $ids = $project->members()->pluck('users.id')->push($leadId)->filter()->unique()->reject(fn ($id) => $id === Auth::id());
+        $commenters = $project->comments()->distinct()->pluck('user_id');
+
+        $text = Str::lower(RichTextSanitizer::toPlainText($body));
+        $mentioned = $project->members()->get(['users.id', 'users.name'])
+            ->filter(function ($member) use ($text) {
+                $name = Str::lower(trim($member->name));
+                $first = Str::before($name, ' ');
+
+                return $name !== '' && (str_contains($text, '@' . $first) || str_contains($text, $name));
+            })
+            ->pluck('id');
+
+        $ids = $commenters->merge($mentioned)->push($leadId)->filter()->unique()->reject(fn ($id) => $id === Auth::id());
         if ($ids->isEmpty()) {
             return;
         }

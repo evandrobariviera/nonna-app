@@ -76,6 +76,9 @@ class NotificationController extends Controller
         $notifications = InternalNotification::where('user_id', auth()->id())
             ->where('status', 'novo')
             ->where('generated_at', '>', $since)
+            // Aviso juntado (repeat_count > 1) sobe no sino mas não toca popup/som de novo:
+            // a pessoa já foi interrompida por esse item e ainda não abriu (atenção eficiente).
+            ->where('repeat_count', 1)
             ->orderBy('generated_at')
             ->limit(20)
             ->get(['id', 'title', 'body', 'link', 'generated_at']);

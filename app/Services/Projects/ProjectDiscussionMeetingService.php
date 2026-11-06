@@ -6,7 +6,6 @@ use App\Models\MacroPlan;
 use App\Models\Meeting;
 use App\Models\Project;
 use App\Models\User;
-use App\Services\NotificationService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -20,8 +19,6 @@ use Illuminate\Support\Facades\DB;
  */
 class ProjectDiscussionMeetingService
 {
-    public function __construct(private NotificationService $notifications) {}
-
     /**
      * @param array $meetingData scheduled_at, duration_minutes, modality, online_link, location
      * @param array<int, array{id:string, team:array<int,int>}> $items na ordem da pauta
@@ -77,27 +74,11 @@ class ProjectDiscussionMeetingService
             return $meeting;
         });
 
-        $this->notifyParticipants($meeting, $userId);
+        // Atenção eficiente (2026-11-06): agendar deixou de mandar aviso no sino (44/mês, 57% nem
+        // abertos). A reunião aparece pra cada participante no quadro Agenda do Dashboard, na
+        // faixa "Hoje" e no "Seu foco" do dia; quem quiser lembrar antes usa "Notificar".
 
         return $meeting;
-    }
-
-    private function notifyParticipants(Meeting $meeting, int $actorId): void
-    {
-        $recipients = $meeting->participants()->where('users.id', '!=', $actorId)->get();
-        if ($recipients->isEmpty()) {
-            return;
-        }
-
-        $this->notifications->notifyUsers(
-            $recipients,
-            'reuniao_lembrete',
-            'Reunião de discussão: ' . $meeting->title,
-            $meeting->scheduled_at->format('d/m H:i') . ' · leia o documento de cada item da pauta antes',
-            route('meetings.show', $meeting),
-            $meeting,
-            $meeting->organization_id,
-        );
     }
 
     /**

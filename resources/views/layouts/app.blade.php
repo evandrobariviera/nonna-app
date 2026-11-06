@@ -328,7 +328,12 @@
                             <div style="max-height:360px; overflow-y:auto">
                                 @forelse($unreadNotifications as $n)
                                     <div class="px-4 py-3 flex flex-col gap-1.5" style="border-bottom:1px solid var(--border2)">
-                                        <a href="{{ $n->link ?? '#' }}" class="text-sm font-semibold" style="color:var(--text)">{{ $n->title }}</a>
+                                        <a href="{{ $n->link ?? '#' }}" class="text-sm font-semibold" style="color:var(--text)">{{ $n->title }}
+                                            @if(($n->repeat_count ?? 1) > 1)
+                                                {{-- Avisos iguais juntados num só (NotificationService) --}}
+                                                <span class="text-xs font-mono px-1.5 rounded-full" style="background:rgba(100,59,142,.1); color:var(--purple)" title="{{ $n->repeat_count }} avisos sobre o mesmo item">{{ $n->repeat_count }}×</span>
+                                            @endif
+                                        </a>
                                         @if($n->body)
                                             <p class="text-xs" style="color:var(--muted2); line-height:1.5">{{ $n->body }}</p>
                                         @endif

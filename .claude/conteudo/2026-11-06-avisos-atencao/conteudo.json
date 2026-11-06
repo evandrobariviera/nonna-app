@@ -1,0 +1,48 @@
+{
+  "novidades": [
+    {
+      "title": "Sino mais enxuto: avisos repetidos viram um só",
+      "summary": "Avisos iguais sobre o mesmo item que você ainda não abriu passam a ser um aviso só, com a contagem (3×), e o popup não toca de novo.",
+      "body": "<p>Antes, cada comentário, cobrança ou atualização sobre o mesmo item criava um aviso novo. Agora, se você ainda não abriu o aviso daquele item, ele é atualizado em vez de duplicar: sobe para o topo do sino, mostra o texto mais recente e a contagem (<em>3×</em>). O popup do navegador não toca de novo para o mesmo item. Abriu, zerou: o próximo volta a tocar normalmente.</p>",
+      "kind": "melhoria", "area": "Notificações"
+    },
+    {
+      "title": "Comentário em campanha avisa só quem está na conversa",
+      "summary": "Comentário em campanha/projeto agora avisa o responsável do cliente, quem já comentou ali e quem for citado com @Nome — não mais a equipe inteira.",
+      "body": "<p>Os comentários em campanhas e projetos eram 30% de todos os avisos do sino. Agora o aviso vai para o <strong>responsável do cliente</strong>, para <strong>quem já comentou</strong> naquele item e para quem você <strong>citar com @Nome</strong> (ex.: \"@Tiago, consegue ver isso?\"). O restante da equipe vê na aba de comentários. Com os comentários do último mês, seriam cerca de 34 avisos em vez de 175.</p>",
+      "kind": "melhoria", "area": "Notificações"
+    },
+    {
+      "title": "Menos avisos de pendência resolvida e de reunião agendada",
+      "summary": "Pendência resolvida avisa só quem pediu. Agendar reunião de discussão não manda mais aviso: ela aparece na Agenda do Dashboard e, no dia, em Hoje e no Seu foco.",
+      "body": "<p><strong>Pendência resolvida</strong> agora avisa só quem pediu (antes avisava também quem cobrava). <strong>Reunião de discussão</strong>: agendar não manda mais aviso no sino, porque a reunião já aparece no quadro Agenda do Dashboard de cada participante e, no dia, na faixa Hoje e no Seu foco. Para lembrar antes, use <strong>Notificar</strong> na reunião.</p>",
+      "kind": "melhoria", "area": "Notificações"
+    },
+    {
+      "title": "Cliente que aprova pelo link não recebe mensagem repetida",
+      "summary": "Quem aprova o material pelo link e fecha a rodada já baixa os arquivos na hora; a mensagem \"Material Aprovado\" vai só para os outros contatos.",
+      "body": "<p>Quando o cliente aprova pelo link e a aprovação dele fecha a rodada, a página de agradecimento já mostra os arquivos para baixar. Por isso, a mensagem <strong>Material Aprovado (pronto pra baixar)</strong> deixou de ir para essa pessoa e vai só para os demais contatos da rodada, que precisam do link.</p>",
+      "kind": "melhoria", "area": "Aprovações"
+    },
+    {
+      "title": "Automação não cria mais tarefa repetida",
+      "summary": "Se já existe uma tarefa automática aberta com o mesmo título para o mesmo cliente, a automação não cria outra.",
+      "body": "<p>Algumas automações disparavam duas vezes seguidas (por exemplo, quando o executor era tirado e posto de novo) e criavam a mesma tarefa em dobro, como \"Agendar Reunião de Macroplanejamento\". Agora, se já existe uma tarefa automática <strong>aberta</strong> com o mesmo título para o mesmo cliente, a automação não cria outra e registra o motivo no histórico da automação. Pendências automáticas já funcionavam assim.</p>",
+      "kind": "correcao", "area": "Automações"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Avisos do sino — quem recebe o quê",
+      "category": "Primeiros passos",
+      "slug": "avisos-do-sino-quem-recebe-o-que",
+      "body_file": "ajuda-avisos-do-sino.html"
+    },
+    {
+      "title": "Planejamento, campanhas e reunião de discussão — como funciona",
+      "category": "Planejamentos",
+      "slug": "planejamento-campanhas-e-reuniao-de-discussao-como-funciona",
+      "body_file": "ajuda-planejamento-discussao.html"
+    }
+  ]
+}

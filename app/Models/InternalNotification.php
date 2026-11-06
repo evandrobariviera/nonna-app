@@ -24,10 +24,12 @@ class InternalNotification extends Model
         'source_id',
         'status',
         'generated_at',
+        'repeat_count', // avisos iguais não abertos juntados num só (NotificationService)
     ];
 
     protected $casts = [
         'generated_at' => 'datetime',
+        'repeat_count' => 'integer',
     ];
 
     public static array $statuses = [

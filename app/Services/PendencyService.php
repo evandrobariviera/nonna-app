@@ -130,8 +130,10 @@ class PendencyService
 
         $this->closeNotifications($pendency);
 
-        // Quem cobra e quem precisa ficam sabendo que chegou — menos quem marcou.
-        $notify = User::whereIn('id', collect([$pendency->owner_id, $pendency->requested_by])->filter()
+        // Quem PRECISA (pediu) fica sabendo que chegou — menos quem marcou. Atenção eficiente
+        // (2026-11-06): quem só cobra deixou de receber (era metade dos 40 avisos/mês de
+        // "resolvida"); sem quem pediu, avisa quem cobra.
+        $notify = User::whereIn('id', collect([$pendency->requested_by ?: $pendency->owner_id])->filter()
             ->map(fn ($id) => (int) $id)->reject(fn ($id) => $id === $userId)->unique())->get();
         if ($notify->isNotEmpty()) {
             $by = User::find($userId)?->name ?? 'Alguém';
