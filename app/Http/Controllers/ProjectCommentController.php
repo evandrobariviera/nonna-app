@@ -78,7 +78,9 @@ class ProjectCommentController extends Controller
     private function notifyTeam(Project $project, string $body, NotificationService $notifications): void
     {
         $leadId = $project->client?->creative_lead_id ?? $project->macroPlan?->client?->creative_lead_id;
-        $commenters = $project->comments()->distinct()->pluck('user_id');
+        // reorder(): comments() vem com ->latest(), e no Postgres DISTINCT + ORDER BY por coluna
+        // fora do SELECT dá erro (derrubava todo comentário novo com 500).
+        $commenters = $project->comments()->reorder()->distinct()->pluck('user_id');
 
         $text = Str::lower(RichTextSanitizer::toPlainText($body));
         $mentioned = $project->members()->get(['users.id', 'users.name'])
