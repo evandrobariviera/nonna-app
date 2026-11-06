@@ -389,12 +389,13 @@
 
     </aside>{{-- /contexto --}}
 
-    <div class="min-w-0">
+    {{-- Documento estica até o fim da coluna mais comprida ao lado (pedido 06/11: sobrava vazio embaixo). --}}
+    <div class="min-w-0 self-stretch flex flex-col">
 
     {{-- DOCUMENTO — o HTML da campanha/projeto (campo próprio document_attachment_id). É onde mora o
          briefing, as peças e a mecânica (2026-10), e o que o Assistente de Tarefas lê. --}}
     @php $mainDocument = $project->mainDocument(); @endphp
-    <div class="card overflow-hidden" x-data="{ open: {{ $mainDocument ? 'true' : 'false' }} }">
+    <div class="card overflow-hidden flex flex-col" :class="open ? 'flex-1' : ''" x-data="{ open: {{ $mainDocument ? 'true' : 'false' }} }">
         <div class="px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
             <button type="button" @click="open = !open" class="flex items-center gap-2 text-left min-w-0">
                 <x-icon name="file-text" size="14" style="color:var(--purple)" />
@@ -432,7 +433,7 @@
         @if($mainDocument)
             <iframe x-show="open" x-cloak src="{{ $mainDocument->url() }}" title="Documento {{ $project->type === 'campanha' ? 'da campanha' : 'do projeto' }}"
                     sandbox="allow-scripts allow-popups" loading="lazy"
-                    style="width:100%; height:calc(100vh - 140px); min-height:560px; border:0; border-top:1px solid var(--border2); background:#fff; display:block"></iframe>
+                    style="width:100%; flex:1 1 auto; height:auto; min-height:max(560px, calc(100vh - 140px)); border:0; border-top:1px solid var(--border2); background:#fff; display:block"></iframe>
         @else
             <p class="px-5 pb-4 text-xs" style="color:var(--muted)">
                 Envie o HTML {{ $project->type === 'campanha' ? 'da campanha (skill de campanha)' : 'do projeto (skill de projeto)' }} pelo botão
