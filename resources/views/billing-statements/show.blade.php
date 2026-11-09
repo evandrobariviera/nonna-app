@@ -160,7 +160,7 @@
                             <label class="flex items-start gap-2 text-sm cursor-pointer">
                                 <input type="hidden" name="notify" value="0">
                                 <input type="checkbox" name="notify" value="1" checked class="mt-0.5" style="accent-color:var(--purple)">
-                                <span>Avisar o cliente agora <span class="block text-xs" style="color:var(--muted)">Um aviso só (WhatsApp/e-mail), com o link para baixar as notas e ver o extrato.</span></span>
+                                <span>Avisar o cliente agora <span class="block text-xs" style="color:var(--muted)">Um aviso só (WhatsApp/e-mail) dizendo que as notas estão no Portal. Os arquivos só abrem lá, com login.</span></span>
                             </label>
                             <button type="submit" class="btn btn-primary btn-sm self-start"><x-icon name="upload" size="14" />Salvar notas</button>
                         </form>
@@ -193,7 +193,27 @@
                         </select>
                         <button type="submit" class="btn btn-sm"><x-icon name="send" size="13" />Reenviar notas do mês</button>
                     </form>
-                    <p class="text-xs mt-2" style="color:var(--muted)">O aviso vai para os contatos que assinam "Prestação de contas" na ficha do cliente (quem já recebia boletos foi incluído).</p>
+                </section>
+
+                {{-- Quem recebe --}}
+                <section class="card p-5">
+                    <h2 class="card-title">Quem recebe o aviso</h2>
+                    <p class="text-xs mt-1 mb-3" style="color:var(--muted2)">As notas só abrem no Portal do Cliente, com login. O aviso por WhatsApp/e-mail só avisa e leva até lá.</p>
+                    @php $withPortal = $recipients->where('portal_access_enabled', true)->count(); @endphp
+                    <div class="flex flex-col gap-1.5">
+                        @forelse($recipients as $rc)
+                            <div class="flex items-center justify-between gap-2 text-sm">
+                                <span class="min-w-0 truncate" style="color:var(--text)">{{ $rc->contact?->name }}</span>
+                                <span class="badge {{ $rc->portal_access_enabled ? 'badge-green' : 'badge-orange' }}">{{ $rc->portal_access_enabled ? 'acessa o Portal' : 'sem acesso ao Portal' }}</span>
+                            </div>
+                        @empty
+                            <p class="text-sm" style="color:var(--red)">Ninguém deste cliente recebe o aviso de prestação de contas.</p>
+                        @endforelse
+                    </div>
+                    @if($recipients->isNotEmpty() && $withPortal === 0)
+                        <p class="text-xs mt-3" style="color:var(--orange)">Ninguém que recebe o aviso tem acesso ao Portal: o cliente vai ser avisado mas não vai conseguir abrir as notas.</p>
+                    @endif
+                    <a href="{{ route('clients.show', [$client, 'tab' => 'contatos']) }}" class="btn btn-ghost btn-sm mt-3">Ajustar na ficha do cliente</a>
                 </section>
             </div>
         </div>

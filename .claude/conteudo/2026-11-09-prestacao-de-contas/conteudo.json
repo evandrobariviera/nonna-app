@@ -2,7 +2,7 @@
   "novidades": [
     {
       "title": "Prestação de contas dos anúncios dentro do App",
-      "summary": "Nova aba na Central de Campanhas: as notas fiscais de cada conta, mês a mês, e o extrato (saldo, créditos, consumido) que antes ficava na planilha do Drive. Ao subir as notas, o cliente recebe um aviso só no WhatsApp/e-mail com o link para baixar.",
+      "summary": "Nova aba na Central de Campanhas: as notas fiscais de cada conta, mês a mês, e o extrato (saldo, créditos, consumido) que antes ficava na planilha do Drive. Ao subir as notas, o cliente recebe um aviso só no WhatsApp/e-mail e baixa as notas no Portal do Cliente, com login.",
       "body": "<p>A aba Hoje mostra quais contas ainda estão sem a nota do mês anterior. O prazo combinado é o dia 10. O consumido vem sozinho da sincronização e os créditos vêm dos boletos e PIX já lançados.</p>",
       "kind": "novidade", "area": "Performance"
     },

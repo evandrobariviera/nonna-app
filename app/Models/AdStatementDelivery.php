@@ -6,11 +6,11 @@ use App\Traits\Tenantable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\URL;
 
 /**
- * Um envio de notas fiscais ao cliente: um aviso por envio (não por arquivo),
- * com o link público assinado do mês e quando o cliente abriu.
+ * Um envio de notas fiscais ao cliente: um aviso por envio (não por arquivo)
+ * levando ao Portal, e quando o cliente abriu a página lá. Não existe link
+ * público: os documentos só abrem no Portal, com login (decisão 09/11/2026).
  */
 class AdStatementDelivery extends Model
 {
@@ -28,10 +28,10 @@ class AdStatementDelivery extends Model
         'viewed_at'    => 'datetime',
     ];
 
-    /** Link que vai no WhatsApp/e-mail: abre sem login, vale 180 dias. */
-    public function publicUrl(): string
+    /** Link que vai no aviso: a Prestação de contas no Portal (pede login). */
+    public function portalUrl(): string
     {
-        return URL::temporarySignedRoute('billing-statement.public', now()->addDays(180), ['delivery' => $this->id]);
+        return route('portal.boletos.index');
     }
 
     public function client(): BelongsTo

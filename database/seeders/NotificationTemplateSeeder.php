@@ -80,11 +80,11 @@ class NotificationTemplateSeeder extends Seeder
             ],
             'prestacao_contas' => [
                 'whatsapp' => [
-                    'body' => "Oi {{contato}}! As notas fiscais dos anúncios de {{cliente}} referentes a {{mes}} já estão disponíveis ({{quantidade}}, total de {{valor}}).\n\nPara baixar: {{link_prestacao}}",
+                    'body' => "Oi {{contato}}! As notas fiscais dos anúncios de {{cliente}} referentes a {{mes}} já estão no Portal do Cliente ({{quantidade}}, total de {{valor}}).\n\nAcesse com seu login: {{link_prestacao}}",
                 ],
                 'email' => [
                     'subject' => 'Notas fiscais dos anúncios — {{mes}} — {{cliente}}',
-                    'body'    => "Olá {{contato}},\n\nAs notas fiscais dos investimentos em anúncios de {{cliente}} referentes a {{mes}} já estão disponíveis.\n\nQuantidade: {{quantidade}}\nTotal: {{valor}}\n\nPara baixar as notas e ver o extrato do mês: {{link_prestacao}}\n\nQualquer dúvida, estamos à disposição.\n\nEquipe Nonna",
+                    'body'    => "Olá {{contato}},\n\nAs notas fiscais dos investimentos em anúncios de {{cliente}} referentes a {{mes}} já estão disponíveis.\n\nQuantidade: {{quantidade}}\nTotal: {{valor}}\n\nAs notas e o extrato do mês estão no Portal do Cliente. Acesse com seu login: {{link_prestacao}}\n\nQualquer dúvida, estamos à disposição.\n\nEquipe Nonna",
                 ],
             ],
             'cobranca' => [

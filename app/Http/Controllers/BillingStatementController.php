@@ -56,6 +56,12 @@ class BillingStatementController extends Controller
             'accounts'     => $accounts,
             'statements'   => $statements,
             'deliveries'   => AdStatementDelivery::with('sentBy:id,name')->where('client_id', $client->id)->orderByDesc('sent_at')->limit(12)->get(),
+            // Quem recebe o aviso — e, como as notas só abrem no Portal, quem
+            // de fato consegue ver (acesso ao Portal liberado na ficha).
+            'recipients'   => \App\Models\ClientContact::with('contact:id,name')
+                ->where('client_id', $client->id)
+                ->whereHas('subscriptions', fn ($q) => $q->where('type', 'prestacao_contas'))
+                ->get(),
             'defaultMonth' => $this->month($request->get('mes')) ?? now()->subMonthNoOverflow()->startOfMonth(),
         ]);
     }

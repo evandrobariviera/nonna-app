@@ -1150,11 +1150,6 @@ Route::get('/documento/{token}', [\App\Http\Controllers\PublicItemController::cl
     ->middleware('throttle:60,1')
     ->name('public-item.show');
 
-// ── Prestação de contas do mês pro cliente (sem senha — link assinado do aviso) ──
-Route::get('/prestacao-de-contas/{delivery}', [\App\Http\Controllers\PublicBillingStatementController::class, 'show'])
-    ->middleware(['signed', 'throttle:60,1'])
-    ->name('billing-statement.public');
-
 // ── Solicitação de senhas/acessos pública (sem autenticação — link tokenizado) ──
 Route::get('/credenciais/{token}', [CredentialRequestController::class, 'show'])
     ->name('credential-request.show');
@@ -1226,7 +1221,9 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
     Route::patch('/central-de-leads-configuracoes', [PortalLeads::class, 'updateSettings'])->name('leads.settings');
     Route::get('/campanhas', [PortalCampaigns::class, 'index'])->name('campaigns.index');
     Route::get('/campanhas/{campaign}', [PortalCampaigns::class, 'show'])->name('campaigns.show');
-    Route::get('/boletos', [PortalBilling::class, 'index'])->name('boletos.index');
+    // Prestação de contas (notas, boletos e extrato) — só aqui, com login.
+    Route::get('/prestacao-de-contas', [PortalBilling::class, 'index'])->name('boletos.index');
+    Route::redirect('/boletos', '/portal/prestacao-de-contas');
     Route::get('/atendimento', [PortalServiceDiagnostics::class, 'index'])->name('service-diagnostics.index');
     Route::get('/atendimento/{integration}', [PortalServiceDiagnostics::class, 'integration'])->name('service-diagnostics.integration');
     Route::get('/atendimento/{integration}/diagnosticos/{diagnostic}', [PortalServiceDiagnostics::class, 'show'])->name('service-diagnostics.show');

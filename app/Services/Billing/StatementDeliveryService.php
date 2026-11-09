@@ -9,9 +9,10 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
- * Envia as notas fiscais do mês ao cliente: um aviso só (WhatsApp/e-mail,
- * mensagem padrão "prestacao_contas") com o link público do mês, mesmo que
- * tenham subido várias notas. Vai para quem assina "Prestação de contas" na
+ * Avisa o cliente das notas fiscais do mês: um aviso só (WhatsApp/e-mail,
+ * mensagem padrão "prestacao_contas"), mesmo que tenham subido várias notas.
+ * O aviso não leva documento nem link público — só o caminho do Portal, onde
+ * as notas abrem com login. Vai para quem assina "Prestação de contas" na
  * ficha do cliente.
  */
 class StatementDeliveryService
@@ -40,7 +41,7 @@ class StatementDeliveryService
             'mes'            => self::monthLabel($month),
             'quantidade'     => $count . ($count === 1 ? ' nota' : ' notas'),
             'valor'          => $total > 0 ? 'R$ ' . number_format($total, 2, ',', '.') : '—',
-            'link_prestacao' => $delivery->publicUrl(),
+            'link_prestacao' => $delivery->portalUrl(),
         ], null, $delivery);
 
         $documents->each->update(['notified_at' => now()]);
