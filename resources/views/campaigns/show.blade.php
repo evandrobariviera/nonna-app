@@ -236,6 +236,11 @@
             {{-- CONJUNTOS DE ANÚNCIOS / CRIATIVOS --}}
             @include('campaigns.partials._adsets-breakdown', ['campaign' => $campaign, 'adsetStats' => $adsetStats, 'adStats' => $adStats, 'periodLabel' => $periodLabel])
 
+            {{-- CONTROLE NO AR (pausar / reativar / verba) --}}
+            @if(in_array($campaign->platform, ['meta', 'meta_ads', 'google', 'google_ads'], true))
+                @include('campaigns.partials._controls', ['campaign' => $campaign])
+            @endif
+
             {{-- OTIMIZAÇÃO --}}
             <div class="card card-body-lg" id="otimizacao" x-data="{ open: false }">
                 <p class="card-title mb-3">Otimização</p>

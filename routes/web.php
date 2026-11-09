@@ -320,6 +320,12 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('campaign-central.ladder');
     Route::post('/campanhas/{campaign}/escada', [\App\Http\Controllers\CampaignCentralController::class, 'storeLadder'])
         ->name('campaign-central.ladder.store');
+    Route::get('/campanhas/{campaign}/controle', [\App\Http\Controllers\CampaignControlController::class, 'state'])
+        ->name('campaign-controls.state');
+    Route::post('/campanhas/{campaign}/controle/status', [\App\Http\Controllers\CampaignControlController::class, 'status'])
+        ->name('campaign-controls.status');
+    Route::post('/campanhas/{campaign}/controle/verba', [\App\Http\Controllers\CampaignControlController::class, 'budget'])
+        ->name('campaign-controls.budget');
 
     // ── Campanhas (dashboard interno + insights de IA) ──
     Route::get('/campanhas', [CampaignController::class, 'index'])

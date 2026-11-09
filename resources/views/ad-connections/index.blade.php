@@ -64,6 +64,9 @@
                                             <span class="text-xs" style="color:var(--muted)">{{ $account->account_id }}</span>
                                             @if($conn)
                                                 <span class="badge badge-{{ $conn->statusColor() }}">{{ $conn->statusLabel() }}</span>
+                                                @if($conn->can_edit === false && $conn->status !== 'sem_acesso')
+                                                    <span class="badge badge-red">Só leitura</span>
+                                                @endif
                                                 @if($conn->utm_status && isset($utmLabels[$conn->utm_status]))
                                                     <span class="badge {{ $utmLabels[$conn->utm_status][1] }}">{{ $utmLabels[$conn->utm_status][0] }}</span>
                                                 @endif

@@ -1,0 +1,23 @@
+{
+  "novidades": [
+    {
+      "title": "Pausar, reativar e mudar verba pela página da campanha",
+      "summary": "Novo cartão \"Controle no ar\" na página de cada campanha (Meta e Google): pausar, reativar e mudar a verba diária sem abrir o Gerenciador. Tudo pede o porquê e vai para o histórico. Aumento de verba só passa se couber na verba do mês do cliente.",
+      "body": "<p>Reduzir verba e pausar são sempre liberados. Verba total (do período inteiro) e orçamento compartilhado do Google continuam pelo Gerenciador.</p>",
+      "kind": "novidade", "area": "Performance"
+    },
+    {
+      "title": "Contas e conexões mostra contas \"Só leitura\"",
+      "summary": "A vistoria diária agora confere se o App pode mexer na conta da Meta. Conta com selo \"Só leitura\" precisa que o usuário \"Nonna - n8n\" receba a função de Anunciante para criar anúncio, pausar ou mudar verba por aqui.",
+      "kind": "melhoria", "area": "Performance"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Controle no ar — pausar, reativar e mudar verba",
+      "category": "Performance",
+      "slug": "controle-no-ar-pausar-verba",
+      "body_file": "ajuda-controle-no-ar.html"
+    }
+  ]
+}

@@ -90,7 +90,14 @@ class AdAccountConnectionChecker
 
         $pages = $this->meta("{$act}/promote_pages", ['fields' => 'id,name,instagram_business_account{id,username}', 'limit' => 25]);
         if (isset($pages['error'])) {
-            return ['status' => 'sem_acesso', 'issues' => ['O BM da Nonna não tem acesso a esta conta na Meta (a conta não foi compartilhada, ou o acesso foi removido). Sem isso a sincronização também não traz dados.']];
+            return ['status' => 'sem_acesso', 'can_edit' => false, 'issues' => ['O BM da Nonna não tem acesso a esta conta na Meta (a conta não foi compartilhada, ou o acesso foi removido). Sem isso a sincronização também não traz dados.']];
+        }
+
+        // Função do usuário do sistema na conta: sem ADVERTISE, o App só lê.
+        $tasks = $this->meta($act, ['fields' => 'user_tasks'])['user_tasks'] ?? [];
+        $canEdit = in_array('ADVERTISE', $tasks, true);
+        if (!$canEdit) {
+            $issues[] = 'O App só tem permissão de leitura nesta conta: não consegue criar anúncio, pausar nem mudar verba. No BM do cliente, dê ao usuário do sistema "Nonna - n8n" a função Anunciante (ou Administrador) na conta de anúncio.';
         }
 
         $page = $pages['data'][0] ?? null;
@@ -117,6 +124,7 @@ class AdAccountConnectionChecker
 
         return [
             'status'             => $page ? ($issues ? 'atencao' : 'ok') : 'atencao',
+            'can_edit'           => $canEdit,
             'issues'             => $issues,
             'page_id'            => $page['id'] ?? null,
             'page_name'          => $page['name'] ?? null,
@@ -137,7 +145,7 @@ class AdAccountConnectionChecker
         );
 
         if ($response->status() === 403 || $response->status() === 401) {
-            return ['status' => 'sem_acesso', 'issues' => ['A conta gerente (MCC) da Nonna não tem acesso a esta conta no Google Ads.']];
+            return ['status' => 'sem_acesso', 'can_edit' => false, 'issues' => ['A conta gerente (MCC) da Nonna não tem acesso a esta conta no Google Ads.']];
         }
         if ($response->failed()) {
             return ['status' => 'erro', 'issues' => ['O Google não respondeu: ' . $this->googleError($response)]];
@@ -160,6 +168,7 @@ class AdAccountConnectionChecker
 
         return [
             'status'       => $issues ? 'atencao' : 'ok',
+            'can_edit'     => true, // acesso pela MCC já permite editar (validado com validateOnly)
             'issues'       => $issues,
             'utm_status'   => $utm,
             'utm_current'  => $suffix ?: null,

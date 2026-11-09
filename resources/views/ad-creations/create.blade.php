@@ -7,7 +7,8 @@
     </x-slot>
 
     @php
-        $firstUsable = $accounts->first(fn ($a) => $connections->get($a->id)?->page_id);
+        $usable = fn ($a) => $connections->get($a->id)?->page_id && $connections->get($a->id)?->can_edit !== false;
+        $firstUsable = $accounts->first($usable);
     @endphp
 
     <div class="py-8 px-6">
@@ -43,12 +44,14 @@
                     <p class="text-xs font-semibold mb-1.5" style="color:var(--muted2)">1. Conta de anúncio</p>
                     <div class="flex flex-col gap-1.5">
                         @forelse($accounts as $a)
-                            @php $conn = $connections->get($a->id); @endphp
-                            <label class="flex items-start gap-2 text-sm rounded px-3 py-2 {{ $conn?->page_id ? 'cursor-pointer' : 'opacity-60' }}" style="background:var(--s2)">
-                                <input type="radio" value="{{ $a->id }}" x-model="accountId" @change="loadAdsets()" @disabled(!$conn?->page_id) class="mt-1" style="accent-color:var(--purple)">
+                            @php $conn = $connections->get($a->id); $ok = $usable($a); @endphp
+                            <label class="flex items-start gap-2 text-sm rounded px-3 py-2 {{ $ok ? 'cursor-pointer' : 'opacity-60' }}" style="background:var(--s2)">
+                                <input type="radio" value="{{ $a->id }}" x-model="accountId" @change="loadAdsets()" @disabled(!$ok) class="mt-1" style="accent-color:var(--purple)">
                                 <span>
                                     <b>Meta · {{ $a->account_id }}</b>
-                                    @if($conn?->page_id)
+                                    @if($conn?->can_edit === false)
+                                        <span class="block text-xs" style="color:var(--orange)">O App só tem permissão de leitura nesta conta. <a href="{{ route('ad-connections.index', ['client_id' => $task->client_id]) }}" class="underline">Ver em Contas e conexões</a></span>
+                                    @elseif($conn?->page_id)
                                         <span class="block text-xs" style="color:var(--muted2)">Página {{ $conn->page_name }}{{ $conn->instagram_username ? ' · @' . $conn->instagram_username : ' · sem Instagram (sairá só no Facebook)' }}</span>
                                     @else
                                         <span class="block text-xs" style="color:var(--orange)">Sem Página liberada para o App. <a href="{{ route('ad-connections.index', ['client_id' => $task->client_id]) }}" class="underline">Ver em Contas e conexões</a></span>

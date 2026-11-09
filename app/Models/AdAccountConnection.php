@@ -17,13 +17,14 @@ class AdAccountConnection extends Model
     protected $connection = 'pgsql';
 
     protected $fillable = [
-        'client_ad_account_id', 'status', 'issues', 'page_id', 'page_name', 'instagram_id', 'instagram_username',
+        'client_ad_account_id', 'status', 'can_edit', 'issues', 'page_id', 'page_name', 'instagram_id', 'instagram_username',
         'utm_status', 'utm_current', 'ads_checked', 'ads_off_standard', 'auto_tagging', 'checked_at',
     ];
 
     protected $casts = [
         'issues'       => 'array',
         'auto_tagging' => 'boolean',
+        'can_edit'     => 'boolean',
         'checked_at'   => 'datetime',
     ];
 
