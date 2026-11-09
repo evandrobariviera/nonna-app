@@ -48,7 +48,14 @@ class MetaAdCreationController extends Controller
         $counts = $tasks->countBy($situation);
         $tasks = $filter === 'todos' ? $tasks : $tasks->filter(fn ($t) => $situation($t) === $filter)->values();
 
+        // Google Pesquisa: anúncios de texto não vêm de arte; atalho para as campanhas ativas.
+        $searchCampaigns = \App\Models\AdCampaign::with('adAccount.client')
+            ->where('platform', 'like', 'google%')->whereRaw('UPPER(objective) = ?', ['SEARCH'])->where('status', 'active')
+            ->when($clientId, fn ($q) => $q->whereHas('adAccount', fn ($a) => $a->where('client_id', $clientId)))
+            ->orderBy('name')->get();
+
         return view('ad-creations.index', [
+            'searchCampaigns' => $searchCampaigns,
             'tasks'     => $tasks,
             'creations' => $creations,
             'images'    => $images,

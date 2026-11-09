@@ -56,6 +56,13 @@
         <p x-show="action === 'budget'" class="text-xs mt-2" style="color:var(--muted)">Aumento só passa se couber na verba do mês do cliente. Diminuir é sempre liberado.</p>
     </div>
     <p x-show="!action && message" x-cloak class="text-xs mt-2" :style="'color:' + (ok ? 'var(--green)' : 'var(--red)')" x-text="message"></p>
+
+    @if(\App\Services\AdSync\GoogleSearchAdCreator::isSearch($campaign))
+        <div class="mt-4 pt-3 flex items-center justify-between gap-2 flex-wrap" style="border-top:1px solid var(--border)">
+            <span class="text-xs" style="color:var(--muted2)">Novo anúncio nesta campanha, com textos sugeridos pela IA.</span>
+            <a href="{{ route('google-search-ads.create', $campaign) }}" class="btn btn-sm"><x-icon name="search" size="13" />Novo anúncio de Pesquisa</a>
+        </div>
+    @endif
 </div>
 
 @once

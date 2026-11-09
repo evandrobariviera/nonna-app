@@ -36,6 +36,22 @@
 
         <p class="text-sm mb-4" style="color:var(--muted2)">Artes de tarefas com destino "Campanhas patrocinadas" aprovadas pelo cliente nos últimos 45 dias. A legenda aprovada vira o texto do anúncio, e o anúncio nasce <b>pausado</b>.</p>
 
+        @if($searchCampaigns->isNotEmpty())
+            <details class="card p-4 mb-5">
+                <summary class="cursor-pointer text-sm font-semibold" style="color:var(--text)">
+                    Google · anúncio de Pesquisa <span class="font-normal text-xs" style="color:var(--muted)">{{ $searchCampaigns->count() }} campanha(s) ativa(s) — a IA sugere os textos, o anúncio nasce pausado</span>
+                </summary>
+                <div class="flex flex-col gap-1.5 mt-3">
+                    @foreach($searchCampaigns as $sc)
+                        <div class="flex items-center justify-between gap-2 flex-wrap rounded px-3 py-2" style="background:var(--s2)">
+                            <span class="text-sm min-w-0"><b style="color:var(--text)">{{ $sc->adAccount?->client?->displayName() }}</b> <span class="text-xs break-all" style="color:var(--muted2)">{{ $sc->name }}</span></span>
+                            <a href="{{ route('google-search-ads.create', $sc) }}" class="btn btn-sm"><x-icon name="search" size="13" />Novo anúncio</a>
+                        </div>
+                    @endforeach
+                </div>
+            </details>
+        @endif
+
         <div class="grid gap-4" style="grid-template-columns:repeat(auto-fill, minmax(230px, 1fr))">
             @forelse($tasks as $task)
                 @php

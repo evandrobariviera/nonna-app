@@ -30,7 +30,7 @@ class CampaignControls
 
     private ?string $metaToken = null;
 
-    public function __construct(private GoogleAdsFetcher $google) {}
+    public function __construct(private GoogleAdsApi $google) {}
 
     /**
      * Situação ao vivo: status e onde está a verba.
@@ -176,13 +176,8 @@ class CampaignControls
     private function googleState(AdCampaign $campaign): array
     {
         $cid = $this->googleCid($campaign);
-        $res = $this->googleRequest()->post("https://googleads.googleapis.com/" . GoogleAdsFetcher::API_VERSION . "/customers/{$cid}/googleAds:search", [
-            'query' => "SELECT campaign.resource_name, campaign.status, campaign_budget.resource_name, campaign_budget.amount_micros, campaign_budget.total_amount_micros, campaign_budget.explicitly_shared FROM campaign WHERE campaign.id = {$campaign->external_id}",
-        ]);
-        if ($res->failed() || !$res->json('results.0')) {
-            throw new \RuntimeException('O Google não respondeu sobre esta campanha.');
-        }
-        $row = $res->json('results.0');
+        $row = $this->google->search($cid, 'SELECT campaign.resource_name, campaign.status, campaign_budget.resource_name, campaign_budget.amount_micros, campaign_budget.total_amount_micros, campaign_budget.explicitly_shared FROM campaign WHERE campaign.id = ' . (int) $campaign->external_id)[0]
+            ?? throw new \RuntimeException('O Google não encontrou esta campanha.');
         $b = $row['campaignBudget'] ?? [];
         $shared = (bool) ($b['explicitlyShared'] ?? false);
         $daily = isset($b['amountMicros']) ? $b['amountMicros'] / 1_000_000 : null;
@@ -254,29 +249,12 @@ class CampaignControls
 
     private function googleCid(AdCampaign $campaign): string
     {
-        return preg_replace('/\D/', '', $campaign->adAccount->account_id);
+        return GoogleAdsApi::cid($campaign->adAccount);
     }
 
     /** @return array{error: ?string} */
     private function googleMutate(string $cid, string $service, array $operation): array
     {
-        $res = $this->googleRequest()->post("https://googleads.googleapis.com/" . GoogleAdsFetcher::API_VERSION . "/customers/{$cid}/{$service}:mutate", [
-            'operations'   => [$operation],
-            'validateOnly' => $this->validateOnly,
-        ]);
-
-        return ['error' => $res->failed() ? mb_substr((string) ($res->json('error.details.0.errors.0.message') ?? $res->json('error.message') ?? $res->body()), 0, 300) : null];
-    }
-
-    private function googleRequest()
-    {
-        $integration = OrganizationIntegration::where('provider', 'google')->where('status', 'connected')->first()
-            ?? throw new \RuntimeException('Integração com o Google Ads não está conectada.');
-        $creds = $integration->credentials ?? [];
-
-        return Http::timeout(20)->withToken($this->google->ensureFreshToken($integration))->withHeaders([
-            'developer-token'   => $creds['developer_token'] ?? '',
-            'login-customer-id' => preg_replace('/\D/', '', $creds['login_customer_id'] ?? ($creds['customer_id'] ?? '')),
-        ]);
+        return $this->google->mutate($cid, $service, [$operation], $this->validateOnly);
     }
 }

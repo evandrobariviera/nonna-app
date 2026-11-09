@@ -296,6 +296,17 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('ad-creations.activate');
     Route::get('/central-campanhas/contas/{adAccount}/conjuntos', [\App\Http\Controllers\MetaAdCreationController::class, 'adsets'])
         ->name('ad-creations.adsets');
+    // Anúncio de Pesquisa no Google (IA sugere textos; nasce pausado)
+    Route::get('/central-campanhas/google/{campaign}/pesquisa', [\App\Http\Controllers\GoogleSearchAdController::class, 'create'])
+        ->name('google-search-ads.create');
+    Route::get('/central-campanhas/google/{campaign}/grupos', [\App\Http\Controllers\GoogleSearchAdController::class, 'groups'])
+        ->name('google-search-ads.groups');
+    Route::post('/central-campanhas/google/{campaign}/sugerir', [\App\Http\Controllers\GoogleSearchAdController::class, 'suggest'])
+        ->name('google-search-ads.suggest');
+    Route::post('/central-campanhas/google/{campaign}/pesquisa', [\App\Http\Controllers\GoogleSearchAdController::class, 'store'])
+        ->name('google-search-ads.store');
+    Route::post('/central-campanhas/google/anuncios/{creation}/ativar', [\App\Http\Controllers\GoogleSearchAdController::class, 'activate'])
+        ->name('google-search-ads.activate');
 
     // Contas e conexões (Página/Instagram/acesso/UTM por conta)
     Route::get('/central-campanhas/contas-e-conexoes', [\App\Http\Controllers\AdAccountConnectionController::class, 'index'])

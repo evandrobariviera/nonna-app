@@ -1,0 +1,18 @@
+{
+  "novidades": [
+    {
+      "title": "Anúncio de Pesquisa no Google com textos da IA",
+      "summary": "Na página de uma campanha de Pesquisa do Google (ou na aba Criativos), o botão \"Novo anúncio de Pesquisa\" monta um anúncio num grupo que já existe. A IA sugere 15 títulos e 4 descrições a partir do briefing, das palavras-chave mais buscadas e dos anúncios atuais. Você revisa, e o anúncio nasce pausado.",
+      "body": "<p>O App confere os limites do Google (30 caracteres por título, 90 por descrição, nada de \"!\" no título) antes de enviar. Performance Max e vídeo continuam pelo Google Ads.</p>",
+      "kind": "novidade", "area": "Performance"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Google — anúncio de Pesquisa com textos da IA",
+      "category": "Performance",
+      "slug": "google-anuncio-pesquisa-ia",
+      "body_file": "ajuda-google-pesquisa.html"
+    }
+  ]
+}
