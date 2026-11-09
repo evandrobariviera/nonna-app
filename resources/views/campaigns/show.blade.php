@@ -16,6 +16,8 @@
         </div>
     </x-slot>
 
+    @include('campaign-central._tabs')
+
     @if(session('success'))
         <div class="mb-5 px-4 py-3 text-sm font-semibold"
              style="background:rgba(52,211,153,.08); border:1px solid rgba(52,211,153,.25); color:var(--green)">
@@ -280,20 +282,27 @@
                     Última otimização: {{ $campaign->last_optimized_at?->format('d/m/Y \à\s H:i') ?? '—' }}
                 </p>
 
-                <form method="POST" action="{{ route('campaigns.mark-optimized', $campaign) }}" x-data="{ comment: '' }">
-                    @csrf
-                    <textarea name="comment" x-model="comment" rows="4" required
-                        placeholder="O que foi otimizado? (obrigatório)"
-                        class="field w-full px-3 py-2 text-sm mb-2 focus:outline-none"
-                        style="resize:vertical"></textarea>
-                    <button type="submit" :disabled="!comment.trim()" :style="!comment.trim() ? 'opacity:.5; cursor:not-allowed' : ''"
-                        class="btn btn-primary btn-sm">
-                        Marcar otimização feita
-                    </button>
-                </form>
+                <button type="button" class="btn btn-primary btn-sm" @click="$dispatch('open-ladder', { id: '{{ $campaign->id }}' })">
+                    <x-icon name="sliders-horizontal" size="14" />Otimizar com a escada
+                </button>
                 <p class="text-xs mt-2" style="color:var(--muted)">
-                    Isso reinicia o prazo de otimização e aparece no histórico logo abaixo, marcado como "Otimização Realizada".
+                    A escada das 5 perguntas mostra os números de cada etapa e para no primeiro "não". O registro reinicia o prazo e aparece no histórico como "Otimização Realizada".
                 </p>
+
+                <details class="mt-3">
+                    <summary class="text-xs cursor-pointer" style="color:var(--muted2)">Registrar sem a escada</summary>
+                    <form method="POST" action="{{ route('campaigns.mark-optimized', $campaign) }}" x-data="{ comment: '' }" class="mt-2">
+                        @csrf
+                        <textarea name="comment" x-model="comment" rows="4" required
+                            placeholder="O que foi otimizado? (obrigatório)"
+                            class="field w-full px-3 py-2 text-sm mb-2 focus:outline-none"
+                            style="resize:vertical"></textarea>
+                        <button type="submit" :disabled="!comment.trim()" :style="!comment.trim() ? 'opacity:.5; cursor:not-allowed' : ''"
+                            class="btn btn-sm">
+                            Marcar otimização feita
+                        </button>
+                    </form>
+                </details>
             </div>
 
             {{-- HISTÓRICO DE OTIMIZAÇÕES --}}
@@ -609,4 +618,6 @@
         </div>{{-- /sidebar --}}
 
     </div>
+
+    @include('campaign-central._ladder')
 </x-app-layout>

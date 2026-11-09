@@ -2,8 +2,8 @@
     <x-slot name="header">
         <div class="flex items-center justify-between w-full">
             <div>
-                <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Rotina</p>
-                <h1 class="text-xl font-black" style="color:var(--text)">Orçamentos</h1>
+                <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Central de Campanhas</p>
+                <h1 class="text-xl font-black" style="color:var(--text)">Verbas <span class="text-sm font-semibold" style="color:var(--muted)">(Orçamentos)</span></h1>
             </div>
             @php
                 $toggleInativos = request()->except('mostrar_inativos');
@@ -16,6 +16,8 @@
             </a>
         </div>
     </x-slot>
+
+    @include('campaign-central._tabs')
 
     @if(session('success'))
         <div class="mb-5 px-4 py-3 text-sm font-semibold"

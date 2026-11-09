@@ -140,17 +140,48 @@ class AdDataUpserter
         return $upserted;
     }
 
-    // Meta devolve balance/amount_spent/spend_cap em centavos da moeda da conta.
+    /**
+     * Saldo de verdade da conta Meta (crédito que ainda sobra para gastar).
+     *
+     * O campo `balance` da API NÃO é isso: é o valor ainda não cobrado (fatura
+     * em aberto). Em conta pré-paga ele fica em centavos perto de 1 dia de
+     * gasto, o que fazia toda conta parecer "acabando" (corrigido 09/11/2026).
+     *
+     * - Pré-paga (boleto/PIX): "Saldo disponível (R$614,31 BRL)" vem em
+     *   funding_source_details.display_string; sem ele, spend_cap - amount_spent.
+     * - Pós-paga (cartão): não existe saldo para acabar → fica vazio (null).
+     */
     public function upsertAccountBalance(ClientAdAccount $account, array $data): void
     {
-        if (!array_key_exists('balance', $data)) {
+        if (!array_key_exists('balance', $data) && !array_key_exists('is_prepay_account', $data)) {
             return;
         }
 
         $account->update([
-            'balance'           => ((float) $data['balance']) / 100,
+            'balance'           => self::metaAvailableBalance($data),
             'balance_source'    => 'api',
             'balance_synced_at' => now(),
         ]);
+    }
+
+    /** @return float|null em reais; null quando a conta não é pré-paga ou não dá para saber. */
+    public static function metaAvailableBalance(array $data): ?float
+    {
+        if (($data['is_prepay_account'] ?? null) === false) {
+            return null;
+        }
+
+        $display = $data['funding_source_details']['display_string'] ?? '';
+        if (preg_match('/(?:Saldo dispon[ií]vel|Available balance)\s*\(\s*R?\$\s*([\d.,]+)/iu', $display, $m)) {
+            // Formato brasileiro: 1.234,56
+            return (float) str_replace(',', '.', str_replace('.', '', $m[1]));
+        }
+
+        $cap = (float) ($data['spend_cap'] ?? 0);
+        if ($cap > 0 && isset($data['amount_spent'])) {
+            return max(0, $cap - (float) $data['amount_spent']) / 100;
+        }
+
+        return null;
     }
 }

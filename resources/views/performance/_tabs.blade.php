@@ -8,7 +8,9 @@
     $_perfTabs = [
         ['Dashboard',   'performance.index',         'layout-dashboard', request()->routeIs('performance.index')],
         ['Leads',       'leads.index',               'megaphone',        request()->routeIs('leads.*')],
-        ['Campanhas',   'campaigns.index',           'target',           request()->routeIs('campaigns.*')],
+        // Campanhas virou a Central de Campanhas (prancheta do gestor) — a aba
+        // continua aqui como atalho.
+        ['Campanhas',   'campaign-central.today',    'target',           request()->routeIs('campaign-central.*')],
         ['Insights',    'performance.insights',      'sparkles',         request()->routeIs('performance.insights')],
         ['Atendimento', 'service-diagnostics.index', 'headphones',       request()->routeIs('service-diagnostics.*')],
     ];

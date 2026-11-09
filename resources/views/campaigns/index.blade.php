@@ -8,7 +8,7 @@
         </div>
     </x-slot>
 
-    @include('performance._tabs')
+    @include('campaign-central._tabs')
 
     @if(session('success'))
         <div class="mb-5 px-4 py-3 text-sm font-semibold"

@@ -40,6 +40,9 @@ class MetaAdsFetcher
 
     private const DEFAULT_CONVERSION_ACTION_TYPES = ['purchase', 'omni_purchase', 'lead', 'offsite_conversion.fb_pixel_purchase'];
 
+    // `effective_status` (campanha/conjunto/anúncio) vai junto no raw_data: é o
+    // status real de veiculação — DISAPPROVED, WITH_ISSUES, CAMPAIGN_PAUSED —
+    // que o `status` configurado não mostra. A Central de Campanhas lê de lá.
     public function fetchCampaigns(ClientAdAccount $account, string $accessToken): array
     {
         $campaigns = $this->fetchCampaignsFlat($account, $accessToken);
@@ -67,7 +70,7 @@ class MetaAdsFetcher
         $rows = $this->fetchAllPages(
             "https://graph.facebook.com/" . self::API_VERSION . "/act_{$account->account_id}/campaigns",
             [
-                'fields'       => 'id,name,status,objective,start_time,stop_time',
+                'fields'       => 'id,name,status,effective_status,objective,start_time,stop_time',
                 'limit'        => 200,
                 'access_token' => $accessToken,
             ],
@@ -91,7 +94,7 @@ class MetaAdsFetcher
         $rows = $this->fetchAllPages(
             "https://graph.facebook.com/" . self::API_VERSION . "/act_{$account->account_id}/adsets",
             [
-                'fields'       => 'id,name,status,campaign_id,daily_budget,lifetime_budget,targeting',
+                'fields'       => 'id,name,status,effective_status,campaign_id,daily_budget,lifetime_budget,targeting',
                 'limit'        => 200,
                 'access_token' => $accessToken,
             ],
@@ -122,7 +125,7 @@ class MetaAdsFetcher
                 // já disparou "Please reduce the amount of data" do Graph API
                 // com limit=200. O limite de página também cai pra 50: essa
                 // é a chamada mais pesada (expande creative por anúncio).
-                'fields'       => 'id,name,status,adset_id,creative{id,thumbnail_url,video_id,object_story_spec{link_data{child_attachments}}}',
+                'fields'       => 'id,name,status,effective_status,adset_id,creative{id,thumbnail_url,video_id,object_story_spec{link_data{child_attachments}}}',
                 'limit'        => 50,
                 'access_token' => $accessToken,
             ],
@@ -360,7 +363,7 @@ class MetaAdsFetcher
     public function fetchAccountBalance(ClientAdAccount $account, string $accessToken): array
     {
         $response = Http::timeout(15)->get("https://graph.facebook.com/" . self::API_VERSION . "/act_{$account->account_id}", [
-            'fields'       => 'balance,amount_spent,spend_cap,funding_source_details',
+            'fields'       => 'balance,amount_spent,spend_cap,is_prepay_account,funding_source_details',
             'access_token' => $accessToken,
         ]);
 

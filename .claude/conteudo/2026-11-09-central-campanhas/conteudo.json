@@ -1,0 +1,45 @@
+{
+  "novidades": [
+    {
+      "title": "Central de Campanhas: a prancheta do gestor de tráfego",
+      "summary": "Novo item no grupo Performance, com as abas Hoje, Campanhas, Verbas e Otimizações. O Hoje mostra o que resolver agora (campanha parada, anúncio reprovado, saldo acabando), alertas, otimizações atrasadas, artes aprovadas para anúncio e campanhas planejadas que ainda não foram criadas.",
+      "body": "<p>A antiga página <strong>Orçamentos</strong> virou a aba <strong>Verbas</strong> e saiu do grupo Rotina. A lista de <strong>Campanhas</strong> é a mesma de antes. Os números de resultado continuam na Central de Performance.</p>",
+      "kind": "novidade", "area": "Performance"
+    },
+    {
+      "title": "Otimizar campanha agora segue a escada das 5 perguntas",
+      "summary": "O botão Otimizar mostra os números de cada etapa (está rodando? as pessoas estão olhando? quem clicou foi atendido? o contato presta? vira negócio?) e para no primeiro \"não\". O registro vai para o diário e continua valendo 1 ponto de sprint.",
+      "kind": "melhoria", "area": "Performance"
+    },
+    {
+      "title": "Conferência diária do tráfego, marcada por gestor",
+      "summary": "Na aba Hoje da Central de Campanhas, um checklist de 5 minutos (todas gastaram ontem? algum reprovado? algum saldo acabando? algum alerta novo?) que cada gestor marca por dia.",
+      "kind": "novidade", "area": "Performance"
+    },
+    {
+      "title": "Saldo das contas Meta corrigido",
+      "summary": "O App mostrava como saldo o gasto ainda não cobrado, então quase toda conta parecia estar acabando. Agora ele lê o saldo disponível de verdade nas contas pré-pagas; conta no cartão aparece sem saldo, porque não tem saldo para acabar.",
+      "kind": "correcao", "area": "Performance"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Central de Campanhas — a prancheta do gestor de tráfego",
+      "category": "Performance",
+      "slug": "central-de-campanhas",
+      "body_file": "ajuda-central-campanhas.html"
+    },
+    {
+      "title": "Central de Performance — o painel de tráfego, leads e atendimento",
+      "category": "Performance",
+      "slug": "central-de-performance",
+      "body_file": "ajuda-central-performance.html"
+    },
+    {
+      "title": "Pontos de Sprint — como funciona a pontuação",
+      "category": "Sprints e Produção",
+      "slug": "pontos-de-sprint-como-funciona-a-pontuacao",
+      "body_file": "ajuda-pontos-de-sprint.html"
+    }
+  ]
+}

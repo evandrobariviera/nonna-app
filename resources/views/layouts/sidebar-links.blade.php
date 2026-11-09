@@ -75,7 +75,10 @@
 
 {{-- ══ PERFORMANCE ══ — Central de Performance: dashboard + Leads (dos CLIENTES
      da Nonna, diferente de Oportunidades), Campanhas, Insights e Atendimento --}}
-@php $_perfOpen = request()->routeIs('performance.*') || request()->routeIs('leads.*') || request()->routeIs('campaigns.*') || request()->routeIs('service-diagnostics.*'); @endphp
+@php
+    $_perfOpen = request()->routeIs('performance.*') || request()->routeIs('leads.*') || request()->routeIs('service-diagnostics.*');
+    $_ccOpen = request()->routeIs('campaign-central.*') || request()->routeIs('campaigns.*') || request()->routeIs('orcamentos.*');
+@endphp
 <div class="nav-group-label" style="margin-top:8px">Performance</div>
 
 <div x-data="{ open: {{ $_perfOpen ? 'true' : 'false' }} }">
@@ -90,7 +93,6 @@
     <div x-show="open" x-transition style="display:none">
         <a href="{{ route('performance.index') }}" class="nav-sub-item {{ request()->routeIs('performance.index') ? 'active' : '' }}">Dashboard</a>
         <a href="{{ route('leads.index') }}" class="nav-sub-item {{ request()->routeIs('leads.*') ? 'active' : '' }}">Leads</a>
-        <a href="{{ route('campaigns.index') }}" class="nav-sub-item {{ request()->routeIs('campaigns.*') ? 'active' : '' }}">Campanhas</a>
         <a href="{{ route('performance.insights') }}" class="nav-sub-item {{ request()->routeIs('performance.insights') ? 'active' : '' }}">
             <span class="flex items-center justify-between w-full">
                 <span>Insights</span>
@@ -105,6 +107,37 @@
             </span>
         </a>
         <a href="{{ route('service-diagnostics.index') }}" class="nav-sub-item {{ request()->routeIs('service-diagnostics.*') ? 'active' : '' }}">Atendimento</a>
+    </div>
+</div>
+
+{{-- Central de Campanhas — a prancheta do gestor de tráfego (Hoje, Campanhas,
+     Verbas = antiga Orçamentos, Otimizações). Endereços antigos continuam valendo. --}}
+<div x-data="{ open: {{ $_ccOpen ? 'true' : 'false' }} }">
+    <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''"
+            style="{{ $_ccOpen ? 'color:var(--purple);' : '' }}">
+        <span class="flex items-center gap-3">
+            <x-icon name="target" size="16" class="flex-shrink-0" />
+            Central de Campanhas
+        </span>
+        <x-icon name="chevron-right" size="14" class="transition-transform duration-200" x-bind:class="open ? 'rotate-90' : ''" />
+    </button>
+    <div x-show="open" x-transition style="display:none">
+        <a href="{{ route('campaign-central.today') }}" class="nav-sub-item {{ request()->routeIs('campaign-central.today') ? 'active' : '' }}">Hoje</a>
+        <a href="{{ route('campaigns.index') }}" class="nav-sub-item {{ request()->routeIs('campaigns.*') ? 'active' : '' }}">Campanhas</a>
+        <a href="{{ route('orcamentos.index') }}" class="nav-sub-item {{ request()->routeIs('orcamentos.*') ? 'active' : '' }}">
+            <span class="flex items-center justify-between w-full">
+                <span>Verbas</span>
+                @if($_orcamentosAlertCount > 0)
+                    <span class="text-xs px-1.5 py-px rounded-full font-semibold"
+                          style="background:{{ request()->routeIs('orcamentos.*') ? 'rgba(100, 59, 142,.15)' : 'var(--s3)' }};
+                                 color:{{ request()->routeIs('orcamentos.*') ? 'var(--purple)' : 'var(--muted)' }};
+                                 border:1px solid {{ request()->routeIs('orcamentos.*') ? 'rgba(100, 59, 142,.25)' : 'var(--border2)' }}">
+                        {{ $_orcamentosAlertCount }}
+                    </span>
+                @endif
+            </span>
+        </a>
+        <a href="{{ route('campaign-central.optimizations') }}" class="nav-sub-item {{ request()->routeIs('campaign-central.optimizations') ? 'active' : '' }}">Otimizações</a>
     </div>
 </div>
 
@@ -300,8 +333,8 @@
     @endif
 </a>
 
-{{-- Rotina (Campanhas mudou para a Central de Performance) --}}
-<div x-data="{ open: {{ request()->routeIs('orcamentos.*') ? 'true' : 'false' }} }">
+{{-- Rotina (Campanhas e Orçamentos mudaram para a Central de Campanhas) --}}
+<div x-data="{ open: false }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <x-icon name="refresh-cw" size="16" class="flex-shrink-0" />
@@ -310,19 +343,6 @@
         <x-icon name="chevron-right" size="14" class="transition-transform duration-200" x-bind:class="open ? 'rotate-90' : ''" />
     </button>
     <div x-show="open" x-transition style="display:none">
-        <a href="{{ route('orcamentos.index') }}" class="nav-sub-item {{ request()->routeIs('orcamentos.*') ? 'active' : '' }}">
-            <span class="flex items-center justify-between w-full">
-                <span>Orçamentos</span>
-                @if($_orcamentosAlertCount > 0)
-                    <span class="text-xs px-1.5 py-px rounded-full font-semibold"
-                          style="background:{{ request()->routeIs('orcamentos.*') ? 'rgba(100, 59, 142,.15)' : 'var(--s3)' }};
-                                 color:{{ request()->routeIs('orcamentos.*') ? 'var(--purple)' : 'var(--muted)' }};
-                                 border:1px solid {{ request()->routeIs('orcamentos.*') ? 'rgba(100, 59, 142,.25)' : 'var(--border2)' }}">
-                        {{ $_orcamentosAlertCount }}
-                    </span>
-                @endif
-            </span>
-        </a>
         <a href="#" class="nav-sub-item">Prestação de Contas</a>
         <a href="#" class="nav-sub-item">Suporte e Manutenção</a>
     </div>

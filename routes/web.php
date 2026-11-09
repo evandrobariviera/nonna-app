@@ -276,6 +276,18 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::get('/contratos/resultados', [ContractController::class, 'results'])
         ->name('contracts.results');
 
+    // ── Central de Campanhas (prancheta do gestor: Hoje e Otimizações) ──
+    Route::get('/central-campanhas', [\App\Http\Controllers\CampaignCentralController::class, 'today'])
+        ->name('campaign-central.today');
+    Route::get('/central-campanhas/otimizacoes', [\App\Http\Controllers\CampaignCentralController::class, 'optimizations'])
+        ->name('campaign-central.optimizations');
+    Route::post('/central-campanhas/conferencia', [\App\Http\Controllers\CampaignCentralController::class, 'toggleCheck'])
+        ->name('campaign-central.check');
+    Route::get('/campanhas/{campaign}/escada', [\App\Http\Controllers\CampaignCentralController::class, 'ladder'])
+        ->name('campaign-central.ladder');
+    Route::post('/campanhas/{campaign}/escada', [\App\Http\Controllers\CampaignCentralController::class, 'storeLadder'])
+        ->name('campaign-central.ladder.store');
+
     // ── Campanhas (dashboard interno + insights de IA) ──
     Route::get('/campanhas', [CampaignController::class, 'index'])
         ->name('campaigns.index');
