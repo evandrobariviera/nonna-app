@@ -1,0 +1,80 @@
+<x-app-layout>
+    <x-slot name="header">
+        <div>
+            <p class="text-xs font-mono text-[var(--muted)] uppercase tracking-widest mb-1">Performance</p>
+            <h1 class="text-2xl font-black text-[var(--text)]">Central de Campanhas</h1>
+        </div>
+    </x-slot>
+
+    @php
+        $filters = ['subir' => 'Para subir', 'criado' => 'Criado · pausado', 'ar' => 'No ar', 'todos' => 'Todas'];
+    @endphp
+
+    <div class="py-8 px-6">
+        @include('campaign-central._tabs')
+
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div class="flex flex-wrap gap-1.5">
+                @foreach($filters as $key => $label)
+                    <a href="{{ route('ad-creations.index', array_filter(['situacao' => $key, 'client_id' => $clientId])) }}"
+                       class="px-3 py-1 rounded-full text-sm border"
+                       style="{{ $filter === $key ? 'background:color-mix(in srgb, var(--purple) 10%, transparent); border-color:color-mix(in srgb, var(--purple) 30%, transparent); color:var(--purple); font-weight:600' : 'border-color:var(--border); color:var(--muted2)' }}">
+                        {{ $label }}{{ $key !== 'todos' ? ' · ' . ($counts[$key] ?? 0) : '' }}
+                    </a>
+                @endforeach
+            </div>
+            <form method="GET" action="{{ route('ad-creations.index') }}">
+                <input type="hidden" name="situacao" value="{{ $filter }}">
+                <select name="client_id" onchange="this.form.submit()" class="filter-select" aria-label="Cliente">
+                    <option value="">Todos os clientes</option>
+                    @foreach($clients as $c)
+                        <option value="{{ $c->id }}" @selected($clientId === $c->id)>{{ $c->displayName() }}</option>
+                    @endforeach
+                </select>
+            </form>
+        </div>
+
+        <p class="text-sm mb-4" style="color:var(--muted2)">Artes de tarefas com destino "Campanhas patrocinadas" aprovadas pelo cliente nos últimos 45 dias. A legenda aprovada vira o texto do anúncio, e o anúncio nasce <b>pausado</b>.</p>
+
+        <div class="grid gap-4" style="grid-template-columns:repeat(auto-fill, minmax(230px, 1fr))">
+            @forelse($tasks as $task)
+                @php
+                    $image = $images->get($task->id)?->first();
+                    $taskCreations = $creations->get($task->id, collect());
+                    $round = $task->latestApprovalRound;
+                @endphp
+                <article class="card overflow-hidden flex flex-col">
+                    <a href="{{ route('tasks.show', $task) }}" class="block aspect-square" style="background:var(--s2)"
+                       @click="if (!$event.ctrlKey && !$event.metaKey) { $event.preventDefault(); $store.taskPopup.open('{{ route('tasks.show', $task) }}') }">
+                        @if($image)
+                            <img src="{{ $image->url() }}" alt="" loading="lazy" class="w-full h-full object-cover">
+                        @else
+                            <span class="w-full h-full flex items-center justify-center text-xs" style="color:var(--muted)">sem imagem entregue</span>
+                        @endif
+                    </a>
+                    <div class="p-3 flex flex-col gap-1 flex-1">
+                        <p class="font-semibold text-sm leading-snug" style="color:var(--text)">{{ $task->title }}</p>
+                        <p class="text-xs" style="color:var(--muted)">{{ $task->client?->displayName() }} · aprovada em {{ ($round?->resolved_at ?? $round?->updated_at)?->format('d/m') }}</p>
+                        @if($round?->caption)
+                            <p class="text-xs line-clamp-2" style="color:var(--muted2)">"{{ $round->caption }}"</p>
+                        @endif
+                        <div class="mt-auto pt-2 flex items-center justify-between gap-2">
+                            @if($taskCreations->isNotEmpty())
+                                @php $c = $taskCreations->first(); @endphp
+                                <span class="badge badge-{{ $c->statusColor() }}">{{ $c->statusLabel() }}{{ $taskCreations->count() > 1 ? ' · ' . $taskCreations->count() : '' }}</span>
+                                <a href="{{ route('ad-creations.create', $task) }}" class="btn btn-sm">Ver</a>
+                            @elseif($image)
+                                <span class="badge badge-purple">Aprovada</span>
+                                <a href="{{ route('ad-creations.create', $task) }}" class="btn btn-primary btn-sm"><x-icon name="upload" size="13" />Criar anúncio</a>
+                            @else
+                                <span class="text-xs" style="color:var(--muted)">vídeo ou sem imagem: suba pelo Gerenciador</span>
+                            @endif
+                        </div>
+                    </div>
+                </article>
+            @empty
+                <p class="text-sm col-span-full" style="color:var(--muted)">Nenhuma arte neste filtro.</p>
+            @endforelse
+        </div>
+    </div>
+</x-app-layout>

@@ -283,6 +283,20 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('campaign-central.optimizations');
     Route::post('/central-campanhas/conferencia', [\App\Http\Controllers\CampaignCentralController::class, 'toggleCheck'])
         ->name('campaign-central.check');
+    // Criativos: arte aprovada → anúncio na Meta (sempre pausado)
+    Route::get('/central-campanhas/criativos', [\App\Http\Controllers\MetaAdCreationController::class, 'index'])
+        ->name('ad-creations.index');
+    Route::get('/central-campanhas/criativos/{task}/anuncio', [\App\Http\Controllers\MetaAdCreationController::class, 'create'])
+        ->name('ad-creations.create');
+    Route::post('/central-campanhas/criativos/{task}/previa', [\App\Http\Controllers\MetaAdCreationController::class, 'preview'])
+        ->name('ad-creations.preview');
+    Route::post('/central-campanhas/criativos/{task}/anuncio', [\App\Http\Controllers\MetaAdCreationController::class, 'store'])
+        ->name('ad-creations.store');
+    Route::post('/central-campanhas/anuncios/{creation}/ativar', [\App\Http\Controllers\MetaAdCreationController::class, 'activate'])
+        ->name('ad-creations.activate');
+    Route::get('/central-campanhas/contas/{adAccount}/conjuntos', [\App\Http\Controllers\MetaAdCreationController::class, 'adsets'])
+        ->name('ad-creations.adsets');
+
     // Contas e conexões (Página/Instagram/acesso/UTM por conta)
     Route::get('/central-campanhas/contas-e-conexoes', [\App\Http\Controllers\AdAccountConnectionController::class, 'index'])
         ->name('ad-connections.index');

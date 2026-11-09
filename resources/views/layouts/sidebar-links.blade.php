@@ -77,7 +77,7 @@
      da Nonna, diferente de Oportunidades), Campanhas, Insights e Atendimento --}}
 @php
     $_perfOpen = request()->routeIs('performance.*') || request()->routeIs('leads.*') || request()->routeIs('service-diagnostics.*');
-    $_ccOpen = request()->routeIs('campaign-central.*') || request()->routeIs('campaigns.*') || request()->routeIs('orcamentos.*') || request()->routeIs('billing-statements.*') || request()->routeIs('ad-connections.*');
+    $_ccOpen = request()->routeIs('campaign-central.*') || request()->routeIs('campaigns.*') || request()->routeIs('orcamentos.*') || request()->routeIs('billing-statements.*') || request()->routeIs('ad-connections.*') || request()->routeIs('ad-creations.*');
 @endphp
 <div class="nav-group-label" style="margin-top:8px">Performance</div>
 
@@ -124,6 +124,7 @@
     <div x-show="open" x-transition style="display:none">
         <a href="{{ route('campaign-central.today') }}" class="nav-sub-item {{ request()->routeIs('campaign-central.today') ? 'active' : '' }}">Hoje</a>
         <a href="{{ route('campaigns.index') }}" class="nav-sub-item {{ request()->routeIs('campaigns.*') ? 'active' : '' }}">Campanhas</a>
+        <a href="{{ route('ad-creations.index') }}" class="nav-sub-item {{ request()->routeIs('ad-creations.*') ? 'active' : '' }}">Criativos</a>
         <a href="{{ route('orcamentos.index') }}" class="nav-sub-item {{ request()->routeIs('orcamentos.*') ? 'active' : '' }}">
             <span class="flex items-center justify-between w-full">
                 <span>Verbas</span>

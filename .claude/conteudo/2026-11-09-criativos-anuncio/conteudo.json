@@ -1,0 +1,18 @@
+{
+  "novidades": [
+    {
+      "title": "Criar anúncio na Meta a partir da arte aprovada",
+      "summary": "Nova aba Criativos na Central de Campanhas: a arte aprovada pelo cliente vira anúncio na Meta com a legenda aprovada, a UTM padrão e o mesmo destino dos anúncios do conjunto (formulário, WhatsApp ou site). Tem prévia antes de criar, o anúncio nasce pausado e só roda depois do Ativar.",
+      "body": "<p>Por enquanto só imagem e só Meta. Vídeo e conjunto com vários destinos continuam pelo Gerenciador.</p>",
+      "kind": "novidade", "area": "Performance"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Criativos — da arte aprovada ao anúncio na Meta",
+      "category": "Performance",
+      "slug": "criativos-arte-aprovada-anuncio-meta",
+      "body_file": "ajuda-criativos.html"
+    }
+  ]
+}

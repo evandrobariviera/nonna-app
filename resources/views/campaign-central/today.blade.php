@@ -175,10 +175,10 @@
                 <section class="card p-5">
                     <h2 class="card-title">Artes aprovadas para anúncio
                         <small class="font-normal text-xs" style="color:var(--muted)">{{ $arts['total'] }} nos últimos 14 dias</small></h2>
-                    <p class="text-xs mt-1" style="color:var(--muted)">Tarefas com destino "Campanhas patrocinadas" que o cliente aprovou. Confira se já subiram: em breve o anúncio vai poder ser criado daqui.</p>
+                    <p class="text-xs mt-1" style="color:var(--muted)">Tarefas com destino "Campanhas patrocinadas" que o cliente aprovou. Clique na arte para criar o anúncio na Meta (nasce pausado). A aba Criativos mostra quais já subiram.</p>
                     <div class="flex flex-col gap-2 mt-3">
                         @forelse($arts['items'] as $task)
-                            <x-item-card :href="route('tasks.show', $task)" kind="tarefa" icon="image" :popup="true" :title="$task->title">
+                            <x-item-card :href="route('ad-creations.create', $task)" kind="tarefa" icon="image" :title="$task->title">
                                 <x-slot:sub>{{ $clientName($task->client) }} · aprovada em {{ ($task->latestApprovalRound?->resolved_at ?? $task->latestApprovalRound?->updated_at)?->format('d/m') }}</x-slot:sub>
                                 @if($task->latestApprovalRound?->caption)
                                     <x-slot:meta>"{{ \Illuminate\Support\Str::limit($task->latestApprovalRound->caption, 110) }}"</x-slot:meta>
