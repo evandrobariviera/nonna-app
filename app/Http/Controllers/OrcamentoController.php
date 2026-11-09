@@ -22,13 +22,18 @@ class OrcamentoController extends Controller
             // Cliente inativo some por padrão — nada é alterado na conta/orçamento,
             // só escondido daqui (reversível assim que o cliente reativa).
             ->when(!$request->boolean('mostrar_inativos'), fn ($q) => $q->whereHas('client', fn ($c) => $c->where('status', '!=', 'inactive')))
+            // Cliente escolhido na Central de Campanhas (RememberCampaignClient).
+            ->when(\Illuminate\Support\Str::isUuid((string) $request->get('client_id')), fn ($q) => $q->where('client_id', $request->get('client_id')))
             ->get()
             ->sortBy(fn (ClientAdAccount $account) => $account->client?->company_name);
 
         $grouped = $accounts->groupBy('budget_status');
         $users = User::orderBy('name')->get(['id', 'name']);
 
-        return view('orcamentos.index', compact('grouped', 'users'));
+        return view('orcamentos.index', compact('grouped', 'users') + [
+            'clients'  => \App\Services\Billing\AccountStatement::clientsWithAccounts(),
+            'clientId' => $request->get('client_id'),
+        ]);
     }
 
     public function updateStatus(Request $request, ClientAdAccount $adAccount): RedirectResponse

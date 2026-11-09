@@ -23,7 +23,7 @@
         <div class="flex flex-wrap items-end justify-between gap-3 mb-5">
             <form method="GET" action="{{ route('ad-connections.index') }}">
                 <select name="client_id" onchange="this.form.submit()" class="filter-select" aria-label="Cliente">
-                    <option value="">Todos os clientes</option>
+                    <option value="todos">Todos os clientes</option>
                     <option value="meus" @selected($mine)>Só os clientes em que sou responsável</option>
                     @foreach($clients as $c)
                         <option value="{{ $c->id }}" @selected($clientId === $c->id)>{{ $c->displayName() }}</option>

@@ -1,0 +1,17 @@
+{
+  "novidades": [
+    {
+      "title": "Central de Campanhas lembra o cliente escolhido",
+      "summary": "O cliente escolhido no filtro agora segue junto em todas as abas da Central de Campanhas (Hoje, Campanhas, Criativos, Verbas, Prestação de contas, Otimizações e Contas e conexões), mesmo saindo e voltando pelo menu. Para ver todos, escolha \"Todos os clientes\". A aba Verbas ganhou o filtro de cliente.",
+      "kind": "melhoria", "area": "Performance"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Central de Campanhas — a prancheta do gestor de tráfego",
+      "category": "Performance",
+      "slug": "central-de-campanhas",
+      "body_file": "ajuda-central-campanhas.html"
+    }
+  ]
+}

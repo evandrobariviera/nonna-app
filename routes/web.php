@@ -278,14 +278,14 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
 
     // ── Central de Campanhas (prancheta do gestor: Hoje e Otimizações) ──
     Route::get('/central-campanhas', [\App\Http\Controllers\CampaignCentralController::class, 'today'])
-        ->name('campaign-central.today');
+        ->name('campaign-central.today')->middleware(\App\Http\Middleware\RememberCampaignClient::class);
     Route::get('/central-campanhas/otimizacoes', [\App\Http\Controllers\CampaignCentralController::class, 'optimizations'])
-        ->name('campaign-central.optimizations');
+        ->name('campaign-central.optimizations')->middleware(\App\Http\Middleware\RememberCampaignClient::class);
     Route::post('/central-campanhas/conferencia', [\App\Http\Controllers\CampaignCentralController::class, 'toggleCheck'])
         ->name('campaign-central.check');
     // Criativos: arte aprovada → anúncio na Meta (sempre pausado)
     Route::get('/central-campanhas/criativos', [\App\Http\Controllers\MetaAdCreationController::class, 'index'])
-        ->name('ad-creations.index');
+        ->name('ad-creations.index')->middleware(\App\Http\Middleware\RememberCampaignClient::class);
     Route::get('/central-campanhas/criativos/{task}/anuncio', [\App\Http\Controllers\MetaAdCreationController::class, 'create'])
         ->name('ad-creations.create');
     Route::post('/central-campanhas/criativos/{task}/previa', [\App\Http\Controllers\MetaAdCreationController::class, 'preview'])
@@ -310,7 +310,7 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
 
     // Contas e conexões (Página/Instagram/acesso/UTM por conta)
     Route::get('/central-campanhas/contas-e-conexoes', [\App\Http\Controllers\AdAccountConnectionController::class, 'index'])
-        ->name('ad-connections.index');
+        ->name('ad-connections.index')->middleware(\App\Http\Middleware\RememberCampaignClient::class);
     Route::post('/central-campanhas/contas-e-conexoes/verificar', [\App\Http\Controllers\AdAccountConnectionController::class, 'refresh'])
         ->name('ad-connections.refresh');
     Route::post('/central-campanhas/contas-e-conexoes/{adAccount}/utm-google', [\App\Http\Controllers\AdAccountConnectionController::class, 'applyGoogleUtm'])
@@ -318,7 +318,7 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
 
     // Prestação de contas (notas fiscais dos anúncios, extrato mensal por conta)
     Route::get('/central-campanhas/prestacao-de-contas', [\App\Http\Controllers\BillingStatementController::class, 'index'])
-        ->name('billing-statements.index');
+        ->name('billing-statements.index')->middleware(\App\Http\Middleware\RememberCampaignClient::class);
     Route::get('/central-campanhas/prestacao-de-contas/{client}', [\App\Http\Controllers\BillingStatementController::class, 'show'])
         ->name('billing-statements.show');
     Route::post('/central-campanhas/prestacao-de-contas/{client}/notas', [\App\Http\Controllers\BillingStatementController::class, 'storeInvoices'])
@@ -340,10 +340,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
 
     // ── Campanhas (dashboard interno + insights de IA) ──
     Route::get('/campanhas', [CampaignController::class, 'index'])
-        ->name('campaigns.index');
+        ->name('campaigns.index')->middleware(\App\Http\Middleware\RememberCampaignClient::class);
     // Precisa vir ANTES de /{campaign} — senão "resultados" colide com o wildcard.
     Route::get('/campanhas/resultados', [CampaignController::class, 'results'])
-        ->name('campaigns.results');
+        ->name('campaigns.results')->middleware(\App\Http\Middleware\RememberCampaignClient::class);
     Route::get('/campanhas/{campaign}', [CampaignController::class, 'show'])
         ->name('campaigns.show');
     Route::patch('/campanhas/{campaign}/descricao', [CampaignController::class, 'updateDescription'])
@@ -367,7 +367,7 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
 
     // ── Orçamentos (visão geral de saldo/pagamento por conta, cross-cliente) ──
     Route::get('/orcamentos', [OrcamentoController::class, 'index'])
-        ->name('orcamentos.index');
+        ->name('orcamentos.index')->middleware(\App\Http\Middleware\RememberCampaignClient::class);
     Route::patch('/orcamentos/{adAccount}', [OrcamentoController::class, 'updateStatus'])
         ->name('orcamentos.update-status');
 

@@ -22,7 +22,7 @@
           data-live-filter data-results-url="{{ route('campaigns.results') }}" data-target="#campaigns-results">
         <select class="field" name="client_id" onchange="this.form.ad_campaign_id.value=''"
             style="color:var(--muted2); padding:8px 12px; font-size:13px; outline:none; cursor:pointer">
-            <option value="">Todos os clientes</option>
+            <option value="todos">Todos os clientes</option>
             @foreach($clients as $c)
                 <option value="{{ $c->id }}" {{ $clientId === $c->id ? 'selected' : '' }}>{{ $c->displayName() }}</option>
             @endforeach
@@ -77,7 +77,7 @@
         </div>
 
         @if(request()->hasAny(['client_id', 'ad_campaign_id', 'platform', 'status', 'period', 'group_by', 'mostrar_inativos']))
-            <a href="{{ route('campaigns.index') }}" class="btn btn-ghost btn-sm">
+            <a href="{{ route('campaigns.index', ['client_id' => 'todos']) }}" class="btn btn-ghost btn-sm">
                 Limpar
             </a>
         @endif

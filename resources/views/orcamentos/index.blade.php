@@ -19,6 +19,16 @@
 
     @include('campaign-central._tabs')
 
+    <form method="GET" action="{{ route('orcamentos.index') }}" class="mb-5">
+        @if(request()->boolean('mostrar_inativos'))<input type="hidden" name="mostrar_inativos" value="1">@endif
+        <select name="client_id" onchange="this.form.submit()" class="filter-select" aria-label="Cliente">
+            <option value="todos">Todos os clientes</option>
+            @foreach($clients as $c)
+                <option value="{{ $c->id }}" @selected($clientId === $c->id)>{{ $c->displayName() }}</option>
+            @endforeach
+        </select>
+    </form>
+
     @if(session('success'))
         <div class="mb-5 px-4 py-3 text-sm font-semibold"
              style="background:rgba(52,211,153,.08); border:1px solid rgba(52,211,153,.25); color:var(--green)">

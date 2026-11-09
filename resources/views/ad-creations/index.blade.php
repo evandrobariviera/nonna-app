@@ -26,7 +26,7 @@
             <form method="GET" action="{{ route('ad-creations.index') }}">
                 <input type="hidden" name="situacao" value="{{ $filter }}">
                 <select name="client_id" onchange="this.form.submit()" class="filter-select" aria-label="Cliente">
-                    <option value="">Todos os clientes</option>
+                    <option value="todos">Todos os clientes</option>
                     @foreach($clients as $c)
                         <option value="{{ $c->id }}" @selected($clientId === $c->id)>{{ $c->displayName() }}</option>
                     @endforeach
