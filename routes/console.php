@@ -9,6 +9,8 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('campaigns:sync-ad-platforms')->dailyAt('05:30');
+// Contas e conexões (Central de Campanhas): Página/Instagram/acesso/UTM, depois do sync.
+Schedule::command('ad-accounts:check-connections')->dailyAt('05:50')->withoutOverlapping();
 Schedule::command('campaigns:generate-insights')->dailyAt('08:00');
 Schedule::command('financial:generate-contract-transactions')->dailyAt('06:00');
 Schedule::command('automations:check-date-triggers')->dailyAt('07:00');

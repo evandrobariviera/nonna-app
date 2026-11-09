@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class GoogleAdsFetcher
 {
-    private const API_VERSION = 'v24';
+    public const API_VERSION = 'v24';
 
     /**
      * Garante um access_token válido, renovando via refresh_token se estiver

@@ -283,6 +283,14 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('campaign-central.optimizations');
     Route::post('/central-campanhas/conferencia', [\App\Http\Controllers\CampaignCentralController::class, 'toggleCheck'])
         ->name('campaign-central.check');
+    // Contas e conexões (Página/Instagram/acesso/UTM por conta)
+    Route::get('/central-campanhas/contas-e-conexoes', [\App\Http\Controllers\AdAccountConnectionController::class, 'index'])
+        ->name('ad-connections.index');
+    Route::post('/central-campanhas/contas-e-conexoes/verificar', [\App\Http\Controllers\AdAccountConnectionController::class, 'refresh'])
+        ->name('ad-connections.refresh');
+    Route::post('/central-campanhas/contas-e-conexoes/{adAccount}/utm-google', [\App\Http\Controllers\AdAccountConnectionController::class, 'applyGoogleUtm'])
+        ->name('ad-connections.google-utm');
+
     // Prestação de contas (notas fiscais dos anúncios, extrato mensal por conta)
     Route::get('/central-campanhas/prestacao-de-contas', [\App\Http\Controllers\BillingStatementController::class, 'index'])
         ->name('billing-statements.index');

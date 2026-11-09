@@ -12,7 +12,7 @@ class MetaAdsFetcher
     // ar em 24/09/2026 (estava sendo redirecionada para a v21, que morre em
     // 21/01/2027). v27 validada em 09/11/2026: mesmos dados da v20 em
     // campanha/conjunto/anúncio/insights/saldo, comparados linha a linha.
-    private const API_VERSION = 'v27.0';
+    public const API_VERSION = 'v27.0';
 
     // "Resultado" no Ads Manager depende do objetivo real do conjunto
     // (optimization_goal), não da campanha — uma campanha OUTCOME_LEADS pode

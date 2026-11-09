@@ -9,6 +9,7 @@
         ['Verbas',      'orcamentos.index',               'wallet',             request()->routeIs('orcamentos.*')],
         ['Prestação de contas', 'billing-statements.index', 'receipt',          request()->routeIs('billing-statements.*')],
         ['Otimizações', 'campaign-central.optimizations', 'sliders-horizontal', request()->routeIs('campaign-central.optimizations')],
+        ['Contas e conexões', 'ad-connections.index',     'plug',               request()->routeIs('ad-connections.*')],
     ];
 @endphp
 

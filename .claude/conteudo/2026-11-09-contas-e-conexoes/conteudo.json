@@ -1,0 +1,18 @@
+{
+  "novidades": [
+    {
+      "title": "Contas e conexões: vistoria diária das contas de anúncio",
+      "summary": "Nova aba na Central de Campanhas: todo dia o App confere cada conta Meta e Google — Página e Instagram liberados, acesso do BM/MCC da Nonna, anúncios sem a UTM padrão e UTM automática no Google, com botão para aplicar o padrão na conta inteira.",
+      "body": "<p>Também tem um gerador de UTM para links fora de anúncio (bio, WhatsApp, e-mail, QR code). O botão Verificar agora refaz a conferência na hora.</p>",
+      "kind": "novidade", "area": "Performance"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Contas e conexões — o que falta em cada conta de anúncio",
+      "category": "Performance",
+      "slug": "contas-e-conexoes",
+      "body_file": "ajuda-contas-e-conexoes.html"
+    }
+  ]
+}
