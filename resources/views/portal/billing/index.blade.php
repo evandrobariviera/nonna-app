@@ -70,5 +70,5 @@
         </div>
     @endforelse
 
-    <p class="text-xs mt-2" style="color:var(--muted)">"Investido nos anúncios" é o gasto registrado nas campanhas. O valor oficial é o da nota fiscal, que pode ficar um pouco abaixo porque a plataforma desconta cliques inválidos.</p>
+    <p class="text-xs mt-2" style="color:var(--muted)">"Investido nos anúncios" é o gasto registrado nas campanhas. O valor oficial é o da nota fiscal: na Meta ela inclui os impostos (por isso fica acima do investido); no Google pode ficar um pouco abaixo, porque a plataforma desconta cliques inválidos.</p>
 </x-portal-layout>

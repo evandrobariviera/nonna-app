@@ -94,7 +94,7 @@
                                             <span style="color:var(--muted)">—</span>
                                         @endif
                                     </td>
-                                    <td class="px-3 py-2.5 text-right whitespace-nowrap text-xs" style="color:{{ $diff !== null && abs($diff) > 5 ? 'var(--orange)' : 'var(--muted)' }}">
+                                    <td class="px-3 py-2.5 text-right whitespace-nowrap text-xs" style="color:{{ \App\Services\Billing\AccountStatement::diffLooksOff($r->account->platform, $diff) ? 'var(--orange)' : 'var(--muted)' }}">
                                         {{ $diff !== null ? ($diff > 0 ? '+' : '') . number_format($diff, 1, ',', '.') . '%' : '' }}
                                     </td>
                                     <td class="px-5 py-2.5 text-xs">
@@ -115,7 +115,7 @@
                     </tbody>
                 </table>
             </div>
-            <p class="text-xs mt-3" style="color:var(--muted)">"Consumido" é o gasto nas campanhas pela sincronização. A nota é o valor oficial e costuma ficar um pouco abaixo (cliques inválidos que a plataforma desconta). Diferença acima de 5% fica laranja para conferir.</p>
+            <p class="text-xs mt-3" style="color:var(--muted)">"Consumido" é o gasto nas campanhas pela sincronização; a nota é o valor oficial. Na <b>Meta</b>, desde 2026 a nota inclui os impostos e fica cerca de 14% acima do consumido. No <b>Google</b>, fica igual ou um pouco abaixo (cliques inválidos descontados). Fora disso a diferença fica laranja: vale conferir se faltou nota ou se o mês está certo.</p>
         </section>
     </div>
 </x-app-layout>

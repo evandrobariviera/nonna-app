@@ -192,6 +192,30 @@ class AccountStatement
         return $day > self::DEADLINE_DAY ? 'late' : ($day >= self::DEADLINE_DAY - 2 ? 'soon' : null);
     }
 
+    /**
+     * Faixa esperada da diferença nota × consumido, em %, por plataforma.
+     * Meta: desde 01/2026 a nota inclui os impostos (IBS/CBS), então fica
+     * acima do gasto nas campanhas (de R$ 1.000 pagos, ~R$ 878 viram mídia →
+     * nota ~14% acima). Google: a nota fica igual ou um pouco abaixo (cliques
+     * inválidos descontados). Fora da faixa = vale conferir.
+     *
+     * @return array{0: float, 1: float}
+     */
+    public static function expectedDiffRange(string $platform): array
+    {
+        return str_starts_with($platform, 'meta') ? [5.0, 20.0] : [-8.0, 3.0];
+    }
+
+    public static function diffLooksOff(string $platform, ?float $diffPct): bool
+    {
+        if ($diffPct === null) {
+            return false;
+        }
+        [$min, $max] = self::expectedDiffRange($platform);
+
+        return $diffPct < $min || $diffPct > $max;
+    }
+
     /** Este mês já devia ter nota? (passou e é do período em que a nota é cobrada) */
     public static function expectsInvoice(Carbon $month): bool
     {
