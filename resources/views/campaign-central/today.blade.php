@@ -143,6 +143,34 @@
                     </div>
                 </section>
 
+                {{-- Prestação de contas do mês anterior --}}
+                @if($billing['total'] > 0)
+                    @php
+                        $bState = \App\Services\Billing\AccountStatement::deadlineState();
+                        $bMonth = \App\Services\Billing\StatementDeliveryService::monthLabel($billing['month']);
+                    @endphp
+                    <section class="card p-5">
+                        <h2 class="card-title flex items-center justify-between gap-2">
+                            <span>Prestação de contas de {{ $bMonth }}
+                                <small class="font-normal text-xs" style="color:var(--muted)">{{ $billing['done'] }} de {{ $billing['total'] }} contas com nota · prazo dia {{ \App\Services\Billing\AccountStatement::DEADLINE_DAY }}</small></span>
+                            <a href="{{ route('billing-statements.index', array_filter(['client_id' => request('client_id')])) }}" class="btn btn-ghost btn-sm">Abrir</a>
+                        </h2>
+                        <div class="flex flex-col gap-2 mt-3">
+                            @forelse($billing['items']->take(8) as $r)
+                                <x-item-card :href="route('billing-statements.show', [$r->client, 'mes' => $billing['month']->format('Y-m')])" kind="cliente" icon="receipt" :state="$bState"
+                                             :title="'Falta a nota de ' . $bMonth . ': ' . $clientName($r->client)">
+                                    <x-slot:sub>{{ $r->account->platformLabel() }} · consumiu {{ $money($r->consumed) }} no mês</x-slot:sub>
+                                </x-item-card>
+                            @empty
+                                <p class="text-sm px-3 py-4 text-center rounded" style="background:var(--s2); color:var(--muted)">Todas as notas de {{ $bMonth }} já subiram.</p>
+                            @endforelse
+                            @if($billing['items']->count() > 8)
+                                <a href="{{ route('billing-statements.index') }}" class="text-xs" style="color:var(--purple)">e mais {{ $billing['items']->count() - 8 }}…</a>
+                            @endif
+                        </div>
+                    </section>
+                @endif
+
                 {{-- Artes aprovadas --}}
                 <section class="card p-5">
                     <h2 class="card-title">Artes aprovadas para anúncio

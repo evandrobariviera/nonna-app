@@ -1745,7 +1745,7 @@
                                             @if($account->hasBillingTracking())
                                                 <button type="button" @click="billingOpenId = billingOpenId === '{{ $account->id }}' ? null : '{{ $account->id }}'"
                                                         class="text-xs font-mono text-[var(--muted)] hover:text-[var(--purple)] transition-colors">
-                                                    Boletos ({{ $account->billingDocuments->count() }})
+                                                    Boletos e notas ({{ $account->billingDocuments->count() }})
                                                 </button>
                                             @endif
                                             <button type="button" @click="metasOpenId = metasOpenId === '{{ $account->id }}' ? null : '{{ $account->id }}'"

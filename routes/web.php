@@ -283,6 +283,17 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('campaign-central.optimizations');
     Route::post('/central-campanhas/conferencia', [\App\Http\Controllers\CampaignCentralController::class, 'toggleCheck'])
         ->name('campaign-central.check');
+    // Prestação de contas (notas fiscais dos anúncios, extrato mensal por conta)
+    Route::get('/central-campanhas/prestacao-de-contas', [\App\Http\Controllers\BillingStatementController::class, 'index'])
+        ->name('billing-statements.index');
+    Route::get('/central-campanhas/prestacao-de-contas/{client}', [\App\Http\Controllers\BillingStatementController::class, 'show'])
+        ->name('billing-statements.show');
+    Route::post('/central-campanhas/prestacao-de-contas/{client}/notas', [\App\Http\Controllers\BillingStatementController::class, 'storeInvoices'])
+        ->name('billing-statements.invoices.store');
+    Route::post('/central-campanhas/prestacao-de-contas/{client}/enviar', [\App\Http\Controllers\BillingStatementController::class, 'send'])
+        ->name('billing-statements.send');
+    Route::patch('/central-campanhas/prestacao-de-contas/conta/{adAccount}', [\App\Http\Controllers\BillingStatementController::class, 'updateStatement'])
+        ->name('billing-statements.statement.update');
     Route::get('/campanhas/{campaign}/escada', [\App\Http\Controllers\CampaignCentralController::class, 'ladder'])
         ->name('campaign-central.ladder');
     Route::post('/campanhas/{campaign}/escada', [\App\Http\Controllers\CampaignCentralController::class, 'storeLadder'])
@@ -1138,6 +1149,11 @@ Route::get('/aprovar/{token}/central', [ApprovalController::class, 'central'])
 Route::get('/documento/{token}', [\App\Http\Controllers\PublicItemController::class, 'show'])
     ->middleware('throttle:60,1')
     ->name('public-item.show');
+
+// ── Prestação de contas do mês pro cliente (sem senha — link assinado do aviso) ──
+Route::get('/prestacao-de-contas/{delivery}', [\App\Http\Controllers\PublicBillingStatementController::class, 'show'])
+    ->middleware(['signed', 'throttle:60,1'])
+    ->name('billing-statement.public');
 
 // ── Solicitação de senhas/acessos pública (sem autenticação — link tokenizado) ──
 Route::get('/credenciais/{token}', [CredentialRequestController::class, 'show'])

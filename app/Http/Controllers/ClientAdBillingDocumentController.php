@@ -86,7 +86,9 @@ class ClientAdBillingDocumentController extends Controller
 
         $document->delete();
 
-        return redirect()->route('clients.show', [$client, 'tab' => 'contas'])
+        // Volta pra onde a pessoa estava: ficha do cliente (aba Contas) ou o
+        // extrato da Prestação de contas.
+        return back(fallback: route('clients.show', [$client, 'tab' => 'contas']))
             ->with('success', 'Documento removido.');
     }
 }

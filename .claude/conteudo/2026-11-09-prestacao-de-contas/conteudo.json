@@ -1,0 +1,29 @@
+{
+  "novidades": [
+    {
+      "title": "Prestação de contas dos anúncios dentro do App",
+      "summary": "Nova aba na Central de Campanhas: as notas fiscais de cada conta, mês a mês, e o extrato (saldo, créditos, consumido) que antes ficava na planilha do Drive. Ao subir as notas, o cliente recebe um aviso só no WhatsApp/e-mail com o link para baixar.",
+      "body": "<p>A aba Hoje mostra quais contas ainda estão sem a nota do mês anterior. O prazo combinado é o dia 10. O consumido vem sozinho da sincronização e os créditos vêm dos boletos e PIX já lançados.</p>",
+      "kind": "novidade", "area": "Performance"
+    },
+    {
+      "title": "Portal: Boletos virou Prestação de contas",
+      "summary": "No Portal, o cliente vê notas fiscais, boletos/PIX e o extrato dos anúncios organizados por mês, num lugar só.",
+      "kind": "melhoria", "area": "Portal do Cliente"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Prestação de contas dos anúncios — notas fiscais e extrato mensal",
+      "category": "Performance",
+      "slug": "prestacao-de-contas-dos-anuncios",
+      "body_file": "ajuda-prestacao-de-contas.html"
+    },
+    {
+      "title": "Central de Campanhas — a prancheta do gestor de tráfego",
+      "category": "Performance",
+      "slug": "central-de-campanhas",
+      "body_file": "ajuda-central-campanhas.html"
+    }
+  ]
+}

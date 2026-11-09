@@ -74,6 +74,7 @@ class TodayBoard
             'overdue'     => $overdue,
             'arts'        => $this->approvedArts(),
             'planned'     => $this->plannedWithoutCampaign(),
+            'billing'     => \App\Services\Billing\AccountStatement::pendingForToday($this->accountIds),
             'kpis'        => $this->kpis($yesterday) + [
                 'urgent' => $stale->count() + $stopped->count() + $problemAds->count() + $balance->count(),
             ],

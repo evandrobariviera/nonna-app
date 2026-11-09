@@ -18,6 +18,7 @@ class ClientAdBillingDocument extends Model
         'type',
         'amount',
         'due_date',
+        'reference_month',
         'pix_code',
         'filename',
         'disk_path',
@@ -32,13 +33,29 @@ class ClientAdBillingDocument extends Model
     protected $casts = [
         'amount'      => 'decimal:2',
         'due_date'    => 'date',
+        'reference_month' => 'date',
         'notified_at' => 'datetime',
     ];
 
+    // "nota" = nota fiscal dos anúncios (Prestação de contas). A coluna type
+    // tem 10 caracteres, por isso não é "nota_fiscal".
     public static array $types = [
         'boleto' => 'Boleto',
         'pix'    => 'PIX',
+        'nota'   => 'Nota fiscal',
     ];
+
+    /** Boleto e PIX são crédito (verba que entra); nota é a prova do gasto. */
+    public function isCredit(): bool
+    {
+        return in_array($this->type, ['boleto', 'pix'], true);
+    }
+
+    /** Mês a que o documento se refere (o de envio, quando não informado). */
+    public function referenceMonth(): \Illuminate\Support\Carbon
+    {
+        return ($this->reference_month ?? $this->created_at)->copy()->startOfMonth();
+    }
 
     public function adAccount(): BelongsTo
     {

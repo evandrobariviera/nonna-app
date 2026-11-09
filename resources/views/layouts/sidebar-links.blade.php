@@ -77,7 +77,7 @@
      da Nonna, diferente de Oportunidades), Campanhas, Insights e Atendimento --}}
 @php
     $_perfOpen = request()->routeIs('performance.*') || request()->routeIs('leads.*') || request()->routeIs('service-diagnostics.*');
-    $_ccOpen = request()->routeIs('campaign-central.*') || request()->routeIs('campaigns.*') || request()->routeIs('orcamentos.*');
+    $_ccOpen = request()->routeIs('campaign-central.*') || request()->routeIs('campaigns.*') || request()->routeIs('orcamentos.*') || request()->routeIs('billing-statements.*');
 @endphp
 <div class="nav-group-label" style="margin-top:8px">Performance</div>
 
@@ -137,6 +137,7 @@
                 @endif
             </span>
         </a>
+        <a href="{{ route('billing-statements.index') }}" class="nav-sub-item {{ request()->routeIs('billing-statements.*') ? 'active' : '' }}">Prestação de contas</a>
         <a href="{{ route('campaign-central.optimizations') }}" class="nav-sub-item {{ request()->routeIs('campaign-central.optimizations') ? 'active' : '' }}">Otimizações</a>
     </div>
 </div>
@@ -343,7 +344,7 @@
         <x-icon name="chevron-right" size="14" class="transition-transform duration-200" x-bind:class="open ? 'rotate-90' : ''" />
     </button>
     <div x-show="open" x-transition style="display:none">
-        <a href="#" class="nav-sub-item">Prestação de Contas</a>
+        <a href="{{ route('billing-statements.index') }}" class="nav-sub-item">Prestação de Contas</a>
         <a href="#" class="nav-sub-item">Suporte e Manutenção</a>
     </div>
 </div>

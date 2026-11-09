@@ -7,6 +7,7 @@
         ['Hoje',        'campaign-central.today',         'sun',                request()->routeIs('campaign-central.today')],
         ['Campanhas',   'campaigns.index',                'target',             request()->routeIs('campaigns.*')],
         ['Verbas',      'orcamentos.index',               'wallet',             request()->routeIs('orcamentos.*')],
+        ['Prestação de contas', 'billing-statements.index', 'receipt',          request()->routeIs('billing-statements.*')],
         ['Otimizações', 'campaign-central.optimizations', 'sliders-horizontal', request()->routeIs('campaign-central.optimizations')],
     ];
 @endphp

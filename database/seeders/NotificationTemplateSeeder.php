@@ -78,6 +78,15 @@ class NotificationTemplateSeeder extends Seeder
                     'body'    => "Olá {{contato}},\n\nInformamos que uma nova nota referente aos investimentos em anúncios de {{cliente}} está disponível.\n\nValor: {{valor}}\nVencimento: {{vencimento}}\n\nAcesse aqui: {{link_fatura}}\n\nQualquer dúvida, estamos à disposição.\n\nEquipe Nonna",
                 ],
             ],
+            'prestacao_contas' => [
+                'whatsapp' => [
+                    'body' => "Oi {{contato}}! As notas fiscais dos anúncios de {{cliente}} referentes a {{mes}} já estão disponíveis ({{quantidade}}, total de {{valor}}).\n\nPara baixar: {{link_prestacao}}",
+                ],
+                'email' => [
+                    'subject' => 'Notas fiscais dos anúncios — {{mes}} — {{cliente}}',
+                    'body'    => "Olá {{contato}},\n\nAs notas fiscais dos investimentos em anúncios de {{cliente}} referentes a {{mes}} já estão disponíveis.\n\nQuantidade: {{quantidade}}\nTotal: {{valor}}\n\nPara baixar as notas e ver o extrato do mês: {{link_prestacao}}\n\nQualquer dúvida, estamos à disposição.\n\nEquipe Nonna",
+                ],
+            ],
             'cobranca' => [
                 'whatsapp' => [
                     'body' => "Oi {{contato}}! Passando pra lembrar do vencimento da fatura de {{cliente}} — valor {{valor}}, vencimento {{vencimento}}.\n\nAcesse aqui: {{link_fatura}}",

@@ -39,6 +39,7 @@ class ClientContactSubscription extends Model
         'planejamento_ativo'     => 'Planejamento em Execução',
         'item_ativo'             => 'Campanha/Projeto em Execução',
         'financeiro'             => 'Financeiro (Notas de Anúncios)',
+        'prestacao_contas'       => 'Prestação de Contas (notas fiscais dos anúncios)',
         'cobranca'               => 'Cobrança / Faturamento',
         'cs_survey'              => 'Pesquisa de Satisfação (CS)',
         'offboarding'            => 'Offboarding',

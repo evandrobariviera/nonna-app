@@ -152,15 +152,7 @@
    style="{{ request()->routeIs('portal.boletos.*') ? 'color:var(--purple);' : '' }}">
     <span class="flex items-center gap-3">
         <x-icon name="receipt" size="16" class="flex-shrink-0" />
-        Boletos
+        Prestação de contas
     </span>
 </a>
-
-<span class="nav-group-trigger" style="opacity:.45; cursor:not-allowed">
-    <span class="flex items-center gap-3">
-        <x-icon name="file-text" size="16" class="flex-shrink-0" />
-        Notas Fiscais
-    </span>
-    <span class="badge badge-muted" style="font-size:9px; padding:1px 6px; white-space:nowrap; flex-shrink:0">Em breve</span>
-</span>
 @endif
