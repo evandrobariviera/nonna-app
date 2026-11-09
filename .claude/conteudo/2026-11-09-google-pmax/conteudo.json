@@ -1,0 +1,19 @@
+{
+    "novidades": [
+        {
+            "title": "Arte aprovada vai também para a Performance Max do Google",
+            "summary": "Na aba Criativos, o botão Google leva a arte aprovada para um grupo de recursos da Performance Max. O App descobre o formato (quadrada, vertical ou paisagem), mostra quantas imagens o grupo já tem e envia pausada. Só entra no ar depois do Ativar.",
+            "body": "<p>Story (9:16) e outros tamanhos não são aceitos pela Performance Max. Arte acima de 5 MB é convertida automaticamente.</p>",
+            "kind": "novidade",
+            "area": "Performance"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Criativos — da arte aprovada ao anúncio (Meta e Google)",
+            "category": "Performance",
+            "slug": "criativos-arte-aprovada-anuncio-meta",
+            "body_file": "ajuda-criativos.html"
+        }
+    ]
+}

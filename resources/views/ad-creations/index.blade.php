@@ -74,16 +74,22 @@
                         @if($round?->caption)
                             <p class="text-xs line-clamp-2" style="color:var(--muted2)">"{{ $round->caption }}"</p>
                         @endif
-                        <div class="mt-auto pt-2 flex items-center justify-between gap-2">
+                        <div class="mt-auto pt-2 flex items-center justify-between gap-2 flex-wrap">
                             @if($taskCreations->isNotEmpty())
                                 @php $c = $taskCreations->first(); @endphp
                                 <span class="badge badge-{{ $c->statusColor() }}">{{ $c->statusLabel() }}{{ $taskCreations->count() > 1 ? ' · ' . $taskCreations->count() : '' }}</span>
-                                <a href="{{ route('ad-creations.create', $task) }}" class="btn btn-sm">Ver</a>
                             @elseif($image)
                                 <span class="badge badge-purple">Aprovada</span>
-                                <a href="{{ route('ad-creations.create', $task) }}" class="btn btn-primary btn-sm"><x-icon name="upload" size="13" />Criar anúncio</a>
                             @else
                                 <span class="text-xs" style="color:var(--muted)">vídeo ou sem imagem: suba pelo Gerenciador</span>
+                            @endif
+                            @if($image)
+                                <span class="flex gap-1.5">
+                                    <a href="{{ route('ad-creations.create', $task) }}" class="btn btn-sm {{ $taskCreations->isEmpty() ? 'btn-primary' : '' }}" title="Criar anúncio na Meta"><x-icon name="upload" size="13" />Meta</a>
+                                    @if(isset($googleClients[$task->client_id]))
+                                        <a href="{{ route('google-pmax.create', $task) }}" class="btn btn-sm" title="Levar para a Performance Max do Google">Google</a>
+                                    @endif
+                                </span>
                             @endif
                         </div>
                     </div>

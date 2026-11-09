@@ -51,6 +51,26 @@ class GoogleAdsApi
     }
 
     /**
+     * Várias operações numa chamada só (googleAds:mutate), com nomes
+     * temporários (ex.: assets/-1) ligando uma operação à outra. Tudo ou nada.
+     *
+     * @return array{ok: bool, results: array, error: ?string}
+     */
+    public function mutateMany(string $cid, array $mutateOperations, bool $validateOnly = false): array
+    {
+        $res = $this->request(180)->post($this->url($cid, 'googleAds:mutate'), [
+            'mutateOperations' => $mutateOperations,
+            'validateOnly'     => $validateOnly,
+        ]);
+
+        return [
+            'ok'      => $res->successful(),
+            'results' => $res->json('mutateOperationResponses') ?? [],
+            'error'   => $res->failed() ? self::errorText($res->json() ?? [], $res->body()) : null,
+        ];
+    }
+
+    /**
      * Junta as mensagens do Google em português claro, incluindo o tema de
      * política quando o anúncio é barrado (ex.: "Saúde em anúncios").
      */
@@ -77,7 +97,7 @@ class GoogleAdsApi
         return 'https://googleads.googleapis.com/' . GoogleAdsFetcher::API_VERSION . "/customers/{$cid}/{$path}";
     }
 
-    private function request()
+    private function request(int $timeout = 30)
     {
         if (!$this->auth) {
             $integration = OrganizationIntegration::where('provider', 'google')->where('status', 'connected')->first()
@@ -92,6 +112,6 @@ class GoogleAdsApi
             ];
         }
 
-        return Http::timeout(30)->withToken((string) $this->auth['token'])->withHeaders($this->auth['headers']);
+        return Http::timeout($timeout)->withToken((string) $this->auth['token'])->withHeaders($this->auth['headers']);
     }
 }

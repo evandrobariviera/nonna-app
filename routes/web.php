@@ -296,6 +296,15 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('ad-creations.activate');
     Route::get('/central-campanhas/contas/{adAccount}/conjuntos', [\App\Http\Controllers\MetaAdCreationController::class, 'adsets'])
         ->name('ad-creations.adsets');
+    // Arte aprovada → imagem na Performance Max (vínculo nasce pausado)
+    Route::get('/central-campanhas/criativos/{task}/google', [\App\Http\Controllers\GooglePmaxAssetController::class, 'create'])
+        ->name('google-pmax.create');
+    Route::post('/central-campanhas/criativos/{task}/google', [\App\Http\Controllers\GooglePmaxAssetController::class, 'store'])
+        ->name('google-pmax.store');
+    Route::get('/central-campanhas/contas/{adAccount}/grupos-de-recursos', [\App\Http\Controllers\GooglePmaxAssetController::class, 'groups'])
+        ->name('google-pmax.groups');
+    Route::post('/central-campanhas/google/imagens/{creation}/ativar', [\App\Http\Controllers\GooglePmaxAssetController::class, 'activate'])
+        ->name('google-pmax.activate');
     // Anúncio de Pesquisa no Google (IA sugere textos; nasce pausado)
     Route::get('/central-campanhas/google/{campaign}/pesquisa', [\App\Http\Controllers\GoogleSearchAdController::class, 'create'])
         ->name('google-search-ads.create');
