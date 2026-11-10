@@ -296,6 +296,15 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('ad-creations.activate');
     Route::get('/central-campanhas/contas/{adAccount}/conjuntos', [\App\Http\Controllers\MetaAdCreationController::class, 'adsets'])
         ->name('ad-creations.adsets');
+    // Nova campanha completa na Meta (campanha + conjunto + anúncio, pausados)
+    Route::get('/central-campanhas/nova-campanha', [\App\Http\Controllers\MetaCampaignCreationController::class, 'create'])
+        ->name('campaign-creations.create');
+    Route::post('/central-campanhas/nova-campanha', [\App\Http\Controllers\MetaCampaignCreationController::class, 'store'])
+        ->name('campaign-creations.store');
+    Route::get('/central-campanhas/cidades', [\App\Http\Controllers\MetaCampaignCreationController::class, 'cities'])
+        ->name('campaign-creations.cities');
+    Route::post('/central-campanhas/nova-campanha/{creation}/ativar', [\App\Http\Controllers\MetaCampaignCreationController::class, 'activate'])
+        ->name('campaign-creations.activate');
     // Arte aprovada → imagem na Performance Max (vínculo nasce pausado)
     Route::get('/central-campanhas/criativos/{task}/google', [\App\Http\Controllers\GooglePmaxAssetController::class, 'create'])
         ->name('google-pmax.create');

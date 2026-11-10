@@ -16,11 +16,16 @@
 @endphp
 
 <div class="mb-6">
-    <p class="text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-        Central de Campanhas
-        <span class="normal-case tracking-normal font-sans" style="color:var(--muted)">· os números de resultado ficam na
-            <a href="{{ route('performance.index', $_ccClient) }}" class="underline" style="color:var(--purple)">Central de Performance</a></span>
-    </p>
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">
+            Central de Campanhas
+            <span class="normal-case tracking-normal font-sans" style="color:var(--muted)">· os números de resultado ficam na
+                <a href="{{ route('performance.index', $_ccClient) }}" class="underline" style="color:var(--purple)">Central de Performance</a></span>
+        </p>
+        @unless(request()->routeIs('campaign-creations.*'))
+            <a href="{{ route('campaign-creations.create') }}" class="btn btn-primary btn-sm"><x-icon name="plus" size="14" />Nova campanha</a>
+        @endunless
+    </div>
     <nav class="flex gap-1 overflow-x-auto pb-px" style="border-bottom:1px solid var(--border)" aria-label="Central de Campanhas">
         @foreach($_ccTabs as [$label, $route, $icon, $active])
             <a href="{{ route($route) }}"

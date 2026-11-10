@@ -1,0 +1,18 @@
+{
+  "novidades": [
+    {
+      "title": "Nova campanha na Meta direto pelo App",
+      "summary": "Botão \"Nova campanha\" na Central de Campanhas: escolha o cliente, o tipo (Mensagens no WhatsApp, Tráfego para o site ou Reconhecimento), as cidades com raio, idade, gênero e a verba diária. O App monta campanha, conjunto e, se quiser, o anúncio com a arte aprovada, tudo pausado e com os nomes no padrão do time.",
+      "body": "<p>A verba passa pelo teto da verba do mês do cliente na criação e de novo no Ativar. Anúncio de imóveis segue a regra da Meta (sem idade e gênero, raio mínimo de 25 km).</p>",
+      "kind": "novidade", "area": "Performance"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Nova campanha na Meta pelo App",
+      "category": "Performance",
+      "slug": "nova-campanha-meta",
+      "body_file": "ajuda-nova-campanha.html"
+    }
+  ]
+}

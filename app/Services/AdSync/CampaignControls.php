@@ -124,11 +124,41 @@ class CampaignControls
      */
     public function capCheck(AdCampaign $campaign, float $dailyIncrease): ?string
     {
-        $clientId = $campaign->adAccount->client_id;
+        return $this->capCheckForClient($campaign->adAccount->client_id, $dailyIncrease);
+    }
+
+    /** Mesmo teto, para verba nova (ex.: campanha criada pelo App). */
+    public function capCheckForClient(string $clientId, float $dailyIncrease): ?string
+    {
+        $room = $this->budgetRoom($clientId);
+        if (!$room) {
+            return null; // sem verba do mês cadastrada, não há teto para conferir
+        }
+
+        $projected = $room['spent'] + ($room['pace'] + $dailyIncrease) * $room['days_left'];
+        if ($projected <= $room['cap']) {
+            return null;
+        }
+
+        $money = fn ($v) => 'R$ ' . number_format($v, 2, ',', '.');
+
+        return "Passa da verba do mês do cliente ({$money($room['cap'])}): no ritmo atual o mês fecharia em {$money($projected)}. "
+            . "Gasto até agora: {$money($room['spent'])}. Dá para aumentar no máximo {$money($room['room'])} por dia. "
+            . 'Para ir além, a verba do mês precisa ser revista com o cliente (ficha do cliente → Orçamento).';
+    }
+
+    /**
+     * Situação da verba do mês do cliente: teto, gasto, ritmo e quanto ainda
+     * cabe por dia. Null quando não há verba do mês cadastrada.
+     *
+     * @return ?array{cap: float, spent: float, pace: float, days_left: int, room: float}
+     */
+    public function budgetRoom(string $clientId): ?array
+    {
         $budget = ClientAdBudget::where('client_id', $clientId)->where('start_date', '<=', now())
             ->orderByDesc('start_date')->orderByDesc('created_at')->first();
-        if (!$budget) {
-            return null; // sem verba do mês cadastrada, não há teto para conferir
+        if (!$budget || (float) $budget->monthly_budget <= 0) {
+            return null; // verba zerada = não cadastrada (ex.: Farmagnus em 10/11/2026)
         }
 
         $accountIds = DB::connection('pgsql')->table('client_ad_accounts')->where('client_id', $clientId)->pluck('id');
@@ -137,21 +167,10 @@ class CampaignControls
         // Ritmo = média dos 3 últimos dias completos (hoje ainda está pela metade).
         $pace = (float) $q()->where('snapshot_date', '>=', now()->subDays(3)->toDateString())
             ->where('snapshot_date', '<', now()->toDateString())->sum('spend') / 3;
-
         $daysLeft = now()->daysInMonth - now()->day + 1;
-        $projected = $spent + ($pace + $dailyIncrease) * $daysLeft;
         $cap = (float) $budget->monthly_budget;
 
-        if ($projected <= $cap) {
-            return null;
-        }
-
-        $room = max(0, ($cap - $spent) / $daysLeft - $pace);
-        $money = fn ($v) => 'R$ ' . number_format($v, 2, ',', '.');
-
-        return "Passa da verba do mês do cliente ({$money($cap)}): no ritmo atual o mês fecharia em {$money($projected)}. "
-            . "Gasto até agora: {$money($spent)}. Dá para aumentar no máximo {$money($room)} por dia. "
-            . 'Para ir além, a verba do mês precisa ser revista com o cliente (ficha do cliente → Orçamento).';
+        return ['cap' => $cap, 'spent' => $spent, 'pace' => $pace, 'days_left' => $daysLeft, 'room' => max(0, ($cap - $spent) / $daysLeft - $pace)];
     }
 
     private function metaState(AdCampaign $campaign): array
