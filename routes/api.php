@@ -31,6 +31,12 @@ Route::post('/clickup/import-projects',   [ClickupProjectImportController::class
 // token da instância embutido no próprio payload (correlaciona com client_integrations)
 Route::post('/whatsapp/uazapi/webhook', UazapiWebhookController::class);
 
+// ── Nonna Tag (substitui o GTM) — público: script do site e leads dos formulários.
+Route::get('/t/{siteKey}', [\App\Http\Controllers\Api\NonnaTagController::class, 'script'])
+    ->where('siteKey', '[a-z0-9]{24}\.js')->middleware('throttle:600,1');
+Route::post('/t/{siteKey}/lead', [\App\Http\Controllers\Api\NonnaTagController::class, 'lead'])
+    ->where('siteKey', '[a-z0-9]{24}')->middleware('throttle:20,1');
+
 Route::middleware(['auth:sanctum', SetApiTenant::class])->group(function () {
 
     // ── Contas de anúncios ──

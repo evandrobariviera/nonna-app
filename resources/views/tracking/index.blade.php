@@ -150,6 +150,19 @@
                 <form id="google-lead" method="POST" action="{{ route('tracking.google-action', $client->id) }}" class="hidden">@csrf<input type="hidden" name="kind" value="lead"></form>
                 <form id="google-venda" method="POST" action="{{ route('tracking.google-action', $client->id) }}" class="hidden">@csrf<input type="hidden" name="kind" value="venda"></form>
 
+                <div class="flex flex-col gap-5 min-w-0">
+                <section class="card p-5 min-w-0" x-data="{ copied: false }">
+                    <h2 class="card-title">Nonna Tag no site</h2>
+                    <p class="text-xs mt-1 mb-2" style="color:var(--muted2)">Substitui o Tag Manager: carrega o Pixel, o GA4, a tag do Google Ads e o Clarity configurados aqui e capta os formulários. No WordPress, o plugin Nonna Leads cola sozinho (campo "Chave da Nonna Tag"). Em outro site, cole no &lt;head&gt; de todas as páginas:</p>
+                    @php $snippet = '<script async src="' . url("/api/t/{$t->site_key}.js") . '"></script>'; @endphp
+                    <code class="block text-[11px] px-2 py-1.5 rounded break-all" style="background:var(--s2); color:var(--purple)">{{ $snippet }}</code>
+                    <div class="flex items-center gap-2 mt-2 flex-wrap">
+                        <button type="button" class="btn btn-xs" @click="navigator.clipboard.writeText(@js($snippet)); copied = true; setTimeout(() => copied = false, 1500)" x-text="copied ? 'Copiado!' : 'Copiar código'"></button>
+                        <span class="text-xs" style="color:var(--muted)">Chave do site: <b class="font-mono">{{ $t->site_key }}</b></span>
+                    </div>
+                    <p class="text-xs mt-2" style="color:var(--orange)">Tire o Tag Manager do site no mesmo dia: os dois juntos disparam o Pixel e o GA4 em dobro.</p>
+                </section>
+
                 <section class="card p-5 min-w-0">
                     <h2 class="card-title">Últimos envios <small class="font-normal text-xs" style="color:var(--muted)">{{ $detail['leads7d'] }} lead(s) nos últimos 7 dias</small></h2>
                     <div class="flex flex-col gap-2 mt-3">
@@ -166,6 +179,7 @@
                         @endforelse
                     </div>
                 </section>
+                </div>
             </div>
         @endif
     </div>

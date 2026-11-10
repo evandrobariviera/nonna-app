@@ -1,0 +1,19 @@
+{
+    "novidades": [
+        {
+            "title": "Nonna Tag: o código do site que substitui o Tag Manager",
+            "summary": "Na aba Rastreamento, cada cliente tem o seu código da Nonna Tag. No site, ele carrega o Pixel, o GA4, a tag do Google Ads e o Clarity configurados no App, guarda a origem da visita e capta os formulários. No WordPress, basta colar o endereço no plugin Nonna Leads 1.2.0.",
+            "body": "<p>Em site que não é WordPress, a própria tag manda o lead direto para a Central de Leads, com a origem do anúncio. Tire o Tag Manager do site no mesmo dia em que colocar a Nonna Tag.</p>",
+            "kind": "novidade",
+            "area": "Performance"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Rastreamento e Nonna Tag — para onde vão as conversões de cada cliente",
+            "category": "Performance",
+            "slug": "rastreamento-conversoes",
+            "body_file": "ajuda-rastreamento.html"
+        }
+    ]
+}
