@@ -1,0 +1,24 @@
+{
+    "novidades": [
+        {
+            "title": "Manual do tráfego na Central de Ajuda",
+            "summary": "Novo capítulo com a rotina do setor de tráfego na Central de Campanhas: o que fazer todo dia, toda semana e todo mês, o que fazer em cada situação e quem decide o quê, com links para o passo a passo de cada tela.",
+            "kind": "novidade",
+            "area": "Performance"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Manual do tráfego — a rotina do setor na Central de Campanhas",
+            "category": "Performance",
+            "slug": "manual-do-trafego",
+            "body_file": "ajuda-manual-trafego.html"
+        },
+        {
+            "title": "Central de Campanhas — a prancheta do gestor de tráfego",
+            "category": "Performance",
+            "slug": "central-de-campanhas",
+            "body_file": "ajuda-central-campanhas.html"
+        }
+    ]
+}
