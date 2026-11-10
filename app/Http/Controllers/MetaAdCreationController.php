@@ -94,7 +94,7 @@ class MetaAdCreationController extends Controller
     {
         abort_unless($adAccount->platform === 'meta_ads', 404);
 
-        return response()->json(['adsets' => $creator->adsets($adAccount)]);
+        return response()->json(['adsets' => $creator->adsets($adAccount, request()->boolean('atualizar'))]);
     }
 
     public function preview(Request $request, Task $task, MetaAdCreator $creator): JsonResponse

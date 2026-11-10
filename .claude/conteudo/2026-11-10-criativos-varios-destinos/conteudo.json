@@ -1,0 +1,24 @@
+{
+    "novidades": [
+        {
+            "title": "Criativos: conjuntos com vários destinos e mensagem de boas-vindas",
+            "summary": "O anúncio criado pelo App agora entra também em conjuntos de mensagem com vários destinos (WhatsApp + Direct) e leva a mensagem de boas-vindas da conversa, copiada do anúncio que já está no conjunto. Conjunto de WhatsApp funciona até sem anúncio modelo.",
+            "kind": "novidade",
+            "area": "Performance"
+        },
+        {
+            "title": "Criativos: conjuntos que apareciam bloqueados sem motivo",
+            "summary": "Muitos conjuntos apareciam como \"sem anúncio para copiar\" mesmo tendo anúncio, e em contas grandes parte dos conjuntos nem aparecia. Corrigido: agora todos aparecem, e os que continuam bloqueados mostram o motivo (encerrado, post impulsionado, etc.).",
+            "kind": "correcao",
+            "area": "Performance"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Criativos — da arte aprovada ao anúncio (Meta e Google)",
+            "category": "Performance",
+            "slug": "criativos-arte-aprovada-anuncio-meta",
+            "body_file": "ajuda-criativos.html"
+        }
+    ]
+}

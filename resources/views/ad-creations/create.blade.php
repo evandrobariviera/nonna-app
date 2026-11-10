@@ -65,8 +65,9 @@
                 </div>
 
                 <div>
-                    <p class="text-xs font-semibold mb-1.5" style="color:var(--muted2)">2. Conjunto onde o anúncio vai entrar</p>
-                    <p class="text-sm" style="color:var(--muted)" x-show="loadingAdsets">Buscando conjuntos na Meta…</p>
+                    <p class="text-xs font-semibold mb-1.5 flex items-center justify-between gap-2" style="color:var(--muted2)">2. Conjunto onde o anúncio vai entrar
+                        <button type="button" class="font-normal underline" style="color:var(--purple)" x-show="accountId && !loadingAdsets" @click="loadAdsets(true)">atualizar lista</button></p>
+                    <p class="text-sm" style="color:var(--muted)" x-show="loadingAdsets">Buscando conjuntos na Meta… (conta grande pode levar até 20 s)</p>
                     <select class="text-sm w-full" x-model="adsetId" x-show="!loadingAdsets && adsets.length" aria-label="Conjunto">
                         <option value="">Escolha o conjunto</option>
                         <template x-for="s in adsets" :key="s.id">
@@ -193,10 +194,10 @@
             loadingAdsets: false, previewing: false, saving: false, previewHtml: '', previewError: '',
             get adset() { return this.adsets.find(s => s.id === this.adsetId) || null; },
             ready() { return this.accountId && this.adset && this.adset.supported && this.imageId && this.message.trim() && (!this.adset.needs_link || this.link); },
-            async loadAdsets() {
+            async loadAdsets(fresh = false) {
                 if (!this.accountId) return;
                 this.loadingAdsets = true; this.adsets = []; this.previewHtml = '';
-                const res = await fetch(this.adsetsUrl + '/' + this.accountId + '/conjuntos', { headers: { Accept: 'application/json' } }).catch(() => null);
+                const res = await fetch(this.adsetsUrl + '/' + this.accountId + '/conjuntos' + (fresh ? '?atualizar=1' : ''), { headers: { Accept: 'application/json' } }).catch(() => null);
                 this.adsets = res && res.ok ? (await res.json()).adsets : [];
                 if (!this.adsets.find(s => s.id === this.adsetId)) this.adsetId = '';
                 this.loadingAdsets = false;

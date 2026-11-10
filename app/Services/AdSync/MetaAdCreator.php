@@ -23,14 +23,19 @@ use Illuminate\Support\Facades\Storage;
  *
  * Regras: todo anúncio nasce PAUSADO; leva a UTM padrão da Nonna; criação e
  * ativação ficam no diário da campanha. Conjunto de múltiplos destinos
- * (Direct + WhatsApp) usa outro formato de criativo e ainda não é suportado.
+ * (Direct + WhatsApp) copia a lista de destinos (asset_feed_spec) do modelo;
+ * a mensagem de boas-vindas da conversa também é copiada.
  * Validado em 09/11/2026 com execution_options=validate_only (WhatsApp,
  * formulário de cadastro).
  */
 class MetaAdCreator
 {
-    /** Conjuntos com mais de um destino pedem asset_feed_spec — fora da v1. */
-    private const UNSUPPORTED_DESTINATIONS = ['MESSAGING_INSTAGRAM_DIRECT_WHATSAPP', 'MESSAGING_MESSENGER_WHATSAPP', 'MESSAGING_INSTAGRAM_DIRECT_MESSENGER', 'MESSAGING_INSTAGRAM_DIRECT_MESSENGER_WHATSAPP'];
+    /**
+     * Conjuntos com mais de um destino (Direct + WhatsApp…): o anúncio leva a
+     * lista de destinos (asset_feed_spec) copiada do anúncio modelo. Sem modelo
+     * com essa lista, não dá para montar.
+     */
+    private const MULTI_DESTINATIONS = ['MESSAGING_INSTAGRAM_DIRECT_WHATSAPP', 'MESSAGING_MESSENGER_WHATSAPP', 'MESSAGING_INSTAGRAM_DIRECT_MESSENGER', 'MESSAGING_INSTAGRAM_DIRECT_MESSENGER_WHATSAPP'];
 
     public const CTA_OPTIONS = [
         'LEARN_MORE' => 'Saiba mais', 'SHOP_NOW' => 'Comprar agora', 'SIGN_UP' => 'Cadastre-se',
@@ -48,23 +53,52 @@ class MetaAdCreator
     public bool $validateOnly = false;
 
     /** Conjuntos ativos/pausados da conta, cada um com o destino que o anúncio vai copiar. */
-    public function adsets(ClientAdAccount $account): array
+    public function adsets(ClientAdAccount $account, bool $fresh = false): array
     {
-        $rows = $this->get("act_{$account->account_id}/adsets", [
-            'fields'           => 'id,name,status,end_time,destination_type,optimization_goal,campaign{id,name,status,objective,stop_time}',
+        // Conta grande (190+ conjuntos) leva ~20 s na Meta: guarda 10 min.
+        $key = "meta_adsets:{$account->id}";
+        if ($fresh) {
+            \Illuminate\Support\Facades\Cache::forget($key);
+        }
+
+        return \Illuminate\Support\Facades\Cache::remember($key, 600, fn () => $this->fetchAdsets($account));
+    }
+
+    private function fetchAdsets(ClientAdAccount $account): array
+    {
+        // Todas as páginas de conjuntos, cada um já com seus anúncios mais
+        // recentes (de onde sai o modelo). Antes: só 100 conjuntos e 100
+        // anúncios por conta — em 10/11/2026, 298 conjuntos apareciam "sem
+        // anúncio para copiar" tendo anúncio.
+        $rows = [];
+        $query = [
+            'fields'           => 'id,name,status,end_time,destination_type,optimization_goal,campaign{id,name,status,objective,stop_time},'
+                . 'ads.limit(3){id,created_time,creative{object_story_spec,degrees_of_freedom_spec,asset_feed_spec}}',
             'effective_status' => json_encode(['ACTIVE', 'PAUSED', 'CAMPAIGN_PAUSED']),
             'limit'            => 100,
-        ])['data'] ?? [];
+        ];
+        for ($page = 0; $page < 5; $page++) {
+            $res = $this->get("act_{$account->account_id}/adsets", $query);
+            $rows = array_merge($rows, $res['data'] ?? []);
+            if (empty($res['paging']['next']) || empty($res['paging']['cursors']['after'])) {
+                break;
+            }
+            $query['after'] = $res['paging']['cursors']['after'];
+        }
 
-        $templates = $this->templatesByAdset($account);
+        $templates = collect($rows)->mapWithKeys(fn ($s) => [$s['id'] => collect($s['ads']['data'] ?? [])
+            ->sortByDesc('created_time')->map(fn ($ad) => $this->parseTemplate($ad))->filter()->first()])->filter()->all();
 
         return collect($rows)->map(function ($s) use ($templates) {
             $destination = $s['destination_type'] ?? null;
-            $template = in_array($destination, self::UNSUPPORTED_DESTINATIONS, true) ? null : ($templates[$s['id']] ?? null);
+            $multi = in_array($destination, self::MULTI_DESTINATIONS, true);
+            $template = $templates[$s['id']] ?? ($destination === 'WHATSAPP' ? self::whatsappTemplate() : null);
+            if ($multi && empty($template['feed'])) {
+                $template = null;
+            }
             $endsAt = $s['end_time'] ?? ($s['campaign']['stop_time'] ?? null);
             $ended = $endsAt && strtotime($endsAt) < time();
-            $supported = !$ended && !in_array($destination, self::UNSUPPORTED_DESTINATIONS, true)
-                && ($template !== null || in_array($destination, [null, 'WEBSITE', 'UNDEFINED'], true));
+            $supported = !$ended && ($template !== null || (!$multi && in_array($destination, [null, 'WEBSITE', 'UNDEFINED'], true)));
 
             return [
                 'id'            => $s['id'],
@@ -76,9 +110,13 @@ class MetaAdCreator
                 'supported'     => $supported,
                 'why_not'       => $supported ? null : ($ended
                     ? 'O conjunto terminou em ' . date('d/m/Y', strtotime($endsAt)) . ': escolha outro ou prorrogue a data no Gerenciador.'
-                    : (in_array($destination, self::UNSUPPORTED_DESTINATIONS, true)
-                    ? 'Conjunto com mais de um destino (Direct + WhatsApp): por enquanto, crie no Gerenciador.'
-                    : 'Conjunto sem nenhum anúncio para copiar o destino (formulário/WhatsApp): crie o primeiro no Gerenciador.')),
+                    : ($multi
+                    ? 'Conjunto com mais de um destino (Direct + WhatsApp) sem nenhum anúncio para copiar os destinos: crie o primeiro no Gerenciador.'
+                    : match ($destination) {
+                        'INSTAGRAM_PROFILE' => 'Conjunto de visitas ao perfil do Instagram: ele impulsiona um post; faça pelo Instagram ou pelo Gerenciador.',
+                        'ON_POST', 'ON_VIDEO' => 'Conjunto de engajamento com post/vídeo: impulsione o post pelo Gerenciador.',
+                        default => 'Nenhum anúncio do conjunto serve de modelo (são posts impulsionados ou criativo dinâmico): crie o primeiro no Gerenciador.',
+                    })),
                 'needs_link'    => $template === null || !empty($template['link_editable']),
                 'link'          => $template['link'] ?? null,
                 'cta'           => $template['cta']['type'] ?? 'LEARN_MORE',
@@ -224,7 +262,7 @@ class MetaAdCreator
     /** Cria o anúncio PAUSADO (imagem ou vídeo) e grava o resultado. */
     private function postAd(string $title, ClientAdAccount $account, array $adset, array $input, array $media, MetaAdCreation $creation): MetaAdCreation
     {
-        $template = $adset['template_ad'] ? $this->template($adset['id']) : null;
+        $template = $this->template($adset['id']);
         $dof = $template['dof'] ?? null;
         if ($dof && isset($media['video_id'])) {
             // recursos de imagem do anúncio modelo não valem para vídeo
@@ -235,6 +273,7 @@ class MetaAdCreator
             'object_story_spec'       => $this->spec($account, $input, $media, $template),
             'url_tags'                => AdAccountConnectionChecker::META_UTM,
             'degrees_of_freedom_spec' => $dof,
+            'asset_feed_spec'         => $template['feed'] ?? null,
         ]);
 
         $name = mb_substr('[App] ' . $title, 0, 120);
@@ -287,26 +326,34 @@ class MetaAdCreator
         return AdAccountConnection::where('client_ad_account_id', $account->id)->first();
     }
 
-    /** Destino copiado do anúncio mais recente do conjunto (CTA, link, formulário e recursos criativos). */
+    /**
+     * Destino copiado de um anúncio recente do conjunto (CTA, link, formulário,
+     * boas-vindas, vários destinos e recursos criativos). Conjunto de WhatsApp
+     * sem anúncio aproveitável recebe o botão padrão de WhatsApp.
+     */
     private function template(string $adsetId): ?array
     {
-        return $this->parseTemplate($this->get("{$adsetId}/ads", ['fields' => 'id,creative{object_story_spec,degrees_of_freedom_spec}', 'limit' => 1])['data'][0] ?? null);
+        $s = $this->get($adsetId, ['fields' => 'destination_type,ads.limit(3){id,created_time,creative{object_story_spec,degrees_of_freedom_spec,asset_feed_spec}}']);
+
+        return collect($s['ads']['data'] ?? [])->sortByDesc('created_time')->map(fn ($ad) => $this->parseTemplate($ad))->filter()->first()
+            ?? (($s['destination_type'] ?? null) === 'WHATSAPP' ? self::whatsappTemplate() : null);
     }
 
-    /** Modelo de cada conjunto numa chamada só (anúncio mais recente por conjunto). */
-    private function templatesByAdset(ClientAdAccount $account): array
+    /**
+     * Botão padrão de WhatsApp (número ligado à Página), para conjunto de
+     * WhatsApp cujos anúncios são post impulsionado ou criativo dinâmico.
+     * Validado em 10/11/2026 (validate_only).
+     */
+    private static function whatsappTemplate(): array
     {
-        $ads = $this->get("act_{$account->account_id}/ads", [
-            'fields'           => 'id,adset_id,created_time,creative{object_story_spec,degrees_of_freedom_spec}',
-            'effective_status' => json_encode(['ACTIVE', 'PAUSED', 'ADSET_PAUSED', 'CAMPAIGN_PAUSED']),
-            'limit'            => 100,
-        ])['data'] ?? [];
-
-        return collect($ads)->sortByDesc('created_time')->groupBy('adset_id')
-            ->map(fn ($group) => $group->map(fn ($ad) => $this->parseTemplate($ad))->filter()->first())
-            ->filter()->all();
+        return [
+            'ad_id' => null, 'cta' => ['type' => 'WHATSAPP_MESSAGE', 'value' => ['app_destination' => 'WHATSAPP']],
+            'link' => 'https://api.whatsapp.com/send', 'link_editable' => false, 'kind' => 'message',
+            'dof' => null, 'welcome' => null, 'feed' => null, 'synthetic' => true,
+        ];
     }
 
+    /** O que o anúncio novo copia de um anúncio que já existe no conjunto. */
     private function parseTemplate(?array $ad): ?array
     {
         $oss = $ad['creative']['object_story_spec'] ?? [];
@@ -338,6 +385,12 @@ class MetaAdCreator
             'link_editable' => !$isForm && !$isMessaging,
             'kind'          => $isForm ? 'form' : ($isMessaging ? 'message' : 'site'),
             'dof'           => $dof,
+            // Mensagem de boas-vindas da conversa (WhatsApp/Direct) — vem do anúncio modelo.
+            'welcome'       => $src['page_welcome_message'] ?? null,
+            // Vários destinos: só a lista de botões e o tipo de otimização.
+            'feed'          => ($ad['creative']['asset_feed_spec']['optimization_type'] ?? null) === 'DOF_MESSAGING_DESTINATION'
+                ? array_intersect_key($ad['creative']['asset_feed_spec'], array_flip(['call_to_actions', 'optimization_type', 'additional_data']))
+                : null,
         ];
     }
 
@@ -366,9 +419,10 @@ class MetaAdCreator
                 'page_id'           => $conn->page_id,
                 'instagram_user_id' => $conn->instagram_id,
                 'video_data'        => array_filter($media + [
-                    'message'        => $input['message'] ?? '',
-                    'title'          => $input['headline'] ?? null,
-                    'call_to_action' => $cta,
+                    'message'              => $input['message'] ?? '',
+                    'title'                => $input['headline'] ?? null,
+                    'call_to_action'       => $cta,
+                    'page_welcome_message' => $template['welcome'] ?? null,
                 ]),
             ]);
         }
@@ -377,10 +431,11 @@ class MetaAdCreator
             'page_id'           => $conn->page_id,
             'instagram_user_id' => $conn->instagram_id,
             'link_data'         => array_filter($media + [
-                'link'           => $link,
-                'message'        => $input['message'] ?? '',
-                'name'           => $input['headline'] ?? null,
-                'call_to_action' => $cta,
+                'link'                 => $link,
+                'message'              => $input['message'] ?? '',
+                'name'                 => $input['headline'] ?? null,
+                'call_to_action'       => $cta,
+                'page_welcome_message' => $template['welcome'] ?? null,
             ]),
         ]);
     }
@@ -424,7 +479,7 @@ class MetaAdCreator
     {
         return match ($template['kind'] ?? null) {
             'form'    => 'Formulário de cadastro',
-            'message' => 'Mensagem (WhatsApp/Direct)',
+            'message' => !empty($template['feed']) ? 'Mensagem em vários destinos (' . collect($template['feed']['call_to_actions'] ?? [])->map(fn ($c) => match ($c['value']['app_destination'] ?? '') { 'WHATSAPP' => 'WhatsApp', 'INSTAGRAM_DIRECT' => 'Direct', 'MESSENGER' => 'Messenger', default => $c['type'] ?? '?' })->implode(' + ') . ')' : 'Mensagem (WhatsApp/Direct)',
             'site'    => 'Site: ' . ($template['link'] ?? ''),
             default   => match ($destination) {
                 'WHATSAPP'                                       => 'WhatsApp',
