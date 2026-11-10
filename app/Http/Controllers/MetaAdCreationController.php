@@ -46,7 +46,8 @@ class MetaAdCreationController extends Controller
             ->sortByDesc('created_at')->groupBy('task_id');
         $googleClients = ClientAdAccount::where('platform', 'google_ads')->whereIn('client_id', $tasks->pluck('client_id')->unique())->pluck('client_id')->flip();
         $images = TaskAttachment::whereIn('task_id', $tasks->pluck('id'))->where('is_deliverable', true)
-            ->where('mime_type', 'like', 'image/%')->orderBy('created_at')->get()->groupBy('task_id');
+            ->where(fn ($q) => $q->where('mime_type', 'like', 'image/%')->orWhere('mime_type', 'like', 'video/%'))
+            ->orderBy('created_at')->get()->groupBy('task_id');
 
         $situation = fn (Task $t) => ($c = $creations->get($t->id)) ? ($c->contains('status', 'ativo') ? 'ar' : 'criado') : 'subir';
         $counts = $tasks->countBy($situation);
@@ -82,7 +83,7 @@ class MetaAdCreationController extends Controller
             'task'        => $task->load(['client', 'latestApprovalRound']),
             'accounts'    => $accounts,
             'connections' => $connections,
-            'images'      => self::approvedImages($task),
+            'images'      => self::approvedImages($task, true),
             'caption'     => $task->latestApprovalRound?->caption ?? $task->caption ?? '',
             'ctaOptions'  => MetaAdCreator::CTA_OPTIONS,
             'creations'   => MetaAdCreation::with('createdBy:id,name')->where('task_id', $task->id)->latest()->get(),
@@ -129,7 +130,9 @@ class MetaAdCreationController extends Controller
         }
 
         return redirect()->route('ad-creations.create', $task)
-            ->with('success', 'Anúncio criado PAUSADO na Meta. Confira e clique em "Ativar" quando quiser que comece a rodar.');
+            ->with('success', $creation->status === 'processando'
+                ? 'Vídeo enviado para a Meta. Ela processa por alguns minutos e o App cria o anúncio PAUSADO sozinho; atualize esta página para ver.'
+                : 'Anúncio criado PAUSADO na Meta. Confira e clique em "Ativar" quando quiser que comece a rodar.');
     }
 
     public function activate(MetaAdCreation $creation, MetaAdCreator $creator): RedirectResponse
@@ -143,12 +146,17 @@ class MetaAdCreationController extends Controller
         return back()->with('success', 'Anúncio ativado. Ele começa a rodar se o conjunto e a campanha também estiverem ativos.');
     }
 
-    /** Imagens entregues na rodada aprovada (ou, se não houver, todas as entregues). */
-    public static function approvedImages(Task $task)
+    /**
+     * Imagens (e vídeos, quando $withVideo) entregues na rodada aprovada — ou,
+     * se não houver, todas as entregues. Vídeo só vale para a Meta; o Google
+     * (Performance Max) só aceita vídeo do YouTube.
+     */
+    public static function approvedImages(Task $task, bool $withVideo = false)
     {
         $round = $task->latestApprovalRound?->round_number;
         $all = TaskAttachment::where('task_id', $task->id)->where('is_deliverable', true)
-            ->where('mime_type', 'like', 'image/%')->orderBy('created_at')->get();
+            ->where(fn ($q) => $q->where('mime_type', 'like', 'image/%')->when($withVideo, fn ($v) => $v->orWhere('mime_type', 'like', 'video/%')))
+            ->orderBy('created_at')->get();
         $inRound = $round ? $all->where('round_number', $round)->values() : collect();
 
         return $inRound->isNotEmpty() ? $inRound : $all;
@@ -173,7 +181,7 @@ class MetaAdCreationController extends Controller
         }
 
         $account = ClientAdAccount::where('client_id', $task->client_id)->where('platform', 'meta_ads')->find($request->input('client_ad_account_id'));
-        $image = self::approvedImages($task)->firstWhere('id', $request->input('task_attachment_id'));
+        $image = self::approvedImages($task, true)->firstWhere('id', $request->input('task_attachment_id'));
         if (!$account || !$image) {
             return [null, response()->json(['errors' => ['conta' => ['Conta ou imagem inválida para esta tarefa.']]], 422)];
         }

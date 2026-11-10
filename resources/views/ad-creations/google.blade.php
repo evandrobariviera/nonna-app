@@ -26,11 +26,11 @@
             <a href="{{ route('ad-creations.create', $task) }}" class="underline" style="color:var(--purple)">Prefere a Meta?</a></p>
 
         <div class="grid gap-5 items-start lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]"
-             x-data="pmaxForm({ accountId: @js(old('client_ad_account_id', $firstUsable?->id)), groupId: @js(old('asset_group_id')), groupsUrl: @js(url('/central-campanhas/contas')) })"
+             x-data="pmaxForm({ accountId: @js(old('client_ad_account_id', $firstUsable?->id)), groupId: @js(old('asset_group_id')), youtube: @js(old('youtube_url', '')), groupsUrl: @js(url('/central-campanhas/contas')) })"
              x-init="loadGroups()">
 
             <form method="POST" action="{{ route('google-pmax.store', $task) }}" class="card p-5 flex flex-col gap-4 min-w-0"
-                  @submit.prevent="if (await $store.confirmDialog.ask('Enviar as imagens PAUSADAS ao grupo de recursos? Elas só entram no ar quando alguém clicar em Ativar.')) { saving = true; $el.submit() }">
+                  @submit.prevent="if (await $store.confirmDialog.ask('Enviar PAUSADO ao grupo de recursos? Só entra no ar quando alguém clicar em Ativar.')) { saving = true; $el.submit() }">
                 @csrf
                 <input type="hidden" name="client_ad_account_id" :value="accountId">
                 <input type="hidden" name="asset_group_id" :value="groupId">
@@ -64,7 +64,7 @@
                                     <b x-text="g.name"></b> <span class="text-xs" x-show="g.status !== 'ENABLED'" style="color:var(--orange)">(grupo pausado)</span>
                                     <span class="block text-xs break-all" style="color:var(--muted2)" x-text="g.campaign_name"></span>
                                     <span class="block text-xs" :style="'color:' + (g.total >= 20 ? 'var(--red)' : 'var(--muted)')"
-                                          x-text="g.total + '/20 imagens · ' + g.images.MARKETING_IMAGE + ' paisagem, ' + g.images.SQUARE_MARKETING_IMAGE + ' quadradas, ' + g.images.PORTRAIT_MARKETING_IMAGE + ' verticais'"></span>
+                                          x-text="g.total + '/20 imagens · ' + g.images.MARKETING_IMAGE + ' paisagem, ' + g.images.SQUARE_MARKETING_IMAGE + ' quadradas, ' + g.images.PORTRAIT_MARKETING_IMAGE + ' verticais · ' + g.videos + '/15 vídeos'"></span>
                                 </span>
                             </label>
                         </template>
@@ -92,11 +92,16 @@
                         @endforeach
                     </div>
                     @if($okImages->isEmpty())
-                        <p class="text-xs mt-2" style="color:var(--orange)">Nenhuma imagem desta arte tem o formato da Performance Max. Peça à criação a versão 1:1, 4:5 ou 1,91:1.</p>
+                        <p class="text-xs mt-2" style="color:var(--orange)">Nenhuma imagem desta arte tem o formato da Performance Max (1:1, 4:5 ou 1,91:1). Se for vídeo, use o campo do YouTube abaixo.</p>
                     @endif
                 </div>
 
-                <button type="submit" class="btn btn-primary self-start" :disabled="saving || !groupId" @disabled($okImages->isEmpty())>
+                <div>
+                    <p class="text-xs font-semibold mb-1.5" style="color:var(--muted2)">4. Vídeo <span class="font-normal" style="color:var(--muted)">(opcional — o Google só aceita vídeo que está no YouTube; suba como "não listado" e cole o link)</span></p>
+                    <input type="url" name="youtube_url" x-model="youtube" value="{{ old('youtube_url') }}" placeholder="https://youtu.be/…" class="field text-sm px-2.5 py-1.5 w-full min-w-0">
+                </div>
+
+                <button type="submit" class="btn btn-primary self-start" :disabled="saving || !groupId">
                     <x-icon name="upload" size="14" /><span x-text="saving ? 'Enviando… (cerca de 20 s por imagem)' : 'Enviar pausadas'"></span>
                 </button>
             </form>
@@ -106,7 +111,8 @@
                 <div class="flex flex-col gap-2 mt-3">
                     @forelse($creations as $c)
                         <div class="rounded px-3 py-2 text-sm flex gap-3" style="background:var(--s2)">
-                            @if($c->attachment)<img src="{{ $c->attachment->url() }}" alt="" class="w-12 h-12 object-cover rounded flex-shrink-0">@endif
+                            @if($c->youtube_id)<img src="https://i.ytimg.com/vi/{{ $c->youtube_id }}/mqdefault.jpg" alt="" class="w-12 h-12 object-cover rounded flex-shrink-0">
+                            @elseif($c->attachment)<img src="{{ $c->attachment->url() }}" alt="" class="w-12 h-12 object-cover rounded flex-shrink-0">@endif
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-center justify-between gap-2 flex-wrap">
                                     <span class="badge badge-{{ $c->statusColor() }}">{{ $c->statusLabel() }}</span>

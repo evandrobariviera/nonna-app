@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Storage;
 class GooglePmaxAssetCreator
 {
     public const MAX_IMAGES_PER_GROUP = 20;
+    public const MAX_VIDEOS_PER_GROUP = 15;
     private const MAX_BYTES = 5_000_000;
 
     /** proporção, tolerância, largura mínima, altura mínima */
@@ -51,15 +52,20 @@ class GooglePmaxAssetCreator
             ->mapWithKeys(fn ($r) => [(string) $r['assetGroup']['id'] => [
                 'id' => (string) $r['assetGroup']['id'], 'resource' => $r['assetGroup']['resourceName'], 'name' => $r['assetGroup']['name'],
                 'status' => $r['assetGroup']['status'], 'campaign_id' => (string) $r['campaign']['id'], 'campaign_name' => $r['campaign']['name'],
-                'images' => array_fill_keys(array_keys(self::FORMATS), 0), 'total' => 0,
+                'images' => array_fill_keys(array_keys(self::FORMATS), 0), 'total' => 0, 'videos' => 0,
             ]])->all();
 
         if ($groups) {
             $links = $this->google->search($cid, "SELECT asset_group.id, asset_group_asset.field_type FROM asset_group_asset WHERE campaign.advertising_channel_type = 'PERFORMANCE_MAX' "
-                . "AND asset_group_asset.status != 'REMOVED' AND asset_group_asset.field_type IN ('MARKETING_IMAGE','SQUARE_MARKETING_IMAGE','PORTRAIT_MARKETING_IMAGE')");
+                . "AND asset_group_asset.status != 'REMOVED' AND asset_group_asset.field_type IN ('MARKETING_IMAGE','SQUARE_MARKETING_IMAGE','PORTRAIT_MARKETING_IMAGE','YOUTUBE_VIDEO')");
             foreach ($links as $r) {
                 $gid = (string) $r['assetGroup']['id'];
-                if (isset($groups[$gid])) {
+                if (!isset($groups[$gid])) {
+                    continue;
+                }
+                if ($r['assetGroupAsset']['fieldType'] === 'YOUTUBE_VIDEO') {
+                    $groups[$gid]['videos']++;
+                } else {
                     $groups[$gid]['images'][$r['assetGroupAsset']['fieldType']]++;
                     $groups[$gid]['total']++;
                 }
@@ -162,6 +168,64 @@ class GooglePmaxAssetCreator
         }
 
         return ['ok' => $res['ok'], 'error' => $res['error'], 'creations' => $creations];
+    }
+
+    /** Id do vídeo a partir do link do YouTube (watch, youtu.be, shorts, embed). */
+    public static function youtubeId(?string $url): ?string
+    {
+        if (!$url) {
+            return null;
+        }
+
+        return preg_match('~(?:youtube\.com/(?:watch\?(?:.*&)?v=|shorts/|embed/|live/)|youtu\.be/)([A-Za-z0-9_-]{11})~', $url, $m) ? $m[1] : null;
+    }
+
+    /**
+     * Vídeo do YouTube (não listado) como recurso do grupo, PAUSADO.
+     *
+     * @return array{ok: bool, error: ?string, creation: ?GoogleAssetCreation}
+     */
+    public function addYoutube(Task $task, ClientAdAccount $account, array $group, string $youtubeId, int $userId): array
+    {
+        $cid = GoogleAdsApi::cid($account);
+        $temp = "customers/{$cid}/assets/-1";
+        $res = $this->google->mutateMany($cid, [
+            ['assetOperation' => ['create' => [
+                'resourceName' => $temp,
+                'name'         => mb_substr("Nonna · {$task->title}", 0, 70) . " · {$youtubeId}",
+                'type'         => 'YOUTUBE_VIDEO',
+                'youtubeVideoAsset' => ['youtubeVideoId' => $youtubeId],
+            ]]],
+            ['assetGroupAssetOperation' => ['create' => [
+                'assetGroup' => $group['resource'], 'asset' => $temp, 'fieldType' => 'YOUTUBE_VIDEO', 'status' => 'PAUSED',
+            ]]],
+        ], $this->validateOnly);
+
+        $creation = new GoogleAssetCreation([
+            'organization_id'      => $task->organization_id,
+            'task_id'              => $task->id,
+            'client_ad_account_id' => $account->id,
+            'campaign_external_id' => $group['campaign_id'],
+            'campaign_name'        => $group['campaign_name'],
+            'asset_group_id'       => $group['id'],
+            'asset_group_name'     => $group['name'],
+            'asset_resource'       => $res['results'][0]['assetResult']['resourceName'] ?? null,
+            'link_resource'        => $res['results'][1]['assetGroupAssetResult']['resourceName'] ?? null,
+            'field_type'           => 'YOUTUBE_VIDEO',
+            'youtube_id'           => $youtubeId,
+            'status'               => $res['ok'] ? 'pausado' : 'erro',
+            'error'                => $res['error'],
+            'created_by'           => $userId,
+        ]);
+
+        if (!$this->validateOnly) {
+            $creation->save();
+            if ($res['ok']) {
+                $this->log($account, $group, 'creative', "Vídeo do YouTube ({$youtubeId}) da arte \"{$task->title}\" enviado pelo App ao grupo \"{$group['name']}\" (pausado).", $userId);
+            }
+        }
+
+        return ['ok' => $res['ok'], 'error' => $res['error'], 'creation' => $creation];
     }
 
     /**

@@ -19,7 +19,7 @@ class MetaAdCreation extends Model
     protected $fillable = [
         'organization_id', 'task_id', 'task_attachment_id', 'client_ad_account_id',
         'campaign_external_id', 'campaign_name', 'adset_external_id', 'adset_name', 'template_ad_id',
-        'ad_id', 'creative_id', 'ad_name', 'status', 'message', 'headline', 'cta_type', 'link',
+        'ad_id', 'creative_id', 'meta_video_id', 'ad_name', 'status', 'message', 'headline', 'cta_type', 'link',
         'caption_changed', 'error', 'created_by', 'activated_by', 'activated_at',
     ];
 
@@ -29,6 +29,7 @@ class MetaAdCreation extends Model
     ];
 
     public static array $statuses = [
+        'processando' => ['label' => 'Processando vídeo', 'color' => 'purple'],
         'pausado' => ['label' => 'Criado · pausado', 'color' => 'orange'],
         'ativo'   => ['label' => 'No ar',            'color' => 'green'],
         'erro'    => ['label' => 'Erro',             'color' => 'red'],

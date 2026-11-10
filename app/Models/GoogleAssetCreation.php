@@ -20,7 +20,7 @@ class GoogleAssetCreation extends Model
     protected $fillable = [
         'organization_id', 'task_id', 'task_attachment_id', 'client_ad_account_id',
         'campaign_external_id', 'campaign_name', 'asset_group_id', 'asset_group_name',
-        'asset_resource', 'link_resource', 'field_type', 'status', 'error',
+        'asset_resource', 'link_resource', 'field_type', 'youtube_id', 'status', 'error',
         'created_by', 'activated_by', 'activated_at',
     ];
 
@@ -30,6 +30,7 @@ class GoogleAssetCreation extends Model
         'MARKETING_IMAGE'          => 'Paisagem 1,91:1',
         'SQUARE_MARKETING_IMAGE'   => 'Quadrada 1:1',
         'PORTRAIT_MARKETING_IMAGE' => 'Vertical 4:5',
+        'YOUTUBE_VIDEO'            => 'Vídeo do YouTube',
     ];
 
     public function task(): BelongsTo

@@ -84,15 +84,19 @@
                 </div>
 
                 <div>
-                    <p class="text-xs font-semibold mb-1.5" style="color:var(--muted2)">3. Arte aprovada</p>
+                    <p class="text-xs font-semibold mb-1.5" style="color:var(--muted2)">3. Arte aprovada <span class="font-normal" style="color:var(--muted)">(imagem ou vídeo; vídeo leva alguns minutos para a Meta processar)</span></p>
                     <div class="flex flex-wrap gap-2">
                         @forelse($images as $img)
                             <label class="cursor-pointer rounded overflow-hidden border-2 w-24 h-24" :style="imageId === @js($img->id) ? 'border-color:var(--purple)' : 'border-color:transparent'">
                                 <input type="radio" value="{{ $img->id }}" x-model="imageId" class="sr-only">
-                                <img src="{{ $img->url() }}" alt="{{ $img->filename }}" class="w-full h-full object-cover">
+                                @if(\App\Services\AdSync\MetaAdCreator::isVideo($img))
+                                    <video src="{{ $img->url() }}#t=0.5" preload="metadata" muted playsinline class="w-full h-full object-cover" title="{{ $img->filename }}"></video>
+                                @else
+                                    <img src="{{ $img->url() }}" alt="{{ $img->filename }}" class="w-full h-full object-cover">
+                                @endif
                             </label>
                         @empty
-                            <p class="text-sm" style="color:var(--orange)">Nenhuma imagem entregue nesta tarefa. Vídeo ainda precisa ser subido pelo Gerenciador.</p>
+                            <p class="text-sm" style="color:var(--orange)">Nenhuma imagem ou vídeo entregue nesta tarefa.</p>
                         @endforelse
                     </div>
                 </div>

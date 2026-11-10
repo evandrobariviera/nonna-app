@@ -54,38 +54,58 @@ class GooglePmaxAssetController extends Controller
         $v = Validator::make($request->all(), [
             'client_ad_account_id' => 'required|uuid',
             'asset_group_id'       => 'required|string|max:30',
-            'images'               => 'required|array|min:1|max:20',
+            'images'               => 'nullable|array|max:20',
             'images.*'             => 'uuid',
-        ], ['images.required' => 'Escolha pelo menos uma imagem.']);
+            'youtube_url'          => 'nullable|string|max:300',
+        ]);
         if ($v->fails()) {
             return back()->withErrors($v)->withInput();
         }
 
-        $account = ClientAdAccount::where('client_id', $task->client_id)->where('platform', 'google_ads')->find($request->input('client_ad_account_id'));
-        $images = MetaAdCreationController::approvedImages($task)->whereIn('id', $request->input('images'))->values();
-        if (!$account || $images->isEmpty()) {
-            return back()->withErrors(['google' => 'Conta ou imagem inválida para esta tarefa.'])->withInput();
+        $youtubeId = GooglePmaxAssetCreator::youtubeId($request->input('youtube_url'));
+        if ($request->filled('youtube_url') && !$youtubeId) {
+            return back()->withErrors(['google' => 'Link do YouTube não reconhecido. Cole o link do vídeo (youtube.com/watch?v=… ou youtu.be/…).'])->withInput();
         }
 
+        $account = ClientAdAccount::where('client_id', $task->client_id)->where('platform', 'google_ads')->find($request->input('client_ad_account_id'));
+        $images = MetaAdCreationController::approvedImages($task)->whereIn('id', $request->input('images', []))->values();
+        if (!$account || ($images->isEmpty() && !$youtubeId)) {
+            return back()->withErrors(['google' => 'Escolha pelo menos uma imagem ou cole o link do vídeo no YouTube.'])->withInput();
+        }
+
+        $done = [];
         try {
             $group = collect($this->creator->assetGroups($account))->firstWhere('id', $request->input('asset_group_id'))
                 ?? throw new \RuntimeException('Grupo de recursos não encontrado nesta conta.');
             if ($group['total'] + $images->count() > GooglePmaxAssetCreator::MAX_IMAGES_PER_GROUP) {
                 return back()->withErrors(['google' => "O grupo já tem {$group['total']} imagens; o Google aceita até 20. Pause ou remova alguma no Google Ads antes."])->withInput();
             }
-            $result = $this->creator->create($task, $account, $group, $images, Auth::id());
+            if ($youtubeId && $group['videos'] >= GooglePmaxAssetCreator::MAX_VIDEOS_PER_GROUP) {
+                return back()->withErrors(['google' => "O grupo já tem {$group['videos']} vídeos; o Google aceita até " . GooglePmaxAssetCreator::MAX_VIDEOS_PER_GROUP . '.'])->withInput();
+            }
+
+            if ($images->isNotEmpty()) {
+                $result = $this->creator->create($task, $account, $group, $images, Auth::id());
+                if (!$result['ok']) {
+                    return back()->withErrors(['google' => 'O Google recusou as imagens: ' . $result['error']])->withInput();
+                }
+                $done[] = count($result['creations']) . ' imagem(ns)';
+            }
+            if ($youtubeId) {
+                $video = $this->creator->addYoutube($task, $account, $group, $youtubeId, Auth::id());
+                if (!$video['ok']) {
+                    return back()->withErrors(['google' => ($done ? implode(' e ', $done) . ' enviada(s), mas o Google recusou o vídeo: ' : 'O Google recusou o vídeo: ') . $video['error']])->withInput();
+                }
+                $done[] = 'o vídeo do YouTube';
+            }
         } catch (\Throwable $e) {
             report($e);
 
             return back()->withErrors(['google' => 'Não foi possível enviar: ' . $e->getMessage()])->withInput();
         }
 
-        if (!$result['ok']) {
-            return back()->withErrors(['google' => 'O Google recusou: ' . $result['error']])->withInput();
-        }
-
         return redirect()->route('google-pmax.create', $task)
-            ->with('success', count($result['creations']) . ' imagem(ns) enviada(s) PAUSADA(S) ao grupo "' . $group['name'] . '". Clique em "Ativar" quando quiser que entrem no ar.');
+            ->with('success', ucfirst(implode(' e ', $done)) . ' enviado(s) PAUSADO(S) ao grupo "' . $group['name'] . '". Clique em "Ativar" quando quiser que entrem no ar.');
     }
 
     public function activate(GoogleAssetCreation $creation): RedirectResponse

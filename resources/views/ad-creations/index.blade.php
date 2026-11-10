@@ -62,7 +62,9 @@
                 <article class="card overflow-hidden flex flex-col">
                     <a href="{{ route('tasks.show', $task) }}" class="block aspect-square" style="background:var(--s2)"
                        @click="if (!$event.ctrlKey && !$event.metaKey) { $event.preventDefault(); $store.taskPopup.open('{{ route('tasks.show', $task) }}') }">
-                        @if($image)
+                        @if($image && \App\Services\AdSync\MetaAdCreator::isVideo($image))
+                            <video src="{{ $image->url() }}#t=0.5" preload="metadata" muted playsinline class="w-full h-full object-cover"></video>
+                        @elseif($image)
                             <img src="{{ $image->url() }}" alt="" loading="lazy" class="w-full h-full object-cover">
                         @else
                             <span class="w-full h-full flex items-center justify-center text-xs" style="color:var(--muted)">sem imagem entregue</span>
@@ -81,7 +83,7 @@
                             @elseif($image)
                                 <span class="badge badge-purple">Aprovada</span>
                             @else
-                                <span class="text-xs" style="color:var(--muted)">vídeo ou sem imagem: suba pelo Gerenciador</span>
+                                <span class="text-xs" style="color:var(--muted)">sem imagem ou vídeo entregue</span>
                             @endif
                             @if($image)
                                 <span class="flex gap-1.5">

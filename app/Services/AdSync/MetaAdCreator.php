@@ -90,6 +90,10 @@ class MetaAdCreator
     /** Prévia do feed sem criar nada (generatepreviews com a URL da imagem). */
     public function preview(ClientAdAccount $account, array $input, TaskAttachment $image): array
     {
+        if (self::isVideo($image)) {
+            return ['ok' => false, 'error' => 'Para vídeo, a prévia da Meta só existe depois que o vídeo sobe. Confira o vídeo e o texto aqui; o anúncio nasce pausado e dá para ver a prévia no Gerenciador antes de ativar.'];
+        }
+
         $spec = $this->spec($account, $input, ['picture' => $image->url()]);
         $res = $this->get("act_{$account->account_id}/generatepreviews", [
             'creative'  => json_encode(['object_story_spec' => $spec]),
@@ -129,15 +133,111 @@ class MetaAdCreator
             'created_by'           => $userId,
         ]);
 
+        if (self::isVideo($image)) {
+            return $this->createFromVideo($task, $account, $adset, $image, $input, $creation);
+        }
+
         $hash = $this->uploadImage($account, $image);
+
+        return $this->postAd($task->title, $account, $adset, $input, ['image_hash' => $hash], $creation);
+    }
+
+    public static function isVideo(TaskAttachment $file): bool
+    {
+        return str_starts_with((string) $file->mime_type, 'video/');
+    }
+
+    /**
+     * Vídeo: a Meta baixa o arquivo direto do R2 e processa por alguns
+     * minutos. O anúncio só pode ser criado depois — fica "processando" e
+     * FinishMetaVideoAdJob termina (conferindo a cada 20 s).
+     */
+    private function createFromVideo(Task $task, ClientAdAccount $account, array $adset, TaskAttachment $video, array $input, MetaAdCreation $creation): MetaAdCreation
+    {
+        if ($this->validateOnly) {
+            // Conferência: usa um vídeo que já está na biblioteca da conta.
+            $videoId = $this->get("act_{$account->account_id}/advideos", ['fields' => 'id', 'limit' => 1])['data'][0]['id'] ?? '';
+
+            return $this->postAd($task->title, $account, $adset, $input, ['video_id' => $videoId, 'image_url' => $this->videoThumbnail($videoId)], $creation);
+        }
+
+        $res = $this->post("act_{$account->account_id}/advideos", [
+            'file_url' => $video->url(),
+            'name'     => mb_substr('[App] ' . $task->title, 0, 120),
+        ]);
+        if (empty($res['id'])) {
+            $creation->fill(['status' => 'erro', 'error' => 'A Meta recusou o vídeo: ' . $this->errorText($res)])->save();
+
+            return $creation;
+        }
+
+        $creation->fill(['status' => 'processando', 'meta_video_id' => $res['id']])->save();
+        \App\Jobs\FinishMetaVideoAdJob::dispatch($creation->id)->delay(now()->addSeconds(20));
+
+        return $creation;
+    }
+
+    /**
+     * Segunda parte do vídeo: se a Meta terminou de processar, cria o anúncio.
+     *
+     * @return string 'pronto' | 'aguardando' | 'erro'
+     */
+    public function finishVideo(MetaAdCreation $creation): string
+    {
+        if ($creation->status !== 'processando') {
+            return 'pronto';
+        }
+
+        $status = $this->get($creation->meta_video_id, ['fields' => 'status'])['status']['video_status'] ?? null;
+        if ($status === 'error') {
+            $creation->update(['status' => 'erro', 'error' => 'A Meta não conseguiu processar o vídeo (formato ou arquivo com problema).']);
+
+            return 'erro';
+        }
+        if ($status !== 'ready') {
+            return 'aguardando';
+        }
+
+        $account = $creation->adAccount;
+        $adset = collect($this->adsets($account))->firstWhere('id', $creation->adset_external_id);
+        if (!$adset || !$adset['supported']) {
+            $creation->update(['status' => 'erro', 'error' => 'O conjunto não está mais disponível para receber o anúncio.']);
+
+            return 'erro';
+        }
+
+        $input = ['adset_id' => $adset['id'], 'message' => $creation->message, 'headline' => $creation->headline, 'link' => $creation->link, 'cta' => $creation->cta_type];
+        $this->postAd($creation->task?->title ?? $creation->ad_name ?? 'Vídeo', $account, $adset, $input,
+            ['video_id' => $creation->meta_video_id, 'image_url' => $this->videoThumbnail($creation->meta_video_id)], $creation);
+
+        return $creation->status === 'erro' ? 'erro' : 'pronto';
+    }
+
+    /** Capa do vídeo: a que a própria Meta escolheu como preferida. */
+    private function videoThumbnail(string $videoId): ?string
+    {
+        $thumbs = $this->get("{$videoId}/thumbnails")['data'] ?? [];
+
+        return collect($thumbs)->firstWhere('is_preferred', true)['uri'] ?? ($thumbs[0]['uri'] ?? null);
+    }
+
+    /** Cria o anúncio PAUSADO (imagem ou vídeo) e grava o resultado. */
+    private function postAd(string $title, ClientAdAccount $account, array $adset, array $input, array $media, MetaAdCreation $creation): MetaAdCreation
+    {
         $template = $adset['template_ad'] ? $this->template($adset['id']) : null;
+        $dof = $template['dof'] ?? null;
+        if ($dof && isset($media['video_id'])) {
+            // recursos de imagem do anúncio modelo não valem para vídeo
+            $dof['creative_features_spec'] = array_filter($dof['creative_features_spec'] ?? [], fn ($k) => !str_starts_with($k, 'image_'), ARRAY_FILTER_USE_KEY);
+            $dof = $dof['creative_features_spec'] ? $dof : null;
+        }
         $creative = array_filter([
-            'object_story_spec'       => $this->spec($account, $input, ['image_hash' => $hash], $template),
+            'object_story_spec'       => $this->spec($account, $input, $media, $template),
             'url_tags'                => AdAccountConnectionChecker::META_UTM,
-            'degrees_of_freedom_spec' => $template['dof'] ?? null,
+            'degrees_of_freedom_spec' => $dof,
         ]);
 
-        $name = mb_substr('[App] ' . $task->title, 0, 120);
+        $name = mb_substr('[App] ' . $title, 0, 120);
         $res = $this->post("act_{$account->account_id}/ads", array_filter([
             'name'              => $name,
             'adset_id'          => $adset['id'],
@@ -161,7 +261,8 @@ class MetaAdCreator
         $ad = $this->get($res['id'], ['fields' => 'id,name,creative{id}']);
         $creation->fill(['status' => 'pausado', 'ad_id' => $res['id'], 'creative_id' => $ad['creative']['id'] ?? null, 'ad_name' => $name])->save();
 
-        $this->log($creation, 'creative', "Anúncio criado pelo App a partir da arte aprovada \"{$task->title}\" (nasceu pausado). Conjunto: {$adset['name']}.");
+        $kind = isset($media['video_id']) ? 'o vídeo aprovado' : 'a arte aprovada';
+        $this->log($creation, 'creative', "Anúncio criado pelo App a partir d{$kind} \"{$title}\" (nasceu pausado). Conjunto: {$adset['name']}.");
 
         return $creation;
     }
@@ -253,11 +354,30 @@ class MetaAdCreator
             $cta['value']['link'] = $input['link'];
         }
 
+        $link = $link ?: 'https://www.facebook.com/' . $conn->page_id;
+
+        if (isset($media['video_id'])) {
+            // Vídeo não tem campo "link": o destino vai dentro do botão.
+            if (!isset($cta['value']['lead_gen_form_id']) && !isset($cta['value']['app_destination'])) {
+                $cta['value']['link'] = $cta['value']['link'] ?? $link;
+            }
+
+            return array_filter([
+                'page_id'           => $conn->page_id,
+                'instagram_user_id' => $conn->instagram_id,
+                'video_data'        => array_filter($media + [
+                    'message'        => $input['message'] ?? '',
+                    'title'          => $input['headline'] ?? null,
+                    'call_to_action' => $cta,
+                ]),
+            ]);
+        }
+
         return array_filter([
             'page_id'           => $conn->page_id,
             'instagram_user_id' => $conn->instagram_id,
             'link_data'         => array_filter($media + [
-                'link'           => $link ?: 'https://www.facebook.com/' . $conn->page_id,
+                'link'           => $link,
                 'message'        => $input['message'] ?? '',
                 'name'           => $input['headline'] ?? null,
                 'call_to_action' => $cta,

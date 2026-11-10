@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Vídeo aprovado vira anúncio (Meta e Google)",
+            "summary": "Na aba Criativos, o vídeo aprovado pelo cliente agora vira anúncio na Meta, como a imagem: o App manda o vídeo, a Meta processa por alguns minutos e o anúncio é criado pausado sozinho. No Google (Performance Max), cole o link do vídeo no YouTube (não listado) e ele entra pausado no grupo de recursos.",
+            "kind": "novidade",
+            "area": "Performance"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Criativos — da arte aprovada ao anúncio (Meta e Google)",
+            "category": "Performance",
+            "slug": "criativos-arte-aprovada-anuncio-meta",
+            "body_file": "ajuda-criativos.html"
+        }
+    ]
+}
