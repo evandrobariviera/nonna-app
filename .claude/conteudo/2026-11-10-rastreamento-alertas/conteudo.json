@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Rastreamento avisa quando algo para",
+            "summary": "O Hoje da Central de Campanhas passa a avisar quando um envio de conversão deu erro ou quando um cliente com rastreamento ligado ficou 7 dias sem lead do site. Na aba Rastreamento, dá para ver se a Nonna Tag está mesmo no site e quando foi vista pela última vez.",
+            "kind": "melhoria",
+            "area": "Performance"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Rastreamento e Nonna Tag — para onde vão as conversões de cada cliente",
+            "category": "Performance",
+            "slug": "rastreamento-conversoes",
+            "body_file": "ajuda-rastreamento.html"
+        }
+    ]
+}

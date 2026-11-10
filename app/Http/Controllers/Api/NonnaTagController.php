@@ -30,6 +30,11 @@ class NonnaTagController extends Controller
             return response('/* Nonna Tag: chave não encontrada */', 404, ['Content-Type' => 'application/javascript; charset=utf-8']);
         }
 
+        // "A tag está no site?": anota onde e quando foi vista (no máximo a cada 10 min).
+        if (Cache::add("nonna_tag_seen_lock:{$tracking->id}", 1, 600)) {
+            Cache::put("nonna_tag_seen:{$tracking->id}", ['at' => now()->toIso8601String(), 'host' => self::host((string) request()->headers->get('Referer'))], now()->addDays(30));
+        }
+
         $config = [
             'version'  => self::VERSION,
             'pixel'    => $tracking->meta_pixel_id,
@@ -142,6 +147,12 @@ class NonnaTagController extends Controller
 
             return $hosts->filter()->unique()->values()->all();
         });
+    }
+
+    /** @return ?array{at: string, host: string} última vez que a tag foi carregada num site */
+    public static function lastSeen(ClientTracking $t): ?array
+    {
+        return Cache::get("nonna_tag_seen:{$t->id}");
     }
 
     private static function host(string $url): string

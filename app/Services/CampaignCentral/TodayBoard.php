@@ -75,8 +75,9 @@ class TodayBoard
             'arts'        => $this->approvedArts(),
             'planned'     => $this->plannedWithoutCampaign(),
             'billing'     => \App\Services\Billing\AccountStatement::pendingForToday($this->accountIds),
+            'tracking'    => $tracking = $this->trackingIssues(),
             'kpis'        => $this->kpis($yesterday) + [
-                'urgent' => $stale->count() + $stopped->count() + $problemAds->count() + $balance->count(),
+                'urgent' => $stale->count() + $stopped->count() + $problemAds->count() + $balance->count() + $tracking->count(),
             ],
             'check'       => CampaignDailyCheck::forToday($userId),
         ];
@@ -203,6 +204,42 @@ class TodayBoard
             || ($a->days_left !== null && $a->days_left <= self::BALANCE_ALERT_DAYS))
           ->sortBy(fn (ClientAdAccount $a) => $a->days_left ?? 999)
           ->values();
+    }
+
+    /**
+     * Rastreamento ligado com problema: envio que deu erro nas últimas 48 h,
+     * ou nenhum lead do site há 7 dias (a tag/plugin pode ter saído do site).
+     *
+     * @return Collection<int, array{client_id: string, client: ?\App\Models\Client, kind: string, text: string}>
+     */
+    private function trackingIssues(): Collection
+    {
+        $trackings = \App\Models\ClientTracking::with('client')->whereIn('client_id', $this->clientIds)->where('send_enabled', true)->get();
+        if ($trackings->isEmpty()) {
+            return collect();
+        }
+
+        $errors = \App\Models\ConversionEvent::whereIn('client_id', $trackings->pluck('client_id'))->where('status', 'erro')
+            ->where('created_at', '>=', now()->subHours(48))->latest()->get()->groupBy('client_id');
+        $withSiteLeads = \App\Models\ClientLeadOpportunity::join('client_leads as l', 'l.id', '=', 'client_lead_opportunities.client_lead_id')
+            ->join('lead_channels as ch', 'ch.id', '=', 'client_lead_opportunities.lead_channel_id')
+            ->whereIn('l.client_id', $trackings->pluck('client_id'))->where('ch.kind', 'site')
+            ->where('client_lead_opportunities.received_at', '>=', now()->subDays(7))->distinct()->pluck('l.client_id')->flip();
+
+        return $trackings->flatMap(function ($t) use ($errors, $withSiteLeads) {
+            $out = [];
+            if ($e = $errors->get($t->client_id)) {
+                $platform = ['meta' => 'Meta', 'google' => 'Google Ads', 'ga4' => 'GA4'][$e->first()->platform] ?? $e->first()->platform;
+                $out[] = ['client_id' => $t->client_id, 'client' => $t->client, 'kind' => 'erro',
+                    'text' => $e->count() . ' envio(s) com erro em 48 h. Último (' . $platform . '): ' . \Illuminate\Support\Str::limit((string) $e->first()->detail, 120)];
+            }
+            if (!isset($withSiteLeads[$t->client_id]) && $t->updated_at->lt(now()->subDays(7))) {
+                $out[] = ['client_id' => $t->client_id, 'client' => $t->client, 'kind' => 'sem_lead',
+                    'text' => 'Nenhum lead do site há 7 dias com o rastreamento ligado. Confira se a Nonna Tag ou o plugin continuam no site.'];
+            }
+
+            return $out;
+        })->values();
     }
 
     /** Alertas abertos das análises automáticas (os mesmos de Insights). */

@@ -160,6 +160,11 @@
                         <button type="button" class="btn btn-xs" @click="navigator.clipboard.writeText(@js($snippet)); copied = true; setTimeout(() => copied = false, 1500)" x-text="copied ? 'Copiado!' : 'Copiar código'"></button>
                         <span class="text-xs" style="color:var(--muted)">Chave do site: <b class="font-mono">{{ $t->site_key }}</b></span>
                     </div>
+                    @php $seen = \App\Http\Controllers\Api\NonnaTagController::lastSeen($t); @endphp
+                    <p class="text-xs mt-2 flex items-center gap-1.5" style="color:{{ $seen ? 'var(--green)' : 'var(--muted)' }}">
+                        <span class="h-2 w-2 rounded-full inline-block" style="background:{{ $seen ? 'var(--green)' : 'var(--border)' }}"></span>
+                        {{ $seen ? 'Tag vista no site' . ($seen['host'] ? ' ' . $seen['host'] : '') . ' ' . \Illuminate\Support\Carbon::parse($seen['at'])->diffForHumans() : 'A tag ainda não foi vista em nenhum site.' }}
+                    </p>
                     <p class="text-xs mt-2" style="color:var(--orange)">Tire o Tag Manager do site no mesmo dia: os dois juntos disparam o Pixel e o GA4 em dobro.</p>
                 </section>
 

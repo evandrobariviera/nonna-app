@@ -86,6 +86,12 @@
                                 </x-slot:sub>
                             </x-item-card>
                         @endforeach
+                        @foreach($tracking as $issue)
+                            <x-item-card :href="route('tracking.index', ['client_id' => $issue['client_id']])" kind="campanha" icon="radio-tower" :state="$issue['kind'] === 'erro' ? 'late' : 'soon'"
+                                         :title="'Rastreamento · ' . $clientName($issue['client'])">
+                                <x-slot:sub>{{ $issue['text'] }}</x-slot:sub>
+                            </x-item-card>
+                        @endforeach
                         @if($kpis['urgent'] === 0)
                             <p class="text-sm px-3 py-4 text-center rounded" style="background:var(--s2); color:var(--muted)">Nada urgente hoje.</p>
                         @endif
