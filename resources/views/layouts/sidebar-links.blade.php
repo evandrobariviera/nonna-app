@@ -77,7 +77,8 @@
      da Nonna, diferente de Oportunidades), Campanhas, Insights e Atendimento --}}
 @php
     $_perfOpen = request()->routeIs('performance.*') || request()->routeIs('leads.*') || request()->routeIs('service-diagnostics.*');
-    $_ccOpen = request()->routeIs('campaign-central.*') || request()->routeIs('campaigns.*') || request()->routeIs('orcamentos.*') || request()->routeIs('billing-statements.*') || request()->routeIs('ad-connections.*') || request()->routeIs('ad-creations.*');
+    $_ccOpen = request()->routeIs('campaign-central.*') || request()->routeIs('campaigns.*') || request()->routeIs('orcamentos.*') || request()->routeIs('billing-statements.*') || request()->routeIs('ad-connections.*') || request()->routeIs('ad-creations.*')
+        || request()->routeIs('tracking.*') || request()->routeIs('campaign-creations.*') || request()->routeIs('google-pmax.*') || request()->routeIs('google-search-ads.*');
 @endphp
 <div class="nav-group-label" style="margin-top:8px">Performance</div>
 
@@ -141,6 +142,7 @@
         <a href="{{ route('billing-statements.index') }}" class="nav-sub-item {{ request()->routeIs('billing-statements.*') ? 'active' : '' }}">Prestação de contas</a>
         <a href="{{ route('campaign-central.optimizations') }}" class="nav-sub-item {{ request()->routeIs('campaign-central.optimizations') ? 'active' : '' }}">Otimizações</a>
         <a href="{{ route('ad-connections.index') }}" class="nav-sub-item {{ request()->routeIs('ad-connections.*') ? 'active' : '' }}">Contas e conexões</a>
+        <a href="{{ route('tracking.index') }}" class="nav-sub-item {{ request()->routeIs('tracking.*') ? 'active' : '' }}">Rastreamento</a>
     </div>
 </div>
 
