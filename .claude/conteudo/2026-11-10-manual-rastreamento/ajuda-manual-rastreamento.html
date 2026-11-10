@@ -1,0 +1,153 @@
+<p>Este é o roteiro completo para deixar um cliente <strong>rastreado do zero</strong>: Pixel da Meta, Google Ads, GA4, Search Console, Clarity e WhatsApp, tudo configurado pelo App e com a Nonna Tag no site no lugar do Google Tag Manager. Siga na ordem. O capítulo <a href="/ajuda/rastreamento-conversoes">Rastreamento e Nonna Tag</a> explica o que cada parte faz; este aqui é o "faça assim".</p><p></p>
+
+<h2>Resumo em 30 segundos</h2>
+<ul>
+<li><p><strong>Antes:</strong> confira os acessos (Pixel, conta Google Ads, GA4, Search Console, painel do site).</p></li>
+<li><p><strong>No App</strong> (Central de Campanhas → Rastreamento → cliente): Pixel, conversões do Google criadas pelo botão, GA4, Search Console e Clarity. Salve.</p></li>
+<li><p><strong>No site:</strong> plugin Nonna Leads 1.2.0 (WordPress) ou o código da Nonna Tag no &lt;head&gt; (outros sites). <strong>No mesmo dia</strong>, tire o Tag Manager.</p></li>
+<li><p><strong>Teste</strong> com o código de teste da Meta e um formulário de verdade.</p></li>
+<li><p><strong>Ligue</strong> "Enviar as conversões de verdade" e acompanhe pelo Hoje e pelos Últimos envios.</p></li>
+<li><p>Tempo médio por cliente: 30 a 40 minutos, se os acessos estiverem certos.</p></li>
+</ul><p></p>
+
+<h2>Pense assim</h2>
+<p>Configurar o rastreamento é como instalar a central de alarme de uma loja. A <strong>Nonna Tag</strong> é o sensor na porta (o site): ela vê quem entrou e quem deixou o contato. O <strong>App</strong> é a central: guarda tudo e avisa a "polícia" certa, que aqui são a Meta, o Google e o GA4. Antes, cada loja tinha uma central diferente (um Tag Manager por cliente). Agora todas as lojas ligam na mesma central, e a configuração de cada uma fica numa tela só.</p>
+<p><strong>Exemplo real:</strong> na Gomes Máquinas, alguém clica num anúncio, entra no site e pede orçamento de uma escavadeira. A Nonna Tag avisa o Pixel no navegador e manda o lead para a Central de Leads. O App manda o mesmo lead para a Meta pelo servidor, com o mesmo código de evento, e ela conta uma vez só. Dias depois, o comercial marca o lead como <strong>Bom</strong> e depois <strong>Ganho</strong>, com o valor. A Meta e o Google recebem isso e passam a procurar mais gente parecida com quem comprou.</p><p></p>
+
+<h2>Parte 0 — Antes de começar: os acessos</h2>
+<p>Quase todo problema de rastreamento é falta de acesso. Confira tudo antes:</p>
+<ol>
+<li><p><strong>Pixel (conjunto de dados) da Meta:</strong> o usuário da Nonna no Gerenciador de Negócios precisa ter acesso ao Pixel do cliente. Se não tiver, a lista de Pixels no App vem vazia. Peça ao cliente: <em>Configurações do negócio → Fontes de dados → Conjuntos de dados → (Pixel) → Atribuir parceiros</em>, com o ID do negócio da Nonna.</p></li>
+<li><p><strong>Google Ads:</strong> a conta do cliente precisa estar ligada à MCC da Nonna e cadastrada em <strong>Contas de Anúncios</strong> no cliente.</p></li>
+<li><p><strong>GA4:</strong> o e-mail Google da agência precisa ser pelo menos <strong>Leitor</strong> na propriedade, e alguém com acesso de <strong>Editor</strong> precisa criar a chave secreta (Parte 3).</p></li>
+<li><p><strong>Search Console:</strong> o e-mail da agência precisa ser usuário (pode ser "Restrito") na propriedade do site.</p></li>
+<li><p><strong>Site:</strong> acesso de administrador ao WordPress (para instalar o plugin) ou a quem cuida do site (para colar o código).</p></li>
+</ol><p></p>
+
+<h2>Parte 1 — Meta (Pixel)</h2>
+<ol>
+<li><p>Abra <strong>Central de Campanhas → Rastreamento</strong> e escolha o cliente.</p></li>
+<li><p>Em <strong>Meta — Pixel</strong>, escolha o Pixel. Se aparecer mais de um, use o que tem "último uso" mais recente. Se não aparecer nenhum, volte na Parte 0 ou digite o ID do Pixel (só números).</p></li>
+<li><p>No <strong>Gerenciador de Eventos</strong> da Meta, abra o Pixel → aba <strong>Eventos de teste</strong>. Copie o código que aparece (ex.: TEST12345) e cole em <strong>Código de teste</strong> no App. Com ele preenchido, nada do que o App manda conta para os anúncios: aparece só na aba de teste.</p></li>
+<li><p>Clique em <strong>Salvar</strong>.</p></li>
+</ol><p></p>
+
+<h2>Parte 2 — Google Ads</h2>
+<ol>
+<li><p>Em <strong>Google Ads — conversão importada</strong>, escolha a conta do cliente e clique em <strong>Salvar</strong>.</p></li>
+<li><p>Clique em <strong>Criar "Lead — Nonna App"</strong>. O App cria a conversão dentro do Google Ads do cliente e já deixa ligada aqui.</p></li>
+<li><p>Clique em <strong>Criar "Venda — Nonna App"</strong>. É para onde vão as vendas marcadas como Ganho.</p></li>
+<li><p>No Google Ads do cliente, confira em <em>Administrador → Configurações da conta</em> se a <strong>Codificação automática</strong> (auto-tagging) está ligada. Sem ela, o clique não traz o gclid e o Google não recebe nada.</p></li>
+<li><p>Se a conta já usa uma conversão de formulário do Tag Manager como "principal", combine com o gestor: depois que a Nonna Tag estiver no site, a conversão "Lead — Nonna App" vira a principal e a antiga vira secundária. Assim o Google não otimiza por duas coisas iguais.</p></li>
+</ol><p></p>
+
+<h2>Parte 3 — GA4</h2>
+<ol>
+<li><p>No GA4 do cliente: <em>Administrador → Fluxos de dados → (o fluxo do site)</em>. Copie o <strong>ID de medição</strong> (começa com G-) e cole no App.</p></li>
+<li><p>No mesmo fluxo, abra <strong>Chaves secretas da API do Measurement Protocol</strong> → <strong>Criar</strong> → dê o nome "Nonna App" → copie o valor e cole em <strong>Chave secreta da API</strong> no App. A chave fica guardada criptografada e não aparece de novo.</p></li>
+<li><p>Em <strong>Números do site → Propriedade do GA4</strong>, escolha a propriedade. Se aparecer um campo de texto em vez da lista, digite o número em <em>Administrador → Detalhes da propriedade → ID da propriedade</em> (só números, ex.: 412345678).</p></li>
+<li><p>No GA4, marque os eventos que o App manda como <strong>eventos principais</strong> (<em>Administrador → Eventos principais → Novo evento principal</em>), digitando o nome de cada um: <code>generate_lead</code> (lead), <code>qualify_lead</code> (lead bom) e <code>close_convert_lead</code> (venda). Pode fazer antes de o primeiro evento chegar.</p></li>
+</ol><p></p>
+
+<h2>Parte 4 — Search Console</h2>
+<ol>
+<li><p>Em <strong>Números do site → Site no Search Console</strong>, escolha o site na lista.</p></li>
+<li><p>Se não estiver na lista, peça ao cliente: <em>Search Console → Configurações → Usuários e permissões → Adicionar usuário</em>, com o e-mail Google da agência, permissão "Restrito".</p></li>
+<li><p>Se a lista não aparecer (só um campo de texto), digite no formato <code>sc-domain:cliente.com.br</code> (propriedade de domínio) ou <code>https://www.cliente.com.br/</code> (propriedade de endereço).</p></li>
+</ol>
+<p>Com GA4 e Search Console preenchidos, aparece o cartão <strong>O site em números</strong>: visitas, de onde vêm, páginas de entrada, buscas no Google e posição média dos últimos 28 dias.</p><p></p>
+
+<h2>Parte 5 — Clarity (opcional)</h2>
+<ol>
+<li><p>No <a href="https://clarity.microsoft.com" target="_blank">Microsoft Clarity</a>, abra o projeto do site (ou crie um) → <em>Configurações → Visão geral</em> → copie o <strong>ID do projeto</strong>.</p></li>
+<li><p>Cole em <strong>Microsoft Clarity — ID do projeto</strong> no App e salve. A Nonna Tag passa a gravar as sessões. Não precisa colar o código do Clarity no site.</p></li>
+</ol><p></p>
+
+<h2>Parte 6 — Nonna Tag no site</h2>
+<p><strong>Site WordPress (plugin Nonna Leads):</strong></p>
+<ol>
+<li><p>No WordPress: <em>Plugins → Adicionar novo → Enviar plugin</em> → envie o arquivo <strong>nonna-leads-1.2.0.zip</strong> → <strong>Substituir o atual</strong> (se já tinha uma versão) → Ativar.</p></li>
+<li><p>No menu lateral do WordPress, abra <em>Nonna → Leads</em> e cole em <strong>Endereço da Nonna Tag</strong> o endereço mostrado no cartão "Nonna Tag no site" do App (o que está entre aspas, terminando em <code>.js</code>). Salve.</p></li>
+<li><p>Se o site usa <strong>LiteSpeed Cache</strong> (ou outro plugin de cache/otimização): em <em>LiteSpeed Cache → Otimização de página → Ajustes de JS</em>, adicione <code>nonna</code> e <code>/api/t/</code> em <strong>"Excluir JS"</strong>, <strong>"Excluir JS adiado"</strong> e <strong>"Excluir JS atrasado"</strong>. Depois clique em <strong>Limpar todo o cache</strong>. Sem isso, o plugin de cache pode juntar ou atrasar a tag e perder o lead.</p></li>
+</ol>
+<p><strong>Outro tipo de site</strong> (Wix, site próprio, landing page):</p>
+<ol>
+<li><p>No App, clique em <strong>Copiar código</strong> no cartão "Nonna Tag no site".</p></li>
+<li><p>Cole no &lt;head&gt; de todas as páginas (no Wix: <em>Configurações → Código personalizado → Head → Todas as páginas</em>).</p></li>
+<li><p>A tag capta sozinha os formulários que têm e-mail ou telefone. Formulário que <strong>não</strong> deve virar lead (ex.: "trabalhe conosco") recebe <code>data-nonna-ignore</code> na tag &lt;form&gt;.</p></li>
+</ol>
+<p><strong>Use só um dos dois:</strong> no WordPress, o campo do plugin. Nunca o plugin e o código colado à mão juntos.</p><p></p>
+
+<h2>Parte 7 — Tirar o Tag Manager</h2>
+<p>No <strong>mesmo dia</strong> em que a Nonna Tag entrar, o Tag Manager sai. Os dois juntos disparam o Pixel e o GA4 em dobro.</p>
+<ol>
+<li><p>Antes de tirar, abra o container do cliente no Tag Manager e anote o que ele faz além do Pixel, GA4, Google Ads e Clarity (ex.: chat de outro fornecedor, pixel do TikTok, LinkedIn). O que não estiver na lista de cima precisa continuar no site por outro caminho: avise o gestor de tráfego.</p></li>
+<li><p>WordPress: desative o plugin do Tag Manager (ex.: GTM4WP, Site Kit com Tag Manager) ou apague o código do GTM do tema. Outros sites: apague o código do GTM do &lt;head&gt; e do &lt;body&gt;.</p></li>
+<li><p>Se o site tiver o código do Pixel ou do GA4 colado direto (fora do Tag Manager), tire também.</p></li>
+<li><p>Limpe o cache do site.</p></li>
+<li><p>Confira: abra o site, aperte <strong>Ctrl+U</strong> (ver código) e procure por <code>googletagmanager.com/gtm.js</code>. Não pode aparecer. Procure por <code>/api/t/</code>: tem que aparecer.</p></li>
+</ol><p></p>
+
+<h2>Parte 8 — Testar</h2>
+<ol>
+<li><p>Com o <strong>código de teste</strong> da Meta preenchido, abra o site com <code>?utm_source=teste</code> no fim do endereço (ex.: <code>https://cliente.com.br/?utm_source=teste</code>).</p></li>
+<li><p>No App, o cartão "Nonna Tag no site" passa a mostrar <strong>"Tag vista no site … há instantes"</strong>. Se não mudar em 5 minutos, a tag não está no site (volte na Parte 6) ou o cache ainda não limpou.</p></li>
+<li><p>Envie um formulário de teste com seu nome e "teste" no texto.</p></li>
+<li><p>Confira na <strong>Central de Leads</strong>: o lead chegou, com origem "teste".</p></li>
+<li><p>Confira no <strong>Gerenciador de Eventos → Eventos de teste</strong>: aparecem o PageView e o Lead do navegador e o Lead do servidor, marcado como desduplicado.</p></li>
+<li><p>Se não quiser esperar um lead novo, use <strong>Enviar teste para a Meta</strong> no App: ele manda o lead mais recente do site (até 7 dias) para a aba de teste.</p></li>
+<li><p>Depois do teste, apague o lead de teste na Central de Leads ou marque como "Ruim".</p></li>
+</ol><p></p>
+
+<h2>Parte 9 — Ligar de verdade</h2>
+<ol>
+<li><p>Apague o <strong>código de teste</strong>.</p></li>
+<li><p>Marque <strong>Enviar as conversões de verdade</strong> e salve.</p></li>
+<li><p>Pronto: daí em diante, cada lead novo, cada lead marcado como Bom e cada Ganho vão sozinhos para a Meta, o Google Ads e o GA4.</p></li>
+</ol><p></p>
+
+<h2>Parte 10 — Acompanhar</h2>
+<ul>
+<li><p><strong>Últimos envios</strong> (na aba Rastreamento): cada envio com o resultado. "Enviado" é ok; "Ignorado" traz o motivo (ex.: lead sem clique no Google); "Erro" precisa de atenção.</p></li>
+<li><p><strong>Hoje → Resolver agora:</strong> avisa erro de envio nas últimas 48 horas e cliente com rastreamento ligado que ficou 7 dias sem lead do site.</p></li>
+<li><p>Uma vez por semana, olhe o cartão "Nonna Tag no site": a data de "vista no site" tem que ser recente.</p></li>
+</ul><p></p>
+
+<h2>Parte 11 — WhatsApp (quando a Meta liberar)</h2>
+<p>As conversas que chegam por anúncio de "clique para o WhatsApp" já são registradas com o código do anúncio. Quando a permissão de mensagens da Meta estiver liberada para o app da Nonna, o App passa a devolver para a Meta o lead, o lead bom e a venda dessas conversas, do mesmo jeito que faz com o site.</p>
+<ol>
+<li><p>No <strong>Gerenciador do WhatsApp</strong> do cliente: <em>Configurações da conta → Informações da conta</em> → copie o <strong>ID da conta do WhatsApp Business</strong>.</p></li>
+<li><p>No <strong>Gerenciador de Eventos</strong>, ligue o Pixel (conjunto de dados) do cliente à conta do WhatsApp: <em>Conectar fontes de dados → WhatsApp</em>.</p></li>
+<li><p>No App, cole o ID em <strong>Conta do WhatsApp Business (ID)</strong>, na parte da Meta, e salve. Teste com o código de teste antes, como na Parte 8.</p></li>
+</ol>
+<p>Enquanto o campo estiver vazio, os leads de WhatsApp aparecem como "Ignorado" nos Últimos envios, com o motivo. É esperado.</p><p></p>
+
+<h2>Pendências da agência (uma vez só, não por cliente)</h2>
+<p>Estes passos são feitos uma vez pelo administrador e liberam recursos para todos os clientes:</p>
+<ol>
+<li><p><strong>Google Cloud da agência:</strong> no projeto usado pelo login do Google Ads, ative as APIs <strong>Google Analytics Data API</strong>, <strong>Google Analytics Admin API</strong> e <strong>Google Search Console API</strong> (<em>APIs e serviços → Biblioteca</em>). Na <em>Tela de consentimento OAuth</em>, adicione os escopos <code>analytics.readonly</code> e <code>webmasters.readonly</code>.</p></li>
+<li><p><strong>Reconectar o Google no App:</strong> <em>Configurações → Integrações → Google → Conectar</em>. Na tela do Google, <strong>marque todas as caixas</strong>. A mensagem de sucesso diz se Analytics e Search Console vieram juntos. Até isso ser feito, o aviso laranja "ainda não tem permissão de ler" aparece na aba Rastreamento.</p></li>
+<li><p><strong>Permissão de mensagens da Meta</strong> (para o WhatsApp da Parte 11): pedido de permissão no app da Nonna no Meta for Developers.</p></li>
+<li><p><strong>Banner de cookies (LGPD):</strong> decidir se o site manda tudo ou só depois do "aceito". A Nonna Tag já entende o consentimento (<code>nonnaTag.consent()</code>); falta a decisão do time e o banner nos sites.</p></li>
+</ol><p></p>
+
+<h2>Combinados do time</h2>
+<ul>
+<li><p>Nunca ligar o envio de verdade sem ver o evento chegar no modo de teste.</p></li>
+<li><p>Nonna Tag entra e Tag Manager sai <strong>no mesmo dia</strong>. Nunca os dois juntos.</p></li>
+<li><p>Um cliente por vez. Comece pela Gomes Máquinas (piloto), depois os outros.</p></li>
+<li><p>Antes de tirar o Tag Manager, anote o que ele fazia além do básico e avise o gestor.</p></li>
+<li><p>Marcar lead <strong>Bom</strong> e <strong>Ganho com valor</strong> na Central de Leads faz parte do rastreamento: é isso que ensina os anúncios.</p></li>
+<li><p>Chave secreta do GA4 é segredo: não mande por WhatsApp em grupo; cole direto no App.</p></li>
+</ul><p></p>
+
+<h2>Perguntas frequentes</h2>
+<h3>A lista de Pixels está vazia.</h3><p>O usuário da Nonna não tem acesso ao Pixel. Veja a Parte 0, item 1, ou digite o ID do Pixel.</p>
+<h3>O botão "Criar Lead — Nonna App" deu erro.</h3><p>Quase sempre a conta Google não está ligada à MCC da Nonna ou não está em Contas de Anúncios do cliente. O motivo exato aparece na mensagem.</p>
+<h3>Aparece "ainda não tem permissão de ler o Analytics".</h3><p>Falta a pendência da agência (reconectar o Google marcando todas as caixas). Não é problema do cliente.</p>
+<h3>"O site em números" diz que não tem acesso a esta propriedade/site.</h3><p>O e-mail Google da agência não está como usuário no GA4 ou no Search Console desse cliente. Veja a Parte 0.</p>
+<h3>"A API ainda não foi ativada no projeto do Google Cloud".</h3><p>Falta ativar a API (pendência da agência, item 1). Depois de ativar, leva alguns minutos.</p>
+<h3>A tag não aparece como "vista no site".</h3><p>Confira com Ctrl+U se o endereço <code>/api/t/</code> está na página. Se está e não aparece, limpe o cache do site e do plugin de cache. Lembre: o aviso é atualizado a cada 10 minutos no máximo.</p>
+<h3>O lead chega duplicado.</h3><p>Nonna Tag junto com o Tag Manager, ou o plugin junto com o código colado à mão. Deixe só um caminho.</p>
+<h3>O Google Ads mostra "Ignorado: sem gclid".</h3><p>Normal para quem veio da Meta, do orgânico ou direto. Só lead que clicou num anúncio do Google vai para o Google Ads. Se nenhum lead do Google tiver gclid, confira a codificação automática (Parte 2, item 4).</p>
+<h3>Vale para lead de formulário da própria Meta (Lead Ads)?</h3><p>O lead em si não volta (a Meta já tem). Mas o lead bom e a venda voltam, ligados ao lead dela.</p>

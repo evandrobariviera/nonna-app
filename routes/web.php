@@ -305,6 +305,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('tracking.google-action');
     Route::post('/central-campanhas/rastreamento/{client}/teste', [\App\Http\Controllers\TrackingController::class, 'testSend'])
         ->name('tracking.test');
+    Route::get('/central-campanhas/rastreamento/{client}/site', [\App\Http\Controllers\TrackingController::class, 'report'])
+        ->name('tracking.report');
     // Nova campanha completa na Meta (campanha + conjunto + anúncio, pausados)
     Route::get('/central-campanhas/nova-campanha', [\App\Http\Controllers\MetaCampaignCreationController::class, 'create'])
         ->name('campaign-creations.create');

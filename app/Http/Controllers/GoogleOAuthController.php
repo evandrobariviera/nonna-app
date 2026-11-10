@@ -10,7 +10,15 @@ use Illuminate\Support\Facades\Http;
 
 class GoogleOAuthController extends Controller
 {
-    private const SCOPE = 'https://www.googleapis.com/auth/adwords';
+    /**
+     * Google Ads + leitura do GA4 e do Search Console (relatórios do site).
+     * Quem conectou antes só com o Ads precisa reconectar para liberar os dois últimos.
+     */
+    public const SCOPES = [
+        'https://www.googleapis.com/auth/adwords',
+        'https://www.googleapis.com/auth/analytics.readonly',
+        'https://www.googleapis.com/auth/webmasters.readonly',
+    ];
 
     public function connect(OrganizationIntegration $integration): RedirectResponse
     {
@@ -26,7 +34,8 @@ class GoogleOAuthController extends Controller
             'client_id'     => $clientId,
             'redirect_uri'  => route('settings.integrations.google.callback'),
             'response_type' => 'code',
-            'scope'         => self::SCOPE,
+            'scope'         => implode(' ', self::SCOPES),
+            'include_granted_scopes' => 'true',
             'access_type'   => 'offline',
             'prompt'        => 'consent',
             'state'         => Crypt::encryptString($integration->id),
@@ -68,6 +77,8 @@ class GoogleOAuthController extends Controller
 
         $creds['access_token'] = $response->json('access_token');
         $creds['token_expires_at'] = now()->addSeconds((int) $response->json('expires_in', 3600))->toIso8601String();
+        // Permissões que a pessoa realmente marcou na tela do Google.
+        $creds['granted_scopes'] = array_values(array_filter(explode(' ', (string) $response->json('scope'))));
         if ($response->json('refresh_token')) {
             $creds['refresh_token'] = $response->json('refresh_token');
         }
@@ -75,7 +86,7 @@ class GoogleOAuthController extends Controller
         $integration->update(['credentials' => $creds, 'status' => 'connected']);
 
         return redirect()->route('settings.index')
-            ->with('success', 'Google Ads conectado com sucesso.')
+            ->with('success', count($creds['granted_scopes']) >= count(self::SCOPES) ? 'Google conectado: Ads, Analytics e Search Console.' : 'Google Ads conectado. Analytics/Search Console não foram liberados na tela do Google.')
             ->with('tab', 'integracoes');
     }
 }

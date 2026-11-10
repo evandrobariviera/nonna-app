@@ -26,7 +26,8 @@ use Illuminate\Support\Str;
  *   "Eventos de teste" e não contam para os anúncios;
  * - sem send_enabled e sem modo teste, nada sai.
  * Lead de formulário da própria Meta (Lead Ads) não volta como Lead: a Meta
- * já tem. WhatsApp entra quando a permissão de mensagens for liberada.
+ * já tem. WhatsApp (conversa de anúncio, com ctwa_clid) vai pela API de
+ * Conversões para Mensagens quando a conta do WhatsApp Business estiver ligada.
  */
 class ConversionSender
 {
@@ -95,12 +96,12 @@ class ConversionSender
         if ($event === 'Lead' && $kind === 'facebook_lead_ad') {
             return ['ignorado', 'Lead de formulário da própria Meta: ela já tem.'];
         }
-        if ($kind === 'whatsapp') {
-            return ['ignorado', 'WhatsApp: aguardando a permissão de mensagens da Meta.'];
-        }
         $time = $this->eventTime($opp, $event);
         if ($time->lt(now()->subDays(self::META_MAX_AGE_DAYS))) {
             return ['ignorado', 'Mais de 7 dias: a Meta não aceita evento tão antigo.'];
+        }
+        if ($kind === 'whatsapp') {
+            return $this->metaWhatsapp($opp, $t, $event, $value, $time);
         }
 
         $raw = $this->raw($opp);
@@ -139,6 +140,45 @@ class ConversionSender
             ], fn ($v) => $v !== null),
         ]];
 
+        return $this->postMeta($t, $data);
+    }
+
+    /**
+     * Conversa de WhatsApp que veio de anúncio (clique para WhatsApp): devolve o
+     * andamento pela API de Conversões para Mensagens. A Meta liga o evento ao
+     * anúncio pelo ctwa_clid. Precisa da conta do WhatsApp Business (WABA) ligada
+     * ao conjunto de dados (Pixel) e da permissão de mensagens no app da Meta.
+     */
+    private function metaWhatsapp(ClientLeadOpportunity $opp, ClientTracking $t, string $event, ?float $value, Carbon $time): array
+    {
+        if (!$t->whatsapp_waba_id) {
+            return ['ignorado', 'WhatsApp: falta ligar a conta do WhatsApp Business no Rastreamento (fica para quando a Meta liberar a permissão).'];
+        }
+        if (!$opp->ctwa_clid) {
+            return ['ignorado', 'Conversa de WhatsApp que não veio de anúncio (sem ctwa_clid).'];
+        }
+
+        $data = [[
+            // Para mensagens, a Meta usa "LeadSubmitted" no lugar de "Lead".
+            'event_name'        => $event === 'Lead' ? 'LeadSubmitted' : $event,
+            'event_time'        => $time->timestamp,
+            'event_id'          => $this->eventId($opp, $event),
+            'action_source'     => 'business_messaging',
+            'messaging_channel' => 'whatsapp',
+            'user_data'         => array_filter([
+                'whatsapp_business_account_id' => $t->whatsapp_waba_id,
+                'ctwa_clid'                    => $opp->ctwa_clid,
+                'ph'                           => $this->hashList($this->phone($opp->lead?->phone)),
+                'external_id'                  => $this->hashList($opp->lead?->id),
+            ]),
+            'custom_data'       => array_filter(['currency' => $value !== null ? 'BRL' : null, 'value' => $value], fn ($v) => $v !== null),
+        ]];
+
+        return $this->postMeta($t, $data);
+    }
+
+    private function postMeta(ClientTracking $t, array $data): array
+    {
         $res = Http::timeout(30)->asForm()->post('https://graph.facebook.com/' . MetaAdsFetcher::API_VERSION . "/{$t->meta_pixel_id}/events", array_filter([
             'data'            => json_encode($data),
             'test_event_code' => $t->meta_test_event_code,

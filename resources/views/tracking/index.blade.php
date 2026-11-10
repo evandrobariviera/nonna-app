@@ -77,6 +77,9 @@
                         <label class="text-xs flex flex-col gap-1 mt-2" style="color:var(--muted2)">Código de teste <span style="color:var(--muted)">(da aba "Eventos de teste" do Gerenciador de Eventos; com ele preenchido, nada conta para os anúncios)</span>
                             <input type="text" name="meta_test_event_code" value="{{ old('meta_test_event_code', $t->meta_test_event_code) }}" placeholder="Ex.: TEST12345" class="field text-sm px-2.5 py-1.5 w-full min-w-0" style="max-width:220px">
                         </label>
+                        <label class="text-xs flex flex-col gap-1 mt-2" style="color:var(--muted2)">Conta do WhatsApp Business (ID) <span style="color:var(--muted)">(para devolver à Meta os leads e vendas das conversas que vieram de anúncio; deixe vazio até a Meta liberar a permissão)</span>
+                            <input type="text" name="whatsapp_waba_id" value="{{ old('whatsapp_waba_id', $t->whatsapp_waba_id) }}" placeholder="Ex.: 102938475610293" class="field text-sm px-2.5 py-1.5 w-full min-w-0" style="max-width:220px">
+                        </label>
                     </div>
 
                     {{-- Google Ads --}}
@@ -125,6 +128,40 @@
                                 <input type="password" name="ga4_api_secret" value="" placeholder="{{ $t->ga4_api_secret ? '••••••••  (deixe vazio para manter)' : 'Administrador → Fluxos de dados → Chaves secretas da API' }}" autocomplete="off" class="field text-sm px-2.5 py-1.5 w-full min-w-0">
                             </label>
                         </div>
+                    </div>
+
+                    {{-- Leitura dos números do site --}}
+                    <div>
+                        <p class="text-xs font-semibold mb-1.5" style="color:var(--muted2)">Números do site <span class="font-normal" style="color:var(--muted)">(o App lê visitas e buscas no Google)</span></p>
+                        <div class="grid gap-2 sm:grid-cols-2">
+                            <label class="text-xs flex flex-col gap-1 min-w-0" style="color:var(--muted2)">Propriedade do GA4
+                                @if($detail['ga4Properties'])
+                                    <select name="ga4_property_id" class="text-sm w-full min-w-0">
+                                        <option value="">Não ler</option>
+                                        @foreach($detail['ga4Properties'] as $p)
+                                            <option value="{{ $p['id'] }}" @selected($t->ga4_property_id === $p['id'])>{{ $p['name'] }} · {{ $p['account'] }}</option>
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <input type="text" name="ga4_property_id" value="{{ old('ga4_property_id', $t->ga4_property_id) }}" placeholder="Ex.: 412345678" class="field text-sm px-2.5 py-1.5 w-full min-w-0">
+                                @endif
+                            </label>
+                            <label class="text-xs flex flex-col gap-1 min-w-0" style="color:var(--muted2)">Site no Search Console
+                                @if($detail['gscSites'])
+                                    <select name="search_console_site" class="text-sm w-full min-w-0">
+                                        <option value="">Não ler</option>
+                                        @foreach($detail['gscSites'] as $s)
+                                            <option value="{{ $s }}" @selected($t->search_console_site === $s)>{{ str_replace('sc-domain:', 'domínio ', $s) }}</option>
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <input type="text" name="search_console_site" value="{{ old('search_console_site', $t->search_console_site) }}" placeholder="sc-domain:cliente.com.br" class="field text-sm px-2.5 py-1.5 w-full min-w-0">
+                                @endif
+                            </label>
+                        </div>
+                        @if(!$detail['canGa4'] || !$detail['canGsc'])
+                            <p class="text-xs mt-1.5" style="color:var(--orange)">O login do Google da agência ainda não tem permissão de ler {{ !$detail['canGa4'] && !$detail['canGsc'] ? 'o Analytics e o Search Console' : (!$detail['canGa4'] ? 'o Analytics' : 'o Search Console') }}. Reconecte o Google em Configurações → Integrações e marque todas as caixas.</p>
+                        @endif
                     </div>
 
                     {{-- Clarity --}}
@@ -184,6 +221,13 @@
                         @endforelse
                     </div>
                 </section>
+
+                @if($t->ga4_property_id || $t->search_console_site)
+                    <section class="card p-5 min-w-0" x-data="{ html: '' }" x-init="fetch(@js(route('tracking.report', $client->id)), { headers: { 'X-Requested-With': 'XMLHttpRequest' } }).then(r => r.ok ? r.text() : '<p class=&quot;text-sm&quot;>Não deu para ler os números agora.</p>').then(h => html = h).catch(() => html = '<p class=&quot;text-sm&quot;>Não deu para ler os números agora.</p>')">
+                        <h2 class="card-title">O site em números <small class="font-normal text-xs" style="color:var(--muted)">últimos 28 dias</small></h2>
+                        <div class="mt-3"><p x-show="!html" class="text-sm" style="color:var(--muted)">Lendo o Google…</p><div x-html="html"></div></div>
+                    </section>
+                @endif
                 </div>
             </div>
         @endif

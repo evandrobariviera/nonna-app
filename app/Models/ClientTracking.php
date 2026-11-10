@@ -21,6 +21,7 @@ class ClientTracking extends Model
     protected $fillable = [
         'organization_id', 'client_id', 'meta_pixel_id', 'meta_test_event_code', 'ga4_measurement_id', 'ga4_api_secret',
         'google_ads_account_id', 'google_lead_action', 'google_purchase_action', 'clarity_id', 'site_key', 'send_enabled',
+        'ga4_property_id', 'search_console_site', 'whatsapp_waba_id',
     ];
 
     protected $casts = [

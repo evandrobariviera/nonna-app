@@ -1,0 +1,36 @@
+{
+    "novidades": [
+        {
+            "title": "O site em números, dentro do Rastreamento",
+            "summary": "Na aba Rastreamento, cada cliente pode mostrar visitas, de onde elas vêm, as buscas no Google e a posição média dos últimos 28 dias, lidos do GA4 e do Search Console. Começa a funcionar quando o Google da agência for reconectado com as novas permissões.",
+            "kind": "novidade",
+            "area": "Performance"
+        },
+        {
+            "title": "WhatsApp pronto para ensinar os anúncios",
+            "summary": "Conversas que chegam por anúncio de clique para o WhatsApp vão poder voltar para a Meta como lead, lead bom e venda, igual ao site. Basta preencher a conta do WhatsApp Business no Rastreamento quando a Meta liberar a permissão.",
+            "kind": "melhoria",
+            "area": "Performance"
+        },
+        {
+            "title": "Manual do rastreamento na Central de Ajuda",
+            "summary": "Passo a passo completo para deixar um cliente rastreado do zero: acessos, Pixel, Google Ads, GA4, Search Console, Clarity, Nonna Tag no site, tirar o Tag Manager, testar e ligar.",
+            "kind": "novidade",
+            "area": "Performance"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Manual do rastreamento — configurar um cliente do zero",
+            "category": "Performance",
+            "slug": "manual-do-rastreamento",
+            "body_file": "../2026-11-10-manual-rastreamento/ajuda-manual-rastreamento.html"
+        },
+        {
+            "title": "Rastreamento e Nonna Tag — para onde vão as conversões de cada cliente",
+            "category": "Performance",
+            "slug": "rastreamento-conversoes",
+            "body_file": "ajuda-rastreamento.html"
+        }
+    ]
+}

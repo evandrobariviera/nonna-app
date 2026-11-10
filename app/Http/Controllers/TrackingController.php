@@ -12,6 +12,7 @@ use App\Services\AdSync\GoogleAdsApi;
 use App\Services\AdSync\MetaAdsFetcher;
 use App\Services\Billing\AccountStatement;
 use App\Services\Tracking\ConversionSender;
+use App\Services\Tracking\GoogleSiteReports;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -50,14 +51,17 @@ class TrackingController extends Controller
             'google_lead_action'     => 'nullable|string|max:120',
             'google_purchase_action' => 'nullable|string|max:120',
             'clarity_id'             => 'nullable|string|max:30',
+            'whatsapp_waba_id'       => 'nullable|regex:/^\d{6,20}$/',
+            'ga4_property_id'        => 'nullable|regex:/^\d{4,20}$/',
+            'search_console_site'    => ['nullable', 'max:255', 'regex:/^(sc-domain:[a-z0-9.-]+|https?:\/\/\S+)$/i'],
             'send_enabled'           => 'nullable|boolean',
-        ], ['ga4_measurement_id.regex' => 'O ID do GA4 começa com G- (ex.: G-AB12CD34EF).', 'meta_pixel_id.regex' => 'O ID do Pixel tem só números.']);
+        ], ['ga4_measurement_id.regex' => 'O ID do GA4 começa com G- (ex.: G-AB12CD34EF).', 'meta_pixel_id.regex' => 'O ID do Pixel tem só números.', 'whatsapp_waba_id.regex' => 'O ID da conta do WhatsApp Business tem só números.', 'ga4_property_id.regex' => 'O ID da propriedade do GA4 tem só números (ex.: 412345678).', 'search_console_site.regex' => 'O site do Search Console é sc-domain:exemplo.com.br ou https://www.exemplo.com.br/.']);
         if ($v->fails()) {
             return back()->withErrors($v)->withInput();
         }
 
         $t = ClientTracking::forClient($client);
-        $data = $request->only(['meta_pixel_id', 'meta_test_event_code', 'ga4_measurement_id', 'google_ads_account_id', 'google_lead_action', 'google_purchase_action', 'clarity_id']);
+        $data = $request->only(['meta_pixel_id', 'meta_test_event_code', 'ga4_measurement_id', 'google_ads_account_id', 'google_lead_action', 'google_purchase_action', 'clarity_id', 'whatsapp_waba_id', 'ga4_property_id', 'search_console_site']);
         if ($request->filled('ga4_api_secret')) {
             $data['ga4_api_secret'] = $request->input('ga4_api_secret'); // vazio = mantém o que já estava
         }
@@ -109,9 +113,20 @@ class TrackingController extends Controller
             : back()->withErrors(['tracking' => 'A Meta recusou: ' . ($ev?->detail ?? 'sem resposta')]);
     }
 
+    /** Números do site (GA4 + Search Console), carregados à parte para a página abrir rápido. */
+    public function report(Client $client, GoogleSiteReports $reports): View
+    {
+        $t = ClientTracking::where('client_id', $client->id)->first();
+        $ga4 = $t?->ga4_property_id ? $reports->ga4Summary($t->ga4_property_id) : null;
+        $gsc = $t?->search_console_site ? $reports->searchConsoleSummary($t->search_console_site) : null;
+
+        return view('tracking._site-report', compact('ga4', 'gsc'));
+    }
+
     private function detail(Client $client): array
     {
         $t = ClientTracking::forClient($client);
+        $reports = app(GoogleSiteReports::class);
         $meta = ClientAdAccount::where('client_id', $client->id)->where('platform', 'meta_ads')->get();
         $googleAccounts = ClientAdAccount::where('client_id', $client->id)->where('platform', 'google_ads')->get();
 
@@ -121,6 +136,10 @@ class TrackingController extends Controller
             'googleAccounts' => $googleAccounts,
             'googleActions'  => $t->google_ads_account_id ? $this->googleActions($googleAccounts->firstWhere('id', $t->google_ads_account_id)) : [],
             'events'         => ConversionEvent::with('opportunity.lead:id,name')->where('client_id', $client->id)->latest()->limit(15)->get(),
+            'canGa4'         => $canGa4 = $reports->can(GoogleSiteReports::GA4),
+            'canGsc'         => $canGsc = $reports->can(GoogleSiteReports::GSC),
+            'ga4Properties'  => $canGa4 ? $reports->ga4Properties() : [],
+            'gscSites'       => $canGsc ? $reports->searchConsoleSites() : [],
             'leads7d'        => ClientLeadOpportunity::whereHas('lead', fn ($q) => $q->where('client_id', $client->id))->where('received_at', '>=', now()->subDays(7))->count(),
         ];
     }
