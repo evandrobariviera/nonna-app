@@ -25,8 +25,18 @@ class SendLeadConversionsJob implements ShouldQueue
 
     public function handle(ConversionSender $sender): void
     {
-        if ($opp = ClientLeadOpportunity::find($this->opportunityId)) {
-            $sender->send($opp, $this->eventName, $this->value);
+        $opp = ClientLeadOpportunity::find($this->opportunityId);
+        if (!$opp) {
+            return;
         }
+        if ($this->eventName === 'Purchase') {
+            // voltou atrás do "Ganho" nesses 15 min: não é venda
+            if ($opp->stage !== 'ganho') {
+                return;
+            }
+            $value = $opp->deal_value !== null ? (float) $opp->deal_value : null;
+        }
+
+        $sender->send($opp, $this->eventName, $value ?? $this->value);
     }
 }

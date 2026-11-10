@@ -119,7 +119,10 @@ class ConversionSender
             'fbp'               => $raw['fbp'] ?? null,
             'client_ip_address' => $raw['ip'] ?? $raw['client_ip'] ?? null,
             'client_user_agent' => $raw['user_agent'] ?? null,
+            // Lead de formulário da Meta: o id do lead dela liga o andamento ao lead (integração com CRM).
+            'lead_id'           => $kind === 'facebook_lead_ad' && ctype_digit((string) $opp->event_id) ? (int) $opp->event_id : null,
         ]);
+        $crm = $kind === 'facebook_lead_ad' ? ['event_source' => 'crm', 'lead_event_source' => 'Nonna App'] : [];
 
         $data = [[
             'event_name'       => $event,
@@ -128,7 +131,7 @@ class ConversionSender
             'action_source'    => $event === 'Lead' && $kind === 'site' ? 'website' : 'system_generated',
             'event_source_url' => $opp->landing_page_url ?: ($raw['site'] ?? null),
             'user_data'        => $userData,
-            'custom_data'      => array_filter([
+            'custom_data'      => array_filter($crm + [
                 'currency'     => $value !== null ? 'BRL' : null,
                 'value'        => $value,
                 'lead_channel' => $kind,
@@ -225,7 +228,11 @@ class ConversionSender
 
     private function eventTime(ClientLeadOpportunity $opp, string $event): Carbon
     {
-        return ($event === 'Purchase' ? $opp->won_at : null) ?? $opp->received_at ?? now();
+        return match ($event) {
+            'Purchase'      => $opp->won_at,
+            'QualifiedLead' => $opp->quality_confirmed_at,
+            default         => null,
+        } ?? $opp->received_at ?? now();
     }
 
     private function raw(ClientLeadOpportunity $opp): array

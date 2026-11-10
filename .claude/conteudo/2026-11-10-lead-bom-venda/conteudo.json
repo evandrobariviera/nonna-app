@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Lead bom e venda voltam para os anúncios",
+            "summary": "Nos clientes com rastreamento ligado, marcar um lead como Bom na Central de Leads avisa a Meta e o GA4 (\"lead qualificado\"), e mover para Ganho manda a venda com o valor para a Meta, o GA4 e o Google Ads. Assim os anúncios aprendem a buscar quem compra, não só quem preenche formulário.",
+            "kind": "novidade",
+            "area": "Central de Leads"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Rastreamento e Nonna Tag — para onde vão as conversões de cada cliente",
+            "category": "Performance",
+            "slug": "rastreamento-conversoes",
+            "body_file": "ajuda-rastreamento.html"
+        }
+    ]
+}

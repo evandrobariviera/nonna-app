@@ -149,6 +149,27 @@ class ClientLeadOpportunity extends Model
         return $this->qualityConfirmedContact?->name ?? $this->qualityConfirmedBy?->name;
     }
 
+    /**
+     * Rastreamento: lead marcado como "bom" vira "lead qualificado" e lead
+     * ganho vira "venda" nas plataformas (Meta, Google Ads, GA4), para os
+     * anúncios aprenderem a buscar quem compra. Cada evento sai uma vez só
+     * (conversion_events). A venda espera 15 min para dar tempo de preencher
+     * o valor; o envio lê o valor do momento.
+     */
+    protected static function booted(): void
+    {
+        static::updated(function (self $opp) {
+            $hasTracking = fn () => \App\Models\ClientTracking::whereHas('client', fn ($q) => $q->whereKey($opp->lead?->client_id))->exists();
+
+            if ($opp->wasChanged('quality') && $opp->quality === 'bom' && $hasTracking()) {
+                \App\Jobs\SendLeadConversionsJob::dispatch($opp->id, 'QualifiedLead')->afterCommit();
+            }
+            if ($opp->wasChanged('won_at') && $opp->won_at && $hasTracking()) {
+                \App\Jobs\SendLeadConversionsJob::dispatch($opp->id, 'Purchase')->delay(now()->addMinutes(15))->afterCommit();
+            }
+        });
+    }
+
     /** Confirma (ou desfaz, com null) a qualidade, com nota no histórico. */
     public function confirmQuality(?string $quality, ?int $byUserId, ?string $byContactId): void
     {
