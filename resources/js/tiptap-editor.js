@@ -40,6 +40,7 @@ export function registerRichEditor() {
         editor: null,
         uploadUrl,
         _observer: null,
+        linkBubble: null, // { href, top, left } quando o cursor está em cima de um link
         tick: 0, // reactive counter — forces Alpine to re-evaluate active() on every editor change
 
         init() {
@@ -108,6 +109,17 @@ export function registerRichEditor() {
                             self.insertImageFile(img.getAsFile());
                             return true;
                         },
+                        // Ctrl+clique (Cmd no Mac) num link abre direto em outra aba. Clique
+                        // simples só põe o cursor (pra dar pra editar o texto do link) e mostra
+                        // o balão "Abrir link" — ver updateLinkBubble().
+                        handleClick(view, pos, event) {
+                            if (!(event.ctrlKey || event.metaKey)) return false;
+                            const a = event.target.closest?.('a[href]');
+                            if (!a || !view.dom.contains(a)) return false;
+                            event.preventDefault();
+                            self.openHref(a.getAttribute('href'));
+                            return true;
+                        },
                         handleDrop(view, event) {
                             const files = Array.from(event.dataTransfer?.files ?? []).filter(f => f.type.startsWith('image/'));
                             if (!files.length) return false;
@@ -120,9 +132,14 @@ export function registerRichEditor() {
                         input.value = editor.getHTML();
                         input.dispatchEvent(new Event('input', { bubbles: true }));
                         self.tick++;
+                        self.updateLinkBubble();
                     },
                     onSelectionUpdate() {
                         self.tick++;
+                        self.updateLinkBubble();
+                    },
+                    onBlur() {
+                        self.linkBubble = null;
                     },
                 }));
             }
@@ -199,13 +216,44 @@ export function registerRichEditor() {
             }
         },
 
+        // O editor fica sempre em modo de escrita, então clicar no link não abre (só põe o
+        // cursor). Com o cursor em cima de um link, mostra um balão logo abaixo dele com
+        // "Abrir link" / Editar / Tirar link — funciona no celular também (sem Ctrl).
+        updateLinkBubble() {
+            const ed = this.editor;
+            if (!ed || !ed.isFocused || !ed.isActive('link')) { this.linkBubble = null; return; }
+            const href = ed.getAttributes('link').href;
+            if (!href) { this.linkBubble = null; return; }
+            const wrap   = this.$root.getBoundingClientRect();
+            const coords = ed.view.coordsAtPos(ed.state.selection.from);
+            const bubbleW = 300;
+            const left = Math.max(4, Math.min(coords.left - wrap.left, wrap.width - bubbleW - 4));
+            this.linkBubble = { href, top: coords.bottom - wrap.top + 6, left };
+        },
+
+        openHref(href) {
+            if (!href) return;
+            // Link digitado sem protocolo ("www.site.com") abriria como caminho do próprio App.
+            const url = /^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith('/') || href.startsWith('#')
+                ? href
+                : 'https://' + href;
+            window.open(url, '_blank', 'noopener,noreferrer');
+        },
+
+        unsetLink() {
+            this.editor?.chain().extendMarkRange('link').unsetLink().run();
+            this.linkBubble = null;
+        },
+
         setLink() {
             const prev = this.editor.getAttributes('link').href ?? '';
             const url  = window.prompt('URL do link:', prev);
             if (url === null) return;
+            // extendMarkRange: com o cursor parado no meio de um link (sem seleção), troca o
+            // link inteiro — sem isso o novo endereço não pegava em nada.
             url === ''
-                ? this.editor.chain().focus().unsetLink().run()
-                : this.editor.chain().focus().setLink({ href: url }).run();
+                ? this.editor.chain().focus().extendMarkRange('link').unsetLink().run()
+                : this.editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
         },
 
         onFileChange(event) {

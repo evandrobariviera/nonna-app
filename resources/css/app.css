@@ -838,10 +838,43 @@ body .pub-label, body .label-sm {
 
 /* ══ Rich Editor (Tiptap) ══ */
 .rich-wrapper {
+    position: relative; /* âncora do balão do link (.rich-link-bubble) */
     border: 1px solid var(--border2);
     background: var(--s2);
     transition: border-color .15s;
 }
+.rich-link-bubble {
+    position: absolute;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    max-width: 300px;
+    padding: 4px;
+    background: var(--s1);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.18);
+}
+.rich-link-bubble .rlb-open {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: var(--purple);
+    font-size: 12px;
+    font-weight: 600;
+}
+.rich-link-bubble .rlb-open:hover { background: var(--s2); }
+.rich-link-bubble .rlb-url {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+}
+.rich-editor .ProseMirror a { cursor: pointer; }
 .rich-wrapper:focus-within { border-color: var(--purple); }
 
 .rich-toolbar {

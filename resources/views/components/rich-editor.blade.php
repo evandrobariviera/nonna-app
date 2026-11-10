@@ -102,6 +102,23 @@
     <div x-ref="editor" class="rich-editor" style="min-height: {{ $minHeight }}"
          @mousedown="focusFromBox($event)"></div>
 
+    {{-- ── Balão do link — aparece com o cursor em cima de um link (o editor está sempre
+         em modo de escrita, então clique simples no link não abre). mousedown.prevent
+         mantém o foco no editor pra ele não sumir antes do clique valer. ── --}}
+    <div x-show="linkBubble" x-cloak class="rich-link-bubble" @mousedown.prevent
+         :style="linkBubble ? `top:${linkBubble.top}px; left:${linkBubble.left}px` : ''">
+        <button type="button" class="rlb-open" @click="openHref(linkBubble?.href)" :title="linkBubble?.href">
+            <x-icon name="external-link" size="13" />
+            <span class="rlb-url" x-text="linkBubble?.href"></span>
+        </button>
+        <button type="button" class="rtb-btn" title="Editar link" @click="setLink()">
+            <x-icon name="pencil" size="13" />
+        </button>
+        <button type="button" class="rtb-btn" title="Tirar link" @click="unsetLink()">
+            <x-icon name="link-2-off" size="13" />
+        </button>
+    </div>
+
     {{-- ── Hidden inputs ── --}}
     <input type="hidden" name="{{ $name }}" x-ref="input">
     <input type="file" accept="image/*" x-ref="fileInput" @change="onFileChange($event)"

@@ -1,0 +1,12 @@
+{
+    "novidades": [
+        {
+            "title": "Links do briefing voltaram a abrir",
+            "summary": "Clicou num link escrito no briefing (ou em qualquer caixa de texto com formatação), aparece um balãozinho logo embaixo com o endereço: é só clicar nele que abre em outra aba. Ali também dá pra editar ou tirar o link. Quem preferir, Ctrl + clique (Cmd no Mac) abre direto.",
+            "body": "<p>Antes o clique no link só colocava o cursor no texto, porque a caixa fica sempre pronta pra escrever. Vale também no celular.</p>",
+            "kind": "correcao",
+            "area": "Tarefas"
+        }
+    ],
+    "ajuda": []
+}
