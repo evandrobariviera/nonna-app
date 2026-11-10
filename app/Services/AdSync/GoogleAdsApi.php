@@ -51,6 +51,51 @@ class GoogleAdsApi
     }
 
     /**
+     * Conversão importada (lead/venda vindo do App, pelo gclid). Erro parcial
+     * do Google (ex.: clique antigo, gclid de outra conta) volta como erro.
+     *
+     * @return array{ok: bool, error: ?string}
+     */
+    public function uploadClickConversions(string $cid, array $conversions, bool $validateOnly = false): array
+    {
+        $res = $this->request()->post('https://googleads.googleapis.com/' . GoogleAdsFetcher::API_VERSION . "/customers/{$cid}:uploadClickConversions", [
+            'conversions'    => array_map(fn ($c) => array_filter($c, fn ($v) => $v !== null), $conversions),
+            'partialFailure' => true,
+            'validateOnly'   => $validateOnly,
+        ]);
+        if ($res->failed()) {
+            return ['ok' => false, 'error' => self::errorText($res->json() ?? [], $res->body())];
+        }
+        $partial = $res->json('partialFailureError');
+
+        return $partial
+            ? ['ok' => false, 'error' => self::errorText(['error' => $partial], json_encode($partial))]
+            : ['ok' => true, 'error' => null];
+    }
+
+    /**
+     * Cria a conversão "importada" que recebe os leads/vendas do App.
+     *
+     * @return array{ok: bool, resource: ?string, error: ?string}
+     */
+    public function createUploadConversionAction(string $cid, string $name, string $category, bool $validateOnly = false): array
+    {
+        $res = $this->mutate($cid, 'conversionActions', [[
+            'create' => [
+                'name'                          => $name,
+                'type'                          => 'UPLOAD_CLICKS',
+                'category'                      => $category, // SUBMIT_LEAD_FORM | PURCHASE | QUALIFIED_LEAD
+                'status'                        => 'ENABLED',
+                'countingType'                  => 'ONE_PER_CLICK',
+                'clickThroughLookbackWindowDays' => 90,
+                'valueSettings'                 => ['defaultValue' => 0, 'defaultCurrencyCode' => 'BRL', 'alwaysUseDefaultValue' => false],
+            ],
+        ]], $validateOnly);
+
+        return ['ok' => $res['ok'], 'resource' => $res['results'][0]['resourceName'] ?? null, 'error' => $res['error']];
+    }
+
+    /**
      * Várias operações numa chamada só (googleAds:mutate), com nomes
      * temporários (ex.: assets/-1) ligando uma operação à outra. Tudo ou nada.
      *

@@ -12,6 +12,7 @@
         ['Prestação de contas', 'billing-statements.index', 'receipt',          request()->routeIs('billing-statements.*')],
         ['Otimizações', 'campaign-central.optimizations', 'sliders-horizontal', request()->routeIs('campaign-central.optimizations')],
         ['Contas e conexões', 'ad-connections.index',     'plug',               request()->routeIs('ad-connections.*')],
+        ['Rastreamento', 'tracking.index',                'radio-tower',        request()->routeIs('tracking.*')],
     ];
 @endphp
 

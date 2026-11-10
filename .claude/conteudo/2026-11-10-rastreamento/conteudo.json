@@ -1,0 +1,25 @@
+{
+    "novidades": [
+        {
+            "title": "Rastreamento: o App manda os leads para a Meta, o Google Ads e o GA4",
+            "summary": "Nova aba Rastreamento na Central de Campanhas. Para cada cliente, escolha o Pixel da Meta (o App já encontra), a conta do Google Ads (o App cria a conversão \"Lead — Nonna App\") e o GA4. Cada lead novo do site vai sozinho para as plataformas pelo servidor, sem contar duas vezes. É o começo da troca do Tag Manager.",
+            "body": "<p>Começa desligado em cada cliente: dá para testar primeiro no modo \"Eventos de teste\" da Meta, que não conta para os anúncios. Lead do WhatsApp entra numa próxima etapa.</p>",
+            "kind": "novidade",
+            "area": "Performance"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Rastreamento — para onde vão as conversões de cada cliente",
+            "category": "Performance",
+            "slug": "rastreamento-conversoes",
+            "body_file": "ajuda-rastreamento.html"
+        },
+        {
+            "title": "Central de Campanhas — a prancheta do gestor de tráfego",
+            "category": "Performance",
+            "slug": "central-de-campanhas",
+            "body_file": "ajuda-central-campanhas.html"
+        }
+    ]
+}

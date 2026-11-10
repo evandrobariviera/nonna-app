@@ -93,6 +93,12 @@ class LeadCaptureService
             ], related: $opportunity);
         }
 
+        // Rastreamento: lead novo vira conversão nas plataformas (Meta/Google/GA4),
+        // depois do commit e em segundo plano. Só para cliente com rastreamento.
+        if ($isNew && $client && \App\Models\ClientTracking::where('client_id', $client->id)->exists()) {
+            \App\Jobs\SendLeadConversionsJob::dispatch($opportunity->id)->afterCommit();
+        }
+
         return [
             'client_lead_id'      => $lead->id,
             'client_id'           => $client?->id,

@@ -296,6 +296,15 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('ad-creations.activate');
     Route::get('/central-campanhas/contas/{adAccount}/conjuntos', [\App\Http\Controllers\MetaAdCreationController::class, 'adsets'])
         ->name('ad-creations.adsets');
+    // Rastreamento por cliente (substitui o GTM): Pixel, Google Ads, GA4
+    Route::get('/central-campanhas/rastreamento', [\App\Http\Controllers\TrackingController::class, 'index'])
+        ->name('tracking.index')->middleware(\App\Http\Middleware\RememberCampaignClient::class);
+    Route::post('/central-campanhas/rastreamento/{client}', [\App\Http\Controllers\TrackingController::class, 'update'])
+        ->name('tracking.update');
+    Route::post('/central-campanhas/rastreamento/{client}/google', [\App\Http\Controllers\TrackingController::class, 'createGoogleAction'])
+        ->name('tracking.google-action');
+    Route::post('/central-campanhas/rastreamento/{client}/teste', [\App\Http\Controllers\TrackingController::class, 'testSend'])
+        ->name('tracking.test');
     // Nova campanha completa na Meta (campanha + conjunto + anúncio, pausados)
     Route::get('/central-campanhas/nova-campanha', [\App\Http\Controllers\MetaCampaignCreationController::class, 'create'])
         ->name('campaign-creations.create');
