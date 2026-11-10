@@ -131,10 +131,11 @@ class MeetingController extends Controller
         $users        = User::orderBy('name')->get(['id', 'name']);
         $clients      = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $opportunities = Opportunity::orderBy('title')->get(['id', 'title', 'client_id']);
-        // Traz todos os contatos com os clientes vinculados — o filtro por cliente
-        // selecionado no form acontece no client-side (Alpine), já que o
+        // Traz todos os contatos com os clientes vinculados — o filtro por cliente e a
+        // busca por qualquer contato (gente de fora do cliente) acontecem no client-side
+        // (Alpine, meetings/_contacts-picker), já que o
         // client_id pode mudar sem recarregar a página.
-        $contacts = Contact::with('clients:id')->orderBy('name')->get(['id', 'name']);
+        $contacts = Contact::with('clients:id')->orderBy('name')->get(['id', 'name', 'company_name', 'email', 'phone', 'whatsapp']);
 
         // "Marcar continuação" (2026-11-06): uma reunião = uma ATA. Precisou atualizar, é outra
         // reunião, com a ATA anterior como pauta e as mesmas pessoas/itens citados.
@@ -250,7 +251,7 @@ class MeetingController extends Controller
         $users         = User::orderBy('name')->get(['id', 'name']);
         $clients       = Client::where('status', 'active')->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
         $opportunities = Opportunity::orderBy('title')->get(['id', 'title', 'client_id']);
-        $contacts      = Contact::with('clients:id')->orderBy('name')->get(['id', 'name']);
+        $contacts      = Contact::with('clients:id')->orderBy('name')->get(['id', 'name', 'company_name', 'email', 'phone', 'whatsapp']);
         $agendaItems   = app(MeetingAgendaService::class)->formItems($meeting);
 
         return view('meetings.edit', compact('meeting', 'users', 'clients', 'opportunities', 'contacts', 'agendaItems'));

@@ -1,0 +1,18 @@
+{
+  "novidades": [
+    {
+      "title": "Reunião aceita qualquer contato da lista",
+      "summary": "Ao criar ou editar a reunião, além dos contatos do cliente, dá pra buscar qualquer pessoa da lista de Contatos (por nome, empresa, e-mail ou telefone) e chamar pra reunião. Ela também recebe o lembrete em Notificar Contatos.",
+      "body": "<p>Serve pra parceiro, fornecedor, quem indicou ou qualquer pessoa de fora do cliente. Quem é de fora aparece como uma etiqueta roxa, com × pra tirar.</p>",
+      "kind": "melhoria", "area": "Reuniões"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Fluxo de Reuniões com o Cliente — do agendamento à ATA",
+      "category": "Reuniões",
+      "slug": "fluxo-de-reunioes-e-agendamento-de-macroplanejamento",
+      "body_file": "ajuda-fluxo-reunioes.html"
+    }
+  ]
+}

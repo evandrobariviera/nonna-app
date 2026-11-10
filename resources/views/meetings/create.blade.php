@@ -181,22 +181,7 @@
                 </div>
 
                 {{-- Contatos --}}
-                <div>
-                    <label class="block text-xs font-mono uppercase tracking-widest mb-2" style="color:var(--muted)">
-                        Contatos (para notificações)
-                    </label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        @foreach($contacts as $c)
-                            <label class="flex items-center gap-2 text-sm cursor-pointer py-1" style="color:var(--text)"
-                                x-show="!clientId || [{{ $c->clients->pluck('id')->map(fn ($id) => "'{$id}'")->implode(',') }}].includes(clientId)">
-                                <input type="checkbox" name="contacts[]" value="{{ $c->id }}"
-                                    {{ in_array($c->id, old('contacts', $prefill['contacts'] ?? [])) ? 'checked' : '' }}
-                                    style="accent-color:var(--purple)">
-                                {{ $c->name }}
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
+                @include('meetings._contacts-picker', ['selected' => old('contacts', $prefill['contacts'] ?? [])])
 
                 {{-- Pauta --}}
                 <div>
