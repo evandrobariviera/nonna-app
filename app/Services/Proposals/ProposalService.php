@@ -5,6 +5,8 @@ namespace App\Services\Proposals;
 use App\Models\CatalogItem;
 use App\Models\Client;
 use App\Models\ClientProduct;
+use App\Models\Contact;
+use App\Support\PhoneKey;
 use App\Models\Opportunity;
 use App\Models\Proposal;
 use Illuminate\Support\Facades\DB;
@@ -174,6 +176,62 @@ class ProposalService
 
             return $proposal;
         });
+    }
+
+    /**
+     * Cria a oportunidade (e o contato, se for novo) direto da tela da proposta, pra não precisar
+     * passar por Contatos e Oportunidades antes. Contato novo com e-mail ou WhatsApp/telefone que
+     * já existe reaproveita o cadastro (mesma pessoa). Devolve [oportunidade, aviso|null].
+     */
+    public function createOpportunity(array $target, ?int $userId): array
+    {
+        $notice = null;
+        $contact = !empty($target['contact_id']) ? Contact::findOrFail($target['contact_id']) : null;
+
+        if (!$contact) {
+            $c = $target['contact'];
+            $contact = $this->findExistingContact($c['email'] ?? null, [$c['whatsapp'] ?? null, $c['phone'] ?? null]);
+            if ($contact) {
+                $notice = "Já existia um contato com esse e-mail ou número ({$contact->name}). A proposta foi ligada a ele, sem duplicar.";
+            } else {
+                $contact = Contact::create([
+                    'name'         => trim($c['name']),
+                    'company_name' => $c['company_name'] ?? null,
+                    'email'        => $c['email'] ?? null,
+                    'whatsapp'     => $c['whatsapp'] ?? null,
+                    'source'       => $c['source'] ?? 'outros',
+                    'status'       => 'ativo',
+                    'created_by'   => $userId,
+                ]);
+            }
+        }
+
+        $who = $contact->company_name ?: $contact->name;
+        $opportunity = Opportunity::create([
+            'contact_id' => $contact->id,
+            'title'      => trim((string) ($target['title'] ?? '')) ?: $who,
+            'type'       => $target['type'] ?? 'novo_cliente',
+            'stage'      => 'novo_lead',
+            'created_by' => $userId,
+        ]);
+        $contact->update(['status' => 'em_negociacao']);
+
+        return [$opportunity, $notice];
+    }
+
+    private function findExistingContact(?string $email, array $phones): ?Contact
+    {
+        if ($email && ($found = Contact::whereRaw('lower(email) = ?', [mb_strtolower(trim($email))])->first())) {
+            return $found;
+        }
+        $keys = array_filter(array_map([PhoneKey::class, 'from'], $phones));
+        if (!$keys) {
+            return null;
+        }
+
+        return Contact::where(fn ($q) => $q->whereNotNull('whatsapp')->orWhereNotNull('phone'))
+            ->get(['id', 'name', 'company_name', 'whatsapp', 'phone', 'status'])
+            ->first(fn ($c) => in_array(PhoneKey::from($c->whatsapp), $keys, true) || in_array(PhoneKey::from($c->phone), $keys, true));
     }
 
     /** Envia (congela). Se o desconto pede liberação que ainda não foi dada, vai pra "aguardando liberação". */

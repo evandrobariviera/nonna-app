@@ -13,6 +13,12 @@
             "area": "Comercial"
         },
         {
+            "title": "Proposta sem precisar criar oportunidade antes",
+            "summary": "Na Nova proposta, escolha uma oportunidade, um contato que já existe ou cadastre um contato novo ali mesmo: a oportunidade é criada junto. Na página do contato também tem o botão + Proposta.",
+            "kind": "melhoria",
+            "area": "Comercial"
+        },
+        {
             "title": "Proposta aceita já fecha o negócio",
             "summary": "Quando o cliente aceita uma proposta, a oportunidade abre o Fechar Negócio, e o que ele contratou fica registrado no cadastro do cliente.",
             "kind": "novidade",

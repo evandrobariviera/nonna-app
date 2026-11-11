@@ -9,6 +9,10 @@
         'state'         => $state,
         'title'         => $proposal->title ?? '',
         'opportunityId' => $opportunity?->id,
+        'opportunities' => $opportunities,
+        'contacts'      => $contacts,
+        'target'        => $preselectContact ? 'contact' : ($opportunities->isEmpty() ? 'new_contact' : 'opportunity'),
+        'preContact'    => $preselectContact,
         'urls'          => [
             'preview' => route('proposals.preview'),
             'save'    => $proposal->exists ? route('proposals.update', $proposal) : route('proposals.store'),
@@ -25,25 +29,64 @@
 
     <div x-data="proposalBuilder(@js($config))">
 
-        {{-- Oportunidade + título --}}
-        <div class="card card-body mb-4 grid gap-4" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
-            <div>
-                <label class="text-xs font-semibold" for="pb-opp" style="color:var(--muted2)">Oportunidade</label>
-                @if($opportunity)
+        {{-- Para quem é + título --}}
+        <div class="card card-body mb-4 flex flex-col gap-4">
+            @if($opportunity)
+                <div>
+                    <p class="text-xs font-semibold" style="color:var(--muted2)">Oportunidade</p>
                     <p class="text-sm font-semibold mt-1" style="color:var(--text)">
                         <a href="{{ route('opportunities.show', $opportunity) }}" style="color:var(--purple)">{{ $opportunity->title }}</a>
                         <span class="font-normal" style="color:var(--muted)">· {{ $opportunity->contact?->name }}</span>
                     </p>
-                @else
-                    <select id="pb-opp" x-model="opportunityId" class="field w-full">
-                        <option value="">Escolha a oportunidade…</option>
-                        @foreach($opportunities as $o)
-                            <option value="{{ $o->id }}">{{ $o->title }} · {{ $o->contact?->name }}</option>
-                        @endforeach
+                </div>
+            @else
+                <div class="flex items-center gap-3 flex-wrap">
+                    <p class="text-sm font-bold" style="color:var(--text)">Para quem é a proposta?</p>
+                    <div class="inline-flex" style="border:1px solid var(--border); border-radius:7px; overflow:hidden">
+                        <template x-for="opt in [['opportunity','Oportunidade que já existe'],['contact','Contato que já existe'],['new_contact','Contato novo']]">
+                            <button type="button" class="px-3 py-1.5 text-xs" :style="target === opt[0] ? 'background:var(--purple); color:#fff' : ''" @click="target = opt[0]" x-text="opt[1]"></button>
+                        </template>
+                    </div>
+                </div>
+
+                <div x-show="target === 'opportunity'">
+                    <label class="text-xs font-semibold" for="pb-opp-q" style="color:var(--muted2)">Oportunidade</label>
+                    <input id="pb-opp-q" x-model="oppQ" class="field w-full mb-1" placeholder="Buscar pelo nome…">
+                    <select x-model="opportunityId" class="field w-full" size="5" aria-label="Oportunidade">
+                        <template x-for="o in filtered(cfg.opportunities, oppQ)" :key="o.id"><option :value="o.id" x-text="o.label"></option></template>
                     </select>
-                @endif
-            </div>
-            <div>
+                </div>
+
+                <div x-show="target === 'contact'">
+                    <label class="text-xs font-semibold" for="pb-ct-q" style="color:var(--muted2)">Contato</label>
+                    <input id="pb-ct-q" x-model="contactQ" class="field w-full mb-1" placeholder="Buscar pelo nome ou empresa…">
+                    <select x-model="newOpp.contact_id" class="field w-full" size="5" aria-label="Contato">
+                        <template x-for="c in filtered(cfg.contacts, contactQ)" :key="c.id"><option :value="c.id" x-text="c.label"></option></template>
+                    </select>
+                    <p class="text-xs mt-1" style="color:var(--muted)">Uma oportunidade nova é criada para esse contato junto com a proposta.</p>
+                </div>
+
+                <div x-show="target === 'new_contact'" class="grid gap-3" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+                    <div><label class="text-xs font-semibold" for="pb-cn" style="color:var(--muted2)">Nome *</label><input id="pb-cn" x-model="newContact.name" class="field w-full" maxlength="255"></div>
+                    <div><label class="text-xs font-semibold" for="pb-cc" style="color:var(--muted2)">Empresa</label><input id="pb-cc" x-model="newContact.company_name" class="field w-full" maxlength="255"></div>
+                    <div><label class="text-xs font-semibold" for="pb-cw" style="color:var(--muted2)">WhatsApp</label><input id="pb-cw" x-model="newContact.whatsapp" class="field w-full" maxlength="30" placeholder="(49) 99999-9999"></div>
+                    <div><label class="text-xs font-semibold" for="pb-ce" style="color:var(--muted2)">E-mail</label><input id="pb-ce" x-model="newContact.email" type="email" class="field w-full" maxlength="255"></div>
+                    <div><label class="text-xs font-semibold" for="pb-cs" style="color:var(--muted2)">De onde veio *</label>
+                        <select id="pb-cs" x-model="newContact.source" class="field w-full">
+                            @foreach(\App\Models\Contact::$sources as $k => $label)<option value="{{ $k }}">{{ $label }}</option>@endforeach
+                        </select></div>
+                </div>
+                <p x-show="target === 'new_contact'" class="text-xs -mt-2" style="color:var(--muted)">O contato e a oportunidade são criados junto com a proposta. Se o e-mail ou o WhatsApp já existir, o App usa o cadastro que já tem.</p>
+
+                <div x-show="target !== 'opportunity'" class="grid gap-3" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+                    <div><label class="text-xs font-semibold" for="pb-ot" style="color:var(--muted2)">Nome da oportunidade <span style="color:var(--muted)">(em branco = nome da empresa)</span></label><input id="pb-ot" x-model="newOpp.title" class="field w-full" maxlength="255"></div>
+                    <div><label class="text-xs font-semibold" for="pb-oy" style="color:var(--muted2)">Tipo</label>
+                        <select id="pb-oy" x-model="newOpp.type" class="field w-full">
+                            @foreach(\App\Models\Opportunity::$types as $k => $label)<option value="{{ $k }}">{{ $label }}</option>@endforeach
+                        </select></div>
+                </div>
+            @endif
+            <div style="max-width:520px">
                 <label class="text-xs font-semibold" for="pb-title" style="color:var(--muted2)">Nome da proposta <span style="color:var(--muted)">(em branco = automático)</span></label>
                 <input id="pb-title" x-model="title" class="field w-full" maxlength="160" placeholder="Ex.: Caminho com site novo">
             </div>
@@ -304,6 +347,10 @@
             const brlFmt = new Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'});
             return {
                 cfg, s: JSON.parse(JSON.stringify(cfg.state)), title: cfg.title, opportunityId: cfg.opportunityId || '',
+                target: cfg.opportunityId ? 'opportunity' : cfg.target, oppQ: '', contactQ: '',
+                newOpp: {contact_id: cfg.preContact || '', title: '', type: 'novo_cliente'},
+                newContact: {name: '', company_name: '', whatsapp: '', email: '', source: 'whatsapp'},
+                filtered(list, q) { q = (q || '').toLowerCase(); return (list || []).filter(x => !q || x.label.toLowerCase().includes(q)).slice(0, 200); },
                 calc: null, upgrade: null, errors: [], warnings: [], picker: false, pickQ: '', pickLine: 'Todas',
                 saving: false, msg: '', msgError: false, wide: window.innerWidth >= 1100, timer: null, seq: 0,
                 init() {
@@ -404,9 +451,15 @@
                     this.changed();
                 },
                 async save() {
-                    if (!this.opportunityId) { this.msg = 'Escolha a oportunidade desta proposta.'; this.msgError = true; return; }
+                    const body = {title: this.title, state: this.payload()};
+                    if (this.cfg.urls.method === 'POST') {
+                        body.target = this.target;
+                        if (this.target === 'opportunity') body.opportunity_id = this.opportunityId;
+                        else body.new = {...this.newOpp, contact: this.target === 'new_contact' ? this.newContact : null,
+                            contact_id: this.target === 'contact' ? this.newOpp.contact_id : null};
+                    }
                     this.saving = true; this.msg = '';
-                    const {ok, data} = await this.post(this.cfg.urls.save, {opportunity_id: this.opportunityId, title: this.title, state: this.payload()}, this.cfg.urls.method);
+                    const {ok, data} = await this.post(this.cfg.urls.save, body, this.cfg.urls.method);
                     this.saving = false;
                     if (ok && data.redirect) { window.location = data.redirect; return; }
                     this.msg = (data.errors || ['Não deu pra salvar. Tente de novo.']).join(' '); this.msgError = true;

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CatalogItem;
+use App\Models\Contact;
 use App\Models\Opportunity;
 use App\Models\Proposal;
 use App\Services\Proposals\ProposalService;
@@ -10,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -74,18 +76,54 @@ class ProposalController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        // Para quem: oportunidade existente OU nova (com contato existente ou contato novo)
+        $target = $request->input('target', 'opportunity');
         $v = Validator::make($request->all(), [
-            'opportunity_id' => 'required|uuid|exists:opportunities,id',
-            'title'          => 'nullable|string|max:160',
-            'state'          => 'required|array',
-        ], ['opportunity_id.required' => 'Escolha a oportunidade desta proposta.']);
+            'title'                     => 'nullable|string|max:160',
+            'state'                     => 'required|array',
+            'target'                    => 'nullable|in:opportunity,contact,new_contact',
+            'opportunity_id'            => 'exclude_unless:target,opportunity|required|uuid|exists:opportunities,id',
+            'new.contact_id'            => 'exclude_unless:target,contact|required|uuid|exists:contacts,id',
+            'new.contact.name'          => 'exclude_unless:target,new_contact|required|string|max:255',
+            'new.contact.company_name'  => 'exclude_unless:target,new_contact|nullable|string|max:255',
+            'new.contact.email'         => 'exclude_unless:target,new_contact|nullable|email|max:255',
+            'new.contact.whatsapp'      => 'exclude_unless:target,new_contact|nullable|string|max:30',
+            'new.contact.source'        => ['exclude_unless:target,new_contact', 'required', 'in:' . implode(',', array_keys(Contact::$sources))],
+            'new.title'                 => 'nullable|string|max:255',
+            'new.type'                  => 'nullable|in:' . implode(',', array_keys(Opportunity::$types)),
+        ], [
+            'opportunity_id.required'   => 'Escolha a oportunidade desta proposta.',
+            'new.contact_id.required'   => 'Escolha o contato desta proposta.',
+            'new.contact.name.required' => 'Informe o nome do contato.',
+            'new.contact.source.required' => 'Informe de onde veio o contato.',
+            'new.contact.email.email'   => 'O e-mail do contato não parece válido.',
+        ]);
         if ($v->fails()) {
             return response()->json(['errors' => $v->errors()->all()], 422);
         }
 
-        $opportunity = Opportunity::findOrFail($request->input('opportunity_id'));
+        // Contato/oportunidade novos e proposta numa transação só: proposta inválida não deixa órfãos
+        try {
+            [$saved, $notice] = DB::transaction(function () use ($request, $target) {
+                $notice = null;
+                if ($target === 'opportunity') {
+                    $opportunity = Opportunity::findOrFail($request->input('opportunity_id'));
+                } else {
+                    [$opportunity, $notice] = $this->service->createOpportunity((array) $request->input('new'), Auth::id());
+                }
+                $saved = $this->service->save(new Proposal(), $opportunity, (array) $request->input('state'), $request->input('title'), Auth::id());
 
-        return $this->persist(new Proposal(), $opportunity, $request);
+                return [$saved, $notice];
+            });
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => collect($e->errors())->flatten()->all()], 422);
+        }
+
+        if ($notice) {
+            session()->flash('success', $notice);
+        }
+
+        return response()->json(['redirect' => route('proposals.show', $saved)]);
     }
 
     public function update(Request $request, Proposal $proposal): JsonResponse
@@ -197,8 +235,12 @@ class ProposalController extends Controller
         ];
 
         $opportunities = $opportunity ? collect() : Opportunity::with('contact:id,name,company_name')
-            ->whereNotIn('stage', ['ganho', 'perdido'])->latest()->get(['id', 'title', 'contact_id']);
+            ->whereNotIn('stage', ['ganho', 'perdido'])->latest()->get(['id', 'title', 'contact_id'])
+            ->map(fn ($o) => ['id' => $o->id, 'label' => $o->title . ($o->contact ? ' · ' . $o->contact->name : '')])->values();
+        $contacts = $opportunity ? collect() : Contact::orderBy('name')->get(['id', 'name', 'company_name'])
+            ->map(fn ($c) => ['id' => $c->id, 'label' => $c->name . ($c->company_name ? ' · ' . $c->company_name : ''), 'company' => $c->company_name ?: $c->name])->values();
+        $preselectContact = $opportunity ? null : request('contato');
 
-        return compact('proposal', 'opportunity', 'opportunities', 'packages', 'items', 'state');
+        return compact('proposal', 'opportunity', 'opportunities', 'contacts', 'preselectContact', 'packages', 'items', 'state');
     }
 }

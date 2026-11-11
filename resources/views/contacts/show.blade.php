@@ -19,6 +19,9 @@
                    style="background:var(--orange)">
                     + Oportunidade
                 </a>
+                <a href="{{ route('proposals.create', ['contato' => $contact->id]) }}" class="btn btn-primary btn-sm">
+                    + Proposta
+                </a>
             </div>
         </div>
     </x-slot>
