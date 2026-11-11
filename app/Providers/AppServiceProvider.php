@@ -28,6 +28,9 @@ class AppServiceProvider extends ServiceProvider
         // Um por request: guarda o catálogo de pontos em memória (vários saves de tarefa
         // seguidos não reconsultam o banco).
         $this->app->singleton(\App\Services\Tasks\SprintPoints::class);
+
+        // Regras comerciais (desconto livre/máximo, upgrade) vêm de config/proposals.php.
+        $this->app->bind(\App\Services\Proposals\ProposalCalculator::class, fn () => \App\Services\Proposals\ProposalCalculator::fromConfig());
     }
 
     public function boot(): void

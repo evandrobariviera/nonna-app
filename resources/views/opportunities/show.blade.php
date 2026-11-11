@@ -18,7 +18,7 @@
         </div>
 
         @if($opportunity->isOpen())
-                <div class="flex items-center gap-3" x-data="{ winModal: false, loseModal: false }">
+                <div class="flex items-center gap-3" x-data="{ winModal: {{ request()->boolean('ganhar') ? 'true' : 'false' }}, loseModal: false }">
 
                     <a href="{{ route('opportunities.edit', $opportunity) }}"
                        class="px-4 py-2 text-xs font-mono border border-[var(--border2)] text-[var(--muted2)] hover:text-[var(--text)] hover:border-[var(--purple)] transition-colors">
@@ -189,6 +189,34 @@
                         @endif
                     </div>
                 </div>
+            </div>
+
+            {{-- Propostas (Central de Comércio) — N por oportunidade, só uma aceita --}}
+            @php $proposals = $opportunity->proposals()->get(); @endphp
+            <div class="card p-5">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                    <h3 class="card-title">Propostas</h3>
+                    @if($opportunity->isOpen())
+                        <a href="{{ route('proposals.create', ['oportunidade' => $opportunity->id]) }}" class="btn btn-primary btn-sm"><x-icon name="plus" size="13" /> Nova proposta</a>
+                    @endif
+                </div>
+                @forelse($proposals as $p)
+                    <a href="{{ route('proposals.show', $p) }}" class="flex items-center gap-3 py-2.5 flex-wrap" style="border-top:1px solid var(--border)">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold" style="color:var(--text)">{{ $p->displayTitle() }}</p>
+                            <p class="text-xs" style="color:var(--muted)">{{ $p->baseLabel() }}</p>
+                        </div>
+                        <span class="text-sm num" style="color:var(--muted2); white-space:nowrap">
+                            {{ collect([
+                                (float) $p->monthly_total ? 'R$ ' . number_format((float) $p->monthly_total, 2, ',', '.') . '/mês' : null,
+                                (float) $p->one_time_total ? 'R$ ' . number_format((float) $p->one_time_total, 2, ',', '.') : null,
+                            ])->filter()->implode(' + ') }}
+                        </span>
+                        <span class="badge badge-{{ $p->statusColor() }}">{{ $p->statusLabel() }}</span>
+                    </a>
+                @empty
+                    <p class="text-sm" style="color:var(--muted)">Nenhuma proposta ainda. Dá pra montar caminhos diferentes pro mesmo cliente; só um pode ser aceito.</p>
+                @endforelse
             </div>
 
             {{-- Services --}}

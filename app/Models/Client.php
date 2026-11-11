@@ -476,6 +476,12 @@ class Client extends Model
         return $this->hasMany(Opportunity::class);
     }
 
+    /** Produtos, serviços e pacotes contratados (registrados a partir da proposta aceita). */
+    public function products(): HasMany
+    {
+        return $this->hasMany(ClientProduct::class)->orderBy('created_at');
+    }
+
     public function macroplans(): HasMany
     {
         return $this->hasMany(MacroPlan::class)->orderByDesc('period_start');

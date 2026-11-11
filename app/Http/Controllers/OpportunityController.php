@@ -7,6 +7,7 @@ use App\Models\Contact;
 use App\Models\Opportunity;
 use App\Models\User;
 use App\Services\ClientOnboardingService;
+use App\Services\Proposals\ProposalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -133,6 +134,10 @@ class OpportunityController extends Controller
 
             $opportunity->contact->update(['status' => 'ganho']);
 
+            if ($clientId && ($existing = Client::find($clientId))) {
+                app(ProposalService::class)->registerClientProducts($opportunity, $existing);
+            }
+
             return $clientId
                 ? redirect()->route('clients.show', $clientId)->with('success', 'Oportunidade fechada como ganha.')
                 : redirect()->route('opportunities.index')->with('success', 'Oportunidade fechada como ganha.');
@@ -173,6 +178,9 @@ class OpportunityController extends Controller
 
             // Update contact status
             $opportunity->contact->update(['status' => 'ganho']);
+
+            // O que estava na proposta aceita fica registrado no cliente (Central de Comércio)
+            app(ProposalService::class)->registerClientProducts($opportunity, $client);
 
             return $client;
         });

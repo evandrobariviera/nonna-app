@@ -520,6 +520,33 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::post('/oportunidades/{opportunity}/perder', [OpportunityController::class, 'lose'])
         ->name('opportunities.lose');
 
+    // ── Central de Comércio: catálogo de Produtos e serviços (leitura pra todos; edição só admin) ──
+    Route::get('/produtos', [\App\Http\Controllers\CatalogItemController::class, 'index'])
+        ->name('catalog.index');
+    Route::middleware('org.admin')->group(function () {
+        Route::post('/produtos', [\App\Http\Controllers\CatalogItemController::class, 'store'])
+            ->name('catalog.store');
+        Route::patch('/produtos/{catalogItem}', [\App\Http\Controllers\CatalogItemController::class, 'update'])
+            ->name('catalog.update');
+        Route::delete('/produtos/{catalogItem}', [\App\Http\Controllers\CatalogItemController::class, 'destroy'])
+            ->name('catalog.destroy');
+    });
+
+    // ── Central de Comércio: Propostas (N por oportunidade; ver ProposalService) ──
+    Route::get('/propostas', [\App\Http\Controllers\ProposalController::class, 'index'])->name('proposals.index');
+    Route::get('/propostas/nova', [\App\Http\Controllers\ProposalController::class, 'create'])->name('proposals.create');
+    Route::post('/propostas/calcular', [\App\Http\Controllers\ProposalController::class, 'preview'])->name('proposals.preview');
+    Route::post('/propostas', [\App\Http\Controllers\ProposalController::class, 'store'])->name('proposals.store');
+    Route::get('/propostas/{proposal}', [\App\Http\Controllers\ProposalController::class, 'show'])->name('proposals.show');
+    Route::get('/propostas/{proposal}/editar', [\App\Http\Controllers\ProposalController::class, 'edit'])->name('proposals.edit');
+    Route::patch('/propostas/{proposal}', [\App\Http\Controllers\ProposalController::class, 'update'])->name('proposals.update');
+    Route::post('/propostas/{proposal}/enviar', [\App\Http\Controllers\ProposalController::class, 'send'])->name('proposals.send');
+    Route::post('/propostas/{proposal}/nova-versao', [\App\Http\Controllers\ProposalController::class, 'newVersion'])->name('proposals.new-version');
+    Route::post('/propostas/{proposal}/aceitar', [\App\Http\Controllers\ProposalController::class, 'accept'])->name('proposals.accept');
+    Route::post('/propostas/{proposal}/recusar', [\App\Http\Controllers\ProposalController::class, 'reject'])->name('proposals.reject');
+    Route::post('/propostas/{proposal}/liberar', [\App\Http\Controllers\ProposalController::class, 'release'])
+        ->middleware('org.admin')->name('proposals.release');
+
     // ── Central de Performance: dashboard central + abas (Leads, Campanhas, Insights, Atendimento) ──
     Route::get('/performance', [\App\Http\Controllers\PerformanceController::class, 'index'])
         ->name('performance.index');

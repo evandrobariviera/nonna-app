@@ -1,0 +1,30 @@
+{
+    "novidades": [
+        {
+            "title": "Propostas: monte o orçamento dentro do App",
+            "summary": "Nova Central de Comércio no menu. Na oportunidade, clique em Nova proposta: escolha um nível do PlaNo C, um pacote da Nonna ou comece do zero, some produtos e serviços, e o App faz a conta da mensalidade, da implantação, das parcelas e do total de 12 meses.",
+            "kind": "novidade",
+            "area": "Comercial"
+        },
+        {
+            "title": "Catálogo de produtos e serviços com preços",
+            "summary": "Em Central de Comércio → Produtos e serviços fica a tabela de preços da Nonna: níveis do PlaNo C, serviços mensais, projetos e pacotes. Os administradores ajustam os preços ali, sem precisar de programação.",
+            "kind": "novidade",
+            "area": "Comercial"
+        },
+        {
+            "title": "Proposta aceita já fecha o negócio",
+            "summary": "Quando o cliente aceita uma proposta, a oportunidade abre o Fechar Negócio, e o que ele contratou fica registrado no cadastro do cliente.",
+            "kind": "novidade",
+            "area": "Comercial"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Propostas e catálogo de produtos — como montar um orçamento",
+            "category": "Comercial",
+            "slug": "propostas",
+            "body_file": "ajuda-propostas.html"
+        }
+    ]
+}

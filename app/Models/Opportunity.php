@@ -98,6 +98,11 @@ class Opportunity extends Model
         return $this->belongsTo(Client::class);
     }
 
+    public function proposals(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Proposal::class)->orderByDesc('version');
+    }
+
     public function assignedTo(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');

@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protótipo · Central de Comércio · Nonna App</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fffdfd;--s1:#fff;--s2:#f6f6f8;--s3:#f3f2f2;--border:#e9e9e9;--text:#161616;--muted:#8b8b8b;--muted2:#5f5f5f;--purple:#643B8E;--orange:#EE7919;--grad:linear-gradient(135deg,#643B8E,#EE7919);--green:#10B981;--red:#DC2626;--yellow:#F59E0B;--blue:#2E90FA;--cyan:#0891b2;--shadow:rgba(126,126,126,.05) 0 5px 8px;--radius:7px;--radius-lg:10px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 14px/1.5 Inter,system-ui,sans-serif}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer}
+.proto-bar{position:sticky;top:0;z-index:50;background:#161616;color:#e9e9e9;display:flex;gap:6px;align-items:center;padding:8px 14px;font-size:12.5px;flex-wrap:wrap}
+.proto-bar b{color:#fff;margin-right:8px}
+.proto-bar button{background:#303030;color:#e9e9e9;border:0;border-radius:6px;padding:5px 10px}
+.proto-bar button.on{background:var(--orange);color:#fff}
+.proto-bar .fict{margin-left:auto;color:#aaa}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:calc(100vh - 42px)}
+/* sidebar */
+.side{border-right:1px solid var(--border);background:var(--s1);padding:16px 12px}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;margin:0 6px 18px}
+.logo i{width:26px;height:26px;border-radius:7px;background:var(--grad);display:inline-block}
+.nav-group-label{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 8px 6px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:var(--radius);color:var(--muted2);font-weight:500}
+.nav-item:hover{background:var(--s2)}
+.nav-item.active{background:#f3eef8;color:var(--purple)}
+.nav-sub{padding-left:26px;display:flex;flex-direction:column}
+.nav-sub a{padding:5px 8px;border-radius:var(--radius);color:var(--muted2);font-size:13px}
+.nav-sub a.active{color:var(--purple);font-weight:600;background:#f3eef8}
+.nav-sub a .new{font-size:10px;background:var(--orange);color:#fff;border-radius:4px;padding:0 5px;margin-left:4px;font-weight:600}
+svg.ic{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+/* main */
+.main{padding:22px 28px 60px;min-width:0}
+.crumb{font-size:12.5px;color:var(--muted);margin-bottom:4px}
+.crumb a:hover{color:var(--purple)}
+.head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+h1{font-size:22px;font-weight:700;letter-spacing:-.015em;margin:0}
+.sub{color:var(--muted2);margin:2px 0 0}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.tabs a{padding:8px 12px;color:var(--muted2);font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer}
+.tabs a.on{color:var(--purple);border-color:var(--purple)}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:16px}
+.card h3{margin:0 0 10px;font-size:14px;font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--s1);border-radius:var(--radius);padding:7px 12px;font-weight:500;color:var(--text)}
+.btn:hover{background:var(--s2)}
+.btn.pri{background:var(--purple);border-color:var(--purple);color:#fff}
+.btn.pri:hover{background:#56317b}
+.btn.ora{background:var(--orange);border-color:var(--orange);color:#fff}
+.btn.sm{padding:4px 9px;font-size:12.5px}
+.grid{display:grid;gap:14px}
+.kpis{grid-template-columns:repeat(5,1fr)}
+.kpi small{display:block;color:var(--muted);font-size:12px;font-weight:500}
+.kpi b{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi span{font-size:12px;color:var(--muted2)}
+label.f{display:block;font-size:12px;font-weight:600;color:var(--muted2);margin-bottom:4px}
+.inp{width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font:inherit;background:var(--s1)}
+.filters{display:grid;grid-template-columns:1.1fr 1.1fr 1.4fr auto;gap:12px;align-items:end}
+.hint{font-size:12px;color:var(--muted);margin-top:4px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.c-map{background:var(--s2);color:var(--muted2)}
+.c-col{background:#e8f3fe;color:#1769c4}
+.c-rx{background:#f3eef8;color:var(--purple)}
+.c-env{background:#fff3e8;color:#c25e0c}
+.c-resp{background:#e7f8f1;color:#08875f}
+.c-out{background:#fdecec;color:var(--red)}
+.sig{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:5px;margin:1px 3px 1px 0;white-space:nowrap}
+.sig-hot{background:#fff3e8;color:#c25e0c;border:1px solid #fde3c8}
+.sig-opp{background:#f3eef8;color:var(--purple);border:1px solid #e2d6ee}
+.sig-neu{background:var(--s2);color:var(--muted2);border:1px solid var(--border)}
+.adrow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px dashed var(--border);font-size:13.5px}
+.adrow:last-of-type{border:0}
+.adrow .meta{display:block}
+.mark{display:inline-flex;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;font-size:12px}
+.mark a{padding:4px 9px;cursor:pointer;color:var(--muted2)}
+.mark a.on{background:var(--purple);color:#fff;font-weight:600}
+.oppbox{background:#fff7ed;border:1px solid #fde3c8;border-radius:var(--radius);padding:10px 12px;margin-top:12px;font-size:13px;color:#7a3e07}
+.oppbox b{display:block;color:#c25e0c;margin-bottom:2px}
+.alert{display:flex;gap:10px;align-items:flex-start;background:#fff7ed;border:1px solid #fde3c8;border-radius:var(--radius-lg);padding:10px 12px;color:#7a3e07;font-size:13px}
+.alert.info{background:#f3eef8;border-color:#e2d6ee;color:#4b2a6c}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;border-bottom:1px solid var(--border)}
+td{padding:10px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr.row:hover td{background:var(--s2);cursor:pointer}
+.name{font-weight:600}
+.meta{font-size:12px;color:var(--muted)}
+.score{display:flex;align-items:center;gap:8px;min-width:120px}
+.score .bar{flex:1;height:6px;background:var(--s3);border-radius:9px;overflow:hidden}
+.score .bar i{display:block;height:100%;border-radius:9px}
+.score b{font-variant-numeric:tabular-nums;width:26px;text-align:right}
+.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.seg a{padding:5px 10px;font-size:12.5px;color:var(--muted2);cursor:pointer}
+.seg a.on{background:var(--s2);color:var(--text);font-weight:600}
+.gmaps{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.gmaps b{color:#5f6368;font-weight:600}
+/* detalhe */
+.two{grid-template-columns:1.25fr 1fr}
+.bignum{display:flex;align-items:center;gap:18px}
+.ring{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;flex:none}
+.ring div{width:76px;height:76px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:28px;font-weight:700;font-variant-numeric:tabular-nums}
+.parts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.part{background:var(--s2);border-radius:var(--radius);padding:10px}
+.part small{display:block;font-size:11.5px;color:var(--muted2)}
+.part b{font-size:17px}
+.part b span{font-size:12px;color:var(--muted);font-weight:500}
+.checks{list-style:none;margin:0;padding:0}
+.checks li{display:flex;gap:8px;padding:6px 0;border-bottom:1px dashed var(--border);font-size:13.5px}
+.checks li:last-child{border:0}
+.ok{color:var(--green)} .no{color:var(--red)} .mid{color:var(--yellow)}
+.cmp td,.cmp th{padding:7px 8px;font-size:13px}
+.cmp tr.me td{background:#f3eef8;font-weight:600}
+.msg{background:#e7fbe0;border-radius:10px 10px 10px 2px;padding:10px 12px;font-size:13.5px;white-space:pre-line;border:1px solid #d3f1c8}
+.tl{border-left:2px solid var(--border);margin-left:6px;padding-left:14px}
+.tl div{position:relative;margin-bottom:10px;font-size:13px}
+.tl div:before{content:'';position:absolute;left:-20px;top:5px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid var(--purple)}
+.tl small{color:var(--muted);display:block}
+/* ia */
+.qs li{margin-bottom:6px}
+.mentions td{font-size:13px}
+.dots{display:inline-flex;gap:3px}
+.dots i{width:9px;height:9px;border-radius:50%;background:var(--s3);display:inline-block}
+.dots i.y{background:var(--purple)}
+/* envios */
+.goal{margin-bottom:14px}
+.goal .top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+.goal .bar{height:8px;background:var(--s3);border-radius:9px;overflow:hidden}
+.goal .bar i{display:block;height:100%;background:var(--grad)}
+/* raio-x público */
+.pub-wrap{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.phone{width:390px;border:10px solid #161616;border-radius:36px;overflow:hidden;background:#F6F7FB;box-shadow:0 20px 40px rgba(0,0,0,.15)}
+.phone .scroll{height:760px;overflow-y:auto}
+.rx-cap{background:linear-gradient(135deg,#643B8E,#8A4FBF);color:#fff;padding:26px 20px 22px}
+.rx-cap small{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#E9DDF5;font-weight:600}
+.rx-cap h2{margin:6px 0 2px;font-size:22px;line-height:1.2}
+.rx-cap p{margin:0;color:#EADCF7;font-size:13px}
+.rx-score{display:flex;align-items:center;gap:14px;margin-top:18px;background:rgba(255,255,255,.12);border-radius:12px;padding:12px}
+.rx-score b{font-size:40px;line-height:1;font-weight:700}
+.rx-score span{font-size:13px;color:#EADCF7}
+.rx-sec{background:#fff;margin:12px;border-radius:12px;padding:16px;border:1px solid #E2E5ED}
+.rx-sec h4{margin:0 0 8px;font-size:15px}
+.rx-sec p{margin:0 0 8px;color:#4D5768;font-size:13.5px}
+.rx-pos{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eef0f4;font-size:13.5px}
+.rx-pos:last-child{border:0}
+.rx-pos.me{font-weight:700;color:var(--purple)}
+.weak{display:flex;gap:10px;padding:8px 0;font-size:13.5px;color:#4D5768}
+.weak b{color:#111827;display:block}
+.weak .n{flex:none;width:22px;height:22px;border-radius:50%;background:#FFF7ED;color:var(--orange);display:grid;place-items:center;font-weight:700;font-size:12px}
+.rx-cta{display:block;text-align:center;background:var(--orange);color:#fff;font-weight:600;border-radius:10px;padding:12px;margin-top:6px}
+.rx-foot{padding:6px 16px 22px;font-size:11px;color:#697386;text-align:center}
+.rx-foot a{text-decoration:underline}
+.notes{flex:1;min-width:260px;max-width:420px}
+.notes li{margin-bottom:8px;color:var(--muted2)}
+.scr{display:none}.scr.on{display:block}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.two{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div class="proto-bar">
+  <b>Protótipo · Central de Comércio</b>
+  <button data-go="varredura" class="on">1. Varredura</button>
+  <button data-go="empresa">2. Empresa</button>
+  <button data-go="ia">3. Rodadas de IA</button>
+  <button data-go="envios">4. Envios e metas</button>
+  <button data-go="publico">5. Raio-x (o que a empresa recebe)</button>
+  <span class="fict">Nomes e números fictícios</span>
+</div>
+
+<div class="app">
+<aside class="side">
+  <div class="logo"><i></i>Nonna App</div>
+  <a class="nav-item"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</a>
+  <div class="nav-group-label">CRM</div>
+  <a class="nav-item"><svg class="ic" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Clientes</a>
+  <a class="nav-item active"><svg class="ic" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>Comercial</a>
+  <div class="nav-sub">
+    <a>Oportunidades</a>
+    <a>Contatos</a>
+    <a class="active" data-go="varredura">Central de Comércio<span class="new">novo</span></a>
+  </div>
+  <div class="nav-group-label">Performance</div>
+  <a class="nav-item"><svg class="ic" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Central de Performance</a>
+  <div class="nav-group-label">Operacional</div>
+  <a class="nav-item"><svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Tarefas</a>
+  <a class="nav-item"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Agenda</a>
+  <div class="nav-group-label">Inteligência IA</div>
+  <a class="nav-item"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3l1.9 5.8L20 10l-6.1 1.2L12 17l-1.9-5.8L4 10l6.1-1.2z"/></svg>Agentes</a>
+</aside>
+
+<main class="main">
+
+<!-- ═════════ 1. VARREDURA ═════════ -->
+<section class="scr on" id="varredura">
+  <div class="crumb">Comercial · Central de Comércio</div>
+  <div class="head">
+    <div><h1>Central de Comércio</h1><p class="sub">Mapeie empresas por cidade e segmento, veja a nota de presença digital e gere o raio-x de abordagem.</p></div>
+    <div style="display:flex;gap:8px"><button class="btn">Segmentos da Nonna</button><button class="btn">Cidades</button></div>
+  </div>
+  <div class="tabs"><a class="on">Empresas</a><a data-go="ia">Rodadas de IA</a><a data-go="envios">Envios e metas</a><a>Histórico de varreduras</a></div>
+
+  <div class="card" style="margin-bottom:14px">
+    <h3>Nova varredura</h3>
+    <div class="filters">
+      <div><label class="f">Cidade *</label><select class="inp"><option>Videira · SC</option><option>Caçador · SC</option><option>Joaçaba · SC</option></select></div>
+      <div><label class="f">Segmento</label><select class="inp"><option>Saúde · Odontologia</option><option>Beleza · Salões e estética</option><option>Automotivo</option><option>Alimentação</option></select><div class="hint">Busca pelos tipos do Google: dentist, dental_clinic</div></div>
+      <div><label class="f">Nicho (opcional)</label><input class="inp" placeholder="ex.: implante dentário, ortodontia"><div class="hint">Texto livre, pra recortes que o Google não separa</div></div>
+      <div><button class="btn pri" style="height:38px">Varrer</button></div>
+    </div>
+  </div>
+
+  <div class="grid kpis" style="margin-bottom:14px">
+    <div class="card kpi"><small>Mapeadas</small><b>64</b><span>Odontologia · Videira</span></div>
+    <div class="card kpi"><small>Com nota</small><b>41</b><span>coleta + site + IA</span></div>
+    <div class="card kpi"><small>Raio-x enviados</small><b>12</b><span>hoje 4 de 20</span></div>
+    <div class="card kpi"><small>Responderam</small><b>3</b><span>25% dos envios</span></div>
+    <div class="card kpi"><small>Custo no mês</small><b>R$ 38</b><span>de R$ 500 · Google + IA</span></div>
+  </div>
+
+  <div class="alert" style="margin-bottom:14px">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+    <div><b>A busca "dentista" voltou cheia (60 de 60).</b> Pode ter mais empresas. O sistema já rodou "clínica odontológica" e "ortodontia" e juntou os resultados (64 empresas, sem repetidas). Pra completar, use <a style="text-decoration:underline">dividir a cidade em áreas</a>.</div>
+  </div>
+
+  <div class="card" style="padding:0">
+    <div class="toolbar" style="padding:12px 14px 0">
+      <div class="seg"><a class="on">Todas</a><a>Sem nota</a><a>Raio-x pronto</a><a>Enviadas</a><a>Responderam</a></div>
+      <input class="inp" style="width:220px;padding:5px 10px" placeholder="Buscar empresa…">
+      <select class="inp" style="width:auto;padding:5px 10px"><option>Ordenar: menor nota primeiro</option><option>Maior nota</option><option>Mais avaliações</option></select>
+      <select class="inp" style="width:auto;padding:5px 10px"><option>Sinal: todos</option><option>Anuncia sem medir</option><option>Não anuncia, concorrente sim</option><option>Pixel pronto, sem anúncio</option><option>Anúncio a conferir</option></select>
+      <span style="margin-left:auto"></span>
+      <button class="btn sm">Coletar selecionadas (8)</button>
+      <button class="btn sm pri">Gerar raio-x</button>
+    </div>
+    <table style="margin-top:8px">
+      <thead><tr><th style="width:28px"><input type="checkbox"></th><th>Empresa</th><th>Nota Nonna</th><th>Google</th><th>Site</th><th>Nas IAs</th><th>Sinais de oportunidade</th><th>Situação</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px">
+      <span class="meta">Mostrando 8 de 64</span>
+      <span class="gmaps">Dados de empresas: <b>Google Maps</b></span>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 2. EMPRESA ═════════ -->
+<section class="scr" id="empresa">
+  <div class="crumb"><a data-go="varredura">Central de Comércio</a> · Odontologia · Videira</div>
+  <div class="head">
+    <div>
+      <h1>Odonto Sorriso Pleno</h1>
+      <p class="sub">Dentista · Centro, Videira · (49) 9 9xxx-xx12 · <span class="chip c-rx">Raio-x pronto</span></p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn">Atualizar dados</button>
+      <button class="btn" data-go="publico">Ver raio-x</button>
+      <button class="btn ora">Enviar pelo WhatsApp</button>
+    </div>
+  </div>
+
+  <div class="grid two">
+    <div class="grid">
+      <div class="card">
+        <div class="bignum">
+          <div class="ring" style="background:conic-gradient(var(--orange) 0 46%,var(--s3) 46% 100%)"><div>46</div></div>
+          <div>
+            <b style="font-size:16px">Nota Nonna 46 de 100</b>
+            <p class="sub" style="margin-top:4px">Está em <b>9º de 64</b> entre dentistas de Videira (de baixo pra cima: 55º). O 1º colocado tem 88.</p>
+          </div>
+        </div>
+        <div class="parts">
+          <div class="part"><small>Perfil no Google</small><b>18<span>/30</span></b></div>
+          <div class="part"><small>Reputação</small><b>14<span>/30</span></b></div>
+          <div class="part"><small>Site</small><b>8<span>/20</span></b></div>
+          <div class="part"><small>Nas IAs</small><b>6<span>/20</span></b></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>O que pesou na nota</h3>
+        <ul class="checks">
+          <li><span class="ok">✓</span>Perfil com telefone, endereço e categoria certa</li>
+          <li><span class="no">✗</span>Sem horário de funcionamento cadastrado</li>
+          <li><span class="mid">!</span>Só 6 fotos (os 3 melhores têm 40 ou mais)</li>
+          <li><span class="mid">!</span>Nota 4,3 com 27 avaliações. A média do segmento na cidade é 4,7 com 112.</li>
+          <li><span class="no">✗</span>Site lento no celular (PageSpeed 31)</li>
+          <li><span class="no">✗</span>Site sem botão de WhatsApp e sem Pixel/GTM</li>
+          <li><span class="ok">✓</span>Site com cadeado (https)</li>
+          <li><span class="mid">!</span>Apareceu em 1 de 15 respostas de IA. O 1º colocado, em 11.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Comparação com os 3 melhores</h3>
+        <table class="cmp">
+          <tr><th>Empresa</th><th>Nota</th><th>Google</th><th>IAs</th></tr>
+          <tr><td>Clínica Dental Vale</td><td>88</td><td>4,9 · 214</td><td>11/15</td></tr>
+          <tr><td>Instituto Odonto Integra</td><td>81</td><td>4,8 · 167</td><td>8/15</td></tr>
+          <tr><td>Dra. Exemplo Ortodontia</td><td>74</td><td>4,9 · 96</td><td>5/15</td></tr>
+          <tr class="me"><td>Odonto Sorriso Pleno</td><td>46</td><td>4,3 · 27</td><td>1/15</td></tr>
+        </table>
+        <div class="gmaps" style="margin-top:8px">Notas e avaliações: <b>Google Maps</b> · buscadas agora</div>
+      </div>
+
+      <div class="card">
+        <h3>Anúncios <span class="meta" style="font-weight:400">· não entra na nota, é sinal pra abordagem</span></h3>
+        <div class="adrow">
+          <div>Estrutura no site<span class="meta">Lido automaticamente no código do site e no GTM</span></div>
+          <div><span class="sig sig-neu">GTM ✓</span><span class="sig sig-neu">GA4 ✓</span><span class="sig sig-neu">Pixel Meta ✗</span><span class="sig sig-neu">Tag Google Ads ✗</span></div>
+        </div>
+        <div class="adrow">
+          <div>Anuncia na Meta?<span class="meta"><a style="text-decoration:underline;color:var(--purple)">Abrir Biblioteca de Anúncios ↗</a> já pesquisando o nome</span></div>
+          <div class="mark"><a class="on">Sim</a><a>Não</a><a>Não sei</a></div>
+        </div>
+        <div class="adrow">
+          <div>Anuncia no Google?<span class="meta"><a style="text-decoration:underline;color:var(--purple)">Abrir Central de Transparência ↗</a> já pesquisando o nome</span></div>
+          <div class="mark"><a>Sim</a><a class="on">Não</a><a>Não sei</a></div>
+        </div>
+        <p class="meta" style="margin:6px 0 0">Conferido por Evandro em 30/10, 09:05</p>
+        <div class="oppbox"><b>Anuncia sem medir</b>Roda anúncio na Meta, mas o site não tem Pixel. Ela está pagando sem saber quantos pacientes vêm do anúncio. Bom gancho pra tráfego.</div>
+      </div>
+
+      <div class="card">
+        <h3>Mensagem de abordagem (prévia)</h3>
+        <div class="msg">Oi! Aqui é a Nonna, agência de Videira. Montamos um raio-x de como a Odonto Sorriso Pleno aparece no Google e nas IAs, comparada com outros dentistas da cidade.
+
+A nota ficou 46 de 100. O ponto que mais pesou foi o horário, que não está cadastrado no Google. E vimos que vocês anunciam no Instagram, mas o site não tem como medir quantos pacientes vêm desses anúncios.
+
+Aqui o raio-x completo: nonna.app/rx/k7f2q9
+
+Se não quiser receber mais mensagens nossas, é só responder SAIR.</div>
+        <div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm">Editar mensagem</button><span class="meta" style="align-self:center">Número de prospecção · 4 de 20 envios hoje</span></div>
+      </div>
+
+      <div class="card">
+        <h3>Histórico</h3>
+        <div class="tl">
+          <div>Raio-x gerado<small>Hoje, 09:12 · Evandro</small></div>
+          <div>Rodada de IA "Odontologia · Videira" incluída<small>29/10, 18:40 · automático</small></div>
+          <div>Dados e site coletados<small>29/10, 18:31 · automático</small></div>
+          <div>Mapeada na varredura "Odontologia · Videira"<small>29/10, 18:20 · Evandro</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 3. RODADAS DE IA ═════════ -->
+<section class="scr" id="ia">
+  <div class="crumb"><a data-go="varredura">Central de Comércio</a> · Rodadas de IA</div>
+  <div class="head">
+    <div><h1>Rodadas de IA</h1><p class="sub">Perguntas que um cliente faria pra IA. Uma rodada por segmento e cidade vale pra todas as empresas daquele segmento.</p></div>
+    <button class="btn pri">Nova rodada</button>
+  </div>
+  <div class="tabs"><a data-go="varredura">Empresas</a><a class="on">Rodadas de IA</a><a data-go="envios">Envios e metas</a><a>Histórico de varreduras</a></div>
+
+  <div class="grid two">
+    <div class="card">
+      <h3>Odontologia · Videira <span class="chip c-resp" style="margin-left:6px">Concluída 29/10</span></h3>
+      <p class="meta" style="margin:0 0 10px">5 perguntas × 3 repetições = 15 respostas · Perplexity e ChatGPT com busca na web · custo R$ 1,90</p>
+      <ol class="qs" style="padding-left:18px;margin:0 0 4px">
+        <li>Qual o melhor dentista em Videira SC?</li>
+        <li>Onde fazer implante dentário em Videira?</li>
+        <li>Dentista bem avaliado no centro de Videira</li>
+        <li>Clínica odontológica que atende convênio em Videira</li>
+        <li>Ortodontista em Videira SC, indicação</li>
+      </ol>
+      <div class="alert info" style="margin-top:12px">A resposta da IA muda a cada vez que se pergunta. Por isso cada pergunta roda 3 vezes, e a nota usa a frequência, não uma resposta só.</div>
+    </div>
+    <div class="card">
+      <h3>Quem aparece nas respostas</h3>
+      <table class="mentions">
+        <tr><th>Empresa</th><th>Aparições</th><th></th></tr>
+        <tr><td>Clínica Dental Vale</td><td>11/15</td><td><span class="dots"><i class="y"></i><i class="y"></i><i class="y"></i><i class="y"></i><i class="y"></i></span></td></tr>
+        <tr><td>Instituto Odonto Integra</td><td>8/15</td><td><span class="dots"><i class="y"></i><i class="y"></i><i class="y"></i><i></i><i></i></span></td></tr>
+        <tr><td>Dra. Exemplo Ortodontia</td><td>5/15</td><td><span class="dots"><i class="y"></i><i class="y"></i><i></i><i></i><i></i></span></td></tr>
+        <tr><td>Odonto Sorriso Pleno</td><td>1/15</td><td><span class="dots"><i class="y"></i><i></i><i></i><i></i><i></i></span></td></tr>
+        <tr><td>Outras 60 empresas</td><td>0/15</td><td><span class="dots"><i></i><i></i><i></i><i></i><i></i></span></td></tr>
+      </table>
+      <p class="meta" style="margin:10px 0 0">2 nomes citados pela IA não bateram com nenhuma empresa mapeada. <a style="text-decoration:underline;color:var(--purple)">Revisar</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 4. ENVIOS E METAS ═════════ -->
+<section class="scr" id="envios">
+  <div class="crumb"><a data-go="varredura">Central de Comércio</a> · Envios e metas</div>
+  <div class="head">
+    <div><h1>Envios e metas</h1><p class="sub">Número de prospecção separado do atendimento. Limite de 20 envios por dia.</p></div>
+    <span class="chip c-resp" style="font-size:12.5px;padding:5px 10px">● Número de prospecção conectado</span>
+  </div>
+  <div class="tabs"><a data-go="varredura">Empresas</a><a data-go="ia">Rodadas de IA</a><a class="on">Envios e metas</a><a>Histórico de varreduras</a></div>
+
+  <div class="grid two">
+    <div class="grid">
+      <div class="card">
+        <h3>Fila de hoje <span class="meta" style="font-weight:400">· 4 de 20 enviados</span></h3>
+        <table>
+          <tr><th>Empresa</th><th>Nota</th><th>Situação</th><th></th></tr>
+          <tr><td class="name">Odonto Sorriso Pleno</td><td>46</td><td><span class="chip c-env">Enviado 09:15</span></td><td></td></tr>
+          <tr><td class="name">Consultório Dr. Exemplo</td><td>38</td><td><span class="chip c-resp">Respondeu</span></td><td><button class="btn sm">Ver oportunidade</button></td></tr>
+          <tr><td class="name">Sorrisos do Vale Odonto</td><td>52</td><td><span class="chip c-rx">Na fila</span></td><td><button class="btn sm ora">Enviar</button></td></tr>
+          <tr><td class="name">Clínica Bem Estar Oral</td><td>29</td><td><span class="chip c-rx">Na fila</span></td><td><button class="btn sm ora">Enviar</button></td></tr>
+          <tr><td class="name">Odontologia Exemplo Prime</td><td>41</td><td><span class="chip c-out">Pediu pra sair</span></td><td></td></tr>
+        </table>
+      </div>
+      <div class="alert info">Quando a empresa responde, ela vira <b>Contato</b> e <b>Oportunidade</b> em "Novo lead", com o raio-x anexado. Quem responde SAIR vai pra lista de bloqueio e nunca mais recebe mensagem.</div>
+    </div>
+    <div class="card">
+      <h3>Metas de 90 dias <span class="meta" style="font-weight:400">· 04/12/2026 a 04/03/2027</span></h3>
+      <div class="goal"><div class="top"><span>Raio-x enviados</span><b>12 / 100</b></div><div class="bar"><i style="width:12%"></i></div></div>
+      <div class="goal"><div class="top"><span>Taxa de resposta</span><b>25% / 20%</b></div><div class="bar"><i style="width:100%"></i></div></div>
+      <div class="goal"><div class="top"><span>Implantações fechadas</span><b>1 / 10</b></div><div class="bar"><i style="width:10%"></i></div></div>
+      <div class="goal"><div class="top"><span>Pagando mensalidade no 3º mês</span><b>0 / 7</b></div><div class="bar"><i style="width:0%"></i></div></div>
+      <h3 style="margin-top:18px">Custo do mês</h3>
+      <table>
+        <tr><td>Google (busca + dados)</td><td style="text-align:right">R$ 31,20</td></tr>
+        <tr><td>IAs (rodadas)</td><td style="text-align:right">R$ 6,80</td></tr>
+        <tr><td><b>Total</b></td><td style="text-align:right"><b>R$ 38,00</b> <span class="meta">de R$ 500</span></td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 5. RAIO-X PÚBLICO ═════════ -->
+<section class="scr" id="publico">
+  <div class="crumb"><a data-go="empresa">Odonto Sorriso Pleno</a> · Raio-x público</div>
+  <div class="head"><div><h1>Raio-x · o que a empresa recebe</h1><p class="sub">Página pública aberta pelo link da mensagem, pensada pro celular.</p></div></div>
+  <div class="pub-wrap">
+    <div class="phone"><div class="scroll">
+      <div class="rx-cap">
+        <small>Raio-x de presença digital</small>
+        <h2>Odonto Sorriso Pleno</h2>
+        <p>Como você aparece pra quem procura dentista em Videira</p>
+        <div class="rx-score"><b>46</b><span>de 100 pontos<br>Os dentistas mais bem colocados da cidade têm entre 74 e 88.</span></div>
+      </div>
+      <div class="rx-sec">
+        <h4>Onde você está</h4>
+        <div class="rx-pos"><span>1º colocado</span><span>88</span></div>
+        <div class="rx-pos"><span>2º colocado</span><span>81</span></div>
+        <div class="rx-pos"><span>3º colocado</span><span>74</span></div>
+        <div class="rx-pos me"><span>Odonto Sorriso Pleno</span><span>46</span></div>
+      </div>
+      <div class="rx-sec">
+        <h4>Os 3 pontos que mais pesaram</h4>
+        <div class="weak"><span class="n">1</span><div><b>Horário não cadastrado no Google</b>Quem procura "dentista aberto agora" não encontra você.</div></div>
+        <div class="weak"><span class="n">2</span><div><b>Site lento no celular</b>Ele demora pra abrir, e boa parte das pessoas desiste antes de ver o conteúdo.</div></div>
+        <div class="weak"><span class="n">3</span><div><b>Quase não aparece nas IAs</b>Perguntamos 15 vezes pra IAs como o ChatGPT qual dentista procurar em Videira. Você foi citado 1 vez.</div></div>
+      </div>
+      <div class="rx-sec">
+        <h4>Sua reputação no Google</h4>
+        <p>Nota 4,3 com 27 avaliações. Os mais bem colocados têm entre 96 e 214 avaliações.</p>
+        <div class="gmaps">Dados de avaliações: <b>Google Maps</b></div>
+      </div>
+      <div class="rx-sec">
+        <h4>Quer subir essa nota?</h4>
+        <p>A Nonna é uma agência de Videira. Os três pontos acima se resolvem em poucas semanas.</p>
+        <a class="rx-cta">Conversar no WhatsApp</a>
+      </div>
+      <div class="rx-foot">
+        Raio-x gerado em 30/10/2026 pela Nonna Agência Digital com dados públicos do Google Maps. Esta página usa conteúdo do Google Maps, sujeito aos <a>Termos adicionais do Google Maps</a> e à <a>Política de Privacidade do Google</a>.<br><br>
+        Não quer receber mais contatos? <a>Sair da lista</a>
+      </div>
+    </div></div>
+
+    <div class="card notes">
+      <h3>O que está por trás desta página</h3>
+      <ul style="padding-left:18px;margin:0">
+        <li>Nome, nota e avaliações são <b>buscados no Google no momento em que a página abre</b>. O App não guarda esses dados, como pedem os termos do Google.</li>
+        <li>Os nomes dos concorrentes <b>não aparecem</b>, só a posição e a nota. A comparação continua clara, e a página não expõe outras empresas.</li>
+        <li>Os pontos fracos saem de <b>regras fixas</b>, não de IA lendo avaliações do Google.</li>
+        <li>O link tem token sem hífen (por causa do problema do Pix no WhatsApp) e um limite de acessos, pra robôs não gerarem custo.</li>
+        <li>"Sair da lista" grava o telefone (embaralhado) na lista de bloqueio.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+const H = t => `<span class="sig sig-hot">${t}</span>`, O = t => `<span class="sig sig-opp">${t}</span>`, N = t => `<span class="sig sig-neu">${t}</span>`;
+const empresas = [
+  ['Clínica Bem Estar Oral','Dentista · São Cristóvão',29,'4,1 · 9','Sem site','0/15','c-rx','Raio-x pronto', O('Não anuncia, concorrente sim')],
+  ['Consultório Dr. Exemplo','Dentista · Centro',38,'4,4 · 15','Lento','0/15','c-resp','Respondeu', H('Anuncia sem medir')],
+  ['Odontologia Exemplo Prime','Clínica odontológica · Matriz',41,'4,6 · 33','Sem WhatsApp','0/15','c-out','Saiu da lista', O('Pixel pronto, sem anúncio')],
+  ['Odonto Sorriso Pleno','Dentista · Centro',46,'4,3 · 27','Lento','1/15','c-env','Enviado', H('Anuncia sem medir')],
+  ['Sorrisos do Vale Odonto','Dentista · Universitário',52,'4,7 · 48','OK','0/15','c-rx','Raio-x pronto', N('Anúncio a conferir')],
+  ['Dra. Exemplo Ortodontia','Ortodontista · Centro',74,'4,9 · 96','OK','5/15','c-col','Com nota', N('Anuncia e mede')],
+  ['Instituto Odonto Integra','Clínica odontológica · Centro',81,'4,8 · 167','OK','8/15','c-col','Com nota', N('Anuncia e mede')],
+  ['Clínica Odonto Nova (exemplo)','Dentista · Rio das Pedras',null,'—','—','—','c-map','Mapeada', ''],
+];
+const color = n => n==null ? 'var(--s3)' : n<40 ? 'var(--red)' : n<70 ? 'var(--orange)' : 'var(--green)';
+document.getElementById('rows').innerHTML = empresas.map(e => `
+  <tr class="row" data-go="empresa">
+    <td onclick="event.stopPropagation()"><input type="checkbox"></td>
+    <td><div class="name">${e[0]}</div><div class="meta">${e[1]}</div></td>
+    <td><div class="score"><div class="bar"><i style="width:${e[2]??0}%;background:${color(e[2])}"></i></div><b>${e[2]??'—'}</b></div></td>
+    <td>${e[3]}</td><td>${e[4]}</td><td>${e[5]}</td><td>${e[8]}</td>
+    <td><span class="chip ${e[6]}">${e[7]}</span></td>
+  </tr>`).join('');
+
+function go(id){
+  document.querySelectorAll('.scr').forEach(s => s.classList.toggle('on', s.id===id));
+  document.querySelectorAll('.proto-bar button').forEach(b => b.classList.toggle('on', b.dataset.go===id));
+  window.scrollTo(0,0);
+}
+document.addEventListener('click', e => { const t = e.target.closest('[data-go]'); if (t) go(t.dataset.go); });
+</script>
+</body>
+</html>
