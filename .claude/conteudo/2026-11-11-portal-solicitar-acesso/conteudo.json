@@ -1,0 +1,11 @@
+{
+    "novidades": [
+        {
+            "title": "Portal: botão para pedir acesso",
+            "summary": "Na tela de entrada do Portal do Cliente, quem ainda não tem acesso vê um aviso e um botão que abre o WhatsApp do atendimento (49 3090-2873) com a mensagem pronta pedindo o acesso.",
+            "kind": "melhoria",
+            "area": "Portal do Cliente"
+        }
+    ],
+    "ajuda": []
+}

@@ -64,4 +64,21 @@
             Entrar
         </button>
     </form>
+
+    @php
+        $acessoWhatsapp = 'https://wa.me/554930902873?text=' . rawurlencode('Olá! Gostaria de solicitar acesso ao Portal do Cliente da Nonna.');
+    @endphp
+
+    <div class="mt-8 pt-6 text-center" style="border-top: 1px solid var(--border)">
+        <p class="text-sm font-semibold mb-1" style="color: var(--text)">Ainda não tem acesso?</p>
+        <p class="text-xs mb-4" style="color: var(--muted)">
+            Fale com o nosso atendimento pelo (49) 3090-2873 e solicite o seu acesso ao portal.
+        </p>
+        <a href="{{ $acessoWhatsapp }}" target="_blank" rel="noopener"
+           class="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-bold transition-opacity hover:opacity-90"
+           style="color: var(--purple); border: 1.5px solid var(--purple); background: transparent">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+            Solicitar acesso pelo WhatsApp
+        </a>
+    </div>
 </x-portal-guest-layout>
