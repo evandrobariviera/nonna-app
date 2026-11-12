@@ -149,19 +149,22 @@
                     </label>
                 </form>
                 @foreach($macroplan->attachments as $attachment)
-                    <div class="flex items-center justify-between gap-2 px-2 py-1.5 text-xs" style="background:var(--s2)">
-                        <a href="{{ $attachment->url() }}" target="_blank" class="truncate hover:underline" style="color:var(--text)">
+                    {{-- Nome numa linha própria (a coluna é estreita; antes os botões espremiam o nome até sobrar "…") --}}
+                    <div class="px-2 py-1.5 text-xs mb-1" style="background:var(--s2)">
+                        <a href="{{ $attachment->url() }}" target="_blank" class="block truncate hover:underline" style="color:var(--text)" title="{{ $attachment->filename }}">
                             {{ $attachment->icon() }} {{ $attachment->filename }}
                         </a>
-                        @if($attachment->id === $macroplan->document_attachment_id)
-                            <span class="badge badge-purple flex-shrink-0" style="font-size:10px" title="É o que aparece na aba Documento">documento</span>
-                        @endif
-                        <a href="{{ $attachment->downloadUrl() }}" title="Baixar" class="btn btn-ghost btn-xs flex-shrink-0 ml-auto">↓</a>
-                        <form method="POST" action="{{ route('macroplans.attachments.destroy', [$macroplan, $attachment]) }}"
-                              @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-xs">✕</button>
-                        </form>
+                        <div class="flex items-center gap-1.5 mt-1">
+                            @if($attachment->id === $macroplan->document_attachment_id)
+                                <span class="badge badge-purple flex-shrink-0" style="font-size:10px" title="É o que aparece na aba Documento">documento</span>
+                            @endif
+                            <a href="{{ $attachment->downloadUrl() }}" title="Baixar" class="btn btn-ghost btn-xs flex-shrink-0 ml-auto">↓</a>
+                            <form method="POST" action="{{ route('macroplans.attachments.destroy', [$macroplan, $attachment]) }}"
+                                  @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-xs">✕</button>
+                            </form>
+                        </div>
                     </div>
                 @endforeach
             </div>
@@ -618,8 +621,69 @@
             @php
                 $activeProjects    = $macroplan->projects->reject(fn ($p) => in_array($p->status, ['concluido', 'cancelado'], true));
                 $discussedCount    = $activeProjects->filter(fn ($p) => $p->discussionMeetings->isNotEmpty())->count();
+
+                // Filtro/ordenação da lista (só no navegador — os dados já estão todos na página).
+                // pos = ordem do planejamento; pct null = sem tarefas (vai pro fim ao ordenar por progresso).
+                $projectRows = $macroplan->projects->values()->mapWithKeys(fn ($p, $i) => [$p->id => [
+                    'status' => $p->status,
+                    'start'  => $p->start_date?->format('Y-m-d'),
+                    'end'    => $p->end_date?->format('Y-m-d'),
+                    'pct'    => $p->tasks->where('status', '!=', 'cancelado')->isEmpty() ? null : $p->progressPercent(),
+                    'pos'    => $i,
+                ]]);
+                $projectStatusCounts = collect(\App\Models\Project::$statuses)
+                    ->map(fn ($meta, $key) => ['label' => $meta['label'], 'count' => $macroplan->projects->where('status', $key)->count()])
+                    ->filter(fn ($s) => $s['count'] > 0);
             @endphp
-            <div x-show="block === 'bloco3'" x-cloak x-data="{ editId: null, addOpen: false, discussOpen: {{ $errors->has('items') || $errors->has('scheduled_at') ? 'true' : 'false' }} }">
+            <div x-show="block === 'bloco3'" x-cloak x-data="{
+                editId: null, addOpen: false, discussOpen: {{ $errors->has('items') || $errors->has('scheduled_at') ? 'true' : 'false' }},
+                rows: @js($projectRows),
+                statusFilter: 'all',
+                sortBy: 'plan',
+                init() {
+                    try {
+                        const saved = JSON.parse(localStorage.getItem('macroplan.projectsView') || '{}');
+                        if (saved.statusFilter) this.statusFilter = saved.statusFilter;
+                        if (saved.sortBy) this.sortBy = saved.sortBy;
+                    } catch (e) {}
+                    if (Object.keys(this.rows).length < 2) { this.statusFilter = 'all'; this.sortBy = 'plan' }
+                    if (this.statusFilter !== 'all' && this.statusFilter !== 'open'
+                        && !Object.values(this.rows).some(r => r.status === this.statusFilter)) this.statusFilter = 'all';
+                    this.$watch('statusFilter', () => this.saveView());
+                    this.$watch('sortBy', () => this.saveView());
+                },
+                saveView() {
+                    try { localStorage.setItem('macroplan.projectsView', JSON.stringify({ statusFilter: this.statusFilter, sortBy: this.sortBy })) } catch (e) {}
+                },
+                visible(id) {
+                    const s = this.rows[id].status;
+                    if (this.statusFilter === 'all') return true;
+                    if (this.statusFilter === 'open') return s !== 'concluido' && s !== 'cancelado';
+                    return s === this.statusFilter;
+                },
+                get visibleCount() { return Object.keys(this.rows).filter(id => this.visible(id)).length },
+                get sortedIds() {
+                    const ids = Object.keys(this.rows);
+                    const r = this.rows;
+                    // Vazio (sem data / sem tarefas) sempre no fim; empate cai na ordem do planejamento.
+                    const cmp = (a, b, key, dir) => {
+                        const x = r[a][key], y = r[b][key];
+                        if (x === y) return r[a].pos - r[b].pos;
+                        if (x === null) return 1;
+                        if (y === null) return -1;
+                        return (x < y ? -1 : 1) * dir;
+                    };
+                    const by = {
+                        plan:      (a, b) => r[a].pos - r[b].pos,
+                        start:     (a, b) => cmp(a, b, 'start', 1),
+                        end:       (a, b) => cmp(a, b, 'end', 1),
+                        pct_asc:   (a, b) => cmp(a, b, 'pct', 1),
+                        pct_desc:  (a, b) => cmp(a, b, 'pct', -1),
+                    }[this.sortBy] || ((a, b) => r[a].pos - r[b].pos);
+                    return ids.sort(by);
+                },
+                orderOf(id) { return this.sortedIds.indexOf(id) },
+            }">
                 <div class="card">
                     <div class="px-5 py-4 flex items-center justify-between gap-3 flex-wrap" style="border-bottom:1px solid var(--border2)">
                         <div>
@@ -642,6 +706,38 @@
                             </button>
                         </div>
                     </div>
+
+                    {{-- Filtro por status + ordenação (no navegador; a escolha fica lembrada neste navegador) --}}
+                    @if($macroplan->projects->count() > 1)
+                        <div class="px-5 py-2.5 flex items-center gap-3 flex-wrap" style="border-bottom:1px solid var(--border2); background:var(--s2)">
+                            <label class="flex items-center gap-2 text-xs" style="color:var(--muted)">
+                                Status
+                                <select x-model="statusFilter" class="filter-select">
+                                    <option value="all">Todos ({{ $macroplan->projects->count() }})</option>
+                                    <option value="open">Em aberto ({{ $activeProjects->count() }})</option>
+                                    @foreach($projectStatusCounts as $key => $s)
+                                        <option value="{{ $key }}">{{ $s['label'] }} ({{ $s['count'] }})</option>
+                                    @endforeach
+                                </select>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs" style="color:var(--muted)">
+                                Ordenar por
+                                <select x-model="sortBy" class="filter-select">
+                                    <option value="plan">Ordem do planejamento</option>
+                                    <option value="start">Data de início (mais cedo primeiro)</option>
+                                    <option value="end">Prazo final (mais próximo primeiro)</option>
+                                    <option value="pct_asc">Progresso (menor primeiro)</option>
+                                    <option value="pct_desc">Progresso (maior primeiro)</option>
+                                </select>
+                            </label>
+                            <span class="text-xs ml-auto" style="color:var(--muted)"
+                                  x-show="statusFilter !== 'all' || sortBy !== 'plan'" x-cloak>
+                                <span x-text="visibleCount"></span> de {{ $macroplan->projects->count() }}
+                                · <button type="button" class="hover:underline" style="color:var(--purple)"
+                                          @click="statusFilter = 'all'; sortBy = 'plan'">limpar</button>
+                            </span>
+                        </div>
+                    @endif
 
                     {{-- Reunião de discussão: pauta (itens do planejamento) + equipe de cada item.
                          Um agendamento só; a equipe fica gravada no item. Ver ProjectDiscussionMeetingService. --}}
@@ -813,8 +909,10 @@
                             <p class="text-sm">Nenhum projeto criado ainda.</p>
                         </div>
                     @else
+                        <div class="flex flex-col">
                         @foreach($macroplan->projects as $project)
-                            <div style="border-bottom:1px solid var(--border2)" x-data="{}">
+                            <div style="border-bottom:1px solid var(--border2)" x-data="{}"
+                                 x-show="visible('{{ $project->id }}')" :style="{ order: orderOf('{{ $project->id }}') }">
 
                                 {{-- View do projeto --}}
                                 @php
@@ -980,6 +1078,10 @@
 
                             </div>
                         @endforeach
+                        </div>
+                        <div x-show="visibleCount === 0" x-cloak class="px-5 py-10 text-center" style="color:var(--muted)">
+                            <p class="text-sm">Nenhuma campanha ou projeto com esse status.</p>
+                        </div>
                     @endif
                 </div>
 

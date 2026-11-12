@@ -1,0 +1,24 @@
+{
+    "novidades": [
+        {
+            "title": "Filtrar e ordenar as campanhas e projetos do planejamento",
+            "summary": "Na aba Campanhas e Projetos do planejamento, escolha o status (ex.: só Em Execução) e a ordem: data de início, prazo final ou progresso das tarefas. A escolha fica guardada no seu navegador.",
+            "kind": "novidade",
+            "area": "Planejamentos"
+        },
+        {
+            "title": "Nome do anexo do planejamento aparece inteiro de novo",
+            "summary": "No card Anexos do planejamento, os botões passaram para a linha de baixo e o nome do arquivo voltou a aparecer, em vez de só \"…\".",
+            "kind": "correcao",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Planejamento, campanhas e reunião de discussão — como funciona",
+            "category": "Planejamentos",
+            "slug": "planejamento-campanhas-e-reuniao-de-discussao-como-funciona",
+            "body_file": "ajuda-planejamento-discussao.html"
+        }
+    ]
+}
