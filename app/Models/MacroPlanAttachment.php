@@ -35,6 +35,18 @@ class MacroPlanAttachment extends Model
         return Storage::disk($this->disk)->url($this->disk_path);
     }
 
+    // URL de download forçado (mesmo padrão de TaskAttachment::downloadUrl): o R2 devolve
+    // Content-Disposition: attachment, pro navegador baixar em vez de abrir numa aba.
+    public function downloadUrl(): string
+    {
+        if ($this->disk === 'r2') {
+            return Storage::disk('r2')->temporaryUrl($this->disk_path, now()->addHours(24), [
+                'ResponseContentDisposition' => 'attachment; filename="' . addslashes($this->filename) . '"',
+            ]);
+        }
+        return $this->url();
+    }
+
     public function sizeForHumans(): string
     {
         $bytes = $this->size;

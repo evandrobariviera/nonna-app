@@ -1,0 +1,11 @@
+{
+    "novidades": [
+        {
+            "title": "Botão de baixar nos anexos de planejamentos e campanhas",
+            "summary": "Nos anexos do planejamento e da campanha/projeto agora tem o botão ↓ ao lado de cada arquivo: ele baixa direto pro computador, em vez de só abrir numa aba.",
+            "kind": "melhoria",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": []
+}

@@ -156,6 +156,7 @@
                         @if($attachment->id === $macroplan->document_attachment_id)
                             <span class="badge badge-purple flex-shrink-0" style="font-size:10px" title="É o que aparece na aba Documento">documento</span>
                         @endif
+                        <a href="{{ $attachment->downloadUrl() }}" title="Baixar" class="btn btn-ghost btn-xs flex-shrink-0 ml-auto">↓</a>
                         <form method="POST" action="{{ route('macroplans.attachments.destroy', [$macroplan, $attachment]) }}"
                               @submit.prevent="if (await $store.confirmDialog.ask('Remover anexo?')) $el.submit()">
                             @csrf @method('DELETE')

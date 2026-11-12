@@ -42,14 +42,15 @@
             <p class="card-title mb-3">Anexos do projeto</p>
             <div class="flex flex-col gap-2">
                 @foreach($project->attachments as $a)
-                    <a href="{{ $a->url() }}" target="_blank"
-                       class="card card-body flex items-center gap-2 transition-colors"
-                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'"
-                       title="{{ $a->filename }}">
-                        <span style="font-size:16px">{{ $a->icon() }}</span>
-                        <span class="text-sm font-medium truncate" style="color:var(--text)">{{ $a->filename }}</span>
-                        <span class="text-xs flex-shrink-0 ml-auto" style="color:var(--muted)">{{ $a->sizeForHumans() }}</span>
-                    </a>
+                    <div class="card card-body flex items-center gap-2 transition-colors"
+                         onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
+                        <a href="{{ $a->url() }}" target="_blank" class="flex items-center gap-2 min-w-0 flex-1" title="{{ $a->filename }}">
+                            <span style="font-size:16px">{{ $a->icon() }}</span>
+                            <span class="text-sm font-medium truncate" style="color:var(--text)">{{ $a->filename }}</span>
+                            <span class="text-xs flex-shrink-0 ml-auto" style="color:var(--muted)">{{ $a->sizeForHumans() }}</span>
+                        </a>
+                        <a href="{{ $a->downloadUrl() }}" title="Baixar" class="btn btn-ghost btn-xs flex-shrink-0">↓</a>
+                    </div>
                 @endforeach
             </div>
         </div>
