@@ -19,7 +19,12 @@ class NotificationController extends Controller
         $base = fn () => InternalNotification::where('user_id', auth()->id())->inBell();
         $nonAction = [...NotificationPresenter::kindsOf('conversa'), ...NotificationPresenter::kindsOf('saber')];
 
-        $query = $base()->orderByDesc('generated_at');
+        // Padrão: só o que está ABERTO (Evandro, 12/11: lista com os resolvidos misturados
+        // confundia). O histórico (lido/resolvido/expirou) fica atrás de ?historico=1.
+        $historico = $request->boolean('historico');
+        $query = $base()->orderByDesc('generated_at')
+            ->when(! $historico, fn ($q) => $q->where('status', 'novo'))
+            ->when($historico, fn ($q) => $q->where('status', '!=', 'novo'));
         if ($bloco === 'acao') {
             $query->where(fn ($q) => $q->whereNull('kind')->orWhereNotIn('kind', $nonAction));
         } elseif ($bloco) {
@@ -36,7 +41,7 @@ class NotificationController extends Controller
         $days = NotificationPresenter::present($notifications->getCollection())
             ->groupBy(fn ($it) => $it->n->generated_at->toDateString());
 
-        return view('notifications.index', compact('notifications', 'days', 'bloco', 'openCounts'));
+        return view('notifications.index', compact('notifications', 'days', 'bloco', 'openCounts', 'historico'));
     }
 
     public function updateStatus(Request $request, InternalNotification $notification)

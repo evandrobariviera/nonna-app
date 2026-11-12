@@ -5,11 +5,13 @@
     <x-slot name="header">
         <div class="flex items-center justify-between w-full gap-3">
             <h1 class="page-title">Notificações</h1>
-            <form method="POST" action="{{ route('notifications.clear-seen') }}"
-                  @submit.prevent="if (await $store.confirmDialog.ask('Apagar todos os avisos que você já leu, resolveu ou que expiraram?')) $el.submit()">
-                @csrf
-                <button type="submit" class="btn btn-ghost btn-sm" title="Apaga os avisos lidos, resolvidos e expirados — os abertos ficam">Limpar os já vistos</button>
-            </form>
+            @if($historico)
+                <form method="POST" action="{{ route('notifications.clear-seen') }}"
+                      @submit.prevent="if (await $store.confirmDialog.ask('Apagar todo o histórico (avisos lidos, resolvidos e expirados)? Os abertos ficam.')) $el.submit()">
+                    @csrf
+                    <button type="submit" class="btn btn-ghost btn-sm" title="Apaga os avisos lidos, resolvidos e expirados — os abertos ficam">Limpar histórico</button>
+                </form>
+            @endif
         </div>
     </x-slot>
 
@@ -25,10 +27,22 @@
         $filters = ['' => 'Todos'] + \App\Support\NotificationPresenter::GROUPS;
         $filterColor = ['acao' => 'var(--orange)', 'conversa' => 'var(--purple)', 'saber' => 'var(--slate)'];
     @endphp
+    {{-- Abertos (padrão) × Histórico — misturar os dois confundia (12/11). --}}
+    <div class="inline-flex mb-3 p-1 rounded-full" style="background:var(--s2); border:1px solid var(--border)">
+        @foreach([false => 'Abertos', true => 'Histórico'] as $isHist => $label)
+            @php $on = (bool) $historico === (bool) $isHist; @endphp
+            <a href="{{ route('notifications.index', array_filter(['bloco' => $bloco, 'historico' => $isHist ? 1 : null])) }}"
+               class="px-4 py-1.5 text-sm font-semibold rounded-full"
+               style="{{ $on ? 'background:var(--s1); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,.08)' : 'color:var(--muted2)' }}">
+                {{ $label }}@if(! $isHist && array_sum($openCounts)) ({{ array_sum($openCounts) }})@endif
+            </a>
+        @endforeach
+    </div>
+
     <div class="flex items-center gap-2 flex-wrap mb-4">
         @foreach($filters as $key => $label)
-            @php $active = ($bloco ?? '') === $key; $count = $key ? $openCounts[$key] : array_sum($openCounts); @endphp
-            <a href="{{ route('notifications.index', $key ? ['bloco' => $key] : []) }}"
+            @php $active = ($bloco ?? '') === $key; $count = $historico ? 0 : ($key ? $openCounts[$key] : array_sum($openCounts)); @endphp
+            <a href="{{ route('notifications.index', array_filter(['bloco' => $key ?: null, 'historico' => $historico ? 1 : null])) }}"
                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full"
                style="{{ $active ? 'background:var(--purple); color:#fff' : 'background:var(--s1); border:1px solid var(--border); color:var(--text)' }}">
                 {{ $label }}
@@ -39,7 +53,7 @@
             </a>
         @endforeach
 
-        @if(in_array($bloco, ['conversa', 'saber'], true) && $openCounts[$bloco] > 0)
+        @if(! $historico && in_array($bloco, ['conversa', 'saber'], true) && $openCounts[$bloco] > 0)
             <form method="POST" action="{{ route('notifications.mark-seen') }}" class="ml-auto">
                 @csrf
                 <input type="hidden" name="group" value="{{ $bloco }}">
@@ -50,7 +64,15 @@
 
     @if($notifications->isEmpty())
         <div class="card px-6 py-10 text-center" style="color:var(--muted)">
-            <p class="text-sm">{{ $bloco ? 'Nada neste bloco.' : 'Nenhuma notificação ainda.' }}</p>
+            @if($historico)
+                <p class="text-sm">{{ $bloco ? 'Nada no histórico deste bloco.' : 'Histórico vazio.' }}</p>
+            @else
+                <p class="text-sm font-semibold flex items-center justify-center gap-1.5" style="color:var(--green)">
+                    <x-icon name="circle-check" size="16" /> Tudo em dia{{ $bloco ? ' neste bloco' : '' }}.
+                </p>
+                <p class="text-xs mt-1">Nada aberto esperando você.
+                    <a href="{{ route('notifications.index', array_filter(['bloco' => $bloco, 'historico' => 1])) }}" style="color:var(--purple)">Ver histórico</a></p>
+            @endif
         </div>
     @else
         <div class="flex flex-col gap-4">

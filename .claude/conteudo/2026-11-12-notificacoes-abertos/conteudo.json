@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Notificações abre só no que está aberto",
+            "summary": "A página Ver todas agora mostra só os avisos que ainda esperam você. O que já foi lido, resolvido ou expirou fica em Histórico, num botão ao lado.",
+            "kind": "melhoria",
+            "area": "Avisos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Avisos do sino — quem recebe o quê",
+            "category": "Primeiros passos",
+            "slug": "avisos-do-sino-quem-recebe-o-que",
+            "body_file": "ajuda-avisos-do-sino.html"
+        }
+    ]
+}
