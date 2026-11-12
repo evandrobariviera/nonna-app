@@ -63,54 +63,11 @@
                 </div>
                 <div class="bell-list">
                     @foreach($items as $it)
-                        @php $n = $it->n; $repeat = ($n->repeat_count ?? 1) > 1 ? ' · ' . $n->repeat_count . '×' : ''; @endphp
-
-                        @if($group === 'acao')
-                            <div class="bell-act ic-{{ $it->nature }}">
-                                <span class="ic-chip"><x-icon :name="$it->icon" size="16" /></span>
-                                <div class="bell-body">
-                                    <a href="{{ route('notifications.open', $n) }}" class="bell-title">{{ $n->title }}</a>
-                                    <span class="bell-meta">{{ collect([$it->natureLabel, $it->client, $it->when])->filter()->join(' · ') }}{{ $repeat }}</span>
-                                </div>
-                                <form method="POST" action="{{ route('notifications.update-status', $n) }}" class="flex-shrink-0">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="status" value="resolvido">
-                                    <button type="submit" class="btn btn-primary btn-xs" title="{{ $n->resolveHint() }}">{{ $n->resolveLabel() }}</button>
-                                </form>
-                            </div>
-
-                        @elseif($group === 'conversa')
-                            <a href="{{ route('notifications.open', $n) }}" class="bell-conv ic-{{ $it->nature }}">
-                                <span class="bell-face">
-                                    @if($it->actor)
-                                        <x-user-avatar :user="$it->actor" size="8" />
-                                    @else
-                                        <span class="ic-chip" style="border-radius:15px"><x-icon name="message-circle" size="15" /></span>
-                                    @endif
-                                    <span class="bell-face-tag"><x-icon :name="$it->icon" size="9" /></span>
-                                </span>
-                                <span class="bell-body">
-                                    <span style="font-size:13px; line-height:1.35">
-                                        @if($it->actorName)<b style="font-weight:600">{{ \Illuminate\Support\Str::before($it->actorName, ' ') }}</b> @endif{{ $it->headline }}
-                                    </span>
-                                    @if($n->body)
-                                        <span class="bell-snippet">“{{ $n->body }}”</span>
-                                    @endif
-                                    <span class="bell-meta">{{ collect([$it->natureLabel, $it->client, $it->when])->filter()->join(' · ') }}{{ $repeat ? ' · ' . $n->repeat_count . ' comentários' : '' }}</span>
-                                </span>
-                            </a>
-
-                        @else
-                            <a href="{{ route('notifications.open', $n) }}" class="bell-info ic-{{ $it->nature }}" title="{{ $n->body }}">
-                                <span class="ic-chip"><x-icon :name="$it->icon" size="12" /></span>
-                                <span class="bell-line" style="{{ $it->nature === 'reuniao' ? '' : 'color:var(--muted2)' }}">{{ $n->title }}</span>
-                                <span class="bell-time">{{ $it->when }}</span>
-                            </a>
-                        @endif
+                        @include('partials._notification-item', ['it' => $it])
                     @endforeach
 
                     @if($hidden > 0)
-                        <a href="{{ route('notifications.index') }}" class="text-xs px-2 py-1" style="color:var(--muted2)">+ {{ $hidden }} em Ver todas</a>
+                        <a href="{{ route('notifications.index', ['bloco' => $group]) }}" class="text-xs px-2 py-1" style="color:var(--muted2)">+ {{ $hidden }} em Ver todas</a>
                     @endif
                 </div>
             @endforeach

@@ -1,11 +1,14 @@
+{{-- Notificações — mesmo padrão do sino (Direção A, 12/11/2026): cada aviso no formato do seu
+     bloco (partials._notification-item, molde único do sino e desta página), cor do ícone =
+     do que se trata. Aqui fica o histórico inteiro: aberto em destaque, o resto apagado. --}}
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between w-full gap-3">
             <h1 class="page-title">Notificações</h1>
             <form method="POST" action="{{ route('notifications.clear-seen') }}"
-                  @submit.prevent="if (await $store.confirmDialog.ask('Apagar todos os avisos que você já leu ou resolveu?')) $el.submit()">
+                  @submit.prevent="if (await $store.confirmDialog.ask('Apagar todos os avisos que você já leu, resolveu ou que expiraram?')) $el.submit()">
                 @csrf
-                <button type="submit" class="btn btn-ghost btn-sm" title="Apaga os avisos lidos/resolvidos — os novos ficam">Limpar os já vistos</button>
+                <button type="submit" class="btn btn-ghost btn-sm" title="Apaga os avisos lidos, resolvidos e expirados — os abertos ficam">Limpar os já vistos</button>
             </form>
         </div>
     </x-slot>
@@ -17,70 +20,52 @@
         </div>
     @endif
 
+    {{-- Filtros por bloco, com quantos estão abertos em cada --}}
+    @php
+        $filters = ['' => 'Todos'] + \App\Support\NotificationPresenter::GROUPS;
+        $filterColor = ['acao' => 'var(--orange)', 'conversa' => 'var(--purple)', 'saber' => 'var(--slate)'];
+    @endphp
+    <div class="flex items-center gap-2 flex-wrap mb-4">
+        @foreach($filters as $key => $label)
+            @php $active = ($bloco ?? '') === $key; $count = $key ? $openCounts[$key] : array_sum($openCounts); @endphp
+            <a href="{{ route('notifications.index', $key ? ['bloco' => $key] : []) }}"
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full"
+               style="{{ $active ? 'background:var(--purple); color:#fff' : 'background:var(--s1); border:1px solid var(--border); color:var(--text)' }}">
+                {{ $label }}
+                @if($count)
+                    <span class="text-xs font-bold px-1.5 rounded-full"
+                          style="{{ $active ? 'background:rgba(255,255,255,.25); color:#fff' : 'background:' . ($key ? $filterColor[$key] : 'var(--muted2)') . '; color:#fff' }}">{{ $count }}</span>
+                @endif
+            </a>
+        @endforeach
+
+        @if(in_array($bloco, ['conversa', 'saber'], true) && $openCounts[$bloco] > 0)
+            <form method="POST" action="{{ route('notifications.mark-seen') }}" class="ml-auto">
+                @csrf
+                <input type="hidden" name="group" value="{{ $bloco }}">
+                <button type="submit" class="btn btn-ghost btn-sm">Marcar todos como vistos</button>
+            </form>
+        @endif
+    </div>
+
     @if($notifications->isEmpty())
         <div class="card px-6 py-10 text-center" style="color:var(--muted)">
-            <p class="text-sm">Nenhuma notificação ainda.</p>
+            <p class="text-sm">{{ $bloco ? 'Nada neste bloco.' : 'Nenhuma notificação ainda.' }}</p>
         </div>
     @else
-        <div class="flex flex-col gap-2">
-            @foreach($notifications as $n)
-                <div class="card px-5 py-4">
-                    <div class="flex items-start justify-between gap-4">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                <span class="badge badge-{{ $n->statusColor() }}">{{ $n->statusLabel() }}</span>
-                                <a href="{{ route('notifications.open', $n) }}" class="font-bold text-sm" style="color:var(--text)">{{ $n->title }}</a>
-                                @if(($n->repeat_count ?? 1) > 1)
-                                    <span class="text-xs font-mono px-1.5 rounded-full" style="background:rgba(100,59,142,.1); color:var(--purple)" title="{{ $n->repeat_count }} avisos sobre o mesmo item, juntados">{{ $n->repeat_count }}×</span>
-                                @endif
-                            </div>
-                            <p class="text-xs font-mono mb-1" style="color:var(--muted)">
-                                {{ $n->generated_at->format('d/m/Y H:i') }}
-                            </p>
-                            @if($n->body)
-                                <p class="text-sm mt-2" style="color:var(--muted2)">{{ $n->body }}</p>
-                            @endif
-                        </div>
-                        <div class="flex items-center gap-2 flex-shrink-0">
-                            @if(! $n->canDiscard())
-                                {{-- aviso de ATA: sem lido/não lido — só sai com "Li a ATA" --}}
-                            @elseif($n->status === 'novo')
-                                <form method="POST" action="{{ route('notifications.update-status', $n) }}">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="status" value="lido">
-                                    <button type="submit" class="btn btn-ghost btn-xs">
-                                        Marcar como lido
-                                    </button>
-                                </form>
-                            @else
-                                <form method="POST" action="{{ route('notifications.update-status', $n) }}">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="status" value="novo">
-                                    <button type="submit" class="btn btn-ghost btn-xs">
-                                        Marcar como não lido
-                                    </button>
-                                </form>
-                            @endif
-                            @if($n->status !== 'resolvido')
-                                <form method="POST" action="{{ route('notifications.update-status', $n) }}">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="status" value="resolvido">
-                                    <button type="submit" class="btn btn-success btn-xs" title="{{ $n->resolveHint() }}">
-                                        ✓ {{ $n->resolveLabel() }}
-                                    </button>
-                                </form>
-                            @endif
-                            @if($n->canDiscard())
-                                <form method="POST" action="{{ route('notifications.destroy', $n) }}">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-ghost btn-xs" title="Apagar este aviso" style="color:var(--red)">
-                                        Apagar
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
+        <div class="flex flex-col gap-4">
+            @foreach($days as $day => $items)
+                @php $d = \Carbon\Carbon::parse($day); @endphp
+                <section class="card px-3 py-3">
+                    <h2 class="px-2 pb-2 text-xs font-bold uppercase tracking-widest" style="color:var(--muted2)">
+                        {{ $d->isToday() ? 'Hoje' : ($d->isYesterday() ? 'Ontem' : $d->translatedFormat('l, d/m')) }}
+                    </h2>
+                    <div class="bell-list">
+                        @foreach($items as $it)
+                            @include('partials._notification-item', ['it' => $it, 'page' => true])
+                        @endforeach
                     </div>
-                </div>
+                </section>
             @endforeach
         </div>
 

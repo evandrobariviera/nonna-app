@@ -1258,6 +1258,15 @@ span.flatpickr-weekday { color: var(--muted); font-weight: 500; font-size: 12px;
     font-size: 12.5px; color: var(--muted2);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+/* Linha com o aviso (<a>) + controles da página Notificações ao lado. */
+.bell-row { display: flex; align-items: flex-start; gap: 6px; }
+.bell-row > .bell-conv, .bell-row > .bell-info { flex: 1; min-width: 0; }
+.bell-row > .bell-info + div { align-self: center; }
+.bell-snippet.is-wrap { white-space: normal; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+/* Já saiu do sino (lido/resolvido/expirou): sem laranja, apagado — o aberto salta aos olhos. */
+.bell-act.is-closed { background: var(--s1); border-color: var(--border); opacity: .7; }
+.bell-act.is-closed::before { background: transparent; }
+.bell-row.is-closed { opacity: .65; }
 .bell-line { flex: 1; min-width: 0; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bell-time { flex-shrink: 0; font-size: 12px; color: var(--muted2); }
 /* Rosto de quem falou + selinho da natureza (campanha rosa, planejamento índigo…) no canto. */

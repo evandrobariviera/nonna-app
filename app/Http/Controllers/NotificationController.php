@@ -3,17 +3,40 @@
 namespace App\Http\Controllers;
 
 use App\Models\InternalNotification;
+use App\Support\NotificationPresenter;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
-    public function index()
+    /**
+     * Página Notificações — mesmo padrão do sino (Pede você / Conversas / Para saber), com o
+     * histórico: filtro por bloco (?bloco=), agrupado por dia. Fila de setor (criativo pronto)
+     * fica de fora, como no sino: mora na fila Mídia Paga.
+     */
+    public function index(Request $request)
     {
-        $notifications = InternalNotification::where('user_id', auth()->id())
-            ->orderByDesc('generated_at')
-            ->paginate(30);
+        $bloco = in_array($request->query('bloco'), ['acao', 'conversa', 'saber'], true) ? $request->query('bloco') : null;
+        $base = fn () => InternalNotification::where('user_id', auth()->id())->inBell();
+        $nonAction = [...NotificationPresenter::kindsOf('conversa'), ...NotificationPresenter::kindsOf('saber')];
 
-        return view('notifications.index', compact('notifications'));
+        $query = $base()->orderByDesc('generated_at');
+        if ($bloco === 'acao') {
+            $query->where(fn ($q) => $q->whereNull('kind')->orWhereNotIn('kind', $nonAction));
+        } elseif ($bloco) {
+            $query->whereIn('kind', NotificationPresenter::kindsOf($bloco));
+        }
+        $notifications = $query->paginate(30)->withQueryString();
+
+        // Abertos por bloco (pros filtros) — um GROUP BY só.
+        $openCounts = ['acao' => 0, 'conversa' => 0, 'saber' => 0];
+        foreach ($base()->where('status', 'novo')->selectRaw('kind, count(*) as n')->groupBy('kind')->pluck('n', 'kind') as $kind => $n) {
+            $openCounts[NotificationPresenter::groupOfKind($kind)] += $n;
+        }
+
+        $days = NotificationPresenter::present($notifications->getCollection())
+            ->groupBy(fn ($it) => $it->n->generated_at->toDateString());
+
+        return view('notifications.index', compact('notifications', 'days', 'bloco', 'openCounts'));
     }
 
     public function updateStatus(Request $request, InternalNotification $notification)

@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Página Notificações no mesmo padrão do sino",
+            "summary": "Em Ver todas, os avisos aparecem com o mesmo desenho do sino, separados por dia, com filtros Pede você, Conversas e Para saber. O que está aberto fica em destaque; o resto aparece apagado.",
+            "kind": "melhoria",
+            "area": "Avisos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Avisos do sino — quem recebe o quê",
+            "category": "Primeiros passos",
+            "slug": "avisos-do-sino-quem-recebe-o-que",
+            "body_file": "ajuda-avisos-do-sino.html"
+        }
+    ]
+}
