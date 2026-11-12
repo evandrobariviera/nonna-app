@@ -270,26 +270,19 @@
          largura cheia, pra não passar batido igual um card discreto a mais. ── --}}
     @if($myNotifications->isNotEmpty())
         <div class="mb-6 flex flex-col gap-2">
-            @foreach($myNotifications as $notification)
-                {{-- Mesmo desenho do <x-item-card> (natureza "aviso" = laranja, barrinha = pede ação),
-                     mas <div>: tem formulários dentro. Botões descem pra linha de baixo no celular. --}}
+            @foreach(\App\Support\NotificationPresenter::present($myNotifications) as $it)
+                @php $notification = $it->n; @endphp
+                {{-- Mesmo desenho do "Pede você" do sino (Direção A): fundo/barrinha laranja = pede
+                     ação; cor do ícone = do que se trata. <div>: tem formulários dentro. --}}
                 <div class="item-card ic-aviso is-soon flex-wrap" style="padding:12px 16px; gap:10px 14px">
-                    <span class="ic-chip" style="width:36px; height:36px"><x-icon :name="$notification->kindIcon()" size="18" /></span>
-                    @if($notification->link)
-                        <a href="{{ route('notifications.open', $notification) }}" class="ic-body" style="min-width:200px">
-                            <span class="ic-title" style="font-size:14px">{{ $notification->title }}</span>
-                            @if($notification->body)
-                                <span class="ic-meta">{{ $notification->body }}</span>
-                            @endif
-                        </a>
-                    @else
-                        <div class="ic-body" style="min-width:200px">
-                            <span class="ic-title" style="font-size:14px">{{ $notification->title }}</span>
-                            @if($notification->body)
-                                <span class="ic-meta">{{ $notification->body }}</span>
-                            @endif
-                        </div>
-                    @endif
+                    <span class="ic-chip ic-{{ $it->nature }}" style="width:36px; height:36px"><x-icon :name="$it->icon" size="18" /></span>
+                    <a href="{{ route('notifications.open', $notification) }}" class="ic-body" style="min-width:200px">
+                        <span class="ic-title" style="font-size:14px">{{ $notification->title }}</span>
+                        @if($notification->body)
+                            <span class="ic-sub">{{ $notification->body }}</span>
+                        @endif
+                        <span class="ic-meta">{{ collect([$it->natureLabel, $it->client, $it->when])->filter()->join(' · ') }}@if(($notification->repeat_count ?? 1) > 1) · {{ $notification->repeat_count }}×@endif</span>
+                    </a>
                     {{-- No "Ver como" a pendência é da outra pessoa — resolver aqui sumiria com ela da tela dela. --}}
                     <div class="flex items-center gap-2 flex-shrink-0 ml-auto" @if($viewingAs) style="display:none" @endif>
                         @if($notification->canDiscard())

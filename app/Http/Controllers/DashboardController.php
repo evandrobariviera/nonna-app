@@ -99,8 +99,11 @@ class DashboardController extends Controller
             // Aviso de pendência fica só no sino: o card "Suas pendências" já mostra a mesma coisa.
             // "Pendência resolvida" também (só informa; fica no sino). Fila de setor (criativo
             // pronto) já tem a própria seção Mídia Paga.
+            // Direção A (12/11): aqui só o que PEDE você — conversa, lembrete e informativo
+            // ficam no sino (antes apareciam nos dois lugares).
             ->where(fn ($q) => $q->whereNull('kind')->orWhereNotIn('kind', [
-                Pendency::NOTIFICATION_KIND, InternalNotification::KIND_PENDENCY_RESOLVED, ...InternalNotification::QUEUE_KINDS,
+                Pendency::NOTIFICATION_KIND, ...InternalNotification::QUEUE_KINDS,
+                ...InternalNotification::CONVERSATION_KINDS, ...InternalNotification::INFO_KINDS, ...InternalNotification::AGENDA_KINDS,
             ]))
             ->orderBy('generated_at')
             ->get();

@@ -76,6 +76,8 @@ class NotificationController extends Controller
         $notifications = InternalNotification::where('user_id', auth()->id())
             ->where('status', 'novo')
             ->inBell()
+            // Informativo não interrompe ninguém: fica no "Para saber" do sino.
+            ->where(fn ($q) => $q->whereNull('kind')->orWhereNotIn('kind', InternalNotification::INFO_KINDS))
             ->where('generated_at', '>', $since)
             // Aviso juntado (repeat_count > 1) sobe no sino mas não toca popup/som de novo:
             // a pessoa já foi interrompida por esse item e ainda não abriu (atenção eficiente).
@@ -95,6 +97,20 @@ class NotificationController extends Controller
             ]),
             'server_time'   => now()->toISOString(),
         ]);
+    }
+
+    /** "Marcar como vistos" de um bloco do sino (Conversas ou Para saber) — o que pede ação não entra. */
+    public function markSeen(Request $request)
+    {
+        $kinds = \App\Support\NotificationPresenter::kindsOf((string) $request->input('group'));
+        abort_if($kinds === [], 422);
+
+        InternalNotification::where('user_id', auth()->id())
+            ->where('status', 'novo')
+            ->whereIn('kind', $kinds)
+            ->update(['status' => 'lido']);
+
+        return back();
     }
 
     /**

@@ -1207,6 +1207,68 @@ span.flatpickr-weekday { color: var(--muted); font-weight: 500; font-size: 12px;
 .item-card.ic-aviso        { --ic-kind: var(--orange); background: rgba(238, 121, 25, .05); border-color: rgba(238, 121, 25, .28); }
 .dark .item-card.ic-planejamento { --ic-kind: #818CF8; }
 
+/* ══ Sino — identidade visual dos avisos (Direção A, 12/11/2026; App\Support\NotificationPresenter)
+   Cor do ícone = do que se trata (mesmas naturezas do .item-card). Formato = o que fazer:
+   .bell-act (pede você: card laranja + um botão), .bell-conv (conversa: rosto + texto),
+   .bell-info (para saber: linha discreta). ══ */
+.bell-sec {
+    padding: 10px 16px 4px;
+    font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+}
+.bell-sec + .bell-list { padding: 0 10px 8px; }
+.bell-sec.is-acao     { color: #b3570a; }
+.bell-sec.is-conversa { color: var(--purple); border-top: 1px solid var(--border2); }
+.bell-sec.is-saber    { color: var(--muted2); border-top: 1px solid var(--border2); }
+.dark .bell-sec.is-acao { color: var(--orange); }
+.bell-list { display: flex; flex-direction: column; gap: 6px; }
+
+.bell-act {
+    --ic-kind: var(--purple);
+    position: relative;
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 10px 12px;
+    border: 1px solid rgba(238, 121, 25, .3); border-radius: 10px;
+    background: rgba(238, 121, 25, .05);
+}
+.bell-act::before {
+    content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px;
+    border-radius: 10px 0 0 10px; background: var(--orange);
+}
+.bell-conv, .bell-info {
+    --ic-kind: var(--purple);
+    display: flex; gap: 10px; color: var(--text); text-decoration: none; border-radius: 8px;
+}
+.bell-conv { align-items: flex-start; padding: 8px 6px; }
+.bell-info { align-items: center; padding: 6px; }
+.bell-conv:hover, .bell-info:hover { background: var(--s2); }
+/* .ic-chip.ic-* = só o quadradinho com a cor da natureza (card de avisos da Dashboard, que é laranja). */
+.bell-act.ic-tarefa, .bell-conv.ic-tarefa, .bell-info.ic-tarefa, .ic-chip.ic-tarefa                         { --ic-kind: var(--purple); }
+.bell-act.ic-reuniao, .bell-conv.ic-reuniao, .bell-info.ic-reuniao, .ic-chip.ic-reuniao                     { --ic-kind: var(--blue); }
+.bell-act.ic-pendencia, .bell-conv.ic-pendencia, .bell-info.ic-pendencia, .ic-chip.ic-pendencia             { --ic-kind: var(--cyan); }
+.bell-act.ic-planejamento, .bell-conv.ic-planejamento, .bell-info.ic-planejamento, .ic-chip.ic-planejamento { --ic-kind: #4F46E5; }
+.bell-act.ic-campanha, .bell-conv.ic-campanha, .bell-info.ic-campanha, .ic-chip.ic-campanha                 { --ic-kind: #DB2777; }
+.bell-act.ic-cliente, .bell-conv.ic-cliente, .bell-info.ic-cliente, .ic-chip.ic-cliente                     { --ic-kind: var(--slate); }
+.dark .bell-act.ic-planejamento, .dark .bell-conv.ic-planejamento, .dark .bell-info.ic-planejamento, .dark .ic-chip.ic-planejamento { --ic-kind: #818CF8; }
+
+.bell-info .ic-chip { width: 22px; height: 22px; border-radius: 6px; }
+.bell-body { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.bell-title { font-size: 13px; font-weight: 600; line-height: 1.35; color: var(--text); text-decoration: none; }
+.bell-meta { font-size: 12px; color: var(--muted2); }
+.bell-snippet {
+    font-size: 12.5px; color: var(--muted2);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bell-line { flex: 1; min-width: 0; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bell-time { flex-shrink: 0; font-size: 12px; color: var(--muted2); }
+/* Rosto de quem falou + selinho da natureza (campanha rosa, planejamento índigo…) no canto. */
+.bell-face { position: relative; flex-shrink: 0; }
+.bell-face-tag {
+    position: absolute; right: -4px; bottom: -4px;
+    width: 16px; height: 16px; border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--ic-kind); color: #fff; border: 2px solid var(--s1);
+}
+
 /* Selinhos Pauta / ATA da reunião (<x-meeting-checks>) */
 .mchk {
     display: inline-flex; align-items: center; gap: 3px;

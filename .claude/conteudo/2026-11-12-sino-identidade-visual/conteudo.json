@@ -1,0 +1,36 @@
+{
+    "novidades": [
+        {
+            "title": "Sino novo: Pede você, Conversas e Para saber",
+            "summary": "O sino agora separa o que pede você (card laranja com um botão), as conversas (com o rosto de quem falou) e o que é só para saber. A cor do ícone mostra do que se trata, igual aos cards da Dashboard.",
+            "kind": "novidade",
+            "area": "Avisos"
+        },
+        {
+            "title": "Número do sino conta só o que pede você",
+            "summary": "O número laranja mostra só o que depende de você. Conversa nova aparece como um pontinho roxo, e informativo não conta.",
+            "kind": "melhoria",
+            "area": "Avisos"
+        },
+        {
+            "title": "Marcar conversas e avisos como vistos de uma vez",
+            "summary": "Nos blocos Conversas e Para saber do sino tem o \"marcar como vistos\", que apaga a luz do bloco inteiro. O que pede você continua até ser resolvido.",
+            "kind": "novidade",
+            "area": "Avisos"
+        },
+        {
+            "title": "Dashboard mostra só o aviso que pede você",
+            "summary": "O card laranja de avisos da Dashboard ficou só com o que pede ação. Conversas e informativos ficam no sino, sem repetir nos dois lugares. Informativo também não abre mais o popup do navegador.",
+            "kind": "melhoria",
+            "area": "Avisos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Avisos do sino — quem recebe o quê",
+            "category": "Primeiros passos",
+            "slug": "avisos-do-sino-quem-recebe-o-que",
+            "body_file": "ajuda-avisos-do-sino.html"
+        }
+    ]
+}

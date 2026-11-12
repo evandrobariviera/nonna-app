@@ -28,6 +28,18 @@ class TidyNotifications extends Command
 
     public function handle(): int
     {
+        // "Pendência resolvida" gravada antes de 12/11 com o kind 'pendencia' — passa pro kind
+        // de informativo, senão cai em "Pede você" no sino. Idempotente (depois não acha mais nada).
+        if (! $this->option('dry')) {
+            $fixed = DB::connection('pgsql')->table('internal_notifications')
+                ->where('kind', 'pendencia')
+                ->where('title', 'like', 'Pendência resolvida:%')
+                ->update(['kind' => InternalNotification::KIND_PENDENCY_RESOLVED]);
+            if ($fixed) {
+                $this->line("  'Pendência resolvida' antiga passou a informativo: {$fixed}");
+            }
+        }
+
         $base = fn () => DB::connection('pgsql')->table('internal_notifications')->where('status', 'novo');
         $closedTask = ['concluido', 'cancelado'];
 
