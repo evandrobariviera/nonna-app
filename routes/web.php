@@ -434,7 +434,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('notifications.update-status');
     Route::get('/notificacoes/novas', [\App\Http\Controllers\NotificationController::class, 'poll'])
         ->name('notifications.poll');
-    Route::post('/notificacoes/limpar', [\App\Http\Controllers\NotificationController::class, 'clearSeen'])
+    Route::get('/notificacoes/{notification}/abrir', [\App\Http\Controllers\NotificationController::class, 'open'])
+        ->name('notifications.open');
+    Route::post('/notificacoes/limpar',[\App\Http\Controllers\NotificationController::class, 'clearSeen'])
         ->name('notifications.clear-seen');
     Route::delete('/notificacoes/{notification}', [\App\Http\Controllers\NotificationController::class, 'destroy'])
         ->name('notifications.destroy');

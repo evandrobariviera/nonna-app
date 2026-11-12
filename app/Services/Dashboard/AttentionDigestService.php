@@ -217,7 +217,11 @@ class AttentionDigestService
         // 7. Outras pendências (notificações novas que não são ATA)
         $others = InternalNotification::where('user_id', $userId)
             ->where('status', 'novo')
-            ->where(fn ($q) => $q->whereNull('kind')->orWhereNotIn('kind', [InternalNotification::KIND_ATA, Pendency::NOTIFICATION_KIND]))
+            // Fila de setor e informativo não são foco de ninguém (atenção com qualidade, 12/11).
+            ->where(fn ($q) => $q->whereNull('kind')->orWhereNotIn('kind', [
+                InternalNotification::KIND_ATA, Pendency::NOTIFICATION_KIND,
+                ...InternalNotification::QUEUE_KINDS, ...InternalNotification::INFO_KINDS,
+            ]))
             ->orderBy('generated_at')
             ->get();
         $otherItems = $others->take(self::LIST_LIMIT)->values()->map(fn ($n, $i) => [

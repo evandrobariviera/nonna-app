@@ -37,7 +37,47 @@ class InternalNotification extends Model
         'lido'       => ['label' => 'Lido',       'color' => 'blue'],
         'resolvido'  => ['label' => 'Resolvido',  'color' => 'green'],
         'descartado' => ['label' => 'Descartado', 'color' => 'muted'],
+        // Perdeu o sentido sozinho (reunião passou, tarefa fechou, informativo velho) — ver
+        // TidyNotifications. Ninguém precisou clicar; não conta como "resolvido".
+        'expirado'   => ['label' => 'Expirou',    'color' => 'muted'],
     ];
+
+    // ── Atenção com qualidade (2026-11-12) ────────────────────────────────────────────
+    // Levantamento: metade do sino era aviso velho e todo aviso pedia uma decisão (3 botões).
+
+    /** "Pendência resolvida" — só informa quem pediu; antes saía com o kind 'pendencia'. */
+    public const KIND_PENDENCY_RESOLVED = 'pendencia_resolvida';
+
+    /**
+     * Fila do setor, não aviso pessoal: cada cópia vai pra todo o papel e qualquer um fecha
+     * pra todos. Mora na própria fila (Mídia Paga, na Dashboard) e fica fora do sino, do
+     * popup, do card de avisos e do Seu foco.
+     */
+    public const QUEUE_KINDS = ['criativo_pronto_campanha'];
+
+    /** Conversa — some do sino quando a pessoa abre; expira em 14 dias ou com o item encerrado. */
+    public const CONVERSATION_KINDS = ['project_comment', 'macro_plan_comment'];
+
+    /** Só informação — some quando abre; expira sozinho em 3 dias. */
+    public const INFO_KINDS = [
+        self::KIND_PENDENCY_RESOLVED, 'oportunidade_ganha', 'oportunidade_perdida',
+        'portal_senha_definida', 'cadastro_atualizado',
+    ];
+
+    /** Lembrete de reunião — some quando abre; expira quando a reunião começa. */
+    public const AGENDA_KINDS = ['reuniao_lembrete'];
+
+    /** Abrir o aviso já conta como lido (não pede "Resolver"). Os outros pedem uma ação. */
+    public function isSeenOnOpen(): bool
+    {
+        return in_array($this->kind, [...self::CONVERSATION_KINDS, ...self::INFO_KINDS, ...self::AGENDA_KINDS], true);
+    }
+
+    /** O que aparece no sino/popup/card de avisos (filas de setor ficam de fora). */
+    public function scopeInBell($query)
+    {
+        return $query->where(fn ($q) => $q->whereNull('kind')->orWhereNotIn('kind', self::QUEUE_KINDS));
+    }
 
     // 'kind' é texto livre (preenchido na automação que gera a notificação — ver
     // AutomationJob::sendNotification) — mapa best-effort só pros valores conhecidos hoje;
@@ -54,6 +94,7 @@ class InternalNotification extends Model
         'meeting_transcribed'      => 'mic',
         'meeting_transcribe_failed' => 'mic',
         'pendencia'                => 'hourglass',
+        self::KIND_PENDENCY_RESOLVED => 'circle-check',
         'project_comment'          => 'message-circle',
         'macro_plan_comment'       => 'messages-square',
         'ajuste_cliente'           => 'rotate-ccw',

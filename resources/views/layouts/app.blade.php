@@ -303,19 +303,20 @@
                 {{-- Notificações --}}
                 @auth
                     @php
-                        $unreadNotifications = \App\Models\InternalNotification::where('user_id', auth()->id())
+                        $bellQuery = \App\Models\InternalNotification::where('user_id', auth()->id())
                             ->where('status', 'novo')
-                            ->orderByDesc('generated_at')
-                            ->limit(8)
-                            ->get();
+                            ->inBell();
+                        // Contador de verdade (antes era o tamanho da lista, que parava em 8).
+                        $unreadCount = (clone $bellQuery)->count();
+                        $unreadNotifications = $bellQuery->orderByDesc('generated_at')->limit(8)->get();
                     @endphp
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" class="topbar-btn relative" title="Notificações">
                             <x-icon name="bell" size="18" />
-                            @if($unreadNotifications->count() > 0)
+                            @if($unreadCount > 0)
                                 <span class="absolute top-0.5 right-0.5 flex items-center justify-center rounded-full text-white"
                                       style="background:var(--orange); font-size:9px; min-width:16px; height:16px; padding:0 4px; line-height:16px; border:2px solid var(--s1)">
-                                    {{ $unreadNotifications->count() }}
+                                    {{ $unreadCount > 99 ? '99+' : $unreadCount }}
                                 </span>
                             @endif
                         </button>
@@ -328,7 +329,7 @@
                             <div style="max-height:360px; overflow-y:auto">
                                 @forelse($unreadNotifications as $n)
                                     <div class="px-4 py-3 flex flex-col gap-1.5" style="border-bottom:1px solid var(--border2)">
-                                        <a href="{{ $n->link ?? '#' }}" class="text-sm font-semibold" style="color:var(--text)">{{ $n->title }}
+                                        <a href="{{ route('notifications.open', $n) }}" class="text-sm font-semibold" style="color:var(--text)">{{ $n->title }}
                                             @if(($n->repeat_count ?? 1) > 1)
                                                 {{-- Avisos iguais juntados num só (NotificationService) --}}
                                                 <span class="text-xs font-mono px-1.5 rounded-full" style="background:rgba(100,59,142,.1); color:var(--purple)" title="{{ $n->repeat_count }} avisos sobre o mesmo item">{{ $n->repeat_count }}×</span>
@@ -340,13 +341,16 @@
                                         {{-- Controle do próprio sino: ✓ resolver · lido · ✕ apagar
                                              (lido/não lido de volta fica em "Ver todas"). --}}
                                         <div class="flex items-center gap-2 mt-0.5">
-                                            <form method="POST" action="{{ route('notifications.update-status', $n) }}">
-                                                @csrf @method('PATCH')
-                                                <input type="hidden" name="status" value="resolvido">
-                                                <button type="submit" class="btn btn-success btn-xs" title="{{ $n->resolveHint() }}">
-                                                    ✓ {{ $n->resolveLabel() }}
-                                                </button>
-                                            </form>
+                                            {{-- Conversa/informativo/lembrete: abrir já é ler; sem "Resolver" (não há o que resolver). --}}
+                                            @unless($n->isSeenOnOpen())
+                                                <form method="POST" action="{{ route('notifications.update-status', $n) }}">
+                                                    @csrf @method('PATCH')
+                                                    <input type="hidden" name="status" value="resolvido">
+                                                    <button type="submit" class="btn btn-success btn-xs" title="{{ $n->resolveHint() }}">
+                                                        ✓ {{ $n->resolveLabel() }}
+                                                    </button>
+                                                </form>
+                                            @endunless
                                             @if($n->canDiscard())
                                                 <form method="POST" action="{{ route('notifications.update-status', $n) }}">
                                                     @csrf @method('PATCH')

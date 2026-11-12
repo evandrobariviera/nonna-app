@@ -1,0 +1,36 @@
+{
+    "novidades": [
+        {
+            "title": "Sino mais limpo: aviso velho some sozinho",
+            "summary": "Lembrete de reunião some quando a reunião começa, informativo em 3 dias e comentário em 14 dias. O que sumiu continua em Ver todas, marcado como Expirou.",
+            "kind": "melhoria",
+            "area": "Avisos"
+        },
+        {
+            "title": "Clicou no aviso, ele conta como lido",
+            "summary": "Comentário, lembrete e aviso que só informa saem do sino quando você abre, sem precisar apertar botão. O que pede ação (pendência, ajuste do cliente, Li a ATA) continua aceso até ser resolvido.",
+            "kind": "melhoria",
+            "area": "Avisos"
+        },
+        {
+            "title": "Criativo pronto fica só na fila do Tráfego",
+            "summary": "O aviso de criativo pronto para campanha não toca mais no sino de todo o Tráfego: fica na fila Mídia Paga da Dashboard, que é onde se trabalha.",
+            "kind": "melhoria",
+            "area": "Avisos"
+        },
+        {
+            "title": "Número do sino mostra o total de verdade",
+            "summary": "O contador parava em 8 mesmo com mais avisos acesos. Agora mostra o total (até 99+).",
+            "kind": "correcao",
+            "area": "Avisos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Avisos do sino — quem recebe o quê",
+            "category": "Primeiros passos",
+            "slug": "avisos-do-sino-quem-recebe-o-que",
+            "body_file": "ajuda-avisos-do-sino.html"
+        }
+    ]
+}

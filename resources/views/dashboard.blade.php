@@ -276,7 +276,7 @@
                 <div class="item-card ic-aviso is-soon flex-wrap" style="padding:12px 16px; gap:10px 14px">
                     <span class="ic-chip" style="width:36px; height:36px"><x-icon :name="$notification->kindIcon()" size="18" /></span>
                     @if($notification->link)
-                        <a href="{{ $notification->link }}" class="ic-body" style="min-width:200px">
+                        <a href="{{ route('notifications.open', $notification) }}" class="ic-body" style="min-width:200px">
                             <span class="ic-title" style="font-size:14px">{{ $notification->title }}</span>
                             @if($notification->body)
                                 <span class="ic-meta">{{ $notification->body }}</span>
@@ -303,11 +303,13 @@
                                 <button type="submit" class="btn btn-ghost btn-xs" title="Apagar este aviso">Apagar</button>
                             </form>
                         @endif
-                        <form method="POST" action="{{ route('notifications.update-status', $notification) }}">
-                            @csrf @method('PATCH')
-                            <input type="hidden" name="status" value="resolvido">
-                            <button type="submit" class="btn btn-primary btn-xs">✓ {{ $notification->resolveLabel() }}</button>
-                        </form>
+                        @unless($notification->isSeenOnOpen())
+                            <form method="POST" action="{{ route('notifications.update-status', $notification) }}">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="status" value="resolvido">
+                                <button type="submit" class="btn btn-primary btn-xs">✓ {{ $notification->resolveLabel() }}</button>
+                            </form>
+                        @endunless
                     </div>
                 </div>
             @endforeach

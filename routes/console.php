@@ -23,3 +23,6 @@ Schedule::command('attention:generate-digests')->weekdays()->at('07:30')->withou
 Schedule::command('attention:generate-digests')->weekdays()->at('12:00')->withoutOverlapping();
 // Central de Leads: IA avalia leads novos e conversas que andaram, pela régua de cada cliente.
 Schedule::command('leads:qualify')->hourly()->withoutOverlapping();
+
+// Faxina do sino: expira aviso que perdeu o sentido (reunião passou, tarefa fechou, informativo velho).
+Schedule::command('notifications:tidy')->hourly()->withoutOverlapping();

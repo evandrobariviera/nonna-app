@@ -137,9 +137,10 @@ class PendencyService
             ->map(fn ($id) => (int) $id)->reject(fn ($id) => $id === $userId)->unique())->get();
         if ($notify->isNotEmpty()) {
             $by = User::find($userId)?->name ?? 'Alguém';
+            // Kind próprio (2026-11-12): é só informação — some ao abrir e expira em 3 dias.
             $this->notify(
                 $notify,
-                Pendency::NOTIFICATION_KIND,
+                InternalNotification::KIND_PENDENCY_RESOLVED,
                 'Pendência resolvida: ' . $pendency->title,
                 $by . ' marcou como resolvida' . ($note ? ' — ' . $note : '.'),
                 $this->linkFor($pendency),

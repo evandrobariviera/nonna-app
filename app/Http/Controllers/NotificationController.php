@@ -56,7 +56,7 @@ class NotificationController extends Controller
     public function clearSeen()
     {
         $n = InternalNotification::where('user_id', auth()->id())
-            ->whereIn('status', ['lido', 'resolvido', 'descartado'])
+            ->whereIn('status', ['lido', 'resolvido', 'descartado', 'expirado'])
             ->where(fn ($q) => $q->whereNull('kind')->orWhere('kind', '!=', InternalNotification::KIND_ATA))
             ->delete();
 
@@ -75,6 +75,7 @@ class NotificationController extends Controller
 
         $notifications = InternalNotification::where('user_id', auth()->id())
             ->where('status', 'novo')
+            ->inBell()
             ->where('generated_at', '>', $since)
             // Aviso juntado (repeat_count > 1) sobe no sino mas não toca popup/som de novo:
             // a pessoa já foi interrompida por esse item e ainda não abriu (atenção eficiente).
@@ -84,8 +85,32 @@ class NotificationController extends Controller
             ->get(['id', 'title', 'body', 'link', 'generated_at']);
 
         return response()->json([
-            'notifications' => $notifications,
+            // Clique no popup passa por "abrir" (marca lido quando é conversa/informativo).
+            'notifications' => $notifications->map(fn ($n) => [
+                'id'           => $n->id,
+                'title'        => $n->title,
+                'body'         => $n->body,
+                'link'         => $n->link ? route('notifications.open', $n) : null,
+                'generated_at' => $n->generated_at,
+            ]),
             'server_time'   => now()->toISOString(),
         ]);
+    }
+
+    /**
+     * Abrir um aviso: leva pro link e, se é conversa/informativo/lembrete, já conta como lido
+     * — sem precisar voltar no sino pra apertar botão (atenção com qualidade, 2026-11-12).
+     * Aviso que pede ação (pendência, ajuste, Li a ATA) continua aceso até ser resolvido.
+     * Aviso de outra pessoa (Dashboard em "Ver como") só redireciona, não mexe em nada.
+     */
+    public function open(InternalNotification $notification)
+    {
+        if ($notification->user_id === auth()->id()
+            && $notification->status === 'novo'
+            && $notification->isSeenOnOpen()) {
+            $notification->update(['status' => 'lido']);
+        }
+
+        return redirect($notification->link ?: route('notifications.index'));
     }
 }
