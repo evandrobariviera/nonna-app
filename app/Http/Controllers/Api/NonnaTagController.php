@@ -7,7 +7,7 @@ use App\Models\ClientAdAccount;
 use App\Models\ClientLeadOpportunity;
 use App\Models\ClientTracking;
 use App\Services\AdSync\GoogleAdsApi;
-use App\Services\Leads\LeadCaptureService;
+use App\Services\Tracking\SiteLeadIntake;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
@@ -21,7 +21,7 @@ use Illuminate\Support\Str;
  */
 class NonnaTagController extends Controller
 {
-    public const VERSION = '1.0.0';
+    public const VERSION = '1.1.0';
 
     public function script(string $siteKey): Response
     {
@@ -31,9 +31,7 @@ class NonnaTagController extends Controller
         }
 
         // "A tag está no site?": anota onde e quando foi vista (no máximo a cada 10 min).
-        if (Cache::add("nonna_tag_seen_lock:{$tracking->id}", 1, 600)) {
-            Cache::put("nonna_tag_seen:{$tracking->id}", ['at' => now()->toIso8601String(), 'host' => self::host((string) request()->headers->get('Referer'))], now()->addDays(30));
-        }
+        SiteLeadIntake::markSeen($tracking, 'tag', ['host' => self::host((string) request()->headers->get('Referer'))]);
 
         $config = [
             'version'  => self::VERSION,
@@ -58,7 +56,7 @@ class NonnaTagController extends Controller
         ]);
     }
 
-    public function lead(Request $request, string $siteKey, LeadCaptureService $capture): Response
+    public function lead(Request $request, string $siteKey, SiteLeadIntake $intake): Response
     {
         $tracking = ClientTracking::withoutGlobalScopes()->with('client')->where('site_key', $siteKey)->first();
         $body = json_decode($request->getContent(), true);
@@ -66,52 +64,13 @@ class NonnaTagController extends Controller
             return response()->noContent();
         }
 
-        $email = filter_var(trim((string) ($body['email'] ?? '')), FILTER_VALIDATE_EMAIL) ?: null;
-        $phone = preg_replace('/[^\d+]/', '', (string) ($body['phone'] ?? '')) ?: null;
-        $eventId = Str::limit(preg_replace('/[^A-Za-z0-9_\-]/', '', (string) ($body['event_id'] ?? '')), 120, '') ?: null;
-        if (!$email && !$phone) {
-            return response()->noContent();
-        }
-        // mesmo lead mandado 2x (clique duplo, reenvio do navegador)
-        if ($eventId && ClientLeadOpportunity::where('event_id', $eventId)->exists()) {
-            return response()->noContent();
-        }
-
-        $attr = is_array($body['attribution'] ?? null) ? $body['attribution'] : [];
-        $last = array_filter(is_array($attr['last'] ?? null) ? $attr['last'] : []);
-        $first = array_filter(is_array($attr['first'] ?? null) ? $attr['first'] : []);
-        $touch = $last ?: $first;
-        $text = fn ($v, $n = 190) => is_scalar($v) && trim((string) $v) !== '' ? Str::limit(trim(strip_tags((string) $v)), $n, '') : null;
-
-        $capture->captureForClient($tracking->client, 'site', [
-            'name'             => $text($body['name'] ?? null, 120),
-            'email'            => $email,
-            'phone'            => $phone,
-            'city'             => $text($body['city'] ?? null, 80),
-            'state'            => $text($body['state'] ?? null, 40),
-            'form_name'        => $text($body['form_name'] ?? null, 120),
-            'event_id'         => $eventId,
-            'utm_source'       => $text($touch['utm_source'] ?? null),
-            'utm_medium'       => $text($touch['utm_medium'] ?? null),
-            'utm_campaign'     => $text($touch['utm_campaign'] ?? null),
-            'utm_content'      => $text($touch['utm_content'] ?? null),
-            'utm_term'         => $text($touch['utm_term'] ?? null),
-            'gclid'            => $text($touch['gclid'] ?? null),
-            'fbclid'           => $text($touch['fbclid'] ?? null),
-            'landing_page_url' => $text($touch['landing_page'] ?? ($body['page_url'] ?? null), 500),
-            'raw_payload'      => [
-                'plugin'      => 'nonna-tag/' . self::VERSION,
-                'site'        => $this->origin($request),
-                'page_url'    => $text($body['page_url'] ?? null, 500),
-                'page_title'  => $text($body['page_title'] ?? null, 200),
-                'fields'      => collect(is_array($body['fields'] ?? null) ? $body['fields'] : [])->take(40)->map(fn ($v) => $text($v, 300))->filter()->all(),
-                'fbp'         => $text($body['fbp'] ?? null, 120),
-                'fbc'         => $text($body['fbc'] ?? null, 300),
-                'consent'     => (bool) ($body['consent'] ?? false),
-                'first_touch' => array_keys($first),
-                'user_agent'  => Str::limit((string) $request->userAgent(), 400, ''),
-                'ip'          => $request->ip(),
-            ],
+        // Sempre 204, aceito ou não: não dá pista a quem tenta abusar.
+        $intake->receive($tracking, $body, [
+            'via'        => 'tag',
+            'platform'   => 'nonna-tag/' . self::VERSION,
+            'site'       => $this->origin($request),
+            'ip'         => $request->ip(),
+            'user_agent' => $request->userAgent(),
         ]);
 
         return response()->noContent();
@@ -152,7 +111,7 @@ class NonnaTagController extends Controller
     /** @return ?array{at: string, host: string} última vez que a tag foi carregada num site */
     public static function lastSeen(ClientTracking $t): ?array
     {
-        return Cache::get("nonna_tag_seen:{$t->id}");
+        return SiteLeadIntake::lastSeen($t, 'tag') ?? Cache::get("nonna_tag_seen:{$t->id}");
     }
 
     private static function host(string $url): string

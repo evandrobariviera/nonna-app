@@ -119,6 +119,7 @@ Ver [.claude/docs/architecture.md](.claude/docs/architecture.md) para schema com
 - [.claude/docs/database-schema.md](.claude/docs/database-schema.md) — schema PostgreSQL completo dos 4 ecossistemas ClickUp/IA/Tráfego/Gamificação
 - [.claude/docs/business-context.md](.claude/docs/business-context.md) — glossário, equipe, regras de negócio, lei das cores, fluxos operacionais
 - [.claude/docs/campaign-sync-api.md](.claude/docs/campaign-sync-api.md) — contrato da API que o n8n usa para sincronizar campanhas/métricas de anúncios (Meta/Google Ads) com o App
+- [.claude/docs/site-connection-api.md](.claude/docs/site-connection-api.md) — contrato de conexão de site (multiplataforma): Nonna Tag no navegador + entrega de leads pelo servidor assinada com o código do site (plugin Nonna do WordPress, Nonna CMS, qualquer sistema), sem n8n
 - [.claude/docs/lead-capture-api.md](.claude/docs/lead-capture-api.md) — contrato da API que o n8n usa pra registrar leads capturados (Site, Facebook/Instagram Lead Ads, WhatsApp) na Central de Leads
 - [.claude/docs/clickup-import-api.md](.claude/docs/clickup-import-api.md) — contrato da API que o n8n usa para importar dados do ClickUp (tarefas, projetos, macroplanejamentos) para o App
 - [.claude/docs/approval-webhook-api.md](.claude/docs/approval-webhook-api.md) — contrato do webhook `approval_requested` que o App dispara pro n8n quando uma tarefa é enviada para aprovação do cliente (WhatsApp/e-mail)

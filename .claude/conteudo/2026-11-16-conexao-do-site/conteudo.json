@@ -1,0 +1,42 @@
+{
+    "novidades": [
+        {
+            "title": "Plugin Nonna: um plugin só no WordPress",
+            "summary": "O Nonna Leads e o Nonna WhatsApp viraram um plugin só, o Nonna 2.0. Ele capta os formulários e o botão de WhatsApp, guarda a origem do anúncio e carrega a Nonna Tag. É só instalar por cima: a configuração dos antigos vem junto.",
+            "kind": "novidade",
+            "area": "Performance"
+        },
+        {
+            "title": "Conexão do site: leads direto para a Central, sem n8n",
+            "summary": "Na aba Rastreamento, cada cliente tem um código de conexão. Colado no site (WordPress ou Nonna CMS), os leads chegam direto na Central de Leads, e a aba mostra quando o site está conectado. Se o código vazar, é só gerar um novo.",
+            "kind": "melhoria",
+            "area": "Performance"
+        },
+        {
+            "title": "Botão de WhatsApp do site não para mais com o cache",
+            "summary": "Em site com cache (LiteSpeed), o botão de WhatsApp podia parar de registrar o lead depois de algumas horas. O plugin Nonna 2.0 corrige isso.",
+            "kind": "correcao",
+            "area": "Performance"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Conexão do site — leads e rastreamento em qualquer site (plugin Nonna e Nonna CMS)",
+            "category": "Performance",
+            "slug": "conexao-do-site",
+            "body_file": "ajuda-conexao-do-site.html"
+        },
+        {
+            "title": "Manual do rastreamento — configurar um cliente do zero",
+            "category": "Performance",
+            "slug": "manual-do-rastreamento",
+            "body_file": "ajuda-manual-rastreamento.html"
+        },
+        {
+            "title": "Rastreamento e Nonna Tag — para onde vão as conversões de cada cliente",
+            "category": "Performance",
+            "slug": "rastreamento-conversoes",
+            "body_file": "ajuda-rastreamento.html"
+        }
+    ]
+}

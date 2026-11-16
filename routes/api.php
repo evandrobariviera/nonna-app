@@ -37,6 +37,14 @@ Route::get('/t/{siteKey}', [\App\Http\Controllers\Api\NonnaTagController::class,
 Route::post('/t/{siteKey}/lead', [\App\Http\Controllers\Api\NonnaTagController::class, 'lead'])
     ->where('siteKey', '[a-z0-9]{24}')->middleware('throttle:20,1');
 
+// ── Conexão do site (servidor → App): plugin do WordPress, Nonna CMS, qualquer
+// plataforma. Assinada com a senha do site (HMAC), sem token da organização.
+// Contrato: .claude/docs/site-connection-api.md
+Route::prefix('site/v1')->middleware(['throttle:120,1', \App\Http\Middleware\VerifySiteSignature::class])->group(function () {
+    Route::get('/ping', [\App\Http\Controllers\Api\SiteConnectionController::class, 'ping']);
+    Route::post('/leads', [\App\Http\Controllers\Api\SiteConnectionController::class, 'lead']);
+});
+
 Route::middleware(['auth:sanctum', SetApiTenant::class])->group(function () {
 
     // ── Contas de anúncios ──

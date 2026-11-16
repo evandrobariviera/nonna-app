@@ -5,13 +5,16 @@
  *
  * Faz:
  *  1. guarda a origem da visita (UTM, gclid, fbclid, site de onde veio) no
- *     cookie `nonna_attr` — o MESMO do plugin Nonna Leads; se o plugin está
- *     no site, só lê (o plugin grava pelo servidor, que dura 12 meses);
+ *     cookie `nonna_attr` — o MESMO do plugin Nonna e do Nonna CMS; se o
+ *     servidor do site cuida disso (window.NONNA_SITE), só lê (cookie gravado
+ *     pelo servidor dura 12 meses, inclusive no Safari);
  *  2. carrega Pixel da Meta, GA4, tag do Google Ads e Clarity;
  *  3. lead: quando o plugin capta um formulário (evento `nonna_lead_captured`
  *     no dataLayer), dispara o Lead no Pixel/GA4 com o mesmo event_id que vai
- *     para o App — a Meta junta os dois e não conta 2x. Sem plugin, a própria
- *     tag capta formulários com e-mail ou telefone e manda o lead ao App;
+ *     para o App — a Meta junta os dois e não conta 2x. Sem servidor
+ *     conectado, a própria tag capta formulários com e-mail ou telefone e
+ *     manda o lead ao App; com servidor, só os que ele não capta
+ *     (fora de NONNA_SITE.serverForms, se NONNA_SITE.captureOthers);
  *  4. clique em link de WhatsApp vira evento "Contact" / "whatsapp_click";
  *  5. consentimento: window.nonnaTag.consent(true|false).
  *
@@ -25,7 +28,14 @@
 
     var w = window, d = document;
     var dataLayer = w.dataLayer = w.dataLayer || [];
-    var hasPlugin = !!(w.NONNA_LEADS || w.NONNA_LEADS_PLUGIN);
+    // O servidor do site cuida da origem e dos leads (plugin Nonna no WordPress,
+    // Nonna CMS, qualquer plataforma conectada): a tag só lê o cookie e escuta
+    // `nonna_lead_captured`. NONNA_LEADS* = plugins antigos (Nonna Leads ≤ 1.2).
+    var hasPlugin = !!(w.NONNA_SITE || w.NONNA_LEADS || w.NONNA_LEADS_PLUGIN);
+    // Com servidor conectado, a tag ainda capta os formulários que o servidor
+    // NÃO capta (NONNA_SITE.serverForms = seletor CSS dos que ele capta).
+    var site = w.NONNA_SITE || null;
+    var captureForms = C.capture && (!hasPlugin || !!(site && site.captureOthers));
     var PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid', 'gbraid', 'wbraid'];
 
     function gtag() { dataLayer.push(arguments); }
@@ -145,6 +155,12 @@
 
     /* ---------------------------------------------- 3. lead */
 
+    /** "GA1.1.123.456" (cookie _ga) → "123.456", o client_id do GA4. */
+    function gaClientId() {
+        var m = String(readCookie('_ga') || '').match(/(\d+\.\d+)$/);
+        return m ? m[1] : '';
+    }
+
     function fireLead(eventId, formName) {
         if (w.fbq && C.pixel) w.fbq('track', 'Lead', formName ? { content_name: formName } : {}, { eventID: eventId });
         gtag('event', 'generate_lead', { event_id: eventId, form_name: formName || '' });
@@ -193,9 +209,19 @@
             page_url: w.location.href.slice(0, 500), page_title: d.title.slice(0, 200),
             attribution: readAttr(),
             fbp: readCookie('_fbp'), fbc: readCookie('_fbc'),
+            ga_client_id: gaClientId(),
             consent: granted
         });
         return eventId;
+    }
+
+    function matches(el, selector) {
+        var fn = el.matches || el.msMatchesSelector || el.webkitMatchesSelector;
+        try {
+            return !!(fn && fn.call(el, selector));
+        } catch (e) {
+            return false; // seletor inválido: na dúvida, a tag capta
+        }
     }
 
     function fieldValue(form, test) {
@@ -213,6 +239,7 @@
     function captureForm(e) {
         var form = e.target;
         if (!form || form.tagName !== 'FORM' || form.hasAttribute('data-nonna-ignore')) return;
+        if (site && site.serverForms && matches(form, site.serverForms)) return; // o servidor do site já capta
         if (form.querySelector('input[type=password]') || form.getAttribute('role') === 'search') return;
         var now = Date.now();
         if (form._nonnaAt && now - form._nonnaAt < 5000) return; // clique duplo
@@ -268,6 +295,6 @@
     loadGoogle();
     loadClarity();
     watchDataLayer();
-    if (C.capture && !hasPlugin) d.addEventListener('submit', captureForm, true);
+    if (captureForms) d.addEventListener('submit', captureForm, true);
     d.addEventListener('click', watchWhatsapp, true);
 })();

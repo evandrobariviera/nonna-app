@@ -93,6 +93,15 @@ class TrackingController extends Controller
         return back()->with('success', 'Conversão "' . ($kind === 'venda' ? 'Venda' : 'Lead') . ' — Nonna App" criada no Google Ads e ligada a este cliente.');
     }
 
+    /** Novo código de conexão do site: o antigo para de funcionar na hora (site invadido, ex-fornecedor com acesso). */
+    public function rotateSiteSecret(Client $client): RedirectResponse
+    {
+        ClientTracking::forClient($client)->rotateSiteSecret();
+
+        return redirect()->route('tracking.index', ['client_id' => $client->id])
+            ->with('success', 'Código novo gerado. O código antigo já não funciona: cole o novo no site (WordPress ou Nonna CMS) para os leads voltarem a chegar.');
+    }
+
     /** Manda o lead mais recente (até 7 dias) no modo teste da Meta. */
     public function testSend(Client $client, ConversionSender $sender): RedirectResponse
     {

@@ -307,6 +307,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('tracking.test');
     Route::get('/central-campanhas/rastreamento/{client}/site', [\App\Http\Controllers\TrackingController::class, 'report'])
         ->name('tracking.report');
+    Route::post('/central-campanhas/rastreamento/{client}/codigo-do-site', [\App\Http\Controllers\TrackingController::class, 'rotateSiteSecret'])
+        ->name('tracking.rotate-secret');
     // Nova campanha completa na Meta (campanha + conjunto + anúncio, pausados)
     Route::get('/central-campanhas/nova-campanha', [\App\Http\Controllers\MetaCampaignCreationController::class, 'create'])
         ->name('campaign-creations.create');

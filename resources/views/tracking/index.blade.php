@@ -188,21 +188,50 @@
                 <form id="google-venda" method="POST" action="{{ route('tracking.google-action', $client->id) }}" class="hidden">@csrf<input type="hidden" name="kind" value="venda"></form>
 
                 <div class="flex flex-col gap-5 min-w-0">
-                <section class="card p-5 min-w-0" x-data="{ copied: false }">
-                    <h2 class="card-title">Nonna Tag no site</h2>
-                    <p class="text-xs mt-1 mb-2" style="color:var(--muted2)">Substitui o Tag Manager: carrega o Pixel, o GA4, a tag do Google Ads e o Clarity configurados aqui e capta os formulários. No WordPress, o plugin Nonna Leads cola sozinho (campo "Chave da Nonna Tag"). Em outro site, cole no &lt;head&gt; de todas as páginas:</p>
-                    @php $snippet = '<script async src="' . url("/api/t/{$t->site_key}.js") . '"></script>'; @endphp
-                    <code class="block text-[11px] px-2 py-1.5 rounded break-all" style="background:var(--s2); color:var(--purple)">{{ $snippet }}</code>
-                    <div class="flex items-center gap-2 mt-2 flex-wrap">
-                        <button type="button" class="btn btn-xs" @click="navigator.clipboard.writeText(@js($snippet)); copied = true; setTimeout(() => copied = false, 1500)" x-text="copied ? 'Copiado!' : 'Copiar código'"></button>
-                        <span class="text-xs" style="color:var(--muted)">Chave do site: <b class="font-mono">{{ $t->site_key }}</b></span>
+                <section class="card p-5 min-w-0" x-data="{ copied: '', show: false }">
+                    <h2 class="card-title">Conexão do site</h2>
+                    <p class="text-xs mt-1 mb-3" style="color:var(--muted2)">Funciona em qualquer plataforma. O site pode usar só a tag (navegador), só o código (servidor) ou os dois. No WordPress, o plugin <b>Nonna</b> cuida dos dois com o código abaixo.</p>
+
+                    @php
+                        $snippet = '<script async src="' . url("/api/t/{$t->site_key}.js") . '"></script>';
+                        $code = $t->connectionCode();
+                        $seen = \App\Http\Controllers\Api\NonnaTagController::lastSeen($t);
+                        $server = \App\Services\Tracking\SiteLeadIntake::lastSeen($t, 'server');
+                    @endphp
+
+                    <div class="rounded px-3 py-2.5" style="background:var(--s2)">
+                        <p class="text-xs font-semibold" style="color:var(--text)">1. Código de conexão <span class="font-normal" style="color:var(--muted)">— WordPress (plugin Nonna), Nonna CMS ou outro sistema</span></p>
+                        <p class="text-xs mt-1" style="color:var(--muted2)">O servidor do site entrega os leads direto para cá, sem passar pelo n8n. Ele só serve para mandar lead deste cliente; não abre mais nada do App.</p>
+                        <div class="flex items-center gap-2 mt-2 flex-wrap">
+                            <code class="text-[11px] px-2 py-1 rounded break-all" style="background:var(--s1, var(--bg)); color:var(--purple)" x-text="show ? @js($code) : @js($t->site_key . '.' . str_repeat('•', 12))"></code>
+                            <button type="button" class="btn btn-xs" @click="show = !show" x-text="show ? 'Esconder' : 'Mostrar'"></button>
+                            <button type="button" class="btn btn-xs" @click="navigator.clipboard.writeText(@js($code)); copied = 'code'; setTimeout(() => copied = '', 1500)" x-text="copied === 'code' ? 'Copiado!' : 'Copiar código'"></button>
+                        </div>
+                        <p class="text-xs mt-2 flex items-center gap-1.5" style="color:{{ $server ? 'var(--green)' : 'var(--muted)' }}">
+                            <span class="h-2 w-2 rounded-full inline-block" style="background:{{ $server ? 'var(--green)' : 'var(--border)' }}"></span>
+                            {{ $server ? 'Site conectado' . (!empty($server['host']) ? ' ' . $server['host'] : '') . (!empty($server['platform']) ? ' (' . $server['platform'] . ')' : '') . ' ' . \Illuminate\Support\Carbon::parse($server['at'])->diffForHumans() : 'Nenhum site conectou com este código ainda.' }}
+                        </p>
+                        <form method="POST" action="{{ route('tracking.rotate-secret', $client->id) }}" class="mt-2"
+                              @submit.prevent="if (await $store.confirmDialog.ask('Gerar um código novo? O código atual para de funcionar na hora e o site só volta a mandar leads quando receber o novo. Os leads ficam guardados no site e são reenviados depois.')) $el.submit()">
+                            @csrf
+                            <button type="submit" class="btn btn-xs">Gerar novo código</button>
+                            <span class="text-[11px]" style="color:var(--muted)">Use se o site foi invadido ou se alguém de fora teve acesso ao código.{{ $t->site_secret_rotated_at ? ' Último: ' . $t->site_secret_rotated_at->format('d/m/Y') . '.' : '' }}</span>
+                        </form>
                     </div>
-                    @php $seen = \App\Http\Controllers\Api\NonnaTagController::lastSeen($t); @endphp
-                    <p class="text-xs mt-2 flex items-center gap-1.5" style="color:{{ $seen ? 'var(--green)' : 'var(--muted)' }}">
-                        <span class="h-2 w-2 rounded-full inline-block" style="background:{{ $seen ? 'var(--green)' : 'var(--border)' }}"></span>
-                        {{ $seen ? 'Tag vista no site' . ($seen['host'] ? ' ' . $seen['host'] : '') . ' ' . \Illuminate\Support\Carbon::parse($seen['at'])->diffForHumans() : 'A tag ainda não foi vista em nenhum site.' }}
-                    </p>
-                    <p class="text-xs mt-2" style="color:var(--orange)">Tire o Tag Manager do site no mesmo dia: os dois juntos disparam o Pixel e o GA4 em dobro.</p>
+
+                    <div class="rounded px-3 py-2.5 mt-3" style="background:var(--s2)">
+                        <p class="text-xs font-semibold" style="color:var(--text)">2. Nonna Tag <span class="font-normal" style="color:var(--muted)">— substitui o Tag Manager</span></p>
+                        <p class="text-xs mt-1" style="color:var(--muted2)">Carrega o Pixel, o GA4, a tag do Google Ads e o Clarity configurados aqui. O plugin Nonna e o Nonna CMS colocam a tag sozinhos. Em outro site, cole no &lt;head&gt; de todas as páginas (sem servidor conectado, a tag também capta os formulários):</p>
+                        <code class="block text-[11px] px-2 py-1.5 mt-2 rounded break-all" style="background:var(--s1, var(--bg)); color:var(--purple)">{{ $snippet }}</code>
+                        <div class="flex items-center gap-2 mt-2 flex-wrap">
+                            <button type="button" class="btn btn-xs" @click="navigator.clipboard.writeText(@js($snippet)); copied = 'tag'; setTimeout(() => copied = '', 1500)" x-text="copied === 'tag' ? 'Copiado!' : 'Copiar tag'"></button>
+                        </div>
+                        <p class="text-xs mt-2 flex items-center gap-1.5" style="color:{{ $seen ? 'var(--green)' : 'var(--muted)' }}">
+                            <span class="h-2 w-2 rounded-full inline-block" style="background:{{ $seen ? 'var(--green)' : 'var(--border)' }}"></span>
+                            {{ $seen ? 'Tag vista no site' . (!empty($seen['host']) ? ' ' . $seen['host'] : '') . ' ' . \Illuminate\Support\Carbon::parse($seen['at'])->diffForHumans() : 'A tag ainda não foi vista em nenhum site.' }}
+                        </p>
+                        <p class="text-xs mt-2" style="color:var(--orange)">Tire o Tag Manager do site no mesmo dia: os dois juntos disparam o Pixel e o GA4 em dobro.</p>
+                    </div>
                 </section>
 
                 <section class="card p-5 min-w-0">
