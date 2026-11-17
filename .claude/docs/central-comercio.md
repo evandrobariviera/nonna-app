@@ -55,3 +55,16 @@ Protótipo das telas: `.claude/docs/prototipos/central-comercio.html`.
 - Base: legítimo interesse (art. 7º IX + art. 10), com teste de balanceamento registrado por escrito.
 - Muitos profissionais (dentistas) cadastram celular pessoal → dado de pessoa física.
 - Mensagem identifica a Nonna, diz de onde veio o contato e oferece saída clara; saída respeitada para sempre.
+
+## Andamento
+
+- **16/11/2026, etapa 2 (varredura) no código.**
+  - Tela: Central de Comércio → Prospecção (`CommerceProspectingController`, `resources/views/commerce/prospecting.blade.php`).
+  - Tabelas `commerce_segments`, `commerce_cities`, `commerce_scans`, `commerce_places` (só `place_id`) e `commerce_scan_place`.
+  - `App\Services\Commerce\GooglePlaces`:
+    - a varredura usa Text Search pedindo só `places.id`, o SKU "Essentials (IDs Only)", **gratuito e sem limite**;
+    - a lista lê nome, endereço, tipo e link do Maps ao vivo, só para a página atual (Place Details, SKU Pro).
+  - `ScanRunner` e o job `RunCommerceScanJob` rodam na fila. Um termo que volta com 60 resultados marca a varredura como saturada.
+  - A chave fica em Integrações → "Google Maps (Places)" (`provider google_maps`, campo `access_token`).
+  - Ponto pendente: o Google Cloud ainda não tem o projeto `nonna-central-comercio` nem a chave.
+- **Próximo: etapa 3.** Coleta, checagem do site (PageSpeed, Pixel, AW-, GTM, GA4), Nota Nonna e sinais de anúncio.

@@ -373,6 +373,7 @@
                                         'automation'   => 'Automação',
                                         'communication'=> 'Comunicação',
                                         'analytics'    => 'Analytics',
+                                        'prospecting'  => 'Prospecção',
                                     ];
                                 @endphp
                                 @foreach($grouped as $category => $providers)
@@ -486,8 +487,18 @@
                                        class="field w-full px-3 py-2 text-sm font-mono">
                             </div>
 
+                            {{-- Google Maps (Places): chave de API da prospecção --}}
+                            <div x-show="form.provider === 'google_maps'" class="mb-3">
+                                <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Chave de API (Places API New)</label>
+                                <p class="text-xs mb-1.5" style="color:var(--muted)">
+                                    Do projeto do Google Cloud só da prospecção (Central de Comércio), com a "Places API (New)" ativada e a chave restrita a ela. Status precisa estar "Conectado".
+                                </p>
+                                <input type="password" name="credentials[access_token]" x-model="form.credentials.access_token" autocomplete="off"
+                                       placeholder="AIza..." class="field w-full px-3 py-2 text-sm font-mono">
+                            </div>
+
                             {{-- Demais providers: token genérico --}}
-                            <div x-show="form.provider && !['meta','tiktok','linkedin','pinterest','google','n8n'].includes(form.provider)" class="mb-3">
+                            <div x-show="form.provider && !['meta','tiktok','linkedin','pinterest','google','n8n','google_maps'].includes(form.provider)" class="mb-3">
                                 <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Access Token / API Key</label>
                                 <input type="password" name="credentials[access_token]" x-model="form.credentials.access_token" autocomplete="off"
                                        class="field w-full px-3 py-2 text-sm font-mono">

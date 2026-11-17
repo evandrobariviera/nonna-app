@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Prospecção: encontre empresas por cidade e segmento",
+            "summary": "Nova tela na Central de Comércio: escolha a cidade e o segmento (ou um nicho), e o App busca no Google Maps as empresas da região, sem custo. Começa a funcionar quando a chave do Google Maps for cadastrada.",
+            "kind": "novidade",
+            "area": "Comercial"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Prospecção — encontrar empresas por cidade e segmento",
+            "category": "Comercial",
+            "slug": "prospeccao-varredura",
+            "body_file": "ajuda-prospeccao.html"
+        }
+    ]
+}

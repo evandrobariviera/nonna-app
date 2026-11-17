@@ -58,8 +58,8 @@
     </span>
 </a>
 
-{{-- Central de Comércio — Propostas e catálogo de Produtos e serviços --}}
-<div x-data="{ open: {{ request()->routeIs('catalog.*') || request()->routeIs('proposals.*') ? 'true' : 'false' }} }">
+{{-- Central de Comércio — Prospecção, Propostas e catálogo de Produtos e serviços --}}
+<div x-data="{ open: {{ request()->routeIs('catalog.*') || request()->routeIs('proposals.*') || request()->routeIs('commerce.*') ? 'true' : 'false' }} }">
     <button @click="open = !open" class="nav-group-trigger" :class="open ? 'open' : ''">
         <span class="flex items-center gap-3">
             <x-icon name="store" size="16" class="flex-shrink-0" />
@@ -68,6 +68,7 @@
         <x-icon name="chevron-right" size="14" class="transition-transform duration-200" x-bind:class="open ? 'rotate-90' : ''" />
     </button>
     <div x-show="open" x-transition style="display:none">
+        <a href="{{ route('commerce.prospecting') }}" class="nav-sub-item {{ request()->routeIs('commerce.*') ? 'active' : '' }}">Prospecção</a>
         <a href="{{ route('proposals.index') }}" class="nav-sub-item {{ request()->routeIs('proposals.*') ? 'active' : '' }}">Propostas</a>
         <a href="{{ route('catalog.index') }}" class="nav-sub-item {{ request()->routeIs('catalog.*') ? 'active' : '' }}">Produtos e serviços</a>
     </div>

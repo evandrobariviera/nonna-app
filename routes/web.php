@@ -538,6 +538,17 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
             ->name('catalog.destroy');
     });
 
+    // ── Central de Comércio: Prospecção (varredura Google Places; só place_id no banco) ──
+    Route::get('/prospeccao', [\App\Http\Controllers\CommerceProspectingController::class, 'index'])->name('commerce.prospecting');
+    Route::post('/prospeccao/varreduras', [\App\Http\Controllers\CommerceProspectingController::class, 'storeScan'])->name('commerce.scans.store');
+    Route::post('/prospeccao/empresas/{place}/descartar', [\App\Http\Controllers\CommerceProspectingController::class, 'discard'])->name('commerce.places.discard');
+    Route::middleware('org.admin')->group(function () {
+        Route::post('/prospeccao/segmentos', [\App\Http\Controllers\CommerceProspectingController::class, 'storeSegment'])->name('commerce.segments.store');
+        Route::patch('/prospeccao/segmentos/{segment}', [\App\Http\Controllers\CommerceProspectingController::class, 'updateSegment'])->name('commerce.segments.update');
+        Route::post('/prospeccao/cidades', [\App\Http\Controllers\CommerceProspectingController::class, 'storeCity'])->name('commerce.cities.store');
+        Route::delete('/prospeccao/cidades/{city}', [\App\Http\Controllers\CommerceProspectingController::class, 'destroyCity'])->name('commerce.cities.destroy');
+    });
+
     // ── Central de Comércio: Propostas (N por oportunidade; ver ProposalService) ──
     Route::get('/propostas', [\App\Http\Controllers\ProposalController::class, 'index'])->name('proposals.index');
     Route::get('/propostas/nova', [\App\Http\Controllers\ProposalController::class, 'create'])->name('proposals.create');

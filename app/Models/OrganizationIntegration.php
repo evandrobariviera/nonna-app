@@ -51,6 +51,8 @@ class OrganizationIntegration extends Model
         // Analytics
         'ga4'       => ['label' => 'Google Analytics 4',        'category' => 'analytics'],
         'looker'    => ['label' => 'Looker Studio',             'category' => 'analytics'],
+        // Prospecção (Central de Comércio): chave de API de um projeto do Google Cloud só dela
+        'google_maps' => ['label' => 'Google Maps (Places)',    'category' => 'prospecting'],
     ];
 
     public static array $statuses = [
