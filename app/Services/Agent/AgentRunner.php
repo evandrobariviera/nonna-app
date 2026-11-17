@@ -46,9 +46,12 @@ class AgentRunner
         $conversation->save();
 
         for ($step = 0; $step < self::MAX_STEPS; $step++) {
+            // Instruções fixas no começo (a OpenAI reaproveita do cache, ~10% do preço);
+            // a hora exata vai no FIM — no começo ela mudava a cada minuto e quebrava o cache.
             $messages = array_merge(
                 [['role' => 'system', 'content' => $this->systemPrompt($agent, $user, $toolbox)]],
                 $this->history($conversation),
+                [['role' => 'system', 'content' => 'Agora: ' . now()->locale('pt_BR')->isoFormat('dddd, DD/MM/YYYY HH:mm') . ' (horário de Brasília).']],
             );
 
             $reply = $this->ai->chatWithTools(
@@ -113,7 +116,7 @@ class AgentRunner
             ->implode('; ');
 
         return $agent->system_prompt . "\n\n---\nCONTEXTO ATUAL\n"
-            . "Hoje: {$now->isoFormat('dddd, DD/MM/YYYY HH:mm')} (data: {$now->format('Y-m-d')}, horário de Brasília)\n"
+            . "Hoje: {$now->isoFormat('dddd, DD/MM/YYYY')} (data: {$now->format('Y-m-d')}; a hora exata vem no fim da conversa)\n"
             . "Pessoa na conversa: {$user->name} (id {$user->id})\n"
             . "Equipe (id: Nome (papéis)): {$team}";
     }

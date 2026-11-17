@@ -165,6 +165,7 @@ class AiService
                 $response['choices'][0]['message'] ?? ['role' => 'assistant', 'content' => ''],
                 [
                     'prompt_tokens'     => $response['usage']['prompt_tokens'] ?? 0,
+                    'cached_tokens'     => $response['usage']['prompt_tokens_details']['cached_tokens'] ?? 0,
                     'completion_tokens' => $response['usage']['completion_tokens'] ?? 0,
                     'total_tokens'      => $response['usage']['total_tokens'] ?? 0,
                 ],
@@ -183,10 +184,16 @@ class AiService
     {
         $instructions = [];
         $input = [];
-        foreach ($messages as $m) {
+        foreach ($messages as $i => $m) {
             switch ($m['role']) {
                 case 'system':
-                    $instructions[] = $m['content'];
+                    // Só o system do começo vira "instructions" (fixo = cache); um system
+                    // no meio/fim (ex.: a hora atual) entra na conversa como "developer".
+                    if ($input === []) {
+                        $instructions[] = $m['content'];
+                    } else {
+                        $input[] = ['role' => 'developer', 'content' => (string) $m['content']];
+                    }
                     break;
                 case 'tool':
                     $input[] = ['type' => 'function_call_output', 'call_id' => $m['tool_call_id'], 'output' => (string) $m['content']];
@@ -252,7 +259,7 @@ class AiService
 
         return [
             ['role' => 'assistant', 'content' => $text !== '' ? $text : null, 'tool_calls' => $calls ?: null],
-            ['prompt_tokens' => $in, 'completion_tokens' => $out, 'total_tokens' => $in + $out],
+            ['prompt_tokens' => $in, 'completion_tokens' => $out, 'total_tokens' => $in + $out, 'cached_tokens' => $response['usage']['input_tokens_details']['cached_tokens'] ?? 0],
         ];
     }
 
@@ -367,6 +374,7 @@ class AiService
             $response['choices'][0]['message']['content'] ?? '',
             [
                 'prompt_tokens'     => $response['usage']['prompt_tokens'] ?? 0,
+                'cached_tokens'     => $response['usage']['prompt_tokens_details']['cached_tokens'] ?? 0,
                 'completion_tokens' => $response['usage']['completion_tokens'] ?? 0,
                 'total_tokens'      => $response['usage']['total_tokens'] ?? 0,
             ],
@@ -508,6 +516,7 @@ class AiService
             $response['choices'][0]['message']['content'] ?? '',
             [
                 'prompt_tokens'     => $response['usage']['prompt_tokens'] ?? 0,
+                'cached_tokens'     => $response['usage']['prompt_tokens_details']['cached_tokens'] ?? 0,
                 'completion_tokens' => $response['usage']['completion_tokens'] ?? 0,
                 'total_tokens'      => $response['usage']['total_tokens'] ?? 0,
             ],
@@ -653,6 +662,7 @@ class AiService
             $response['choices'][0]['message']['content'] ?? '',
             [
                 'prompt_tokens'     => $response['usage']['prompt_tokens'] ?? 0,
+                'cached_tokens'     => $response['usage']['prompt_tokens_details']['cached_tokens'] ?? 0,
                 'completion_tokens' => $response['usage']['completion_tokens'] ?? 0,
                 'total_tokens'      => $response['usage']['total_tokens'] ?? 0,
             ],
@@ -799,6 +809,7 @@ class AiService
             'prompt_tokens'      => $usage['prompt_tokens'],
             'completion_tokens'  => $usage['completion_tokens'],
             'total_tokens'       => $usage['total_tokens'],
+            'cached_tokens'      => (int) ($usage['cached_tokens'] ?? 0),
             'estimated_cost_usd' => $cost,
             'trigger'            => $trigger,
         ]);
@@ -812,7 +823,12 @@ class AiService
             return 0.0;
         }
 
-        $inputCost  = ($usage['prompt_tokens'] / 1000) * ($modelData['input_per_1k'] ?? 0);
+        // Tokens vindos do cache saem com desconto: usa o preço do modelo se cadastrado
+        // (cached_input_per_1k), senão 10% da entrada — a regra da OpenAI pra linha gpt-5.
+        $cached     = min((int) ($usage['cached_tokens'] ?? 0), (int) $usage['prompt_tokens']);
+        $inPrice    = $modelData['input_per_1k'] ?? 0;
+        $inputCost  = (($usage['prompt_tokens'] - $cached) / 1000) * $inPrice
+                    + ($cached / 1000) * ($modelData['cached_input_per_1k'] ?? $inPrice * 0.1);
         $outputCost = ($usage['completion_tokens'] / 1000) * ($modelData['output_per_1k'] ?? 0);
 
         return round($inputCost + $outputCost, 6);

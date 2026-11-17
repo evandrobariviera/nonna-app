@@ -92,7 +92,7 @@ class AgentToolbox
                 'status'           => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => $taskStatusKeys]],
                 'somente_atrasadas'=> ['type' => 'boolean'],
                 'termo'            => ['type' => 'string', 'description' => 'Palavra no título'],
-                'limite'           => ['type' => 'integer', 'description' => 'Padrão 30, máximo 60'],
+                'limite'           => ['type' => 'integer', 'description' => 'Padrão 20, máximo 40. Use o padrão; peça mais só se a pessoa quiser a lista completa (o total vem em total_encontrado)'],
             ]),
 
             $fn('detalhe_tarefa', 'Abre uma tarefa: descrição completa, pessoas, datas e os últimos comentários.', [
@@ -118,7 +118,7 @@ class AgentToolbox
                 'somente_vencidas'  => ['type' => 'boolean'],
                 'incluir_resolvidas'=> ['type' => 'boolean'],
                 'task_id'           => ['type' => 'string', 'description' => 'Pendências ligadas a essa tarefa'],
-                'limite'            => ['type' => 'integer', 'description' => 'Padrão 30, máximo 60'],
+                'limite'            => ['type' => 'integer', 'description' => 'Padrão 20, máximo 40. Use o padrão; peça mais só se a pessoa quiser a lista completa (o total vem em total_encontrado)'],
             ]),
 
             $fn('propor_pendencia', 'Prepara uma pendência para a pessoa confirmar na tela (NÃO cria sozinha). Pendência = algo que alguém precisa entregar; não é tarefa de produção.', [
@@ -317,7 +317,7 @@ class AgentToolbox
 
     private function listarTarefas(array $a): array
     {
-        $limit = min(max((int) ($a['limite'] ?? 30), 1), 60);
+        $limit = min(max((int) ($a['limite'] ?? 20), 1), 40);
         $statuses = array_values(array_intersect((array) ($a['status'] ?? []), array_keys(Task::$statuses)));
 
         $query = Task::query()
@@ -529,7 +529,7 @@ class AgentToolbox
 
     private function listarPendencias(array $a): array
     {
-        $limit = min(max((int) ($a['limite'] ?? 30), 1), 60);
+        $limit = min(max((int) ($a['limite'] ?? 20), 1), 40);
 
         $query = Pendency::query()
             ->with(['client:id,company_name', 'owedContact:id,name', 'owedUser:id,name', 'owner:id,name', 'requester:id,name', 'pendable'])

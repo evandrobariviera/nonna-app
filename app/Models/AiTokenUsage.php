@@ -19,12 +19,13 @@ class AiTokenUsage extends Model
     protected $fillable = [
         'agent_id', 'user_id', 'client_id',
         'model', 'provider',
-        'prompt_tokens', 'completion_tokens', 'total_tokens',
+        'prompt_tokens', 'completion_tokens', 'total_tokens', 'cached_tokens',
         'estimated_cost_usd', 'trigger',
     ];
 
     protected $casts = [
         'prompt_tokens'      => 'integer',
+        'cached_tokens'      => 'integer',
         'completion_tokens'  => 'integer',
         'total_tokens'       => 'integer',
         'estimated_cost_usd' => 'float',
