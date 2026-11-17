@@ -127,7 +127,8 @@
                                 <div class="my-4 sm:ml-10 rounded-[10px] overflow-hidden" style="border:1px solid var(--border2); background:var(--s1)">
                                     <div class="flex items-center gap-2 px-4 py-2.5 text-[13px] font-semibold" style="background:var(--s2); color:var(--text)">
                                         <span x-show="item.type === 'meeting'"><x-icon name="calendar-plus" size="15" /></span>
-                                        <span x-show="item.type !== 'meeting'"><x-icon name="clipboard-list" size="15" /></span>
+                                        <span x-show="item.type === 'pendency'"><x-icon name="hourglass" size="15" /></span>
+                                        <span x-show="item.type === 'task'"><x-icon name="clipboard-list" size="15" /></span>
                                         <span x-text="item.title"></span>
                                         <span class="ml-auto text-[11px] font-medium px-2 py-0.5 rounded-full"
                                               :style="item.status === 'confirmed' ? 'background:rgba(16,185,129,.12); color:var(--green)'

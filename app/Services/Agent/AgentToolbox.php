@@ -5,6 +5,7 @@ namespace App\Services\Agent;
 use App\Models\Client;
 use App\Models\MacroPlan;
 use App\Models\Meeting;
+use App\Models\Pendency;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
@@ -27,7 +28,10 @@ use Illuminate\Support\Str;
  */
 class AgentToolbox
 {
-    public const PROPOSAL_TOOLS = ['propor_tarefa', 'propor_reuniao'];
+    public const PROPOSAL_TOOLS = ['propor_tarefa', 'propor_reuniao', 'propor_pendencia'];
+
+    // Tipo da proposta (cartão) → ferramenta que a valida (usado no Confirmar).
+    public const PROPOSAL_TOOL_BY_TYPE = ['task' => 'propor_tarefa', 'meeting' => 'propor_reuniao', 'pendency' => 'propor_pendencia'];
 
     // O que aparece na tela enquanto o agente trabalha ("Consultou …").
     public const LABELS = [
@@ -38,8 +42,10 @@ class AgentToolbox
         'detalhe_tarefa'  => 'Abriu uma tarefa',
         'listar_reunioes' => 'Consultou a agenda',
         'ler_ata'         => 'Leu a ATA de uma reunião',
+        'listar_pendencias' => 'Consultou pendências',
         'propor_tarefa'   => 'Preparou uma tarefa',
         'propor_reuniao'  => 'Preparou uma reunião',
+        'propor_pendencia' => 'Preparou uma pendência',
     ];
 
     private const OPEN_STATUSES = ['backlog', 'em_producao', 'revisao_interna', 'ajuste_alteracao', 'aprovacao', 'despacho_agendamento'];
@@ -105,7 +111,34 @@ class AgentToolbox
                 'meeting_id' => ['type' => 'string'],
             ], ['meeting_id']),
 
-            $fn('propor_tarefa', 'Prepara uma tarefa para a pessoa confirmar na tela (NÃO cria sozinha). Sem project_id vira um chamado avulso do cliente.', [
+            $fn('listar_pendencias', 'Lista pendências (coisas que alguém precisa entregar pro trabalho andar: material, acesso, informação, decisão, pagamento…). Sem filtro de situação traz só as abertas/cobradas.', [
+                'client_id'         => ['type' => 'string'],
+                'user_id'           => ['type' => 'integer', 'description' => 'Pendências dessa pessoa: ela cobra OU ela deve entregar'],
+                'deve'              => ['type' => 'string', 'enum' => array_keys(Pendency::$owedBy), 'description' => 'Quem deve entregar'],
+                'somente_vencidas'  => ['type' => 'boolean'],
+                'incluir_resolvidas'=> ['type' => 'boolean'],
+                'task_id'           => ['type' => 'string', 'description' => 'Pendências ligadas a essa tarefa'],
+                'limite'            => ['type' => 'integer', 'description' => 'Padrão 30, máximo 60'],
+            ]),
+
+            $fn('propor_pendencia', 'Prepara uma pendência para a pessoa confirmar na tela (NÃO cria sozinha). Pendência = algo que alguém precisa entregar; não é tarefa de produção.', [
+                'title'           => ['type' => 'string', 'description' => 'O que precisa ser entregue, curto (ex.: "Acesso ao Google Ads")'],
+                'description'     => ['type' => 'string'],
+                'kind'            => ['type' => 'string', 'enum' => array_keys(Pendency::$kinds)],
+                'owed_by'         => ['type' => 'string', 'enum' => array_keys(Pendency::$owedBy), 'description' => 'Quem deve entregar: cliente, agência (alguém do time) ou terceiro'],
+                'client_id'       => ['type' => 'string', 'description' => 'Obrigatório quando não houver task_id/project_id/meeting_id'],
+                'task_id'         => ['type' => 'string', 'description' => 'Tarefa que está esperando essa entrega (opcional)'],
+                'project_id'      => ['type' => 'string', 'description' => 'Projeto/campanha que está esperando (opcional)'],
+                'meeting_id'      => ['type' => 'string', 'description' => 'Reunião de origem (opcional)'],
+                'owed_contact_id' => ['type' => 'string', 'description' => 'Contato do cliente que deve (contact_id do resumo_cliente) — só se owed_by=cliente'],
+                'owed_user_id'    => ['type' => 'integer', 'description' => 'Pessoa do time que deve — obrigatório se owed_by=agencia'],
+                'owed_party'      => ['type' => 'string', 'description' => 'Nome do terceiro (fornecedor, outra agência…) — se owed_by=terceiro'],
+                'owner_id'        => ['type' => 'integer', 'description' => 'Quem COBRA (pessoa do time)'],
+                'requested_by'    => ['type' => 'integer', 'description' => 'Quem PRECISA da entrega (pessoa do time). Padrão: a pessoa da conversa'],
+                'due_date'        => ['type' => 'string', 'description' => 'Prazo AAAA-MM-DD'],
+            ], ['title', 'kind', 'owed_by', 'owner_id']),
+
+            $fn('propor_tarefa','Prepara uma tarefa para a pessoa confirmar na tela (NÃO cria sozinha). Sem project_id vira um chamado avulso do cliente.', [
                 'client_id'           => ['type' => 'string'],
                 'title'               => ['type' => 'string'],
                 'description'         => ['type' => 'string'],
@@ -237,6 +270,7 @@ class AgentToolbox
             'observacoes_internas' => $this->plain($client->notes, 1500),
             'link'        => $this->link('clients.show', $client),
             'contatos'    => $client->contacts->map(fn ($c) => array_filter([
+                'contact_id' => $c->id,
                 'nome' => $c->name, 'cargo' => $c->job_title, 'email' => $c->email, 'whatsapp' => $c->whatsapp,
             ]))->values()->all(),
             'contas_de_anuncio' => $client->adAccounts->map(fn ($acc) => "{$acc->platform} ({$acc->status})")->values()->all(),
@@ -490,6 +524,135 @@ class AgentToolbox
         return [
             'proposal' => ['type' => 'meeting', 'title' => 'Nova reunião', 'data' => $data, 'display' => array_values($display)],
             'result'   => ['ok' => 'Cartão da reunião mostrado na tela. A pessoa precisa clicar em "Confirmar" — ainda NÃO foi agendada.'],
+        ];
+    }
+
+    private function listarPendencias(array $a): array
+    {
+        $limit = min(max((int) ($a['limite'] ?? 30), 1), 60);
+
+        $query = Pendency::query()
+            ->with(['client:id,company_name', 'owedContact:id,name', 'owedUser:id,name', 'owner:id,name', 'requester:id,name', 'pendable'])
+            ->when(empty($a['incluir_resolvidas']), fn ($q) => $q->open())
+            ->when(!empty($a['client_id']), fn ($q) => $q->where('client_id', $a['client_id']))
+            ->when(!empty($a['user_id']), fn ($q) => $q->forUser((int) $a['user_id']))
+            ->when(!empty($a['deve']), fn ($q) => $q->where('owed_by', $a['deve']))
+            ->when(!empty($a['somente_vencidas']), fn ($q) => $q->whereNotNull('due_date')->where('due_date', '<', today()))
+            ->when(!empty($a['task_id']), fn ($q) => $q->where('pendable_type', (new Task)->getMorphClass())->where('pendable_id', $a['task_id']));
+
+        $total = (clone $query)->count();
+        $items = $query->orderByRaw('due_date is null')->orderBy('due_date')->orderBy('created_at')->limit($limit)->get();
+
+        return [
+            'total_encontrado' => $total,
+            'mostrando'        => $items->count(),
+            'link_central'     => $this->link('pendencies.index', []),
+            'pendencias'       => $items->map(fn (Pendency $p) => array_filter([
+                'titulo'      => $p->title,
+                'tipo'        => $p->kindLabel(),
+                'situacao'    => $p->statusLabel(),
+                'cliente'     => $p->client?->company_name,
+                'deve'        => (Pendency::$owedBy[$p->owed_by]['label'] ?? $p->owed_by) . ': ' . $p->owedName(),
+                'quem_cobra'  => $p->owner?->name,
+                'quem_precisa'=> $p->requester?->name,
+                'prazo'       => $p->due_date?->format('d/m/Y'),
+                'vencida'     => $p->isOverdue() ?: null,
+                'cobrada_vezes' => $p->nudge_count ?: null,
+                'aberta_ha_dias'=> $p->isOpen() ? $p->daysOpen() : null,
+                'origem'      => $p->originLink(),
+                'descricao'   => $this->plain($p->description, 400),
+            ], fn ($v) => $v !== null && $v !== ''))->all(),
+        ];
+    }
+
+    private function proporPendencia(array $a): array
+    {
+        $v = Validator::make($a, [
+            'title'           => 'required|string|max:500',
+            'description'     => 'nullable|string|max:5000',
+            'kind'            => 'required|in:' . implode(',', array_keys(Pendency::$kinds)),
+            'owed_by'         => 'required|in:' . implode(',', array_keys(Pendency::$owedBy)),
+            'client_id'       => 'nullable|uuid',
+            'task_id'         => 'nullable|uuid',
+            'project_id'      => 'nullable|uuid',
+            'meeting_id'      => 'nullable|uuid',
+            'owed_contact_id' => 'nullable|uuid',
+            'owed_user_id'    => 'nullable|integer',
+            'owed_party'      => 'nullable|string|max:255',
+            'owner_id'        => 'required|integer',
+            'requested_by'    => 'nullable|integer',
+            'due_date'        => 'nullable|date_format:Y-m-d',
+        ]);
+        if ($v->fails()) {
+            return ['result' => ['erro' => 'Dados inválidos: ' . implode(' ', $v->errors()->all())]];
+        }
+        $data = $v->validated();
+        $data['requested_by'] ??= $this->user->id;
+
+        // Origem: tarefa > projeto > reunião (a pendência herda o cliente dela).
+        $origin = null;
+        if (!empty($data['task_id'])) {
+            $origin = Task::find($data['task_id']) ?? null;
+            $originLabel = $origin ? 'Tarefa: ' . $origin->title : null;
+        } elseif (!empty($data['project_id'])) {
+            $origin = Project::find($data['project_id']);
+            $originLabel = $origin ? 'Projeto/Campanha: ' . $origin->title : null;
+        } elseif (!empty($data['meeting_id'])) {
+            $origin = Meeting::find($data['meeting_id']);
+            $originLabel = $origin ? 'Reunião: ' . $origin->title : null;
+        }
+        if ((!empty($data['task_id']) || !empty($data['project_id']) || !empty($data['meeting_id'])) && !$origin) {
+            return ['result' => ['erro' => 'A tarefa/projeto/reunião de origem não foi encontrada.']];
+        }
+
+        $clientId = $origin?->client_id ?? ($data['client_id'] ?? null);
+        $client = $this->findClient($clientId);
+        if (!$client) {
+            return ['result' => ['erro' => 'Informe o cliente da pendência (ou a tarefa/projeto de origem).']];
+        }
+        if (!empty($data['client_id']) && $origin && $origin->client_id && $origin->client_id !== $data['client_id']) {
+            return ['result' => ['erro' => 'A origem informada é de outro cliente.']];
+        }
+        $data['client_id'] = $client->id;
+
+        $team = $this->team();
+        foreach (['owner_id' => 'Quem cobra', 'requested_by' => 'Quem precisa', 'owed_user_id' => 'Quem deve'] as $field => $label) {
+            if (!empty($data[$field]) && !$team->has($data[$field])) {
+                return ['result' => ['erro' => "{$label}: pessoa não está na equipe. Use só ids da lista da equipe."]];
+            }
+        }
+
+        $owed = match ($data['owed_by']) {
+            'agencia'  => empty($data['owed_user_id']) ? null : $team[$data['owed_user_id']],
+            'terceiro' => $data['owed_party'] ?? 'Terceiro',
+            default    => 'Cliente ' . $client->company_name,
+        };
+        if ($owed === null) {
+            return ['result' => ['erro' => 'Quando quem deve é a agência, diga QUAL pessoa do time deve entregar (owed_user_id).']];
+        }
+        if ($data['owed_by'] === 'cliente' && !empty($data['owed_contact_id'])) {
+            $contact = $client->contacts()->where('contacts.id', $data['owed_contact_id'])->first(['contacts.id', 'contacts.name']);
+            if (!$contact) {
+                return ['result' => ['erro' => 'Esse contato não é deste cliente. Use o contact_id do resumo_cliente.']];
+            }
+            $owed .= ' — ' . $contact->name;
+        }
+
+        $display = array_filter([
+            ['Cliente', $client->company_name],
+            isset($originLabel) ? ['Ligada a', $originLabel] : null,
+            ['O que', $data['title']],
+            ['Tipo', Pendency::$kinds[$data['kind']]['label']],
+            ['Quem deve', $owed],
+            ['Quem precisa', $team[$data['requested_by']]],
+            ['Quem cobra', $team[$data['owner_id']]],
+            !empty($data['due_date']) ? ['Prazo', Carbon::parse($data['due_date'])->format('d/m/Y')] : null,
+            !empty($data['description']) ? ['Detalhes', $data['description']] : null,
+        ]);
+
+        return [
+            'proposal' => ['type' => 'pendency', 'title' => 'Nova pendência', 'data' => $data, 'display' => array_values($display)],
+            'result'   => ['ok' => 'Cartão da pendência mostrado na tela. A pessoa precisa clicar em "Confirmar" — ainda NÃO foi criada.'],
         ];
     }
 

@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use App\Services\MeetingText;
+use App\Services\PendencyService;
 use App\Services\TaskDraftService;
 use App\Services\TaskExecutorSync;
 use Carbon\Carbon;
@@ -26,7 +27,10 @@ class AgentActionExecutor
     public function confirm(AgentMessage $message): array
     {
         $proposal = $message->proposal ?? [];
-        $tool = $proposal['type'] === 'meeting' ? 'propor_reuniao' : 'propor_tarefa';
+        $tool = AgentToolbox::PROPOSAL_TOOL_BY_TYPE[$proposal['type'] ?? ''] ?? null;
+        if (!$tool) {
+            throw new \RuntimeException('Tipo de proposta desconhecido.');
+        }
 
         // Revalidação: mesmos critérios de quando a IA propôs.
         $check = (new AgentToolbox($this->user))->call($tool, $proposal['data'] ?? []);
@@ -35,9 +39,34 @@ class AgentActionExecutor
         }
         $data = $check['proposal']['data'];
 
-        return DB::connection('pgsql')->transaction(fn () => $proposal['type'] === 'meeting'
-            ? $this->createMeeting($data)
-            : $this->createTask($data));
+        return DB::connection('pgsql')->transaction(fn () => match ($proposal['type']) {
+            'meeting'  => $this->createMeeting($data),
+            'pendency' => $this->createPendency($data),
+            default    => $this->createTask($data),
+        });
+    }
+
+    private function createPendency(array $data): array
+    {
+        // Mesmo caminho da Central de Pendências (PendencyController::store): avisa no
+        // sino quem cobra e quem deve (menos quem confirmou).
+        $origin = match (true) {
+            !empty($data['task_id'])    => Task::find($data['task_id']),
+            !empty($data['project_id']) => Project::find($data['project_id']),
+            !empty($data['meeting_id']) => Meeting::find($data['meeting_id']),
+            default                     => null,
+        };
+
+        $pendency = app(PendencyService::class)->create(
+            collect($data)->only(['client_id', 'title', 'description', 'kind', 'owed_by', 'owed_contact_id',
+                'owed_user_id', 'owed_party', 'owner_id', 'requested_by', 'due_date'])->all(),
+            $origin,
+            $this->user->id,
+        );
+
+        $url = $origin instanceof Task ? route('tasks.show', $origin) : route('pendencies.index');
+
+        return ['label' => "Pendência criada: {$pendency->title}", 'url' => $url, 'id' => $pendency->id];
     }
 
     private function createTask(array $data): array
