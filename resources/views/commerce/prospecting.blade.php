@@ -94,6 +94,10 @@
                     <option value="">Todas as situações</option>
                     @foreach(\App\Models\CommercePlace::$statuses as $key => $st)<option value="{{ $key }}" @selected(($filters['situacao'] ?? '') === $key)>{{ $st['label'] }}</option>@endforeach
                 </select>
+                <select name="sinal" class="field text-sm px-2.5 py-1.5" onchange="this.form.submit()">
+                    <option value="">Sinal: todos</option>
+                    @foreach(\App\Services\Commerce\OpportunitySignal::$labels as $key => $sg)<option value="{{ $key }}" @selected(($filters['sinal'] ?? '') === $key)>{{ $sg['label'] }}</option>@endforeach
+                </select>
                 @if(!empty($filters['varredura']))
                     @php $sc = $scans->firstWhere('id', $filters['varredura']); @endphp
                     <input type="hidden" name="varredura" value="{{ $filters['varredura'] }}">
@@ -105,7 +109,7 @@
             <div class="card" style="padding:0; overflow-x:auto">
                 <table class="nonna-table w-full">
                     <thead>
-                        <tr><th>Empresa</th><th>Segmento · Cidade</th><th>Nota Nonna</th><th>Situação</th><th></th></tr>
+                        <tr><th>Empresa</th><th>Segmento · Cidade</th><th>Nota Nonna</th><th>Sinal</th><th>Situação</th><th></th></tr>
                     </thead>
                     <tbody>
                         @forelse($places as $p)
@@ -113,15 +117,26 @@
                             <tr>
                                 <td class="min-w-0">
                                     @if($g)
-                                        <b style="color:var(--text)">{{ $g['name'] }}</b>
+                                        <a href="{{ route('commerce.places.show', $p) }}" class="font-semibold hover:underline" style="color:var(--text)">{{ $g['name'] }}</a>
                                         @if($g['closed'])<span class="badge badge-red ml-1">fechada</span>@endif
                                         <span class="block text-xs" style="color:var(--muted2)">{{ $g['type'] }}{{ $g['type'] && $g['address'] ? ' · ' : '' }}{{ $g['address'] }}</span>
                                     @else
-                                        <span class="text-xs" style="color:var(--muted)">{{ $configured ? 'Não foi possível ler agora' : 'Sem chave do Google' }}</span>
+                                        <a href="{{ route('commerce.places.show', $p) }}" class="text-xs hover:underline" style="color:var(--muted)">{{ $configured ? 'Não foi possível ler agora' : 'Sem chave do Google' }}</a>
                                     @endif
                                 </td>
                                 <td class="text-xs" style="color:var(--muted2)">{{ $p->segment?->name ?? '—' }} · {{ $p->city?->name ?? '—' }}</td>
-                                <td>{{ $p->score !== null ? $p->score : '—' }}</td>
+                                <td class="whitespace-nowrap">
+                                    @if($p->score !== null)
+                                        <b style="color:{{ $p->score >= $p->scoreMax() * 0.7 ? 'var(--green)' : ($p->score >= $p->scoreMax() * 0.45 ? 'var(--orange)' : 'var(--red)') }}">{{ $p->score }}</b><span class="text-xs" style="color:var(--muted)">/{{ $p->scoreMax() }}</span>
+                                    @elseif($p->collect_error)
+                                        <span class="text-xs" style="color:var(--red)" title="{{ $p->collect_error }}">erro</span>
+                                    @else
+                                        <span style="color:var(--muted)">—</span>
+                                    @endif
+                                </td>
+                                <td>@php $sg = \App\Services\Commerce\OpportunitySignal::$labels[$signals[$p->id] ?? ''] ?? null; @endphp
+                                    @if($sg && $p->collected_at)<span class="badge badge-{{ $sg['color'] }}" title="{{ $sg['hint'] }}">{{ $sg['label'] }}</span>@endif
+                                </td>
                                 <td>@if($st)<span class="badge badge-{{ $st['color'] }}">{{ $st['label'] }}</span>@endif</td>
                                 <td class="text-right whitespace-nowrap">
                                     @if($g && $g['maps_url'])
@@ -133,7 +148,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="text-sm" style="color:var(--muted)">Nenhuma empresa ainda. Faça uma varredura.</td></tr>
+                            <tr><td colspan="6" class="text-sm" style="color:var(--muted)">Nenhuma empresa ainda. Faça uma varredura.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -142,7 +157,7 @@
                 <span class="text-xs" style="color:var(--muted)">Dados de empresas: <b>Google Maps</b>. Buscados agora, não ficam guardados.</span>
                 {{ $places->links() }}
             </div>
-            <p class="text-xs mt-2" style="color:var(--muted)">A Nota Nonna (perfil, reputação, site e presença nas IAs) chega na próxima etapa.</p>
+            <p class="text-xs mt-2" style="color:var(--muted)">Nota Nonna: perfil no Google (30) + reputação (30) + site (20). A parte "nas IAs" (20) entra com as rodadas de IA; até lá a nota vai até 80. Menor nota primeiro: é quem mais precisa de ajuda.</p>
 
         @elseif($tab === 'varreduras')
             <div class="card" style="padding:0; overflow-x:auto">
@@ -163,9 +178,19 @@
                                     @endif
                                 </td>
                                 <td class="text-xs whitespace-nowrap" style="color:var(--muted2)">{{ $s->created_at->format('d/m H:i') }}<span class="block">{{ $s->creator?->name }}</span></td>
-                                <td class="text-sm">{{ $s->status === 'done' ? $s->places_found : '—' }}@if($s->status === 'done' && $s->places_new)<span class="block text-xs" style="color:var(--green)">{{ $s->places_new }} nova(s)</span>@endif</td>
+                                @php $pg = $progress[$s->id] ?? null; @endphp
+                                <td class="text-sm">{{ $s->status === 'done' ? $s->places_found : '—' }}@if($s->status === 'done' && $s->places_new)<span class="block text-xs" style="color:var(--green)">{{ $s->places_new }} nova(s)</span>@endif
+                                    @if($pg && $pg->total)<span class="block text-xs" style="color:var(--muted2)">{{ $pg->collected }} de {{ $pg->total }} coletada(s)</span>@endif
+                                </td>
                                 <td>@if($st)<span class="badge badge-{{ $st['color'] }}">{{ $st['label'] }}</span>@endif</td>
-                                <td class="text-right">@if($s->status === 'done')<a href="{{ $tabUrl('empresas', ['varredura' => $s->id]) }}" class="btn btn-xs">Ver empresas</a>@endif</td>
+                                <td class="text-right whitespace-nowrap">@if($s->status === 'done')
+                                    <a href="{{ $tabUrl('empresas', ['varredura' => $s->id]) }}" class="btn btn-xs">Ver empresas</a>
+                                    @if($pg && $pg->collected < $pg->total)
+                                        <form method="POST" action="{{ route('commerce.scans.collect', $s) }}" class="inline">@csrf
+                                            <button type="submit" class="btn btn-xs btn-primary" title="Busca os dados no Google, checa o site e calcula a Nota Nonna de cada empresa">Coletar e dar nota</button>
+                                        </form>
+                                    @endif
+                                @endif</td>
                             </tr>
                         @empty
                             <tr><td colspan="5" class="text-sm" style="color:var(--muted)">Nenhuma varredura ainda.</td></tr>

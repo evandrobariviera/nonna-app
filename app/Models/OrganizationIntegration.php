@@ -38,7 +38,7 @@ class OrganizationIntegration extends Model
     public static array $providers = [
         // Mídia paga
         'meta'      => ['label' => 'Meta (Facebook/Instagram)', 'category' => 'ads'],
-        'google'    => ['label' => 'Google Ads',                'category' => 'ads'],
+        'google'    => ['label' => 'Google (Ads, Analytics e Search Console)', 'category' => 'ads'],
         'tiktok'    => ['label' => 'TikTok Ads',                'category' => 'ads'],
         'linkedin'  => ['label' => 'LinkedIn Ads',              'category' => 'ads'],
         'pinterest' => ['label' => 'Pinterest Ads',             'category' => 'ads'],

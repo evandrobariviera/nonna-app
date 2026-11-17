@@ -542,6 +542,10 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::get('/prospeccao', [\App\Http\Controllers\CommerceProspectingController::class, 'index'])->name('commerce.prospecting');
     Route::post('/prospeccao/varreduras', [\App\Http\Controllers\CommerceProspectingController::class, 'storeScan'])->name('commerce.scans.store');
     Route::post('/prospeccao/empresas/{place}/descartar', [\App\Http\Controllers\CommerceProspectingController::class, 'discard'])->name('commerce.places.discard');
+    Route::get('/prospeccao/empresas/{place}', [\App\Http\Controllers\CommerceProspectingController::class, 'showPlace'])->name('commerce.places.show');
+    Route::post('/prospeccao/empresas/{place}/coletar', [\App\Http\Controllers\CommerceProspectingController::class, 'collectPlace'])->name('commerce.places.collect');
+    Route::post('/prospeccao/empresas/{place}/anuncios', [\App\Http\Controllers\CommerceProspectingController::class, 'markAds'])->name('commerce.places.ads');
+    Route::post('/prospeccao/varreduras/{scan}/coletar', [\App\Http\Controllers\CommerceProspectingController::class, 'collectScan'])->name('commerce.scans.collect');
     Route::middleware('org.admin')->group(function () {
         Route::post('/prospeccao/segmentos', [\App\Http\Controllers\CommerceProspectingController::class, 'storeSegment'])->name('commerce.segments.store');
         Route::patch('/prospeccao/segmentos/{segment}', [\App\Http\Controllers\CommerceProspectingController::class, 'updateSegment'])->name('commerce.segments.update');

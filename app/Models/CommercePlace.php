@@ -21,13 +21,17 @@ class CommercePlace extends Model
 
     protected $fillable = [
         'organization_id', 'place_id', 'city_id', 'segment_id', 'status', 'score', 'score_parts',
-        'last_seen_at', 'place_id_checked_at',
+        'last_seen_at', 'place_id_checked_at', 'site_signals', 'collected_at', 'collect_error',
+        'ads_meta', 'ads_google', 'ads_checked_by', 'ads_checked_at',
     ];
 
     protected $casts = [
         'score_parts'         => 'array',
         'last_seen_at'        => 'datetime',
         'place_id_checked_at' => 'datetime',
+        'site_signals'        => 'array',
+        'collected_at'        => 'datetime',
+        'ads_checked_at'      => 'datetime',
     ];
 
     public static array $statuses = [
@@ -39,6 +43,17 @@ class CommercePlace extends Model
         'opted_out' => ['label' => 'Pediu pra sair',   'color' => 'red'],
         'discarded' => ['label' => 'Descartada',       'color' => 'muted'],
     ];
+
+    public function adsChecker(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'ads_checked_by');
+    }
+
+    /** Nota parcial enquanto as rodadas de IA (etapa 4) não existem: vai até 80. */
+    public function scoreMax(): int
+    {
+        return (int) ($this->score_parts['max'] ?? 100);
+    }
 
     public function city(): BelongsTo
     {

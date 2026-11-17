@@ -67,4 +67,14 @@ Protótipo das telas: `.claude/docs/prototipos/central-comercio.html`.
   - `ScanRunner` e o job `RunCommerceScanJob` rodam na fila. Um termo que volta com 60 resultados marca a varredura como saturada.
   - A chave fica em Integrações → "Google Maps (Places)" (`provider google_maps`, campo `access_token`).
   - Ponto pendente: o Google Cloud ainda não tem o projeto `nonna-central-comercio` nem a chave.
-- **Próximo: etapa 3.** Coleta, checagem do site (PageSpeed, Pixel, AW-, GTM, GA4), Nota Nonna e sinais de anúncio.
+- **16/11/2026, etapa 3 (coleta, site, nota e sinais) no código.**
+  - `PlaceCollector` junta três coisas:
+    - `GooglePlaces::collect`, ao vivo, com o SKU Enterprise (~1 chamada por empresa; o Google dá 1.000 grátis por mês);
+    - `SiteInspector`, que lê o HTML e o `gtm.js` público e chama o PageSpeed mobile;
+    - `PlaceScorer`, a régua v1: perfil 30, reputação 30, site 20 e IAs 20 (pendente; até lá a nota vai até 80).
+  - O banco guarda só pontos, sinais do site e a conferência de anúncio.
+  - Fotos: a API devolve no máximo 10, então a régua vai até "10 ou mais".
+  - `OpportunitySignal` gera os 6 sinais decididos em 30/10.
+  - A coleta roda no job `CollectCommercePlaceJob`, na fila `prospecting`. O worker passou a `--queue=default,prospecting`.
+  - Página da empresa em `/prospeccao/empresas/{id}`.
+- **Próximo: etapa 4.** Rodadas de IA ("aparece nas IAs", 20 pontos).

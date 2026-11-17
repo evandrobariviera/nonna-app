@@ -310,9 +310,11 @@
                             @if($integration->provider === 'google')
                                 <a href="{{ route('settings.integrations.google.connect', $integration) }}"
                                    class="block text-center text-xs font-semibold py-1.5 rounded-lg"
-                                   style="background:rgba(100, 59, 142,.1); color:var(--purple)">
-                                    Conectar com Google Ads
+                                   style="background:rgba(100, 59, 142,.1); color:var(--purple)"
+                                   title="Um login só: Google Ads, Analytics e Search Console. Na tela do Google, marque todas as caixas.">
+                                    Conectar com Google
                                 </a>
+                                <p class="text-[11px] text-center" style="color:var(--muted)">Ads, Analytics e Search Console · marque todas as caixas</p>
                             @endif
 
                             <div class="flex items-center gap-2 pt-1 border-t" style="border-color:var(--border2)">
@@ -472,7 +474,7 @@
                                            class="field w-full px-3 py-2 text-sm font-mono">
                                 </div>
                                 <p class="text-xs" style="color:var(--muted)">
-                                    Depois de salvar com Client ID/Secret preenchidos, use o botão "Conectar com Google Ads" no card da integração — o App cuida de gerar e renovar o token de acesso sozinho.
+                                    Depois de salvar com Client ID/Secret preenchidos, use o botão "Conectar com Google" no card da integração (um login só para Ads, Analytics e Search Console) — o App cuida de gerar e renovar o token de acesso sozinho.
                                 </p>
                             </div>
 

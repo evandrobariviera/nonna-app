@@ -1,0 +1,24 @@
+{
+    "novidades": [
+        {
+            "title": "Nota Nonna e sinais de anúncio na Prospecção",
+            "summary": "Depois da varredura, clique em \"Coletar e dar nota\": cada empresa ganha uma nota de presença digital (perfil no Google, reputação e site) e um sinal como \"Anuncia sem medir\", para escolher quem abordar e como.",
+            "kind": "novidade",
+            "area": "Comercial"
+        },
+        {
+            "title": "Botão \"Conectar com Google\" nas integrações",
+            "summary": "O botão do Google em Configurações → Integrações agora se chama \"Conectar com Google\": um login só para Google Ads, Analytics e Search Console. Na tela do Google, marque todas as caixas.",
+            "kind": "melhoria",
+            "area": "Configurações"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Prospecção — encontrar empresas por cidade e segmento",
+            "category": "Comercial",
+            "slug": "prospeccao-varredura",
+            "body_file": "ajuda-prospeccao.html"
+        }
+    ]
+}

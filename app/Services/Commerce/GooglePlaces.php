@@ -128,6 +128,51 @@ class GooglePlaces
         return $out;
     }
 
+    /** Campos da coleta (SKU Enterprise, ~1 chamada por empresa): o que a Nota Nonna precisa. */
+    public const COLLECT_FIELDS = 'id,displayName,formattedAddress,primaryType,primaryTypeDisplayName,nationalPhoneNumber,websiteUri,regularOpeningHours,rating,userRatingCount,photos,googleMapsUri,businessStatus';
+
+    /**
+     * Dados de uma empresa para calcular a nota e mostrar o raio-x. Ao vivo, NUNCA guardar
+     * (só os pontos calculados a partir deles, que são da Nonna).
+     *
+     * @return array{name: ?string, address: ?string, type: ?string, primary_type: ?string, phone: ?string, website: ?string,
+     *               has_hours: bool, rating: ?float, reviews: int, photos: int, maps_url: ?string, closed: bool}|null
+     */
+    public function collect(string $placeId): ?array
+    {
+        $this->ensureConfigured();
+        $r = Http::timeout(20)
+            ->withHeaders(['X-Goog-Api-Key' => $this->apiKey, 'X-Goog-FieldMask' => self::COLLECT_FIELDS])
+            ->get(self::BASE . '/places/' . rawurlencode($placeId), ['languageCode' => 'pt-BR', 'regionCode' => 'BR']);
+
+        if ($r->status() === 404) {
+            return null; // empresa saiu do Google (ou o ID mudou)
+        }
+        if (!$r->successful()) {
+            throw new \RuntimeException('Google Places recusou a coleta: ' . ($r->json('error.message') ?? 'HTTP ' . $r->status()));
+        }
+
+        return [
+            'name'         => $r->json('displayName.text'),
+            'address'      => $r->json('formattedAddress'),
+            'type'         => $r->json('primaryTypeDisplayName.text'),
+            'primary_type' => $r->json('primaryType'),
+            'phone'        => $r->json('nationalPhoneNumber'),
+            'website'      => $r->json('websiteUri'),
+            'has_hours'    => !empty($r->json('regularOpeningHours.periods')) || !empty($r->json('regularOpeningHours.weekdayDescriptions')),
+            'rating'       => $r->json('rating') !== null ? (float) $r->json('rating') : null,
+            'reviews'      => (int) $r->json('userRatingCount', 0),
+            'photos'       => count((array) $r->json('photos', [])), // a API devolve no máximo 10
+            'maps_url'     => $r->json('googleMapsUri'),
+            'closed'       => in_array($r->json('businessStatus'), ['CLOSED_PERMANENTLY', 'CLOSED_TEMPORARILY'], true),
+        ];
+    }
+
+    public function apiKey(): ?string
+    {
+        return $this->apiKey;
+    }
+
     private function ensureConfigured(): void
     {
         if (!$this->configured()) {
