@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AgentConversation;
 use App\Models\AgentMessage;
 use App\Services\Agent\AgentActionExecutor;
+use App\Services\Agent\AgentCredits;
 use App\Services\Agent\AgentRunner;
 use App\Services\Agent\AgentTranscript;
 use Illuminate\Http\Request;
@@ -34,6 +35,7 @@ class AgentController extends Controller
                 'when'  => $c->last_message_at?->diffForHumans(short: true),
             ])->all(),
             'current'  => $conversation?->exists ? $conversation->id : null,
+            'credits'  => AgentCredits::status(auth()->user()),
             'messages' => $conversation?->exists ? AgentTranscript::toUi($conversation->messages()->get()) : [],
         ]);
     }
@@ -44,6 +46,13 @@ class AgentController extends Controller
             'message'         => 'required|string|max:20000',
             'conversation_id' => 'nullable|uuid',
         ]);
+
+        // Créditos da semana: acabou = não começa outra pergunta (a que estava em
+        // andamento sempre termina). Ver AgentCredits.
+        $credits = AgentCredits::status($request->user());
+        if ($credits['blocked']) {
+            return response()->json(['error' => AgentCredits::blockedMessage($credits), 'credits' => $credits], 422);
+        }
 
         $conversation = !empty($data['conversation_id'])
             ? AgentConversation::findOrFail($data['conversation_id'])
@@ -67,6 +76,7 @@ class AgentController extends Controller
             'conversation_id' => $conversation->id,
             'title'           => $conversation->title,
             'items'           => AgentTranscript::toUi($created->reject(fn ($m) => $m->role === 'user')),
+            'credits'         => AgentCredits::status($request->user()),
         ]);
     }
 

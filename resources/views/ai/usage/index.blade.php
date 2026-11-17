@@ -86,6 +86,77 @@
             </div>
         </div>
 
+        {{-- Créditos do Agente Nonna (AgentCredits): saldo semanal por pessoa; só o chat do agente gasta --}}
+        @php $canManageCredits = auth()->user()->can('manage-agent-credits'); @endphp
+        <div class="mb-6" style="border:1px solid var(--border2); border-radius:8px; overflow:hidden">
+            <div class="px-4 py-3 flex flex-wrap items-center justify-between gap-2"
+                 style="background:var(--s2); border-bottom:1px solid var(--border2)">
+                <span class="text-xs font-semibold" style="color:var(--muted); letter-spacing:.05em">
+                    CRÉDITOS DO AGENTE NONNA — SEMANA DE {{ $creditWeek->format('d/m') }} A {{ $creditWeek->copy()->addDays(6)->format('d/m') }}
+                </span>
+                <span class="text-[11px]" style="color:var(--muted)">
+                    Padrão: {{ number_format(\App\Services\Agent\AgentCredits::DEFAULT_WEEKLY, 0, ',', '.') }} por pessoa · renova toda segunda · só o chat do agente gasta crédito
+                </span>
+            </div>
+            <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr style="border-bottom:1px solid var(--border2); background:var(--s3)">
+                        <th class="px-4 py-2 text-left font-semibold" style="color:var(--muted)">PESSOA</th>
+                        <th class="px-4 py-2 text-left font-semibold" style="color:var(--muted); min-width:180px">USADOS</th>
+                        <th class="px-4 py-2 text-right font-semibold" style="color:var(--muted)">LIMITE SEMANAL</th>
+                        <th class="px-4 py-2 text-right font-semibold" style="color:var(--muted)">EXTRA NA SEMANA</th>
+                        <th class="px-4 py-2 text-right font-semibold" style="color:var(--muted)">RESTAM</th>
+                        @if($canManageCredits)<th class="px-4 py-2"></th>@endif
+                    </tr>
+                </thead>
+                <tbody class="divide-y" style="border-color:var(--border2)">
+                    @foreach($creditRows as $row)
+                    @php $barColor = $row['blocked'] ? 'var(--red)' : ($row['warn'] ? 'var(--orange)' : 'var(--purple)'); @endphp
+                    <tr x-data="{ edit: false }">
+                        <td class="px-4 py-2 font-semibold" style="color:var(--text)">{{ $row['user']->name }}</td>
+                        <td class="px-4 py-2">
+                            <div class="flex items-center gap-2">
+                                <div class="flex-1 h-1.5 rounded-full overflow-hidden" style="background:var(--s3); min-width:80px">
+                                    <div class="h-full rounded-full" style="width:{{ $row['pct'] }}%; background:{{ $barColor }}"></div>
+                                </div>
+                                <span class="font-mono" style="color:var(--muted2)">{{ number_format($row['used'], 0, ',', '.') }}</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-2 text-right font-mono" style="color:var(--text)">
+                            {{ number_format($row['limit'], 0, ',', '.') }}
+                        </td>
+                        <td class="px-4 py-2 text-right font-mono" style="color:var(--muted2)">{{ $row['extra'] ? '+' . number_format($row['extra'], 0, ',', '.') : '—' }}</td>
+                        <td class="px-4 py-2 text-right font-mono font-bold" style="color:{{ $row['blocked'] ? 'var(--red)' : ($row['warn'] ? 'var(--orange)' : 'var(--text)') }}">
+                            {{ number_format($row['remaining'], 0, ',', '.') }}
+                        </td>
+                        @if($canManageCredits)
+                        <td class="px-4 py-2 text-right whitespace-nowrap">
+                            <button type="button" class="text-[11px] font-semibold" style="color:var(--purple)" x-show="!edit" @click="edit = true">Ajustar</button>
+                            <div x-show="edit" x-cloak class="flex flex-col items-end gap-1.5">
+                                <form method="POST" action="{{ route('ai.credits.limit', $row['user']) }}" class="flex items-center gap-1.5">
+                                    @csrf @method('PATCH')
+                                    <span style="color:var(--muted)">Limite semanal</span>
+                                    <input type="number" name="weekly_credits" min="0" step="100" value="{{ $row['limit'] }}" class="w-20 text-xs rounded px-2 py-1" style="border:1px solid var(--border2); background:var(--s1); color:var(--text)">
+                                    <button class="btn text-[11px] py-1">Salvar</button>
+                                </form>
+                                <form method="POST" action="{{ route('ai.credits.grant', $row['user']) }}" class="flex items-center gap-1.5">
+                                    @csrf
+                                    <span style="color:var(--muted)">Extra só nesta semana</span>
+                                    <input type="number" name="credits" min="1" step="100" value="500" class="w-20 text-xs rounded px-2 py-1" style="border:1px solid var(--border2); background:var(--s1); color:var(--text)">
+                                    <button class="btn btn-primary text-[11px] py-1">Liberar</button>
+                                </form>
+                                <button type="button" class="text-[11px]" style="color:var(--muted)" @click="edit = false">Fechar</button>
+                            </div>
+                        </td>
+                        @endif
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            </div>
+        </div>
+
         {{-- Histórico recente --}}
         <div style="border:1px solid var(--border2); border-radius:8px; overflow:hidden">
             <div class="px-4 py-3 text-xs font-semibold"

@@ -35,9 +35,12 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Agente Nonna (/agente): em teste, só super admin. Pra liberar pro time,
-        // trocar por `fn (User $u) => $u->client_id === null`.
-        \Illuminate\Support\Facades\Gate::define('use-agent', fn (User $user) => (bool) $user->is_super_admin);
+        // Agente Nonna (/agente): liberado pra toda a equipe interna em 17/11/2026
+        // (cliente/portal nunca). O uso é limitado pelos créditos semanais (AgentCredits).
+        \Illuminate\Support\Facades\Gate::define('use-agent', fn (User $user) => $user->client_id === null);
+        // Mudar limite / liberar crédito extra do Agente Nonna (Uso & Custos): dono/admin da organização.
+        \Illuminate\Support\Facades\Gate::define('manage-agent-credits', fn (User $user) => $user->is_super_admin
+            || in_array(app()->has('currentOrgRole') ? app('currentOrgRole') : null, ['owner', 'admin'], true));
 
         Task::observe(TaskObserver::class);
         Client::observe(ClientObserver::class);

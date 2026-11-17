@@ -25,6 +25,7 @@
             'conversations' => $conversations,
             'current'       => $current,
             'messages'      => $messages,
+            'credits'       => $credits,
             'userName'      => \Illuminate\Support\Str::of(auth()->user()->name)->before(' '),
             'urls'          => [
                 'index'   => route('agent.index'),
@@ -61,6 +62,18 @@
                         </button>
                     </div>
                 </template>
+            </div>
+
+            {{-- Créditos da semana (AgentCredits) --}}
+            <div class="p-3" style="border-top:1px solid var(--border2)">
+                <div class="flex items-center justify-between text-[11px] font-semibold" style="color:var(--muted)">
+                    <span>CRÉDITOS DA SEMANA</span>
+                    <span :style="credits.warn ? 'color:var(--orange)' : ''" x-text="fmt(credits.remaining) + ' de ' + fmt(credits.total)"></span>
+                </div>
+                <div class="mt-1.5 h-1.5 rounded-full overflow-hidden" style="background:var(--s3)">
+                    <div class="h-full rounded-full transition-all" :style="'width:' + credits.pct + '%; background:' + (credits.blocked ? 'var(--red)' : credits.warn ? 'var(--orange)' : 'var(--purple)')"></div>
+                </div>
+                <p class="mt-1.5 text-[11px]" style="color:var(--muted)">Renova na <span x-text="credits.renews"></span>.</p>
             </div>
         </aside>
 
@@ -201,6 +214,9 @@
                     </div>
                     <p class="mt-1.5 text-center text-[11px]" style="color:var(--muted)">
                         O agente pode errar. Nada é criado sem você clicar em "Confirmar".
+                        <span :style="credits.warn ? 'color:var(--orange); font-weight:600' : ''">
+                            · <span x-text="fmt(credits.remaining)"></span> créditos restantes nesta semana
+                        </span>
                     </p>
                 </form>
             </div>
@@ -213,6 +229,7 @@
                 conversations: cfg.conversations,
                 current: cfg.current,
                 items: cfg.messages,
+                credits: cfg.credits,
                 userName: cfg.userName,
                 urls: cfg.urls,
                 draft: '',
@@ -231,6 +248,8 @@
                 },
 
                 csrf() { return document.querySelector('meta[name=csrf-token]').content; },
+
+                fmt(n) { return Number(n || 0).toLocaleString('pt-BR'); },
 
                 currentTitle() {
                     return (this.conversations.find(c => c.id === this.current) || {}).title || 'Agente Nonna';
@@ -285,6 +304,7 @@
                             body: JSON.stringify({ message: text, conversation_id: this.current }),
                         });
                         const data = await res.json().catch(() => ({}));
+                        if (data.credits) this.credits = data.credits;
 
                         if (data.conversation_id && data.conversation_id !== this.current) {
                             this.current = data.conversation_id;

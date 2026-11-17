@@ -1107,6 +1107,13 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         // Uso & Custos
         Route::get('/uso', [\App\Http\Controllers\Ai\AiUsageController::class, 'index'])
             ->name('usage.index');
+        // Créditos semanais do Agente Nonna (limite por pessoa + extra da semana)
+        Route::middleware('can:manage-agent-credits')->group(function () {
+            Route::patch('/creditos/{user}/limite', [\App\Http\Controllers\Ai\AiUsageController::class, 'updateCreditLimit'])
+                ->name('credits.limit');
+            Route::post('/creditos/{user}/extra', [\App\Http\Controllers\Ai\AiUsageController::class, 'grantCredits'])
+                ->name('credits.grant');
+        });
     });
 
     // ── Playbooks de Projeto (modelos reutilizáveis de estrutura de tarefas) ──

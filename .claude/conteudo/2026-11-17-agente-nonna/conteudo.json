@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Agente Nonna: converse com o App",
+            "summary": "Nova página no topo do menu: pergunte como está um cliente, o que está atrasado ou o que ficou decidido numa reunião, e peça tarefa, reunião ou pendência. Nada é criado sem você clicar em Confirmar.",
+            "kind": "novidade",
+            "area": "Agente Nonna"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Agente Nonna — como conversar com o App",
+            "category": "Primeiros passos",
+            "slug": "agente-nonna",
+            "body_file": "ajuda-agente-nonna.html"
+        }
+    ]
+}

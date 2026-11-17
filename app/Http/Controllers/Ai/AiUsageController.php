@@ -5,6 +5,10 @@ namespace App\Http\Controllers\Ai;
 use App\Http\Controllers\Controller;
 use App\Models\AiTokenUsage;
 use App\Models\AiAgent;
+use App\Models\AgentCreditGrant;
+use App\Models\AgentCreditLimit;
+use App\Models\User;
+use App\Services\Agent\AgentCredits;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -61,8 +65,47 @@ class AiUsageController extends Controller
             ->limit(50)
             ->get();
 
+        // Créditos do Agente Nonna nesta semana, por pessoa do time (ver AgentCredits).
+        $team = User::whereNull('client_id')->orderBy('name')->get(['id', 'name']);
+        $credits = AgentCredits::forUsers($team);
+        $creditRows = $team->map(fn ($u) => ['user' => $u] + $credits[$u->id])
+            ->sortByDesc('used')->values();
+        $creditWeek = AgentCredits::weekStart();
+
         return view('ai.usage.index', compact(
-            'totals', 'byAgent', 'byModel', 'byTrigger', 'recent', 'period'
+            'totals', 'byAgent', 'byModel', 'byTrigger', 'recent', 'period', 'creditRows', 'creditWeek'
         ));
+    }
+
+    public function updateCreditLimit(Request $request, User $user)
+    {
+        abort_unless($user->client_id === null, 404);
+        $data = $request->validate(['weekly_credits' => 'required|integer|min:0|max:1000000']);
+
+        AgentCreditLimit::updateOrCreate(
+            ['user_id' => $user->id],
+            ['weekly_credits' => $data['weekly_credits'], 'updated_by' => auth()->id()],
+        );
+
+        return back()->with('success', "Limite semanal de {$user->name}: " . number_format($data['weekly_credits'], 0, ',', '.') . ' créditos.');
+    }
+
+    public function grantCredits(Request $request, User $user)
+    {
+        abort_unless($user->client_id === null, 404);
+        $data = $request->validate([
+            'credits' => 'required|integer|min:1|max:100000',
+            'note'    => 'nullable|string|max:255',
+        ]);
+
+        AgentCreditGrant::create([
+            'user_id'    => $user->id,
+            'week_start' => AgentCredits::weekStart()->toDateString(),
+            'credits'    => $data['credits'],
+            'note'       => $data['note'] ?? null,
+            'granted_by' => auth()->id(),
+        ]);
+
+        return back()->with('success', number_format($data['credits'], 0, ',', '.') . " créditos extras liberados para {$user->name} nesta semana.");
     }
 }
