@@ -146,10 +146,10 @@
                                     <div class="flex items-center gap-2 px-4 py-2.5" style="border-top:1px solid var(--border2)">
                                         <template x-if="item.status === 'pending'">
                                             <div class="flex items-center gap-2">
-                                                <button type="button" class="btn btn-primary" :disabled="item.saving" @click="resolve(item, 'confirm')">
+                                                <button type="button" class="btn btn-primary" :disabled="!!item.saving" @click="resolve(item, 'confirm')">
                                                     <span x-text="item.saving ? 'Criando…' : 'Confirmar'"></span>
                                                 </button>
-                                                <button type="button" class="btn" :disabled="item.saving" @click="resolve(item, 'discard')">Descartar</button>
+                                                <button type="button" class="btn" :disabled="!!item.saving" @click="resolve(item, 'discard')">Descartar</button>
                                                 <span class="text-xs" style="color:var(--muted)">Quer mudar algo? É só pedir na conversa.</span>
                                             </div>
                                         </template>
@@ -319,9 +319,13 @@
                         const data = await res.json().catch(() => ({}));
                         if (!res.ok) {
                             this.items.push({ id: 'e' + Date.now(), kind: 'error', text: data.error || data.message || 'Não deu certo. Tente de novo.' });
+                            this.scrollDown();
                             return;
                         }
                         Object.assign(item, data.item);
+                    } catch (e) {
+                        this.items.push({ id: 'e' + Date.now(), kind: 'error', text: 'Sem conexão com o App. Confira a internet e tente de novo.' });
+                        this.scrollDown();
                     } finally {
                         item.saving = false;
                     }
