@@ -10,6 +10,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -324,19 +325,75 @@ class AgentToolbox
             ->with(['client:id,company_name', 'project:id,title', 'executors:id,name', 'responsibles:id,name'])
             ->when(!empty($a['client_id']), fn ($q) => $q->where('client_id', $a['client_id']))
             ->when(!empty($a['project_id']), fn ($q) => $q->where('project_id', $a['project_id']))
-            ->when(!empty($a['executor_user_id']), fn ($q) => $q->whereHas('executors', fn ($e) => $e->where('users.id', (int) $a['executor_user_id'])))
+            ->when(!empty($a['executor_user_id']), fn ($q) => $q->whereHas('executors', fn ($e) => $e
+                ->where('users.id', (int) $a['executor_user_id'])->where('task_executors.role', 'executor')))
             ->when($statuses, fn ($q) => $q->whereIn('status', $statuses), fn ($q) => $q->whereIn('status', self::OPEN_STATUSES))
             ->when(!empty($a['somente_atrasadas']), fn ($q) => $q->whereNotNull('due_date')->where('due_date', '<', today()))
             ->when(!empty($a['termo']), fn ($q) => $q->where('title', 'ilike', '%' . str_replace(['%', '_'], ['\%', '\_'], $a['termo']) . '%'));
 
         $total = (clone $query)->count();
-        $tasks = $query->orderByRaw('due_date is null')->orderBy('due_date')->limit($limit)->get();
+        $tasks = (clone $query)->orderByRaw('due_date is null')->orderBy('due_date')->limit($limit)->get();
 
         return [
             'total_encontrado' => $total,
             'mostrando'        => $tasks->count(),
+            // Contas feitas no banco sobre TODAS as encontradas (não só as mostradas) —
+            // a IA erra contando item por item numa lista; com o número pronto, não.
+            'contagens'        => $total ? $this->taskCounts($query, $total, empty($a['client_id'])) : null,
             'tarefas'          => $tasks->map(fn (Task $t) => $this->taskRow($t))->all(),
         ];
+    }
+
+    /** Resumo numérico das tarefas filtradas: por status, pessoa, cliente/projeto e atrasadas. */
+    private function taskCounts($query, int $total, bool $byClient): array
+    {
+        $ids = (clone $query)->toBase()->select('tasks.id');
+        $byRole = function (string $role) use ($ids, $total) {
+            $rows = DB::connection('pgsql')->table('task_executors')
+                ->join('users', 'users.id', '=', 'task_executors.user_id')
+                ->whereIn('task_executors.task_id', $ids)
+                ->where('task_executors.role', $role)
+                ->groupBy('users.name')
+                ->selectRaw('users.name, count(distinct task_executors.task_id) as n')
+                ->orderByDesc('n')
+                ->pluck('n', 'name')
+                ->map(fn ($n) => (int) $n);
+            $with = DB::connection('pgsql')->table('task_executors')->whereIn('task_id', $ids)->where('role', $role)->distinct()->count('task_id');
+            if ($total - $with > 0) {
+                $rows['(ninguém definido)'] = $total - $with;
+            }
+            return $rows->all();
+        };
+
+        // Agrupa pelo código (sem JOIN — evita coluna ambígua com os filtros) e busca os nomes depois.
+        $count = fn (string $col) => (clone $query)->toBase()->reorder()->selectRaw("{$col} as nome, count(*) as n")
+            ->groupBy($col)->orderByDesc('n')->pluck('n', 'nome')->map(fn ($n) => (int) $n)->all();
+        $statusCounts = $count('status');
+
+        $groupKey = $byClient ? 'por_cliente' : 'por_projeto';
+        $group = $byClient
+            ? $this->named(array_slice($count('client_id'), 0, 15, true), fn ($ids) => Client::whereIn('id', $ids)->pluck('company_name', 'id'), '(sem cliente)')
+            : $this->named(array_slice($count('project_id'), 0, 15, true), fn ($ids) => Project::whereIn('id', $ids)->pluck('title', 'id'), '(chamado avulso, sem projeto)');
+
+        return [
+            'atrasadas'        => (clone $query)->whereNotNull('due_date')->where('due_date', '<', today())->count(),
+            'por_status'       => collect($statusCounts)->mapWithKeys(fn ($n, $s) => [Task::$statuses[$s]['label'] ?? $s => $n])->all(),
+            'por_executor'     => $byRole('executor'),
+            'por_responsavel'  => $byRole('responsavel'),
+            $groupKey          => $group,
+        ];
+    }
+
+    /** [id => n] vira [nome => n]; id vazio vira $emptyLabel. */
+    private function named(array $counts, callable $names, string $emptyLabel): array
+    {
+        $map = collect($names(array_values(array_filter(array_keys($counts), fn ($k) => $k !== '' && $k !== null))));
+        $out = [];
+        foreach ($counts as $id => $n) {
+            $label = ($id === '' || $id === null) ? $emptyLabel : ($map[$id] ?? $emptyLabel);
+            $out[$label] = ($out[$label] ?? 0) + $n;
+        }
+        return $out;
     }
 
     private function detalheTarefa(array $a): array
@@ -541,11 +598,24 @@ class AgentToolbox
             ->when(!empty($a['task_id']), fn ($q) => $q->where('pendable_type', (new Task)->getMorphClass())->where('pendable_id', $a['task_id']));
 
         $total = (clone $query)->count();
-        $items = $query->orderByRaw('due_date is null')->orderBy('due_date')->orderBy('created_at')->limit($limit)->get();
+        $items = (clone $query)->orderByRaw('due_date is null')->orderBy('due_date')->orderBy('created_at')->limit($limit)->get();
+
+        // Contas no banco sobre todas as encontradas (ver listarTarefas).
+        $count = fn ($select, $group) => (clone $query)->toBase()->reorder()->selectRaw("{$select} as nome, count(*) as n")
+            ->groupByRaw($group)->orderByDesc('n')->pluck('n', 'nome')->map(fn ($n) => (int) $n)->all();
+        $counts = $total ? [
+            'vencidas'       => (clone $query)->whereNotNull('due_date')->where('due_date', '<', today())->count(),
+            'por_quem_deve'  => collect($count('owed_by', 'owed_by'))->mapWithKeys(fn ($n, $k) => [Pendency::$owedBy[$k]['label'] ?? $k => $n])->all(),
+            'por_quem_cobra' => $this->named($count('owner_id', 'owner_id'), fn ($ids) => $this->team()->only($ids), '(ninguém)'),
+            'por_tipo'       => collect($count('kind', 'kind'))->mapWithKeys(fn ($n, $k) => [Pendency::$kinds[$k]['label'] ?? $k => $n])->all(),
+            'por_cliente'    => $this->named(array_slice($count('client_id', 'client_id'), 0, 15, true),
+                fn ($ids) => Client::whereIn('id', $ids)->pluck('company_name', 'id'), '(sem cliente)'),
+        ] : null;
 
         return [
             'total_encontrado' => $total,
             'mostrando'        => $items->count(),
+            'contagens'        => $counts,
             'link_central'     => $this->link('pendencies.index', []),
             'pendencias'       => $items->map(fn (Pendency $p) => array_filter([
                 'titulo'      => $p->title,
@@ -683,7 +753,8 @@ class AgentToolbox
             'prioridade'  => $t->priorityLabel(),
             'prazo'       => $t->due_date?->format('d/m/Y'),
             'atrasada'    => $t->isOverdue() ?: null,
-            'executores'  => $t->executors->pluck('name')->implode(', ') ?: null,
+            // executors() traz todos os papéis (executor, responsável, aprovador, observador)
+            'executores'  => $t->executors->where('pivot.role', 'executor')->pluck('name')->implode(', ') ?: null,
             'responsavel' => $t->responsibles->pluck('name')->implode(', ') ?: null,
             'chamado'     => $t->is_ticket ?: null,
         ], fn ($v) => $v !== null && $v !== '');
