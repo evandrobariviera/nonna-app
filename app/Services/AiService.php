@@ -106,6 +106,156 @@ class AiService
         return $this->parseJsonResponse($responseText, $agent);
     }
 
+    /**
+     * Uma rodada com ferramentas (function calling) — usada pelo Agente Nonna
+     * (AgentRunner), que faz o loop: chama, executa as ferramentas pedidas, chama
+     * de novo. $messages já vem no formato da OpenAI (system/user/assistant/tool).
+     * Só provedores compatíveis com a OpenAI; devolve a mensagem crua do assistente
+     * (content + tool_calls).
+     */
+    public function chatWithTools(
+        AiAgent $agent,
+        array $messages,
+        array $tools,
+        ?int $userId = null,
+        ?string $clientId = null,
+        bool $allowTools = true,
+    ): array {
+        $agent->loadMissing('provider');
+
+        if (!in_array($agent->provider->slug, ['openai', 'groq'], true)) {
+            throw new \RuntimeException("Agente '{$agent->name}': ferramentas só funcionam com provedor compatível com a OpenAI.");
+        }
+
+        $apiKey = $agent->resolvedApiKey();
+        if (!$apiKey) {
+            throw new \RuntimeException("Agente '{$agent->name}': nenhuma chave de API configurada para {$agent->provider->name}.");
+        }
+
+        // gpt-5.x da OpenAI recusa ferramentas + raciocínio na Chat Completions
+        // ("use /v1/responses") — vai pela Responses API, que mantém o raciocínio.
+        if ($agent->provider->slug === 'openai' && $this->isReasoningModel($agent->model)) {
+            [$message, $usage] = $this->guard($agent, fn () => $this->callResponsesWithTools($agent, $apiKey->getApiKey(), $messages, $tools, $allowTools));
+            $this->logUsage($agent, $usage, $userId, $clientId, 'agent');
+
+            return $message;
+        }
+
+        $payload = [
+            'model'                 => $agent->model,
+            'messages'              => $messages,
+            'max_completion_tokens' => $agent->max_tokens,
+        ];
+        if ($tools) {
+            $payload['tools'] = $tools;
+            $payload['tool_choice'] = $allowTools ? 'auto' : 'none';
+        }
+        if (!$this->isReasoningModel($agent->model)) {
+            $payload['temperature'] = $agent->temperature;
+        }
+
+        [$message, $usage] = $this->guard($agent, function () use ($agent, $apiKey, $payload) {
+            $response = Http::withToken($apiKey->getApiKey())
+                ->timeout(180)
+                ->post(rtrim($agent->provider->base_url, '/') . '/chat/completions', $payload)
+                ->throw()
+                ->json();
+
+            return [
+                $response['choices'][0]['message'] ?? ['role' => 'assistant', 'content' => ''],
+                [
+                    'prompt_tokens'     => $response['usage']['prompt_tokens'] ?? 0,
+                    'completion_tokens' => $response['usage']['completion_tokens'] ?? 0,
+                    'total_tokens'      => $response['usage']['total_tokens'] ?? 0,
+                ],
+            ];
+        });
+        $this->logUsage($agent, $usage, $userId, $clientId, 'agent');
+
+        return $message;
+    }
+
+    /**
+     * Tradução Chat Completions ⇄ Responses API: entra e sai no formato de chat
+     * (role/content/tool_calls), que é como o AgentRunner grava o histórico.
+     */
+    private function callResponsesWithTools(AiAgent $agent, string $apiKey, array $messages, array $tools, bool $allowTools): array
+    {
+        $instructions = [];
+        $input = [];
+        foreach ($messages as $m) {
+            switch ($m['role']) {
+                case 'system':
+                    $instructions[] = $m['content'];
+                    break;
+                case 'tool':
+                    $input[] = ['type' => 'function_call_output', 'call_id' => $m['tool_call_id'], 'output' => (string) $m['content']];
+                    break;
+                case 'assistant':
+                    if (trim((string) ($m['content'] ?? '')) !== '') {
+                        $input[] = ['role' => 'assistant', 'content' => (string) $m['content']];
+                    }
+                    foreach ($m['tool_calls'] ?? [] as $call) {
+                        $input[] = [
+                            'type'      => 'function_call',
+                            'call_id'   => $call['id'],
+                            'name'      => $call['function']['name'],
+                            'arguments' => $call['function']['arguments'] ?? '{}',
+                        ];
+                    }
+                    break;
+                default:
+                    $input[] = ['role' => 'user', 'content' => (string) $m['content']];
+            }
+        }
+
+        $payload = [
+            'model'             => $agent->model,
+            'instructions'      => implode("\n\n", $instructions),
+            'input'             => $input,
+            'max_output_tokens' => $agent->max_tokens,
+            // "low": conversa precisa ser ágil; o raciocínio serve pra escolher as ferramentas.
+            'reasoning'         => ['effort' => 'low'],
+            'store'             => false,
+        ];
+        if ($tools) {
+            $payload['tools'] = array_map(fn ($t) => ['type' => 'function'] + $t['function'], $tools);
+            $payload['tool_choice'] = $allowTools ? 'auto' : 'none';
+        }
+
+        $response = Http::withToken($apiKey)
+            ->timeout(180)
+            ->post(rtrim($agent->provider->base_url, '/') . '/responses', $payload)
+            ->throw()
+            ->json();
+
+        $text = '';
+        $calls = [];
+        foreach ($response['output'] ?? [] as $item) {
+            if (($item['type'] ?? '') === 'message') {
+                foreach ($item['content'] ?? [] as $part) {
+                    if (($part['type'] ?? '') === 'output_text') {
+                        $text .= $part['text'];
+                    }
+                }
+            } elseif (($item['type'] ?? '') === 'function_call') {
+                $calls[] = [
+                    'id'       => $item['call_id'],
+                    'type'     => 'function',
+                    'function' => ['name' => $item['name'], 'arguments' => $item['arguments'] ?? '{}'],
+                ];
+            }
+        }
+
+        $in  = $response['usage']['input_tokens'] ?? 0;
+        $out = $response['usage']['output_tokens'] ?? 0;
+
+        return [
+            ['role' => 'assistant', 'content' => $text !== '' ? $text : null, 'tool_calls' => $calls ?: null],
+            ['prompt_tokens' => $in, 'completion_tokens' => $out, 'total_tokens' => $in + $out],
+        ];
+    }
+
     private function buildChatSystemPrompt(string $agentPrompt, array $context): string
     {
         if (empty($context)) {

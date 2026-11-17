@@ -30,6 +30,7 @@ class AiAgent extends Model
     public const SLUG_CAMPAIGN_FUNNEL_ANALYST = 'campaign-funnel-analyst'; // analisa o funil anúncio → venda da campanha
     public const SLUG_GOOGLE_SEARCH_WRITER = 'google-search-writer'; // títulos/descrições de anúncio de Pesquisa (GoogleSearchAdCreator)
     public const SLUG_DOCUMENT_UPDATER = 'document-updater'; // "Atualizar documento com reunião" (DocumentUpdateService)
+    public const SLUG_NONNA_AGENT = 'nonna-agent'; // Agente Nonna — página /agente (AgentRunner)
 
     public static function bySlug(string $slug): ?self
     {

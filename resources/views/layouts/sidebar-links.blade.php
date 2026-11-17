@@ -33,6 +33,18 @@
         ->count());
 @endphp
 
+{{-- Agente Nonna (IA em página inteira) — em teste, Gate "use-agent" --}}
+@can('use-agent')
+<a href="{{ route('agent.index') }}"
+   class="nav-group-trigger {{ request()->routeIs('agent.*') ? 'open' : '' }}"
+   style="{{ request()->routeIs('agent.*') ? 'color:var(--purple);' : '' }}">
+    <span class="flex items-center gap-3">
+        <x-icon name="sparkles" size="16" class="flex-shrink-0" />
+        Agente Nonna
+    </span>
+</a>
+@endcan
+
 {{-- Chat da equipe — contador vem do widget (Alpine store "chat"), sem query aqui --}}
 <a href="{{ route('chat.index') }}"
    class="nav-group-trigger {{ request()->routeIs('chat.*') ? 'open' : '' }}"

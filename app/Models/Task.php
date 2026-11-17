@@ -112,6 +112,7 @@ class Task extends Model
         'reuniao'      => 'Reunião',
         'playbook'     => 'Playbook',
         'ai_assistant' => 'Assistente de Tarefas (IA)',
+        'agente'       => 'Agente Nonna (IA)',
     ];
 
     // Situação = sub-status cru vindo do ClickUp (texto livre). As chaves abaixo são

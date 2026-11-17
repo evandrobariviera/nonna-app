@@ -35,6 +35,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Agente Nonna (/agente): em teste, só super admin. Pra liberar pro time,
+        // trocar por `fn (User $u) => $u->client_id === null`.
+        \Illuminate\Support\Facades\Gate::define('use-agent', fn (User $user) => (bool) $user->is_super_admin);
+
         Task::observe(TaskObserver::class);
         Client::observe(ClientObserver::class);
         Opportunity::observe(OpportunityObserver::class);

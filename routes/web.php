@@ -445,6 +445,16 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::delete('/notificacoes/{notification}', [\App\Http\Controllers\NotificationController::class, 'destroy'])
         ->name('notifications.destroy');
 
+    // ── Agente Nonna (conversa com IA em página inteira; ver AgentController) ──
+    Route::prefix('agente')->name('agent.')->middleware('can:use-agent')->controller(\App\Http\Controllers\AgentController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/mensagens', 'send')->middleware('throttle:20,1')->name('send');
+        Route::post('/propostas/{message}/confirmar', 'confirm')->name('confirm');
+        Route::post('/propostas/{message}/descartar', 'discard')->name('discard');
+        Route::get('/{conversation}', 'index')->name('show');
+        Route::delete('/{conversation}', 'destroy')->name('destroy');
+    });
+
     // ── Chat interno (widget flutuante + tela cheia) — ver .claude/docs/internal-chat-plan.md.
     // Acesso a conversa só por participação (ChatConversationPolicy), sem exceção pra admin.
     Route::prefix('chat')->name('chat.')->controller(\App\Http\Controllers\ChatController::class)->group(function () {
