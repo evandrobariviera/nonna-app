@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Agente Nonna enxerga a agência inteira",
+            "summary": "Agora dá para perguntar sobre todos os clientes de uma vez — \"quais sites estão em produção ou ainda não começaram?\" — e procurar uma palavra em tudo (clientes, projetos, tarefas, reuniões e pendências).",
+            "kind": "melhoria",
+            "area": "Agente Nonna"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Agente Nonna — como conversar com o App",
+            "category": "Primeiros passos",
+            "slug": "agente-nonna",
+            "body_file": "../2026-11-17-agente-nonna/ajuda-agente-nonna.html"
+        }
+    ]
+}
