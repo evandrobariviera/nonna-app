@@ -20,6 +20,12 @@ class AutomationEngine
             return;
         }
 
+        // Demonstração (Portal de exemplo) nunca dispara automação — a tabela automations
+        // não tem organização, então as regras da agência valeriam pros dados fictícios.
+        if (self::isDemoEntity($entity)) {
+            return;
+        }
+
         $automations = Automation::where('entity_type', $entityType)
             ->where('is_active', true)
             ->get();
@@ -29,6 +35,19 @@ class AutomationEngine
                 AutomationJob::dispatch($automation, $entityType, $entity->getKey(), $changeData);
             }
         }
+    }
+
+    /** @var array<string, bool> organização => é demo (cache por processo) */
+    private static array $demoOrgs = [];
+
+    public static function isDemoEntity(Model $entity): bool
+    {
+        $orgId = $entity->getAttribute('organization_id');
+        if (!$orgId) {
+            return false;
+        }
+
+        return self::$demoOrgs[$orgId] ??= \App\Models\Organization::whereKey($orgId)->value('status') === 'demo';
     }
 
     private static function resolveEntityType(Model $entity): ?string

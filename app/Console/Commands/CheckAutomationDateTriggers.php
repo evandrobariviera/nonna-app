@@ -39,7 +39,7 @@ class CheckAutomationDateTriggers extends Command
             $entities = $this->entitiesFor($automation->entity_type, $dateField, $targetDate, $automation->organization_id);
 
             foreach ($entities as $entity) {
-                if (!$automation->conditionsMatch($entity)) {
+                if (\App\Services\AutomationEngine::isDemoEntity($entity) || !$automation->conditionsMatch($entity)) {
                     continue;
                 }
 
