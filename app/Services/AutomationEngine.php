@@ -20,11 +20,8 @@ class AutomationEngine
             return;
         }
 
-        // Só as automações da organização da entidade: no Portal (e em jobs) não há
-        // currentOrganization, e o escopo global deixaria passar as de todas.
         $automations = Automation::where('entity_type', $entityType)
             ->where('is_active', true)
-            ->when($entity->getAttribute('organization_id'), fn ($q, $orgId) => $q->where('organization_id', $orgId))
             ->get();
 
         foreach ($automations as $automation) {
