@@ -319,6 +319,14 @@ class PortalDemoBuilder
             ]);
         }
 
+        // Analytics e Search Console "ligados": a fonte de números da demo é fictícia
+        // (DemoSiteReports), então os ids não precisam existir no Google.
+        $this->mk(\App\Models\ClientTracking::class, [
+            'client_id' => $this->client->id, 'site_key' => Str::lower(Str::random(24)), 'send_enabled' => false,
+            'ga4_measurement_id' => 'G-DEMO000001', 'ga4_property_id' => '000000001',
+            'search_console_site' => 'sc-domain:auroraestruturas.com.br',
+        ]);
+
         $creds = [
             ['site', 'https://auroraestruturas.com.br/wp-admin', 'nonna.admin', 'Exemplo#2026', 'Acesso administrador do WordPress.'],
             ['instagram', 'https://instagram.com/auroraestruturas', '@auroraestruturas', 'Exemplo#2026', 'Login com verificação em duas etapas no celular da Juliana.'],

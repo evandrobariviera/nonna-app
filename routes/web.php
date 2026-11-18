@@ -1355,6 +1355,7 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
     Route::patch('/central-de-leads/{lead}/stage', [PortalLeads::class, 'updateStage'])->name('leads.update-stage');
     Route::patch('/central-de-leads/{lead}/dados', [PortalLeads::class, 'update'])->name('leads.update');
     Route::patch('/central-de-leads-configuracoes', [PortalLeads::class, 'updateSettings'])->name('leads.settings');
+    Route::get('/relatorio-analitico', [\App\Http\Controllers\Portal\SiteReportController::class, 'index'])->name('site-report.index');
     Route::get('/campanhas', [PortalCampaigns::class, 'index'])->name('campaigns.index');
     Route::get('/campanhas/{campaign}', [PortalCampaigns::class, 'show'])->name('campaigns.show');
     // Prestação de contas (notas, boletos e extrato) — só aqui, com login.

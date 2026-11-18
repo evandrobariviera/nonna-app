@@ -1,0 +1,24 @@
+{
+    "novidades": [
+        {
+            "title": "Relatório Analítico no Portal do Cliente",
+            "summary": "O cliente com GA4 ou Search Console vinculado já vê no Portal as visitas do site, de onde elas vêm, as páginas de entrada e o que as pessoas buscam no Google — de 7, 28 ou 90 dias.",
+            "kind": "novidade",
+            "area": "Portal do Cliente"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Relatório Analítico — os números do site no Portal do cliente",
+            "category": "Performance",
+            "slug": "relatorio-analitico",
+            "body_file": "ajuda-relatorio-analitico.html"
+        },
+        {
+            "title": "Manual do rastreamento — configurar um cliente do zero",
+            "category": "Performance",
+            "slug": "manual-do-rastreamento",
+            "body_file": "../2026-11-17-manual-rastreamento/ajuda-manual-rastreamento.html"
+        }
+    ]
+}

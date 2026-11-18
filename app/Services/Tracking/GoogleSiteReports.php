@@ -127,6 +127,42 @@ class GoogleSiteReports
     }
 
     /**
+     * Visitas e conversões dia a dia nos últimos N dias (gráfico do Relatório Analítico).
+     * Dias sem visita entram com zero, pra linha não "pular" datas.
+     *
+     * @return array{ok: bool, error?: string, days?: list<array{date: string, sessions: int, key_events: int}>}
+     */
+    public function ga4Daily(string $propertyId, int $days = 28): array
+    {
+        if (!$this->can(self::GA4)) {
+            return ['ok' => false, 'error' => 'O login do Google ainda não tem permissão de ler o Analytics. Reconecte o Google em Configurações → Integrações.'];
+        }
+
+        return Cache::remember("ga4_daily:{$propertyId}:{$days}", self::TTL, function () use ($propertyId, $days) {
+            $res = $this->http()->post("https://analyticsdata.googleapis.com/v1beta/properties/{$propertyId}:runReport", [
+                'dateRanges' => [['startDate' => "{$days}daysAgo", 'endDate' => 'yesterday']],
+                'dimensions' => [['name' => 'date']],
+                'metrics'    => [['name' => 'sessions'], ['name' => 'keyEvents']],
+                'orderBys'   => [['dimension' => ['dimensionName' => 'date']]],
+            ]);
+            if ($res->failed()) {
+                return ['ok' => false, 'error' => $this->error($res->json(), $res->status())];
+            }
+
+            $byDate = collect($res->json('rows') ?? [])->mapWithKeys(fn ($r) => [
+                $r['dimensionValues'][0]['value'] => [(int) $r['metricValues'][0]['value'], (int) $r['metricValues'][1]['value']],
+            ]);
+
+            return ['ok' => true, 'days' => collect(range($days, 1))->map(function ($ago) use ($byDate) {
+                $date = now()->subDays($ago);
+                [$sessions, $events] = $byDate->get($date->format('Ymd'), [0, 0]);
+
+                return ['date' => $date->toDateString(), 'sessions' => $sessions, 'key_events' => $events];
+            })->all()];
+        });
+    }
+
+    /**
      * Resumo do Search Console nos últimos N dias (o Google leva ~2 dias para fechar os números).
      *
      * @return array{ok: bool, error?: string, totals?: array, queries?: list<array>, pages?: list<array>}

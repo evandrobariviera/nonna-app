@@ -123,8 +123,9 @@ class TrackingController extends Controller
     }
 
     /** Números do site (GA4 + Search Console), carregados à parte para a página abrir rápido. */
-    public function report(Client $client, GoogleSiteReports $reports): View
+    public function report(Client $client): View
     {
+        $reports = \App\Services\Tracking\SiteReports::for($client); // demo = números fictícios
         $t = ClientTracking::where('client_id', $client->id)->first();
         $ga4 = $t?->ga4_property_id ? $reports->ga4Summary($t->ga4_property_id) : null;
         $gsc = $t?->search_console_site ? $reports->searchConsoleSummary($t->search_console_site) : null;

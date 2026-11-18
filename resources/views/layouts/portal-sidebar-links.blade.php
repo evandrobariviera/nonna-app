@@ -58,13 +58,26 @@
     </span>
 </a>
 
-<span class="nav-group-trigger" style="opacity:.45; cursor:not-allowed">
-    <span class="flex items-center gap-3">
-        <x-icon name="file-chart-column" size="16" class="flex-shrink-0" />
-        Relatório Analítico
+{{-- Relatório Analítico: liga sozinho quando o cliente tem Analytics ou Search Console
+     vinculado na aba Rastreamento (sem isso, segue como "Em breve"). --}}
+@if(isset($currentClient) && \App\Services\Tracking\SiteReports::tracking($currentClient))
+    <a href="{{ route('portal.site-report.index') }}"
+       class="nav-group-trigger {{ request()->routeIs('portal.site-report.*') ? 'open' : '' }}"
+       style="{{ request()->routeIs('portal.site-report.*') ? 'color:var(--purple);' : '' }}">
+        <span class="flex items-center gap-3">
+            <x-icon name="file-chart-column" size="16" class="flex-shrink-0" />
+            Relatório Analítico
+        </span>
+    </a>
+@else
+    <span class="nav-group-trigger" style="opacity:.45; cursor:not-allowed">
+        <span class="flex items-center gap-3">
+            <x-icon name="file-chart-column" size="16" class="flex-shrink-0" />
+            Relatório Analítico
+        </span>
+        <span class="badge badge-muted" style="font-size:9px; padding:1px 6px; white-space:nowrap; flex-shrink:0">Em breve</span>
     </span>
-    <span class="badge badge-muted" style="font-size:9px; padding:1px 6px; white-space:nowrap; flex-shrink:0">Em breve</span>
-</span>
+@endif
 
 {{-- ══ SEU TRABALHO ══ --}}
 <div class="nav-group-label" style="margin-top:8px">Seu trabalho</div>
