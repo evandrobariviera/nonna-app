@@ -15,7 +15,18 @@ class HelpArticleController extends Controller
             ->groupBy(fn (HelpArticle $a) => $a->category ?: 'Sem categoria');
         $readAt = $this->readAtByArticle();
 
-        return view('help.index', compact('articlesByCategory', 'readAt'));
+        // Atalho do Mapa dos Documentos no topo. Se a tabela ainda não existir (meio de um
+        // deploy), o atalho some em vez de derrubar a Ajuda.
+        try {
+            $documentMap = \App\Models\DocumentStandard::query()
+                ->selectRaw("count(*) filter (where status <> 'a_decidir') as total, count(*) filter (where status = 'fechado') as fechados")
+                ->first();
+        } catch (\Illuminate\Database\QueryException $e) {
+            report($e);
+            $documentMap = null;
+        }
+
+        return view('help.index', compact('articlesByCategory', 'readAt', 'documentMap'));
     }
 
     // Fragmento pra busca dinâmica (live-filter.js) — mesmo padrão de ClientController::results().

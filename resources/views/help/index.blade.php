@@ -22,6 +22,22 @@
         </a>
     </div>
 
+    @if($documentMap && $documentMap->total > 0)
+        <a href="{{ route('help.documents.index') }}"
+           class="card px-5 py-4 mb-5 flex items-center gap-4 transition-colors"
+           style="border-left:3px solid var(--purple)"
+           onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+            <span class="flex-none flex items-center justify-center" style="width:36px; height:36px; border-radius:var(--radius); background:var(--s3); color:var(--purple)">
+                <x-icon name="map" size="18" />
+            </span>
+            <span class="flex-1 min-w-0">
+                <span class="block text-sm font-bold" style="color:var(--text)">Mapa dos Documentos</span>
+                <span class="block text-xs" style="color:var(--muted2)">Os documentos padrão da agência por etapa, com modelo e manual de cada um.</span>
+            </span>
+            <span class="flex-none text-xs font-mono" style="color:var(--muted)">{{ $documentMap->fechados }} de {{ $documentMap->total }} fechados</span>
+        </a>
+    @endif
+
     <div id="help-results">
         @include('help._results')
     </div>

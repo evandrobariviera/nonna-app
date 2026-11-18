@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\AppUpdate;
+use App\Models\DocumentStandard;
 use App\Models\HelpArticle;
 use App\Models\Organization;
 use Illuminate\Console\Command;
@@ -16,8 +17,12 @@ use Illuminate\Support\Carbon;
  * Formato:
  * {
  *   "novidades": [{"title", "summary", "body"?, "kind": novidade|melhoria|correcao, "area", "published_at"?}],
- *   "ajuda":     [{"title", "category", "slug"?, "body_file": "arquivo.html" (relativo ao JSON)}]
+ *   "ajuda":     [{"title", "category", "slug"?, "body_file": "arquivo.html" (relativo ao JSON)}],
+ *   "documentos": [{"slug", "name", "stage", "position", "status": na_fila|em_construcao|fechado,
+ *                   "summary"?, "when_made"?, "made_by"?, "reviewed_by"?, "inputs"?, "next_step"?,
+ *                   "help_article_slug"?, "template_file"?: "modelo.html" (relativo ao JSON)}]
  * }
+ * Documento (Mapa dos Documentos) com o mesmo slug é atualizado só nos campos enviados.
  *
  * Pode rodar de novo sem duplicar: novidade com o mesmo título é pulada; artigo com o
  * mesmo slug é atualizado (título, categoria e texto).
@@ -111,6 +116,56 @@ class PublishAppContent extends Command
                     'body'            => $body,
                     'created_by'      => $userId,
                     'updated_by'      => $userId,
+                ]);
+            }
+        }
+
+        foreach ($data['documentos'] ?? [] as $item) {
+            if (empty($item['slug']) || empty($item['name'])) {
+                $this->error('Documento sem slug ou name.');
+                return self::FAILURE;
+            }
+            if (isset($item['stage']) && !isset(DocumentStandard::$stages[$item['stage']])) {
+                $this->error("Etapa inválida em \"{$item['name']}\": {$item['stage']}");
+                return self::FAILURE;
+            }
+            if (isset($item['status']) && !isset(DocumentStandard::$statuses[$item['status']])) {
+                $this->error("Status inválido em \"{$item['name']}\": {$item['status']}");
+                return self::FAILURE;
+            }
+
+            $fields = array_intersect_key($item, array_flip([
+                'name', 'stage', 'position', 'status', 'summary', 'when_made', 'made_by',
+                'reviewed_by', 'inputs', 'next_step', 'help_article_slug',
+            ]));
+            if (!empty($item['template_file'])) {
+                $templatePath = dirname($path) . DIRECTORY_SEPARATOR . $item['template_file'];
+                if (!is_file($templatePath)) {
+                    $this->error("Modelo do documento não encontrado: {$templatePath}");
+                    return self::FAILURE;
+                }
+                $fields['template_html'] = file_get_contents($templatePath);
+            }
+
+            $document = DocumentStandard::withoutGlobalScopes()->where('organization_id', $orgId)->where('slug', $item['slug'])->first();
+            if ($document) {
+                $this->info("  ~ documento atualizado: {$item['name']} (/ajuda/documentos/{$item['slug']})");
+                if (!$dry) {
+                    $document->update($fields);
+                }
+                continue;
+            }
+
+            if (empty($item['stage'])) {
+                $this->error("Documento novo sem etapa: {$item['name']}");
+                return self::FAILURE;
+            }
+            $this->info("  + documento novo [{$item['stage']}] {$item['name']} (/ajuda/documentos/{$item['slug']})");
+            if (!$dry) {
+                DocumentStandard::withoutGlobalScopes()->create([
+                    ...$fields,
+                    'organization_id' => $orgId,
+                    'slug'            => $item['slug'],
                 ]);
             }
         }

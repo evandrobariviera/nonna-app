@@ -1,0 +1,133 @@
+{
+    "novidades": [
+        {
+            "title": "Mapa dos Documentos na Central de Ajuda",
+            "summary": "Os documentos padrão da agência agora aparecem por etapa, do comercial ao acompanhamento, cada um com a sua ficha, o modelo para preencher e o manual. O primeiro fechado é o Briefing do Kickoff, que substitui o Dossiê de Marca.",
+            "kind": "novidade",
+            "area": "Central de Ajuda"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Mapa dos Documentos — como funciona",
+            "category": "Documentos",
+            "slug": "mapa-dos-documentos",
+            "body_file": "ajuda-mapa-dos-documentos.html"
+        },
+        {
+            "title": "Briefing do Kickoff — como preencher",
+            "category": "Documentos",
+            "slug": "briefing-do-kickoff",
+            "body_file": "ajuda-briefing-do-kickoff.html"
+        }
+    ],
+    "documentos": [
+        {
+            "slug": "raio-x-presenca-digital", "name": "Raio-X de presença digital", "stage": "comercial", "position": 1, "status": "a_decidir",
+            "summary": "A leitura da presença digital da empresa prospectada, gerada pela Central de Comércio. A decidir: vira documento para mostrar ao prospect?"
+        },
+        {
+            "slug": "pesquisa-prospect", "name": "Pesquisa do prospect", "stage": "comercial", "position": 2, "status": "a_decidir",
+            "summary": "Pesquisa de mercado, concorrentes e reputação da empresa antes da reunião de diagnóstico. A decidir: documento próprio ou trabalho do agente que alimenta o Briefing."
+        },
+        {
+            "slug": "abordagem-sdr", "name": "Roteiro e mensagens de abordagem", "stage": "comercial", "position": 3, "status": "a_decidir",
+            "summary": "As mensagens e o roteiro que o SDR usa para abordar empresas com o perfil ideal."
+        },
+        {
+            "slug": "guia-vendas-conversa", "name": "Guia de vendas por conversa (Bula)", "stage": "comercial", "position": 4, "status": "a_decidir",
+            "summary": "Material de presente para a empresa prospectada, no formato da Bula, sobre como vender pela conversa."
+        },
+        {
+            "slug": "roteiro-reuniao-diagnostico", "name": "Roteiro da reunião de diagnóstico", "stage": "comercial", "position": 5, "status": "na_fila",
+            "summary": "O passo a passo da reunião de diagnóstico com a empresa que ainda não é cliente: o que perguntar e o que mostrar."
+        },
+        {
+            "slug": "diagnostico-atendimento", "name": "Diagnóstico de Atendimento", "stage": "comercial", "position": 6, "status": "na_fila",
+            "summary": "A leitura de como a empresa atende os contatos e onde a venda se perde, com recomendações. Já sai do App em PDF; falta fechar o padrão de leitura."
+        },
+        {
+            "slug": "proposta-comercial", "name": "Proposta comercial", "stage": "comercial", "position": 7, "status": "na_fila",
+            "summary": "Uma parte igual para todos (quem é a Nonna e o PlaNo C) e uma parte feita para cada cliente (o que vamos fazer e quanto custa). Junta a antiga apresentação comercial."
+        },
+        {
+            "slug": "contrato", "name": "Contrato", "stage": "comercial", "position": 8, "status": "na_fila",
+            "summary": "O contrato assinado com o cliente. Em estudo: incluir as metas combinadas e a forma de avaliação."
+        },
+        {
+            "slug": "manual-do-cliente", "name": "Manual do cliente", "stage": "entrada", "position": 1, "status": "na_fila",
+            "summary": "Entregue ao cliente no começo da parceria: como trabalhamos, quem fala com quem e os prazos de aprovação."
+        },
+        {
+            "slug": "relatorio-setup-tecnico", "name": "Relatório do setup técnico", "stage": "entrada", "position": 2, "status": "a_decidir",
+            "summary": "O resultado da auditoria técnica do onboarding (Gerenciador da Meta, Pixel, Tag Manager, GA4): o que estava certo, o que foi corrigido e o que falta."
+        },
+        {
+            "slug": "pauta-kickoff", "name": "Pauta do kickoff", "stage": "entrada", "position": 3, "status": "na_fila",
+            "summary": "O roteiro da reunião de kickoff, pensado para sair dela com tudo o que o Briefing do Kickoff pede."
+        },
+        {
+            "slug": "briefing-kickoff", "name": "Briefing do Kickoff", "stage": "entrada", "position": 4, "status": "fechado",
+            "summary": "Quem é o cliente, como ele vende e o que vai contar como sucesso. É a base do primeiro planejamento e substitui o Dossiê de Marca.",
+            "when_made": "Até 2 dias úteis depois da reunião de kickoff",
+            "made_by": "Quem conduziu o kickoff (geralmente o Evandro)",
+            "reviewed_by": "O dono da conta e o gestor de projetos que vai falar com o cliente",
+            "inputs": "ATA do kickoff, cadastro do cliente, Diagnóstico de Atendimento, proposta fechada e, quando houver, a leitura das conversas",
+            "next_step": "Planejamento do ciclo",
+            "help_article_slug": "briefing-do-kickoff",
+            "template_file": "../../docs/templates/nonna-briefing-kickoff-modelo.html"
+        },
+        {
+            "slug": "planejamento-ciclo", "name": "Planejamento do ciclo", "stage": "planejamento", "position": 1, "status": "em_construcao",
+            "summary": "O plano de 60 a 90 dias: onde estamos, como vamos fazer, metas, cronograma, campanhas e projetos. Já existe; está ganhando metas ligadas a cada campanha e projeto."
+        },
+        {
+            "slug": "pauta-revisao-interna", "name": "Pauta da revisão interna", "stage": "planejamento", "position": 2, "status": "na_fila",
+            "summary": "A pauta da reunião em que a equipe discute o planejamento antes de levar ao cliente."
+        },
+        {
+            "slug": "documento-campanha", "name": "Documento de campanha", "stage": "execucao", "position": 1, "status": "em_construcao",
+            "summary": "O escopo de cada campanha: objetivo, ângulos de venda, mecânica, peças e como vamos medir se deu certo."
+        },
+        {
+            "slug": "conceito-criativo", "name": "Conceito criativo", "stage": "execucao", "position": 2, "status": "na_fila",
+            "summary": "A grande ideia da campanha e a forma de contar. Pode virar parte do documento de campanha."
+        },
+        {
+            "slug": "documento-projeto", "name": "Documento de projeto", "stage": "execucao", "position": 3, "status": "na_fila",
+            "summary": "O escopo de cada projeto: objetivo, o que será entregue, cronograma, o que o cliente aprova e como medir o benefício."
+        },
+        {
+            "slug": "escopo-tecnico-site", "name": "Escopo técnico de site", "stage": "execucao", "position": 4, "status": "na_fila",
+            "summary": "O que o site vai ter, em qual plataforma e o que é preciso do cliente para fazer."
+        },
+        {
+            "slug": "plano-de-midia", "name": "Plano de mídia", "stage": "execucao", "position": 5, "status": "na_fila",
+            "summary": "Como a verba de anúncios será dividida entre plataformas e campanhas."
+        },
+        {
+            "slug": "calendario-conteudo", "name": "Calendário de conteúdo", "stage": "execucao", "position": 6, "status": "na_fila",
+            "summary": "O que vai ser publicado, quando e em qual canal."
+        },
+        {
+            "slug": "roteiro-video", "name": "Roteiro de vídeo", "stage": "execucao", "position": 7, "status": "na_fila",
+            "summary": "Cena a cena do vídeo: o que aparece, o que se fala e o texto na tela."
+        },
+        {
+            "slug": "briefing-peca", "name": "Briefing de peça", "stage": "execucao", "position": 8, "status": "na_fila",
+            "summary": "O pedido de cada peça para a criação: o que é, para quem, a mensagem e o texto."
+        },
+        {
+            "slug": "ata-reuniao", "name": "ATA de reunião", "stage": "acompanhamento", "position": 1, "status": "na_fila",
+            "summary": "O registro de cada reunião com o cliente: decisões, pendências e o que muda. Já é montada pela IA; falta o manual."
+        },
+        {
+            "slug": "relatorio-resultados", "name": "Relatório de resultados para o cliente", "stage": "acompanhamento", "position": 2, "status": "a_decidir",
+            "summary": "O resumo periódico dos resultados de anúncios e vendas enviado ao cliente. A decidir: documento próprio ou só o painel do Portal."
+        },
+        {
+            "slug": "pesquisa-satisfacao", "name": "Pesquisa de satisfação", "stage": "acompanhamento", "position": 3, "status": "na_fila",
+            "summary": "As perguntas de satisfação enviadas ao cliente a cada ciclo."
+        }
+    ]
+}

@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Briefing do Kickoff · [Nome do cliente]</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,300;9..144,400&display=swap" rel="stylesheet">
+<style>
+/* Modelo do Briefing do Kickoff Nonna (v1) — substitui o Dossiê de Marca.
+   Mesmo visual do planejamento v2. As 10 seções e a ordem não mudam.
+   Trechos entre [colchetes] são para preencher; caixas "Como preencher" somem na impressão. */
+:root {
+  --bg: #F6F7FB; --surface: #FFFFFF; --surface-2: #F1F3F8;
+  --brand: #643B8E; --brand-soft: #F6F1FA; --accent: #EE7919; --accent-soft: #FFF7ED;
+  --text: #111827; --text-2: #4D5768; --text-3: #697386; --border: #E2E5ED;
+  --warning: #B45309; --warning-soft: #FEF3C7;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 15px/1.6 Inter, system-ui, sans-serif; }
+.doc { max-width: 860px; margin: 0 auto; padding: 40px 20px 80px; display: flex; flex-direction: column; gap: 28px; }
+.label { font: 600 11px/1.3 "IBM Plex Mono", monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--brand); }
+h1 { font: 300 clamp(30px, 6vw, 42px)/1.1 Fraunces, Georgia, serif; letter-spacing: -.02em; margin: 6px 0 10px; }
+h2 { font: 700 21px/1.25 Inter, sans-serif; letter-spacing: -.015em; margin: 0 0 14px; }
+h3 { font: 600 16px/1.3 Inter, sans-serif; margin: 0 0 4px; }
+p { margin: 0 0 10px; color: var(--text-2); }
+section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+.num { font: 600 11px "IBM Plex Mono", monospace; color: var(--text-3); margin-bottom: 4px; }
+ul { margin: 6px 0 0; padding-left: 20px; color: var(--text-2); }
+li { margin-bottom: 4px; }
+
+/* Campo a preencher */
+.ph { background: var(--accent-soft); color: #9A4A0B; border-radius: 4px; padding: 0 4px; }
+.pendente { display: inline-block; background: var(--warning-soft); color: var(--warning); font: 600 12px Inter, sans-serif; padding: 2px 8px; border-radius: 6px; }
+
+/* Instruções de preenchimento (somem ao imprimir ou pelo botão) */
+.guia { border: 1px dashed #C9B6DD; background: #FBF8FD; border-radius: 10px; padding: 12px 14px; margin: 0 0 16px; font-size: 13.5px; color: var(--text-2); }
+.guia b { color: var(--brand); }
+.guia .label { display: block; margin-bottom: 4px; }
+body.sem-guia .guia { display: none; }
+.alternar { position: fixed; right: 16px; bottom: 16px; background: var(--brand); color: #fff; border: 0; border-radius: 999px; padding: 10px 16px; font: 600 13px Inter, sans-serif; cursor: pointer; box-shadow: 0 4px 14px rgba(100,59,142,.3); }
+
+/* Capa */
+.capa { background: linear-gradient(135deg, var(--brand), #8A4FBF); color: #fff; border: 0; padding: 36px 28px; }
+.capa .label { color: rgba(255,255,255,.75); }
+.capa p { color: rgba(255,255,255,.9); font-size: 17px; font-style: italic; }
+.capa .ph { background: rgba(255,255,255,.18); color: #fff; }
+.meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 22px; }
+.meta div { background: rgba(255,255,255,.12); border-radius: 10px; padding: 10px 14px; }
+.meta b { display: block; font-weight: 600; color: #fff; }
+
+/* Blocos */
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.box { background: var(--surface-2); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.box .label { margin-bottom: 6px; }
+.box p:last-child { margin-bottom: 0; }
+.foco { background: var(--brand-soft); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin-top: 14px; font-family: Fraunces, Georgia, serif; font-size: 18px; color: var(--text); }
+.foco .label { font-family: "IBM Plex Mono", monospace; display: block; margin-bottom: 4px; }
+
+/* Cards de perfil */
+.perfis { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.perfil { border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.perfil h3 { color: var(--brand); }
+.perfil dl { margin: 8px 0 0; }
+.perfil dt { font: 600 11px "IBM Plex Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); margin-top: 8px; }
+.perfil dd { margin: 2px 0 0; color: var(--text-2); }
+
+/* Tabelas */
+.tabela { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tabela th { text-align: left; font: 600 11px "IBM Plex Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.tabela td { padding: 10px; border-bottom: 1px solid var(--border); color: var(--text-2); vertical-align: top; }
+.tabela tr:last-child td { border-bottom: 0; }
+.tabela td:first-child { color: var(--text); font-weight: 600; }
+.rolagem { overflow-x: auto; }
+.tabela tr.grupo td { background: var(--surface-2); font: 600 11px "IBM Plex Mono", monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--brand); padding: 7px 10px; }
+
+/* Combinados e pontos em aberto */
+.lista-dupla { display: grid; grid-template-columns: 200px 1fr; gap: 0; }
+.lista-dupla div { padding: 9px 0; border-bottom: 1px dashed var(--border); }
+.lista-dupla div:nth-last-child(-n+2) { border-bottom: 0; }
+.lista-dupla .chave { font-weight: 600; color: var(--text); padding-right: 14px; }
+.abertos li { margin-bottom: 8px; }
+.abertos .quem { color: var(--accent); font-weight: 600; }
+
+footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: var(--text-3); }
+
+@media (max-width: 520px) {
+  section { padding: 20px 16px; }
+  .lista-dupla { grid-template-columns: 1fr; }
+  .lista-dupla .chave { border-bottom: 0 !important; padding-bottom: 0; }
+}
+@media print {
+  body { background: #fff; }
+  .guia, .alternar { display: none !important; }
+  .doc { padding: 0; gap: 16px; }
+  section { break-inside: avoid; }
+  .ph { background: none; color: inherit; padding: 0; }
+}
+</style>
+</head>
+<body>
+<main class="doc">
+
+  <div class="guia">
+    <span class="label">Como usar este modelo</span>
+    O Briefing do Kickoff diz <b>quem é o cliente, como ele vende e o que vai contar como sucesso</b>. É a base do primeiro planejamento e de tudo o que vem depois.<br>
+    <b>Quem faz:</b> quem conduziu o kickoff (geralmente o Evandro), até 2 dias úteis depois da reunião.
+    <b>Quem revisa:</b> o dono da conta e o gestor de projetos que vai falar com o cliente.<br>
+    <b>Com o quê:</b> ATA do kickoff, cadastro do cliente, Diagnóstico de Atendimento, proposta fechada e, quando houver, a leitura das conversas.<br>
+    Troque tudo o que está <span class="ph">[entre colchetes]</span>. O que não se sabe ainda fica como <span class="pendente">A confirmar</span> e entra na seção 10. As seções 01 a 07 são a parte estratégica; 08 a 10, a parte operacional. Essas caixas tracejadas somem ao imprimir ou pelo botão no canto da tela.
+  </div>
+
+  <!-- CAPA -->
+  <section class="capa">
+    <div class="label">Nonna · Briefing do Kickoff</div>
+    <h1><span class="ph">[Nome do cliente]</span></h1>
+    <p><span class="ph">[Uma frase: o que a empresa faz e para quem. Ex.: "Autoescola com duas unidades em Joaçaba, que forma motoristas de primeira habilitação."]</span></p>
+    <div class="meta">
+      <div><span class="label">Kickoff em</span><b><span class="ph">[dd/mm/aaaa]</span></b></div>
+      <div><span class="label">Feito por</span><b><span class="ph">[Nome]</span></b></div>
+      <div><span class="label">Revisado por</span><b><span class="ph">[Nomes]</span></b></div>
+      <div><span class="label">Atualizado em</span><b><span class="ph">[dd/mm/aaaa]</span></b></div>
+    </div>
+  </section>
+
+  <!-- 01 RESUMO -->
+  <section>
+    <div class="num">01</div>
+    <h2>Resumo em 5 linhas</h2>
+    <div class="guia"><span class="label">Como preencher</span>Quem é, o que vende, para quem, em que momento está e o que espera da Nonna. Se alguém da equipe ler só isto, já entende o cliente. No máximo 5 linhas.</div>
+    <p><span class="ph">[Ex.: Empresa familiar com 12 anos de mercado, que vende móveis planejados de alto padrão para casais de 30 a 50 anos na região. O faturamento caiu em 2026 porque a loja depende de indicação e a concorrência passou a anunciar. O dono quer previsibilidade: saber quantos orçamentos vão chegar por mês e quanto custa cada venda.]</span></p>
+  </section>
+
+  <!-- 02 NEGÓCIO E OFERTA -->
+  <section>
+    <div class="num">02</div>
+    <h2>Negócio e oferta</h2>
+    <div class="guia"><span class="label">Como preencher</span>O que a empresa vende e o que importa vender mais. Os valores podem ser aproximados; o importante é a ordem de grandeza.</div>
+    <div class="cols">
+      <div class="box"><div class="label">Carro-chefe</div><p><span class="ph">[O produto ou serviço que mais vende]</span></p></div>
+      <div class="box"><div class="label">Ticket médio</div><p><span class="ph">[R$ por venda]</span></p></div>
+      <div class="box"><div class="label">O que dá mais margem</div><p><span class="ph">[O que o dono quer vender mais]</span></p></div>
+      <div class="box"><div class="label">Sazonalidade</div><p><span class="ph">[Meses fortes e meses fracos]</span></p></div>
+      <div class="box"><div class="label">Onde atende</div><p><span class="ph">[Cidades ou região; loja física, online ou os dois]</span></p></div>
+      <div class="box"><div class="label">O que contratou com a Nonna</div><p><span class="ph">[Nível do PlaNo C e serviços, como na proposta]</span></p></div>
+    </div>
+  </section>
+
+  <!-- 03 COMO VENDE HOJE -->
+  <section>
+    <div class="num">03</div>
+    <h2>Como vende hoje</h2>
+    <div class="guia"><span class="label">Como preencher</span>O caminho do contato até a venda. Use o Diagnóstico de Atendimento quando houver. A frase final é o principal gargalo, em uma linha.</div>
+    <div class="cols">
+      <div class="box"><div class="label">Por onde os contatos chegam</div><p><span class="ph">[WhatsApp, loja, site, indicação, Instagram... e qual traz mais]</span></p></div>
+      <div class="box"><div class="label">Quem atende e em quanto tempo</div><p><span class="ph">[Nome ou cargo de quem responde e o tempo médio de resposta]</span></p></div>
+      <div class="box"><div class="label">Onde a venda se perde</div><p><span class="ph">[Demora, falta de retorno, preço apresentado cedo demais...]</span></p></div>
+      <div class="box"><div class="label">Como registra as vendas</div><p><span class="ph">[CRM, planilha, caderno ou não registra]</span></p></div>
+    </div>
+    <div class="foco"><span class="label">Principal gargalo hoje</span><span class="ph">[Ex.: Metade dos contatos do WhatsApp não recebe retorno depois do primeiro orçamento.]</span></div>
+  </section>
+
+  <!-- 04 QUEM COMPRA -->
+  <section>
+    <div class="num">04</div>
+    <h2>Quem compra</h2>
+    <div class="guia"><span class="label">Como preencher</span>De 1 a 3 perfis de quem compra de verdade, de forma objetiva. Substitui as personas: nada de nome fictício nem idade exata, só o que ajuda a vender.</div>
+    <div class="perfis">
+      <div class="perfil">
+        <h3><span class="ph">[Perfil 1, ex.: Casal montando o primeiro apartamento]</span></h3>
+        <dl>
+          <dt>O que dói</dt><dd><span class="ph">[O problema que leva a pessoa a procurar]</span></dd>
+          <dt>Objeções</dt><dd><span class="ph">[O que faz hesitar: preço, prazo, confiança...]</span></dd>
+          <dt>O que faz decidir</dt><dd><span class="ph">[O que fecha a venda]</span></dd>
+        </dl>
+      </div>
+      <div class="perfil">
+        <h3><span class="ph">[Perfil 2]</span></h3>
+        <dl>
+          <dt>O que dói</dt><dd><span class="ph">[...]</span></dd>
+          <dt>Objeções</dt><dd><span class="ph">[...]</span></dd>
+          <dt>O que faz decidir</dt><dd><span class="ph">[...]</span></dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 CONCORRÊNCIA -->
+  <section>
+    <div class="num">05</div>
+    <h2>Concorrência e diferencial</h2>
+    <div class="guia"><span class="label">Como preencher</span>Até 3 concorrentes que o cliente final realmente compara. A frase final é o diferencial em uma linha, dito como o cliente diria.</div>
+    <div class="rolagem">
+      <table class="tabela">
+        <thead><tr><th>Concorrente</th><th>O que faz bem</th><th>Onde o cliente ganha dele</th></tr></thead>
+        <tbody>
+          <tr><td><span class="ph">[Nome]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td><span class="ph">[Nome]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td><span class="ph">[Nome]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="foco"><span class="label">Diferencial em uma frase</span><span class="ph">[Ex.: É a única da região que entrega o projeto em 3D antes de fechar o orçamento.]</span></div>
+  </section>
+
+  <!-- 06 VOZ E LIMITES -->
+  <section>
+    <div class="num">06</div>
+    <h2>Voz e limites</h2>
+    <div class="guia"><span class="label">Como preencher</span>Só o que guia quem escreve e quem cria. O que não pode ser dito inclui regras do setor (saúde, crédito, educação), promessas proibidas e assuntos que o dono não quer.</div>
+    <div class="cols">
+      <div class="box"><div class="label">Tom</div><p><span class="ph">[3 palavras, ex.: próximo, direto, confiante]</span></p></div>
+      <div class="box"><div class="label">Palavras que usa</div><p><span class="ph">[Como o cliente chama o próprio produto e o seu público]</span></p></div>
+      <div class="box"><div class="label">Palavras que evita</div><p><span class="ph">[...]</span></p></div>
+      <div class="box"><div class="label">O que não pode ser dito</div><p><span class="ph">[...]</span></p></div>
+    </div>
+  </section>
+
+  <!-- 07 METAS E PONTO DE PARTIDA -->
+  <section>
+    <div class="num">07</div>
+    <h2>Metas e ponto de partida</h2>
+    <div class="guia"><span class="label">Como preencher</span>Os números de hoje e o que o dono quer em 90 dias. É daqui que sai a base de comparação das campanhas e projetos. Número desconhecido não se inventa: marque <span class="pendente">A confirmar</span> e leve para a seção 10.</div>
+    <div class="rolagem">
+      <table class="tabela">
+        <thead><tr><th>Indicador</th><th>Hoje</th><th>Meta em 90 dias</th><th>De onde vem o número</th></tr></thead>
+        <tbody>
+          <tr><td>Contatos por mês</td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[Arkanno, WhatsApp, planilha do cliente...]</span></td></tr>
+          <tr><td>Vendas por mês</td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td>Custo por venda</td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td>Faturamento mensal</td><td><span class="pendente">A confirmar</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td><span class="ph">[Outro indicador que o dono acompanha]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="foco"><span class="label">O que o dono considera sucesso</span><span class="ph">[Nas palavras dele, ex.: "Quero parar de depender de indicação e ter agenda cheia todo mês."]</span></div>
+  </section>
+
+  <!-- 08 PRESENÇA DIGITAL E ESTRUTURA TÉCNICA -->
+  <section>
+    <div class="num">08</div>
+    <h2>Presença digital e estrutura técnica</h2>
+    <div class="guia"><span class="label">Como preencher</span>O raio-x de tudo o que o cliente já tem na internet. Evita descobrir no meio de um projeto de site que o domínio está no nome da agência anterior ou que ninguém sabe a senha do Facebook.<br>
+      <b>Em nome de quem:</b> de quem é a conta de verdade (do dono, de um funcionário, da agência anterior).
+      <b>Acesso da Nonna:</b> Já temos, Pedido ou Falta pedir.<br>
+      <b>Senha nunca entra aqui.</b> Senhas vão para os Acessos do cliente no App, pelo link de pedido de acessos. O que ficar como "Não sabe" ou "Falta pedir" vai para a seção 10.</div>
+
+    <div class="rolagem">
+      <table class="tabela">
+        <thead><tr><th>Item</th><th>Tem?</th><th>Link ou onde está</th><th>Em nome de quem</th><th>Acesso da Nonna</th></tr></thead>
+        <tbody>
+          <tr class="grupo"><td colspan="5">Canais</td></tr>
+          <tr><td>Site</td><td><span class="ph">[Sim · Não · Não sabe]</span></td><td><span class="ph">[endereço do site]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td>Instagram</td><td><span class="ph">[...]</span></td><td><span class="ph">[@perfil]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td>Página no Facebook</td><td><span class="ph">[...]</span></td><td><span class="ph">[link da página]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td>Google Meu Negócio</td><td><span class="ph">[...]</span></td><td><span class="ph">[link do perfil; uma linha por unidade]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td>WhatsApp de atendimento</td><td><span class="ph">[...]</span></td><td><span class="ph">[número; Business ou comum]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td><span class="ph">[Outros: TikTok, YouTube, LinkedIn, loja virtual, marketplace]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+
+          <tr class="grupo"><td colspan="5">Estrutura do site e e-mail</td></tr>
+          <tr><td>Domínio</td><td><span class="ph">[...]</span></td><td><span class="ph">[onde está registrado, ex.: Registro.br · vence em mm/aaaa]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td>Hospedagem</td><td><span class="ph">[...]</span></td><td><span class="ph">[empresa e plano · quem paga]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td>Plataforma do site</td><td><span class="ph">[...]</span></td><td><span class="ph">[WordPress, Wix, Nonna CMS, loja virtual...]</span></td><td><span class="ph">[quem fez e quem mantém]</span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td>E-mail com domínio próprio</td><td><span class="ph">[...]</span></td><td><span class="ph">[Google Workspace, Microsoft, da hospedagem... · quantas contas]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+
+          <tr class="grupo"><td colspan="5">Anúncios e medição</td></tr>
+          <tr><td>Gerenciador de Negócios da Meta</td><td><span class="ph">[...]</span></td><td><span class="ph">[ID ou nome]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td>Conta de anúncios da Meta</td><td><span class="ph">[...]</span></td><td><span class="ph">[ID · já anunciou antes?]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td>Google Ads</td><td><span class="ph">[...]</span></td><td><span class="ph">[ID da conta]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td>Google Analytics e Search Console</td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td>Tag Manager e Pixel</td><td><span class="ph">[...]</span></td><td><span class="ph">[instalados no site?]</span></td><td><span class="ph">[...]</span></td><td><span class="ph">[...]</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="foco"><span class="label">Risco técnico</span><span class="ph">[O que pode travar um projeto. Ex.: O domínio está no nome da agência anterior e vence em março; ninguém tem o acesso.]</span></div>
+  </section>
+
+  <!-- 09 COMBINADOS -->
+  <section>
+    <div class="num">09</div>
+    <h2>Combinados</h2>
+    <div class="guia"><span class="label">Como preencher</span>As regras do dia a dia da parceria. Tudo o que evita dúvida de quem aprova, quem decide e por onde se fala.</div>
+    <div class="lista-dupla">
+      <div class="chave">Verba mensal de anúncios</div><div><span class="ph">[R$ e plataformas]</span></div>
+      <div class="chave">Quem aprova as peças</div><div><span class="ph">[Nome e prazo para responder]</span></div>
+      <div class="chave">Quem decide investimento</div><div><span class="ph">[Nome]</span></div>
+      <div class="chave">Canal oficial de contato</div><div><span class="ph">[Grupo de WhatsApp, e-mail...]</span></div>
+      <div class="chave">Reuniões</div><div><span class="ph">[Frequência e formato]</span></div>
+      <div class="chave">Outros combinados</div><div><span class="ph">[...]</span></div>
+    </div>
+  </section>
+
+  <!-- 10 PONTOS EM ABERTO -->
+  <section>
+    <div class="num">10</div>
+    <h2>Pontos em aberto</h2>
+    <div class="guia"><span class="label">Como preencher</span>Tudo o que ficou como "A confirmar", com quem vai trazer a resposta e até quando. Esta seção esvazia conforme o cliente responde.</div>
+    <ul class="abertos">
+      <li><span class="ph">[O que falta descobrir]</span> · <span class="quem"><span class="ph">[Quem traz]</span></span> · <span class="ph">[até dd/mm]</span></li>
+      <li><span class="ph">[...]</span></li>
+    </ul>
+  </section>
+
+  <footer>Nonna Agência Digital · Briefing do Kickoff · <span class="ph">[Mês de aaaa]</span></footer>
+</main>
+
+<button class="alternar" type="button" onclick="document.body.classList.toggle('sem-guia'); this.textContent = document.body.classList.contains('sem-guia') ? 'Mostrar instruções' : 'Ocultar instruções';">Ocultar instruções</button>
+</body>
+</html>

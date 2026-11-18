@@ -1160,6 +1160,13 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // com o wildcard de slug (mesmo motivo do /agenda/resultados).
     Route::get('/ajuda/resultados', [\App\Http\Controllers\HelpArticleController::class, 'results'])
         ->name('help.results');
+    // Mapa dos Documentos — também antes do {article:slug}.
+    Route::get('/ajuda/documentos', [\App\Http\Controllers\DocumentMapController::class, 'index'])
+        ->name('help.documents.index');
+    Route::get('/ajuda/documentos/{document:slug}', [\App\Http\Controllers\DocumentMapController::class, 'show'])
+        ->name('help.documents.show');
+    Route::get('/ajuda/documentos/{document:slug}/modelo', [\App\Http\Controllers\DocumentMapController::class, 'template'])
+        ->name('help.documents.template');
     Route::get('/ajuda/nova', [\App\Http\Controllers\HelpArticleController::class, 'create'])
         ->name('help.create');
     Route::post('/ajuda', [\App\Http\Controllers\HelpArticleController::class, 'store'])
