@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Tenantable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,11 +10,18 @@ use Illuminate\Support\Facades\Storage;
 
 class ClientAdBillingDocument extends Model
 {
-    use HasUuids;
+    use HasUuids, Tenantable;
+
+    // Organização herdada da conta de anúncio (ver Tenantable::tenantParent).
+    protected function tenantParent(): array
+    {
+        return ['client_ad_accounts', 'client_ad_account_id'];
+    }
 
     protected $connection = 'pgsql';
 
     protected $fillable = [
+        'organization_id',
         'client_ad_account_id',
         'type',
         'amount',

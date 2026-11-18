@@ -82,6 +82,9 @@ Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'ind
     ->middleware(['auth', 'verified'])->name('dashboard');
 Route::patch('/dashboard/modo', [\App\Http\Controllers\DashboardController::class, 'setMode'])
     ->middleware(['auth', 'verified'])->name('dashboard.mode');
+// Seletor de organização no topo (quem participa de mais de uma).
+Route::post('/organizacao/{organization}', \App\Http\Controllers\OrganizationSwitchController::class)
+    ->middleware(['auth', 'verified'])->name('organization.switch');
 // "Seu foco" — gerar de novo na hora (fila) e consultar se o novo já ficou pronto.
 Route::post('/dashboard/foco', [\App\Http\Controllers\DashboardController::class, 'refreshFocus'])
     ->middleware(['auth', 'verified'])->name('dashboard.focus.refresh');

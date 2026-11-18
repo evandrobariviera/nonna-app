@@ -18,6 +18,11 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new \App\Scopes\UserOrganizationScope());
+    }
+
     public function avatarUrl(): ?string
     {
         if (!$this->avatar_path) {

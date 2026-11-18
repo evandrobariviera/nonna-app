@@ -52,6 +52,12 @@ class ResolvePortalClientContext
 
         app()->instance('currentPortalClient', $current);
 
+        // A organização do cliente vira a "atual": o filtro automático (Tenantable)
+        // e as automações passam a enxergar só ela, como no app interno.
+        if ($current->organization_id && ($organization = \App\Models\Organization::find($current->organization_id))) {
+            app()->instance('currentOrganization', $organization);
+        }
+
         view()->share('currentClient', $current);
         view()->share('portalContact', $contact);
         view()->share('portalClients', $clients);

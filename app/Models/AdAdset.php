@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Tenantable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AdAdset extends Model
 {
-    use HasUuids;
+    use HasUuids, Tenantable;
+
+    // Organização herdada da campanha (ver Tenantable::tenantParent).
+    protected function tenantParent(): array
+    {
+        return ['ad_campaigns', 'ad_campaign_id'];
+    }
 
     protected $connection = 'pgsql';
 

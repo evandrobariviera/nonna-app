@@ -36,7 +36,7 @@ class CheckAutomationDateTriggers extends Command
             $offsetDays = (int) ($automation->trigger_config['offset_days'] ?? 0);
             $targetDate = today()->addDays($offsetDays);
 
-            $entities = $this->entitiesFor($automation->entity_type, $dateField, $targetDate);
+            $entities = $this->entitiesFor($automation->entity_type, $dateField, $targetDate, $automation->organization_id);
 
             foreach ($entities as $entity) {
                 if (!$automation->conditionsMatch($entity)) {
@@ -69,15 +69,20 @@ class CheckAutomationDateTriggers extends Command
     /**
      * @return iterable<Model>
      */
-    private function entitiesFor(string $entityType, string $dateField, \Illuminate\Support\Carbon $targetDate): iterable
+    private function entitiesFor(string $entityType, string $dateField, \Illuminate\Support\Carbon $targetDate, ?string $organizationId): iterable
     {
+        // No console não há currentOrganization: sem este filtro a automação de uma
+        // organização pegaria tarefas/planejamentos de todas.
+        $sameOrg = fn ($q) => $q->when($organizationId, fn ($q) => $q->where('organization_id', $organizationId));
+
         return match ($entityType) {
             // Ticket e Tarefa são a mesma tabela (Task.is_ticket) — a automação já
             // escolheu qual das duas entidades quer, então filtra aqui pra não misturar.
             'task', 'ticket' => Task::whereDate($dateField, $targetDate)
                 ->where('is_ticket', $entityType === 'ticket')
+                ->tap($sameOrg)
                 ->get(),
-            'macro_plan' => MacroPlan::whereDate($dateField, $targetDate)->get(),
+            'macro_plan' => MacroPlan::whereDate($dateField, $targetDate)->tap($sameOrg)->get(),
             default => [],
         };
     }

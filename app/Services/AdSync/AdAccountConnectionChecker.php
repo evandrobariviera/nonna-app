@@ -38,6 +38,8 @@ class AdAccountConnectionChecker
         ClientAdAccount::with('client')
             ->whereIn('platform', ['meta_ads', 'google_ads'])
             ->whereHas('client', fn ($q) => $q->where('status', '!=', 'inactive'))
+            // Organização de demonstração (Portal de exemplo) tem contas fictícias.
+            ->whereHas('client.organization', fn ($q) => $q->where('status', '!=', 'demo'))
             ->get()
             ->each(function (ClientAdAccount $account) use (&$counts) {
                 $counts[$this->check($account)->status]++;

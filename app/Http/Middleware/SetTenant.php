@@ -30,10 +30,18 @@ class SetTenant
                 throw new NotFoundHttpException("Organização não encontrada.");
             }
         } elseif (auth()->check()) {
-            // Fallback para acesso via domínio principal (dev ou admin)
-            $organization = auth()->user()->organizations()
-                ->whereIn('organizations.status', ['active', 'trial'])
-                ->first();
+            // Domínio principal: a organização escolhida no seletor do topo (sessão),
+            // senão a primeira do usuário. "demo" = organização de demonstração do Portal.
+            $organizations = auth()->user()->organizations()
+                ->whereIn('organizations.status', ['active', 'trial', 'demo'])
+                ->orderByRaw("organizations.status = 'demo'")
+                ->orderBy('organizations.created_at')
+                ->get();
+
+            $organization = $organizations->firstWhere('id', $request->session()->get('current_organization_id'))
+                ?? $organizations->first();
+
+            view()->share('userOrganizations', $organizations);
         }
 
         if ($organization) {

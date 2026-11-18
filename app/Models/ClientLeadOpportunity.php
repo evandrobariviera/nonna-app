@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\Leads\FormAnswers;
 use Illuminate\Database\Eloquent\Builder;
+use App\Traits\Tenantable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,11 +14,18 @@ use Illuminate\Support\Str;
 
 class ClientLeadOpportunity extends Model
 {
-    use HasUuids;
+    use HasUuids, Tenantable;
+
+    // Organização herdada do lead (ver Tenantable::tenantParent).
+    protected function tenantParent(): array
+    {
+        return ['client_leads', 'client_lead_id'];
+    }
 
     protected $connection = 'pgsql';
 
     protected $fillable = [
+        'organization_id',
         'client_lead_id',
         'client_lead_source_id',
         'lead_channel_id',

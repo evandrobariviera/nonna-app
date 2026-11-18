@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Tenantable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,11 +10,12 @@ use Illuminate\Support\Facades\Crypt;
 
 class ClientCredential extends Model
 {
-    use HasUuids;
+    use HasUuids, Tenantable;
 
     protected $connection = 'pgsql';
 
     protected $fillable = [
+        'organization_id',
         'client_id',
         'credential_request_id',
         'platform',

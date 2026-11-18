@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\Tenantable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AiTokenUsage extends Model
 {
-    use HasUuids;
+    use HasUuids, Tenantable;
 
     protected $connection = 'pgsql';
     protected $table = 'ai_token_usage';
@@ -17,6 +18,7 @@ class AiTokenUsage extends Model
     const UPDATED_AT = null; // só created_at importa aqui
 
     protected $fillable = [
+        'organization_id',
         'agent_id', 'user_id', 'client_id',
         'model', 'provider',
         'prompt_tokens', 'completion_tokens', 'total_tokens', 'cached_tokens',

@@ -161,6 +161,50 @@
 
                 <div class="flex-1"></div>
 
+                {{-- Seletor de ORGANIZAÇÃO — só pra quem participa de mais de uma
+                     (ex.: Nonna e a organização de demonstração do Portal). --}}
+                @auth
+                    @if(isset($currentOrg) && count($userOrganizations ?? []) > 1)
+                        <div class="relative flex-shrink-0" x-data="{ open: false }">
+                            <button type="button" @click="open = !open"
+                                class="btn btn-ghost btn-sm flex items-center gap-1.5"
+                                title="Organização: {{ $currentOrg->name }}"
+                                @if($currentOrg->status === 'demo') style="color:var(--orange)" @endif>
+                                <x-icon name="building-2" size="14" style="color:{{ $currentOrg->status === 'demo' ? 'var(--orange)' : 'var(--purple)' }}" />
+                                <span class="hidden sm:inline max-w-[160px] truncate">{{ $currentOrg->status === 'demo' ? 'Demonstração' : $currentOrg->name }}</span>
+                                <x-icon name="chevron-down" size="12" />
+                            </button>
+                            <div x-show="open" @click.outside="open = false" x-cloak
+                                 class="absolute right-0 mt-1 z-30 w-64 max-md:fixed max-md:inset-x-3 max-md:top-16 max-md:w-auto py-1"
+                                 style="background:var(--s1); border:1px solid var(--border2); box-shadow:0 4px 16px rgba(0,0,0,.15)">
+                                <p class="px-3 pt-1.5 pb-1 text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Organização</p>
+                                @foreach($userOrganizations as $org)
+                                    @php $isCurrent = $org->id === $currentOrg->id; @endphp
+                                    <form method="POST" action="{{ route('organization.switch', $org) }}">
+                                        @csrf
+                                        <button type="submit"
+                                            class="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors"
+                                            style="{{ $isCurrent ? 'background:rgba(100, 59, 142,.10)' : '' }}"
+                                            onmouseover="this.style.background='var(--s3)'"
+                                            onmouseout="this.style.background='{{ $isCurrent ? 'rgba(100, 59, 142,.10)' : '' }}'">
+                                            <x-icon name="building-2" size="15" style="color:{{ $isCurrent ? 'var(--purple)' : 'var(--muted)' }}" />
+                                            <span class="min-w-0">
+                                                <span class="block text-sm font-semibold truncate" style="color:{{ $isCurrent ? 'var(--purple)' : 'var(--text)' }}">{{ $org->name }}</span>
+                                                @if($org->status === 'demo')
+                                                    <span class="block text-xs" style="color:var(--muted)">Dados fictícios, para demonstração</span>
+                                                @endif
+                                            </span>
+                                            @if($isCurrent)
+                                                <x-icon name="check" size="14" class="ml-auto" style="color:var(--purple)" />
+                                            @endif
+                                        </button>
+                                    </form>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                @endauth
+
                 {{-- Seletor de MODO (ver App\Support\DashboardModes) — o que a pessoa está
                      fazendo agora; trocar salva como último modo e abre a Dashboard nele.
                      Só aparece pra quem tem mais de um modo. --}}

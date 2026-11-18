@@ -2,11 +2,20 @@
 
 namespace App\Models;
 
+use App\Traits\TenantViaParent;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TaskExecutor extends Model
 {
+    use TenantViaParent;
+
+    // Filtro de organização herdado do pai (ver TenantViaParent).
+    public function tenantParentRelation(): string
+    {
+        return 'task';
+    }
+
     protected $connection = 'pgsql';
 
     protected $table = 'task_executors';

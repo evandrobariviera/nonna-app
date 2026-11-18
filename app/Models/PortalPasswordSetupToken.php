@@ -2,17 +2,19 @@
 
 namespace App\Models;
 
+use App\Traits\Tenantable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PortalPasswordSetupToken extends Model
 {
-    use HasUuids;
+    use HasUuids, Tenantable;
 
     protected $connection = 'pgsql';
 
-    protected $fillable = ['client_id', 'contact_id', 'token', 'requested_by', 'expires_at', 'used_at'];
+    protected $fillable = [
+        'organization_id','client_id', 'contact_id', 'token', 'requested_by', 'expires_at', 'used_at'];
 
     protected $casts = [
         'expires_at' => 'datetime',

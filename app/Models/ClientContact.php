@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Tenantable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class ClientContact extends Pivot
 {
-    use HasUuids;
+    use HasUuids, Tenantable;
 
     protected $connection = 'pgsql';
 
@@ -20,6 +21,7 @@ class ClientContact extends Pivot
     protected $keyType = 'string';
 
     protected $fillable = [
+        'organization_id',
         'client_id',
         'contact_id',
         'role',

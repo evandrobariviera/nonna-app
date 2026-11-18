@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planejamento Aurora · {{PERIODO_CURTO}}</title>
+<style>
+  :root{--ink:#1d2433;--muted:#5d6678;--line:#e6e8ee;--bg:#f7f7fa;--purple:#643B8E;--orange:#EE7919;--navy:#0F2A44;--amber:#F2A900}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,'Segoe UI',Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.55}
+  .page{max-width:880px;margin:0 auto;padding:40px 24px 80px}
+  header{background:linear-gradient(135deg,#643B8E,#3d2360);color:#fff;border-radius:18px;padding:36px 32px}
+  header small{letter-spacing:2px;text-transform:uppercase;opacity:.8;font-size:12px}
+  header h1{margin:8px 0 6px;font-size:30px;line-height:1.15}
+  header p{margin:0;opacity:.9}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  .meta span{background:rgba(255,255,255,.14);padding:6px 12px;border-radius:999px;font-size:13px}
+  section{background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px 26px;margin-top:18px}
+  h2{margin:0 0 12px;font-size:19px;display:flex;align-items:center;gap:10px}
+  h2 .n{background:var(--orange);color:#fff;font-size:12px;border-radius:8px;padding:3px 8px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+  .kpi{border:1px solid var(--line);border-radius:12px;padding:14px}
+  .kpi b{display:block;font-size:24px;color:var(--purple)}
+  .kpi span{font-size:13px;color:var(--muted)}
+  .cards{display:grid;gap:12px}
+  .card{border:1px solid var(--line);border-left:4px solid var(--purple);border-radius:12px;padding:14px 16px}
+  .card.camp{border-left-color:var(--orange)}
+  .card h3{margin:0 0 4px;font-size:16px}
+  .card p{margin:0;color:var(--muted);font-size:14px}
+  .pill{display:inline-block;font-size:11px;border-radius:999px;padding:2px 9px;margin-right:6px;background:#f1ecf7;color:var(--purple);font-weight:600}
+  .pill.o{background:#fdf0e5;color:var(--orange)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  td,th{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  .bar{height:10px;border-radius:99px;background:#eee;overflow:hidden;display:flex}
+  .bar i{display:block;height:100%}
+  ul{margin:6px 0 0;padding-left:20px}
+  li{margin:4px 0}
+  .note{background:#fff8ec;border:1px solid #f6dfb8;border-radius:12px;padding:14px 16px;font-size:14px}
+  footer{text-align:center;color:var(--muted);font-size:12px;margin-top:28px}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <small>Planejamento trimestral · Nonna Agência Digital</small>
+    <h1>Aurora Estruturas Metálicas<br>{{PERIODO}}</h1>
+    <p>Foco do ciclo: transformar a procura por galpões em orçamentos qualificados e mostrar a fábrica por dentro.</p>
+    <div class="meta"><span>Versão 2.0</span><span>Período: {{DATAS}}</span><span>Verba de mídia: R$ 9.000/mês</span></div>
+  </header>
+
+  <section>
+    <h2><span class="n">01</span> Onde estamos e aonde vamos</h2>
+    <p>No trimestre passado o site novo entrou no ar e a campanha “Galpão em 90 dias” trouxe <b>214 contatos</b>, dos quais <b>61 eram empresas com obra prevista</b> em até 12 meses. O gargalo agora não é volume: é separar quem tem obra de verdade de quem só está pesquisando preço, e responder rápido.</p>
+    <div class="kpis" style="margin-top:14px">
+      <div class="kpi"><b>90</b><span>orçamentos qualificados no trimestre (meta)</span></div>
+      <div class="kpi"><b>R$ 180</b><span>custo máximo por lead bom</span></div>
+      <div class="kpi"><b>&lt; 30 min</b><span>tempo da primeira resposta no WhatsApp</span></div>
+      <div class="kpi"><b>6</b><span>obras fechadas vindas do digital</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">02</span> Estratégia em uma frase</h2>
+    <p><b>“Prazo é a nossa promessa.”</b> Quem procura galpão tem medo de obra atrasada. Toda a comunicação do ciclo mostra prazo cumprido: obra entregue, contagem de dias e a fábrica funcionando.</p>
+    <ul>
+      <li><b>Prova:</b> obras entregues com número de dias e m² cobertos.</li>
+      <li><b>Bastidores:</b> a fábrica por dentro (corte, solda, pintura e montagem).</li>
+      <li><b>Educação:</b> conteúdo técnico para engenheiros e compradores.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="n">03</span> Projetos e campanhas do ciclo</h2>
+    <div class="cards">
+      <div class="card camp"><span class="pill o">Campanha</span><h3>Obra Pronta — galpão em 90 dias</h3><p>Campanha principal de captação no Meta e no Google, com página de orçamento e formulário que já pergunta área, cidade e prazo da obra.</p></div>
+      <div class="card camp"><span class="pill o">Campanha</span><h3>Bastidores da Fábrica</h3><p>Série de conteúdo orgânico e impulsionado mostrando o processo de fabricação.</p></div>
+      <div class="card"><span class="pill">Projeto</span><h3>Catálogo Técnico Digital 2027</h3><p>Catálogo em PDF e página no site com perfis, vãos e tabela de carga, usado pelo comercial e como isca de cadastro.</p></div>
+      <div class="card"><span class="pill">Projeto</span><h3>Vídeo Institucional “Feito pra durar”</h3><p>Filme de 60 segundos com versões de 15s para anúncios e Reels.</p></div>
+      <div class="card"><span class="pill">Projeto</span><h3>Newsletter da Engenharia</h3><p>E-mail mensal para engenheiros, arquitetos e compradores da base.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">04</span> Mídia paga</h2>
+    <p>Verba de <b>R$ 9.000/mês</b>, dividida assim:</p>
+    <div class="bar" style="margin:10px 0 6px"><i style="width:55%;background:#643B8E"></i><i style="width:45%;background:#EE7919"></i></div>
+    <table>
+      <tr><th>Canal</th><th>Verba</th><th>Papel</th></tr>
+      <tr><td>Meta (Facebook e Instagram)</td><td>R$ 5.000</td><td>Captação de orçamentos, remarketing de quem visitou o site e alcance do vídeo institucional.</td></tr>
+      <tr><td>Google Ads</td><td>R$ 4.000</td><td>Pesquisa por “galpão”, “estrutura metálica” e “mezanino” nas regiões atendidas.</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="n">05</span> Rotina mensal</h2>
+    <table>
+      <tr><th>Entrega</th><th>Quantidade</th></tr>
+      <tr><td>Posts de feed (estáticos e carrossel)</td><td>8 por mês</td></tr>
+      <tr><td>Stories</td><td>12 por mês</td></tr>
+      <tr><td>Reels / vídeos curtos</td><td>2 por mês</td></tr>
+      <tr><td>Relatório de campanhas</td><td>Contínuo, no Portal</td></tr>
+      <tr><td>Reunião de acompanhamento</td><td>1 por mês</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="n">06</span> Cronograma</h2>
+    <table>
+      <tr><th>Quando</th><th>O que acontece</th></tr>
+      <tr><td>{{M1}}</td><td>Campanha Obra Pronta no ar · gravação do vídeo institucional · início dos bastidores</td></tr>
+      <tr><td>{{M2}}</td><td>Catálogo técnico · primeira newsletter · vídeo institucional nos anúncios</td></tr>
+      <tr><td>{{M3}}</td><td>Ajuste fino das campanhas · conteúdo de fim de ano · revisão do trimestre</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="n">07</span> O que precisamos da Aurora</h2>
+    <div class="note">
+      <ul>
+        <li>Fotos e dados das obras entregues (cidade, m², dias de obra) até o dia 10 de cada mês.</li>
+        <li>Um responsável do comercial para marcar, na Central de Leads, quais contatos viraram orçamento e venda.</li>
+        <li>Agenda de uma manhã por mês na fábrica para captação de bastidores.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>Documento fictício criado para demonstração do Portal do Cliente · Nonna Agência Digital</footer>
+</div>
+</body>
+</html>
