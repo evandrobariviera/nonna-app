@@ -26,10 +26,13 @@ class PerformanceDashboard
     {
         $db = DB::connection('pgsql');
         $start = now()->startOfWeek(CarbonInterface::MONDAY)->subWeeks($weeks - 1)->toDateString();
+        // Sem cliente = soma da organização atual (nunca de todas).
+        $orgId = $client ? null : self::organizationId();
 
         $spend = $db->table('ad_daily_snapshots as s')
             ->join('client_ad_accounts as a', 'a.id', '=', 's.client_ad_account_id')
             ->when($client, fn ($q) => $q->where('a.client_id', $client->id))
+            ->when($orgId, fn ($q) => $q->where('a.organization_id', $orgId))
             ->where('s.entity_level', 'campaign')
             ->where('s.snapshot_date', '>=', $start)
             ->groupByRaw("date_trunc('week', s.snapshot_date)")
@@ -39,6 +42,7 @@ class PerformanceDashboard
         $leads = $db->table('client_lead_opportunities as o')
             ->join('client_leads as l', 'l.id', '=', 'o.client_lead_id')
             ->when($client, fn ($q) => $q->where('l.client_id', $client->id), fn ($q) => $q->whereNotNull('l.client_id'))
+            ->when($orgId, fn ($q) => $q->where('o.organization_id', $orgId))
             ->whereRaw('COALESCE(o.received_at, o.created_at) >= ?', [$start])
             ->groupByRaw("date_trunc('week', COALESCE(o.received_at, o.created_at))")
             ->selectRaw("date_trunc('week', COALESCE(o.received_at, o.created_at))::date AS week,
@@ -71,12 +75,18 @@ class PerformanceDashboard
     {
         $r = DB::connection('pgsql')->table('service_conversations')
             ->when($client, fn ($q) => $q->where('client_id', $client->id))
+            ->when(!$client && self::organizationId(), fn ($q) => $q->where('organization_id', self::organizationId()))
             ->where('is_group', false)
             ->whereBetween('started_at', [$from, $to])
             ->selectRaw('COUNT(*) AS total, COUNT(ad_source_id) AS from_ad')
             ->first();
 
         return ['total' => (int) ($r->total ?? 0), 'from_ad' => (int) ($r->from_ad ?? 0)];
+    }
+
+    private static function organizationId(): ?string
+    {
+        return app()->has('currentOrganization') ? app('currentOrganization')->id : null;
     }
 
     /** Insights (alertas e análises da IA) em aberto, mais graves primeiro. */
