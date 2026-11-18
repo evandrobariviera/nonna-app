@@ -586,6 +586,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('performance.index');
     Route::get('/performance/insights', [\App\Http\Controllers\PerformanceController::class, 'insights'])
         ->name('performance.insights');
+    Route::get('/performance/site', [\App\Http\Controllers\PerformanceController::class, 'site'])
+        ->name('performance.site');
 
     // ── CRM: Central de Leads (leads dos CLIENTES da Nonna, não o funil comercial acima) ──
     Route::get('/central-de-leads', [LeadController::class, 'index'])

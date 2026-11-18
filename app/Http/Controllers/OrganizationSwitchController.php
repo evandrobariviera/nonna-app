@@ -23,6 +23,8 @@ class OrganizationSwitchController extends Controller
         abort_unless($member, 403);
 
         $request->session()->put('current_organization_id', $organization->id);
+        // Filtros guardados apontam para clientes da organização anterior.
+        $request->session()->forget([\App\Http\Middleware\RememberCampaignClient::KEY, 'approval_review']);
 
         return redirect()->route('dashboard')->with('success', "Você está em: {$organization->name}");
     }

@@ -70,6 +70,34 @@ class PerformanceController extends Controller
         ]);
     }
 
+    // Aba Site: o mesmo Relatório Analítico que o cliente vê no Portal (GA4 +
+    // Search Console). Sem cliente escolhido, lista quem já tem os números ligados.
+    public function site(Request $request)
+    {
+        $client = self::selectedClient($request);
+        $days = (int) $request->query('dias', 28);
+        if (!array_key_exists($days, Portal\SiteReportController::PERIODS)) {
+            $days = 28;
+        }
+
+        $data = ['client' => $client, 'clients' => self::clientOptions(), 'days' => $days, 'tracking' => null];
+
+        if ($client) {
+            $tracking = \App\Services\Tracking\SiteReports::tracking($client);
+            $reports = \App\Services\Tracking\SiteReports::for($client);
+            $data['tracking'] = $tracking;
+            $data['ga4'] = $tracking?->ga4_property_id ? $reports->ga4Summary($tracking->ga4_property_id, $days) : null;
+            $data['daily'] = $tracking?->ga4_property_id ? $reports->ga4Daily($tracking->ga4_property_id, $days) : null;
+            $data['gsc'] = $tracking?->search_console_site ? $reports->searchConsoleSummary($tracking->search_console_site, $days) : null;
+        } else {
+            $linked = \App\Models\ClientTracking::where(fn ($q) => $q->whereNotNull('ga4_property_id')->orWhereNotNull('search_console_site'))->pluck('client_id');
+            $data['linkedClients'] = Client::whereIn('id', $linked)->where('status', '!=', 'inactive')
+                ->orderByRaw('COALESCE(nickname, company_name)')->get(['id', 'company_name', 'nickname']);
+        }
+
+        return view('performance.site', $data);
+    }
+
     public static function selectedClient(Request $request): ?Client
     {
         return $request->filled('client_id') ? Client::find($request->client_id) : null;

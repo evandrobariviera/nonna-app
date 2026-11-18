@@ -13,6 +13,8 @@
         ['Campanhas',   'campaign-central.today',    'target',           request()->routeIs('campaign-central.*')],
         ['Insights',    'performance.insights',      'sparkles',         request()->routeIs('performance.insights')],
         ['Atendimento', 'service-diagnostics.index', 'headphones',       request()->routeIs('service-diagnostics.*')],
+        // Site: o Relatório Analítico do Portal (GA4 + Search Console), visto pela equipe.
+        ['Site',        'performance.site',          'file-chart-column', request()->routeIs('performance.site')],
     ];
 @endphp
 

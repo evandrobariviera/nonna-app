@@ -136,6 +136,7 @@
             </span>
         </a>
         <a href="{{ route('service-diagnostics.index') }}" class="nav-sub-item {{ request()->routeIs('service-diagnostics.*') ? 'active' : '' }}">Atendimento</a>
+        <a href="{{ route('performance.site') }}" class="nav-sub-item {{ request()->routeIs('performance.site') ? 'active' : '' }}">Site</a>
     </div>
 </div>
 

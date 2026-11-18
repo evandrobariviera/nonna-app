@@ -1,0 +1,24 @@
+{
+    "novidades": [
+        {
+            "title": "Aba Site na Central de Performance",
+            "summary": "A equipe vê o mesmo Relatório Analítico que o cliente vê no Portal — visitas, origem das visitas e buscas no Google — escolhendo o cliente em Performance → Central de Performance → Site.",
+            "kind": "melhoria",
+            "area": "Performance"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Relatório Analítico — os números do site no Portal do cliente",
+            "category": "Performance",
+            "slug": "relatorio-analitico",
+            "body_file": "../2026-11-18-relatorio-analitico/ajuda-relatorio-analitico.html"
+        },
+        {
+            "title": "Central de Performance — o painel de tráfego, leads e atendimento",
+            "category": "Performance",
+            "slug": "central-de-performance",
+            "body_file": "../2026-11-09-central-campanhas/ajuda-central-performance.html"
+        }
+    ]
+}

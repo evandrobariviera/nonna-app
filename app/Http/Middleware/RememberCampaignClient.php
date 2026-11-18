@@ -35,7 +35,11 @@ class RememberCampaignClient
                 $request->session()->put(self::KEY, $value);
             }
         } elseif ($saved = $request->session()->get(self::KEY)) {
-            if ($saved !== 'meus' || $request->routeIs(...self::SUPPORTS_MINE)) {
+            // Cliente guardado de outra organização (trocou no seletor do topo) não
+            // existe aqui — filtrar por ele deixava a Central vazia. Esquece e mostra todos.
+            if ($saved !== 'meus' && !\App\Models\Client::whereKey($saved)->exists()) {
+                $request->session()->forget(self::KEY);
+            } elseif ($saved !== 'meus' || $request->routeIs(...self::SUPPORTS_MINE)) {
                 $request->query->set('client_id', $saved);
             }
         }
