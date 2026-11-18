@@ -39,6 +39,7 @@ class AgentToolbox
         'buscar_clientes' => 'Procurou clientes',
         'resumo_cliente'  => 'Leu o resumo do cliente',
         'listar_projetos' => 'Consultou projetos e campanhas',
+        'buscar_geral'    => 'Procurou em todo o App',
         'listar_tarefas'  => 'Consultou tarefas',
         'detalhe_tarefa'  => 'Abriu uma tarefa',
         'listar_reunioes' => 'Consultou a agenda',
@@ -81,10 +82,19 @@ class AgentToolbox
                 'client_id' => ['type' => 'string'],
             ], ['client_id']),
 
-            $fn('listar_projetos', 'Lista projetos e campanhas de um cliente (com o planejamento de origem e quantas tarefas abertas têm). Use para achar o project_id ao criar tarefa dentro de um projeto/campanha.', [
-                'client_id' => ['type' => 'string'],
-                'incluir_concluidos' => ['type' => 'boolean'],
-            ], ['client_id']),
+            $fn('listar_projetos', 'Lista projetos e campanhas — de UM cliente ou da AGÊNCIA INTEIRA (deixe client_id vazio). Filtra por área (ex.: web = sites/landing pages), tipo, situação e palavras. Mostra quantas tarefas abertas cada um tem, quantas já estão em andamento e quantas ainda não começaram. Use também para achar o project_id ao criar tarefa.', [
+                'client_id' => ['type' => 'string', 'description' => 'Vazio = todos os clientes'],
+                'area'      => ['type' => 'string', 'enum' => array_keys(Project::$disciplines), 'description' => 'Área do trabalho: casa com a disciplina do projeto OU com tarefas abertas desse tipo dentro dele'],
+                'tipo'      => ['type' => 'string', 'enum' => array_keys(Project::$types)],
+                'status'    => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => array_keys(Project::$statuses)], 'description' => 'Padrão: os não concluídos/cancelados'],
+                'termos'    => ['type' => 'array', 'items' => ['type' => 'string'], 'description' => 'Palavras alternativas no título/objetivo (qualquer uma serve), ex.: ["site","landing","LP"]'],
+                'limite'    => ['type' => 'integer', 'description' => 'Padrão 30, máximo 60'],
+            ]),
+
+            $fn('buscar_geral', 'Procura uma palavra em TUDO de uma vez: clientes, projetos/campanhas, tarefas, reuniões e pendências. Use quando a pessoa citar algo pelo nome e você não souber onde está.', [
+                'termo' => ['type' => 'string'],
+                'incluir_concluidos' => ['type' => 'boolean', 'description' => 'Padrão: só o que está em aberto'],
+            ], ['termo']),
 
             $fn('listar_tarefas', 'Lista tarefas com filtros. Sem filtro de status traz só as abertas (não concluídas/canceladas). Ordenadas pelo prazo.', [
                 'client_id'        => ['type' => 'string'],
@@ -293,27 +303,108 @@ class AgentToolbox
 
     private function listarProjetos(array $a): array
     {
-        $client = $this->findClient($a['client_id'] ?? null);
-        if (!$client) {
-            return ['erro' => 'Cliente não encontrado.'];
+        $client = null;
+        if (!empty($a['client_id'])) {
+            $client = $this->findClient($a['client_id']);
+            if (!$client) {
+                return ['erro' => 'Cliente não encontrado.'];
+            }
         }
 
-        $projects = Project::where('client_id', $client->id)
-            ->when(empty($a['incluir_concluidos']), fn ($q) => $q->whereNotIn('status', ['concluido', 'cancelado']))
-            ->with('macroPlan:id,title')
-            ->withCount(['tasks as tarefas_abertas' => fn ($q) => $q->whereIn('status', self::OPEN_STATUSES)])
-            ->orderByDesc('created_at')
-            ->limit(40)
+        $limit    = min(max((int) ($a['limite'] ?? 30), 1), 60);
+        $statuses = array_values(array_intersect((array) ($a['status'] ?? []), array_keys(Project::$statuses)));
+        $area     = isset($a['area'], Project::$disciplines[$a['area']]) ? $a['area'] : null;
+        $termos   = array_values(array_filter(array_map('trim', (array) ($a['termos'] ?? [])), fn ($t) => $t !== ''));
+
+        $query = Project::query()
+            ->when($client, fn ($q) => $q->where('projects.client_id', $client->id))
+            ->when($statuses, fn ($q) => $q->whereIn('projects.status', $statuses), fn ($q) => $q->whereNotIn('projects.status', ['concluido', 'cancelado']))
+            ->when(!empty($a['tipo']), fn ($q) => $q->where('projects.type', $a['tipo']))
+            // Área: disciplina marcada no projeto OU tarefas abertas daquele tipo dentro dele
+            // (muitos projetos não têm disciplina preenchida — as tarefas dizem o que é).
+            ->when($area, fn ($q) => $q->where(fn ($w) => $w->whereJsonContains('projects.disciplines', $area)
+                ->orWhereHas('tasks', fn ($t) => $t->where('task_type', $area)->whereIn('status', self::OPEN_STATUSES))))
+            ->when($termos, fn ($q) => $q->where(function ($w) use ($termos) {
+                foreach ($termos as $t) {
+                    $like = '%' . str_replace(['%', '_'], ['\%', '\_'], $t) . '%';
+                    $w->orWhere('projects.title', 'ilike', $like)->orWhere('projects.objective', 'ilike', $like);
+                }
+            }));
+
+        $total = (clone $query)->count();
+        $projects = (clone $query)
+            ->with(['macroPlan:id,title', 'client:id,company_name'])
+            ->withCount([
+                'tasks as tarefas_abertas'   => fn ($q) => $q->whereIn('status', self::OPEN_STATUSES),
+                'tasks as tarefas_a_fazer'   => fn ($q) => $q->where('status', 'backlog'),
+                'tasks as tarefas_atrasadas' => fn ($q) => $q->whereIn('status', self::OPEN_STATUSES)->whereNotNull('due_date')->where('due_date', '<', today()),
+            ] + ($area ? ['tasks as tarefas_abertas_da_area' => fn ($q) => $q->where('task_type', $area)->whereIn('status', self::OPEN_STATUSES)] : []))
+            ->orderBy('projects.status')->orderByDesc('projects.created_at')
+            ->limit($limit)
             ->get(['id', 'macro_plan_id', 'client_id', 'title', 'type', 'status', 'start_date', 'end_date', 'objective']);
 
+        $byClient = $client ? null : $this->named(
+            (clone $query)->toBase()->reorder()->selectRaw('projects.client_id as nome, count(*) as n')->groupBy('projects.client_id')
+                ->orderByDesc('n')->pluck('n', 'nome')->map(fn ($n) => (int) $n)->all(),
+            fn ($ids) => Client::whereIn('id', $ids)->pluck('company_name', 'id'), '(sem cliente)');
+
         return [
-            'cliente'  => $client->company_name,
-            'projetos' => $projects->map(fn ($p) => $this->projectRow($p) + [
+            'cliente'          => $client?->company_name ?? 'todos os clientes',
+            'total_encontrado' => $total,
+            'mostrando'        => $projects->count(),
+            'contagens'        => $total ? array_filter([
+                'por_status'  => (clone $query)->toBase()->reorder()->selectRaw('projects.status as s, count(*) as n')->groupBy('projects.status')
+                    ->pluck('n', 's')->mapWithKeys(fn ($n, $s) => [Project::$statuses[$s]['label'] ?? $s => (int) $n])->all(),
+                'por_cliente' => $byClient,
+            ]) : null,
+            'projetos' => $projects->map(fn ($p) => $this->projectRow($p) + array_filter([
+                'cliente'         => $client ? null : $p->client?->company_name,
                 'planejamento'    => $p->macroPlan?->title,
-                'objetivo'        => $this->plain($p->objective, 300),
+                'objetivo'        => $this->plain($p->objective, 250),
+                // Classificação feita aqui (não pela IA): já saiu do A Fazer = em andamento.
+                'andamento'       => $p->tarefas_abertas - $p->tarefas_a_fazer > 0 ? 'em andamento'
+                    : ($p->tarefas_abertas > 0 ? 'não começou (tudo no A Fazer)' : 'sem tarefas abertas'),
                 'tarefas_abertas' => $p->tarefas_abertas,
-            ])->all(),
+                'tarefas_em_andamento' => $p->tarefas_abertas - $p->tarefas_a_fazer,
+                'tarefas_a_fazer' => $p->tarefas_a_fazer,
+                'tarefas_atrasadas' => $p->tarefas_atrasadas ?: null,
+                'tarefas_abertas_da_area' => $area ? $p->tarefas_abertas_da_area : null,
+            ], fn ($v) => $v !== null))->all(),
         ];
+    }
+
+    private function buscarGeral(array $a): array
+    {
+        $term = trim((string) ($a['termo'] ?? ''));
+        if (mb_strlen($term) < 2) {
+            return ['erro' => 'Informe ao menos 2 letras.'];
+        }
+        $like = '%' . str_replace(['%', '_'], ['\%', '\_'], $term) . '%';
+        $all  = !empty($a['incluir_concluidos']);
+
+        $clients = Client::where(fn ($q) => $q->where('company_name', 'ilike', $like)->orWhere('nickname', 'ilike', $like))
+            ->limit(8)->get(['id', 'company_name', 'status']);
+        $projects = Project::with('client:id,company_name')
+            ->where(fn ($q) => $q->where('title', 'ilike', $like)->orWhere('objective', 'ilike', $like))
+            ->when(!$all, fn ($q) => $q->whereNotIn('status', ['concluido', 'cancelado']))
+            ->orderByDesc('created_at')->limit(10)
+            ->get(['id', 'macro_plan_id', 'client_id', 'title', 'type', 'status', 'start_date', 'end_date']);
+        $tasks = Task::with(['client:id,company_name', 'project:id,title', 'executors:id,name', 'responsibles:id,name'])
+            ->where('title', 'ilike', $like)
+            ->when(!$all, fn ($q) => $q->whereIn('status', self::OPEN_STATUSES))
+            ->orderByRaw('due_date is null')->orderBy('due_date')->limit(15)->get();
+        $meetings = Meeting::with('client:id,company_name')->where('title', 'ilike', $like)
+            ->orderByDesc('scheduled_at')->limit(8)->get();
+        $pendencies = Pendency::with('client:id,company_name')->where('title', 'ilike', $like)
+            ->when(!$all, fn ($q) => $q->open())->limit(8)->get();
+
+        return array_filter([
+            'clientes'   => $clients->map(fn ($c) => ['client_id' => $c->id, 'nome' => $c->company_name, 'status' => Client::$statuses[$c->status]['label'] ?? $c->status, 'link' => $this->link('clients.show', $c)])->all(),
+            'projetos'   => $projects->map(fn ($p) => $this->projectRow($p) + ['cliente' => $p->client?->company_name])->all(),
+            'tarefas'    => $tasks->map(fn ($t) => $this->taskRow($t))->all(),
+            'reunioes'   => $meetings->map(fn ($m) => $this->meetingRow($m) + ['cliente' => $m->client?->company_name])->all(),
+            'pendencias' => $pendencies->map(fn ($p) => ['titulo' => $p->title, 'cliente' => $p->client?->company_name, 'situacao' => $p->statusLabel(), 'prazo' => $p->due_date?->format('d/m/Y')])->all(),
+        ]) ?: ['nada_encontrado' => "Nada com \"{$term}\"."];
     }
 
     private function listarTarefas(array $a): array
