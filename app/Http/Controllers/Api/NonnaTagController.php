@@ -131,15 +131,35 @@ class NonnaTagController extends Controller
             return null;
         }
 
-        return Cache::remember("nonna_tag_aw:{$t->google_ads_account_id}", 86400, function () use ($t) {
-            $account = ClientAdAccount::withoutGlobalScopes()->find($t->google_ads_account_id);
-            try {
-                $id = app(GoogleAdsApi::class)->search(GoogleAdsApi::cid($account), 'SELECT customer.conversion_tracking_setting.conversion_tracking_id FROM customer')[0]['customer']['conversionTrackingSetting']['conversionTrackingId'] ?? null;
-            } catch (\Throwable) {
-                $id = null;
-            }
+        // Esta rota roda em TODA página dos sites dos clientes. O Cache::remember
+        // não guarda null, então "sem ID" ou falha no Google virava uma chamada
+        // ao Google Ads (até 30 s + renovação do token) a cada pageview e
+        // travava os workers do App. Agora "sem ID" também fica guardado ('').
+        $key = "nonna_tag_aw:{$t->google_ads_account_id}";
+        $cached = Cache::get($key);
+        if ($cached !== null) {
+            return $cached !== '' ? $cached : null;
+        }
 
-            return $id ? "AW-{$id}" : null;
-        });
+        // Só uma requisição por vez consulta o Google; as outras seguem sem o ID.
+        if (!Cache::add("{$key}:busy", 1, 120)) {
+            return null;
+        }
+
+        $failed = false;
+        try {
+            $account = ClientAdAccount::withoutGlobalScopes()->find($t->google_ads_account_id);
+            $id = $account ? (app(GoogleAdsApi::class)->search(GoogleAdsApi::cid($account), 'SELECT customer.conversion_tracking_setting.conversion_tracking_id FROM customer')[0]['customer']['conversionTrackingSetting']['conversionTrackingId'] ?? null) : null;
+        } catch (\Throwable) {
+            $id = null;
+            $failed = true;
+        }
+
+        $value = $id ? "AW-{$id}" : '';
+        // Falha do Google: tenta de novo em 1 h. Resposta "sem ID": 1 dia.
+        Cache::put($key, $value, $failed ? 3600 : 86400);
+        Cache::forget("{$key}:busy");
+
+        return $value !== '' ? $value : null;
     }
 }
