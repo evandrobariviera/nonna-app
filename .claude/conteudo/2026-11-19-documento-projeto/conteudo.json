@@ -1,0 +1,21 @@
+{
+    "documentos": [
+        {
+            "slug": "documento-projeto",
+            "name": "Documento de projeto",
+            "status": "em_construcao",
+            "summary": "O que o projeto entrega, por que, quando está pronto e como saber se valeu a pena. Serve para qualquer natureza (site, automação, integração, CRM); a camada técnica fica no Escopo técnico. Modelo em revisão.",
+            "made_by": "Gestor de Projetos, com Estratégia",
+            "reviewed_by": "Head da área principal do projeto (ex.: Head de Tecnologia num site, Head Criativo num projeto de marca)",
+            "when_made": "Depois do Planejamento do ciclo aprovado, ou quando entra um projeto avulso",
+            "inputs": "Planejamento do ciclo (meta que carrega ou campanha que prepara) e Briefing do Kickoff (seção 08, Presença digital e estrutura técnica)",
+            "next_step": "Escopo técnico, quando o projeto precisar; entregas viram tarefas no App",
+            "template_file": "../../docs/templates/nonna-projeto-modelo.html"
+        },
+        {
+            "slug": "escopo-tecnico-site",
+            "name": "Escopo técnico",
+            "summary": "A camada técnica do projeto, conforme a natureza: páginas e plataforma de um site, fluxos e campos de uma automação ou integração, estrutura de um CRM. Fica separado do documento de projeto, assim como o Conceito criativo fica separado da campanha. Projeto simples pode não precisar."
+        }
+    ]
+}
