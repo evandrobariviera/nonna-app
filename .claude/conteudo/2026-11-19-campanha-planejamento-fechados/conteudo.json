@@ -1,0 +1,44 @@
+{
+    "novidades": [
+        {
+            "title": "Documento de campanha e Planejamento do ciclo com modelo novo",
+            "summary": "Os dois documentos foram fechados no Mapa dos Documentos, com modelo e manual. A campanha agora diz como vamos medir, quais ângulos criativos vamos testar e quais sinais de alerta pedem ação; o planejamento liga cada meta às campanhas e projetos que a carregam. No mapa, os cartões ganharam cor por status.",
+            "kind": "melhoria",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Documento de campanha — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-campanha",
+            "body_file": "ajuda-documento-de-campanha.html"
+        },
+        {
+            "title": "Planejamento do ciclo — como preencher",
+            "category": "Documentos",
+            "slug": "planejamento-do-ciclo",
+            "body_file": "ajuda-planejamento-do-ciclo.html"
+        }
+    ],
+    "documentos": [
+        {
+            "slug": "documento-campanha",
+            "name": "Documento de campanha",
+            "status": "fechado",
+            "summary": "O escopo de cada campanha: objetivo e como medir, ângulos criativos, conceito, mecânica, peças, sinais de alerta e o fechamento com o resultado.",
+            "when_made": "Depois do Planejamento do ciclo aprovado, antes de lançar a campanha",
+            "help_article_slug": "documento-de-campanha",
+            "template_file": "../../docs/templates/nonna-campanha-modelo.html"
+        },
+        {
+            "slug": "planejamento-ciclo",
+            "name": "Planejamento do ciclo",
+            "status": "fechado",
+            "summary": "O plano de 60 a 90 dias, só no global estratégico: onde estamos, metas ligadas a cada campanha e projeto, como vamos fazer, verba, cronograma com as revisões e o que precisamos do cliente.",
+            "when_made": "No início de cada ciclo: depois do Briefing do Kickoff (primeiro ciclo) ou do fechamento do ciclo anterior",
+            "help_article_slug": "planejamento-do-ciclo",
+            "template_file": "../../docs/templates/nonna-planejamento-modelo-v4.html"
+        }
+    ]
+}

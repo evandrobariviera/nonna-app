@@ -13,6 +13,8 @@
         // "A decidir" são candidatos: aparecem no mapa, mas não contam no andamento.
         $total = $documents->where('status', '!=', 'a_decidir')->count();
         $percent = $total ? round($closed / $total * 100) : 0;
+        $building = $documents->where('status', 'em_construcao')->count();
+        $buildingPercent = $total ? round($building / $total * 100) : 0;
     @endphp
 
     {{-- Cabeçalho: o que é o mapa + andamento da padronização --}}
@@ -37,14 +39,15 @@
                     <span class="flex items-center gap-4 text-xs flex-wrap" style="color:var(--muted2)">
                         @foreach(\App\Models\DocumentStandard::$statuses as $key => $st)
                             <span class="flex items-center gap-1.5">
-                                <span style="width:8px; height:8px; border-radius:999px; background:{{ $st['color'] }}"></span>
+                                <span style="width:10px; height:10px; border-radius:3px; background:{{ $st['bg'] ?: 'var(--s1)' }}; border:1.5px solid {{ $st['color'] }}"></span>
                                 {{ $st['label'] }} ({{ $documents->where('status', $key)->count() }})
                             </span>
                         @endforeach
                     </span>
                 </div>
-                <div style="height:8px; border-radius:999px; background:var(--s3); overflow:hidden">
-                    <div style="height:100%; width:{{ $percent }}%; background:var(--green); border-radius:999px"></div>
+                <div class="flex" style="height:8px; border-radius:999px; background:var(--s3); overflow:hidden">
+                    <div style="height:100%; width:{{ $percent }}%; background:var(--green)"></div>
+                    <div style="height:100%; width:{{ $buildingPercent }}%; background:var(--orange); opacity:.7"></div>
                 </div>
             </div>
         @endif
@@ -79,10 +82,11 @@
 
                     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         @foreach($stageDocs as $doc)
+                            @php $bg = $doc->statusBackground(); @endphp
                             <a href="{{ route('help.documents.show', $doc) }}"
                                class="card px-4 py-3.5 flex flex-col gap-1.5 transition-colors"
-                               style="border-left:3px {{ $doc->status === 'a_decidir' ? 'dashed' : 'solid' }} {{ $doc->statusColor() }}"
-                               onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+                               style="border-left:3px {{ $doc->status === 'a_decidir' ? 'dashed' : 'solid' }} {{ $doc->statusColor() }}; {{ $bg ? "background:{$bg}" : '' }}"
+                               onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='{{ $bg }}'">
                                 <span class="flex items-center justify-between gap-2">
                                     <span class="text-xs font-mono" style="color:var(--muted)">{{ $stageNumber }}.{{ $loop->iteration }}</span>
                                     <span class="text-xs font-semibold" style="color:{{ $doc->statusColor() }}">{{ $doc->statusLabel() }}</span>

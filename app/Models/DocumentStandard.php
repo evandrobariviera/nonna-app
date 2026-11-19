@@ -48,11 +48,12 @@ class DocumentStandard extends Model
     ];
 
     /** `a_decidir` = candidato: aparece no mapa para avaliação, mas fica fora da conta de andamento. */
+    // `bg` = fundo levemente tingido do cartão no mapa (rgba, funciona no tema claro e escuro).
     public static array $statuses = [
-        'a_decidir'    => ['label' => 'A decidir',     'color' => 'var(--blue)'],
-        'na_fila'      => ['label' => 'Na fila',       'color' => 'var(--muted)'],
-        'em_construcao' => ['label' => 'Em construção', 'color' => 'var(--orange)'],
-        'fechado'      => ['label' => 'Fechado',       'color' => 'var(--green)'],
+        'a_decidir'     => ['label' => 'A decidir',     'color' => 'var(--blue)',   'bg' => 'rgba(46, 144, 250, 0.05)'],
+        'na_fila'       => ['label' => 'Na fila',       'color' => 'var(--muted)',  'bg' => ''],
+        'em_construcao' => ['label' => 'Em construção', 'color' => 'var(--orange)', 'bg' => 'rgba(238, 121, 25, 0.07)'],
+        'fechado'       => ['label' => 'Fechado',       'color' => 'var(--green)',  'bg' => 'rgba(16, 185, 129, 0.09)'],
     ];
 
     public function stageLabel(): string
@@ -68,6 +69,11 @@ class DocumentStandard extends Model
     public function statusColor(): string
     {
         return self::$statuses[$this->status]['color'] ?? 'var(--muted)';
+    }
+
+    public function statusBackground(): string
+    {
+        return self::$statuses[$this->status]['bg'] ?? '';
     }
 
     public function getRouteKeyName(): string
