@@ -1,0 +1,21 @@
+{
+    "novidades": [
+        {
+            "title": "Mapa dos Documentos: modelos de campanha e planejamento para revisão",
+            "summary": "O Documento de campanha (com objetivo e como medir, ângulos criativos e sinais de alerta) e o exemplo do novo planejamento (metas ligadas a cada campanha e projeto) já podem ser abertos no Mapa dos Documentos. Os dois estão em construção. A Central de Ajuda ganhou o combinado de forma e mérito dos documentos.",
+            "kind": "melhoria",
+            "area": "Central de Ajuda"
+        }
+    ],
+    "documentos": [
+        {
+            "slug": "planejamento-ciclo",
+            "name": "Planejamento do ciclo",
+            "status": "em_construcao",
+            "summary": "O plano de 60 a 90 dias: onde estamos, como vamos fazer, metas do ciclo ligadas a cada campanha e projeto, cronograma e como vamos acompanhar. O modelo aberto aqui é o exemplo v3, em discussão, feito com o planejamento da própria Nonna.",
+            "inputs": "Briefing do Kickoff (no primeiro ciclo) ou a revisão do ciclo anterior",
+            "next_step": "Documento de campanha e documento de projeto de cada item do planejamento",
+            "template_file": "../../docs/templates/nonna-planejamento-exemplo-v3.html"
+        }
+    ]
+}

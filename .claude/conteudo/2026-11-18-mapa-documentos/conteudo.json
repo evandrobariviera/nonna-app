@@ -87,7 +87,7 @@
         },
         {
             "slug": "documento-campanha", "name": "Documento de campanha", "stage": "execucao", "position": 1, "status": "em_construcao",
-            "summary": "O escopo de cada campanha: objetivo, ângulos de venda, mecânica, peças e como vamos medir se deu certo."
+            "summary": "O escopo de cada campanha: objetivo, ângulos criativos, mecânica, peças e como vamos medir se deu certo."
         },
         {
             "slug": "conceito-criativo", "name": "Conceito criativo", "stage": "execucao", "position": 2, "status": "na_fila",

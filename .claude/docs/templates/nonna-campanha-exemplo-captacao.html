@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campanha · Captação de Clientes · Nonna Agência Digital</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,300;9..144,400&display=swap" rel="stylesheet">
+<style>
+/* Modelo do Documento de Campanha Nonna (v2).
+   Mesmo visual do planejamento v2. As 9 seções, a ordem e o bloco #nonna-dados não mudam.
+   Tom, voz e direção de arte ficam no documento de Conceito criativo.
+
+   FORMA E MÉRITO (regra de todos os documentos padrão):
+   - Forma = os componentes deste modelo (seção, campo com rótulo, cartão, tabela, destaque).
+     Só eles existem. NÃO criar cartão, tabela, gráfico ou destaque que não esteja aqui.
+   - Componentes repetíveis (ângulo criativo, métrica de apoio, frente, passo, linha de mídia,
+     peça, sinal de alerta) podem ser duplicados, removidos ou ter o conteúdo mudado à vontade.
+   - Mérito (texto livre) = só parágrafos e, no máximo, lista simples.
+   - Gramática visual: tudo que tem rótulo (título pequeno em caixa alta) é campo do modelo;
+     texto sem rótulo é conteúdo livre.
+   Trechos entre [colchetes] são para preencher; caixas "Como preencher" somem na impressão. */
+:root {
+  --bg: #F6F7FB; --surface: #FFFFFF; --surface-2: #F1F3F8;
+  --brand: #643B8E; --brand-soft: #F6F1FA; --accent: #EE7919; --accent-soft: #FFF7ED;
+  --text: #111827; --text-2: #4D5768; --text-3: #697386; --border: #E2E5ED;
+  --warning: #B45309; --warning-soft: #FEF3C7;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 15px/1.6 Inter, system-ui, sans-serif; }
+.doc { max-width: 860px; margin: 0 auto; padding: 40px 20px 80px; display: flex; flex-direction: column; gap: 28px; }
+section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+.label { font: 600 11px/1.3 "IBM Plex Mono", monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--brand); }
+.num { font: 600 11px "IBM Plex Mono", monospace; color: var(--text-3); margin-bottom: 4px; }
+h1 { font: 300 clamp(28px, 6vw, 40px)/1.1 Fraunces, Georgia, serif; letter-spacing: -.02em; margin: 6px 0 8px; }
+h2 { font: 700 21px/1.25 Inter, sans-serif; letter-spacing: -.015em; margin: 0 0 14px; }
+h3 { font: 600 16px/1.3 Inter, sans-serif; margin: 0 0 6px; }
+p { margin: 0 0 10px; color: var(--text-2); }
+ul { margin: 6px 0 0; padding-left: 20px; color: var(--text-2); }
+
+/* Campo a preencher e pendências */
+.ph { background: var(--accent-soft); color: #9A4A0B; border-radius: 4px; padding: 0 4px; }
+.pendente { display: inline-block; background: var(--warning-soft); color: var(--warning); font: 600 12px Inter, sans-serif; padding: 2px 8px; border-radius: 6px; }
+
+/* Instruções de preenchimento (somem ao imprimir ou pelo botão) */
+.guia { border: 1px dashed #C9B6DD; background: #FBF8FD; border-radius: 10px; padding: 12px 14px; margin: 0 0 16px; font-size: 13.5px; color: var(--text-2); }
+.guia b { color: var(--brand); }
+.guia .label { display: block; margin-bottom: 4px; }
+body.sem-guia .guia { display: none; }
+.alternar { position: fixed; right: 16px; bottom: 16px; background: var(--brand); color: #fff; border: 0; border-radius: 999px; padding: 10px 16px; font: 600 13px Inter, sans-serif; cursor: pointer; box-shadow: 0 4px 14px rgba(100,59,142,.3); }
+
+/* Capa */
+.capa { background: linear-gradient(135deg, var(--brand), #8A4FBF); color: #fff; border: 0; padding: 36px 28px; }
+.capa .label { color: rgba(255,255,255,.75); }
+.capa p { color: rgba(255,255,255,.9); }
+.capa .ph { background: rgba(255,255,255,.18); color: #fff; }
+.ficha { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 20px; }
+.ficha div { background: rgba(255,255,255,.12); border-radius: 10px; padding: 10px 14px; }
+.ficha b { display: block; font-weight: 600; color: #fff; font-variant-numeric: tabular-nums; }
+
+/* 01 Objetivo e como medir */
+.objetivo { background: var(--brand-soft); border-radius: 12px; padding: 20px; font: 300 clamp(19px, 3.4vw, 24px)/1.35 Fraunces, Georgia, serif; color: var(--text); margin-bottom: 16px; }
+.metrica { border: 2px solid var(--brand); border-radius: 12px; padding: 18px; margin: 16px 0; }
+.metrica .nome { font: 700 18px/1.3 Inter, sans-serif; color: var(--text); margin: 4px 0 12px; }
+.metrica .campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 10px; }
+.metrica .campos div { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
+.metrica .campos b { display: block; color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.semanal { display: flex; gap: 12px; align-items: flex-start; background: var(--accent-soft); border-radius: 10px; padding: 14px 16px; margin-top: 14px; }
+.semanal .label { color: var(--accent); white-space: nowrap; padding-top: 2px; }
+
+/* Blocos */
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.box { background: var(--surface-2); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.box .label { margin-bottom: 6px; display: block; }
+.box p:last-child { margin-bottom: 0; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.card { border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.card .label { margin-bottom: 6px; display: block; }
+.angulo h3 { color: var(--brand); }
+.angulo dl { margin: 8px 0 0; }
+.angulo dt { font: 600 11px "IBM Plex Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); margin-top: 8px; }
+.angulo dd { margin: 2px 0 0; color: var(--text-2); }
+.angulo dd ul { margin: 2px 0 0; padding-left: 18px; }
+.angulo .msg { font: 400 17px/1.35 Fraunces, Georgia, serif; color: var(--text); margin: 6px 0 4px; }
+.tipo-ang { display: inline-block; background: var(--accent-soft); color: var(--accent); font: 600 10px "IBM Plex Mono", monospace; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; margin-bottom: 8px; }
+.tipo-ang .ph { background: none; color: inherit; padding: 0; }
+.hero { background: var(--brand-soft); border-radius: 12px; padding: 24px; font: 300 clamp(26px,4.5vw,36px)/1.2 Fraunces, Georgia, serif; color: var(--text); margin-bottom: 14px; }
+.frente { border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px 6px; margin-bottom: 12px; }
+.frente > .label { display: block; margin-bottom: 2px; }
+.rotulo { display: block; margin-bottom: 6px; }
+.passo { display: grid; grid-template-columns: 32px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--border); }
+.passo:last-child { border-bottom: 0; }
+.passo .n { width: 28px; height: 28px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font: 600 13px Inter, sans-serif; }
+.verba-bar { display: flex; height: 34px; border-radius: 8px; overflow: hidden; margin: 10px 0 6px; font: 600 12px Inter, sans-serif; color: #fff; }
+.verba-bar div { display: flex; align-items: center; padding: 0 10px; }
+.chip { display: inline-block; background: var(--brand-soft); color: var(--brand); font: 500 12px "IBM Plex Mono", monospace; padding: 3px 10px; border-radius: 999px; margin: 0 6px 6px 0; }
+
+/* Tabelas */
+.rolagem { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font: 600 11px "IBM Plex Mono", monospace; text-transform: uppercase; color: var(--text-3); padding: 8px; border-bottom: 1px solid var(--border); }
+td { padding: 10px 8px; border-bottom: 1px solid var(--border); color: var(--text-2); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.data { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text); }
+tr.total td { font-weight: 700; color: var(--text); border-top: 2px solid var(--border); }
+
+/* 10 Acompanhamento e fechamento */
+.lista-dupla { display: grid; grid-template-columns: 200px 1fr; }
+.lista-dupla div { padding: 9px 0; border-bottom: 1px dashed var(--border); }
+.lista-dupla div:nth-last-child(-n+2) { border-bottom: 0; }
+.lista-dupla .chave { font-weight: 600; color: var(--text); padding-right: 14px; }
+.fechamento { border: 1px dashed var(--border); border-radius: 12px; padding: 18px; margin-top: 18px; background: var(--surface-2); }
+.fechamento h3 { margin-bottom: 10px; }
+.veredito { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.veredito span { border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 4px 12px; font: 600 12px Inter, sans-serif; color: var(--text-2); }
+
+footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: var(--text-3); }
+@media (max-width: 520px) {
+  section { padding: 20px 16px; }
+  .lista-dupla { grid-template-columns: 1fr; }
+  .lista-dupla .chave { border-bottom: 0 !important; padding-bottom: 0; }
+  .semanal { flex-direction: column; gap: 4px; }
+}
+@media print {
+  body { background: #fff; }
+  .guia, .alternar { display: none !important; }
+  .doc { padding: 0; gap: 16px; }
+  section { break-inside: avoid; }
+  .ph { background: none; color: inherit; padding: 0; }
+}
+</style>
+</head>
+<body>
+<main class="doc">
+
+  <section class="capa">
+    <div class="label">Nonna · Campanha</div>
+    <h1>Captação de Clientes</h1>
+    <p>Fechar 4 contratos novos até 31/01/2027 com empresas do Meio-Oeste que têm o perfil ideal, a partir de diagnósticos gratuitos.</p>
+    <div class="ficha">
+      <div><span class="label">Cliente</span><b>Nonna Agência Digital</b></div>
+      <div><span class="label">Tipo</span><b>Venda</b></div>
+      <div><span class="label">Vai ao ar</span><b>01/12/2026</b></div>
+      <div><span class="label">Fim</span><b>28/02/2027</b></div>
+      <div><span class="label">Peças prontas</span><b>27/11/2026</b></div>
+      <div><span class="label">Planejamento de origem</span><b>Nov/2026 a Fev/2027</b></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="num">01</div>
+    <h2>Objetivo e como vamos medir</h2>
+    <span class="label rotulo">Objetivo</span>
+    <div class="objetivo">Fechar 4 contratos novos até 31/01/2027 com empresas do Meio-Oeste que têm o perfil ideal, a partir de diagnósticos gratuitos.</div>
+    <div class="cols">
+      <div class="box"><span class="label">Tipo de campanha</span><p>Venda</p></div>
+      <div class="box"><span class="label">Meta do planejamento que ela carrega</span><p>Contratos novos: 4 até janeiro</p></div>
+    </div>
+    <div class="metrica">
+      <span class="label">Métrica principal</span>
+      <div class="nome">Contratos novos fechados pela campanha</div>
+      <div class="campos">
+        <div><span class="label">Hoje</span><b>0 (campanha nova)</b></div>
+        <div><span class="label">Meta</span><b>4 · até 31/01/2027</b></div>
+        <div><span class="label">De onde vem o número</span><b>Contratos registrados no Arkanno</b></div>
+        <div><span class="label">Como entra</span><b>Automático</b></div>
+      </div>
+    </div>
+    <div class="rolagem">
+      <table>
+        <thead><tr><th>Métrica de apoio</th><th>Hoje</th><th>Meta</th><th>De onde vem</th><th>Como entra</th></tr></thead>
+        <tbody>
+          <tr><td>Diagnósticos realizados</td><td>0</td><td>2 ou mais por semana, a partir de dezembro</td><td>Reuniões registradas no funil da agência</td><td>Automático</td></tr>
+          <tr><td>Pedidos de diagnóstico pela página</td><td>0</td><td><span class="pendente">A confirmar</span></td><td>Central de Leads</td><td>Automático</td></tr>
+          <tr><td>Custo por pedido de diagnóstico</td><td>—</td><td><span class="pendente">A confirmar</span></td><td>Central de Campanhas (Meta)</td><td>Automático</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="semanal">
+      <span class="label">Para olhar toda semana</span>
+      <span>Pedidos de diagnóstico da semana, somando a página e a prospecção ativa.</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="num">02</div>
+    <h2>Ângulos criativos</h2>
+    <div class="cards">
+      <div class="card angulo">
+        <span class="tipo-ang">Dor</span>
+        <h3>A última venda</h3>
+        <p class="msg">"Você sabe quanto custou sua última venda?"</p>
+        <dl>
+          <dt>Para quem e em que momento</dt><dd>O dono que investe em anúncio e não mede o resultado · ainda não percebeu o problema</dd>
+          <dt>Ganchos</dt><dd><ul><li>A pergunta dita direto para a câmera, nos dois primeiros segundos</li><li>"Se você não sabe quanto custou o seu último cliente, a gente te mostra em uma conversa."</li></ul></dd>
+          <dt>Formatos</dt><dd>Vídeo falado (Evandro para a câmera) e card</dd>
+        </dl>
+      </div>
+      <div class="card angulo">
+        <span class="tipo-ang">Objeção</span>
+        <h3>PlaNo C</h3>
+        <p class="msg">"Já tentou o plano A e o B? Conheça o PlaNo C."</p>
+        <dl>
+          <dt>Para quem e em que momento</dt><dd>Quem já se decepcionou com agência · já compara soluções</dd>
+          <dt>Ganchos</dt><dd><ul><li>"Já tentou o plano A e o B?"</li></ul></dd>
+          <dt>Formatos</dt><dd>Card de lembrete, para quem já visitou a página</dd>
+        </dl>
+      </div>
+      <div class="card angulo">
+        <span class="tipo-ang">Comparação</span>
+        <h3>Post não é venda</h3>
+        <p class="msg">Agência que entrega posts × especialista em fazer anúncio virar venda.</p>
+        <dl>
+          <dt>Para quem e em que momento</dt><dd>Quem compara preço de social media com freelancer · já compara soluções</dd>
+          <dt>Ganchos</dt><dd><ul><li><span class="pendente">A definir na criação</span></li></ul></dd>
+          <dt>Formatos</dt><dd>Vídeo falado e carrossel</dd>
+        </dl>
+      </div>
+      <div class="card angulo">
+        <span class="tipo-ang">Demonstração</span>
+        <h3>O custo de cada venda</h3>
+        <p class="msg">Veja como é saber quanto custou cada venda.</p>
+        <dl>
+          <dt>Para quem e em que momento</dt><dd>O dono que duvida que dá para medir · já sabe do problema</dd>
+          <dt>Ganchos</dt><dd><ul><li>A tela do Arkanno mostrando o custo de uma venda real</li></ul></dd>
+          <dt>Formatos</dt><dd>Vídeo com a tela do sistema e carrossel</dd>
+        </dl>
+      </div>
+      <div class="card angulo">
+        <span class="tipo-ang">Oferta</span>
+        <h3>Diagnóstico gratuito</h3>
+        <p class="msg">Em uma conversa, mostramos onde a sua venda se perde.</p>
+        <dl>
+          <dt>Para quem e em que momento</dt><dd>Quem já sabe que perde venda e quer entender onde · já sabe do problema</dd>
+          <dt>Ganchos</dt><dd><ul><li>"Diagnóstico gratuito: onde a sua venda se perde"</li></ul></dd>
+          <dt>Formatos</dt><dd>Card e o guia de vendas por conversa como presente</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="num">03</div>
+    <h2>Conceito e racional</h2>
+    <span class="label rotulo">Frase do conceito</span>
+    <div class="hero">Você sabe quanto custou sua última venda?</div>
+    <p>Quase nenhum dono de empresa consegue responder a essa pergunta. Ele sabe quanto investiu em anúncio e, às vezes, quantos contatos chegaram, mas não sabe quanto custou cada cliente que fechou. A campanha começa exatamente nessa lacuna, porque é a pergunta que a Nonna sabe responder e quase ninguém mais sabe.</p>
+    <p>O diagnóstico gratuito é a resposta à pergunta: mostra ao dono onde a venda dele se perde. Para quem já conheceu a Nonna e ainda não pediu o diagnóstico, entra uma segunda camada de mensagem: "Já tentou o plano A e o B? Conheça o PlaNo C."</p>
+    <span class="label">Por que deve funcionar</span>
+    <p>O cliente ideal da Nonna já investe em marketing e já se decepcionou com algum fornecedor. Por isso, uma promessa de resultado soa igual à de qualquer outra agência. Uma pergunta que ele não consegue responder, ao contrário, abre a conversa sem pedir confiança antes.</p>
+    <p>A campanha combina prospecção ativa e anúncios porque cada frente compensa a fraqueza da outra. A prospecção escolhe a dedo as empresas com o perfil ideal, mas depende de tempo de quem aborda. Os anúncios alcançam mais gente ao mesmo tempo, e a página do diagnóstico filtra quem tem o perfil antes de chegar ao comercial. A campanha fica no Meio-Oeste porque é onde a Nonna já é conhecida e pode atender de perto.</p>
+  </section>
+
+  <section>
+    <div class="num">04</div>
+    <h2>Mecânica</h2>
+    <div class="frente">
+    <span class="label">Frente</span>
+    <h3>Prospecção ativa</h3>
+    <div class="passo"><span class="n">1</span><div><h3>Montar a lista</h3><p>O comercial busca na Central de Comércio empresas do Meio-Oeste e escolhe só as que se encaixam no perfil ideal. A busca começa por revendas de veículos e clínicas, onde o perfil aparece com mais frequência.</p></div></div>
+    <div class="passo"><span class="n">2</span><div><h3>Abordar</h3><p>A primeira mensagem sai do número comercial, uma conversa por vez, usando o raio-x de presença da empresa como gancho. Em dezembro, quem aborda é o Evandro. Quando o SDR chega, ele assume essa etapa.</p></div></div>
+    <div class="passo"><span class="n">3</span><div><h3>Convidar ou presentear</h3><p>Quem demonstra interesse recebe o convite para o diagnóstico gratuito. Quem ainda não está pronto recebe o guia de vendas por conversa e volta para a lista de acompanhamento.</p></div></div>
+    </div>
+    <div class="frente">
+    <span class="label">Frente</span>
+    <h3>Anúncios</h3>
+    <div class="passo"><span class="n">1</span><div><h3>Ver o anúncio</h3><p>O dono ou gestor de uma empresa do Meio-Oeste vê a pergunta do conceito no Instagram ou no Facebook.</p></div></div>
+    <div class="passo"><span class="n">2</span><div><h3>Pedir o diagnóstico</h3><p>O clique leva para a página do diagnóstico gratuito, no site novo da Nonna. O formulário pergunta como a empresa vende e quantos contatos recebe, para separar quem tem o perfil ideal.</p></div></div>
+    <div class="passo"><span class="n">3</span><div><h3>Ser lembrado</h3><p>Quem visitou a página e não pediu o diagnóstico passa a ver os anúncios de lembrete, com o guia gratuito e a mensagem do PlaNo C.</p></div></div>
+    </div>
+    <p>As duas frentes se encontram no funil: todo pedido de diagnóstico entra no funil da agência no Arkanno. O Evandro conduz o diagnóstico e o fechamento, porque é a etapa que mais pesa na meta de contratos.</p>
+  </section>
+
+  <section>
+    <div class="num">05</div>
+    <h2>Desdobramento por disciplina</h2>
+    <div class="cards">
+      <div class="card"><span class="label">Criação</span><p>Cria os cards e os roteiros dos vídeos a partir da pergunta do conceito, e escreve o roteiro de abordagem com a sequência de mensagens. Também produz o guia de vendas por conversa.</p></div>
+      <div class="card"><span class="label">Audiovisual</span><p>Grava os três anúncios em vídeo no mesmo lote do Crescimento Orgânico, com o Evandro fazendo a pergunta direto para a câmera.</p></div>
+      <div class="card"><span class="label">Web (comunicação)</span><p>A página do diagnóstico é entregue pelo projeto do site novo. Ela abre com a pergunta do conceito, explica em três passos como funciona o diagnóstico e termina no formulário.</p></div>
+      <div class="card"><span class="label">Comercial</span><p>Monta as listas na Central de Comércio, aborda pelo WhatsApp e agenda os diagnósticos. Até o SDR chegar, essa função é do Evandro.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="num">06</div>
+    <h2>Tráfego pago</h2>
+    <div class="rolagem">
+      <table>
+        <thead><tr><th>Plataforma</th><th>Para quê</th><th>Verba mensal</th></tr></thead>
+        <tbody>
+          <tr><td>Meta (Instagram e Facebook)</td><td>Levar gente nova à página do diagnóstico</td><td class="data">R$ 700</td></tr>
+          <tr><td>Meta (Instagram e Facebook)</td><td>Lembrar quem visitou a página e não pediu o diagnóstico</td><td class="data">R$ 300</td></tr>
+          <tr class="total"><td>Total</td><td></td><td class="data">R$ 1.000</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:12px">O público são donos e gestores de empresas no Meio-Oeste de Santa Catarina. As cidades consideradas são estas, a confirmar:</p>
+    <div><span class="chip">Videira</span><span class="chip">Caçador</span><span class="chip">Fraiburgo</span><span class="chip">Joaçaba</span><span class="chip">Campos Novos</span><span class="chip">Concórdia</span></div>
+    <p>Os anúncios são renovados em janeiro, porque a mesma peça perde força depois de algumas semanas no ar.</p>
+  </section>
+
+  <section>
+    <div class="num">07</div>
+    <h2>Peças e datas</h2>
+    <div class="rolagem">
+      <table>
+        <thead><tr><th>Peça</th><th>Ângulo criativo</th><th>Formato</th><th>Qtd.</th><th>Pronta em</th></tr></thead>
+        <tbody>
+          <tr><td>Roteiro e sequência de mensagens de abordagem</td><td>—</td><td>roteiro</td><td>1</td><td class="data">27/11/2026</td></tr>
+          <tr><td>Anúncios em vídeo para o diagnóstico</td><td>A última venda, Post não é venda e O custo de cada venda (um vídeo cada)</td><td>vídeo vertical</td><td>3</td><td class="data">27/11/2026</td></tr>
+          <tr><td>Anúncios em card para o diagnóstico</td><td>A última venda e Diagnóstico gratuito (dois de cada)</td><td>card</td><td>4</td><td class="data">27/11/2026</td></tr>
+          <tr><td>Anúncios de remarketing com o guia e o PlaNo C</td><td>PlaNo C</td><td>card</td><td>2</td><td class="data">27/11/2026</td></tr>
+          <tr><td>Guia de vendas por conversa</td><td>—</td><td>guia em PDF</td><td>1</td><td class="data">18/12/2026</td></tr>
+          <tr><td>Renovação de anúncios para janeiro</td><td>Os ângulos que funcionaram melhor em dezembro</td><td>vídeo vertical e card</td><td>7</td><td class="data">23/12/2026</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:12px">A página do diagnóstico gratuito não está nesta lista porque é entregue pelo projeto do site novo, até 20/11.</p>
+  </section>
+
+  <section>
+    <div class="num">08</div>
+    <h2>Sinais de alerta</h2>
+    <div class="rolagem">
+      <table>
+        <thead><tr><th>Se acontecer</th><th>Fazemos</th><th>Quem age</th></tr></thead>
+        <tbody>
+          <tr><td>7 dias sem nenhum pedido de diagnóstico</td><td>Trocar o ângulo criativo dos anúncios e conferir a página do diagnóstico</td><td>Tráfego</td></tr>
+          <tr><td>2 semanas seguidas com menos de 2 diagnósticos</td><td>Reforçar a prospecção ativa</td><td>Evandro</td></tr>
+          <tr><td>Custo por pedido de diagnóstico acima de <span class="pendente">A confirmar</span> por 7 dias</td><td>Pausar o anúncio mais caro e reforçar o que está funcionando</td><td>Tráfego</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="num">09</div>
+    <h2>Acompanhamento e fechamento</h2>
+    <div class="lista-dupla">
+      <div class="chave">Quem acompanha</div><div>Evandro</div>
+      <div class="chave">Check-in</div><div>A cada 15 dias, a partir de 15/12/2026</div>
+      <div class="chave">Fechamento</div><div>Até 07/03/2027, uma semana depois do fim</div>
+    </div>
+    <div class="fechamento">
+      <span class="label">Preencher no fechamento</span>
+      <h3>Resultado</h3>
+      <div class="veredito"><span>Atingiu</span><span>Parcial</span><span>Não atingiu</span></div>
+      <div class="lista-dupla">
+        <div class="chave">O que era para acontecer</div><div>4 contratos novos até 31/01/2027 e 2 ou mais diagnósticos por semana.</div>
+        <div class="chave">O que aconteceu</div><div>—</div>
+        <div class="chave">Por que houve diferença</div><div>—</div>
+        <div class="chave">Ângulo criativo que funcionou melhor</div><div>—</div>
+        <div class="chave">O que levamos para o próximo ciclo</div><div>—</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>Nonna Agência Digital · Novembro de 2026</footer>
+</main>
+
+<script type="application/json" id="nonna-dados">
+{
+  "contrato": null,
+  "tipo": "campanha",
+  "cliente": "Nonna Agência Digital",
+  "nome": "Captação de Clientes",
+  "inicio": "2026-12-01",
+  "fim": "2027-02-28",
+  "entrega_pecas": "2026-11-27",
+  "tipo_campanha": "venda",
+  "meta_planejamento": "Contratos novos",
+  "sucesso": {
+    "objetivo": "Fechar 4 contratos novos até 31/01/2027 com empresas do Meio-Oeste que têm o perfil ideal, a partir de diagnósticos gratuitos.",
+    "principal": { "nome": "Contratos novos fechados pela campanha", "hoje": 0, "meta": 4, "meta_ate": "2027-01-31", "fonte": "Contratos registrados no Arkanno", "entrada": "automatico" },
+    "apoio": [
+      { "nome": "Diagnósticos realizados por semana", "hoje": 0, "meta": 2, "fonte": "Reuniões registradas no funil da agência", "entrada": "automatico" },
+      { "nome": "Pedidos de diagnóstico pela página", "hoje": 0, "meta": null, "fonte": "Central de Leads", "entrada": "automatico" },
+      { "nome": "Custo por pedido de diagnóstico", "hoje": null, "meta": null, "fonte": "Central de Campanhas (Meta)", "entrada": "automatico" }
+    ],
+    "semanal": "Pedidos de diagnóstico da semana, somando a página e a prospecção ativa"
+  },
+  "angulos": [
+    { "nome": "A última venda", "tipo": "dor", "momento": "nao_percebeu", "mensagem": "Você sabe quanto custou sua última venda?", "ganchos": ["A pergunta dita direto para a câmera, nos dois primeiros segundos", "Se você não sabe quanto custou o seu último cliente, a gente te mostra em uma conversa."], "formatos": ["vídeo falado", "card"] },
+    { "nome": "PlaNo C", "tipo": "objecao", "momento": "compara_solucoes", "mensagem": "Já tentou o plano A e o B? Conheça o PlaNo C.", "ganchos": ["Já tentou o plano A e o B?"], "formatos": ["card"] },
+    { "nome": "Post não é venda", "tipo": "comparacao", "momento": "compara_solucoes", "mensagem": "Agência que entrega posts × especialista em fazer anúncio virar venda.", "ganchos": [], "formatos": ["vídeo falado", "carrossel"] },
+    { "nome": "O custo de cada venda", "tipo": "demonstracao", "momento": "sabe_do_problema", "mensagem": "Veja como é saber quanto custou cada venda.", "ganchos": ["A tela do Arkanno mostrando o custo de uma venda real"], "formatos": ["vídeo com a tela do sistema", "carrossel"] },
+    { "nome": "Diagnóstico gratuito", "tipo": "oferta", "momento": "sabe_do_problema", "mensagem": "Em uma conversa, mostramos onde a sua venda se perde.", "ganchos": ["Diagnóstico gratuito: onde a sua venda se perde"], "formatos": ["card", "guia como presente"] }
+  ],
+  "midia": [
+    { "plataforma": "Meta", "para": "Levar gente nova à página do diagnóstico", "verba_mensal": 700 },
+    { "plataforma": "Meta", "para": "Lembrar quem visitou a página e não pediu o diagnóstico", "verba_mensal": 300 }
+  ],
+  "alertas": [
+    { "se": "7 dias sem nenhum pedido de diagnóstico", "fazemos": "Trocar o ângulo criativo dos anúncios e conferir a página do diagnóstico", "quem": "Tráfego" },
+    { "se": "2 semanas seguidas com menos de 2 diagnósticos", "fazemos": "Reforçar a prospecção ativa", "quem": "Evandro" },
+    { "se": "Custo por pedido de diagnóstico acima do limite (a confirmar) por 7 dias", "fazemos": "Pausar o anúncio mais caro e reforçar o que está funcionando", "quem": "Tráfego" }
+  ],
+  "acompanhamento": { "responsavel": "Evandro", "checkin_dias": 15, "fechamento": "2027-03-07" },
+  "pecas": [
+    { "nome": "Roteiro e sequência de mensagens de abordagem", "angulo": null, "formato": "roteiro", "quantidade": 1, "data": "2026-11-27" },
+    { "nome": "Anúncios em vídeo para o diagnóstico", "angulo": "A última venda, Post não é venda e O custo de cada venda", "formato": "vídeo vertical", "quantidade": 3, "data": "2026-11-27" },
+    { "nome": "Anúncios em card para o diagnóstico", "angulo": "A última venda e Diagnóstico gratuito", "formato": "card", "quantidade": 4, "data": "2026-11-27" },
+    { "nome": "Anúncios de remarketing com o guia e o PlaNo C", "angulo": "PlaNo C", "formato": "card", "quantidade": 2, "data": "2026-11-27" },
+    { "nome": "Guia de vendas por conversa", "angulo": null, "formato": "guia em PDF", "quantidade": 1, "data": "2026-12-18" },
+    { "nome": "Renovação de anúncios para janeiro", "angulo": "Os que funcionaram melhor em dezembro", "formato": "vídeo vertical e card", "quantidade": 7, "data": "2026-12-23" }
+  ]
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planejamento · Nonna Agência Digital · Nov/2026–Fev/2027 · exemplo v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,300;9..144,400&display=swap" rel="stylesheet">
+<style>
+/* Exemplo do planejamento Nonna (v3, para discussão) — base: esqueleto v2 — um documento só, cliente + equipe.
+   FORMA E MÉRITO: só os componentes deste modelo existem (campo com rótulo, cartão de meta,
+   pilar, item, etapa do cronograma); repetíveis podem ser duplicados ou removidos; texto livre
+   é só parágrafo ou lista simples. Tudo que tem rótulo é campo do modelo.
+   NÃO ajustar o visual nem criar componentes; as 7 seções, a ordem e o bloco #nonna-dados não mudam. */
+:root {
+  --bg: #F6F7FB; --surface: #FFFFFF; --surface-2: #F1F3F8;
+  --brand: #643B8E; --brand-soft: #F6F1FA; --accent: #EE7919; --accent-soft: #FFF7ED;
+  --text: #111827; --text-2: #4D5768; --text-3: #697386; --border: #E2E5ED;
+  --warning: #B45309; --warning-soft: #FEF3C7;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 15px/1.6 Inter, system-ui, sans-serif; }
+.doc { max-width: 860px; margin: 0 auto; padding: 40px 20px 80px; display: flex; flex-direction: column; gap: 28px; }
+.label { font: 600 11px/1.3 "IBM Plex Mono", monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--brand); }
+h1 { font: 300 clamp(30px, 6vw, 42px)/1.1 Fraunces, Georgia, serif; letter-spacing: -.02em; margin: 6px 0 10px; }
+h2 { font: 700 21px/1.25 Inter, sans-serif; letter-spacing: -.015em; margin: 0 0 14px; }
+h3 { font: 600 16px/1.3 Inter, sans-serif; margin: 0; }
+p { margin: 0 0 10px; color: var(--text-2); }
+section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+.num { font: 600 11px "IBM Plex Mono", monospace; color: var(--text-3); margin-bottom: 4px; }
+
+/* 1. Capa */
+.capa { background: linear-gradient(135deg, var(--brand), #8A4FBF); color: #fff; border: 0; padding: 36px 28px; }
+.capa .label { color: rgba(255,255,255,.75); }
+.capa p { color: rgba(255,255,255,.9); font-size: 17px; font-style: italic; }
+.meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 22px; }
+.meta div { background: rgba(255,255,255,.12); border-radius: 10px; padding: 10px 14px; }
+.meta b { display: block; font-weight: 600; color: #fff; }
+
+/* Blocos de texto lado a lado */
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.box { background: var(--surface-2); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.box .label { margin-bottom: 6px; }
+.foco { background: var(--brand-soft); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin-top: 14px; font-family: Fraunces, Georgia, serif; font-size: 18px; color: var(--text); }
+
+/* 3. Pilares */
+.pilares { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 14px; }
+.pilar { border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.pilar h3 { color: var(--brand); margin-bottom: 4px; }
+
+/* 4. Metas e verba */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.kpi { border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.kpi .valor { font: 700 20px Inter, sans-serif; color: var(--text); margin: 4px 0; font-variant-numeric: tabular-nums; }
+.verba { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; background: var(--accent-soft); border-radius: 10px; padding: 14px 16px; margin-top: 14px; }
+.verba .valor { font: 700 24px Inter, sans-serif; color: var(--accent); font-variant-numeric: tabular-nums; }
+.pendente { display: inline-block; background: var(--warning-soft); color: var(--warning); font: 600 12px Inter, sans-serif; padding: 2px 8px; border-radius: 6px; }
+
+/* 5. Cronograma */
+.crono { display: flex; flex-direction: column; gap: 10px; }
+.mes { display: grid; grid-template-columns: 110px 1fr; gap: 14px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
+.mes:last-child { border-bottom: 0; }
+.mes .quando { font: 600 12px "IBM Plex Mono", monospace; color: var(--brand); text-transform: uppercase; padding-top: 2px; }
+
+/* 6. Campanhas e Projetos */
+.itens { display: flex; flex-direction: column; gap: 14px; }
+.item { border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+.item-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-bottom: 8px; }
+.tipo { font: 600 10px "IBM Plex Mono", monospace; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; }
+.tipo.campanha { background: var(--accent-soft); color: var(--accent); }
+.tipo.projeto { background: var(--brand-soft); color: var(--brand); }
+.datas { font: 500 13px Inter, sans-serif; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.item ul { margin: 8px 0 0; padding-left: 20px; color: var(--text-2); }
+
+/* 7. O que precisamos de você */
+.precisamos li { margin-bottom: 6px; color: var(--text-2); }
+.precisamos .prazo { color: var(--accent); font-weight: 600; }
+
+footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: var(--text-3); }
+@media (max-width: 520px) { .mes { grid-template-columns: 1fr; gap: 2px; } section { padding: 20px 16px; } }
+
+/* v3 — metas ligadas a campanhas e projetos */
+.pendente-ph { display: inline-block; background: var(--warning-soft); color: var(--warning); font: 600 12px Inter, sans-serif; padding: 2px 8px; border-radius: 6px; }
+.kpi .linha { display: flex; gap: 14px; flex-wrap: wrap; margin: 6px 0 8px; font-size: 13px; color: var(--text-3); }
+.kpi .linha b { color: var(--text); font-weight: 600; }
+.carrega { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); font-size: 12.5px; color: var(--text-3); }
+.chip-item { display: inline-block; font: 600 11.5px Inter, sans-serif; padding: 2px 8px; border-radius: 999px; margin: 3px 4px 0 0; }
+.chip-item.campanha { background: var(--accent-soft); color: #9A4A0B; }
+.chip-item.projeto { background: var(--brand-soft); color: var(--brand); }
+.sem-dono { color: var(--warning); font-weight: 600; }
+.item .medida { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 12px; }
+.item .medida div { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; font-size: 13.5px; color: var(--text-2); }
+.item .medida .label { display: block; margin-bottom: 2px; }
+.discutir { border: 1px solid #BFD3F2; background: #F1F6FD; border-radius: 10px; padding: 12px 14px; margin-top: 14px; font-size: 13.5px; color: #1E3A5F; }
+.discutir .label { color: #2E5C9A; display: block; margin-bottom: 4px; }
+.ritual { display: grid; grid-template-columns: 170px 1fr; gap: 0; }
+.ritual div { padding: 10px 0; border-bottom: 1px dashed var(--border); }
+.ritual div:nth-last-child(-n+2) { border-bottom: 0; }
+.ritual .chave { font-weight: 600; color: var(--text); padding-right: 14px; }
+@media (max-width: 520px) { .ritual { grid-template-columns: 1fr; } .ritual .chave { border-bottom: 0 !important; padding-bottom: 0; } }
+@media print { .discutir { display: none; } }
+</style>
+</head>
+<body>
+<main class="doc">
+
+  <!-- CAPA -->
+  <section class="capa">
+    <div class="label">Nonna · Planejamento do ciclo</div>
+    <h1>Nonna Agência Digital</h1>
+    <p>Fazer a Nonna ser reconhecida como especialista em fazer anúncio virar venda e provar isso com o PlaNo C.</p>
+    <div class="meta">
+      <div><span class="label">Período</span><b>10/11/2026 a 28/02/2027</b></div>
+      <div><span class="label">Responsável Nonna</span><b>Evandro</b></div>
+      <div><span class="label">Atualizado em</span><b>10/11/2026</b></div>
+    </div>
+  </section>
+
+  <!-- 01 ONDE ESTAMOS E AONDE VAMOS -->
+  <section>
+    <div class="num">01</div>
+    <h2>Onde estamos e aonde vamos</h2>
+    <div class="cols">
+      <div class="box"><div class="label">Situação atual</div><p>Hoje a maior parte dos contratos da Nonna é vendida por quantidade de posts e peças. Como a inteligência artificial barateou esse tipo de produção, o social media vendido por agência passou a disputar preço com freelancers, e já perdemos propostas por isso. Ao mesmo tempo, a Nonna tem algo que quase nenhuma agência da região tem: o Arkanno, um sistema próprio que liga o anúncio à conversa e à venda.</p></div>
+      <div class="box"><div class="label">O que muda neste ciclo</div><p>A Nonna passa a vender um único programa, o PlaNo C, Plano Nonna de Crescimento, em três níveis. Os clientes passam a ser escolhidos pela forma como vendem, e não pelo setor. A comunicação da agência passa a se apoiar na frase "especialistas em fazer anúncio virar venda". O social media deixa de ser oferecido e sai de cada contrato na data da renovação.</p></div>
+    </div>
+    <div class="foco"><span class="label" style="display:block;font-family:'IBM Plex Mono',monospace;margin-bottom:4px">Foco do ciclo</span>Provar o PlaNo C com cinco clientes da carteira e, a partir daí, abrir a prospecção ativa de clientes novos com o perfil ideal.</div>
+  </section>
+
+  <!-- 02 COMO VAMOS FAZER -->
+  <section>
+    <div class="num">02</div>
+    <h2>Como vamos fazer</h2>
+    <p>Primeiro, vamos organizar a casa: definir o PlaNo C, dar nome e identidade ao Arkanno, refazer o site e padronizar todos os documentos da agência. Com isso pronto, a comunicação da Nonna ganha consistência e a equipe passa a entregar do mesmo jeito para todos os clientes. Em seguida, o programa roda com cinco clientes da carteira, porque são eles que vão gerar os primeiros números de custo por venda. Em paralelo, a Central de Comércio e o SDR abrem a prospecção ativa, e o conteúdo orgânico e os anúncios da Nonna sustentam a percepção de especialista. Toda a comunicação segue três pilares.</p>
+    <span class="label" style="display:block;margin-top:16px">Pilares de comunicação</span>
+    <div class="discutir" style="margin-top:6px"><span class="label">Para discutir</span>Pilar é um componente repetível e opcional do planejamento: de 0 a 4, cada um com nome e descrição. Cliente sem pilares definidos não tem esta parte.</div>
+    <div class="pilares">
+      <div class="pilar"><h3>Atenção</h3><p>Para a empresa que anuncia e sente que ninguém presta atenção. Mostramos que sabemos criar anúncios que prendem nos primeiros segundos. Responde ao dinheiro gasto em anúncio que ninguém vê.</p></div>
+      <div class="pilar"><h3>Conversa</h3><p>Para a empresa que recebe contatos, mas não consegue transformá-los em clientes. Mostramos que acompanhamos o que acontece depois do clique e apontamos onde a venda se perde. Responde ao contato desperdiçado.</p></div>
+      <div class="pilar"><h3>Clareza</h3><p>Para o dono que já se decepcionou com agência e não sabe o que o investimento trouxe de volta. Mostramos quanto custou cada venda, sem esconder número. Responde à sensação de investir no escuro.</p></div>
+    </div>
+  </section>
+
+  <!-- 03 METAS DO CICLO -->
+  <section>
+    <div class="num">03</div>
+    <h2>Metas do ciclo</h2>
+    <p>Cada meta diz onde estamos hoje, aonde queremos chegar, de onde vem o número e quais campanhas e projetos carregam essa meta. Meta sem ninguém carregando é desejo, não plano.</p>
+    <div class="kpis">
+      <div class="kpi">
+        <div class="label">Contratos novos</div><div class="valor">4 até 31/01</div>
+        <div class="linha"><span>Hoje <b>0</b></span><span>Fonte <b>contratos no Arkanno</b></span></div>
+        <div class="carrega">Carregada por <span class="chip-item campanha">Captação de Clientes</span></div>
+      </div>
+      <div class="kpi">
+        <div class="label">Diagnósticos de prospecção</div><div class="valor">2 ou mais por semana</div>
+        <div class="linha"><span>Hoje <b>0</b></span><span>Fonte <b>funil da agência</b></span></div>
+        <div class="carrega">Carregada por <span class="chip-item campanha">Captação de Clientes</span></div>
+      </div>
+      <div class="kpi">
+        <div class="label">Contratos no PlaNo C</div><div class="valor">5 até fevereiro</div>
+        <div class="linha"><span>Hoje <span class="pendente-ph">A confirmar</span></span><span>Fonte <b>contratos no Arkanno</b></span></div>
+        <div class="carrega">Carregada por <span class="chip-item projeto">Piloto do PlaNo C</span></div>
+      </div>
+      <div class="kpi">
+        <div class="label">Contatos com origem identificada</div><div class="valor">90%</div>
+        <div class="linha"><span>Hoje <span class="pendente-ph">A confirmar</span></span><span>Fonte <b>Arkanno, por cliente</b></span></div>
+        <div class="carrega">Carregada por <span class="chip-item projeto">Piloto do PlaNo C</span></div>
+      </div>
+      <div class="kpi">
+        <div class="label">Contatos com resultado marcado</div><div class="valor">70%</div>
+        <div class="linha"><span>Hoje <span class="pendente-ph">A confirmar</span></span><span>Fonte <b>Arkanno</b></span></div>
+        <div class="carrega">Carregada por <span class="chip-item projeto">Piloto do PlaNo C</span></div>
+      </div>
+      <div class="kpi">
+        <div class="label">Renovações sem o Evandro</div><div class="valor">Todas até janeiro</div>
+        <div class="linha"><span>Hoje <span class="pendente-ph">A confirmar</span></span><span>Fonte <b>planejamentos de renovação</b></span></div>
+        <div class="carrega">Carregada por <span class="chip-item projeto">Padronização Documental</span></div>
+      </div>
+      <div class="kpi">
+        <div class="label">Faturamento mensal</div><div class="valor">R$ 100 mil</div>
+        <div class="linha"><span>Hoje <span class="pendente-ph">A confirmar</span></span><span>Fonte <b>contratos recorrentes</b></span></div>
+        <div class="carrega">Carregada por <span class="chip-item campanha">Captação de Clientes</span> <span class="chip-item projeto">Piloto do PlaNo C</span></div>
+      </div>
+      <div class="kpi">
+        <div class="label">Horas de produção por cliente</div><div class="valor">Em queda</div>
+        <div class="linha"><span>Hoje <span class="pendente-ph">A confirmar</span></span><span>Fonte <b>Carga de Produção</b></span></div>
+        <div class="carrega"><span class="sem-dono">Nenhuma campanha ou projeto carrega esta meta</span></div>
+      </div>
+    </div>
+    <div class="verba">
+      <span class="label">Investimento mensal em anúncios da Nonna</span>
+      <span class="valor">R$ 1.000</span>
+      <span class="datas">100% Meta</span>
+    </div>
+    <div class="discutir"><span class="label">Para discutir</span>
+      <b>1.</b> "Horas de produção por cliente" não tem quem carregue. Ou um projeto assume (talvez o Piloto do PlaNo C, se o programa reduz produção), ou a meta vira só acompanhamento.<br>
+      <b>2.</b> "Em queda" não é um número: dá para comparar, mas não para saber se chegou. Sugestão: definir o número de hoje e um alvo, como "20% a menos".<br>
+      <b>3.</b> Quase todo "Hoje" está a confirmar. Sem ponto de partida, no fim do ciclo não dá para dizer quanto melhorou.
+    </div>
+  </section>
+
+  <!-- 04 CRONOGRAMA -->
+  <section>
+    <div class="num">04</div>
+    <h2>Cronograma</h2>
+    <div class="crono">
+      <div class="mes"><div class="quando">Nov/2026</div><div><h3>Definir</h3><p>Os sócios aprovam o plano estratégico. A Central de Comércio fica pronta na primeira semana. O reposicionamento fica pronto em dez dias, com o site novo no ar até 20/11. Começa a padronização dos documentos.</p></div></div>
+      <div class="mes"><div class="quando">Dez/2026</div><div><h3>Preparar</h3><p>O conteúdo orgânico da Nonna começa, já nos três pilares. A captação de clientes vai ao ar, com a prospecção feita pelo Evandro até o SDR ser contratado. Os documentos ficam padronizados e a equipe é treinada. O PlaNo C é implantado nos cinco clientes do piloto até 31/12.</p></div></div>
+      <div class="mes"><div class="quando">Jan/2027</div><div><h3>Provar</h3><p>O PlaNo C passa a rodar completo nos cinco clientes. A captação ganha ritmo com o SDR, e os quatro contratos novos precisam estar fechados até o fim do mês.</p></div></div>
+      <div class="mes"><div class="quando">Fev/2027</div><div><h3>Consolidar</h3><p>O Marlon assume o piloto. Saem os primeiros números de custo por venda. O manual de entrega do PlaNo C começa a ser escrito a partir do piloto.</p></div></div>
+    </div>
+  </section>
+
+  <!-- 05 CAMPANHAS E PROJETOS -->
+  <section>
+    <div class="num">05</div>
+    <h2>Campanhas e projetos</h2>
+    <p>Cada item diz qual meta carrega e como vamos saber se deu certo. Campanha é medida pelo resultado; projeto, pela entrega e pelo benefício que deixa. Projetos que preparam o terreno para outra campanha dizem para quem trabalham.</p>
+    <div class="itens">
+
+      <div class="item">
+        <div class="item-top"><span class="tipo campanha">Campanha</span><h3>Captação de Clientes</h3><span class="datas">01/12/2026 → 28/02/2027</span></div>
+        <p>Gerar reuniões de diagnóstico e 4 contratos novos até o fim de janeiro, com empresas do Meio-Oeste que têm o perfil ideal, combinando prospecção ativa e anúncios patrocinados.</p>
+        <div class="medida">
+          <div><span class="label">Carrega</span>Contratos novos · Diagnósticos · Faturamento</div>
+          <div><span class="label">Métrica principal</span>Contratos novos fechados: 4 até 31/01</div>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="item-top"><span class="tipo campanha">Campanha</span><h3>Crescimento Orgânico</h3><span class="datas">01/12/2026 → 28/02/2027</span></div>
+        <p>Fazer o perfil da Nonna crescer com conteúdo que reforça a percepção de especialista em fazer anúncio virar venda.</p>
+        <div class="medida">
+          <div><span class="label">Carrega</span><span class="sem-dono">Nenhuma meta do ciclo</span></div>
+          <div><span class="label">Métrica principal</span><span class="pendente-ph">A definir</span></div>
+        </div>
+        <div class="discutir"><span class="label">Para discutir</span>É uma campanha de marca, mas nenhuma meta do ciclo mede percepção ou alcance. Ou criamos uma meta de marca (por exemplo, seguidores do perfil ideal ou pedidos de diagnóstico que chegam pelo orgânico), ou a campanha fica sem como ser avaliada.</div>
+      </div>
+
+      <div class="item">
+        <div class="item-top"><span class="tipo projeto">Projeto</span><h3>Piloto do PlaNo C</h3><span class="datas">01/12/2026 → 31/12/2026</span></div>
+        <p>Rodar o PlaNo C com cinco clientes da carteira (DBK, Gomes, Rede Farmagnus, Autoescola Esquina e Studio Jack Cardoso) para provar o programa e gerar os primeiros cases.</p>
+        <div class="medida">
+          <div><span class="label">Carrega</span>Contratos no PlaNo C · Origem identificada · Resultado marcado · Faturamento</div>
+          <div><span class="label">Pronto quando</span>Programa implantado nos cinco clientes até 31/12</div>
+          <div><span class="label">Benefício, conferido em fevereiro</span>Primeiros números de custo por venda dos cinco clientes</div>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="item-top"><span class="tipo projeto">Projeto</span><h3>Padronização Documental</h3><span class="datas">16/11/2026 → 30/11/2026</span></div>
+        <p>Fazer com que tudo o que a Nonna documenta siga um processo claro e um modelo padrão, para que qualquer pessoa da equipe entregue com a mesma qualidade.</p>
+        <div class="medida">
+          <div><span class="label">Carrega</span>Renovações sem o Evandro</div>
+          <div><span class="label">Pronto quando</span>Documentos centrais fechados no Mapa dos Documentos e equipe treinada</div>
+          <div><span class="label">Benefício, conferido em janeiro</span>Renovações conduzidas por Vitor e Alessandra</div>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="item-top"><span class="tipo projeto">Projeto</span><h3>Reposicionamento da Agência</h3><span class="datas">10/11/2026 → 20/11/2026</span></div>
+        <p>Dar à Nonna uma comunicação única e clara, que mostre a agência como especialista em fazer anúncio virar venda.</p>
+        <div class="medida">
+          <div><span class="label">Prepara o terreno para</span>Captação de Clientes · Crescimento Orgânico</div>
+          <div><span class="label">Pronto quando</span>Textos, PlaNo C, descritivo e logomarca do Arkanno aprovados e site novo no ar</div>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="item-top"><span class="tipo projeto">Projeto</span><h3>Finalização da Central de Comércio</h3><span class="datas">10/11/2026 → 17/11/2026</span></div>
+        <p>Deixar pronta a ferramenta de prospecção, com o perfil de cliente ideal como filtro de busca.</p>
+        <div class="medida">
+          <div><span class="label">Prepara o terreno para</span>Captação de Clientes</div>
+          <div><span class="label">Pronto quando</span>Busca, nota, raio-x e abordagem funcionando com o filtro do perfil ideal</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 06 COMO VAMOS ACOMPANHAR -->
+  <section>
+    <div class="num">06</div>
+    <h2>Como vamos acompanhar</h2>
+    <div class="ritual">
+      <div class="chave">No dia a dia</div><div>As metas com fonte automática aparecem no App com semáforo, comparando o resultado com o tempo que já passou.</div>
+      <div class="chave">A cada 15 dias</div><div>Check-in de cada campanha e projeto: semáforo, confiança de 1 a 5 e uma frase sobre o que mudou. Os sinais de alerta de cada campanha são conferidos aqui.</div>
+      <div class="chave">No meio do ciclo</div><div><span class="pendente-ph">A confirmar</span> Revisão das metas com o cliente: o que está no rumo e o que muda.</div>
+      <div class="chave">No fim do ciclo</div><div>Fechamento de cada campanha e projeto e revisão do ciclo, que vira a base do próximo planejamento.</div>
+    </div>
+  </section>
+
+  <!-- 07 O QUE PRECISAMOS DE VOCÊ -->
+  <section>
+    <div class="num">07</div>
+    <h2>O que precisamos de você</h2>
+    <ul class="precisamos">
+      <li>Aprovação do plano estratégico pelos sócios, <span class="prazo">até o fim de novembro</span></li>
+      <li>Consulta no INPI dos nomes Arkanno e PlaNo C, antes de qualquer uso público</li>
+      <li>Definição do preço de cada nível do PlaNo C, <span class="prazo">até dezembro</span></li>
+      <li>Contratação do SDR, <span class="prazo">até dezembro</span></li>
+    </ul>
+  </section>
+
+  <footer>Nonna Agência Digital · Novembro de 2026 · Exemplo para discussão (v3)</footer>
+</main>
+
+<!-- Dados para o Nonna App — não aparece na tela. Os campos novos ("metas", e "metas"/"metrica" em cada item) ainda não são lidos pelo App. -->
+<script type="application/json" id="nonna-dados">
+{
+  "contrato": null,
+  "cliente": "Nonna Agência Digital",
+  "titulo": "Planejamento Nov/2026–Fev/2027",
+  "periodo_inicio": "2026-11-10",
+  "periodo_fim": "2027-02-28",
+  "responsavel": "Evandro",
+  "verba_mensal": 1000,
+  "metas": [
+    { "nome": "Contratos novos", "hoje": 0, "meta": "4", "ate": "2027-01-31", "fonte": "Contratos no Arkanno" },
+    { "nome": "Diagnósticos de prospecção", "hoje": 0, "meta": "2 por semana", "ate": "2027-02-28", "fonte": "Funil da agência" },
+    { "nome": "Contratos no PlaNo C", "hoje": null, "meta": "5", "ate": "2027-02-28", "fonte": "Contratos no Arkanno" },
+    { "nome": "Contatos com origem identificada", "hoje": null, "meta": "90%", "ate": "2027-02-28", "fonte": "Arkanno" },
+    { "nome": "Contatos com resultado marcado", "hoje": null, "meta": "70%", "ate": "2027-02-28", "fonte": "Arkanno" },
+    { "nome": "Renovações sem o Evandro", "hoje": null, "meta": "todas", "ate": "2027-01-31", "fonte": "Planejamentos de renovação" },
+    { "nome": "Faturamento mensal", "hoje": null, "meta": "R$ 100 mil", "ate": "2027-02-28", "fonte": "Contratos recorrentes" },
+    { "nome": "Horas de produção por cliente", "hoje": null, "meta": "em queda", "ate": "2027-02-28", "fonte": "Carga de Produção" }
+  ],
+  "itens": [
+    { "tipo": "campanha", "nome": "Captação de Clientes", "objetivo": "Gerar reuniões de diagnóstico e 4 contratos novos até janeiro com empresas de perfil ideal do Meio-Oeste, combinando prospecção ativa e anúncios patrocinados.", "inicio": "2026-12-01", "fim": "2027-02-28", "metas": ["Contratos novos", "Diagnósticos de prospecção", "Faturamento mensal"], "metrica": "Contratos novos fechados: 4 até 31/01" },
+    { "tipo": "campanha", "nome": "Crescimento Orgânico", "objetivo": "Fazer o perfil da Nonna crescer com conteúdo nos três pilares, reforçando a percepção de especialista.", "inicio": "2026-12-01", "fim": "2027-02-28", "metas": [], "metrica": null },
+    { "tipo": "projeto", "nome": "Piloto do PlaNo C", "objetivo": "Rodar o PlaNo C com cinco clientes da carteira para provar o programa e gerar os primeiros cases.", "inicio": "2026-12-01", "fim": "2026-12-31", "metas": ["Contratos no PlaNo C", "Contatos com origem identificada", "Contatos com resultado marcado", "Faturamento mensal"], "pronto_quando": "Programa implantado nos cinco clientes até 31/12", "beneficio": "Primeiros números de custo por venda", "beneficio_em": "2027-02-28" },
+    { "tipo": "projeto", "nome": "Padronização Documental", "objetivo": "Descrever o processo e criar modelos para todos os documentos da Nonna, com a própria agência como primeiro teste.", "inicio": "2026-11-16", "fim": "2026-11-30", "metas": ["Renovações sem o Evandro"], "pronto_quando": "Documentos centrais fechados e equipe treinada", "beneficio": "Renovações conduzidas por Vitor e Alessandra", "beneficio_em": "2027-01-31" },
+    { "tipo": "projeto", "nome": "Reposicionamento da Agência", "objetivo": "Dar à Nonna uma comunicação única e clara, como especialista em fazer anúncio virar venda, com PlaNo C definido, descritivo e logomarca do Arkanno e site novo.", "inicio": "2026-11-10", "fim": "2026-11-20", "metas": [], "prepara": ["Captação de Clientes", "Crescimento Orgânico"], "pronto_quando": "Textos, PlaNo C, descritivo e logomarca aprovados e site no ar" },
+    { "tipo": "projeto", "nome": "Finalização da Central de Comércio", "objetivo": "Deixar pronta a ferramenta de prospecção, com o perfil de cliente ideal como filtro de busca.", "inicio": "2026-11-10", "fim": "2026-11-17", "metas": [], "prepara": ["Captação de Clientes"], "pronto_quando": "Busca, nota, raio-x e abordagem funcionando com o filtro do perfil ideal" }
+  ]
+}
+</script>
+</body>
+</html>
