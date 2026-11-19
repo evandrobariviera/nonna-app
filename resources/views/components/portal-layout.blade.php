@@ -9,7 +9,8 @@
     <link rel="icon" href="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/FAVICON-300x300.png" sizes="192x192">
     <link rel="apple-touch-icon" href="https://nonnaagenciadigital.com.br/wp-content/uploads/2024/02/FAVICON-300x300.png">
 
-    <title>{{ config('app.name', 'Nonna Agência Digital — Do posicionamento à conversão!') }}</title>
+    {{-- Título da aba: automático pela rota (App\Support\PageTitle); a tela pode forçar com <x-slot name="pageTitle"> --}}
+    <title>{{ isset($pageTitle) ? \App\Support\PageTitle::custom(strip_tags((string) $pageTitle), true) : \App\Support\PageTitle::forCurrentRoute(true) }}</title>
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|outfit:300,400,500,600,700&display=swap" rel="stylesheet" />
