@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conceito criativo · [Nome da campanha] · [Cliente]</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,300;9..144,400&display=swap" rel="stylesheet">
+<style>
+/* Modelo do Conceito Criativo Nonna (v3).
+   Função dupla: (1) dar a direção criativa a qualquer designer, redator ou videomaker produzir
+   as peças da campanha; (2) mostrar ao cliente a "cara" da campanha para ele aprovar.
+   Tudo gira em torno da PEÇA CONCEITO. As 4 seções, a ordem e o bloco #nonna-dados não mudam.
+   Não repete nada do Documento de campanha (objetivo, mensagem e ganchos dos ângulos, peças,
+   datas) nem do Briefing do Kickoff (tom da marca, limites): só aponta para lá.
+   A aprovação do cliente é registrada no App, não neste documento.
+
+   FORMA E MÉRITO (regra de todos os documentos padrão):
+   - Forma = os componentes deste modelo (seção, campo com rótulo, cartão, tabela, destaque).
+     Só eles existem. NÃO criar cartão, tabela, gráfico ou destaque que não esteja aqui.
+   - Componentes repetíveis (item de lista, linha de tabela, cor) podem ser duplicados,
+     removidos ou ter o conteúdo mudado à vontade.
+   - Mérito (texto livre) = só parágrafos e, no máximo, lista simples. A imagem da peça
+     conceito é o único conteúdo visual livre.
+   - Gramática visual: tudo que tem rótulo (título pequeno em caixa alta) é campo do modelo;
+     texto sem rótulo é conteúdo livre.
+   Trechos entre [colchetes] são para preencher; caixas "Como preencher" somem na impressão
+   e pelo botão, para mandar ao cliente. */
+:root {
+  --bg: #F6F7FB; --surface: #FFFFFF; --surface-2: #F1F3F8;
+  --brand: #643B8E; --brand-soft: #F6F1FA; --accent: #EE7919; --accent-soft: #FFF7ED;
+  --text: #111827; --text-2: #4D5768; --text-3: #697386; --border: #E2E5ED;
+  --warning: #B45309; --warning-soft: #FEF3C7;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 15px/1.6 Inter, system-ui, sans-serif; }
+.doc { max-width: 860px; margin: 0 auto; padding: 40px 20px 80px; display: flex; flex-direction: column; gap: 28px; }
+section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+.label { font: 600 11px/1.3 "IBM Plex Mono", monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--brand); }
+.num { font: 600 11px "IBM Plex Mono", monospace; color: var(--text-3); margin-bottom: 4px; }
+h1 { font: 300 clamp(28px, 6vw, 40px)/1.1 Fraunces, Georgia, serif; letter-spacing: -.02em; margin: 6px 0 8px; }
+h2 { font: 700 21px/1.25 Inter, sans-serif; letter-spacing: -.015em; margin: 0 0 14px; }
+p { margin: 0 0 10px; color: var(--text-2); }
+ul { margin: 0; padding-left: 20px; color: var(--text-2); }
+
+/* Campo a preencher e pendências */
+.ph { background: var(--accent-soft); color: #9A4A0B; border-radius: 4px; padding: 0 4px; }
+.pendente { display: inline-block; background: var(--warning-soft); color: var(--warning); font: 600 12px Inter, sans-serif; padding: 2px 8px; border-radius: 6px; }
+
+/* Instruções de preenchimento (somem ao imprimir ou pelo botão) */
+.guia { border: 1px dashed #C9B6DD; background: #FBF8FD; border-radius: 10px; padding: 12px 14px; margin: 0 0 16px; font-size: 13.5px; color: var(--text-2); }
+.guia b { color: var(--brand); }
+.guia .label { display: block; margin-bottom: 4px; }
+body.sem-guia .guia { display: none; }
+.alternar { position: fixed; right: 16px; bottom: 16px; background: var(--brand); color: #fff; border: 0; border-radius: 999px; padding: 10px 16px; font: 600 13px Inter, sans-serif; cursor: pointer; box-shadow: 0 4px 14px rgba(100,59,142,.3); }
+
+/* Capa */
+.capa { background: linear-gradient(135deg, var(--brand), #8A4FBF); color: #fff; border: 0; padding: 36px 28px; }
+.capa .label { color: rgba(255,255,255,.75); }
+.capa p { color: rgba(255,255,255,.9); font: 300 20px/1.35 Fraunces, Georgia, serif; }
+.capa .ph { background: rgba(255,255,255,.18); color: #fff; }
+.ficha { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 20px; }
+.ficha div { background: rgba(255,255,255,.12); border-radius: 10px; padding: 10px 14px; }
+.ficha b { display: block; font-weight: 600; color: #fff; font-variant-numeric: tabular-nums; }
+
+/* Blocos */
+.rotulo { display: block; margin-bottom: 6px; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.box { background: var(--surface-2); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.box .label { margin-bottom: 6px; display: block; }
+.box p:last-child { margin-bottom: 0; }
+.mt { margin-top: 14px; }
+
+/* 01 Peça conceito */
+.peca { margin: 0 0 16px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface-2); }
+.peca img, .peca svg { display: block; max-width: 100%; max-height: 560px; width: auto; height: auto; margin: 0 auto; }
+.peca svg { width: 448px; }
+.peca .vazio { aspect-ratio: 4 / 5; max-height: 520px; width: 100%; display: grid; place-items: center; text-align: center; padding: 24px; border: 2px dashed #C9B6DD; border-radius: 12px; color: var(--text-3); font-size: 14px; }
+.peca figcaption { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 10px 14px; background: var(--surface); border-top: 1px solid var(--border); font-size: 13px; color: var(--text-2); }
+.peca figcaption .label { margin-right: 6px; }
+.fixo { border-left: 3px solid var(--brand); }
+
+/* Tabelas */
+.rolagem { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font: 600 11px "IBM Plex Mono", monospace; text-transform: uppercase; color: var(--text-3); padding: 8px; border-bottom: 1px solid var(--border); }
+td { padding: 10px 8px; border-bottom: 1px solid var(--border); color: var(--text-2); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.nome { font-weight: 600; color: var(--text); white-space: nowrap; }
+td.frase { font: 400 16px/1.4 Fraunces, Georgia, serif; color: var(--text); }
+.tipo-ang { display: inline-block; background: var(--accent-soft); color: var(--accent); font: 600 10px "IBM Plex Mono", monospace; letter-spacing: .1em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; margin-top: 4px; }
+.tipo-ang .ph { background: none; color: inherit; padding: 0; }
+.tipo-ang.momento { background: var(--brand-soft); color: var(--brand); }
+
+/* 04 Cores (repetível) */
+.cores { display: flex; flex-wrap: wrap; gap: 10px; }
+.cor { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px 4px 4px; font: 500 12px "IBM Plex Mono", monospace; color: var(--text-2); }
+.cor i { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(0,0,0,.08); display: inline-block; flex: none; }
+
+footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: var(--text-3); }
+@media (max-width: 520px) { section { padding: 20px 16px; } td.nome { white-space: normal; } }
+@media print {
+  body { background: #fff; }
+  .guia, .alternar { display: none !important; }
+  .doc { padding: 0; gap: 16px; }
+  section { break-inside: avoid; }
+  .ph { background: none; color: inherit; padding: 0; }
+}
+</style>
+</head>
+<body>
+<main class="doc">
+
+  <div class="guia">
+    <span class="label">Como usar este modelo</span>
+    Um conceito criativo por campanha, feito pelo Head de Criação. Tem <b>duas funções</b>: dar a qualquer designer, redator ou videomaker a direção para produzir as peças sem precisar perguntar, e mostrar ao cliente <b>a cara da campanha</b> para ele aprovar antes da produção.<br>
+    <b>Não é trabalho a mais:</b> a peça conceito é a primeira peça da lista da campanha, feita com mais cuidado, e não uma peça extra. O resto do documento são listas curtas; campo que não se aplica, remova.<br>
+    <b>Não repete nada:</b> objetivo, mensagem e ganchos dos ângulos, lista de peças e datas ficam no Documento de campanha; o tom da marca e o que não pode ser dito ficam no Briefing do Kickoff (seção 06).<br>
+    <b>Combinado:</b> a produção das outras peças só começa depois que o cliente aprova o conceito no App (quem aprovou, quando e os ajustes ficam registrados lá). Troque tudo o que está <span class="ph">[entre colchetes]</span>. Antes de mandar ao cliente, clique em "Ocultar instruções" ou imprima: estas caixas tracejadas somem.
+  </div>
+
+  <!-- CAPA -->
+  <section class="capa">
+    <div class="label">Nonna · Conceito criativo</div>
+    <h1><span class="ph">[Nome da campanha]</span></h1>
+    <p><span class="ph">[A frase do conceito, copiada da seção 03 do Documento de campanha]</span></p>
+    <div class="ficha">
+      <div><span class="label">Cliente</span><b><span class="ph">[Cliente]</span></b></div>
+      <div><span class="label">Vai ao ar</span><b><span class="ph">[dd/mm/aaaa]</span></b></div>
+    </div>
+  </section>
+
+  <!-- 01 PEÇA CONCEITO -->
+  <section>
+    <div class="num">01</div>
+    <h2>Peça conceito</h2>
+    <div class="guia"><span class="label">Como preencher</span>
+      A peça que <b>dá a cara da campanha</b>, pronta como se fosse ao ar. É a primeira peça da lista da campanha, no formato que mais vai aparecer e com o ângulo criativo mais forte.<br>
+      <b>Fixo em toda peça</b> é só o que diz <b>de quem é</b> a peça: marca, assinatura e no máximo um ou dois elementos próprios da campanha. <b>No máximo 4 itens.</b> Layout, fundo, cena e pessoa <b>não</b> entram aqui: se forem fixos, todas as peças ficam parecidas e a Meta passa a tratá-las como um anúncio só, entregando menos.<br>
+      Teste antes de fechar a lista: <b>tampe o logo</b>. Se ainda dá para saber de quem é a peça, o Fixo está funcionando.</div>
+    <figure class="peca">
+      <div class="vazio"><span class="ph">[Imagem da peça conceito. No arquivo: troque este bloco por &lt;img src="link-da-imagem"&gt;]</span></div>
+      <figcaption>
+        <span><span class="label">Formato</span><span class="ph">[Card 4:5 · Abertura de vídeo vertical...]</span></span>
+        <span><span class="label">Ângulo criativo</span><span class="ph">[Nome do ângulo, como está na campanha]</span></span>
+      </figcaption>
+    </figure>
+    <div class="box fixo"><span class="label">Fixo em toda peça</span>
+      <ul><li><span class="ph">[Ex.: assinatura no rodapé, à direita]</span></li><li><span class="ph">[Ex.: o ponto de interrogação em laranja]</span></li><li><span class="ph">[...]</span></li></ul></div>
+  </section>
+
+  <!-- 02 CADA ÂNGULO NA PEÇA -->
+  <section>
+    <div class="num">02</div>
+    <h2>Cada ângulo na peça</h2>
+    <div class="guia"><span class="label">Como preencher</span>
+      <b>Uma linha por ângulo criativo</b> da campanha, com o mesmo nome, motivo e momento (só copiados de lá). A mensagem e os ganchos já estão na campanha: aqui entra só <b>como a peça desse ângulo fica diferente das outras</b> (cena, pessoa, enquadramento, o que aparece). Uma ou duas frases por linha.<br>
+      Se duas linhas ficarem parecidas, os dois ângulos vão virar o mesmo anúncio para a Meta: mude uma delas. O que está no Fixo da seção 01 continua valendo em todas.</div>
+    <div class="rolagem">
+      <table>
+        <thead><tr><th>Ângulo criativo</th><th>Como a peça fica diferente</th></tr></thead>
+        <tbody>
+          <tr><td class="nome"><span class="ph">[Nome do ângulo 1]</span><br><span class="tipo-ang"><span class="ph">[Motivo]</span></span> <span class="tipo-ang momento"><span class="ph">[Momento]</span></span></td><td><span class="ph">[Ex.: o dono falando direto para a câmera, fundo do próprio escritório]</span></td></tr>
+          <tr><td class="nome"><span class="ph">[Nome do ângulo 2]</span><br><span class="tipo-ang"><span class="ph">[Motivo]</span></span> <span class="tipo-ang momento"><span class="ph">[Momento]</span></span></td><td><span class="ph">[...]</span></td></tr>
+          <tr><td class="nome"><span class="ph">[Nome do ângulo 3]</span><br><span class="tipo-ang"><span class="ph">[Motivo]</span></span> <span class="tipo-ang momento"><span class="ph">[Momento]</span></span></td><td><span class="ph">[...]</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 03 LINGUAGEM -->
+  <section>
+    <div class="num">03</div>
+    <h2>Linguagem</h2>
+    <div class="guia"><span class="label">Como preencher</span>
+      O tom da marca já está no Briefing do Kickoff (seção 06): aqui entra só <b>o jeito desta campanha</b>, com frases de exemplo, porque quem escreve compara o próprio texto com elas. Se a campanha segue a marca sem mudança, remova os dois quadros e deixe só as frases fixas.<br>
+      <b>Frases fixas</b> são as que aparecem iguais em todas as peças, normalmente a assinatura e a chamada para ação.</div>
+    <div class="cols">
+      <div class="box"><span class="label">Soa como</span><ul><li><span class="ph">[Frase de exemplo no jeito certo]</span></li><li><span class="ph">[...]</span></li></ul></div>
+      <div class="box"><span class="label">Não soa como</span><ul><li><span class="ph">[Frase de exemplo no jeito errado]</span></li><li><span class="ph">[...]</span></li></ul></div>
+    </div>
+    <div class="rolagem mt">
+      <table>
+        <thead><tr><th>Frase fixa</th><th>Texto</th><th>Onde aparece</th></tr></thead>
+        <tbody>
+          <tr><td><span class="ph">[Assinatura]</span></td><td class="frase"><span class="ph">[...]</span></td><td><span class="ph">[Fim dos vídeos, rodapé dos cards]</span></td></tr>
+          <tr><td><span class="ph">[Chamada para ação]</span></td><td class="frase"><span class="ph">[...]</span></td><td><span class="ph">[Botão do anúncio, fim da legenda]</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 04 ELEMENTOS VISUAIS -->
+  <section>
+    <div class="num">04</div>
+    <h2>Elementos visuais</h2>
+    <div class="guia"><span class="label">Como preencher</span>
+      Só o que a peça conceito não mostra sozinha e o designer precisa para fazer as outras. <b>Cores</b> com o código (ex.: #643B8E), para ninguém tirar a cor no olho. <b>Em vídeo</b> só se a campanha tiver vídeo. Campo que não se aplica, remova.</div>
+    <span class="label rotulo">Cores</span>
+    <div class="cores">
+      <span class="cor"><i style="background:#CCCCCC"></i><span class="ph">[Nome · #000000]</span></span>
+      <span class="cor"><i style="background:#CCCCCC"></i><span class="ph">[Nome · #000000]</span></span>
+    </div>
+    <div class="cols mt">
+      <div class="box"><span class="label">Letras</span><p><span class="ph">[Fonte dos títulos e fonte dos textos.]</span></p></div>
+      <div class="box"><span class="label">Imagens</span><p><span class="ph">[Foto real ou ilustração, quem aparece, com que luz.]</span></p></div>
+      <div class="box"><span class="label">Em vídeo</span><p><span class="ph">[Como abre, ritmo dos cortes, texto na tela.]</span></p></div>
+      <div class="box"><span class="label">O que evitar</span><p><span class="ph">[Ex.: banco de imagem genérico, mais de uma frase no card.]</span></p></div>
+    </div>
+  </section>
+
+  <footer>Nonna Agência Digital · <span class="ph">[Mês de aaaa]</span></footer>
+</main>
+
+<button class="alternar" type="button" onclick="document.body.classList.toggle('sem-guia'); this.textContent = document.body.classList.contains('sem-guia') ? 'Mostrar instruções' : 'Ocultar instruções';">Ocultar instruções</button>
+
+<script type="application/json" id="nonna-dados">
+{
+  "tipo": "conceito_criativo",
+  "cliente": "[Cliente]",
+  "campanha": "[Nome da campanha]",
+  "peca_conceito": { "imagem": "[link da imagem]", "formato": "[Formato]", "angulo": "[Nome do ângulo]" },
+  "fixo": ["[No máximo 4 itens]"],
+  "angulos": [ { "nome": "[Nome do ângulo, igual ao da campanha]", "motivo": "[igual à campanha]", "momento": "[igual à campanha]", "como_difere": "[Como a peça fica diferente]" } ],
+  "soa_como": ["[Frase]"],
+  "nao_soa_como": ["[Frase]"],
+  "frases_fixas": [ { "uso": "[Assinatura]", "texto": "[Frase]", "onde": "[Onde aparece]" } ],
+  "visual": {
+    "cores": [ { "nome": "[Nome]", "hex": "#000000" } ],
+    "letras": "[Fontes]",
+    "imagens": "[Imagens]",
+    "video": "[Em vídeo ou null]",
+    "evitar": "[O que evitar]"
+  }
+}
+</script>
+</body>
+</html>

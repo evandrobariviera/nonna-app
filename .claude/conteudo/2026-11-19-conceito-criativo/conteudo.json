@@ -1,0 +1,56 @@
+{
+    "novidades": [
+        {
+            "title": "Conceito criativo com modelo novo",
+            "summary": "O Conceito criativo foi fechado no Mapa dos Documentos, com modelo e manual. Ele dá a cara da campanha a partir de uma peça conceito: o que é fixo em toda peça, como cada ângulo fica diferente, a linguagem e os elementos visuais. Serve de direção para quem produz e é o que o cliente aprova antes da produção.",
+            "kind": "novidade",
+            "area": "Planejamentos"
+        },
+        {
+            "title": "Ângulos criativos agora têm motivo e momento",
+            "summary": "Todo ângulo criativo da campanha leva duas etiquetas: o motivo (dor, desejo, objeção...) e o momento da pessoa (de 1, não percebeu o problema, a 5, pronta para comprar). Tem capítulo novo na Central de Ajuda explicando com exemplos.",
+            "kind": "melhoria",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Ângulos criativos: motivo e momento",
+            "category": "Documentos",
+            "slug": "angulos-criativos",
+            "body_file": "ajuda-angulos-criativos.html"
+        },
+        {
+            "title": "Conceito criativo — como preencher",
+            "category": "Documentos",
+            "slug": "conceito-criativo",
+            "body_file": "ajuda-conceito-criativo.html"
+        },
+        {
+            "title": "Documento de campanha — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-campanha",
+            "body_file": "ajuda-documento-de-campanha.html"
+        }
+    ],
+    "documentos": [
+        {
+            "slug": "conceito-criativo",
+            "name": "Conceito criativo",
+            "status": "fechado",
+            "summary": "A cara da campanha: uma peça conceito, o que é fixo em toda peça, como cada ângulo criativo fica diferente, a linguagem e os elementos visuais. Dá a direção para qualquer designer produzir e é o que o cliente aprova antes da produção.",
+            "made_by": "Direção Criativa (Head de Criação)",
+            "reviewed_by": "Estratégia",
+            "when_made": "Depois do Documento de campanha, antes de produzir as peças",
+            "inputs": "Documento de campanha (frase do conceito, ângulos criativos e peças) e Briefing do Kickoff (seção 06, Voz e limites); nada disso é reescrito",
+            "next_step": "Aprovação do cliente no App e produção das peças; vídeos seguem para o Roteiro de vídeo",
+            "help_article_slug": "conceito-criativo",
+            "template_file": "../../docs/templates/nonna-conceito-criativo-modelo.html"
+        },
+        {
+            "slug": "documento-campanha",
+            "name": "Documento de campanha",
+            "template_file": "../../docs/templates/nonna-campanha-modelo.html"
+        }
+    ]
+}

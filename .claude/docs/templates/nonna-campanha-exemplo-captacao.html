@@ -83,6 +83,7 @@ body.sem-guia .guia { display: none; }
 .angulo .msg { font: 400 17px/1.35 Fraunces, Georgia, serif; color: var(--text); margin: 6px 0 4px; }
 .tipo-ang { display: inline-block; background: var(--accent-soft); color: var(--accent); font: 600 10px "IBM Plex Mono", monospace; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; margin-bottom: 8px; }
 .tipo-ang .ph { background: none; color: inherit; padding: 0; }
+.tipo-ang.momento { background: var(--brand-soft); color: var(--brand); }
 .hero { background: var(--brand-soft); border-radius: 12px; padding: 24px; font: 300 clamp(26px,4.5vw,36px)/1.2 Fraunces, Georgia, serif; color: var(--text); margin-bottom: 14px; }
 .frente { border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px 6px; margin-bottom: 12px; }
 .frente > .label { display: block; margin-bottom: 2px; }
@@ -181,7 +182,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
     <h2>Ângulos criativos</h2>
     <div class="cards">
       <div class="card angulo">
-        <span class="tipo-ang">Dor</span>
+        <span class="tipo-ang">Dor</span> <span class="tipo-ang momento">1. Não percebeu o problema</span>
         <h3>A última venda</h3>
         <p class="msg">"Você sabe quanto custou sua última venda?"</p>
         <dl>
@@ -191,7 +192,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
         </dl>
       </div>
       <div class="card angulo">
-        <span class="tipo-ang">Objeção</span>
+        <span class="tipo-ang">Objeção</span> <span class="tipo-ang momento">4. Conhece a gente</span>
         <h3>PlaNo C</h3>
         <p class="msg">"Já tentou o plano A e o B? Conheça o PlaNo C."</p>
         <dl>
@@ -201,7 +202,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
         </dl>
       </div>
       <div class="card angulo">
-        <span class="tipo-ang">Comparação</span>
+        <span class="tipo-ang">Comparação</span> <span class="tipo-ang momento">3. Procura solução</span>
         <h3>Post não é venda</h3>
         <p class="msg">Agência que entrega posts × especialista em fazer anúncio virar venda.</p>
         <dl>
@@ -211,7 +212,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
         </dl>
       </div>
       <div class="card angulo">
-        <span class="tipo-ang">Demonstração</span>
+        <span class="tipo-ang">Demonstração</span> <span class="tipo-ang momento">2. Sabe do problema</span>
         <h3>O custo de cada venda</h3>
         <p class="msg">Veja como é saber quanto custou cada venda.</p>
         <dl>
@@ -221,7 +222,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
         </dl>
       </div>
       <div class="card angulo">
-        <span class="tipo-ang">Oferta</span>
+        <span class="tipo-ang">Oferta</span> <span class="tipo-ang momento">5. Pronta para comprar</span>
         <h3>Diagnóstico gratuito</h3>
         <p class="msg">Em uma conversa, mostramos onde a sua venda se perde.</p>
         <dl>
@@ -373,11 +374,11 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
     ]
   },
   "angulos": [
-    { "nome": "A última venda", "tipo": "dor", "mensagem": "Você sabe quanto custou sua última venda?", "ganchos": ["A pergunta dita direto para a câmera, nos dois primeiros segundos", "Se você não sabe quanto custou o seu último cliente, a gente te mostra em uma conversa."], "formatos": ["vídeo falado", "card"] },
-    { "nome": "PlaNo C", "tipo": "objecao", "mensagem": "Já tentou o plano A e o B? Conheça o PlaNo C.", "ganchos": ["Já tentou o plano A e o B?"], "formatos": ["card"] },
-    { "nome": "Post não é venda", "tipo": "comparacao", "mensagem": "Agência que entrega posts × especialista em fazer anúncio virar venda.", "ganchos": [], "formatos": ["vídeo falado", "carrossel"] },
-    { "nome": "O custo de cada venda", "tipo": "demonstracao", "mensagem": "Veja como é saber quanto custou cada venda.", "ganchos": ["A tela do Arkanno mostrando o custo de uma venda real"], "formatos": ["vídeo com a tela do sistema", "carrossel"] },
-    { "nome": "Diagnóstico gratuito", "tipo": "oferta", "mensagem": "Em uma conversa, mostramos onde a sua venda se perde.", "ganchos": ["Diagnóstico gratuito: onde a sua venda se perde"], "formatos": ["card", "guia como presente"] }
+    { "nome": "A última venda", "tipo": "dor", "momento": "nao_percebeu", "mensagem": "Você sabe quanto custou sua última venda?", "ganchos": ["A pergunta dita direto para a câmera, nos dois primeiros segundos", "Se você não sabe quanto custou o seu último cliente, a gente te mostra em uma conversa."], "formatos": ["vídeo falado", "card"] },
+    { "nome": "PlaNo C", "tipo": "objecao", "momento": "conhece_a_gente", "mensagem": "Já tentou o plano A e o B? Conheça o PlaNo C.", "ganchos": ["Já tentou o plano A e o B?"], "formatos": ["card"] },
+    { "nome": "Post não é venda", "tipo": "comparacao", "momento": "procura_solucao", "mensagem": "Agência que entrega posts × especialista em fazer anúncio virar venda.", "ganchos": [], "formatos": ["vídeo falado", "carrossel"] },
+    { "nome": "O custo de cada venda", "tipo": "demonstracao", "momento": "sabe_do_problema", "mensagem": "Veja como é saber quanto custou cada venda.", "ganchos": ["A tela do Arkanno mostrando o custo de uma venda real"], "formatos": ["vídeo com a tela do sistema", "carrossel"] },
+    { "nome": "Diagnóstico gratuito", "tipo": "oferta", "momento": "pronto_para_comprar", "mensagem": "Em uma conversa, mostramos onde a sua venda se perde.", "ganchos": ["Diagnóstico gratuito: onde a sua venda se perde"], "formatos": ["card", "guia como presente"] }
   ],
   "midia": [
     { "plataforma": "Meta", "para": "Levar gente nova à página do diagnóstico", "verba_mensal": 700 },

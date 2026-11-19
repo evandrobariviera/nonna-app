@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conceito criativo · Cozinha do Ano Novo · Ateliê Casa Serra</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,300;9..144,400&display=swap" rel="stylesheet">
+<style>
+/* Modelo do Conceito Criativo Nonna (v3).
+   Função dupla: (1) dar a direção criativa a qualquer designer, redator ou videomaker produzir
+   as peças da campanha; (2) mostrar ao cliente a "cara" da campanha para ele aprovar.
+   Tudo gira em torno da PEÇA CONCEITO. As 4 seções, a ordem e o bloco #nonna-dados não mudam.
+   Não repete nada do Documento de campanha (objetivo, mensagem e ganchos dos ângulos, peças,
+   datas) nem do Briefing do Kickoff (tom da marca, limites): só aponta para lá.
+   A aprovação do cliente é registrada no App, não neste documento.
+
+   FORMA E MÉRITO (regra de todos os documentos padrão):
+   - Forma = os componentes deste modelo (seção, campo com rótulo, cartão, tabela, destaque).
+     Só eles existem. NÃO criar cartão, tabela, gráfico ou destaque que não esteja aqui.
+   - Componentes repetíveis (item de lista, linha de tabela, cor) podem ser duplicados,
+     removidos ou ter o conteúdo mudado à vontade.
+   - Mérito (texto livre) = só parágrafos e, no máximo, lista simples. A imagem da peça
+     conceito é o único conteúdo visual livre.
+   - Gramática visual: tudo que tem rótulo (título pequeno em caixa alta) é campo do modelo;
+     texto sem rótulo é conteúdo livre.
+   Trechos entre [colchetes] são para preencher; caixas "Como preencher" somem na impressão
+   e pelo botão, para mandar ao cliente. */
+:root {
+  --bg: #F6F7FB; --surface: #FFFFFF; --surface-2: #F1F3F8;
+  --brand: #643B8E; --brand-soft: #F6F1FA; --accent: #EE7919; --accent-soft: #FFF7ED;
+  --text: #111827; --text-2: #4D5768; --text-3: #697386; --border: #E2E5ED;
+  --warning: #B45309; --warning-soft: #FEF3C7;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 15px/1.6 Inter, system-ui, sans-serif; }
+.doc { max-width: 860px; margin: 0 auto; padding: 40px 20px 80px; display: flex; flex-direction: column; gap: 28px; }
+section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+.label { font: 600 11px/1.3 "IBM Plex Mono", monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--brand); }
+.num { font: 600 11px "IBM Plex Mono", monospace; color: var(--text-3); margin-bottom: 4px; }
+h1 { font: 300 clamp(28px, 6vw, 40px)/1.1 Fraunces, Georgia, serif; letter-spacing: -.02em; margin: 6px 0 8px; }
+h2 { font: 700 21px/1.25 Inter, sans-serif; letter-spacing: -.015em; margin: 0 0 14px; }
+p { margin: 0 0 10px; color: var(--text-2); }
+ul { margin: 0; padding-left: 20px; color: var(--text-2); }
+
+/* Campo a preencher e pendências */
+.ph { background: var(--accent-soft); color: #9A4A0B; border-radius: 4px; padding: 0 4px; }
+.pendente { display: inline-block; background: var(--warning-soft); color: var(--warning); font: 600 12px Inter, sans-serif; padding: 2px 8px; border-radius: 6px; }
+
+/* Instruções de preenchimento (somem ao imprimir ou pelo botão) */
+.guia { border: 1px dashed #C9B6DD; background: #FBF8FD; border-radius: 10px; padding: 12px 14px; margin: 0 0 16px; font-size: 13.5px; color: var(--text-2); }
+.guia b { color: var(--brand); }
+.guia .label { display: block; margin-bottom: 4px; }
+body.sem-guia .guia { display: none; }
+.alternar { position: fixed; right: 16px; bottom: 16px; background: var(--brand); color: #fff; border: 0; border-radius: 999px; padding: 10px 16px; font: 600 13px Inter, sans-serif; cursor: pointer; box-shadow: 0 4px 14px rgba(100,59,142,.3); }
+
+/* Capa */
+.capa { background: linear-gradient(135deg, var(--brand), #8A4FBF); color: #fff; border: 0; padding: 36px 28px; }
+.capa .label { color: rgba(255,255,255,.75); }
+.capa p { color: rgba(255,255,255,.9); font: 300 20px/1.35 Fraunces, Georgia, serif; }
+.capa .ph { background: rgba(255,255,255,.18); color: #fff; }
+.ficha { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 20px; }
+.ficha div { background: rgba(255,255,255,.12); border-radius: 10px; padding: 10px 14px; }
+.ficha b { display: block; font-weight: 600; color: #fff; font-variant-numeric: tabular-nums; }
+
+/* Blocos */
+.rotulo { display: block; margin-bottom: 6px; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.box { background: var(--surface-2); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.box .label { margin-bottom: 6px; display: block; }
+.box p:last-child { margin-bottom: 0; }
+.mt { margin-top: 14px; }
+
+/* 01 Peça conceito */
+.peca { margin: 0 0 16px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface-2); }
+.peca img, .peca svg { display: block; max-width: 100%; max-height: 560px; width: auto; height: auto; margin: 0 auto; }
+.peca svg { width: 448px; }
+.peca .vazio { aspect-ratio: 4 / 5; max-height: 520px; width: 100%; display: grid; place-items: center; text-align: center; padding: 24px; border: 2px dashed #C9B6DD; border-radius: 12px; color: var(--text-3); font-size: 14px; }
+.peca figcaption { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 10px 14px; background: var(--surface); border-top: 1px solid var(--border); font-size: 13px; color: var(--text-2); }
+.peca figcaption .label { margin-right: 6px; }
+.fixo { border-left: 3px solid var(--brand); }
+
+/* Tabelas */
+.rolagem { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font: 600 11px "IBM Plex Mono", monospace; text-transform: uppercase; color: var(--text-3); padding: 8px; border-bottom: 1px solid var(--border); }
+td { padding: 10px 8px; border-bottom: 1px solid var(--border); color: var(--text-2); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.nome { font-weight: 600; color: var(--text); white-space: nowrap; }
+td.frase { font: 400 16px/1.4 Fraunces, Georgia, serif; color: var(--text); }
+.tipo-ang { display: inline-block; background: var(--accent-soft); color: var(--accent); font: 600 10px "IBM Plex Mono", monospace; letter-spacing: .1em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; margin-top: 4px; }
+.tipo-ang .ph { background: none; color: inherit; padding: 0; }
+.tipo-ang.momento { background: var(--brand-soft); color: var(--brand); }
+
+/* 04 Cores (repetível) */
+.cores { display: flex; flex-wrap: wrap; gap: 10px; }
+.cor { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px 4px 4px; font: 500 12px "IBM Plex Mono", monospace; color: var(--text-2); }
+.cor i { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(0,0,0,.08); display: inline-block; flex: none; }
+
+footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: var(--text-3); }
+@media (max-width: 520px) { section { padding: 20px 16px; } td.nome { white-space: normal; } }
+@media print {
+  body { background: #fff; }
+  .guia, .alternar { display: none !important; }
+  .doc { padding: 0; gap: 16px; }
+  section { break-inside: avoid; }
+  .ph { background: none; color: inherit; padding: 0; }
+}
+</style>
+</head>
+<body>
+<main class="doc">
+
+  <!-- CAPA -->
+  <section class="capa">
+    <div class="label">Nonna · Conceito criativo</div>
+    <h1>Cozinha do Ano Novo</h1>
+    <p>A cozinha que cabe na sua rotina.</p>
+    <div class="ficha">
+      <div><span class="label">Cliente</span><b>Ateliê Casa Serra (fictício)</b></div>
+      <div><span class="label">Vai ao ar</span><b>05/01/2027</b></div>
+    </div>
+  </section>
+
+  <!-- 01 PEÇA CONCEITO -->
+  <section>
+    <div class="num">01</div>
+    <h2>Peça conceito</h2>
+    <figure class="peca">
+      <svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Card com foto de cozinha planejada e a frase A cozinha que cabe na sua rotina">
+        <rect width="400" height="500" fill="#F4EFE6"/>
+        <rect x="0" y="0" width="400" height="300" fill="#B07A4B"/>
+        <rect x="30" y="60" width="340" height="120" fill="#8C5D36"/>
+        <rect x="30" y="200" width="340" height="70" fill="#4F5B3A"/>
+        <text x="200" y="150" text-anchor="middle" fill="#F4EFE6" fill-opacity=".7" font-family="Inter, sans-serif" font-size="13">[foto da cozinha de um cliente real]</text>
+        <text x="32" y="350" fill="#2B2B2B" font-family="Fraunces, Georgia, serif" font-size="28">A cozinha que cabe</text>
+        <text x="32" y="386" fill="#2B2B2B" font-family="Fraunces, Georgia, serif" font-size="28">na sua rotina.</text>
+        <line x1="32" y1="440" x2="368" y2="440" stroke="#B07A4B" stroke-width="2"/>
+        <g stroke="#B07A4B" stroke-width="2">
+          <line x1="32" y1="432" x2="32" y2="440"/><line x1="116" y1="436" x2="116" y2="440"/><line x1="200" y1="432" x2="200" y2="440"/><line x1="284" y1="436" x2="284" y2="440"/><line x1="368" y1="432" x2="368" y2="440"/>
+        </g>
+        <text x="368" y="470" text-anchor="end" fill="#4F5B3A" font-family="Inter, sans-serif" font-weight="600" font-size="13">Ateliê Casa Serra</text>
+      </svg>
+      <figcaption>
+        <span><span class="label">Formato</span>Card 4:5</span>
+        <span><span class="label">Ângulo criativo</span>Domingo na cozinha</span>
+      </figcaption>
+    </figure>
+    <div class="box fixo"><span class="label">Fixo em toda peça</span>
+      <ul><li>A régua de marceneiro (traço com marcações) acima da assinatura</li><li>Nome "Ateliê Casa Serra" no rodapé, à direita</li><li>No vídeo, o nome aparece nos 3 primeiros segundos</li></ul></div>
+  </section>
+
+  <!-- 02 CADA ÂNGULO NA PEÇA -->
+  <section>
+    <div class="num">02</div>
+    <h2>Cada ângulo na peça</h2>
+    <div class="rolagem">
+      <table>
+        <thead><tr><th>Ângulo criativo</th><th>Como a peça fica diferente</th></tr></thead>
+        <tbody>
+          <tr><td class="nome">A bancada que ninguém usa<br><span class="tipo-ang">Dor</span> <span class="tipo-ang momento">1. Não percebeu o problema</span></td><td>Câmera parada, plano aberto de uma cozinha comum, bagunçada, com luz fria. Nada de móvel novo na peça.</td></tr>
+          <tr><td class="nome">Domingo na cozinha<br><span class="tipo-ang">Desejo</span> <span class="tipo-ang momento">2. Sabe do problema</span></td><td>Família cozinhando junta numa cozinha entregue pelo Ateliê, luz de fim de tarde, sem falas, só som ambiente.</td></tr>
+          <tr><td class="nome">Projeto em 3D<br><span class="tipo-ang">Demonstração</span> <span class="tipo-ang momento">3. Procura solução</span></td><td>Gravação da tela com o projeto 3D girando e a mão do projetista no mouse. Nenhuma foto de cozinha pronta.</td></tr>
+          <tr><td class="nome">Casa da Dona Lurdes<br><span class="tipo-ang">Prova social</span> <span class="tipo-ang momento">4. Conhece a gente</span></td><td>A cliente falando na própria cozinha, câmera na mão, abrindo as gavetas que mais usa.</td></tr>
+          <tr><td class="nome">Planejado é caro?<br><span class="tipo-ang">Objeção</span> <span class="tipo-ang momento">5. Pronta para comprar</span></td><td>Card só de texto, fundo verde-oliva, a pergunta grande. Sem foto.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 03 LINGUAGEM -->
+  <section>
+    <div class="num">03</div>
+    <h2>Linguagem</h2>
+    <div class="cols">
+      <div class="box"><span class="label">Soa como</span><ul><li>"Cada gaveta no lugar de uma coisa que você usa todo dia."</li><li>"A gente desenha com você, em 3D, antes de você decidir."</li></ul></div>
+      <div class="box"><span class="label">Não soa como</span><ul><li>"Luxo e sofisticação para o seu lar!"</li><li>"Promoção imperdível, só hoje!"</li></ul></div>
+    </div>
+    <div class="rolagem mt">
+      <table>
+        <thead><tr><th>Frase fixa</th><th>Texto</th><th>Onde aparece</th></tr></thead>
+        <tbody>
+          <tr><td>Assinatura</td><td class="frase">Ateliê Casa Serra. Feito para a sua rotina.</td><td>Fim dos vídeos e rodapé dos cards</td></tr>
+          <tr><td>Chamada para ação</td><td class="frase">Peça seu projeto em 3D</td><td>Botão do anúncio e fim da legenda</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 04 ELEMENTOS VISUAIS -->
+  <section>
+    <div class="num">04</div>
+    <h2>Elementos visuais</h2>
+    <span class="label rotulo">Cores</span>
+    <div class="cores">
+      <span class="cor"><i style="background:#4F5B3A"></i>Verde-oliva · #4F5B3A</span>
+      <span class="cor"><i style="background:#B07A4B"></i>Madeira · #B07A4B</span>
+      <span class="cor"><i style="background:#F4EFE6"></i>Areia · #F4EFE6</span>
+    </div>
+    <div class="cols mt">
+      <div class="box"><span class="label">Letras</span><p>Fraunces nos títulos, Inter nos textos.</p></div>
+      <div class="box"><span class="label">Imagens</span><p>Cozinhas de clientes reais, com objetos do dia a dia à mostra. Luz natural, nunca foto de catálogo.</p></div>
+      <div class="box"><span class="label">Em vídeo</span><p>Sem trilha animada: som ambiente da cozinha. A frase do conceito escrita na tela no fim.</p></div>
+      <div class="box"><span class="label">O que evitar</span><p>Imagem 3D renderizada fingindo ser foto, cozinha vazia e perfeita, mármore e dourado.</p></div>
+    </div>
+  </section>
+
+  <footer>Nonna Agência Digital · Dezembro de 2026</footer>
+</main>
+</body>
+</html>
