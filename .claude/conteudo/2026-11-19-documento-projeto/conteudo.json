@@ -1,15 +1,32 @@
 {
+    "novidades": [
+        {
+            "title": "Documento de projeto com modelo novo",
+            "summary": "O Documento de projeto foi fechado no Mapa dos Documentos, com modelo e manual. Serve para qualquer projeto, de um site a uma automação simples: diz quando está pronto, o que não entra e qual benefício vamos conferir depois. O detalhe técnico vai para o Escopo técnico.",
+            "kind": "melhoria",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Documento de projeto — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-projeto",
+            "body_file": "ajuda-documento-de-projeto.html"
+        }
+    ],
     "documentos": [
         {
             "slug": "documento-projeto",
             "name": "Documento de projeto",
-            "status": "em_construcao",
-            "summary": "O que o projeto entrega, por que, quando está pronto e como saber se valeu a pena. Serve para qualquer natureza (site, automação, integração, CRM); a camada técnica fica no Escopo técnico. Modelo em revisão.",
+            "status": "fechado",
+            "summary": "O que o projeto entrega, por que, quando está pronto e como saber se valeu a pena. Serve para qualquer natureza (site, automação, integração, CRM); a camada técnica fica no Escopo técnico.",
             "made_by": "Gestor de Projetos, com Estratégia",
             "reviewed_by": "Head da área principal do projeto (ex.: Head de Tecnologia num site, Head Criativo num projeto de marca)",
             "when_made": "Depois do Planejamento do ciclo aprovado, ou quando entra um projeto avulso",
             "inputs": "Planejamento do ciclo (meta que carrega ou campanha que prepara) e Briefing do Kickoff (seção 08, Presença digital e estrutura técnica)",
             "next_step": "Escopo técnico, quando o projeto precisar; entregas viram tarefas no App",
+            "help_article_slug": "documento-de-projeto",
             "template_file": "../../docs/templates/nonna-projeto-modelo.html"
         },
         {
