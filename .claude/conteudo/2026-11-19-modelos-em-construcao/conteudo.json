@@ -12,10 +12,10 @@
             "slug": "planejamento-ciclo",
             "name": "Planejamento do ciclo",
             "status": "em_construcao",
-            "summary": "O plano de 60 a 90 dias: onde estamos, como vamos fazer, metas do ciclo ligadas a cada campanha e projeto, cronograma e como vamos acompanhar. O modelo aberto aqui é o exemplo v3, em discussão, feito com o planejamento da própria Nonna.",
+            "summary": "O plano de 60 a 90 dias, só no global estratégico: onde estamos, metas do ciclo ligadas a cada campanha e projeto, como vamos fazer, verba, cronograma com as revisões e o que precisamos do cliente. Modelo v4 em revisão.",
             "inputs": "Briefing do Kickoff (no primeiro ciclo) ou a revisão do ciclo anterior",
             "next_step": "Documento de campanha e documento de projeto de cada item do planejamento",
-            "template_file": "../../docs/templates/nonna-planejamento-exemplo-v3.html"
+            "template_file": "../../docs/templates/nonna-planejamento-modelo-v4.html"
         }
     ]
 }

@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planejamento · [Cliente] · [Mês/aaaa–Mês/aaaa]</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,300;9..144,400&display=swap" rel="stylesheet">
+<style>
+/* Modelo do Planejamento do ciclo Nonna (v4).
+   As 6 seções, a ordem e o bloco #nonna-dados não mudam. Só o global estratégico: o detalhe fica nos documentos de campanha e projeto.
+
+   FORMA E MÉRITO (regra de todos os documentos padrão):
+   - Forma = os componentes deste modelo (seção, campo com rótulo, cartão de meta, cartão de item, tabela de verba, linha do cronograma).
+     Só eles existem. NÃO criar cartão, tabela, gráfico ou destaque que não esteja aqui. NÃO ajustar o visual.
+   - Repetíveis (meta, item, linha de verba, linha do cronograma, pedido ao cliente) podem ser duplicados, removidos ou mudados.
+   - Mérito (texto livre) = só parágrafos e, no máximo, lista simples.
+   - Tudo que tem rótulo (título pequeno em caixa alta) é campo do modelo; texto sem rótulo é conteúdo livre. */
+:root {
+  --bg: #F6F7FB; --surface: #FFFFFF; --surface-2: #F1F3F8;
+  --brand: #643B8E; --brand-soft: #F6F1FA; --accent: #EE7919; --accent-soft: #FFF7ED;
+  --text: #111827; --text-2: #4D5768; --text-3: #697386; --border: #E2E5ED;
+  --warning: #B45309; --warning-soft: #FEF3C7;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 15px/1.6 Inter, system-ui, sans-serif; }
+.doc { max-width: 860px; margin: 0 auto; padding: 40px 20px 80px; display: flex; flex-direction: column; gap: 28px; }
+.label { font: 600 11px/1.3 "IBM Plex Mono", monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--brand); }
+h1 { font: 300 clamp(30px, 6vw, 42px)/1.1 Fraunces, Georgia, serif; letter-spacing: -.02em; margin: 6px 0 10px; }
+h2 { font: 700 21px/1.25 Inter, sans-serif; letter-spacing: -.015em; margin: 0 0 14px; }
+h3 { font: 600 16px/1.3 Inter, sans-serif; margin: 0; }
+p { margin: 0 0 10px; color: var(--text-2); }
+section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+.num { font: 600 11px "IBM Plex Mono", monospace; color: var(--text-3); margin-bottom: 4px; }
+
+/* 1. Capa */
+.capa { background: linear-gradient(135deg, var(--brand), #8A4FBF); color: #fff; border: 0; padding: 36px 28px; }
+.capa .label { color: rgba(255,255,255,.75); }
+.capa p { color: rgba(255,255,255,.9); font-size: 17px; font-style: italic; }
+.meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 22px; }
+.meta div { background: rgba(255,255,255,.12); border-radius: 10px; padding: 10px 14px; }
+.meta b { display: block; font-weight: 600; color: #fff; }
+
+/* Blocos de texto lado a lado */
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.box { background: var(--surface-2); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.box .label { margin-bottom: 6px; }
+.foco { background: var(--brand-soft); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin-top: 14px; font-family: Fraunces, Georgia, serif; font-size: 18px; color: var(--text); }
+
+/* 4. Metas e verba */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.kpi { border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.kpi .valor { font: 700 20px Inter, sans-serif; color: var(--text); margin: 4px 0; font-variant-numeric: tabular-nums; }
+.verba { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; background: var(--accent-soft); border-radius: 10px; padding: 14px 16px; margin-top: 14px; }
+.verba .valor { font: 700 24px Inter, sans-serif; color: var(--accent); font-variant-numeric: tabular-nums; }
+.pendente { display: inline-block; background: var(--warning-soft); color: var(--warning); font: 600 12px Inter, sans-serif; padding: 2px 8px; border-radius: 6px; }
+
+/* 5. Cronograma */
+.crono { display: flex; flex-direction: column; gap: 10px; }
+.mes { display: grid; grid-template-columns: 110px 1fr; gap: 14px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
+.mes:last-child { border-bottom: 0; }
+.mes .quando { font: 600 12px "IBM Plex Mono", monospace; color: var(--brand); text-transform: uppercase; padding-top: 2px; }
+
+/* 6. Campanhas e Projetos */
+.itens { display: flex; flex-direction: column; gap: 14px; }
+.item { border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+.item-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-bottom: 8px; }
+.tipo { font: 600 10px "IBM Plex Mono", monospace; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; }
+.tipo.campanha { background: var(--accent-soft); color: var(--accent); }
+.tipo.projeto { background: var(--brand-soft); color: var(--brand); }
+.datas { font: 500 13px Inter, sans-serif; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.item ul { margin: 8px 0 0; padding-left: 20px; color: var(--text-2); }
+
+/* 7. O que precisamos de você */
+.precisamos li { margin-bottom: 6px; color: var(--text-2); }
+.precisamos .prazo { color: var(--accent); font-weight: 600; }
+
+footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: var(--text-3); }
+@media (max-width: 520px) { .mes { grid-template-columns: 1fr; gap: 2px; } section { padding: 20px 16px; } }
+
+/* Componentes do planejamento v4 */
+.ph { background: var(--accent-soft); color: #9A4A0B; border-radius: 4px; padding: 0 4px; }
+.capa .ph { background: rgba(255,255,255,.18); color: #fff; }
+.pendente-ph { display: inline-block; background: var(--warning-soft); color: var(--warning); font: 600 12px Inter, sans-serif; padding: 2px 8px; border-radius: 6px; }
+.guia { border: 1px dashed #C9B6DD; background: #FBF8FD; border-radius: 10px; padding: 12px 14px; margin: 0 0 16px; font-size: 13.5px; color: var(--text-2); }
+.guia b { color: var(--brand); }
+.guia .label { display: block; margin-bottom: 4px; }
+body.sem-guia .guia { display: none; }
+.alternar { position: fixed; right: 16px; bottom: 16px; background: var(--brand); color: #fff; border: 0; border-radius: 999px; padding: 10px 16px; font: 600 13px Inter, sans-serif; cursor: pointer; box-shadow: 0 4px 14px rgba(100,59,142,.3); }
+.foco .label { display: block; font-family: "IBM Plex Mono", monospace; margin-bottom: 4px; }
+.kpi .linha { display: flex; gap: 14px; flex-wrap: wrap; margin: 6px 0 8px; font-size: 13px; color: var(--text-3); }
+.kpi .linha b { color: var(--text); font-weight: 600; }
+.carrega { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); font-size: 12.5px; color: var(--text-3); }
+.chip-item { display: inline-block; font: 600 11.5px Inter, sans-serif; padding: 2px 8px; border-radius: 999px; margin: 3px 4px 0 0; }
+.chip-item.campanha { background: var(--accent-soft); color: #9A4A0B; }
+.chip-item.projeto { background: var(--brand-soft); color: var(--brand); }
+.sem-dono { color: var(--warning); font-weight: 600; }
+.item .medida { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 12px; }
+.item .medida div { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; font-size: 13.5px; color: var(--text-2); }
+.item .medida .label { display: block; margin-bottom: 2px; }
+.rotulo { display: block; margin: 18px 0 8px; }
+.rolagem { overflow-x: auto; }
+.tabela { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tabela th { text-align: left; font: 600 11px "IBM Plex Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.tabela td { padding: 10px; border-bottom: 1px solid var(--border); color: var(--text-2); vertical-align: top; }
+.tabela td.valor { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text); }
+.tabela tr.total td { font-weight: 700; color: var(--text); border-top: 2px solid var(--border); border-bottom: 0; }
+.mes.revisao .quando { color: var(--accent); }
+@media print { body { background: #fff; } .guia, .alternar { display: none !important; } .doc { padding: 0; gap: 16px; } section { break-inside: avoid; } .ph { background: none; color: inherit; padding: 0; } }
+</style>
+</head>
+<body>
+<main class="doc">
+
+  <div class="guia">
+    <span class="label">Como usar este modelo</span>
+    O planejamento diz <b>onde o cliente está, aonde vamos chegar neste ciclo e com quais campanhas e projetos</b>. É só o global estratégico: o detalhe de cada item fica no documento da campanha ou do projeto. É lido pelo cliente, pela equipe e pelo App.<br>
+    <b>Com o quê:</b> no primeiro ciclo, o Briefing do Kickoff; nos seguintes, a revisão do ciclo anterior.<br>
+    <b>Regras:</b> toda meta tem número e data; toda meta é carregada por pelo menos uma campanha ou projeto; toda campanha carrega pelo menos uma meta; projeto carrega uma meta ou diz para qual campanha prepara o terreno.<br>
+    Troque tudo o que está <span class="ph">[entre colchetes]</span>. Número que não se sabe fica como <span class="pendente-ph">A confirmar</span> e vira pedido na seção 06. Só os componentes deste modelo existem; texto livre é só parágrafo ou lista simples. Estas caixas tracejadas somem ao imprimir ou pelo botão no canto da tela.
+  </div>
+
+  <!-- CAPA -->
+  <section class="capa">
+    <div class="label">Nonna · Planejamento do ciclo</div>
+    <h1><span class="ph">[Cliente]</span></h1>
+    <p><span class="ph">[O objetivo do ciclo em uma frase]</span></p>
+    <div class="meta">
+      <div><span class="label">Período</span><b><span class="ph">[dd/mm/aaaa a dd/mm/aaaa]</span></b></div>
+      <div><span class="label">Responsável Nonna</span><b><span class="ph">[Nome]</span></b></div>
+      <div><span class="label">Atualizado em</span><b><span class="ph">[dd/mm/aaaa]</span></b></div>
+    </div>
+  </section>
+
+  <!-- 01 ONDE ESTAMOS -->
+  <section>
+    <div class="num">01</div>
+    <h2>Onde estamos e aonde vamos</h2>
+    <div class="guia"><span class="label">Como preencher</span>A situação de hoje e o que muda neste ciclo, em poucas linhas cada. O foco é a frase que resume o ciclo inteiro.</div>
+    <div class="cols">
+      <div class="box"><div class="label">Situação atual</div><p><span class="ph">[...]</span></p></div>
+      <div class="box"><div class="label">O que muda neste ciclo</div><p><span class="ph">[...]</span></p></div>
+    </div>
+    <div class="foco"><span class="label">Foco do ciclo</span><span class="ph">[Uma frase]</span></div>
+  </section>
+
+  <!-- 02 METAS -->
+  <section>
+    <div class="num">02</div>
+    <h2>Metas do ciclo</h2>
+    <div class="guia"><span class="label">Como preencher</span>Um cartão por meta (duplique ou apague à vontade). Cada uma com <b>alvo e data</b>, o número de <b>hoje</b> (do Briefing do Kickoff ou do ciclo anterior), <b>de onde vem o número</b> e <b>quem carrega</b>: as campanhas e projetos da seção 04 que trabalham por ela. "Em queda" ou "melhorar" não são metas: transforme em número ("20% a menos").</div>
+    <div class="kpis">
+      <div class="kpi">
+        <div class="label"><span class="ph">[Nome da meta]</span></div><div class="valor"><span class="ph">[alvo]</span></div>
+        <div class="linha"><span>Até <b><span class="ph">[dd/mm]</span></b></span><span>Hoje <b><span class="ph">[número]</span></b></span><span>Fonte <b><span class="ph">[de onde vem]</span></b></span></div>
+        <div class="carrega">Carregada por <span class="chip-item campanha"><span class="ph">[Campanha]</span></span> <span class="chip-item projeto"><span class="ph">[Projeto]</span></span></div>
+      </div>
+      <div class="kpi">
+        <div class="label"><span class="ph">[Nome da meta]</span></div><div class="valor"><span class="ph">[alvo]</span></div>
+        <div class="linha"><span>Até <b><span class="ph">[...]</span></b></span><span>Hoje <span class="pendente-ph">A confirmar</span></span><span>Fonte <b><span class="ph">[...]</span></b></span></div>
+        <div class="carrega"><span class="sem-dono">Nenhuma campanha ou projeto carrega esta meta</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 COMO VAMOS FAZER -->
+  <section>
+    <div class="num">03</div>
+    <h2>Como vamos fazer</h2>
+    <div class="guia"><span class="label">Como preencher</span>A estratégia geral do ciclo, em um ou dois parágrafos: o que vem primeiro, o que roda em paralelo e por quê. Sem cartões nem listas de peças.</div>
+    <p><span class="ph">[...]</span></p>
+  </section>
+
+  <!-- 04 CAMPANHAS E PROJETOS -->
+  <section>
+    <div class="num">04</div>
+    <h2>Campanhas e projetos</h2>
+    <div class="guia"><span class="label">Como preencher</span>Um cartão por campanha ou projeto. Campanha diz quais metas <b>carrega</b> e sua <b>métrica principal</b> (a mesma do documento da campanha). Projeto diz quais metas carrega ou <b>para qual campanha prepara o terreno</b>, quando está <b>pronto</b> e qual <b>benefício</b> será conferido, e quando. As entregas e peças ficam no documento de cada item. No fim, a verba de anúncios: uma linha por campanha com tráfego pago.</div>
+    <div class="itens">
+      <div class="item">
+        <div class="item-top"><span class="tipo campanha">Campanha</span><h3><span class="ph">[Nome]</span></h3><span class="datas"><span class="ph">[dd/mm/aaaa → dd/mm/aaaa]</span></span></div>
+        <p><span class="ph">[Objetivo em uma frase]</span></p>
+        <div class="medida">
+          <div><span class="label">Carrega</span><span class="ph">[Metas]</span></div>
+          <div><span class="label">Métrica principal</span><span class="ph">[Métrica: alvo até dd/mm]</span></div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-top"><span class="tipo projeto">Projeto</span><h3><span class="ph">[Nome]</span></h3><span class="datas"><span class="ph">[dd/mm/aaaa → dd/mm/aaaa]</span></span></div>
+        <p><span class="ph">[Objetivo em uma frase]</span></p>
+        <div class="medida">
+          <div><span class="label">Carrega · ou · Prepara o terreno para</span><span class="ph">[Metas ou campanha]</span></div>
+          <div><span class="label">Pronto quando</span><span class="ph">[O que precisa estar entregue e aprovado]</span></div>
+          <div><span class="label">Benefício, conferido em <span class="ph">[mês]</span></span><span class="ph">[O que deve melhorar depois da entrega]</span></div>
+        </div>
+      </div>
+    </div>
+    <span class="label rotulo">Verba de anúncios</span>
+    <div class="rolagem">
+      <table class="tabela">
+        <thead><tr><th>Campanha</th><th>Plataformas</th><th>Verba mensal</th></tr></thead>
+        <tbody>
+          <tr><td><span class="ph">[Campanha]</span></td><td><span class="ph">[Meta, Google...]</span></td><td class="valor"><span class="ph">[R$]</span></td></tr>
+          <tr class="total"><td>Total</td><td></td><td class="valor"><span class="ph">[R$]</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 05 CRONOGRAMA -->
+  <section>
+    <div class="num">05</div>
+    <h2>Cronograma</h2>
+    <div class="guia"><span class="label">Como preencher</span>Uma linha por mês ou fase, com o nome da fase e o que acontece. As duas últimas linhas são fixas: a <b>revisão do meio do ciclo</b>, feita com o cliente, e o <b>fechamento do ciclo</b>, que vira a base do próximo planejamento.</div>
+    <div class="crono">
+      <div class="mes"><div class="quando"><span class="ph">[Mês/aaaa]</span></div><div><h3><span class="ph">[Nome da fase]</span></h3><p><span class="ph">[O que acontece]</span></p></div></div>
+      <div class="mes"><div class="quando"><span class="ph">[Mês/aaaa]</span></div><div><h3><span class="ph">[...]</span></h3><p><span class="ph">[...]</span></p></div></div>
+      <div class="mes revisao"><div class="quando"><span class="ph">[dd/mm/aaaa]</span></div><div><h3>Revisão do meio do ciclo</h3><p>Com o cliente: o que está no rumo e o que muda.</p></div></div>
+      <div class="mes revisao"><div class="quando"><span class="ph">[dd/mm/aaaa]</span></div><div><h3>Fechamento do ciclo</h3><p>Resultado de cada meta, campanha e projeto, e o que levamos para o próximo planejamento.</p></div></div>
+    </div>
+  </section>
+
+  <!-- 06 O QUE PRECISAMOS DE VOCÊ -->
+  <section>
+    <div class="num">06</div>
+    <h2>O que precisamos de você</h2>
+    <div class="guia"><span class="label">Como preencher</span>O que depende do cliente, com prazo. Inclui os números de hoje que ficaram como "A confirmar" nas metas.</div>
+    <ul class="precisamos">
+      <li><span class="ph">[O que precisamos]</span>, <span class="prazo"><span class="ph">[até quando]</span></span></li>
+    </ul>
+  </section>
+
+  <footer>Nonna Agência Digital · <span class="ph">[Mês de aaaa]</span></footer>
+</main>
+
+<button class="alternar" type="button" onclick="document.body.classList.toggle('sem-guia'); this.textContent = document.body.classList.contains('sem-guia') ? 'Mostrar instruções' : 'Ocultar instruções';">Ocultar instruções</button>
+
+<!-- Dados para o Nonna App — não aparece na tela. Mesmos itens e datas da seção 04. -->
+<script type="application/json" id="nonna-dados">
+{
+  "contrato": null,
+  "cliente": "[Cliente]",
+  "titulo": "[Planejamento Mês/aaaa–Mês/aaaa]",
+  "periodo_inicio": "aaaa-mm-dd",
+  "periodo_fim": "aaaa-mm-dd",
+  "responsavel": "[Nome]",
+  "verba_mensal": null,
+  "metas": [
+    { "nome": "[Meta]", "hoje": null, "meta": "[alvo]", "ate": "aaaa-mm-dd", "fonte": "[De onde vem]" }
+  ],
+  "itens": [
+    { "tipo": "campanha", "nome": "[Nome]", "objetivo": "[Objetivo]", "inicio": "aaaa-mm-dd", "fim": "aaaa-mm-dd", "metas": ["[Meta]"], "metrica": "[Métrica principal]", "verba_mensal": null, "plataformas": ["[Meta]"] },
+    { "tipo": "projeto", "nome": "[Nome]", "objetivo": "[Objetivo]", "inicio": "aaaa-mm-dd", "fim": "aaaa-mm-dd", "metas": [], "prepara": ["[Campanha]"], "pronto_quando": "[...]", "beneficio": "[...]", "beneficio_em": "aaaa-mm-dd" }
+  ],
+  "revisoes": { "meio_do_ciclo": "aaaa-mm-dd", "fechamento": "aaaa-mm-dd" }
+}
+</script>
+</body>
+</html>

@@ -171,13 +171,8 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
         <tbody>
           <tr><td>Diagnósticos realizados</td><td>0</td><td>2 ou mais por semana, a partir de dezembro</td><td>Reuniões registradas no funil da agência</td><td>Automático</td></tr>
           <tr><td>Pedidos de diagnóstico pela página</td><td>0</td><td><span class="pendente">A confirmar</span></td><td>Central de Leads</td><td>Automático</td></tr>
-          <tr><td>Custo por pedido de diagnóstico</td><td>—</td><td><span class="pendente">A confirmar</span></td><td>Central de Campanhas (Meta)</td><td>Automático</td></tr>
         </tbody>
       </table>
-    </div>
-    <div class="semanal">
-      <span class="label">Para olhar toda semana</span>
-      <span>Pedidos de diagnóstico da semana, somando a página e a prospecção ativa.</span>
     </div>
   </section>
 
@@ -190,7 +185,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
         <h3>A última venda</h3>
         <p class="msg">"Você sabe quanto custou sua última venda?"</p>
         <dl>
-          <dt>Para quem e em que momento</dt><dd>O dono que investe em anúncio e não mede o resultado · ainda não percebeu o problema</dd>
+          <dt>Para quem</dt><dd>O dono que investe em anúncio e não mede o resultado</dd>
           <dt>Ganchos</dt><dd><ul><li>A pergunta dita direto para a câmera, nos dois primeiros segundos</li><li>"Se você não sabe quanto custou o seu último cliente, a gente te mostra em uma conversa."</li></ul></dd>
           <dt>Formatos</dt><dd>Vídeo falado (Evandro para a câmera) e card</dd>
         </dl>
@@ -200,7 +195,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
         <h3>PlaNo C</h3>
         <p class="msg">"Já tentou o plano A e o B? Conheça o PlaNo C."</p>
         <dl>
-          <dt>Para quem e em que momento</dt><dd>Quem já se decepcionou com agência · já compara soluções</dd>
+          <dt>Para quem</dt><dd>Quem já se decepcionou com agência</dd>
           <dt>Ganchos</dt><dd><ul><li>"Já tentou o plano A e o B?"</li></ul></dd>
           <dt>Formatos</dt><dd>Card de lembrete, para quem já visitou a página</dd>
         </dl>
@@ -210,7 +205,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
         <h3>Post não é venda</h3>
         <p class="msg">Agência que entrega posts × especialista em fazer anúncio virar venda.</p>
         <dl>
-          <dt>Para quem e em que momento</dt><dd>Quem compara preço de social media com freelancer · já compara soluções</dd>
+          <dt>Para quem</dt><dd>Quem compara preço de social media com freelancer</dd>
           <dt>Ganchos</dt><dd><ul><li><span class="pendente">A definir na criação</span></li></ul></dd>
           <dt>Formatos</dt><dd>Vídeo falado e carrossel</dd>
         </dl>
@@ -220,7 +215,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
         <h3>O custo de cada venda</h3>
         <p class="msg">Veja como é saber quanto custou cada venda.</p>
         <dl>
-          <dt>Para quem e em que momento</dt><dd>O dono que duvida que dá para medir · já sabe do problema</dd>
+          <dt>Para quem</dt><dd>O dono que duvida que dá para medir</dd>
           <dt>Ganchos</dt><dd><ul><li>A tela do Arkanno mostrando o custo de uma venda real</li></ul></dd>
           <dt>Formatos</dt><dd>Vídeo com a tela do sistema e carrossel</dd>
         </dl>
@@ -230,7 +225,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
         <h3>Diagnóstico gratuito</h3>
         <p class="msg">Em uma conversa, mostramos onde a sua venda se perde.</p>
         <dl>
-          <dt>Para quem e em que momento</dt><dd>Quem já sabe que perde venda e quer entender onde · já sabe do problema</dd>
+          <dt>Para quem</dt><dd>Quem já sabe que perde venda e quer entender onde</dd>
           <dt>Ganchos</dt><dd><ul><li>"Diagnóstico gratuito: onde a sua venda se perde"</li></ul></dd>
           <dt>Formatos</dt><dd>Card e o guia de vendas por conversa como presente</dd>
         </dl>
@@ -374,17 +369,15 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
     "principal": { "nome": "Contratos novos fechados pela campanha", "hoje": 0, "meta": 4, "meta_ate": "2027-01-31", "fonte": "Contratos registrados no Arkanno", "entrada": "automatico" },
     "apoio": [
       { "nome": "Diagnósticos realizados por semana", "hoje": 0, "meta": 2, "fonte": "Reuniões registradas no funil da agência", "entrada": "automatico" },
-      { "nome": "Pedidos de diagnóstico pela página", "hoje": 0, "meta": null, "fonte": "Central de Leads", "entrada": "automatico" },
-      { "nome": "Custo por pedido de diagnóstico", "hoje": null, "meta": null, "fonte": "Central de Campanhas (Meta)", "entrada": "automatico" }
-    ],
-    "semanal": "Pedidos de diagnóstico da semana, somando a página e a prospecção ativa"
+      { "nome": "Pedidos de diagnóstico pela página", "hoje": 0, "meta": null, "fonte": "Central de Leads", "entrada": "automatico" }
+    ]
   },
   "angulos": [
-    { "nome": "A última venda", "tipo": "dor", "momento": "nao_percebeu", "mensagem": "Você sabe quanto custou sua última venda?", "ganchos": ["A pergunta dita direto para a câmera, nos dois primeiros segundos", "Se você não sabe quanto custou o seu último cliente, a gente te mostra em uma conversa."], "formatos": ["vídeo falado", "card"] },
-    { "nome": "PlaNo C", "tipo": "objecao", "momento": "compara_solucoes", "mensagem": "Já tentou o plano A e o B? Conheça o PlaNo C.", "ganchos": ["Já tentou o plano A e o B?"], "formatos": ["card"] },
-    { "nome": "Post não é venda", "tipo": "comparacao", "momento": "compara_solucoes", "mensagem": "Agência que entrega posts × especialista em fazer anúncio virar venda.", "ganchos": [], "formatos": ["vídeo falado", "carrossel"] },
-    { "nome": "O custo de cada venda", "tipo": "demonstracao", "momento": "sabe_do_problema", "mensagem": "Veja como é saber quanto custou cada venda.", "ganchos": ["A tela do Arkanno mostrando o custo de uma venda real"], "formatos": ["vídeo com a tela do sistema", "carrossel"] },
-    { "nome": "Diagnóstico gratuito", "tipo": "oferta", "momento": "sabe_do_problema", "mensagem": "Em uma conversa, mostramos onde a sua venda se perde.", "ganchos": ["Diagnóstico gratuito: onde a sua venda se perde"], "formatos": ["card", "guia como presente"] }
+    { "nome": "A última venda", "tipo": "dor", "mensagem": "Você sabe quanto custou sua última venda?", "ganchos": ["A pergunta dita direto para a câmera, nos dois primeiros segundos", "Se você não sabe quanto custou o seu último cliente, a gente te mostra em uma conversa."], "formatos": ["vídeo falado", "card"] },
+    { "nome": "PlaNo C", "tipo": "objecao", "mensagem": "Já tentou o plano A e o B? Conheça o PlaNo C.", "ganchos": ["Já tentou o plano A e o B?"], "formatos": ["card"] },
+    { "nome": "Post não é venda", "tipo": "comparacao", "mensagem": "Agência que entrega posts × especialista em fazer anúncio virar venda.", "ganchos": [], "formatos": ["vídeo falado", "carrossel"] },
+    { "nome": "O custo de cada venda", "tipo": "demonstracao", "mensagem": "Veja como é saber quanto custou cada venda.", "ganchos": ["A tela do Arkanno mostrando o custo de uma venda real"], "formatos": ["vídeo com a tela do sistema", "carrossel"] },
+    { "nome": "Diagnóstico gratuito", "tipo": "oferta", "mensagem": "Em uma conversa, mostramos onde a sua venda se perde.", "ganchos": ["Diagnóstico gratuito: onde a sua venda se perde"], "formatos": ["card", "guia como presente"] }
   ],
   "midia": [
     { "plataforma": "Meta", "para": "Levar gente nova à página do diagnóstico", "verba_mensal": 700 },
