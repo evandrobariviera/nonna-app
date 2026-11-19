@@ -5,6 +5,8 @@
             "name": "Documento de campanha",
             "status": "em_construcao",
             "summary": "O escopo de cada campanha: objetivo e como medir (Contrato de Sucesso), ângulos criativos, conceito, mecânica, peças e o fechamento com o resultado. Modelo v2 em revisão.",
+            "made_by": "Estratégia",
+            "reviewed_by": "Direção Criativa (ângulos criativos e conceito) e Tráfego (mídia e sinais de alerta)",
             "inputs": "Planejamento do ciclo (de onde a campanha vem) e Briefing do Kickoff (seções 04, Quem compra, e 07, Metas e ponto de partida)",
             "next_step": "Peças e tarefas no App; check-in a cada 15 dias e fechamento ao fim da campanha",
             "template_file": "../../docs/templates/nonna-campanha-modelo.html"
