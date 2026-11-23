@@ -115,29 +115,29 @@
         .proj-tabs { display: flex; flex-direction: column; gap: 1.5rem; align-items: stretch; }
         .proj-tabs > .proj-side { width: 100%; min-width: 0; }
         .proj-tabs > .proj-main { flex: 1 1 auto; min-width: 0; width: 100%; }
+        .proj-tabs > .proj-strip { width: 100%; flex-basis: 100%; margin-bottom: 0; }
         @media (min-width: 64rem) {
-            .proj-tabs { flex-direction: row; align-items: flex-start; }
+            .proj-tabs { flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
+            .proj-tabs > .proj-main { flex: 1 1 0; }
             .proj-tabs > .proj-side { width: 300px; flex-shrink: 0; }
         }
     </style>
 
     {{-- MENU + CONTEXTO (esquerda) --}}
     {{-- Na aba Documento em campos a lateral some e vira a faixa de abas do topo: a mesa usa a largura toda. --}}
+    {{-- MENU (24/11): faixa de abas no topo, padrão de todas as abas --}}
+    <div class="proj-strip flex items-center gap-1 flex-wrap mb-4">
+        @foreach($abas as $key => $item)
+            <button type="button" @click="aba = '{{ $key }}'"
+                class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg"
+                :style="aba === '{{ $key }}' ? 'background:rgba(100,59,142,.12); color:var(--purple)' : 'color:var(--muted2); border:1px solid var(--border2)'">
+            <x-icon :name="$item['icon']" size="12" /> {{ $item['label'] }}
+            @if(!empty($item['count']))<span class="font-mono" style="color:var(--muted)">{{ $item['count'] }}</span>@endif
+            </button>
+        @endforeach
+    </div>
+
     <aside class="proj-side" @if($fieldDocument) x-show="aba !== 'documento'" @endif>
-        <div class="card overflow-hidden mb-5">
-            @foreach($abas as $key => $item)
-                <button type="button" @click="aba = '{{ $key }}'; window.scrollTo({ top: 0, behavior: 'smooth' })"
-                        class="w-full flex items-center gap-3 px-4 py-3 text-left transition-all"
-                        style="border:none; {{ !$loop->last ? 'border-bottom:1px solid var(--border2);' : '' }} background:none; cursor:pointer"
-                        :style="aba === '{{ $key }}' ? 'background:rgba(100, 59, 142,.12); color:var(--purple)' : 'color:var(--muted2)'">
-                    <span class="opacity-60" style="display:inline-flex"><x-icon :name="$item['icon']" size="13" /></span>
-                    <span class="text-xs font-semibold leading-tight">{{ $item['label'] }}</span>
-                    @if(isset($item['count']))
-                        <span class="ml-auto text-xs font-mono" style="color:var(--muted)">{{ $item['count'] }}</span>
-                    @endif
-                </button>
-            @endforeach
-        </div>
 
     {{-- PROGRESSO + DETALHES — mesmo visual do "Faz parte de" da tarefa (tasks/show): rosca,
          datas e régua do período. Contadores data-stat-count são atualizados ao vivo pelo
@@ -409,19 +409,7 @@
     </aside>{{-- /menu + contexto --}}
 
     <div class="proj-main">
-    @if($fieldDocument)
-        <div x-show="aba === 'documento'" x-cloak class="flex items-center gap-1 flex-wrap mb-4">
-            @foreach($abas as $key => $item)
-                <button type="button" @click="aba = '{{ $key }}'"
-                        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg"
-                        :style="aba === '{{ $key }}' ? 'background:rgba(100,59,142,.12); color:var(--purple)' : 'color:var(--muted2); border:1px solid var(--border2)'">
-                    <x-icon :name="$item['icon']" size="12" /> {{ $item['label'] }}
-                    @if(!empty($item['count']))<span class="font-mono" style="color:var(--muted)">{{ $item['count'] }}</span>@endif
-                </button>
-            @endforeach
-            <span class="text-xs ml-2" style="color:var(--muted)">Resumo, equipe, reuniões e anexos ficam ao lado nas outras abas.</span>
-        </div>
-    @endif
+
 
     {{-- ABA DOCUMENTO --}}
     <div x-show="aba === 'documento'" x-cloak>

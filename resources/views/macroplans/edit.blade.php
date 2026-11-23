@@ -55,14 +55,8 @@
     </style>
 
     {{-- LAYOUT: SIDEBAR + CONTEÚDO --}}
-    <div x-data="{ block: '{{ $currentBlock }}' }" class="flex gap-6">
-
-        {{-- SIDEBAR (na aba Documento em campos ela some e vira a faixa de abas do topo: a mesa usa a largura toda) --}}
-        <div class="flex-shrink-0" style="width:220px" @if($fieldDocument) x-show="block !== 'documento'" @endif>
-            <div class="card overflow-hidden">
-                {{-- Planejamento enxuto (2026-10): Documento (HTML) + Campanhas e Projetos +
-                     Configurações. Os blocos antigos só aparecem se tiverem conteúdo, em leitura. --}}
-                @php
+    <div x-data="{ block: '{{ $currentBlock }}' }" style="display:flex; flex-wrap:wrap; column-gap:1.5rem">
+        @php
                     $nav = [
                         'documento' => ['icon' => 'file-text',     'label' => 'Documento'],
                         'linha-do-tempo' => ['icon' => 'chart-gantt', 'label' => 'Linha do tempo'],
@@ -74,58 +68,35 @@
                     $suggestedCount = app(\App\Services\DocumentUpdate\DocumentUpdateService::class)
                         ->suggestedPendencies($macroplan)->sum(fn ($g) => count($g['items']));
                 @endphp
-                @foreach($nav as $key => $item)
-                    <button type="button"
-                            @click="block = '{{ $key }}'"
-                            class="w-full flex items-center gap-3 px-4 py-3 text-left transition-all"
-                            style="border:none; border-bottom:1px solid var(--border2); background:none; cursor:pointer"
-                            :style="block === '{{ $key }}'
-                                ? 'background:rgba(100, 59, 142,.12); color:var(--purple)'
-                                : 'color:var(--muted2)'">
-                        <span class="opacity-60" style="display:inline-flex"><x-icon :name="$item['icon']" size="13" /></span>
-                        <span class="text-xs font-semibold leading-tight">{{ $item['label'] }}</span>
-                        @if($key === 'pendencias' && $suggestedCount)
-                            <span class="ml-auto text-[10px] font-semibold px-1.5 py-0.5" title="{{ $suggestedCount }} sugerida(s) pela reunião para registrar ou dispensar"
-                                  style="background:rgba(238,121,25,.12); color:var(--orange); border-radius:6px">+{{ $suggestedCount }} sugerida{{ $suggestedCount !== 1 ? 's' : '' }}</span>
-                            <span class="text-xs font-mono" style="color:var(--muted)">{{ $item['count'] }}</span>
-                        @elseif(isset($item['count']))
-                            <span class="ml-auto text-xs font-mono" style="color:var(--muted)">{{ $item['count'] }}</span>
-                        @endif
+
+        {{-- MENU DO PLANEJAMENTO (24/11): faixa de abas no topo, padrão de todas as abas. A lateral
+             fica só com o contexto (reuniões, anexos, histórico) e some na aba Documento em campos. --}}
+        <div class="flex items-center gap-1 flex-wrap mb-4" style="flex-basis:100%">
+            @foreach($nav + ['meta' => ['icon' => 'settings', 'label' => 'Configurações']] as $key => $item)
+                <button type="button" @click="block = '{{ $key }}'"
+                        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg"
+                        :style="block === '{{ $key }}' ? 'background:rgba(100,59,142,.12); color:var(--purple)' : 'color:var(--muted2); border:1px solid var(--border2)'">
+                    <x-icon :name="$item['icon']" size="12" /> {{ $item['label'] }}
+                    @if(!empty($item['count']))<span class="font-mono" style="color:var(--muted)">{{ $item['count'] }}</span>@endif
+                    @if($key === 'pendencias' && $suggestedCount)
+                        <span class="text-[10px] font-semibold px-1.5" title="{{ $suggestedCount }} sugerida(s) pela reunião para registrar ou dispensar"
+                              style="background:rgba(238,121,25,.12); color:var(--orange); border-radius:6px">+{{ $suggestedCount }}</span>
+                    @endif
+                </button>
+            @endforeach
+            @if($legacyBlocks)
+                <span class="text-[11px] ml-2 mr-1 uppercase font-mono" style="color:var(--muted)">Anterior:</span>
+                @foreach($legacyBlocks as $key)
+                    <button type="button" @click="block = '{{ $key }}'" class="px-2.5 py-1 text-xs rounded-lg"
+                            :style="block === '{{ $key }}' ? 'background:rgba(100,59,142,.12); color:var(--purple)' : 'color:var(--muted)'">
+                        {{ \App\Models\MacroPlan::$blocks[$key]['label'] }}
                     </button>
                 @endforeach
+            @endif
+        </div>
 
-                {{-- Meta / configurações --}}
-                <button type="button"
-                        @click="block = 'meta'"
-                        :class="block === 'meta' ? 'active' : ''"
-                        class="w-full flex items-center gap-3 px-4 py-3 text-left transition-all"
-                        style="border:none; background:none; cursor:pointer"
-                        :style="block === 'meta'
-                            ? 'background:rgba(100, 59, 142,.12); color:var(--purple)'
-                            : 'color:var(--muted2)'">
-                    <span class="opacity-60" style="display:inline-flex"><x-icon name="settings" size="13" /></span>
-                    <span class="text-xs font-semibold">Configurações</span>
-                </button>
-
-                @if($legacyBlocks)
-                    <div class="px-4 pt-3 pb-1" style="border-top:1px solid var(--border2)">
-                        <p class="text-xs font-mono uppercase tracking-widest" style="color:var(--muted)">Conteúdo anterior · leitura</p>
-                    </div>
-                    @foreach($legacyBlocks as $key)
-                        <button type="button"
-                                @click="block = '{{ $key }}'"
-                                class="w-full flex items-center gap-3 px-4 py-2 text-left transition-all"
-                                style="border:none; background:none; cursor:pointer"
-                                :style="block === '{{ $key }}'
-                                    ? 'background:rgba(100, 59, 142,.12); color:var(--purple)'
-                                    : 'color:var(--muted)'">
-                            <span class="text-xs font-mono opacity-50">{{ \App\Models\MacroPlan::$blocks[$key]['num'] }}</span>
-                            <span class="text-xs leading-tight">{{ \App\Models\MacroPlan::$blocks[$key]['label'] }}</span>
-                        </button>
-                    @endforeach
-                @endif
-            </div>
-
+        {{-- LATERAL: contexto (some na aba Documento em campos: a mesa usa a largura toda) --}}
+        <div class="flex-shrink-0" style="width:220px" @if($fieldDocument) x-show="block !== 'documento'" @endif>
             {{-- Reuniões ligadas --}}
             <div class="card mt-3 p-3">
                 <x-related-meetings :meetings="$relatedMeetings" :context="$macroplan" />
@@ -187,20 +158,6 @@
 
         {{-- CONTEÚDO --}}
         <div class="flex-1 min-w-0">
-            @if($fieldDocument)
-                {{-- Faixa de abas (só na aba Documento, no lugar da lateral) --}}
-                <div x-show="block === 'documento'" x-cloak class="flex items-center gap-1 flex-wrap mb-4">
-                    @foreach($nav + ['meta' => ['icon' => 'settings', 'label' => 'Configurações']] as $key => $item)
-                        <button type="button" @click="block = '{{ $key }}'"
-                                class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg"
-                                :style="block === '{{ $key }}' ? 'background:rgba(100,59,142,.12); color:var(--purple)' : 'color:var(--muted2); border:1px solid var(--border2)'">
-                            <x-icon :name="$item['icon']" size="12" /> {{ $item['label'] }}
-                            @if(!empty($item['count']))<span class="font-mono" style="color:var(--muted)">{{ $item['count'] }}</span>@endif
-                        </button>
-                    @endforeach
-                    <span class="text-xs ml-2" style="color:var(--muted)">Reuniões, anexos e histórico ficam ao lado nas outras abas.</span>
-                </div>
-            @endif
 
             {{-- ══ DOCUMENTO — o HTML do planejamento (campo próprio document_attachment_id) ══ --}}
             <div x-show="block === 'documento'" x-cloak>

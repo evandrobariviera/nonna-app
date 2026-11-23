@@ -1,0 +1,16 @@
+{
+    "novidades": [
+        {
+            "title": "Menu em abas no topo do planejamento, da campanha e do projeto",
+            "summary": "O menu (Documento, Tarefas, Linha do tempo, Campanhas, Discussão, Pendências, Configurações) agora é uma faixa de abas no topo, em todas as abas. A lateral fica só com o contexto: resumo, equipe, reuniões, anexos e histórico.",
+            "kind": "melhoria",
+            "area": "Planejamentos"
+        },
+        {
+            "title": "Cliente lê o planejamento e as campanhas quando entram em execução",
+            "summary": "O link que o cliente recebe quando o planejamento entra em execução agora abre o documento novo, com uma aba para cada campanha e projeto, e o Portal mostra o mesmo. Enquanto está em Planejamento ou Aprovação, o cliente não vê nada.",
+            "kind": "melhoria",
+            "area": "Portal do Cliente"
+        }
+    ]
+}

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MacroPlan;
 use App\Models\Project;
 use App\Models\Task;
+use App\Services\Documents\ClientDocuments;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -31,15 +32,31 @@ class ProjectController extends Controller
 
         $macroplan->load(['projects.tasks' => fn($q) => $q->orderBy('created_at')]);
 
-        $document = $macroplan->mainDocument();
+        $document      = $macroplan->mainDocument();
+        $fieldDocument = ClientDocuments::forPlan($macroplan);
 
-        return view('portal.projects.show', compact('client', 'macroplan', 'document'));
+        return view('portal.projects.show', compact('client', 'macroplan', 'document', 'fieldDocument'));
+    }
+
+    // Documento em campos do planejamento, na versão do cliente (só em execução ou concluído).
+    public function planDocument(MacroPlan $macroplan)
+    {
+        abort_if($macroplan->client_id !== app('currentPortalClient')->id, 403);
+        $doc = ClientDocuments::forPlan($macroplan);
+        abort_unless($doc, 404);
+
+        return ClientDocuments::view($doc);
     }
 
     // Link assinado gerado só no clique: abrir o card não pede um link por campanha.
-    public function document(Project $project): RedirectResponse
+    public function document(Project $project)
     {
         abort_if($project->client_id !== app('currentPortalClient')->id, 403);
+
+        // Documento em campos (24/11) tem prioridade: é a versão viva da campanha/projeto.
+        if ($field = ClientDocuments::forProject($project)) {
+            return ClientDocuments::view($field);
+        }
 
         $document = $project->mainDocument();
         abort_unless($document, 404);

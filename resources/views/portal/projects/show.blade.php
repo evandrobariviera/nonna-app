@@ -13,7 +13,12 @@
         </p>
     </div>
 
-    @if($document)
+    @if($fieldDocument)
+        <div class="card mb-5 overflow-hidden">
+            <iframe src="{{ route('portal.projects.plan-document', $macroplan) }}" title="Documento do planejamento" loading="lazy"
+                    style="width:100%; height:78vh; border:0; background:#fff; display:block"></iframe>
+        </div>
+    @elseif($document)
         <div class="card mb-5 overflow-hidden">
             <iframe src="{{ $document->url() }}" title="Documento do planejamento"
                     sandbox="allow-scripts allow-popups" loading="lazy"
@@ -43,7 +48,7 @@
                 @if($project->objective)
                     <p class="text-xs mt-3" style="color: var(--muted)">{{ $project->objective }}</p>
                 @endif
-                @if($project->document_attachment_id)
+                @if($project->document_attachment_id || \App\Services\Documents\ClientDocuments::forProject($project))
                     <a href="{{ route('portal.projects.document', $project) }}" target="_blank" rel="noopener"
                        class="text-xs font-semibold inline-block mt-3" style="color: var(--purple)">
                         Ver documento {{ $project->type === 'campanha' ? 'da campanha' : 'do projeto' }} →

@@ -1336,6 +1336,9 @@ Route::get('/aprovar/{token}/central', [ApprovalController::class, 'central'])
 Route::get('/documento/{token}', [\App\Http\Controllers\PublicItemController::class, 'show'])
     ->middleware('throttle:60,1')
     ->name('public-item.show');
+Route::get('/documento/{token}/ver/{part?}', [\App\Http\Controllers\PublicItemController::class, 'document'])
+    ->middleware('throttle:120,1')
+    ->name('public-item.document');
 
 // ── Solicitação de senhas/acessos pública (sem autenticação — link tokenizado) ──
 Route::get('/credenciais/{token}', [CredentialRequestController::class, 'show'])
@@ -1373,6 +1376,7 @@ Route::prefix('portal')->name('portal.')->middleware(['portal', 'portal.client']
     Route::get('/projetos', [PortalProjects::class, 'index'])->name('projects.index');
     Route::get('/projetos/{macroplan}', [PortalProjects::class, 'show'])->name('projects.show');
     Route::get('/projetos/documento/{project}', [PortalProjects::class, 'document'])->name('projects.document');
+    Route::get('/projetos/{macroplan}/documento', [PortalProjects::class, 'planDocument'])->name('projects.plan-document');
     Route::get('/tarefas/{task}', [PortalProjects::class, 'showTask'])->name('tasks.show');
     Route::post('/tarefas/{task}/comentarios', [PortalTaskComments::class, 'store'])->name('tasks.comments.store');
     Route::get('/chamados', [PortalTickets::class, 'index'])->name('tickets.index');
