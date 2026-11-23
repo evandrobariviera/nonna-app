@@ -113,6 +113,15 @@ class MacroPlan extends Model
      * documento só por planejamento, sem versão interna × cliente). É o que a tela mostra
      * e o que a IA lê.
      */
+    /**
+     * Documento em campos (23/11) — o planejamento no modelo v4 guardado campo a campo.
+     * Quando existe, é ele que a aba Documento mostra (o HTML antigo fica nos anexos).
+     */
+    public function fieldDocument(): \Illuminate\Database\Eloquent\Relations\MorphOne
+    {
+        return $this->morphOne(Document::class, 'documentable');
+    }
+
     public function mainDocument(): ?MacroPlanAttachment
     {
         // Campo próprio (document_attachment_id) — antes era "o HTML mais recente dos anexos",

@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Planejamento preenchido direto no App",
+            "summary": "O planejamento agora se preenche aqui, seção por seção, no modelo padrão: cada campo salva sozinho, o App avisa o que falta e quais regras estão quebradas, e a versão do cliente se monta sozinha em \"Como o cliente vê\". Novo planejamento já nasce assim; os antigos ganham o botão \"Começar documento em campos\".",
+            "kind": "novidade",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Planejamento do ciclo — como preencher",
+            "category": "Documentos",
+            "slug": "planejamento-do-ciclo",
+            "body_file": "ajuda-planejamento-do-ciclo.html"
+        }
+    ]
+}

@@ -100,9 +100,12 @@ class MacroPlanController extends Controller
                 ...$data,
                 'created_by' => Auth::id(),
             ]);
+            // Sem HTML, o planejamento já nasce com o documento em campos (23/11).
+            app(\App\Services\Documents\DocumentEditor::class)
+                ->create('planejamento', $plan->client_id, $plan->getMorphClass(), $plan->id, Auth::id());
 
-            return redirect()->route('macroplans.edit', $plan)
-                ->with('success', 'Planejamento criado. Envie o documento (HTML) quando estiver pronto.');
+            return redirect()->route('macroplans.edit', [$plan, 'bloco' => 'documento'])
+                ->with('success', 'Planejamento criado. Preencha o documento seção por seção: cada campo salva sozinho.');
         }
 
         try {
@@ -154,6 +157,8 @@ class MacroPlanController extends Controller
         // na navegação quando têm conteúdo, e em modo leitura.
         $legacyBlocks = $macroplan->legacyBlocks();
         $mainDocument = $macroplan->mainDocument();
+        // Documento em campos (23/11): quando existe, é ele que a aba Documento mostra.
+        $fieldDocument = $macroplan->fieldDocument()->with('client:id,company_name')->first();
         $currentBlock = $request->get('bloco', 'documento');
 
         if (!in_array($currentBlock, array_merge(['documento', 'linha-do-tempo', 'bloco3', 'discussao', 'pendencias', 'meta'], $legacyBlocks), true)) {
@@ -173,7 +178,7 @@ class MacroPlanController extends Controller
         // Quem a discussão avisa — aparece embaixo do campo de comentário.
         $discussionRecipients = User::whereIn('id', $macroplan->discussionRecipientIds())->orderBy('name')->pluck('name');
 
-        return view('macroplans.edit', compact('macroplan', 'users', 'currentBlock', 'legacyBlocks', 'mainDocument', 'discussionItems', 'relatedMeetings', 'planTimeline', 'discussionRecipients'));
+        return view('macroplans.edit', compact('macroplan', 'users', 'currentBlock', 'legacyBlocks', 'mainDocument', 'discussionItems', 'relatedMeetings', 'planTimeline', 'discussionRecipients', 'fieldDocument'));
     }
 
     public function update(Request $request, MacroPlan $macroplan)
@@ -292,6 +297,18 @@ class MacroPlanController extends Controller
         $data = $request->validate([
             'status' => 'required|in:' . implode(',', array_keys(MacroPlan::$statuses)),
         ]);
+
+        // Documento em campos com regra do modelo quebrada não sai do rascunho (23/11).
+        if ($macroplan->status === 'em_planejamento' && $data['status'] !== 'em_planejamento') {
+            $doc = $macroplan->fieldDocument;
+            if ($doc && $doc->schema()->hasBlockingIssues($doc->content)) {
+                $msg = 'O documento ainda tem regra do modelo quebrada (veja "O que falta" na aba Documento). Corrija antes de mudar a situação.';
+
+                return $request->wantsJson()
+                    ? response()->json(['success' => false, 'message' => $msg], 422)
+                    : redirect()->back()->with('error', $msg);
+            }
+        }
 
         $macroplan->update($data);
 

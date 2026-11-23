@@ -33,7 +33,7 @@
                     <label class="block text-xs font-mono uppercase tracking-widest mb-1" style="color:var(--muted)">
                         Documento do planejamento <span class="normal-case tracking-normal" style="color:var(--muted2)">(HTML da skill — opcional)</span>
                     </label>
-                    <p class="text-xs mb-3" style="color:var(--muted2)">Enviando o HTML, o App já lê o período, a verba e cria as campanhas e projetos. Sem ele, o planejamento nasce vazio e o documento pode ser enviado depois.</p>
+                    <p class="text-xs mb-3" style="color:var(--muted2)">Sem HTML, o planejamento nasce com o documento em campos, para preencher seção por seção aqui no App (o jeito novo). Enviando um HTML antigo, o App lê o período, a verba e cria as campanhas e projetos.</p>
                     <input type="file" name="document" accept=".html,.htm"
                            @change="hasDoc = $event.target.files.length > 0"
                            class="w-full text-sm" style="color:var(--text)">

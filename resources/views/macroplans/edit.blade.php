@@ -190,6 +190,29 @@
 
             {{-- ══ DOCUMENTO — o HTML do planejamento (campo próprio document_attachment_id) ══ --}}
             <div x-show="block === 'documento'" x-cloak>
+                @if($fieldDocument)
+                    @include('documents._editor', ['document' => $fieldDocument])
+                    @if($mainDocument)
+                        <p class="text-xs mt-2" style="color:var(--muted)">
+                            O documento HTML anterior continua nos Anexos ({{ $mainDocument->filename }}).
+                        </p>
+                    @endif
+                @else
+                <div class="card mb-3 px-5 py-4 flex items-center justify-between gap-3 flex-wrap"
+                     style="border:1px dashed rgba(100,59,142,.35); background:rgba(100,59,142,.04)">
+                    <div>
+                        <p class="text-sm font-semibold" style="color:var(--text)">Documento em campos (novo)</p>
+                        <p class="text-xs mt-0.5" style="color:var(--muted); max-width:70ch">
+                            O planejamento no modelo padrão, preenchido seção por seção aqui no App, com as regras do modelo avisando o que falta.
+                            A versão do cliente se monta sozinha. {{ $mainDocument ? 'O HTML atual continua nos anexos.' : '' }}
+                        </p>
+                    </div>
+                    <form method="POST" action="{{ route('macroplans.field-document.start', $macroplan) }}"
+                          @submit.prevent="if (await $store.confirmDialog.ask('Começar o documento em campos deste planejamento? {{ $mainDocument ? 'A aba Documento passa a mostrar ele no lugar do HTML.' : '' }}')) $el.submit()">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-xs">Começar documento em campos</button>
+                    </form>
+                </div>
                 <div class="card overflow-hidden">
                     <div class="px-5 py-4 flex items-center justify-between gap-3 flex-wrap" style="border-bottom:1px solid var(--border2)">
                         <div>
@@ -240,6 +263,7 @@
                         </div>
                     @endif
                 </div>
+                @endif
             </div>
 
             {{-- ══ BLOCO 1: VISÃO GERAL E METAS (formato antigo — leitura) ══ --}}

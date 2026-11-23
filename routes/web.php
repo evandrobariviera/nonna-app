@@ -717,6 +717,18 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->middleware('throttle:10,1')
         ->name('macroplans.document.update-store');
 
+    // ── Documento em campos (23/11 — DocumentEditor; o planejamento é o primeiro tipo) ──
+    Route::post('/planejamentos/{macroplan}/documento-em-campos', [\App\Http\Controllers\FieldDocumentController::class, 'startForPlan'])
+        ->name('macroplans.field-document.start');
+    Route::patch('/documentos/{document}/campo', [\App\Http\Controllers\FieldDocumentController::class, 'field'])
+        ->middleware('throttle:240,1')
+        ->name('documents.field');
+    Route::post('/documentos/{document}/lista', [\App\Http\Controllers\FieldDocumentController::class, 'list'])
+        ->middleware('throttle:120,1')
+        ->name('documents.list');
+    Route::get('/documentos/{document}/visualizar', [\App\Http\Controllers\FieldDocumentController::class, 'render'])
+        ->name('documents.render');
+
     // ── Anexos do macroplanejamento ──
     Route::post('/planejamentos/{macroplan}/anexos', [MacroPlanAttachmentController::class, 'store'])
         ->name('macroplans.attachments.store');
