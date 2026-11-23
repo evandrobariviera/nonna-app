@@ -1,0 +1,24 @@
+{
+    "novidades": [
+        {
+            "title": "Agente Nonna completa o rascunho da campanha e do projeto",
+            "summary": "Na campanha ou no projeto criado a partir do planejamento, o cartão \"Montar rascunho com o Agente Nonna\" completa o documento: ângulos criativos, conceito, mecânica, peças e sinais de alerta (ou escopo e entregas, no projeto). O que veio do planejamento fica como está; verba, datas e números que ninguém deu viram perguntas.",
+            "kind": "novidade",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Documento de campanha — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-campanha",
+            "body_file": "ajuda-documento-de-campanha.html"
+        },
+        {
+            "title": "Documento de projeto — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-projeto",
+            "body_file": "ajuda-documento-de-projeto.html"
+        }
+    ]
+}

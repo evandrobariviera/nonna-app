@@ -123,6 +123,99 @@ class PlanningSources
         return $result;
     }
 
+    /**
+     * Fontes para o rascunho de uma CAMPANHA ou PROJETO: o planejamento de onde ela veio (marcado),
+     * reuniões do cliente, briefing e anexos (da campanha/projeto e das reuniões).
+     * Chaves: as mesmas, mais att:project:{id}.
+     */
+    public function availableForProject(\App\Models\Project $project): array
+    {
+        $project->loadMissing('client', 'macroPlan');
+        $out = [];
+        if ($project->macroPlan) {
+            $out[] = ['key' => "plan:{$project->macroPlan->id}", 'group' => 'Planejamento', 'label' => $project->macroPlan->title,
+                'detail' => 'o planejamento de onde ' . ($project->type === 'campanha' ? 'a campanha' : 'o projeto') . ' veio', 'default' => true];
+        }
+        $meetings = Meeting::where('client_id', $project->client_id)
+            ->where(fn ($q) => $q->whereNotNull('ata')->orWhereNotNull('transcricao'))
+            ->orderByDesc('scheduled_at')->limit(8)->get(['id', 'title', 'type', 'scheduled_at', 'ata', 'transcricao']);
+        $defaultMeeting = $meetings->first(fn ($m) => in_array($m->type, self::PLANNING_TYPES, true));
+        foreach ($meetings as $m) {
+            $has = array_filter([filled($m->ata) ? 'ATA' : null, filled($m->transcricao) ? 'transcrição' : null]);
+            $out[] = ['key' => "meeting:{$m->id}", 'group' => 'Reuniões', 'label' => $m->title ?: (Meeting::$types[$m->type] ?? 'Reunião'),
+                'detail' => $m->scheduled_at?->format('d/m/Y') . ' · ' . implode(' + ', $has), 'default' => $defaultMeeting && $m->id === $defaultMeeting->id];
+        }
+        if (filled($project->client->briefing ?? null)) {
+            $out[] = ['key' => 'briefing', 'group' => 'Cliente', 'label' => 'Briefing do cliente', 'detail' => 'cadastro do cliente', 'default' => true];
+        }
+        foreach (\App\Models\ProjectAttachment::where('project_id', $project->id)->latest()->get() as $a) {
+            $out[] = ['key' => "att:project:{$a->id}", 'group' => 'Anexos', 'label' => $a->filename, 'detail' => 'anexo desta ' . ($project->type === 'campanha' ? 'campanha' : 'página'), 'default' => false];
+        }
+        foreach (MeetingAttachment::whereIn('meeting_id', $meetings->pluck('id'))->latest()->get() as $a) {
+            $meeting = $meetings->firstWhere('id', $a->meeting_id);
+            $out[] = ['key' => "att:meeting:{$a->id}", 'group' => 'Anexos', 'label' => $a->filename,
+                'detail' => 'anexo da reunião ' . ($meeting?->scheduled_at?->format('d/m/Y') ?? ''), 'default' => false];
+        }
+
+        return $out;
+    }
+
+    public function gatherForProject(\App\Models\Project $project, array $keys): array
+    {
+        $allowed = collect($this->availableForProject($project))->keyBy('key');
+        $result  = ['blocks' => [], 'files' => [], 'used' => [], 'skipped' => []];
+        foreach (array_unique($keys) as $key) {
+            if (!$allowed->has($key)) {
+                continue;
+            }
+            $label = $allowed[$key]['label'];
+            [$type, $id, $sub] = array_pad(explode(':', $key, 3), 3, null);
+            if ($type === 'plan') {
+                $plan = MacroPlan::with('projects')->find($id);
+                $text = $plan?->fieldDocument ? $plan->fieldDocument->schema()->toText($plan->fieldDocument->content) : $this->planText($plan);
+                if ($text) {
+                    $result['blocks'][] = ['title' => "Planejamento de origem: {$label}", 'text' => $text];
+                    $result['used'][] = "Planejamento: {$label}";
+                }
+            } elseif ($type === 'meeting' || $type === 'briefing') {
+                $one = $this->gatherMeetingOrBriefing($project->client, $type, $id, $label);
+                $result['blocks'] = array_merge($result['blocks'], $one['blocks']);
+                $result['used'] = array_merge($result['used'], $one['used']);
+            } elseif ($type === 'att') {
+                $att = match ($id) {
+                    'project' => \App\Models\ProjectAttachment::find($sub),
+                    'meeting' => MeetingAttachment::find($sub),
+                    default   => null,
+                };
+                $this->addFile($result, $att?->disk, $att?->disk_path, $att?->mime_type, $att?->filename ?? $label);
+            }
+        }
+
+        return $result;
+    }
+
+    private function gatherMeetingOrBriefing($client, string $type, ?string $id, string $label): array
+    {
+        $r = ['blocks' => [], 'used' => []];
+        if ($type === 'briefing') {
+            $r['blocks'][] = ['title' => 'Briefing do cliente', 'text' => trim(SourceText::html((string) $client->briefing))];
+            $r['used'][] = 'Briefing do cliente';
+
+            return $r;
+        }
+        $m = Meeting::find($id);
+        $title = "Reunião: {$label} (" . $m?->scheduled_at?->format('d/m/Y') . ')';
+        if (filled($m?->ata)) {
+            $r['blocks'][] = ['title' => "{$title} — ATA", 'text' => trim(SourceText::html((string) $m->ata))];
+        }
+        if (filled($m?->transcricao)) {
+            $r['blocks'][] = ['title' => "{$title} — transcrição", 'text' => mb_substr(trim((string) $m->transcricao), 0, self::MAX_TRANSCRIPT)];
+        }
+        $r['used'][] = $title;
+
+        return $r;
+    }
+
     /** Arquivo enviado na hora (já guardado como anexo do planejamento). */
     public function addFile(array &$result, ?string $disk, ?string $path, ?string $mime, string $name): void
     {

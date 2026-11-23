@@ -394,6 +394,30 @@
          briefing, as peças e a mecânica (2026-10). --}}
     @php $mainDocument = $project->mainDocument(); $fieldDocument = $project->fieldDocument()->with('client:id,company_name')->first(); @endphp
     @if($fieldDocument)
+        @php
+            $itemDraftState = $fieldDocument->agent_state['draft'] ?? null;
+            if (($itemDraftState['status'] ?? null) === 'processando' && now()->diffInMinutes(\Carbon\Carbon::parse($itemDraftState['started_at'])) > 15) {
+                $itemDraftState['status'] = 'erro';
+                $itemDraftState['error'] = 'O agente parou no meio (o sistema pode ter sido atualizado). Tente de novo.';
+            }
+            $itemTouched = app(\App\Services\Documents\DocumentEditor::class)->touchedByPerson($fieldDocument);
+            $itemDraft = [
+                'state'     => $itemDraftState,
+                'canDraft'  => !$itemTouched && ($itemDraftState['status'] ?? null) !== 'processando',
+                'sources'   => !$itemTouched ? app(\App\Services\Documents\PlanningSources::class)->availableForProject($project) : [],
+                'perguntas' => empty($fieldDocument->agent_state['perguntas_ocultas']) ? ($fieldDocument->agent_state['perguntas'] ?? []) : [],
+            ];
+        @endphp
+        @if(session('error'))
+            <div class="mb-3 px-4 py-3 text-sm font-semibold" style="background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.25); color:var(--red)">{{ session('error') }}</div>
+        @endif
+        @include('documents._planning-draft', [
+            'macroplan' => null, 'document' => $fieldDocument, 'draft' => $itemDraft,
+            'draftAction' => route('projects.field-document.draft', $project),
+            'draftStatusUrl' => route('projects.field-document.draft-status', $project),
+            'draftWhat' => $project->type === 'campanha' ? 'a campanha' : 'o projeto',
+            'draftKeepsInherited' => true,
+        ])
         @include('documents._editor', ['document' => $fieldDocument])
         @if($mainDocument)
             <p class="text-xs mt-2" style="color:var(--muted)">O documento HTML anterior continua nos Anexos ({{ $mainDocument->filename }}).</p>

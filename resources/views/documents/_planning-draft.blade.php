@@ -3,12 +3,15 @@
 @php
     $state  = $draft['state'] ?? null;
     $status = $state['status'] ?? null;
+    $draftAction    = $draftAction    ?? route('macroplans.field-document.draft', $macroplan);
+    $draftStatusUrl = $draftStatusUrl ?? route('macroplans.field-document.draft-status', $macroplan);
+    $draftWhat      = $draftWhat      ?? 'o documento';
 @endphp
 
 @if($status === 'processando')
     <div class="card mb-3 px-5 py-4 flex items-center gap-3" style="border:1px solid rgba(100,59,142,.35); background:rgba(100,59,142,.05)"
          x-data x-init="const t = setInterval(async () => {
-             try { const r = await fetch(@js(route('macroplans.field-document.draft-status', $macroplan)), { headers: { Accept: 'application/json' } });
+             try { const r = await fetch(@js($draftStatusUrl), { headers: { Accept: 'application/json' } });
                    const d = await r.json(); if (d.status !== 'processando') { clearInterval(t); location.reload(); } } catch (e) {}
          }, 5000)">
         <span class="inline-block w-4 h-4 rounded-full animate-spin flex-shrink-0" style="border:2px solid rgba(100,59,142,.25); border-top-color:var(--purple)"></span>
@@ -30,9 +33,9 @@
             </span>
             <span class="text-xs" style="color:var(--muted)" x-text="open ? 'Fechar' : 'Abrir'"></span>
         </button>
-        <form x-show="open" method="POST" action="{{ route('macroplans.field-document.draft', $macroplan) }}" enctype="multipart/form-data"
+        <form x-show="open" method="POST" action="{{ $draftAction }}" enctype="multipart/form-data"
               class="px-5 py-4 space-y-4" style="border-top:1px solid var(--border2)"
-              @submit.prevent="if (await $store.confirmDialog.ask('O agente vai ler as fontes marcadas e preencher o documento. Leva de 1 a 3 minutos e gasta em torno de 100 a 200 créditos seus. Começar?')) $el.submit()">
+              @submit.prevent="if (await $store.confirmDialog.ask('O agente vai ler as fontes marcadas e preencher {{ $draftWhat }}. Leva de 1 a 3 minutos e gasta em torno de 100 a 200 créditos seus. Começar?')) $el.submit()">
             @csrf
             @if($status === 'erro')
                 <p class="text-xs px-3 py-2" style="background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.25); color:var(--red)">
@@ -44,7 +47,7 @@
             @endif
             <p class="text-xs" style="color:var(--muted); max-width:80ch">
                 Marque o que o agente deve ler. Ele lê tudo uma vez, preenche as seções e deixa perguntas sobre o que faltou.
-                Número que ninguém falou fica "A confirmar": ele não inventa.
+                Número que ninguém falou fica "A confirmar": ele não inventa.@isset($draftKeepsInherited) O que veio do planejamento fica como está: ele só completa o que está vazio.@endisset
             </p>
 
             @forelse(collect($draft['sources'])->groupBy('group') as $group => $items)

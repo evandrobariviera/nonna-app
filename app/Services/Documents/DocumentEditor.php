@@ -201,6 +201,67 @@ class DocumentEditor
         });
     }
 
+    /**
+     * Rascunho do agente em documento que já tem conteúdo herdado (campanha/projeto): preenche só
+     * campos VAZIOS e só troca listas SEM conteúdo. Nada que já tinha valor é mudado.
+     */
+    public function fillEmptyByAgent(Document $document, array $fields, array $lists, int $userId): Document
+    {
+        return DB::connection('pgsql')->transaction(function () use ($document, $fields, $lists, $userId) {
+            $fresh = Document::whereKey($document->id)->lockForUpdate()->firstOrFail();
+            if ($this->touchedByPerson($fresh)) {
+                throw new \InvalidArgumentException('Alguém editou o documento enquanto o agente trabalhava: o rascunho não foi aplicado.');
+            }
+            $schema  = $fresh->schema();
+            $content = $fresh->content;
+            $before  = $content;
+            $prov    = $fresh->provenance ?? [];
+            $mark    = ['by' => 'agente', 'user_id' => $userId, 'at' => now()->toIso8601String()];
+            $empty   = fn ($v) => in_array($v, [null, '', []], true);
+
+            foreach ($fields as $key => $value) {
+                if (array_key_exists($key, $content) && $empty($content[$key]) && !$empty($value)) {
+                    $content[$key] = $value;
+                    $prov[$key] = $mark;
+                }
+            }
+            foreach ($lists as $key => $items) {
+                $block = $schema->block($key);
+                if (!$block || $block['type'] !== 'list' || !$items) {
+                    continue;
+                }
+                $hasContent = false;
+                foreach ($content[$key] ?? [] as $item) {
+                    foreach ($block['fields'] as $f) {
+                        $v = $item[$f['key']] ?? null;
+                        if ($f['key'] !== ($block['switch'] ?? null) && !$empty($v) && $v !== ($f['default'] ?? null)) {
+                            $hasContent = true;
+                        }
+                    }
+                }
+                if ($hasContent) {
+                    continue;
+                }
+                $content[$key] = $items;
+                foreach ($items as $item) {
+                    foreach ($item as $f => $v) {
+                        if ($f !== 'id' && !$empty($v)) {
+                            $prov["{$key}.{$item['id']}.{$f}"] = $mark;
+                        }
+                    }
+                }
+            }
+
+            $fresh->update(['content' => $content, 'provenance' => $prov, 'updated_by' => $userId]);
+            DocumentRevision::create([
+                'document_id' => $fresh->id, 'user_id' => $userId, 'actor' => 'agente', 'action' => 'rascunho',
+                'path' => '*', 'before' => ['v' => $before], 'after' => ['v' => $content],
+            ]);
+
+            return $fresh;
+        });
+    }
+
     /** Tudo que a tela precisa depois de uma operação. */
     public function payload(Document $document): array
     {

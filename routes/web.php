@@ -729,6 +729,11 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('documents.questions.hide');
     Route::post('/planejamentos/{macroplan}/criar-campanhas-projetos', [\App\Http\Controllers\FieldDocumentController::class, 'launchPlanItems'])
         ->name('macroplans.field-document.launch');
+    Route::post('/projetos/{project}/rascunho-agente', [\App\Http\Controllers\FieldDocumentController::class, 'startItemDraft'])
+        ->middleware('throttle:6,1')
+        ->name('projects.field-document.draft');
+    Route::get('/projetos/{project}/rascunho-agente', [\App\Http\Controllers\FieldDocumentController::class, 'itemDraftStatus'])
+        ->name('projects.field-document.draft-status');
     Route::post('/projetos/{project}/documento-em-campos', [\App\Http\Controllers\FieldDocumentController::class, 'startForProject'])
         ->name('projects.field-document.start');
     // Agente Nonna ao lado do documento (DocumentAssistant): conversa + propostas com Aceitar/Descartar.

@@ -84,6 +84,60 @@ class FieldDocumentController extends Controller
         return $back->with('success', 'O agente começou a montar o rascunho. Leva de 1 a 3 minutos; a página atualiza sozinha e você recebe aviso no sino.');
     }
 
+    /** Rascunho da campanha/projeto pelo agente (DocumentDrafter: completa só o que está vazio). */
+    public function startItemDraft(Request $request, Project $project): RedirectResponse
+    {
+        $doc = $project->fieldDocument;
+        abort_unless($doc, 404);
+        $back = redirect($project->macro_plan_id ? route('macroplans.projects.show', [$project->macro_plan_id, $project]) : route('projects.showDirect', $project));
+
+        $data = $request->validate([
+            'sources'   => 'nullable|array|max:40',
+            'sources.*' => 'string|max:80',
+            'note'      => 'nullable|string|max:3000',
+            'files'     => 'nullable|array|max:6',
+            'files.*'   => 'file|max:15360|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,csv,txt,md,html,htm,png,jpg,jpeg,webp',
+        ], ['files.*.mimes' => 'Arquivo de tipo que o agente não lê.', 'files.*.max' => 'Cada arquivo pode ter até 15 MB.']);
+
+        if ($this->editor->touchedByPerson($doc)) {
+            return $back->with('error', 'Este documento já foi editado: o rascunho do agente só entra em documento ainda não preenchido.');
+        }
+        if (($doc->agent_state['draft']['status'] ?? null) === 'processando') {
+            return $back->with('error', 'O agente já está montando o rascunho.');
+        }
+        if (empty($data['sources']) && !$request->hasFile('files')) {
+            return $back->with('error', 'Marque pelo menos uma fonte ou envie um arquivo.');
+        }
+        $credits = \App\Services\Agent\AgentCredits::status($request->user());
+        if ($credits['blocked']) {
+            return $back->with('error', \App\Services\Agent\AgentCredits::blockedMessage($credits));
+        }
+
+        $uploadIds = [];
+        foreach ($request->file('files', []) as $file) {
+            $disk = config('filesystems.default', 'r2');
+            $mime = $file->getMimeType();
+            $path = $file->store("projects/{$project->id}", \App\Support\UploadOptions::forStore($mime, $disk));
+            $uploadIds[] = \App\Models\ProjectAttachment::create([
+                'project_id' => $project->id, 'filename' => $file->getClientOriginalName(), 'disk_path' => $path,
+                'disk' => $disk, 'mime_type' => $mime, 'size' => $file->getSize(), 'uploaded_by' => Auth::id(),
+            ])->id;
+        }
+
+        $state = $doc->agent_state ?? [];
+        $state['draft'] = ['status' => 'processando', 'started_at' => now()->toIso8601String(), 'user_id' => Auth::id()];
+        $doc->update(['agent_state' => $state]);
+
+        \App\Jobs\DraftItemDocumentJob::dispatch($doc->id, $project->id, $data['sources'] ?? [], $uploadIds, Auth::id(), (string) ($data['note'] ?? ''));
+
+        return $back->with('success', 'O agente começou a montar o rascunho. Leva de 1 a 3 minutos; a página atualiza sozinha e você recebe aviso no sino.');
+    }
+
+    public function itemDraftStatus(Project $project): JsonResponse
+    {
+        return response()->json(['status' => $project->fieldDocument?->agent_state['draft']['status'] ?? null]);
+    }
+
     public function draftStatus(MacroPlan $macroplan): JsonResponse
     {
         return response()->json(['status' => $macroplan->fieldDocument?->agent_state['draft']['status'] ?? null]);
