@@ -65,7 +65,7 @@ class ProjetoSchema extends DocumentSchema
                     ['type' => 'field', 'key' => 'beneficio_hoje', 'label' => 'Ponto de partida (como está antes do projeto)', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Ex.: 3 dias para responder um orçamento (ou "A confirmar")'],
                     ['type' => 'field', 'key' => 'beneficio_esperado', 'label' => 'Quanto esperamos', 'input' => 'line', 'required' => true, 'half' => true],
                     ['type' => 'field', 'key' => 'conferir_em', 'label' => 'Quando vamos conferir', 'input' => 'date', 'required' => true, 'half' => true],
-                    ['type' => 'field', 'key' => 'beneficio_fonte', 'label' => 'Onde medimos esse número', 'input' => 'line', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'beneficio_fonte', 'label' => 'Onde vemos esse número (no começo e no fim)', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Ex.: Central de Leads, CRM, planilha do cliente'],
                 ],
             ],
             [

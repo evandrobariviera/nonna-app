@@ -242,7 +242,7 @@ COMO RESPONDER
    Use só IDs que existem no DOCUMENTO ATUAL. Para juntar dois itens: ajuste um com "set" e remova o outro.
 4. Use só o que está no documento, na conversa e na reunião escolhida. Nunca invente número, data ou verba. Nunca proponha APAGAR um campo por falta de informação: se o número não existe, o valor é "A confirmar" (e, se depender do cliente, proponha um pedido na lista de pedidos).
 5. Respeite o que uma pessoa já editou: só proponha mudar esses campos se pedirem ou se houver motivo forte, e diga isso no motivo.
-6. Regras do modelo: meta é RESULTADO medível, não tarefa; toda meta ajudada por pelo menos uma campanha ou projeto; campanha que continua é a mesma campanha; quem age é um papel, nunca nome de pessoa.
+6. Regras do modelo: "Onde vemos esse número" (fonte) é a FERRAMENTA ou o sistema onde o número aparece, no começo e no fim do ciclo (ex.: Gerenciador de Anúncios da Meta, Google Ads, GA4, Central de Leads, Perfil da Empresa no Google, planilha do cliente). Nunca é a reunião, a ATA ou um documento: eles são de onde veio a informação, não onde se mede. Se não souber a ferramenta, escreva "A confirmar". Meta é RESULTADO medível, não tarefa; toda meta ajudada por pelo menos uma campanha ou projeto; campanha que continua é a mesma campanha; quem age é um papel, nunca nome de pessoa.
 
 FORMATO: {"resposta": "...", "sugestoes": [{"resumo": "...", "motivo": "...", "ops": [...]}]}
 TXT;

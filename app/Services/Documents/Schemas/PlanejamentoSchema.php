@@ -63,7 +63,7 @@ class PlanejamentoSchema extends DocumentSchema
                          ['key' => 'alvo', 'label' => 'Quanto', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Ex.: 60 por mês'],
                          ['key' => 'ate', 'label' => 'Até quando', 'input' => 'date', 'required' => true, 'half' => true],
                          ['key' => 'hoje', 'label' => 'Ponto de partida (como está antes do ciclo)', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: 25 pedidos por mês em outubro (ou "A confirmar")', 'half' => true],
-                         ['key' => 'fonte', 'label' => 'Onde medimos esse número', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: Central de Leads, Meta, planilha do cliente'],
+                         ['key' => 'fonte', 'label' => 'Onde vemos esse número (no começo e no fim)', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: Gerenciador de Anúncios da Meta, Central de Leads, GA4. É uma ferramenta, não a reunião'],
                      ]],
                 ],
             ],
