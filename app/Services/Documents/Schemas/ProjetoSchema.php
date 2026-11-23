@@ -52,7 +52,7 @@ class ProjetoSchema extends DocumentSchema
             ],
             [
                 'key' => 's01', 'num' => '01', 'title' => 'Objetivo e como saber que deu certo',
-                'help' => 'Projeto é avaliado duas vezes: na entrega (ficou pronto?) e depois (valeu a pena?). "Está pronto quando" é o que o cliente precisa ver funcionando e aprovar. "O que melhora" é o ganho que esperamos depois da entrega, com quanto é hoje, quanto esperamos e quando vamos conferir.',
+                'help' => 'Projeto é avaliado duas vezes: na entrega (ficou pronto?) e depois (valeu a pena?). "Está pronto quando" é o que o cliente precisa ver funcionando e aprovar. "O que melhora" é o ganho que esperamos depois da entrega, com o ponto de partida (como está antes do projeto), quanto esperamos e quando vamos conferir.',
                 'blocks' => [
                     ['type' => 'field', 'key' => 'objetivo', 'label' => 'Para que serve o projeto', 'input' => 'line', 'required' => true, 'placeholder' => 'Em uma frase, começando por um verbo'],
                     ['type' => 'field', 'key' => 'carrega', 'label' => 'Ajuda a bater a meta · ou · Deixa pronto para a campanha', 'input' => 'line', 'required' => true,
@@ -62,7 +62,7 @@ class ProjetoSchema extends DocumentSchema
                     ['type' => 'field', 'key' => 'pronto_quando', 'label' => 'Está pronto quando', 'input' => 'text', 'required' => true,
                      'placeholder' => 'O que precisa estar funcionando e aprovado pelo cliente'],
                     ['type' => 'field', 'key' => 'beneficio', 'label' => 'O que melhora depois de pronto', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: mais pedidos vindos do site'],
-                    ['type' => 'field', 'key' => 'beneficio_hoje', 'label' => 'Quanto é hoje', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'O número de agora (ou "A confirmar")'],
+                    ['type' => 'field', 'key' => 'beneficio_hoje', 'label' => 'Ponto de partida (como está antes do projeto)', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Ex.: 3 dias para responder um orçamento (ou "A confirmar")'],
                     ['type' => 'field', 'key' => 'beneficio_esperado', 'label' => 'Quanto esperamos', 'input' => 'line', 'required' => true, 'half' => true],
                     ['type' => 'field', 'key' => 'conferir_em', 'label' => 'Quando vamos conferir', 'input' => 'date', 'required' => true, 'half' => true],
                     ['type' => 'field', 'key' => 'beneficio_fonte', 'label' => 'Onde medimos esse número', 'input' => 'line', 'required' => true, 'half' => true],

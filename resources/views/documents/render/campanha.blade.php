@@ -164,7 +164,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
       <span class="label">Como vamos saber se deu certo</span>
       <div class="nome">{{ $content['metrica'] ?? '' }}</div>
       <div class="campos">
-        <div><span class="label">Quanto é hoje</span><b>{{ $content['metrica_hoje'] ?? '' }}</b></div>
+        <div><span class="label">Ponto de partida</span><b>{{ $content['metrica_hoje'] ?? '' }}</b></div>
         <div><span class="label">Quanto queremos</span><b>{{ $content['metrica_meta'] ?? '' }}@if(!empty($content['metrica_ate'])) · até {{ $d($content['metrica_ate']) }}@endif</b></div>
         <div><span class="label">Onde medimos</span><b>{{ $content['metrica_fonte'] ?? '' }}</b></div>
         <div><span class="label">Quem lança o número</span><b>{{ $S::ENTRADAS[$content['metrica_entrada'] ?? ''] ?? '' }}</b></div>
@@ -173,7 +173,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
     @if(!empty($content['apoio']))
       <div class="rolagem">
         <table>
-          <thead><tr><th>Número de apoio</th><th>Quanto é hoje</th><th>Quanto queremos</th><th>Onde medimos</th><th>Quem lança</th></tr></thead>
+          <thead><tr><th>Número de apoio</th><th>Ponto de partida</th><th>Quanto queremos</th><th>Onde medimos</th><th>Quem lança</th></tr></thead>
           <tbody>
             @foreach($content['apoio'] as $a)
               <tr><td>{{ $a['nome'] }}</td><td>{{ $a['hoje'] }}</td><td>{{ $a['meta'] }}</td><td>{{ $a['fonte'] }}</td><td>{{ $S::ENTRADAS[$a['entrada'] ?? ''] ?? '' }}</td></tr>

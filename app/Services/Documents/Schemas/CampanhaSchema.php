@@ -67,13 +67,13 @@ class CampanhaSchema extends DocumentSchema
             ],
             [
                 'key' => 's01', 'num' => '01', 'title' => 'Objetivo e como vamos medir',
-                'help' => 'Para que a campanha serve e como vamos saber se deu certo: um número principal e até dois de apoio, cada um com quanto é hoje e quanto queremos. Campanha de venda ou lançamento se mede por contato, venda ou custo por venda, nunca por curtida ou alcance. "Quem lança o número": o App puxa sozinho (Meta, Google, GA4, Central de Leads), a equipe lança, ou a equipe dá uma nota. Combinado: campanha sem esta seção completa não vai ao ar.',
+                'help' => 'Para que a campanha serve e como vamos saber se deu certo: um número principal e até dois de apoio, cada um com o ponto de partida (como está antes da campanha) e quanto queremos. Campanha de venda ou lançamento se mede por contato, venda ou custo por venda, nunca por curtida ou alcance. "Quem lança o número": o App puxa sozinho (Meta, Google, GA4, Central de Leads), a equipe lança, ou a equipe dá uma nota. Combinado: campanha sem esta seção completa não vai ao ar.',
                 'blocks' => [
                     ['type' => 'field', 'key' => 'objetivo', 'label' => 'Para que serve a campanha', 'input' => 'line', 'required' => true,
                      'placeholder' => 'Começando por um verbo. Ex.: Gerar 40 pedidos de orçamento por mês'],
                     ['type' => 'field', 'key' => 'meta_planejamento', 'label' => 'Meta do planejamento que ela ajuda a bater', 'input' => 'line', 'required' => true],
                     ['type' => 'field', 'key' => 'metrica', 'label' => 'Número principal: como vamos saber se deu certo', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: Pedidos de orçamento pelo WhatsApp'],
-                    ['type' => 'field', 'key' => 'metrica_hoje', 'label' => 'Quanto é hoje', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'O número de agora (ou "A confirmar")'],
+                    ['type' => 'field', 'key' => 'metrica_hoje', 'label' => 'Ponto de partida (como está antes da campanha)', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Ex.: 25 pedidos por mês em outubro (ou "A confirmar")'],
                     ['type' => 'field', 'key' => 'metrica_meta', 'label' => 'Quanto queremos', 'input' => 'line', 'required' => true, 'half' => true],
                     ['type' => 'field', 'key' => 'metrica_ate', 'label' => 'Até quando', 'input' => 'date', 'required' => true, 'half' => true],
                     ['type' => 'field', 'key' => 'metrica_entrada', 'label' => 'Quem lança o número', 'input' => 'select', 'required' => true, 'half' => true, 'options' => self::ENTRADAS],
@@ -82,7 +82,7 @@ class CampanhaSchema extends DocumentSchema
                      'add' => [['label' => 'Número de apoio', 'attrs' => []]],
                      'fields' => [
                          ['key' => 'nome', 'label' => 'Número de apoio', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: Custo por pedido'],
-                         ['key' => 'hoje', 'label' => 'Quanto é hoje', 'input' => 'line', 'required' => true, 'half' => true],
+                         ['key' => 'hoje', 'label' => 'Ponto de partida', 'input' => 'line', 'required' => true, 'half' => true],
                          ['key' => 'meta', 'label' => 'Quanto queremos', 'input' => 'line', 'required' => true, 'half' => true],
                          ['key' => 'fonte', 'label' => 'Onde medimos', 'input' => 'line', 'required' => true, 'half' => true],
                          ['key' => 'entrada', 'label' => 'Quem lança o número', 'input' => 'select', 'required' => true, 'half' => true, 'options' => self::ENTRADAS],

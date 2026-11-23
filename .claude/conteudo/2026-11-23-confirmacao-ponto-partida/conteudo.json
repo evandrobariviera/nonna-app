@@ -1,0 +1,36 @@
+{
+    "novidades": [
+        {
+            "title": "Confirmação aparece ao lado do botão",
+            "summary": "Em todo o App, quando algo pede confirmação (remover, excluir, enviar), aparece um balão pequeno junto do botão que você clicou, em vez do aviso no meio da tela com fundo escuro. Esc ou clicar fora desiste.",
+            "kind": "melhoria",
+            "area": "Geral"
+        },
+        {
+            "title": "\"Quanto é hoje\" virou \"Ponto de partida\"",
+            "summary": "Nas metas do planejamento e nos números da campanha e do projeto, o campo agora se chama \"Ponto de partida (como está antes do ciclo)\": é o número de antes, para comparar no fim.",
+            "kind": "melhoria",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Planejamento do ciclo — como preencher",
+            "category": "Documentos",
+            "slug": "planejamento-do-ciclo",
+            "body_file": "ajuda-planejamento-do-ciclo.html"
+        },
+        {
+            "title": "Documento de campanha — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-campanha",
+            "body_file": "ajuda-documento-de-campanha.html"
+        },
+        {
+            "title": "Documento de projeto — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-projeto",
+            "body_file": "ajuda-documento-de-projeto.html"
+        }
+    ]
+}

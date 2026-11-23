@@ -105,7 +105,7 @@ export function registerDossierEditor() {
             },
 
             async deleteCompetitor(id) {
-                if (!confirm('Remover este concorrente?')) return;
+                if (!(await Alpine.store('confirmDialog').ask('Remover este concorrente?'))) return;
                 const res = await fetch(urls.competitorUrl.replace('__ID__', id), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf(), 'Accept': 'application/json' },
@@ -129,7 +129,7 @@ export function registerDossierEditor() {
             },
 
             async deletePersona(id) {
-                if (!confirm('Remover esta persona?')) return;
+                if (!(await Alpine.store('confirmDialog').ask('Remover esta persona?'))) return;
                 const res = await fetch(urls.personaUrl.replace('__ID__', id), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf(), 'Accept': 'application/json' },

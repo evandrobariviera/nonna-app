@@ -53,7 +53,7 @@ class PlanejamentoSchema extends DocumentSchema
             ],
             [
                 'key' => 's02', 'num' => '02', 'title' => 'Metas do ciclo',
-                'help' => 'Meta é um RESULTADO que dá para medir, não uma tarefa: mais pedidos, mais vendas, custo menor. "Publicar artigos no blog" é tarefa (fica no projeto do blog); a meta seria, por exemplo, "visitas vindas do Google". Cada meta tem quanto queremos, até quando e quanto é hoje, para dar para comparar no fim. Quem ajuda a bater cada meta se marca nas campanhas e projetos da seção 04. Não sabe quanto é hoje? Escreva "A confirmar" e peça ao cliente na seção 06.',
+                'help' => 'Meta é um RESULTADO que dá para medir, não uma tarefa: mais pedidos, mais vendas, custo menor. "Publicar artigos no blog" é tarefa (fica no projeto do blog); a meta seria, por exemplo, "visitas vindas do Google". Cada meta tem quanto queremos, até quando e o ponto de partida (como está antes do ciclo), para dar para comparar no fim. Quem ajuda a bater cada meta se marca nas campanhas e projetos da seção 04. Não sabe o ponto de partida? Escreva "A confirmar" e peça ao cliente na seção 06.',
                 'blocks' => [
                     ['type' => 'list', 'key' => 'metas', 'item_label' => 'Meta', 'title_field' => 'nome',
                      'add' => [['label' => 'Meta', 'attrs' => []]],
@@ -62,7 +62,7 @@ class PlanejamentoSchema extends DocumentSchema
                          ['key' => 'nome', 'label' => 'O que queremos alcançar', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Ex.: Mais pedidos de orçamento pelo WhatsApp'],
                          ['key' => 'alvo', 'label' => 'Quanto', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Ex.: 60 por mês'],
                          ['key' => 'ate', 'label' => 'Até quando', 'input' => 'date', 'required' => true, 'half' => true],
-                         ['key' => 'hoje', 'label' => 'Quanto é hoje', 'input' => 'line', 'required' => true, 'placeholder' => 'O número de agora, para comparar no fim (ou "A confirmar")', 'half' => true],
+                         ['key' => 'hoje', 'label' => 'Ponto de partida (como está antes do ciclo)', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: 25 pedidos por mês em outubro (ou "A confirmar")', 'half' => true],
                          ['key' => 'fonte', 'label' => 'Onde medimos esse número', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: Central de Leads, Meta, planilha do cliente'],
                      ]],
                 ],
@@ -186,7 +186,7 @@ class PlanejamentoSchema extends DocumentSchema
         $pending = array_filter($metas, fn ($m) => is_string($m['hoje'] ?? null) && mb_strtolower(trim($m['hoje'])) === mb_strtolower(self::PENDING));
         if ($pending && empty($content['pedidos'])) {
             $issues[] = ['section' => 's06', 'level' => 'falta', 'path' => null,
-                'text' => count($pending) . ' meta(s) com "Quanto é hoje" a confirmar: peça esse número ao cliente aqui.'];
+                'text' => count($pending) . ' meta(s) sem ponto de partida (está "A confirmar"): peça esse número ao cliente aqui.'];
         }
 
         return $issues;

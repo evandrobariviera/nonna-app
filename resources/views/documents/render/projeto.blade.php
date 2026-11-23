@@ -162,7 +162,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
       <span class="label">O que melhora depois de pronto</span>
       <div class="nome">{{ $content['beneficio'] ?? '' }}</div>
       <div class="campos">
-        <div><span class="label">Quanto é hoje</span><b>{{ $content['beneficio_hoje'] ?? '' }}</b></div>
+        <div><span class="label">Ponto de partida</span><b>{{ $content['beneficio_hoje'] ?? '' }}</b></div>
         <div><span class="label">Quanto esperamos</span><b>{{ $content['beneficio_esperado'] ?? '' }}</b></div>
         <div><span class="label">Quando vamos conferir</span><b>{{ $d($content['conferir_em'] ?? null) }}</b></div>
         <div><span class="label">Onde medimos</span><b>{{ $content['beneficio_fonte'] ?? '' }}</b></div>

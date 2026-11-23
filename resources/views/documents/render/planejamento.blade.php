@@ -150,7 +150,7 @@ body.sem-guia .guia { display: none; }
           <div class="label">{{ $meta['nome'] }}</div><div class="valor">{{ $meta['alvo'] }}</div>
           <div class="linha">
             <span>Até <b>{{ $d($meta['ate']) }}</b></span>
-            <span>Quanto é hoje @if($isPending($meta['hoje']))<span class="pendente">A confirmar</span>@else<b>{{ $meta['hoje'] }}</b>@endif</span>
+            <span>Ponto de partida @if($isPending($meta['hoje']))<span class="pendente">A confirmar</span>@else<b>{{ $meta['hoje'] }}</b>@endif</span>
             <span>Medido em <b>{{ $meta['fonte'] }}</b></span>
           </div>
           <div class="carrega">
