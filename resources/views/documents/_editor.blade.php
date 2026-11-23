@@ -22,26 +22,33 @@
         'decideUrl' => url('/documentos/' . $document->id . '/agente'),
         'chat'      => $document->agent_state['chat'] ?? [],
         'meetings'  => $agentMeetings,
-    ]))" class="card fdoc"
-     x-init="try { const v = localStorage.getItem('fdocAgent'); agentOpen = v === null ? window.matchMedia('(min-width: 96rem)').matches : v === '1'; } catch (e) {}
+    ]))" class="fdoc"
+     x-init="try { const v = localStorage.getItem('fdocAgent'); agentOpen = v === null ? true : v === '1'; } catch (e) {}
              $watch('agentOpen', v => { try { localStorage.setItem('fdocAgent', v ? '1' : '0'); } catch (e) {} if (v) $nextTick(() => scrollChat()); });
              $nextTick(() => scrollChat())">
     {{-- Agente Nonna em coluna (24/11, pedido do Evandro: gaveta que abre e fecha cansava). Tela larga:
          coluna à direita do documento, que acompanha a rolagem. Tela menor: painel logo abaixo do
          cabeçalho. Abre/fecha pelo botão; a escolha fica guardada no navegador. --}}
     <style>
-        .fdoc-body { display: flex; flex-direction: column; }
-        .fdoc-main { min-width: 0; flex: 1 1 auto; }
-        .fdoc-agent { order: -1; display: flex; flex-direction: column; max-height: 70vh; border-bottom: 1px solid var(--border2); background: var(--s1); }
-        @media (min-width: 96rem) {
-            .fdoc-body { flex-direction: row; align-items: flex-start; }
-            .fdoc-agent { order: 0; width: 420px; flex-shrink: 0; position: sticky; top: .75rem; height: calc(100vh - 9rem); max-height: none;
-                          border-bottom: 0; border-left: 1px solid var(--border2); }
+        /* Mesa do documento (protótipo de 23/11): seções · documento · agente. */
+        .fdoc-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
+        .fdoc-nav { position: static; }
+        .fdoc-agent { display: flex; flex-direction: column; max-height: 75vh; overflow: hidden; }
+        @media (min-width: 64rem) {
+            .fdoc-grid { grid-template-columns: 210px minmax(0, 1fr); }
+            .fdoc-nav { position: sticky; top: .75rem; grid-row: span 2; }
+            .fdoc-agent { grid-column: 2; grid-row: 1; }
+        }
+        @media (min-width: 90rem) {
+            .fdoc-grid { grid-template-columns: 210px minmax(0, 1fr) 390px; }
+            .fdoc-grid.sem-agente { grid-template-columns: 210px minmax(0, 1fr); }
+            .fdoc-nav { grid-row: auto; }
+            .fdoc-agent { grid-column: 3; grid-row: 1; position: sticky; top: .75rem; height: calc(100vh - 9rem); max-height: none; }
         }
     </style>
 
     {{-- Cabeçalho --}}
-    <div class="px-5 py-4 flex items-center justify-between gap-3 flex-wrap" style="border-bottom:1px solid var(--border2)">
+    <div class="card mb-4 px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
         <div>
             <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">{{ $schema->title() }} · em campos</p>
             <p class="text-xs" style="color:var(--muted2)">
@@ -69,32 +76,34 @@
         </div>
     </div>
 
-    <div class="fdoc-body">
-    <div class="fdoc-main">
-    {{-- Como o cliente vê --}}
-    <div x-show="view === 'cliente'" x-cloak>
-        <iframe :src="clientSrc" title="Versão do cliente" style="width:100%; height:78vh; border:0; background:#F6F7FB; display:block"></iframe>
-    </div>
+    <div class="fdoc-grid" :class="agentOpen ? '' : 'sem-agente'">
 
-    {{-- Editar --}}
-    <div x-show="view === 'editar'" class="p-5">
-
-        {{-- Situação das seções --}}
-        <div class="flex flex-wrap gap-2 mb-4">
+    {{-- SEÇÕES (esquerda): situação de cada uma + progresso + o que falta --}}
+    <nav class="fdoc-nav card py-2" aria-label="Seções do documento">
+        <p class="px-4 pt-2 pb-1 text-[11px] font-semibold uppercase" style="color:var(--muted); letter-spacing:.06em">Seções</p>
+        <ol class="px-2 space-y-0.5">
             <template x-for="s in cfg.sections" :key="s.key">
-                <button type="button" @click="scrollTo('sec-' + s.key)"
-                        class="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full"
-                        style="border:1px solid var(--border2); background:var(--s2); color:var(--text)">
-                    <span class="font-mono" style="color:var(--muted)" x-text="s.num || '··'"></span>
-                    <span x-text="s.title"></span>
-                    <span class="font-semibold px-1.5 rounded-full" style="font-size:10px"
-                          :style="statusStyle(state.statuses[s.key])" x-text="statusLabel(state.statuses[s.key])"></span>
-                </button>
+                <li>
+                    <button type="button" class="w-full text-left px-2 py-1.5 rounded-lg grid gap-x-2 gap-y-0.5 hover:bg-black/5"
+                            style="grid-template-columns:20px minmax(0,1fr)" @click="openSection(s.key)">
+                        <span class="text-xs font-mono font-semibold" style="color:var(--muted)" x-text="s.num || '··'"></span>
+                        <span class="text-xs font-medium leading-snug" style="color:var(--text)" x-text="s.title"></span>
+                        <span></span>
+                        <span style="justify-self:start"><span class="font-semibold px-1.5 rounded-full text-[10px]"
+                              :style="statusStyle(state.statuses[s.key])" x-text="statusLabel(state.statuses[s.key])"></span></span>
+                    </button>
+                </li>
             </template>
+        </ol>
+        <div class="px-4 pt-3 pb-2 text-xs" style="color:var(--muted)">
+            <span x-text="readyCount() + ' de ' + cfg.sections.length + ' seções prontas'"></span>
+            <div class="mt-1.5 h-1.5 rounded-full overflow-hidden" style="background:var(--border2)">
+                <div class="h-full" style="background:var(--purple)" :style="{ width: Math.round(100 * readyCount() / cfg.sections.length) + '%' }"></div>
+            </div>
         </div>
-
+        <div class="px-2 pb-1">
         {{-- O que falta --}}
-        <div x-show="state.issues.length" class="mb-5 px-4 py-3 text-xs" style="border-radius:8px"
+        <div x-show="state.issues.length" class="px-3 py-2 text-xs" style="border-radius:8px"
              :style="state.blocking ? 'background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.25)' : 'background:rgba(238,121,25,.06); border:1px solid rgba(238,121,25,.25)'">
             <button type="button" class="w-full flex items-center justify-between gap-2 font-semibold" @click="issuesOpen = !issuesOpen"
                     :style="state.blocking ? 'color:var(--red)' : 'color:var(--orange)'">
@@ -107,20 +116,37 @@
                         <span class="font-semibold flex-shrink-0" :style="i.level === 'erro' ? 'color:var(--red)' : 'color:var(--orange)'"
                               x-text="i.level === 'erro' ? 'Regra' : 'Falta'"></span>
                         <button type="button" class="text-left hover:underline" style="color:var(--text)" x-text="i.text"
-                                @click="scrollTo(i.path ? 'f-' + i.path : 'sec-' + i.section)"></button>
+                                @click="collapsed[i.section] = false; $nextTick(() => scrollTo(i.path ? 'f-' + i.path : 'sec-' + i.section))"></button>
                     </li>
                 </template>
             </ul>
         </div>
 
+        </div>
+    </nav>
+
+    {{-- DOCUMENTO (centro) --}}
+    <div class="fdoc-main card min-w-0">
+    {{-- Como o cliente vê --}}
+    <div x-show="view === 'cliente'" x-cloak>
+        <iframe :src="clientSrc" title="Versão do cliente" style="width:100%; height:78vh; border:0; background:#F6F7FB; display:block"></iframe>
+    </div>
+
+    {{-- Editar --}}
+    <div x-show="view === 'editar'" class="p-5">
+
         {{-- Seções --}}
         <template x-for="s in cfg.sections" :key="s.key">
-            <section :id="'sec-' + s.key" class="mb-6 pb-6" style="border-bottom:1px solid var(--border2); scroll-margin-top:80px">
-                <div class="flex items-baseline gap-2 mb-1">
+            <section :id="'sec-' + s.key" class="mb-5 pb-5" style="border-bottom:1px solid var(--border2); scroll-margin-top:80px">
+                <button type="button" class="w-full flex items-baseline gap-2 text-left" @click="collapsed[s.key] = !collapsed[s.key]"
+                        :title="collapsed[s.key] ? 'Abrir a seção' : 'Recolher a seção'">
                     <span class="text-xs font-mono font-bold" style="color:var(--purple)" x-text="s.num"></span>
                     <h3 class="text-base font-bold" style="color:var(--text)" x-text="s.title"></h3>
-                </div>
-                <p class="text-xs mb-4" style="color:var(--muted); max-width:80ch" x-text="s.help"></p>
+                    <span class="font-semibold px-1.5 rounded-full text-[10px]" :style="statusStyle(state.statuses[s.key])" x-text="statusLabel(state.statuses[s.key])"></span>
+                    <span class="ml-auto text-xs" style="color:var(--muted)" x-text="collapsed[s.key] ? 'Abrir' : 'Recolher'"></span>
+                </button>
+                <div x-show="!collapsed[s.key]">
+                <p class="text-xs mt-1 mb-4" style="color:var(--muted); max-width:80ch" x-text="s.help"></p>
 
                 <div class="grid gap-4" style="grid-template-columns:repeat(2, minmax(0, 1fr))">
                     <template x-for="b in s.blocks" :key="b.key">
@@ -191,13 +217,16 @@
                         </div>
                     </template>
                 </div>
+                </div>
             </section>
         </template>
+        {{-- Próximo passo (cada página manda o seu: criar campanhas, peças viram tarefas...) --}}
+        @isset($docFooter){!! $docFooter !!}@endisset
     </div>
     </div>{{-- /fdoc-main --}}
 
     {{-- Agente Nonna (DocumentAssistant): conversa + propostas com Aceitar/Descartar --}}
-    <aside class="fdoc-agent" x-show="agentOpen" x-cloak>
+    <aside class="fdoc-agent card" x-show="agentOpen" x-cloak>
             <div class="px-4 py-3 flex items-center justify-between gap-2" style="border-bottom:1px solid var(--border2)">
                 <div>
                     <p class="text-sm font-bold flex items-center gap-1.5" style="color:var(--text)"><x-icon name="sparkles" size="14" style="color:var(--purple)" /> Agente Nonna</p>
@@ -207,6 +236,7 @@
             </div>
 
             <div x-ref="chatBox" class="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+                @isset($agentTop)<div class="fdoc-agent-top">{!! $agentTop !!}</div>@endisset
                 <template x-if="!chat.length">
                     <div class="text-xs space-y-2" style="color:var(--muted)">
                         <p>Peça em palavras. Por exemplo:</p>
@@ -266,7 +296,7 @@
                 </div>
             </form>
     </aside>
-    </div>{{-- /fdoc-body --}}
+    </div>{{-- /fdoc-grid --}}
 </div>
 
 @once
@@ -282,7 +312,16 @@ function fieldDocEditor(cfg) {
         savedLabel: '',
         issuesOpen: false,
         timers: {},
-        agentOpen: false,
+        agentOpen: true,
+        collapsed: Object.fromEntries(cfg.sections.map(s => [s.key, cfg.payload.statuses[s.key] === 'pronta'])),
+
+        readyCount() {
+            return this.cfg.sections.filter(s => ['pronta', 'opcional'].includes(this.state.statuses[s.key])).length;
+        },
+        openSection(key) {
+            this.collapsed[key] = false;
+            this.$nextTick(() => this.scrollTo('sec-' + key));
+        },
         chat: cfg.chat || [],
         question: '',
         meetingId: '',

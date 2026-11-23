@@ -57,8 +57,8 @@
     {{-- LAYOUT: SIDEBAR + CONTEÚDO --}}
     <div x-data="{ block: '{{ $currentBlock }}' }" class="flex gap-6">
 
-        {{-- SIDEBAR --}}
-        <div class="flex-shrink-0" style="width:220px">
+        {{-- SIDEBAR (na aba Documento em campos ela some e vira a faixa de abas do topo: a mesa usa a largura toda) --}}
+        <div class="flex-shrink-0" style="width:220px" @if($fieldDocument) x-show="block !== 'documento'" @endif>
             <div class="card overflow-hidden">
                 {{-- Planejamento enxuto (2026-10): Documento (HTML) + Campanhas e Projetos +
                      Configurações. Os blocos antigos só aparecem se tiverem conteúdo, em leitura. --}}
@@ -187,6 +187,20 @@
 
         {{-- CONTEÚDO --}}
         <div class="flex-1 min-w-0">
+            @if($fieldDocument)
+                {{-- Faixa de abas (só na aba Documento, no lugar da lateral) --}}
+                <div x-show="block === 'documento'" x-cloak class="flex items-center gap-1 flex-wrap mb-4">
+                    @foreach($nav + ['meta' => ['icon' => 'settings', 'label' => 'Configurações']] as $key => $item)
+                        <button type="button" @click="block = '{{ $key }}'"
+                                class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg"
+                                :style="block === '{{ $key }}' ? 'background:rgba(100,59,142,.12); color:var(--purple)' : 'color:var(--muted2); border:1px solid var(--border2)'">
+                            <x-icon :name="$item['icon']" size="12" /> {{ $item['label'] }}
+                            @if(!empty($item['count']))<span class="font-mono" style="color:var(--muted)">{{ $item['count'] }}</span>@endif
+                        </button>
+                    @endforeach
+                    <span class="text-xs ml-2" style="color:var(--muted)">Reuniões, anexos e histórico ficam ao lado nas outras abas.</span>
+                </div>
+            @endif
 
             {{-- ══ DOCUMENTO — o HTML do planejamento (campo próprio document_attachment_id) ══ --}}
             <div x-show="block === 'documento'" x-cloak>
@@ -194,11 +208,13 @@
                     @if(session('error'))
                         <div class="mb-3 px-4 py-3 text-sm font-semibold" style="background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.25); color:var(--red)">{{ session('error') }}</div>
                     @endif
+                    @php ob_start(); @endphp
                     @include('documents._planning-draft', ['macroplan' => $macroplan, 'document' => $fieldDocument, 'draft' => $draft])
+                    @php $agentTop = ob_get_clean(); ob_start(); @endphp
                     {{-- Do plano para as campanhas e projetos de verdade (PlanItemsLauncher) --}}
                     @php $missing = $planLaunch['total'] - $planLaunch['created']; @endphp
                     @if($planLaunch['total'])
-                    <div class="card mb-3 px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
+                    <div class="mt-2 pt-4 flex items-center justify-between gap-3 flex-wrap" style="border-top:1px solid var(--border2)">
                         <div class="min-w-0">
                             <p class="text-sm font-semibold" style="color:var(--text)">
                                 Campanhas e projetos: {{ $planLaunch['created'] }} de {{ $planLaunch['total'] }} criados no App
@@ -222,7 +238,8 @@
                         @endif
                     </div>
                     @endif
-                    @include('documents._editor', ['document' => $fieldDocument, 'itemLinks' => $planLaunch['links']])
+                    @php $docFooter = ob_get_clean(); @endphp
+                    @include('documents._editor', ['document' => $fieldDocument, 'itemLinks' => $planLaunch['links'], 'agentTop' => $agentTop, 'docFooter' => $docFooter])
                     @if($mainDocument)
                         <p class="text-xs mt-2" style="color:var(--muted)">
                             O documento HTML anterior continua nos Anexos ({{ $mainDocument->filename }}).

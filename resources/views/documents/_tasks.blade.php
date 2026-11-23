@@ -8,7 +8,7 @@
     $pending     = collect($docTaskRows)->whereNull('task')->count();
 @endphp
 
-<div class="card mt-3 overflow-hidden" x-data="docTasks(@js([
+<div class="mt-2 overflow-hidden rounded-lg" x-data="docTasks(@js([
         'rows'  => $docTaskRows,
         'url'   => route('projects.field-document.tasks', $project),
         'types' => \App\Models\Task::$types,

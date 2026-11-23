@@ -1,0 +1,30 @@
+{
+    "novidades": [
+        {
+            "title": "Documento virou uma mesa de trabalho em três colunas",
+            "summary": "Na aba Documento do planejamento, da campanha e do projeto: à esquerda, as seções com a situação de cada uma e o progresso; no centro, só o documento (seções prontas ficam recolhidas) e, no fim, o próximo passo; à direita, o Agente Nonna sempre aberto, com o rascunho, as perguntas dele e a conversa.",
+            "kind": "melhoria",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Planejamento do ciclo — como preencher",
+            "category": "Documentos",
+            "slug": "planejamento-do-ciclo",
+            "body_file": "ajuda-planejamento-do-ciclo.html"
+        },
+        {
+            "title": "Documento de campanha — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-campanha",
+            "body_file": "ajuda-documento-de-campanha.html"
+        },
+        {
+            "title": "Documento de projeto — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-projeto",
+            "body_file": "ajuda-documento-de-projeto.html"
+        }
+    ]
+}

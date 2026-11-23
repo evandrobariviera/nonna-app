@@ -122,7 +122,8 @@
     </style>
 
     {{-- MENU + CONTEXTO (esquerda) --}}
-    <aside class="proj-side">
+    {{-- Na aba Documento em campos a lateral some e vira a faixa de abas do topo: a mesa usa a largura toda. --}}
+    <aside class="proj-side" @if($fieldDocument) x-show="aba !== 'documento'" @endif>
         <div class="card overflow-hidden mb-5">
             @foreach($abas as $key => $item)
                 <button type="button" @click="aba = '{{ $key }}'; window.scrollTo({ top: 0, behavior: 'smooth' })"
@@ -408,6 +409,19 @@
     </aside>{{-- /menu + contexto --}}
 
     <div class="proj-main">
+    @if($fieldDocument)
+        <div x-show="aba === 'documento'" x-cloak class="flex items-center gap-1 flex-wrap mb-4">
+            @foreach($abas as $key => $item)
+                <button type="button" @click="aba = '{{ $key }}'"
+                        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg"
+                        :style="aba === '{{ $key }}' ? 'background:rgba(100,59,142,.12); color:var(--purple)' : 'color:var(--muted2); border:1px solid var(--border2)'">
+                    <x-icon :name="$item['icon']" size="12" /> {{ $item['label'] }}
+                    @if(!empty($item['count']))<span class="font-mono" style="color:var(--muted)">{{ $item['count'] }}</span>@endif
+                </button>
+            @endforeach
+            <span class="text-xs ml-2" style="color:var(--muted)">Resumo, equipe, reuniões e anexos ficam ao lado nas outras abas.</span>
+        </div>
+    @endif
 
     {{-- ABA DOCUMENTO --}}
     <div x-show="aba === 'documento'" x-cloak>
@@ -431,6 +445,7 @@
         @if(session('error'))
             <div class="mb-3 px-4 py-3 text-sm font-semibold" style="background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.25); color:var(--red)">{{ session('error') }}</div>
         @endif
+        @php ob_start(); @endphp
         @include('documents._planning-draft', [
             'macroplan' => null, 'document' => $fieldDocument, 'draft' => $itemDraft,
             'draftAction' => route('projects.field-document.draft', $project),
@@ -438,8 +453,10 @@
             'draftWhat' => $project->type === 'campanha' ? 'a campanha' : 'o projeto',
             'draftKeepsInherited' => true,
         ])
-        @include('documents._editor', ['document' => $fieldDocument])
+        @php $agentTop = ob_get_clean(); ob_start(); @endphp
         @include('documents._tasks', ['document' => $fieldDocument, 'project' => $project])
+        @php $docFooter = ob_get_clean(); @endphp
+        @include('documents._editor', ['document' => $fieldDocument, 'agentTop' => $agentTop, 'docFooter' => $docFooter])
         @if($mainDocument)
             <p class="text-xs mt-2" style="color:var(--muted)">O documento HTML anterior continua nos Anexos ({{ $mainDocument->filename }}).</p>
         @endif
