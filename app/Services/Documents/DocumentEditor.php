@@ -151,6 +151,56 @@ class DocumentEditor
         }, $userId, $actor);
     }
 
+    /** Alguma PESSOA já mexeu neste documento? (o agente não monta rascunho por cima) */
+    public function touchedByPerson(Document $document): bool
+    {
+        foreach ($document->provenance ?? [] as $mark) {
+            if (($mark['by'] ?? null) === 'pessoa') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Rascunho do agente: troca o conteúdo inteiro (documento ainda não editado por pessoa),
+     * marca cada campo preenchido como escrito pelo agente e registra uma linha no histórico.
+     */
+    public function replaceByAgent(Document $document, array $content, int $userId): Document
+    {
+        return DB::connection('pgsql')->transaction(function () use ($document, $content, $userId) {
+            $fresh = Document::whereKey($document->id)->lockForUpdate()->firstOrFail();
+            if ($this->touchedByPerson($fresh)) {
+                throw new \InvalidArgumentException('Alguém editou o documento enquanto o agente trabalhava: o rascunho não foi aplicado.');
+            }
+            $at   = now()->toIso8601String();
+            $mark = ['by' => 'agente', 'user_id' => $userId, 'at' => $at];
+            $prov = [];
+            foreach ($content as $key => $value) {
+                if (is_array($value) && array_is_list($value) && isset($value[0]['id'])) {
+                    foreach ($value as $item) {
+                        foreach ($item as $f => $v) {
+                            if ($f !== 'id' && !in_array($v, [null, '', []], true)) {
+                                $prov["{$key}.{$item['id']}.{$f}"] = $mark;
+                            }
+                        }
+                    }
+                } elseif (!in_array($value, [null, '', []], true)) {
+                    $prov[$key] = $mark;
+                }
+            }
+            $before = $fresh->content;
+            $fresh->update(['content' => $content, 'provenance' => $prov, 'updated_by' => $userId]);
+            DocumentRevision::create([
+                'document_id' => $fresh->id, 'user_id' => $userId, 'actor' => 'agente', 'action' => 'rascunho',
+                'path' => '*', 'before' => ['v' => $before], 'after' => ['v' => $content],
+            ]);
+
+            return $fresh;
+        });
+    }
+
     /** Tudo que a tela precisa depois de uma operação. */
     public function payload(Document $document): array
     {

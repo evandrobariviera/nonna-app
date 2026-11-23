@@ -194,8 +194,10 @@
                     @if(session('error'))
                         <div class="mb-3 px-4 py-3 text-sm font-semibold" style="background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.25); color:var(--red)">{{ session('error') }}</div>
                     @endif
+                    @include('documents._planning-draft', ['macroplan' => $macroplan, 'document' => $fieldDocument, 'draft' => $draft])
                     {{-- Do plano para as campanhas e projetos de verdade (PlanItemsLauncher) --}}
                     @php $missing = $planLaunch['total'] - $planLaunch['created']; @endphp
+                    @if($planLaunch['total'])
                     <div class="card mb-3 px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
                         <div class="min-w-0">
                             <p class="text-sm font-semibold" style="color:var(--text)">
@@ -219,6 +221,7 @@
                             </form>
                         @endif
                     </div>
+                    @endif
                     @include('documents._editor', ['document' => $fieldDocument, 'itemLinks' => $planLaunch['links']])
                     @if($mainDocument)
                         <p class="text-xs mt-2" style="color:var(--muted)">

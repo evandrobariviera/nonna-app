@@ -270,6 +270,65 @@ abstract class DocumentSchema
         return (bool) array_filter($this->issues($content), fn ($i) => $i['level'] === 'erro');
     }
 
+    /**
+     * O documento em texto corrido, seção por seção, com os rótulos do modelo — pra IA ler
+     * (planejamento anterior como fonte do próximo, contexto do agente). Ligações viram nomes.
+     */
+    public function toText(array $content): string
+    {
+        $names = [];
+        foreach ($this->sections() as $section) {
+            foreach ($section['blocks'] as $block) {
+                if ($block['type'] === 'list') {
+                    foreach ($content[$block['key']] ?? [] as $item) {
+                        $names[$item['id']] = $item[$block['title_field']] ?? '';
+                    }
+                }
+            }
+        }
+        $fmt = function (array $field, mixed $v) use ($names) {
+            if ($v === null || $v === '' || $v === []) {
+                return null;
+            }
+
+            return match ($field['input']) {
+                'refs'   => implode(', ', array_filter(array_map(fn ($id) => $names[$id] ?? null, (array) $v))),
+                'ref'    => $names[$v] ?? null,
+                'select' => $field['options'][$v] ?? $v,
+                default  => is_scalar($v) ? (string) $v : json_encode($v, JSON_UNESCAPED_UNICODE),
+            };
+        };
+
+        $out = [];
+        foreach ($this->sections() as $section) {
+            $lines = [];
+            foreach ($section['blocks'] as $block) {
+                if ($block['type'] === 'field') {
+                    if (($t = $fmt($block, $content[$block['key']] ?? null)) !== null) {
+                        $lines[] = "{$block['label']}: {$t}";
+                    }
+                    continue;
+                }
+                foreach ($content[$block['key']] ?? [] as $n => $item) {
+                    $parts = [];
+                    foreach ($block['fields'] as $field) {
+                        if ($this->applies($field, $item) && ($t = $fmt($field, $item[$field['key']] ?? null)) !== null) {
+                            $parts[] = "{$field['label']}: {$t}";
+                        }
+                    }
+                    if ($parts) {
+                        $lines[] = "- {$block['item_label']} " . ($n + 1) . ': ' . implode(' | ', $parts);
+                    }
+                }
+            }
+            if ($lines) {
+                $out[] = '## ' . trim(($section['num'] ? $section['num'] . ' ' : '') . $section['title']) . "\n" . implode("\n", $lines);
+            }
+        }
+
+        return implode("\n\n", $out);
+    }
+
     /** Lista de itens por id (pra montar "Carregada por", referências etc.). */
     protected static function byId(array $items): array
     {

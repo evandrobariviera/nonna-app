@@ -161,7 +161,22 @@ class MacroPlanController extends Controller
         $fieldDocument = $macroplan->fieldDocument()->with('client:id,company_name')->first();
         // Itens do documento que já viraram campanha/projeto (link no cartão) + se dá para criar os outros.
         $planLaunch = null;
+        $draft = null;
         if ($fieldDocument) {
+            $draftState = $fieldDocument->agent_state['draft'] ?? null;
+            // Processando há mais de 15 min = o worker caiu no meio (deploy): libera tentar de novo.
+            if (($draftState['status'] ?? null) === 'processando' && now()->diffInMinutes(\Carbon\Carbon::parse($draftState['started_at'])) > 15) {
+                $draftState['status'] = 'erro';
+                $draftState['error'] = 'O agente parou no meio (o sistema pode ter sido atualizado). Tente de novo.';
+            }
+            $touched = app(\App\Services\Documents\DocumentEditor::class)->touchedByPerson($fieldDocument);
+            $draft = [
+                'state'     => $draftState,
+                'canDraft'  => !$touched && ($draftState['status'] ?? null) !== 'processando',
+                'sources'   => !$touched ? app(\App\Services\Documents\PlanningSources::class)->available($macroplan) : [],
+                'perguntas' => empty($fieldDocument->agent_state['perguntas_ocultas']) ? ($fieldDocument->agent_state['perguntas'] ?? []) : [],
+            ];
+
             $launcher = app(\App\Services\Documents\PlanItemsLauncher::class);
             $created  = $launcher->created($fieldDocument);
             $named    = collect($fieldDocument->content['itens'] ?? [])->filter(fn ($i) => filled($i['nome'] ?? null));
@@ -194,7 +209,7 @@ class MacroPlanController extends Controller
         // Quem a discussão avisa — aparece embaixo do campo de comentário.
         $discussionRecipients = User::whereIn('id', $macroplan->discussionRecipientIds())->orderBy('name')->pluck('name');
 
-        return view('macroplans.edit', compact('macroplan', 'users', 'currentBlock', 'legacyBlocks', 'mainDocument', 'discussionItems', 'relatedMeetings', 'planTimeline', 'discussionRecipients', 'fieldDocument', 'planLaunch'));
+        return view('macroplans.edit', compact('macroplan', 'users', 'currentBlock', 'legacyBlocks', 'mainDocument', 'discussionItems', 'relatedMeetings', 'planTimeline', 'discussionRecipients', 'fieldDocument', 'planLaunch', 'draft'));
     }
 
     public function update(Request $request, MacroPlan $macroplan)

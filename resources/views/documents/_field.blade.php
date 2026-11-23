@@ -7,7 +7,11 @@
 <div>
     <label class="block text-[11px] font-semibold uppercase mb-1" style="letter-spacing:.06em"
            :style="hasIssue({{ $P }}) ? 'color:var(--orange)' : 'color:var(--muted)'"
-           x-text="{{ $F }}.label + ({{ $F }}.required || {{ $F }}.input === 'refs' ? '' : ' (opcional)')"></label>
+           ><span x-text="{{ $F }}.label + ({{ $F }}.required || {{ $F }}.input === 'refs' ? '' : ' (opcional)')"></span>
+        <template x-if="originLabel({{ $P }})">
+            <span class="ml-1 normal-case font-semibold px-1.5 rounded" style="letter-spacing:0; font-size:10px; background:rgba(100,59,142,.1); color:var(--purple)"
+                  x-text="originLabel({{ $P }})"></span>
+        </template></label>
 
     {{-- Linha --}}
     <template x-if="{{ $F }}.input === 'line'">

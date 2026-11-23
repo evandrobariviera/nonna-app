@@ -212,6 +212,11 @@ function fieldDocEditor(cfg) {
         refLabel(o) {
             return o.nome || o.o_que || o.area || o.plataforma || 'Sem nome';
         },
+        // Quem escreveu o campo (some quando uma pessoa edita: aí o campo é dela).
+        originLabel(path) {
+            const by = ((this.state.provenance || {})[path] || {}).by;
+            return { agente: 'escrito pelo agente', planejamento: 'veio do planejamento' }[by] || '';
+        },
         hasIssue(path) {
             return this.state.issues.some(i => i.path === path);
         },

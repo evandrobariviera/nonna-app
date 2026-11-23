@@ -720,6 +720,13 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Documento em campos (23/11 — DocumentEditor; o planejamento é o primeiro tipo) ──
     Route::post('/planejamentos/{macroplan}/documento-em-campos', [\App\Http\Controllers\FieldDocumentController::class, 'startForPlan'])
         ->name('macroplans.field-document.start');
+    Route::post('/planejamentos/{macroplan}/rascunho-agente', [\App\Http\Controllers\FieldDocumentController::class, 'startDraft'])
+        ->middleware('throttle:6,1')
+        ->name('macroplans.field-document.draft');
+    Route::get('/planejamentos/{macroplan}/rascunho-agente', [\App\Http\Controllers\FieldDocumentController::class, 'draftStatus'])
+        ->name('macroplans.field-document.draft-status');
+    Route::post('/documentos/{document}/perguntas/esconder', [\App\Http\Controllers\FieldDocumentController::class, 'hideQuestions'])
+        ->name('documents.questions.hide');
     Route::post('/planejamentos/{macroplan}/criar-campanhas-projetos', [\App\Http\Controllers\FieldDocumentController::class, 'launchPlanItems'])
         ->name('macroplans.field-document.launch');
     Route::post('/projetos/{project}/documento-em-campos', [\App\Http\Controllers\FieldDocumentController::class, 'startForProject'])

@@ -32,6 +32,72 @@ class FieldDocumentController extends Controller
             ->with('success', 'Documento em campos criado. Preencha seção por seção: cada campo salva sozinho.');
     }
 
+    /**
+     * Rascunho do planejamento pelo Agente Nonna (PlanningDrafter, em segundo plano). Arquivos
+     * enviados na hora ficam como anexos do planejamento e entram como fonte.
+     */
+    public function startDraft(Request $request, MacroPlan $macroplan): RedirectResponse
+    {
+        $doc = $macroplan->fieldDocument;
+        abort_unless($doc, 404);
+        $back = redirect()->route('macroplans.edit', [$macroplan, 'bloco' => 'documento']);
+
+        $data = $request->validate([
+            'sources'   => 'nullable|array|max:40',
+            'sources.*' => 'string|max:80',
+            'note'      => 'nullable|string|max:3000',
+            'files'     => 'nullable|array|max:6',
+            'files.*'   => 'file|max:15360|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,csv,txt,md,html,htm,png,jpg,jpeg,webp',
+        ], ['files.*.mimes' => 'Arquivo de tipo que o agente não lê.', 'files.*.max' => 'Cada arquivo pode ter até 15 MB.']);
+
+        if ($this->editor->touchedByPerson($doc)) {
+            return $back->with('error', 'Este documento já foi editado: o rascunho do agente só entra em documento ainda não preenchido.');
+        }
+        if (($doc->agent_state['draft']['status'] ?? null) === 'processando') {
+            return $back->with('error', 'O agente já está montando o rascunho deste planejamento.');
+        }
+        if (empty($data['sources']) && !$request->hasFile('files')) {
+            return $back->with('error', 'Marque pelo menos uma fonte ou envie um arquivo.');
+        }
+        $credits = \App\Services\Agent\AgentCredits::status($request->user());
+        if ($credits['blocked']) {
+            return $back->with('error', \App\Services\Agent\AgentCredits::blockedMessage($credits));
+        }
+
+        $uploadIds = [];
+        foreach ($request->file('files', []) as $file) {
+            $disk = config('filesystems.default', 'r2');
+            $mime = $file->getMimeType();
+            $path = $file->store("macroplans/{$macroplan->id}", \App\Support\UploadOptions::forStore($mime, $disk));
+            $uploadIds[] = \App\Models\MacroPlanAttachment::create([
+                'macro_plan_id' => $macroplan->id, 'filename' => $file->getClientOriginalName(), 'disk_path' => $path,
+                'disk' => $disk, 'mime_type' => $mime, 'size' => $file->getSize(), 'uploaded_by' => Auth::id(),
+            ])->id;
+        }
+
+        $state = $doc->agent_state ?? [];
+        $state['draft'] = ['status' => 'processando', 'started_at' => now()->toIso8601String(), 'user_id' => Auth::id()];
+        $doc->update(['agent_state' => $state]);
+
+        \App\Jobs\DraftPlanningDocumentJob::dispatch($doc->id, $macroplan->id, $data['sources'] ?? [], $uploadIds, Auth::id(), (string) ($data['note'] ?? ''));
+
+        return $back->with('success', 'O agente começou a montar o rascunho. Leva de 1 a 3 minutos; a página atualiza sozinha e você recebe aviso no sino.');
+    }
+
+    public function draftStatus(MacroPlan $macroplan): JsonResponse
+    {
+        return response()->json(['status' => $macroplan->fieldDocument?->agent_state['draft']['status'] ?? null]);
+    }
+
+    public function hideQuestions(Document $document): RedirectResponse
+    {
+        $state = $document->agent_state ?? [];
+        $state['perguntas_ocultas'] = true;
+        $document->update(['agent_state' => $state]);
+
+        return back();
+    }
+
     /** Do documento do planejamento para as campanhas e projetos de verdade (PlanItemsLauncher). */
     public function launchPlanItems(MacroPlan $macroplan, PlanItemsLauncher $launcher): RedirectResponse
     {

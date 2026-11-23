@@ -626,6 +626,82 @@ class AiService
         return $this->parseJsonResponse($responseText, $agent);
     }
 
+    /**
+     * Saída JSON com instruções próprias da tarefa (o "manual", em vez do prompt do agente) e
+     * arquivos junto (PDF e imagem vão como arquivo; o resto o chamador já transformou em texto).
+     * Usado pelo Agente Nonna em tarefas de documento (ex.: rascunho do planejamento).
+     * Só OpenAI por enquanto (a API lê PDF e imagem direto).
+     *
+     * @param array<int, array{name: string, mime: string, data: string}> $files conteúdo binário cru
+     */
+    public function runStructuredWithFiles(
+        AiAgent $agent,
+        string $instructions,
+        string $userMessage,
+        array $files,
+        int $maxTokens,
+        ?int $userId,
+        ?string $clientId,
+        string $trigger
+    ): array {
+        $agent->loadMissing('provider');
+        if ($agent->provider->slug !== 'openai') {
+            throw new \RuntimeException('Leitura de arquivos pela IA só funciona com a OpenAI.');
+        }
+        $apiKey = $agent->resolvedApiKey();
+        if (!$apiKey) {
+            throw new \RuntimeException("Agente '{$agent->name}': nenhuma chave de API configurada.");
+        }
+
+        $content = [['type' => 'text', 'text' => $userMessage]];
+        foreach ($files as $file) {
+            $b64 = base64_encode($file['data']);
+            $content[] = str_starts_with($file['mime'], 'image/')
+                ? ['type' => 'image_url', 'image_url' => ['url' => "data:{$file['mime']};base64,{$b64}"]]
+                : ['type' => 'file', 'file' => ['filename' => $file['name'], 'file_data' => "data:{$file['mime']};base64,{$b64}"]];
+        }
+
+        $system = $instructions . "\n\n---\nIMPORTANTE: responda ESTRITAMENTE com um único objeto JSON válido, sem markdown, sem texto antes ou depois. Se não souber um valor, use null - nunca invente dado.";
+        $payload = [
+            'model'                 => $agent->model,
+            'messages'              => [
+                ['role' => 'system', 'content' => $system],
+                ['role' => 'user', 'content' => $content],
+            ],
+            'max_completion_tokens' => $maxTokens,
+            'response_format'       => ['type' => 'json_object'],
+        ];
+        if (!$this->isReasoningModel($agent->model)) {
+            $payload['temperature'] = $agent->temperature;
+        }
+
+        [$text, $usage] = $this->guard($agent, function () use ($agent, $apiKey, $payload) {
+            $response = Http::withToken($apiKey->getApiKey())
+                ->timeout(420)
+                ->post(rtrim($agent->provider->base_url, '/') . '/chat/completions', $payload)
+                ->throw()
+                ->json();
+
+            return [
+                $response['choices'][0]['message']['content'] ?? '',
+                [
+                    'prompt_tokens'     => $response['usage']['prompt_tokens'] ?? 0,
+                    'cached_tokens'     => $response['usage']['prompt_tokens_details']['cached_tokens'] ?? 0,
+                    'completion_tokens' => $response['usage']['completion_tokens'] ?? 0,
+                    'total_tokens'      => $response['usage']['total_tokens'] ?? 0,
+                ],
+            ];
+        });
+
+        $this->logUsage($agent, $usage, $userId, $clientId, $trigger);
+
+        if (trim($text) === '' && ($usage['completion_tokens'] ?? 0) >= $maxTokens) {
+            throw new \RuntimeException("A IA atingiu o limite de {$maxTokens} tokens antes de terminar a resposta.");
+        }
+
+        return $this->parseJsonResponse($text, $agent);
+    }
+
     private function dispatchStructured(AiAgent $agent, string $apiKey, string $systemPrompt, string $userMessage): array
     {
         return match ($agent->provider->slug) {

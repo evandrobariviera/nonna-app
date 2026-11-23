@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Agente Nonna monta o rascunho do planejamento",
+            "summary": "No planejamento novo, marque o que o agente deve ler (reunião com ATA e transcrição, planejamento anterior, briefing, anexos ou arquivos enviados na hora) e ele preenche as seções do documento em 1 a 3 minutos, deixando perguntas sobre o que faltou. Número que ninguém falou fica \"A confirmar\".",
+            "kind": "novidade",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Planejamento do ciclo — como preencher",
+            "category": "Documentos",
+            "slug": "planejamento-do-ciclo",
+            "body_file": "ajuda-planejamento-do-ciclo.html"
+        }
+    ]
+}
