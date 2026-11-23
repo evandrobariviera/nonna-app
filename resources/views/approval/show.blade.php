@@ -265,6 +265,39 @@
         <div style="background:var(--s1); border:1px solid var(--border); padding:16px 18px; text-align:center">
             <p style="font-size:13px; color:var(--muted2); margin:0">Isso é só um aviso — nenhuma ação é necessária da sua parte.</p>
         </div>
+        @elseif(!empty($answered))
+        {{-- Já respondido: no lugar de Aprovar/Ajuste, a resposta dada e — se a
+             rodada inteira fechou aprovada — o botão de baixar os arquivos. --}}
+        @php $myApproved = $approvalToken->status === 'approved'; @endphp
+        <div class="piece-card" style="padding:18px">
+            <span class="label-sm">Sua avaliação</span>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:{{ $approvalToken->overall_comment ? '8px' : '0' }}">
+                <span class="badge badge-{{ $myApproved ? 'approved' : 'changes' }}">{{ $myApproved ? '✓ Você aprovou' : '✎ Você pediu ajuste' }}</span>
+                @if($approvalToken->reviewed_at)
+                    <span class="mono" style="font-size:11px; color:var(--muted)">em {{ $approvalToken->reviewed_at->format('d/m/Y') }}</span>
+                @endif
+            </div>
+            @if($approvalToken->overall_comment)
+                <p class="approver-feedback">"{{ $approvalToken->overall_comment }}"</p>
+            @endif
+            @if($myApproved && $approvalToken->round->status !== 'approved')
+                <p style="font-size:12px; color:var(--muted); margin:10px 0 0">Aguardando os outros aprovadores. Quando todos aprovarem, o download fica liberado aqui.</p>
+            @endif
+        </div>
+
+        @if($approvalToken->round->status === 'approved' && $deliverables->isNotEmpty())
+            @if($deliverables->count() > 1)
+                <span class="label-sm">Baixar arquivos</span>
+            @endif
+            <div style="display:flex; flex-direction:column; gap:8px">
+                @foreach($deliverables as $file)
+                    <a href="{{ $file->downloadUrl() }}" class="submit-btn" style="display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; box-sizing:border-box">
+                        <x-icon name="download" size="18" />
+                        <span>Baixar {{ $deliverables->count() > 1 ? $file->filename : 'arquivo' }}</span>
+                    </a>
+                @endforeach
+            </div>
+        @endif
         @else
         <div x-data="{ decision: null }">
             <form method="POST" action="{{ route('approval.submit', $approvalToken->token) }}">

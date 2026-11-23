@@ -1,0 +1,11 @@
+{
+    "novidades": [
+        {
+            "title": "Link de aprovação já respondido continua mostrando a peça",
+            "summary": "Quando o cliente abre de novo uma peça que já aprovou (ou pediu ajuste), a página não some mais: continua com a barra de números pra navegar entre as peças do mês, o material e a legenda. No lugar de Aprovar/Solicitar ajuste aparece a resposta que ele deu e, se a rodada fechou aprovada, o botão de baixar o arquivo.",
+            "kind": "melhoria",
+            "area": "Aprovações"
+        }
+    ],
+    "ajuda": []
+}

@@ -115,7 +115,12 @@ class ApprovalController extends Controller
         $centralNav = $this->enterCentral($request, $approvalToken);
         $this->markOpened($request, $approvalToken);
 
-        if (! $isAviso && ! $approvalToken->isValid()) {
+        // Já respondido (aprovou ou pediu ajuste): a página continua igual — barra
+        // de números, material, legenda — só sem os botões de decisão. Quem volta
+        // pra rever a peça ou baixar o arquivo não perde a navegação.
+        $answered = ! $isAviso && in_array($approvalToken->status, ['approved', 'changes_requested'], true);
+
+        if (! $isAviso && ! $answered && ! $approvalToken->isValid()) {
             return view('approval.expired', compact('approvalToken', 'deliverables', 'centralNav'));
         }
 
@@ -128,9 +133,9 @@ class ApprovalController extends Controller
             ->sortBy('created_at');
 
         // "Revisar pendentes" em andamento — barra "peça X de N" no topo.
-        $review = $centralNav ? $this->queue->state($request, $approvalToken) : null;
+        $review = $centralNav && ! $answered ? $this->queue->state($request, $approvalToken) : null;
 
-        return view('approval.show', compact('approvalToken', 'deliverables', 'batch', 'visibleComments', 'centralNav', 'review'));
+        return view('approval.show', compact('approvalToken', 'deliverables', 'batch', 'visibleComments', 'centralNav', 'review', 'answered'));
     }
 
     /**
