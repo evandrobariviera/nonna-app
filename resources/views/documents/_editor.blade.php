@@ -115,6 +115,9 @@
                                                 </template>
                                                 <span class="text-sm font-semibold" style="color:var(--text)"
                                                       x-text="item[b.title_field] || (b.item_label + ' ' + (idx + 1))"></span>
+                                                <template x-if="itemOrigin(b.key, item.id)">
+                                                    <span class="text-[10px] font-semibold px-1.5 rounded" style="background:rgba(100,59,142,.1); color:var(--purple)" x-text="itemOrigin(b.key, item.id)"></span>
+                                                </template>
                                                 <template x-if="cfg.itemLinks[b.key] && cfg.itemLinks[b.key][item.id]">
                                                     <a :href="cfg.itemLinks[b.key][item.id][0]" class="text-xs font-semibold hover:underline" style="color:var(--purple)"
                                                        x-text="cfg.itemLinks[b.key][item.id][1]"></a>
@@ -216,6 +219,13 @@ function fieldDocEditor(cfg) {
         originLabel(path) {
             const by = ((this.state.provenance || {})[path] || {}).by;
             return { agente: 'escrito pelo agente', planejamento: 'veio do planejamento' }[by] || '';
+        },
+        // Cartão escrito pelo agente: some quando uma pessoa mexe em qualquer campo dele.
+        itemOrigin(list, id) {
+            const prefix = list + '.' + id + '.';
+            const marks = Object.entries(this.state.provenance || {}).filter(([k]) => k.startsWith(prefix)).map(([, v]) => v.by);
+            if (!marks.length || marks.includes('pessoa')) return '';
+            return marks.includes('agente') ? 'escrito pelo agente' : '';
         },
         hasIssue(path) {
             return this.state.issues.some(i => i.path === path);

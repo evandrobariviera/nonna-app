@@ -217,7 +217,7 @@
                             <form method="POST" action="{{ route('macroplans.field-document.launch', $macroplan) }}"
                                   @submit.prevent="if (await $store.confirmDialog.ask('Criar {{ $missing }} campanha(s)/projeto(s) a partir do documento? Depois de criados, cada um é dono do próprio documento: mudar o planejamento não muda eles.')) $el.submit()">
                                 @csrf
-                                <button type="submit" class="btn btn-primary btn-xs" @disabled($planLaunch['reason'])>Criar {{ $missing }} campanha(s)/projeto(s)</button>
+                                <button type="submit" class="btn btn-primary btn-xs" @disabled($planLaunch['reason']) @if($planLaunch['reason']) style="opacity:.45; cursor:not-allowed" title="{{ $planLaunch['reason'] }}" @endif>Criar {{ $missing }} campanha(s)/projeto(s)</button>
                             </form>
                         @endif
                     </div>

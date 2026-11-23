@@ -158,22 +158,22 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
     <div class="objetivo">{{ $content['objetivo'] ?? '' }}</div>
     <div class="cols">
       <div class="box"><span class="label">Tipo de campanha</span><p>{{ $tipos[$content['tipo_campanha'] ?? ''] ?? '' }}</p></div>
-      <div class="box"><span class="label">Meta do planejamento que ela carrega</span><p>{{ $content['meta_planejamento'] ?? '' }}</p></div>
+      <div class="box"><span class="label">Meta do planejamento que ela ajuda a bater</span><p>{{ $content['meta_planejamento'] ?? '' }}</p></div>
     </div>
     <div class="metrica">
-      <span class="label">Métrica principal</span>
+      <span class="label">Como vamos saber se deu certo</span>
       <div class="nome">{{ $content['metrica'] ?? '' }}</div>
       <div class="campos">
-        <div><span class="label">Hoje</span><b>{{ $content['metrica_hoje'] ?? '' }}</b></div>
-        <div><span class="label">Meta</span><b>{{ $content['metrica_meta'] ?? '' }}@if(!empty($content['metrica_ate'])) · até {{ $d($content['metrica_ate']) }}@endif</b></div>
-        <div><span class="label">De onde vem o número</span><b>{{ $content['metrica_fonte'] ?? '' }}</b></div>
-        <div><span class="label">Como entra</span><b>{{ $S::ENTRADAS[$content['metrica_entrada'] ?? ''] ?? '' }}</b></div>
+        <div><span class="label">Quanto é hoje</span><b>{{ $content['metrica_hoje'] ?? '' }}</b></div>
+        <div><span class="label">Quanto queremos</span><b>{{ $content['metrica_meta'] ?? '' }}@if(!empty($content['metrica_ate'])) · até {{ $d($content['metrica_ate']) }}@endif</b></div>
+        <div><span class="label">Onde medimos</span><b>{{ $content['metrica_fonte'] ?? '' }}</b></div>
+        <div><span class="label">Quem lança o número</span><b>{{ $S::ENTRADAS[$content['metrica_entrada'] ?? ''] ?? '' }}</b></div>
       </div>
     </div>
     @if(!empty($content['apoio']))
       <div class="rolagem">
         <table>
-          <thead><tr><th>Métrica de apoio</th><th>Hoje</th><th>Meta</th><th>De onde vem</th><th>Como entra</th></tr></thead>
+          <thead><tr><th>Número de apoio</th><th>Quanto é hoje</th><th>Quanto queremos</th><th>Onde medimos</th><th>Quem lança</th></tr></thead>
           <tbody>
             @foreach($content['apoio'] as $a)
               <tr><td>{{ $a['nome'] }}</td><td>{{ $a['hoje'] }}</td><td>{{ $a['meta'] }}</td><td>{{ $a['fonte'] }}</td><td>{{ $S::ENTRADAS[$a['entrada'] ?? ''] ?? '' }}</td></tr>
@@ -207,7 +207,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
   <section>
     <div class="num">03</div>
     <h2>Conceito e racional</h2>
-    <span class="label rotulo">Frase do conceito</span>
+    <span class="label rotulo">A grande ideia</span>
     <div class="hero">{{ $content['frase_conceito'] ?? '' }}</div>
     <p>{!! $txt($content['conceito'] ?? '') !!}</p>
     <span class="label">Por que deve funcionar</span>
@@ -248,7 +248,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
     @else
       <div class="rolagem">
         <table>
-          <thead><tr><th>Plataforma</th><th>Para quê</th><th>Verba mensal</th></tr></thead>
+          <thead><tr><th>Onde anuncia</th><th>Para quê</th><th>Verba por mês</th></tr></thead>
           <tbody>
             @foreach($content['midia'] as $m)
               <tr><td>{{ $m['plataforma'] }}</td><td>{{ $m['para'] }}</td><td class="data">{{ $m['verba_mensal'] ? $money($m['verba_mensal']) : '' }}</td></tr>
@@ -269,7 +269,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
     <h2>Peças e datas</h2>
     <div class="rolagem">
       <table>
-        <thead><tr><th>Peça</th><th>Ângulo criativo</th><th>Formato</th><th>Qtd.</th><th>Pronta em</th></tr></thead>
+        <thead><tr><th>Peça</th><th>Ângulo criativo</th><th>Formato</th><th>Quantas</th><th>Pronta até</th></tr></thead>
         <tbody>
           @foreach($content['pecas'] ?? [] as $p)
             <tr><td>{{ $p['nome'] }}</td><td>{{ $angulos[$p['angulo'] ?? '']['nome'] ?? '—' }}</td><td>{{ $p['formato'] }}</td><td>{{ $p['quantidade'] }}</td><td class="data">{{ $d($p['data']) }}</td></tr>
@@ -284,7 +284,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
     <h2>Sinais de alerta</h2>
     <div class="rolagem">
       <table>
-        <thead><tr><th>Se acontecer</th><th>Fazemos</th><th>Quem age</th></tr></thead>
+        <thead><tr><th>Se acontecer</th><th>O que fazemos</th><th>Quem age</th></tr></thead>
         <tbody>
           @foreach($content['alertas'] ?? [] as $al)
             <tr><td>{{ $al['se'] }}</td><td>{{ $al['fazemos'] }}</td><td>{{ $al['quem'] }}</td></tr>

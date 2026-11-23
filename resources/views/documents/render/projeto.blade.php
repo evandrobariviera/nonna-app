@@ -152,20 +152,20 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
     <span class="label rotulo">Objetivo</span>
     <div class="objetivo">{{ $content['objetivo'] ?? '' }}</div>
     <div class="cols">
-      <div class="box"><span class="label">Carrega a meta · ou · Prepara o terreno para</span><p>{{ $content['carrega'] ?? '' }}</p></div>
-      <div class="box"><span class="label">Documento técnico</span><p>{{ $content['documento_tecnico'] ?? '' }}</p></div>
+      <div class="box"><span class="label">Ajuda a bater a meta · ou · Deixa pronto para a campanha</span><p>{{ $content['carrega'] ?? '' }}</p></div>
+      <div class="box"><span class="label">Escopo técnico</span><p>{{ $content['documento_tecnico'] ?? '' }}</p></div>
     </div>
     <div class="cols" style="margin-top:14px">
-      <div class="box"><span class="label">Pronto quando</span><p>{!! $txt($content['pronto_quando'] ?? '') !!}</p></div>
+      <div class="box"><span class="label">Está pronto quando</span><p>{!! $txt($content['pronto_quando'] ?? '') !!}</p></div>
     </div>
     <div class="metrica">
-      <span class="label">Benefício esperado</span>
+      <span class="label">O que melhora depois de pronto</span>
       <div class="nome">{{ $content['beneficio'] ?? '' }}</div>
       <div class="campos">
-        <div><span class="label">Hoje</span><b>{{ $content['beneficio_hoje'] ?? '' }}</b></div>
-        <div><span class="label">Esperado</span><b>{{ $content['beneficio_esperado'] ?? '' }}</b></div>
-        <div><span class="label">Conferir em</span><b>{{ $d($content['conferir_em'] ?? null) }}</b></div>
-        <div><span class="label">De onde vem o número</span><b>{{ $content['beneficio_fonte'] ?? '' }}</b></div>
+        <div><span class="label">Quanto é hoje</span><b>{{ $content['beneficio_hoje'] ?? '' }}</b></div>
+        <div><span class="label">Quanto esperamos</span><b>{{ $content['beneficio_esperado'] ?? '' }}</b></div>
+        <div><span class="label">Quando vamos conferir</span><b>{{ $d($content['conferir_em'] ?? null) }}</b></div>
+        <div><span class="label">Onde medimos</span><b>{{ $content['beneficio_fonte'] ?? '' }}</b></div>
       </div>
     </div>
   </section>
@@ -174,8 +174,8 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
     <div class="num">02</div>
     <h2>Escopo</h2>
     <div class="cols">
-      <div class="box"><span class="label">Entra</span><ul>@foreach($lines($content['entra'] ?? '') as $l)<li>{{ $l }}</li>@endforeach</ul></div>
-      <div class="box"><span class="label">Não entra</span><ul>@foreach($lines($content['nao_entra'] ?? '') as $l)<li>{{ $l }}</li>@endforeach</ul></div>
+      <div class="box"><span class="label">O que entra</span><ul>@foreach($lines($content['entra'] ?? '') as $l)<li>{{ $l }}</li>@endforeach</ul></div>
+      <div class="box"><span class="label">O que não entra</span><ul>@foreach($lines($content['nao_entra'] ?? '') as $l)<li>{{ $l }}</li>@endforeach</ul></div>
     </div>
   </section>
 
@@ -184,7 +184,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
     <h2>Entregas e datas</h2>
     <div class="rolagem">
       <table>
-        <thead><tr><th>Entrega</th><th>Área</th><th>Pronta em</th></tr></thead>
+        <thead><tr><th>Entrega</th><th>Área que faz</th><th>Pronta até</th></tr></thead>
         <tbody>
           @foreach($content['entregas'] ?? [] as $e)
             <tr><td>{{ $e['nome'] }}</td><td>{{ $e['area'] }}</td><td class="data">{{ $d($e['data']) }}</td></tr>
@@ -221,7 +221,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
     @else
       <div class="rolagem">
         <table>
-          <thead><tr><th>Se acontecer</th><th>Fazemos</th><th>Quem age</th></tr></thead>
+          <thead><tr><th>Se acontecer</th><th>O que fazemos</th><th>Quem age</th></tr></thead>
           <tbody>
             @foreach($content['alertas'] as $al)
               <tr><td>{{ $al['se'] }}</td><td>{{ $al['fazemos'] }}</td><td>{{ $al['quem'] }}</td></tr>
@@ -236,8 +236,8 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
     <div class="num">06</div>
     <h2>Entrega e fechamento</h2>
     <div class="lista-dupla">
-      <div class="chave">Aceite do cliente</div><div>{{ $d($content['aceite'] ?? null) }}</div>
-      <div class="chave">Conferir o benefício</div><div>{{ $d($content['conferir_beneficio'] ?? null) }}</div>
+      <div class="chave">Cliente aprova a entrega em</div><div>{{ $d($content['aceite'] ?? null) }}</div>
+      <div class="chave">Conferimos se melhorou em</div><div>{{ $d($content['conferir_beneficio'] ?? null) }}</div>
     </div>
     @if(filled($content['resultado'] ?? null))
       <div class="fechamento">

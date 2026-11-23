@@ -23,7 +23,7 @@ class CampanhaSchema extends DocumentSchema
         'pronto_para_comprar' => '5. Pronta para comprar',
     ];
 
-    public const ENTRADAS = ['automatico' => 'Automático', 'informado' => 'Informado', 'avaliado' => 'Avaliado'];
+    public const ENTRADAS = ['automatico' => 'O App puxa sozinho', 'informado' => 'A equipe lança', 'avaliado' => 'A equipe dá uma nota'];
 
     public function kind(): string
     {
@@ -55,37 +55,37 @@ class CampanhaSchema extends DocumentSchema
         return [
             [
                 'key' => 'capa', 'num' => null, 'title' => 'Capa',
-                'help' => 'Nome, tipo e datas da campanha. Nome, datas e objetivo atualizam a campanha no App (listas, linha do tempo, tarefas).',
+                'help' => 'Nome, tipo e datas. O nome, as datas e o "para que serve" atualizam a campanha no resto do App.',
                 'blocks' => [
                     ['type' => 'field', 'key' => 'nome', 'label' => 'Nome da campanha', 'input' => 'line', 'required' => true, 'half' => true],
-                    ['type' => 'field', 'key' => 'tipo_campanha', 'label' => 'Tipo', 'input' => 'select', 'required' => true, 'half' => true,
+                    ['type' => 'field', 'key' => 'tipo_campanha', 'label' => 'Tipo de campanha', 'input' => 'select', 'required' => true, 'half' => true,
                      'options' => ['venda' => 'Venda', 'marca' => 'Marca', 'lancamento' => 'Lançamento', 'relacionamento' => 'Relacionamento']],
-                    ['type' => 'field', 'key' => 'inicio', 'label' => 'Vai ao ar', 'input' => 'date', 'required' => true, 'half' => true],
-                    ['type' => 'field', 'key' => 'fim', 'label' => 'Fim', 'input' => 'date', 'required' => true, 'half' => true],
-                    ['type' => 'field', 'key' => 'entrega_pecas', 'label' => 'Peças prontas', 'input' => 'date', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'inicio', 'label' => 'Vai ao ar em', 'input' => 'date', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'fim', 'label' => 'Termina em', 'input' => 'date', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'entrega_pecas', 'label' => 'Peças prontas até', 'input' => 'date', 'required' => true, 'half' => true],
                 ],
             ],
             [
                 'key' => 's01', 'num' => '01', 'title' => 'Objetivo e como vamos medir',
-                'help' => 'O que a campanha quer e como vamos saber se deu certo: uma métrica principal e até duas de apoio. Campanha de venda ou lançamento é medida por contato, venda ou custo por venda, nunca por curtida ou alcance. Hoje vem do Briefing do Kickoff ou do último ciclo. Como entra: Automático (o App puxa de Meta, Google, GA4 ou Central de Leads), Informado (a equipe lança) ou Avaliado (nota dada pela equipe). Combinado: campanha sem esta seção completa não é lançada.',
+                'help' => 'Para que a campanha serve e como vamos saber se deu certo: um número principal e até dois de apoio, cada um com quanto é hoje e quanto queremos. Campanha de venda ou lançamento se mede por contato, venda ou custo por venda, nunca por curtida ou alcance. "Quem lança o número": o App puxa sozinho (Meta, Google, GA4, Central de Leads), a equipe lança, ou a equipe dá uma nota. Combinado: campanha sem esta seção completa não vai ao ar.',
                 'blocks' => [
-                    ['type' => 'field', 'key' => 'objetivo', 'label' => 'Objetivo', 'input' => 'line', 'required' => true,
+                    ['type' => 'field', 'key' => 'objetivo', 'label' => 'Para que serve a campanha', 'input' => 'line', 'required' => true,
                      'placeholder' => 'Começando por um verbo. Ex.: Gerar 40 pedidos de orçamento por mês'],
-                    ['type' => 'field', 'key' => 'meta_planejamento', 'label' => 'Meta do planejamento que ela carrega', 'input' => 'line', 'required' => true],
-                    ['type' => 'field', 'key' => 'metrica', 'label' => 'Métrica principal', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: Pedidos de orçamento pelo WhatsApp'],
-                    ['type' => 'field', 'key' => 'metrica_hoje', 'label' => 'Hoje', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Número de hoje ou "A confirmar"'],
-                    ['type' => 'field', 'key' => 'metrica_meta', 'label' => 'Meta', 'input' => 'line', 'required' => true, 'half' => true],
-                    ['type' => 'field', 'key' => 'metrica_ate', 'label' => 'Meta até', 'input' => 'date', 'required' => true, 'half' => true],
-                    ['type' => 'field', 'key' => 'metrica_entrada', 'label' => 'Como entra', 'input' => 'select', 'required' => true, 'half' => true, 'options' => self::ENTRADAS],
-                    ['type' => 'field', 'key' => 'metrica_fonte', 'label' => 'De onde vem o número', 'input' => 'line', 'required' => true, 'placeholder' => 'Central de Leads, Meta, contratos no App...'],
-                    ['type' => 'list', 'key' => 'apoio', 'item_label' => 'Métrica de apoio', 'title_field' => 'nome', 'max' => 2,
-                     'add' => [['label' => 'Métrica de apoio', 'attrs' => []]],
+                    ['type' => 'field', 'key' => 'meta_planejamento', 'label' => 'Meta do planejamento que ela ajuda a bater', 'input' => 'line', 'required' => true],
+                    ['type' => 'field', 'key' => 'metrica', 'label' => 'Número principal: como vamos saber se deu certo', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: Pedidos de orçamento pelo WhatsApp'],
+                    ['type' => 'field', 'key' => 'metrica_hoje', 'label' => 'Quanto é hoje', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'O número de agora (ou "A confirmar")'],
+                    ['type' => 'field', 'key' => 'metrica_meta', 'label' => 'Quanto queremos', 'input' => 'line', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'metrica_ate', 'label' => 'Até quando', 'input' => 'date', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'metrica_entrada', 'label' => 'Quem lança o número', 'input' => 'select', 'required' => true, 'half' => true, 'options' => self::ENTRADAS],
+                    ['type' => 'field', 'key' => 'metrica_fonte', 'label' => 'Onde medimos esse número', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: Central de Leads, Meta, contratos no App'],
+                    ['type' => 'list', 'key' => 'apoio', 'item_label' => 'Número de apoio', 'title_field' => 'nome', 'max' => 2,
+                     'add' => [['label' => 'Número de apoio', 'attrs' => []]],
                      'fields' => [
-                         ['key' => 'nome', 'label' => 'Métrica de apoio', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: Custo por pedido'],
-                         ['key' => 'hoje', 'label' => 'Hoje', 'input' => 'line', 'required' => true, 'half' => true],
-                         ['key' => 'meta', 'label' => 'Meta', 'input' => 'line', 'required' => true, 'half' => true],
-                         ['key' => 'fonte', 'label' => 'De onde vem', 'input' => 'line', 'required' => true, 'half' => true],
-                         ['key' => 'entrada', 'label' => 'Como entra', 'input' => 'select', 'required' => true, 'half' => true, 'options' => self::ENTRADAS],
+                         ['key' => 'nome', 'label' => 'Número de apoio', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: Custo por pedido'],
+                         ['key' => 'hoje', 'label' => 'Quanto é hoje', 'input' => 'line', 'required' => true, 'half' => true],
+                         ['key' => 'meta', 'label' => 'Quanto queremos', 'input' => 'line', 'required' => true, 'half' => true],
+                         ['key' => 'fonte', 'label' => 'Onde medimos', 'input' => 'line', 'required' => true, 'half' => true],
+                         ['key' => 'entrada', 'label' => 'Quem lança o número', 'input' => 'select', 'required' => true, 'half' => true, 'options' => self::ENTRADAS],
                      ]],
                 ],
             ],
@@ -98,11 +98,11 @@ class CampanhaSchema extends DocumentSchema
                      'start' => [[], [], []],
                      'fields' => [
                          ['key' => 'nome', 'label' => 'Nome curto do ângulo', 'input' => 'line', 'required' => true],
-                         ['key' => 'motivo', 'label' => 'Motivo', 'input' => 'select', 'required' => true, 'half' => true, 'options' => self::MOTIVOS],
-                         ['key' => 'momento', 'label' => 'Momento', 'input' => 'select', 'required' => true, 'half' => true, 'options' => self::MOMENTOS],
-                         ['key' => 'mensagem', 'label' => 'Mensagem central', 'input' => 'line', 'required' => true, 'placeholder' => 'Numa frase'],
-                         ['key' => 'para_quem', 'label' => 'Para quem', 'input' => 'line', 'required' => true, 'placeholder' => 'Com base em Quem compra, do Briefing'],
-                         ['key' => 'ganchos', 'label' => 'Ganchos', 'input' => 'text', 'required' => true, 'placeholder' => 'Uma primeira frase por linha'],
+                         ['key' => 'motivo', 'label' => 'Motivo: por que a pessoa para', 'input' => 'select', 'required' => true, 'half' => true, 'options' => self::MOTIVOS],
+                         ['key' => 'momento', 'label' => 'Momento: o quanto ela já sabe', 'input' => 'select', 'required' => true, 'half' => true, 'options' => self::MOMENTOS],
+                         ['key' => 'mensagem', 'label' => 'O que o anúncio diz', 'input' => 'line', 'required' => true, 'placeholder' => 'A mensagem principal, numa frase'],
+                         ['key' => 'para_quem', 'label' => 'Para quem é', 'input' => 'line', 'required' => true, 'placeholder' => 'Com base em Quem compra, do Briefing'],
+                         ['key' => 'ganchos', 'label' => 'Primeiras frases (ganchos)', 'input' => 'text', 'required' => true, 'placeholder' => 'Como o anúncio começa. Uma frase por linha'],
                          ['key' => 'formatos', 'label' => 'Formatos', 'input' => 'line', 'required' => true, 'placeholder' => 'Vídeo falado, depoimento, card, carrossel...'],
                      ]],
                 ],
@@ -111,8 +111,8 @@ class CampanhaSchema extends DocumentSchema
                 'key' => 's03', 'num' => '03', 'title' => 'Conceito e racional',
                 'help' => 'A grande ideia da campanha, numa frase que aparece em tudo, e por que ela deve funcionar com este público. Como a campanha soa e parece fica no Conceito criativo, feito pela Criação a partir daqui.',
                 'blocks' => [
-                    ['type' => 'field', 'key' => 'frase_conceito', 'label' => 'Frase do conceito', 'input' => 'line', 'required' => true],
-                    ['type' => 'field', 'key' => 'conceito', 'label' => 'O que o conceito quer dizer', 'input' => 'text', 'required' => true,
+                    ['type' => 'field', 'key' => 'frase_conceito', 'label' => 'A grande ideia, em uma frase', 'input' => 'line', 'required' => true],
+                    ['type' => 'field', 'key' => 'conceito', 'label' => 'O que essa ideia quer dizer', 'input' => 'text', 'required' => true,
                      'placeholder' => 'E como ele une os ângulos criativos da seção 02'],
                     ['type' => 'field', 'key' => 'por_que', 'label' => 'Por que deve funcionar', 'input' => 'text', 'required' => true,
                      'placeholder' => 'O que se sabe do público, do momento e da concorrência que justifica esse caminho'],
@@ -120,7 +120,7 @@ class CampanhaSchema extends DocumentSchema
             ],
             [
                 'key' => 's04', 'num' => '04', 'title' => 'Mecânica',
-                'help' => 'O caminho da pessoa do primeiro contato até o objetivo da seção 01, passo a passo. Uma frente para cada caminho diferente (anúncio, prospecção, loja...). Nos passos, um por linha, no formato "Passo: o que acontece".',
+                'help' => 'O caminho da pessoa, do primeiro contato até o objetivo da seção 01, passo a passo. Uma frente para cada caminho diferente (anúncio, prospecção, loja...). Nos passos, um por linha, assim: "Vê o anúncio: o vídeo mostra o projeto".',
                 'blocks' => [
                     ['type' => 'list', 'key' => 'frentes', 'item_label' => 'Frente', 'title_field' => 'nome', 'min' => 1,
                      'add' => [['label' => 'Frente', 'attrs' => []]],
@@ -142,23 +142,23 @@ class CampanhaSchema extends DocumentSchema
                      'start' => [[]],
                      'fields' => [
                          ['key' => 'area', 'label' => 'Área', 'input' => 'line', 'required' => true, 'placeholder' => 'Criação, Audiovisual, Tráfego...'],
-                         ['key' => 'o_que', 'label' => 'O que faz', 'input' => 'text', 'required' => true],
+                         ['key' => 'o_que', 'label' => 'O que essa área faz', 'input' => 'text', 'required' => true],
                      ]],
                 ],
             ],
             [
                 'key' => 's06', 'num' => '06', 'title' => 'Tráfego pago',
-                'help' => 'Uma linha por plataforma e finalidade (Meta, Google, TikTok...). Depois, o público e as regiões. Sem anúncio pago? Deixe sem nenhuma linha: a versão do cliente mostra "Esta campanha não tem tráfego pago."',
+                'help' => 'Uma linha para cada lugar onde vamos anunciar (Meta, Google, TikTok...), com a verba e para quê. Depois, quem queremos alcançar e onde. Sem anúncio pago? Deixe sem nenhuma linha.',
                 'optional' => true,
                 'blocks' => [
                     ['type' => 'list', 'key' => 'midia', 'item_label' => 'Plataforma', 'title_field' => 'plataforma',
                      'add' => [['label' => 'Plataforma', 'attrs' => []]],
                      'fields' => [
-                         ['key' => 'plataforma', 'label' => 'Plataforma', 'input' => 'line', 'required' => true, 'half' => true],
-                         ['key' => 'verba_mensal', 'label' => 'Verba mensal', 'input' => 'money', 'required' => true, 'half' => true],
+                         ['key' => 'plataforma', 'label' => 'Onde anuncia', 'input' => 'line', 'required' => true, 'half' => true],
+                         ['key' => 'verba_mensal', 'label' => 'Verba por mês', 'input' => 'money', 'required' => true, 'half' => true],
                          ['key' => 'para', 'label' => 'Para quê', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: levar gente nova ao pedido de orçamento'],
                      ]],
-                    ['type' => 'field', 'key' => 'publico', 'label' => 'Público', 'input' => 'text', 'placeholder' => 'Quem queremos alcançar'],
+                    ['type' => 'field', 'key' => 'publico', 'label' => 'Quem queremos alcançar', 'input' => 'text'],
                     ['type' => 'field', 'key' => 'regioes', 'label' => 'Cidades ou regiões', 'input' => 'line', 'placeholder' => 'Separadas por vírgula'],
                 ],
             ],
@@ -171,10 +171,10 @@ class CampanhaSchema extends DocumentSchema
                      'start' => [[]],
                      'fields' => [
                          ['key' => 'nome', 'label' => 'Peça', 'input' => 'line', 'required' => true],
-                         ['key' => 'angulo', 'label' => 'Ângulo criativo', 'input' => 'ref', 'refs' => 'angulos', 'half' => true],
+                         ['key' => 'angulo', 'label' => 'De qual ângulo é', 'input' => 'ref', 'refs' => 'angulos', 'half' => true],
                          ['key' => 'formato', 'label' => 'Formato', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'card, vídeo vertical, roteiro...'],
-                         ['key' => 'quantidade', 'label' => 'Quantidade', 'input' => 'number', 'required' => true, 'half' => true, 'default' => 1],
-                         ['key' => 'data', 'label' => 'Pronta em', 'input' => 'date', 'required' => true, 'half' => true],
+                         ['key' => 'quantidade', 'label' => 'Quantas', 'input' => 'number', 'required' => true, 'half' => true, 'default' => 1],
+                         ['key' => 'data', 'label' => 'Pronta até', 'input' => 'date', 'required' => true, 'half' => true],
                      ]],
                 ],
             ],
@@ -187,19 +187,19 @@ class CampanhaSchema extends DocumentSchema
                      'start' => [[]],
                      'fields' => [
                          ['key' => 'se', 'label' => 'Se acontecer', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: 7 dias sem nenhum pedido de orçamento'],
-                         ['key' => 'fazemos', 'label' => 'Fazemos', 'input' => 'line', 'required' => true],
-                         ['key' => 'quem', 'label' => 'Quem age', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Papel: Tráfego, Atendimento...'],
+                         ['key' => 'fazemos', 'label' => 'O que fazemos', 'input' => 'line', 'required' => true],
+                         ['key' => 'quem', 'label' => 'Quem age', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'O papel: Tráfego, Atendimento...'],
                      ]],
                 ],
             ],
             [
                 'key' => 's09', 'num' => '09', 'title' => 'Acompanhamento',
-                'help' => 'Quem acompanha a campanha e quando ela é avaliada. O check-in leva 30 segundos: um semáforo e uma frase sobre o que mudou.',
+                'help' => 'Quem acompanha a campanha e de quanto em quanto tempo conferimos como ela vai. A conferência é rápida: verde, amarelo ou vermelho, e uma frase sobre o que mudou.',
                 'blocks' => [
-                    ['type' => 'field', 'key' => 'quem_acompanha', 'label' => 'Quem acompanha', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Papel'],
-                    ['type' => 'field', 'key' => 'checkin_dias', 'label' => 'Check-in a cada (dias)', 'input' => 'number', 'required' => true, 'half' => true],
-                    ['type' => 'field', 'key' => 'checkin_inicio', 'label' => 'Primeiro check-in', 'input' => 'date', 'required' => true, 'half' => true],
-                    ['type' => 'field', 'key' => 'fechamento', 'label' => 'Fechamento', 'input' => 'date', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'quem_acompanha', 'label' => 'Quem acompanha', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'O papel: Tráfego, Atendimento...'],
+                    ['type' => 'field', 'key' => 'checkin_dias', 'label' => 'Conferir a cada quantos dias', 'input' => 'number', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'checkin_inicio', 'label' => 'Primeira conferência', 'input' => 'date', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'fechamento', 'label' => 'Data do fechamento', 'input' => 'date', 'required' => true, 'half' => true],
                 ],
             ],
             [
@@ -227,7 +227,7 @@ class CampanhaSchema extends DocumentSchema
         if (in_array($content['tipo_campanha'] ?? null, ['venda', 'lancamento'], true)
             && preg_match('/curtid|alcance|seguidor|impress|visualiza/i', (string) ($content['metrica'] ?? ''))) {
             $issues[] = ['section' => 's01', 'level' => 'erro', 'path' => 'metrica',
-                'text' => 'Campanha de venda ou lançamento é medida por contato, venda ou custo por venda, nunca por curtida ou alcance.'];
+                'text' => 'Campanha de venda ou lançamento se mede por contato, venda ou custo por venda, nunca por curtida ou alcance.'];
         }
 
         // Dois ângulos com o mesmo motivo e o mesmo momento = um ângulo só.
@@ -245,7 +245,7 @@ class CampanhaSchema extends DocumentSchema
         }
 
         if (!empty($content['midia']) && blank($content['publico'] ?? null)) {
-            $issues[] = ['section' => 's06', 'level' => 'falta', 'path' => 'publico', 'text' => 'Tem anúncio pago mas falta o público.'];
+            $issues[] = ['section' => 's06', 'level' => 'falta', 'path' => 'publico', 'text' => 'Tem anúncio pago mas falta dizer quem queremos alcançar.'];
         }
 
         if (!empty($content['inicio']) && !empty($content['fim']) && $content['fim'] < $content['inicio']) {

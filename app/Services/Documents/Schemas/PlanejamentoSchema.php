@@ -36,47 +36,47 @@ class PlanejamentoSchema extends DocumentSchema
         return [
             [
                 'key' => 'capa', 'num' => null, 'title' => 'Capa',
-                'help' => 'O objetivo do ciclo inteiro, numa frase. Cliente, período e responsável vêm do cadastro do planejamento (Configurações).',
+                'help' => 'O ciclo inteiro resumido numa frase. Cliente, período e responsável vêm do cadastro do planejamento (Configurações).',
                 'blocks' => [
-                    ['type' => 'field', 'key' => 'objetivo', 'label' => 'Objetivo do ciclo', 'input' => 'line', 'required' => true,
-                     'placeholder' => 'O objetivo do ciclo em uma frase'],
+                    ['type' => 'field', 'key' => 'objetivo', 'label' => 'O que queremos neste ciclo', 'input' => 'line', 'required' => true,
+                     'placeholder' => 'Em uma frase. Ex.: Aumentar os pedidos de orçamento sem subir o custo'],
                 ],
             ],
             [
                 'key' => 's01', 'num' => '01', 'title' => 'Onde estamos e aonde vamos',
-                'help' => 'A situação de hoje e o que muda neste ciclo, em poucas linhas cada. O foco é a frase que resume o ciclo inteiro.',
+                'help' => 'Como o cliente está agora e o que vai ser diferente neste ciclo, em poucas linhas cada. O foco é o que, se der certo, faz o ciclo valer a pena.',
                 'blocks' => [
-                    ['type' => 'field', 'key' => 'situacao', 'label' => 'Situação atual', 'input' => 'text', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'situacao', 'label' => 'Como o cliente está hoje', 'input' => 'text', 'required' => true, 'half' => true],
                     ['type' => 'field', 'key' => 'o_que_muda', 'label' => 'O que muda neste ciclo', 'input' => 'text', 'required' => true, 'half' => true],
-                    ['type' => 'field', 'key' => 'foco', 'label' => 'Foco do ciclo', 'input' => 'line', 'required' => true, 'placeholder' => 'Uma frase'],
+                    ['type' => 'field', 'key' => 'foco', 'label' => 'Foco do ciclo', 'input' => 'line', 'required' => true, 'placeholder' => 'Uma frase: a coisa mais importante deste ciclo'],
                 ],
             ],
             [
                 'key' => 's02', 'num' => '02', 'title' => 'Metas do ciclo',
-                'help' => 'Um cartão por meta. Cada uma com alvo e data, o número de hoje (do Briefing do Kickoff ou do ciclo anterior) e de onde vem o número. Quem carrega cada meta se marca nas campanhas e projetos da seção 04. "Em queda" ou "melhorar" não são metas: transforme em número ("20% a menos"). Número que não se sabe: escreva "A confirmar" e peça na seção 06.',
+                'help' => 'Meta é um RESULTADO que dá para medir, não uma tarefa: mais pedidos, mais vendas, custo menor. "Publicar artigos no blog" é tarefa (fica no projeto do blog); a meta seria, por exemplo, "visitas vindas do Google". Cada meta tem quanto queremos, até quando e quanto é hoje, para dar para comparar no fim. Quem ajuda a bater cada meta se marca nas campanhas e projetos da seção 04. Não sabe quanto é hoje? Escreva "A confirmar" e peça ao cliente na seção 06.',
                 'blocks' => [
                     ['type' => 'list', 'key' => 'metas', 'item_label' => 'Meta', 'title_field' => 'nome',
                      'add' => [['label' => 'Meta', 'attrs' => []]],
                      'start' => [[]],
                      'fields' => [
-                         ['key' => 'nome', 'label' => 'Nome da meta', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Ex.: Pedidos de orçamento'],
-                         ['key' => 'alvo', 'label' => 'Alvo', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Ex.: 60 por mês'],
-                         ['key' => 'ate', 'label' => 'Até', 'input' => 'date', 'required' => true, 'half' => true],
-                         ['key' => 'hoje', 'label' => 'Hoje', 'input' => 'line', 'required' => true, 'placeholder' => 'Número de hoje ou "A confirmar"', 'half' => true],
-                         ['key' => 'fonte', 'label' => 'Fonte', 'input' => 'line', 'required' => true, 'placeholder' => 'De onde vem o número'],
+                         ['key' => 'nome', 'label' => 'O que queremos alcançar', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Ex.: Mais pedidos de orçamento pelo WhatsApp'],
+                         ['key' => 'alvo', 'label' => 'Quanto', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Ex.: 60 por mês'],
+                         ['key' => 'ate', 'label' => 'Até quando', 'input' => 'date', 'required' => true, 'half' => true],
+                         ['key' => 'hoje', 'label' => 'Quanto é hoje', 'input' => 'line', 'required' => true, 'placeholder' => 'O número de agora, para comparar no fim (ou "A confirmar")', 'half' => true],
+                         ['key' => 'fonte', 'label' => 'Onde medimos esse número', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: Central de Leads, Meta, planilha do cliente'],
                      ]],
                 ],
             ],
             [
                 'key' => 's03', 'num' => '03', 'title' => 'Como vamos fazer',
-                'help' => 'A estratégia geral do ciclo, em um ou dois parágrafos: o que vem primeiro, o que roda em paralelo e por quê. Sem cartões nem listas de peças.',
+                'help' => 'O caminho do ciclo, em um ou dois parágrafos: o que vem primeiro, o que roda junto e por quê. Sem listar peças: elas ficam no documento de cada campanha.',
                 'blocks' => [
-                    ['type' => 'field', 'key' => 'estrategia', 'label' => 'Estratégia do ciclo', 'input' => 'text', 'required' => true],
+                    ['type' => 'field', 'key' => 'estrategia', 'label' => 'O caminho do ciclo', 'input' => 'text', 'required' => true],
                 ],
             ],
             [
                 'key' => 's04', 'num' => '04', 'title' => 'Campanhas e projetos',
-                'help' => 'Um cartão por campanha ou projeto. Campanha diz quais metas carrega e a métrica principal. Projeto diz quais metas carrega ou para qual campanha prepara o terreno, quando está pronto e qual benefício será conferido, e quando. Campanha com anúncio pago informa plataformas e verba: a tabela de verba se monta sozinha. As entregas e peças ficam no documento de cada item.',
+                'help' => 'Um cartão para cada campanha ou projeto do ciclo. Campanha é comunicação com prazo que precisa trazer resultado; projeto é algo que fica pronto e continua servindo (site, CRM, automação). Toda campanha ajuda a bater pelo menos uma meta; projeto ajuda a bater uma meta ou deixa tudo pronto para uma campanha. Campanha que continua do ciclo passado é a mesma campanha: não crie outra. A tabela de verba se monta sozinha; peças e entregas ficam no documento de cada um.',
                 'blocks' => [
                     ['type' => 'list', 'key' => 'itens', 'item_label' => 'Campanha ou projeto', 'title_field' => 'nome', 'switch' => 'tipo',
                      'add' => [
@@ -88,52 +88,52 @@ class PlanejamentoSchema extends DocumentSchema
                          ['key' => 'tipo', 'label' => 'Tipo', 'input' => 'select', 'required' => true,
                           'options' => ['campanha' => 'Campanha', 'projeto' => 'Projeto']],
                          ['key' => 'nome', 'label' => 'Nome', 'input' => 'line', 'required' => true],
-                         ['key' => 'inicio', 'label' => 'Início', 'input' => 'date', 'required' => true, 'half' => true],
-                         ['key' => 'fim', 'label' => 'Fim', 'input' => 'date', 'required' => true, 'half' => true],
-                         ['key' => 'objetivo', 'label' => 'Objetivo', 'input' => 'line', 'required' => true, 'placeholder' => 'Objetivo em uma frase'],
-                         ['key' => 'metas', 'label' => 'Carrega', 'input' => 'refs', 'refs' => 'metas'],
-                         ['key' => 'metrica', 'label' => 'Métrica principal', 'input' => 'line', 'required' => true,
-                          'placeholder' => 'Métrica: alvo até dd/mm', 'only' => ['tipo' => 'campanha']],
-                         ['key' => 'plataformas', 'label' => 'Plataformas de anúncio', 'input' => 'line', 'half' => true,
-                          'placeholder' => 'Meta, Google... (vazio = sem anúncio)', 'only' => ['tipo' => 'campanha']],
-                         ['key' => 'verba_mensal', 'label' => 'Verba mensal', 'input' => 'money', 'half' => true,
+                         ['key' => 'inicio', 'label' => 'Começa em', 'input' => 'date', 'required' => true, 'half' => true],
+                         ['key' => 'fim', 'label' => 'Termina em', 'input' => 'date', 'required' => true, 'half' => true],
+                         ['key' => 'objetivo', 'label' => 'Para que serve', 'input' => 'line', 'required' => true, 'placeholder' => 'Em uma frase'],
+                         ['key' => 'metas', 'label' => 'Ajuda a bater a meta', 'input' => 'refs', 'refs' => 'metas'],
+                         ['key' => 'metrica', 'label' => 'Como vamos saber se deu certo', 'input' => 'line', 'required' => true,
+                          'placeholder' => 'Ex.: pedidos de orçamento: 60 por mês até 31/03', 'only' => ['tipo' => 'campanha']],
+                         ['key' => 'plataformas', 'label' => 'Onde vai anunciar', 'input' => 'line', 'half' => true,
+                          'placeholder' => 'Meta, Google... (vazio se não tiver anúncio pago)', 'only' => ['tipo' => 'campanha']],
+                         ['key' => 'verba_mensal', 'label' => 'Verba de anúncio por mês', 'input' => 'money', 'half' => true,
                           'placeholder' => 'R$', 'only' => ['tipo' => 'campanha']],
-                         ['key' => 'prepara', 'label' => 'Prepara o terreno para', 'input' => 'refs', 'refs' => 'itens',
+                         ['key' => 'prepara', 'label' => 'Deixa pronto para a campanha', 'input' => 'refs', 'refs' => 'itens',
                           'refs_filter' => ['tipo' => 'campanha'], 'only' => ['tipo' => 'projeto']],
-                         ['key' => 'pronto_quando', 'label' => 'Pronto quando', 'input' => 'text', 'required' => true,
-                          'placeholder' => 'O que precisa estar entregue e aprovado', 'only' => ['tipo' => 'projeto']],
-                         ['key' => 'beneficio', 'label' => 'Benefício', 'input' => 'line', 'required' => true, 'half' => true,
-                          'placeholder' => 'O que deve melhorar depois da entrega', 'only' => ['tipo' => 'projeto']],
-                         ['key' => 'beneficio_em', 'label' => 'Conferir o benefício em', 'input' => 'date', 'required' => true, 'half' => true,
+                         ['key' => 'pronto_quando', 'label' => 'Está pronto quando', 'input' => 'text', 'required' => true,
+                          'placeholder' => 'O que o cliente precisa ver funcionando e aprovar', 'only' => ['tipo' => 'projeto']],
+                         ['key' => 'beneficio', 'label' => 'O que melhora depois de pronto', 'input' => 'line', 'required' => true, 'half' => true,
+                          'placeholder' => 'Ex.: mais pedidos vindos do site', 'only' => ['tipo' => 'projeto']],
+                         ['key' => 'beneficio_em', 'label' => 'Quando vamos conferir se melhorou', 'input' => 'date', 'required' => true, 'half' => true,
                           'only' => ['tipo' => 'projeto']],
                      ]],
                 ],
             ],
             [
                 'key' => 's05', 'num' => '05', 'title' => 'Cronograma',
-                'help' => 'Uma linha por mês ou fase, com o nome da fase e o que acontece. No fim, as duas datas fixas: a revisão do meio do ciclo, feita com o cliente, e o fechamento do ciclo, que vira a base do próximo planejamento.',
+                'help' => 'Uma linha por mês ou fase: o nome da fase e o que acontece nela. No fim, duas datas que todo ciclo tem: a conversa com o cliente no meio do caminho e o fechamento, quando olhamos o resultado de tudo e começamos o próximo planejamento.',
                 'blocks' => [
                     ['type' => 'list', 'key' => 'fases', 'item_label' => 'Fase', 'title_field' => 'nome',
                      'add' => [['label' => 'Fase', 'attrs' => []]],
                      'start' => [[]],
                      'fields' => [
-                         ['key' => 'quando', 'label' => 'Quando', 'input' => 'line', 'required' => true, 'placeholder' => 'Mês/aaaa', 'half' => true],
+                         ['key' => 'quando', 'label' => 'Quando', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: Janeiro/2027', 'half' => true],
                          ['key' => 'nome', 'label' => 'Nome da fase', 'input' => 'line', 'required' => true, 'half' => true],
                          ['key' => 'texto', 'label' => 'O que acontece', 'input' => 'line', 'required' => true],
                      ]],
-                    ['type' => 'field', 'key' => 'revisao_meio', 'label' => 'Revisão do meio do ciclo', 'input' => 'date', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'revisao_meio', 'label' => 'Conversa do meio do ciclo com o cliente', 'input' => 'date', 'required' => true, 'half' => true],
                     ['type' => 'field', 'key' => 'fechamento', 'label' => 'Fechamento do ciclo', 'input' => 'date', 'required' => true, 'half' => true],
                 ],
             ],
             [
                 'key' => 's06', 'num' => '06', 'title' => 'O que precisamos de você',
-                'help' => 'O que depende do cliente, com prazo. Inclui os números de hoje que ficaram como "A confirmar" nas metas. Sem pedido? Deixe a lista vazia.',
+                'help' => 'O que depende do cliente, com prazo: acessos, materiais, aprovações e os números que ficaram "A confirmar" nas metas. Sem pedido? Deixe vazio.',
                 'optional' => true,
                 'blocks' => [
                     ['type' => 'list', 'key' => 'pedidos', 'item_label' => 'Pedido', 'title_field' => 'o_que',
                      'add' => [['label' => 'Pedido', 'attrs' => []]],
                      'fields' => [
-                         ['key' => 'o_que', 'label' => 'O que precisamos', 'input' => 'line', 'required' => true],
+                         ['key' => 'o_que', 'label' => 'O que precisamos do cliente', 'input' => 'line', 'required' => true],
                          ['key' => 'ate', 'label' => 'Até quando', 'input' => 'date', 'required' => true, 'half' => true],
                      ]],
                 ],
@@ -156,7 +156,7 @@ class PlanejamentoSchema extends DocumentSchema
             if (empty($byMeta[$meta['id']])) {
                 $nome = $meta['nome'] ?: 'Meta sem nome';
                 $issues[] = ['section' => 's02', 'level' => 'erro', 'path' => "metas.{$meta['id']}.nome",
-                    'text' => "{$nome}: nenhuma campanha ou projeto carrega esta meta. Marque em \"Carrega\" na seção 04."];
+                    'text' => "{$nome}: nenhuma campanha ou projeto ajuda a bater esta meta. Marque em \"Ajuda a bater a meta\" na seção 04."];
             }
         }
 
@@ -167,11 +167,11 @@ class PlanejamentoSchema extends DocumentSchema
             $nome = $item['nome'] ?: ($item['tipo'] === 'projeto' ? 'Projeto' : 'Campanha') . ' sem nome';
             if ($item['tipo'] === 'campanha' && empty($item['metas'])) {
                 $issues[] = ['section' => 's04', 'level' => 'erro', 'path' => "itens.{$item['id']}.metas",
-                    'text' => "{$nome}: toda campanha carrega pelo menos uma meta."];
+                    'text' => "{$nome}: toda campanha ajuda a bater pelo menos uma meta (marque em \"Ajuda a bater a meta\")."];
             }
             if ($item['tipo'] === 'projeto' && empty($item['metas']) && empty($item['prepara'])) {
                 $issues[] = ['section' => 's04', 'level' => 'erro', 'path' => "itens.{$item['id']}.metas",
-                    'text' => "{$nome}: projeto carrega uma meta ou diz para qual campanha prepara o terreno."];
+                    'text' => "{$nome}: o projeto precisa ajudar a bater uma meta ou deixar tudo pronto para uma campanha."];
             }
             if (!empty($item['inicio']) && !empty($item['fim']) && $item['fim'] < $item['inicio']) {
                 $issues[] = ['section' => 's04', 'level' => 'erro', 'path' => "itens.{$item['id']}.fim",
@@ -179,14 +179,14 @@ class PlanejamentoSchema extends DocumentSchema
             }
             if ($item['tipo'] === 'campanha' && filled($item['plataformas'] ?? null) && empty($item['verba_mensal'])) {
                 $issues[] = ['section' => 's04', 'level' => 'falta', 'path' => "itens.{$item['id']}.verba_mensal",
-                    'text' => "{$nome}: tem plataforma de anúncio mas falta a verba mensal."];
+                    'text' => "{$nome}: diz onde vai anunciar mas falta a verba de anúncio por mês."];
             }
         }
 
         $pending = array_filter($metas, fn ($m) => is_string($m['hoje'] ?? null) && mb_strtolower(trim($m['hoje'])) === mb_strtolower(self::PENDING));
         if ($pending && empty($content['pedidos'])) {
             $issues[] = ['section' => 's06', 'level' => 'falta', 'path' => null,
-                'text' => count($pending) . ' meta(s) com o número de hoje "A confirmar": peça ao cliente aqui.'];
+                'text' => count($pending) . ' meta(s) com "Quanto é hoje" a confirmar: peça esse número ao cliente aqui.'];
         }
 
         return $issues;

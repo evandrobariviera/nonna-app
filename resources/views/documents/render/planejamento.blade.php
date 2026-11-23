@@ -150,14 +150,14 @@ body.sem-guia .guia { display: none; }
           <div class="label">{{ $meta['nome'] }}</div><div class="valor">{{ $meta['alvo'] }}</div>
           <div class="linha">
             <span>Até <b>{{ $d($meta['ate']) }}</b></span>
-            <span>Hoje @if($isPending($meta['hoje']))<span class="pendente">A confirmar</span>@else<b>{{ $meta['hoje'] }}</b>@endif</span>
-            <span>Fonte <b>{{ $meta['fonte'] }}</b></span>
+            <span>Quanto é hoje @if($isPending($meta['hoje']))<span class="pendente">A confirmar</span>@else<b>{{ $meta['hoje'] }}</b>@endif</span>
+            <span>Medido em <b>{{ $meta['fonte'] }}</b></span>
           </div>
           <div class="carrega">
             @forelse($carriers[$meta['id']] ?? [] as $item)
-              @if($loop->first)Carregada por @endif<span class="chip-item {{ $item['tipo'] }}">{{ $item['nome'] }}</span>
+              @if($loop->first)Quem ajuda a bater: @endif<span class="chip-item {{ $item['tipo'] }}">{{ $item['nome'] }}</span>
             @empty
-              <span class="sem-dono">Nenhuma campanha ou projeto carrega esta meta</span>
+              <span class="sem-dono">Nenhuma campanha ou projeto ajuda a bater esta meta</span>
             @endforelse
           </div>
         </div>
@@ -189,12 +189,12 @@ body.sem-guia .guia { display: none; }
           <p>{{ $item['objetivo'] }}</p>
           <div class="medida">
             @if($item['tipo'] === 'campanha')
-              <div><span class="label">Carrega</span>{{ $carrega }}</div>
-              <div><span class="label">Métrica principal</span>{{ $item['metrica'] ?? '' }}</div>
+              <div><span class="label">Ajuda a bater a meta</span>{{ $carrega }}</div>
+              <div><span class="label">Como vamos saber se deu certo</span>{{ $item['metrica'] ?? '' }}</div>
             @else
-              <div><span class="label">{{ $carrega ? 'Carrega' : 'Prepara o terreno para' }}</span>{{ $carrega ?: $prepara }}</div>
-              <div><span class="label">Pronto quando</span>{!! $txt($item['pronto_quando'] ?? '') !!}</div>
-              <div><span class="label">Benefício, conferido em {{ $d($item['beneficio_em'] ?? null) }}</span>{{ $item['beneficio'] ?? '' }}</div>
+              <div><span class="label">{{ $carrega ? 'Ajuda a bater a meta' : 'Deixa pronto para a campanha' }}</span>{{ $carrega ?: $prepara }}</div>
+              <div><span class="label">Está pronto quando</span>{!! $txt($item['pronto_quando'] ?? '') !!}</div>
+              <div><span class="label">O que melhora (conferimos em {{ $d($item['beneficio_em'] ?? null) }})</span>{{ $item['beneficio'] ?? '' }}</div>
             @endif
           </div>
         </div>
@@ -204,7 +204,7 @@ body.sem-guia .guia { display: none; }
       <span class="label rotulo">Verba de anúncios</span>
       <div class="rolagem">
         <table class="tabela">
-          <thead><tr><th>Campanha</th><th>Plataformas</th><th>Verba mensal</th></tr></thead>
+          <thead><tr><th>Campanha</th><th>Onde anuncia</th><th>Verba por mês</th></tr></thead>
           <tbody>
             @foreach($budget['rows'] as $row)
               <tr><td>{{ $row['nome'] }}</td><td>{{ $row['plataformas'] }}</td><td class="valor">{{ $row['verba_mensal'] ? $money($row['verba_mensal']) : '' }}</td></tr>
@@ -223,7 +223,7 @@ body.sem-guia .guia { display: none; }
       @foreach($content['fases'] ?? [] as $fase)
         <div class="mes"><div class="quando">{{ $fase['quando'] }}</div><div><h3>{{ $fase['nome'] }}</h3><p>{{ $fase['texto'] }}</p></div></div>
       @endforeach
-      <div class="mes revisao"><div class="quando">{{ $d($content['revisao_meio'] ?? null) }}</div><div><h3>Revisão do meio do ciclo</h3><p>Com o cliente: o que está no rumo e o que muda.</p></div></div>
+      <div class="mes revisao"><div class="quando">{{ $d($content['revisao_meio'] ?? null) }}</div><div><h3>Conversa do meio do ciclo</h3><p>Com o cliente: o que está no rumo e o que muda.</p></div></div>
       <div class="mes revisao"><div class="quando">{{ $d($content['fechamento'] ?? null) }}</div><div><h3>Fechamento do ciclo</h3><p>Resultado de cada meta, campanha e projeto, e o que levamos para o próximo planejamento.</p></div></div>
     </div>
   </section>

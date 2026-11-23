@@ -62,6 +62,11 @@ class PlanningDrafter
         if ($gathered['files']) {
             $message .= "\n=== Arquivos anexados a esta mensagem ===\n" . implode(', ', array_column($gathered['files'], 'name')) . "\n";
         }
+        // Sempre: o que já está rodando no App, pra não recriar campanha que só continua.
+        if ($running = $this->runningItems($plan)) {
+            $message .= "\n=== CAMPANHAS E PROJETOS DO CLIENTE QUE JÁ EXISTEM NO APP ===\n{$running}\n";
+            $gathered['used'][] = 'Campanhas e projetos em andamento no App';
+        }
 
         $answer = $this->ai->runStructuredWithFiles(
             $agent, $this->instructions($document->schema()), $message, $gathered['files'],
@@ -76,6 +81,25 @@ class PlanningDrafter
         $this->editor->replaceByAgent($document, $content, $userId);
 
         return ['perguntas' => $perguntas, 'used' => $gathered['used'], 'skipped' => $gathered['skipped']];
+    }
+
+    /** Campanhas e projetos do cliente ainda abertos (de qualquer planejamento), em texto. */
+    private function runningItems(MacroPlan $plan): string
+    {
+        $labels = \App\Models\Project::$statuses;
+
+        return \App\Models\Project::where('client_id', $plan->client_id)
+            ->whereIn('status', ['em_planejamento', 'aprovacao', 'em_execucao', 'stand_by'])
+            ->with('macroPlan:id,title')
+            ->orderBy('start_date')
+            ->limit(40)
+            ->get()
+            ->map(fn ($p) => '- ' . ($p->type === 'campanha' ? 'Campanha' : 'Projeto') . ": {$p->title}"
+                . ' | situação: ' . ($labels[$p->status]['label'] ?? $p->status)
+                . ($p->start_date ? ' | ' . $p->start_date->format('d/m/Y') . ' a ' . ($p->end_date?->format('d/m/Y') ?? '?') : '')
+                . ($p->objective ? ' | para que serve: ' . \Illuminate\Support\Str::limit($p->objective, 160) : '')
+                . ($p->macroPlan ? " | do planejamento {$p->macroPlan->title}" : ''))
+            ->implode("\n");
     }
 
     /** Resposta da IA -> conteúdo no formato do modelo (ids gerados aqui; índices viram ligações). */
@@ -161,13 +185,14 @@ AS SEÇÕES DO MODELO (o que vai em cada uma)
 
 REGRAS
 1. Use SOMENTE o que está nas fontes. Nunca invente número, data, verba, plataforma ou nome. Se um número de hoje não foi dito, escreva exatamente "A confirmar" e crie um pedido em "pedidos" quando depender do cliente.
-2. Toda meta tem número (alvo) e data. "Melhorar" ou "aumentar" não é meta: transforme em número só se as fontes derem o número; senão, alvo "A confirmar" e uma pergunta.
+2. META É RESULTADO, NÃO TAREFA. Meta é algo que muda para o cliente e dá para medir: mais pedidos, mais vendas, custo menor, mais visitas. "Publicar artigos", "estruturar a campanha", "fazer o site" são tarefas: viram campanha ou projeto, e a meta é o resultado que eles devem trazer. Toda meta tem quanto (alvo) e até quando. "Melhorar" ou "aumentar" sem número não é meta: use o número das fontes; se não houver, alvo "A confirmar" e uma pergunta. Prefira de 1 a 4 metas que importam de verdade.
 3. Toda meta é carregada por pelo menos uma campanha ou projeto. Toda campanha carrega pelo menos uma meta. Projeto carrega uma meta ou prepara o terreno para uma campanha.
 4. Datas no formato AAAA-MM-DD, dentro do período do ciclo. Revisão do meio do ciclo perto da metade; fechamento perto do fim.
 5. Escreva em português do Brasil, do jeito que se fala no dia a dia: frases curtas, sem jargão de marketing, sem exagero. Texto livre só em parágrafos curtos.
 6. Nunca use nome de pessoa da equipe da agência como responsável; se precisar, use o papel (Estratégia, Tráfego, Criação, Atendimento).
 7. Se o planejamento anterior trouxer resultados ou aprendizados (fechamento), use em "situacao" e "o_que_muda".
-8. "perguntas": de 3 a 8 perguntas objetivas para a equipe responder, sobre o que faltou ou ficou ambíguo nas fontes, cada uma dizendo a seção ("02", "04"...). Nada de pergunta genérica.
+8. CAMPANHAS E PROJETOS: antes de criar um, confira a lista "CAMPANHAS E PROJETOS DO CLIENTE QUE JÁ EXISTEM NO APP". Se o assunto já existe e continua neste ciclo, use EXATAMENTE o mesmo nome e não crie outro parecido. Só crie item para o que foi DECIDIDO nas fontes; ideia comentada mas não decidida vira pergunta, não campanha. Prefira poucos itens bem definidos a muitos pequenos: ajustes de rotina (trocar criativo, testar mensagem) ficam dentro da campanha que já existe.
+9. "perguntas": de 3 a 8 perguntas objetivas para a equipe responder, sobre o que faltou ou ficou ambíguo nas fontes, cada uma dizendo a seção ("02", "04"...). Nada de pergunta genérica.
 
 FORMATO DA RESPOSTA (um único objeto JSON; listas podem ter quantos itens fizerem sentido)
 {

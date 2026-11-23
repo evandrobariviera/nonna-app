@@ -41,39 +41,39 @@ class ProjetoSchema extends DocumentSchema
         return [
             [
                 'key' => 'capa', 'num' => null, 'title' => 'Capa',
-                'help' => 'Nome, tipo e datas do projeto. Nome, datas e objetivo atualizam o projeto no App.',
+                'help' => 'Nome, tipo e datas. O nome, as datas e o "para que serve" atualizam o projeto no resto do App.',
                 'blocks' => [
                     ['type' => 'field', 'key' => 'nome', 'label' => 'Nome do projeto', 'input' => 'line', 'required' => true, 'half' => true],
-                    ['type' => 'field', 'key' => 'tipo_projeto', 'label' => 'Tipo', 'input' => 'select', 'required' => true, 'half' => true,
+                    ['type' => 'field', 'key' => 'tipo_projeto', 'label' => 'Tipo de projeto', 'input' => 'select', 'required' => true, 'half' => true,
                      'options' => ['site' => 'Site', 'automacao' => 'Automação', 'integracao' => 'Integração', 'crm' => 'CRM', 'identidade' => 'Identidade', 'outro' => 'Outro']],
-                    ['type' => 'field', 'key' => 'inicio', 'label' => 'Início', 'input' => 'date', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'inicio', 'label' => 'Começa em', 'input' => 'date', 'required' => true, 'half' => true],
                     ['type' => 'field', 'key' => 'fim', 'label' => 'Entrega prevista', 'input' => 'date', 'required' => true, 'half' => true],
                 ],
             ],
             [
                 'key' => 's01', 'num' => '01', 'title' => 'Objetivo e como saber que deu certo',
-                'help' => 'Projeto é avaliado duas vezes: na entrega (está pronto?) e depois, pelo benefício (valeu a pena?). Pronto quando: o que o cliente precisa ver funcionando e aprovar. Benefício esperado: o que deve melhorar depois da entrega, o número de hoje e quando vamos conferir. Documento técnico: diga se o projeto tem Escopo técnico ou escreva "Não precisa".',
+                'help' => 'Projeto é avaliado duas vezes: na entrega (ficou pronto?) e depois (valeu a pena?). "Está pronto quando" é o que o cliente precisa ver funcionando e aprovar. "O que melhora" é o ganho que esperamos depois da entrega, com quanto é hoje, quanto esperamos e quando vamos conferir.',
                 'blocks' => [
-                    ['type' => 'field', 'key' => 'objetivo', 'label' => 'Objetivo', 'input' => 'line', 'required' => true, 'placeholder' => 'O objetivo em uma frase, começando por um verbo'],
-                    ['type' => 'field', 'key' => 'carrega', 'label' => 'Carrega a meta · ou · Prepara o terreno para', 'input' => 'line', 'required' => true,
-                     'placeholder' => 'Meta do planejamento ou nome da campanha'],
-                    ['type' => 'field', 'key' => 'documento_tecnico', 'label' => 'Documento técnico', 'input' => 'line', 'required' => true,
+                    ['type' => 'field', 'key' => 'objetivo', 'label' => 'Para que serve o projeto', 'input' => 'line', 'required' => true, 'placeholder' => 'Em uma frase, começando por um verbo'],
+                    ['type' => 'field', 'key' => 'carrega', 'label' => 'Ajuda a bater a meta · ou · Deixa pronto para a campanha', 'input' => 'line', 'required' => true,
+                     'placeholder' => 'A meta do planejamento ou o nome da campanha'],
+                    ['type' => 'field', 'key' => 'documento_tecnico', 'label' => 'Precisa de Escopo técnico?', 'input' => 'line', 'required' => true,
                      'placeholder' => 'Escopo técnico do ... ou "Não precisa"'],
-                    ['type' => 'field', 'key' => 'pronto_quando', 'label' => 'Pronto quando', 'input' => 'text', 'required' => true,
+                    ['type' => 'field', 'key' => 'pronto_quando', 'label' => 'Está pronto quando', 'input' => 'text', 'required' => true,
                      'placeholder' => 'O que precisa estar funcionando e aprovado pelo cliente'],
-                    ['type' => 'field', 'key' => 'beneficio', 'label' => 'Benefício esperado', 'input' => 'line', 'required' => true, 'placeholder' => 'O que deve melhorar depois da entrega'],
-                    ['type' => 'field', 'key' => 'beneficio_hoje', 'label' => 'Hoje', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Número de hoje ou "A confirmar"'],
-                    ['type' => 'field', 'key' => 'beneficio_esperado', 'label' => 'Esperado', 'input' => 'line', 'required' => true, 'half' => true],
-                    ['type' => 'field', 'key' => 'conferir_em', 'label' => 'Conferir em', 'input' => 'date', 'required' => true, 'half' => true],
-                    ['type' => 'field', 'key' => 'beneficio_fonte', 'label' => 'De onde vem o número', 'input' => 'line', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'beneficio', 'label' => 'O que melhora depois de pronto', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: mais pedidos vindos do site'],
+                    ['type' => 'field', 'key' => 'beneficio_hoje', 'label' => 'Quanto é hoje', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'O número de agora (ou "A confirmar")'],
+                    ['type' => 'field', 'key' => 'beneficio_esperado', 'label' => 'Quanto esperamos', 'input' => 'line', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'conferir_em', 'label' => 'Quando vamos conferir', 'input' => 'date', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'beneficio_fonte', 'label' => 'Onde medimos esse número', 'input' => 'line', 'required' => true, 'half' => true],
                 ],
             ],
             [
                 'key' => 's02', 'num' => '02', 'title' => 'Escopo',
                 'help' => 'O que o projeto entrega e, tão importante quanto, o que não entrega. O "não entra" evita pedido extra e retrabalho. Um item por linha, sem detalhe técnico.',
                 'blocks' => [
-                    ['type' => 'field', 'key' => 'entra', 'label' => 'Entra', 'input' => 'text', 'required' => true, 'half' => true, 'placeholder' => 'Um item por linha'],
-                    ['type' => 'field', 'key' => 'nao_entra', 'label' => 'Não entra', 'input' => 'text', 'required' => true, 'half' => true, 'placeholder' => 'Um item por linha'],
+                    ['type' => 'field', 'key' => 'entra', 'label' => 'O que entra', 'input' => 'text', 'required' => true, 'half' => true, 'placeholder' => 'Um item por linha'],
+                    ['type' => 'field', 'key' => 'nao_entra', 'label' => 'O que não entra', 'input' => 'text', 'required' => true, 'half' => true, 'placeholder' => 'Um item por linha'],
                 ],
             ],
             [
@@ -85,8 +85,8 @@ class ProjetoSchema extends DocumentSchema
                      'start' => [[]],
                      'fields' => [
                          ['key' => 'nome', 'label' => 'Entrega', 'input' => 'line', 'required' => true],
-                         ['key' => 'area', 'label' => 'Área', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Dev, Design, Web...'],
-                         ['key' => 'data', 'label' => 'Pronta em', 'input' => 'date', 'required' => true, 'half' => true],
+                         ['key' => 'area', 'label' => 'Área que faz', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Dev, Design, Web...'],
+                         ['key' => 'data', 'label' => 'Pronta até', 'input' => 'date', 'required' => true, 'half' => true],
                      ]],
                 ],
             ],
@@ -98,7 +98,7 @@ class ProjetoSchema extends DocumentSchema
                     ['type' => 'list', 'key' => 'cliente_precisa', 'item_label' => 'Pedido', 'title_field' => 'o_que',
                      'add' => [['label' => 'Pedido', 'attrs' => []]],
                      'fields' => [
-                         ['key' => 'o_que', 'label' => 'O que precisamos', 'input' => 'line', 'required' => true],
+                         ['key' => 'o_que', 'label' => 'O que precisamos do cliente', 'input' => 'line', 'required' => true],
                          ['key' => 'ate', 'label' => 'Até quando', 'input' => 'date', 'required' => true, 'half' => true],
                      ]],
                 ],
@@ -112,17 +112,17 @@ class ProjetoSchema extends DocumentSchema
                      'add' => [['label' => 'Sinal de alerta', 'attrs' => []]],
                      'fields' => [
                          ['key' => 'se', 'label' => 'Se acontecer', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: material do cliente atrasado 5 dias'],
-                         ['key' => 'fazemos', 'label' => 'Fazemos', 'input' => 'line', 'required' => true],
-                         ['key' => 'quem', 'label' => 'Quem age', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Papel'],
+                         ['key' => 'fazemos', 'label' => 'O que fazemos', 'input' => 'line', 'required' => true],
+                         ['key' => 'quem', 'label' => 'Quem age', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'O papel: Gestor de Projetos, Web...'],
                      ]],
                 ],
             ],
             [
                 'key' => 's06', 'num' => '06', 'title' => 'Entrega e fechamento',
-                'help' => 'A data em que o cliente aprova a entrega e a data em que conferimos o benefício da seção 01.',
+                'help' => 'A data em que o cliente aprova a entrega e a data em que conferimos se o ganho esperado (seção 01) apareceu.',
                 'blocks' => [
-                    ['type' => 'field', 'key' => 'aceite', 'label' => 'Aceite do cliente', 'input' => 'date', 'required' => true, 'half' => true],
-                    ['type' => 'field', 'key' => 'conferir_beneficio', 'label' => 'Conferir o benefício', 'input' => 'date', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'aceite', 'label' => 'Cliente aprova a entrega em', 'input' => 'date', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'conferir_beneficio', 'label' => 'Conferimos se melhorou em', 'input' => 'date', 'required' => true, 'half' => true],
                 ],
             ],
             [
@@ -147,7 +147,7 @@ class ProjetoSchema extends DocumentSchema
             $issues[] = ['section' => 'capa', 'level' => 'erro', 'path' => 'fim', 'text' => 'A entrega prevista está antes do início.'];
         }
         if (!empty($content['aceite']) && !empty($content['conferir_beneficio']) && $content['conferir_beneficio'] < $content['aceite']) {
-            $issues[] = ['section' => 's06', 'level' => 'erro', 'path' => 'conferir_beneficio', 'text' => 'Conferir o benefício vem depois do aceite do cliente.'];
+            $issues[] = ['section' => 's06', 'level' => 'erro', 'path' => 'conferir_beneficio', 'text' => 'A conferência do ganho vem depois de o cliente aprovar a entrega.'];
         }
 
         return $issues;

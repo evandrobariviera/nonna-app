@@ -1,0 +1,30 @@
+{
+    "novidades": [
+        {
+            "title": "Documentos com linguagem mais simples",
+            "summary": "Os campos do planejamento, da campanha e do projeto ganharam nomes do dia a dia: \"Quanto é hoje\", \"Quanto queremos\", \"Onde medimos esse número\", \"Ajuda a bater a meta\". E o Agente Nonna agora enxerga as campanhas que já estão rodando, para não criar outra igual, e trata meta como resultado, não como tarefa.",
+            "kind": "melhoria",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Planejamento do ciclo — como preencher",
+            "category": "Documentos",
+            "slug": "planejamento-do-ciclo",
+            "body_file": "ajuda-planejamento-do-ciclo.html"
+        },
+        {
+            "title": "Documento de campanha — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-campanha",
+            "body_file": "ajuda-documento-de-campanha.html"
+        },
+        {
+            "title": "Documento de projeto — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-projeto",
+            "body_file": "ajuda-documento-de-projeto.html"
+        }
+    ]
+}
