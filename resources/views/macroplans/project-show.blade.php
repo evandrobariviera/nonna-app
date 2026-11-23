@@ -419,6 +419,7 @@
             'draftKeepsInherited' => true,
         ])
         @include('documents._editor', ['document' => $fieldDocument])
+        @include('documents._tasks', ['document' => $fieldDocument, 'project' => $project])
         @if($mainDocument)
             <p class="text-xs mt-2" style="color:var(--muted)">O documento HTML anterior continua nos Anexos ({{ $mainDocument->filename }}).</p>
         @endif

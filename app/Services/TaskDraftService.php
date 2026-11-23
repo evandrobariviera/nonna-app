@@ -178,6 +178,7 @@ class TaskDraftService
             'origin'        => $origin,
             'created_by'    => $userId,
             'project_phase_id' => $data['project_phase_id'] ?? null,
+            'document_item_id' => $data['document_item_id'] ?? null, // DocumentTasks (peça/entrega do documento)
         ];
 
         // tasks.priority é NOT NULL com default 'normal' no banco — passar

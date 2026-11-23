@@ -275,4 +275,26 @@ class FieldDocumentController extends Controller
             'owner'    => $document->documentable,
         ]);
     }
+
+    /**
+     * Peças da campanha / entregas do projeto viram tarefas (DocumentTasks, etapa D). A tela manda
+     * as linhas escolhidas, já conferidas pela pessoa (título, tipo, data, quem faz).
+     */
+    public function createTasks(Request $request, Project $project, \App\Services\Documents\DocumentTasks $service): JsonResponse
+    {
+        $doc = $project->fieldDocument;
+        abort_unless($doc, 404);
+
+        $data = $request->validate([
+            'rows'                       => 'required|array|min:1|max:60',
+            'rows.*.item_id'             => 'required|string|max:16',
+            'rows.*.title'               => 'required|string|max:300',
+            'rows.*.task_type'           => 'required|in:' . implode(',', array_keys(\App\Models\Task::$types)),
+            'rows.*.due_date'            => 'nullable|date_format:Y-m-d',
+            'rows.*.responsavel_user_id' => 'nullable|integer',
+            'rows.*.executor_user_id'    => 'nullable|integer',
+        ], ['rows.*.task_type.required' => 'Escolha o tipo de cada tarefa.']);
+
+        return response()->json($service->create($doc, $project, $data['rows'], Auth::id()));
+    }
 }

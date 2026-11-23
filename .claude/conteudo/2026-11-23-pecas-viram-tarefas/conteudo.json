@@ -1,0 +1,24 @@
+{
+    "novidades": [
+        {
+            "title": "Peças e entregas viram tarefas com um clique",
+            "summary": "Abaixo do documento da campanha (ou do projeto), o cartão \"Peças viram tarefas\" transforma cada peça (ou entrega) em tarefa, com tipo, data e o contexto do documento na descrição. Você confere, escolhe quem faz e confirma. Substitui o antigo Assistente de Tarefas e não gasta crédito.",
+            "kind": "novidade",
+            "area": "Tarefas"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Documento de campanha — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-campanha",
+            "body_file": "ajuda-documento-de-campanha.html"
+        },
+        {
+            "title": "Documento de projeto — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-projeto",
+            "body_file": "ajuda-documento-de-projeto.html"
+        }
+    ]
+}

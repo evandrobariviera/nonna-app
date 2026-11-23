@@ -27,6 +27,7 @@ class Task extends Model
         'requester_name', 'requester_whatsapp', 'requester_channel',
         'origin', 'is_ticket', 'queued_at', 'clickup_task_id', 'launched_at', 'custom_fields', 'clickup_attachments',
         'task_format_id', 'sprint_points', 'sprint_points_manual', // pontos de sprint (App\Services\Tasks\SprintPoints)
+        'document_item_id', // linha do documento em campos que virou esta tarefa (DocumentTasks)
     ];
 
     protected $casts = [
@@ -113,6 +114,7 @@ class Task extends Model
         'playbook'     => 'Playbook',
         'ai_assistant' => 'Assistente de Tarefas (IA)',
         'agente'       => 'Agente Nonna (IA)',
+        'documento'    => 'Documento da campanha/projeto',
     ];
 
     // Situação = sub-status cru vindo do ClickUp (texto livre). As chaves abaixo são
