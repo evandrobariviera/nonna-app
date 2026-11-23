@@ -578,9 +578,10 @@ class TaskApprovalService
     // Última rodada voltou com ajuste só na legenda (nenhuma peça para refazer).
     private function onlyCaptionToFix(Task $task): bool
     {
+        // reorder(): a relação já vem ordenada da 1ª pra última rodada.
         $last = $task->approvalRounds()
             ->where('status', '!=', 'cancelled')
-            ->orderByDesc('round_number')
+            ->reorder('round_number', 'desc')
             ->first();
 
         return $last
@@ -629,7 +630,7 @@ class TaskApprovalService
         $lastRound = $task->approvalRounds()
             ->where('status', 'changes_requested')
             ->where('type', '!=', 'aviso')
-            ->orderByDesc('round_number')
+            ->reorder('round_number', 'desc')
             ->first();
         if ($lastRound) {
             $lastFiles = TaskAttachment::where('task_id', $task->id)
