@@ -17,8 +17,9 @@ class DocumentDrafter
 {
     public const TRIGGER     = 'documento:rascunho_item';
     private const MAX_TOKENS = 24000;
+    private const MAX_TOKENS_CAMPAIGN = 40000; // raciocínio "high" gasta tokens pensando antes de escrever
 
-    public function __construct(private AiService $ai, private PlanningSources $sources, private DocumentEditor $editor) {}
+    public function __construct(private AiService $ai, private PlanningSources $sources, private DocumentEditor $editor, private CreativeContext $creative) {}
 
     /** @return array{perguntas: array, used: array, skipped: array} */
     public function draft(Document $document, Project $project, array $keys, array $uploadIds, int $userId, string $note = ''): array
@@ -30,6 +31,20 @@ class DocumentDrafter
 
         $keys = array_merge($keys, array_map(fn ($id) => "att:project:{$id}", $uploadIds));
         $gathered = $this->sources->gatherForProject($project, $keys);
+        $isCampaign = $document->kind === 'campanha';
+
+        // Pesquisa de mercado na internet (campanha): concorrentes, como o público fala, regras do setor.
+        if ($isCampaign && !empty($gathered['research'])) {
+            $research = $this->creative->market($document, $project, $userId);
+            if ($research) {
+                $sourcesList = collect($research['sources'])->map(fn ($s) => "- {$s['title']}: {$s['url']}")->implode("\n");
+                $gathered['blocks'][] = ['title' => 'Pesquisa de mercado na internet (' . \Carbon\Carbon::parse($research['at'])->format('d/m/Y') . ')',
+                    'text' => $research['text'] . ($sourcesList ? "\n\nFontes:\n{$sourcesList}" : '')];
+                $gathered['used'][] = 'Pesquisa de mercado na internet';
+            } else {
+                $gathered['skipped'][] = 'Pesquisa na internet (não deu certo desta vez)';
+            }
+        }
         if (!$gathered['blocks'] && !$gathered['files']) {
             throw new \InvalidArgumentException('Nenhuma das fontes marcadas tem conteúdo para ler.');
         }
@@ -51,7 +66,8 @@ class DocumentDrafter
         }
 
         $answer = $this->ai->runStructuredWithFiles($agent, $this->instructions($schema), $message, $gathered['files'],
-            self::MAX_TOKENS, $userId, $project->client_id, self::TRIGGER);
+            $isCampaign ? self::MAX_TOKENS_CAMPAIGN : self::MAX_TOKENS, $userId, $project->client_id, self::TRIGGER,
+            $isCampaign ? 'high' : null);
 
         [$fields, $lists] = $this->toValues($schema, $document->content, $answer);
         $this->editor->fillEmptyByAgent($document, $fields, $lists, $userId);
@@ -131,6 +147,7 @@ class DocumentDrafter
     {
         $map   = SchemaPrompt::map($schema);
         $title = $schema->title();
+        $manual = $schema->kind() === 'campanha' ? "\n\n" . CreativeManual::campaign() . "\n" : '';
 
         return <<<TXT
 Você é o Agente Nonna, da Nonna Agência Digital. Sua tarefa agora é COMPLETAR o rascunho de um documento padrão: {$title}. O documento já nasceu com o que veio do planejamento; você preenche o que está vazio, a partir das fontes que a equipe escolheu. A equipe revisa tudo depois.
@@ -147,7 +164,7 @@ REGRAS
 5. Sinais de alerta fáceis de ver, com prazo ("7 dias sem nenhum pedido"); quem age é um papel (Tráfego, Atendimento, Gestor de Projetos), nunca nome de pessoa.
 6. Português do dia a dia: frases curtas, sem jargão, sem exagero.
 7. "perguntas": de 3 a 8 perguntas objetivas sobre o que faltou, com a seção ("01", "02"...).
-
+{$manual}
 FORMATO DA RESPOSTA (um único objeto JSON)
 {
   "campos": {"chave": valor, ...},                         // só os campos simples que você preencheu

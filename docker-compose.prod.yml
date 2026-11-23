@@ -33,6 +33,9 @@ services:
 
       CACHE_STORE: database
       QUEUE_CONNECTION: database
+      # Job de IA leva até 600s ($timeout): com o padrão de 90s, a fila achava que o job travou e
+      # entregava o mesmo job a outro processo no meio do caminho. Tem que ficar acima de 600.
+      DB_QUEUE_RETRY_AFTER: 700
 
       FILESYSTEM_DISK: r2
       CLOUDFLARE_R2_ACCESS_KEY_ID: ${CLOUDFLARE_R2_ACCESS_KEY_ID}

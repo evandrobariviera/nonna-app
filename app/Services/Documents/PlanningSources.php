@@ -148,6 +148,20 @@ class PlanningSources
         if (filled($project->client->briefing ?? null)) {
             $out[] = ['key' => 'briefing', 'group' => 'Cliente', 'label' => 'Briefing do cliente', 'detail' => 'cadastro do cliente', 'default' => true];
         }
+        // Ferramentas criativas (24/11): só para campanha.
+        if ($project->type === 'campanha') {
+            $creative = app(CreativeContext::class);
+            if ($creative->hasPerformance($project->client)) {
+                $out[] = ['key' => 'dados:performance', 'group' => 'Dados do cliente', 'label' => 'Desempenho real dos anúncios',
+                    'detail' => 'últimos 90 dias na Central de Performance: o que funcionou e o que não', 'default' => true];
+            }
+            if (\App\Models\Project::where('client_id', $project->client_id)->where('id', '!=', $project->id)->where('type', 'campanha')->where('status', '!=', 'cancelado')->exists()) {
+                $out[] = ['key' => 'dados:campanhas', 'group' => 'Dados do cliente', 'label' => 'Outras campanhas do cliente',
+                    'detail' => 'documentos das campanhas anteriores e como fecharam', 'default' => true];
+            }
+            $out[] = ['key' => 'dados:pesquisa', 'group' => 'Pesquisa', 'label' => 'Pesquisa de mercado na internet',
+                'detail' => 'concorrentes da região, como o público fala, regras do setor (uns 100 a 150 créditos a mais; fica guardada 30 dias e não cobra de novo)', 'default' => true];
+        }
         foreach (\App\Models\ProjectAttachment::where('project_id', $project->id)->latest()->get() as $a) {
             $out[] = ['key' => "att:project:{$a->id}", 'group' => 'Anexos', 'label' => $a->filename, 'detail' => 'anexo desta ' . ($project->type === 'campanha' ? 'campanha' : 'página'), 'default' => false];
         }
@@ -181,6 +195,18 @@ class PlanningSources
                 $one = $this->gatherMeetingOrBriefing($project->client, $type, $id, $label);
                 $result['blocks'] = array_merge($result['blocks'], $one['blocks']);
                 $result['used'] = array_merge($result['used'], $one['used']);
+            } elseif ($type === 'dados' && $id === 'performance') {
+                if ($text = app(CreativeContext::class)->performance($project->client)) {
+                    $result['blocks'][] = ['title' => 'Desempenho real dos anúncios do cliente', 'text' => $text];
+                    $result['used'][] = 'Desempenho dos anúncios (90 dias)';
+                }
+            } elseif ($type === 'dados' && $id === 'campanhas') {
+                if ($text = app(CreativeContext::class)->previousCampaigns($project)) {
+                    $result['blocks'][] = ['title' => 'Outras campanhas do cliente (o que já foi tentado)', 'text' => $text];
+                    $result['used'][] = 'Outras campanhas do cliente';
+                }
+            } elseif ($type === 'dados' && $id === 'pesquisa') {
+                $result['research'] = true; // feita pelo DocumentDrafter (precisa do documento e de quem pediu)
             } elseif ($type === 'att') {
                 $att = match ($id) {
                     'project' => \App\Models\ProjectAttachment::find($sub),

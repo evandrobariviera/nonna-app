@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Agente Nonna cria campanha com dados reais e pesquisa de mercado",
+            "summary": "No rascunho da campanha, o Agente Nonna agora lê o desempenho real dos anúncios do cliente (o que trouxe lead barato e o que não), as campanhas anteriores e faz uma pesquisa na internet sobre concorrentes, como o público fala e as regras do setor. Segue um manual criativo novo: grande ideia que só o cliente pode dizer, ângulos diferentes, três ganchos por ângulo e peças como plano de teste.",
+            "kind": "novidade",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Documento de campanha — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-campanha",
+            "body_file": "ajuda-documento-de-campanha.html"
+        }
+    ]
+}

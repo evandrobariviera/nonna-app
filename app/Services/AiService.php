@@ -642,7 +642,8 @@ class AiService
         int $maxTokens,
         ?int $userId,
         ?string $clientId,
-        string $trigger
+        string $trigger,
+        ?string $reasoningEffort = null
     ): array {
         $agent->loadMissing('provider');
         if ($agent->provider->slug !== 'openai') {
@@ -673,6 +674,9 @@ class AiService
         ];
         if (!$this->isReasoningModel($agent->model)) {
             $payload['temperature'] = $agent->temperature;
+        } elseif ($reasoningEffort) {
+            // Trabalho criativo pede pensar mais antes de escrever (rascunho de campanha: "high").
+            $payload['reasoning_effort'] = $reasoningEffort;
         }
 
         [$text, $usage] = $this->guard($agent, function () use ($agent, $apiKey, $payload) {
@@ -700,6 +704,78 @@ class AiService
         }
 
         return $this->parseJsonResponse($text, $agent);
+    }
+
+    /**
+     * Pesquisa na internet (Responses API + ferramenta web_search da OpenAI). Devolve o texto da
+     * pesquisa e as fontes (links citados). Usado pelo Agente Nonna antes de criar campanha:
+     * mercado, concorrentes, como o público fala. Só OpenAI. Cada busca custa à parte na OpenAI
+     * (em torno de US$ 0,01 a 0,03), além dos tokens que ficam no registro de uso.
+     *
+     * @return array{text: string, sources: array<int, array{title: string, url: string}>}
+     */
+    public function webResearch(AiAgent $agent, string $instructions, string $question, int $maxTokens, ?int $userId, ?string $clientId, string $trigger): array
+    {
+        $agent->loadMissing('provider');
+        if ($agent->provider->slug !== 'openai') {
+            throw new \RuntimeException('Pesquisa na internet só funciona com a OpenAI.');
+        }
+        $apiKey = $agent->resolvedApiKey();
+        if (!$apiKey) {
+            throw new \RuntimeException("Agente '{$agent->name}': nenhuma chave de API configurada.");
+        }
+
+        $payload = [
+            'model'             => $agent->model,
+            'instructions'      => $instructions,
+            'input'             => [['role' => 'user', 'content' => $question]],
+            'tools'             => [['type' => 'web_search']],
+            'max_output_tokens' => $maxTokens,
+            'store'             => false,
+        ];
+        if ($this->isReasoningModel($agent->model)) {
+            $payload['reasoning'] = ['effort' => 'medium'];
+        }
+
+        [$result, $usage] = $this->guard($agent, function () use ($agent, $apiKey, $payload) {
+            $response = Http::withToken($apiKey->getApiKey())
+                ->timeout(300)
+                ->post(rtrim($agent->provider->base_url, '/') . '/responses', $payload)
+                ->throw()
+                ->json();
+
+            $text = '';
+            $sources = [];
+            foreach ($response['output'] ?? [] as $item) {
+                if (($item['type'] ?? '') !== 'message') {
+                    continue;
+                }
+                foreach ($item['content'] ?? [] as $part) {
+                    if (($part['type'] ?? '') !== 'output_text') {
+                        continue;
+                    }
+                    $text .= $part['text'];
+                    foreach ($part['annotations'] ?? [] as $a) {
+                        if (($a['type'] ?? '') === 'url_citation' && !empty($a['url'])) {
+                            $sources[$a['url']] = ['title' => (string) ($a['title'] ?? $a['url']), 'url' => $a['url']];
+                        }
+                    }
+                }
+            }
+            $in  = $response['usage']['input_tokens'] ?? 0;
+            $out = $response['usage']['output_tokens'] ?? 0;
+
+            return [['text' => trim($text), 'sources' => array_values($sources)], [
+                'prompt_tokens'     => $in,
+                'cached_tokens'     => $response['usage']['input_tokens_details']['cached_tokens'] ?? 0,
+                'completion_tokens' => $out,
+                'total_tokens'      => $in + $out,
+            ]];
+        });
+
+        $this->logUsage($agent, $usage, $userId, $clientId, $trigger);
+
+        return $result;
     }
 
     private function dispatchStructured(AiAgent $agent, string $apiKey, string $systemPrompt, string $userMessage): array

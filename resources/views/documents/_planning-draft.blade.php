@@ -17,7 +17,7 @@
         <span class="inline-block w-4 h-4 rounded-full animate-spin flex-shrink-0" style="border:2px solid rgba(100,59,142,.25); border-top-color:var(--purple)"></span>
         <div>
             <p class="text-sm font-semibold" style="color:var(--text)">O Agente Nonna está montando o rascunho…</p>
-            <p class="text-xs mt-0.5" style="color:var(--muted)">Leva de 1 a 3 minutos. A página atualiza sozinha; se sair, você recebe aviso no sino.</p>
+            <p class="text-xs mt-0.5" style="color:var(--muted)">Leva de 1 a 4 minutos. A página atualiza sozinha; se sair, você recebe aviso no sino.</p>
         </div>
     </div>
 @endif
@@ -35,7 +35,7 @@
         </button>
         <form x-show="open" method="POST" action="{{ $draftAction }}" enctype="multipart/form-data"
               class="px-5 py-4 space-y-4" style="border-top:1px solid var(--border2)"
-              @submit.prevent="if (await $store.confirmDialog.ask('O agente vai ler as fontes marcadas e preencher {{ $draftWhat }}. Leva de 1 a 3 minutos e gasta em torno de 100 a 200 créditos seus. Começar?')) $el.submit()">
+              @submit.prevent="if (await $store.confirmDialog.ask('O agente vai ler as fontes marcadas e preencher {{ $draftWhat }}. Leva de 1 a 4 minutos e gasta em torno de 100 a 300 créditos seus (campanha com pesquisa na internet fica perto de 300). Começar?')) $el.submit()">
             @csrf
             @if($status === 'erro')
                 <p class="text-xs px-3 py-2" style="background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.25); color:var(--red)">
