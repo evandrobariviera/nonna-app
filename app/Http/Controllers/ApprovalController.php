@@ -95,6 +95,8 @@ class ApprovalController extends Controller
                 'round.task.client',
                 'round.submittedBy',
                 'round.tokens.contact',
+                // O que os outros aprovadores já pediram em cada peça.
+                'round.tokens.feedbacks',
                 // Histórico de todas as rodadas da mesma tarefa (quem aprovou/pediu
                 // ajuste em cada uma) — pra o aprovador ver o quadro completo, não só
                 // a rodada atual.
