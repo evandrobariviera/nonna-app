@@ -5,6 +5,9 @@ namespace App\Services\Documents;
 use App\Models\Document;
 use App\Models\MacroPlan;
 use App\Models\Project;
+use App\Models\FunctionalRole;
+use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -15,6 +18,10 @@ use Illuminate\Support\Facades\DB;
  * Idempotente: o documento criado guarda de onde veio (source_document_id + source_item_id);
  * rodar de novo só cria os itens que ainda não viraram campanha/projeto. Depois de criada, a
  * campanha é dona do próprio documento: mudar o planejamento não sobrescreve nada.
+ *
+ * Ao criar, avisa no sino (só informação, sem pendência) o responsável do planejamento, o
+ * responsável do cliente e o Gestor de Projetos, para lerem o plano e os documentos (23/11:
+ * saiu a pendência de leitura da Revisão Interna; a leitura é depois das campanhas criadas).
  */
 class PlanItemsLauncher
 {
@@ -45,7 +52,7 @@ class PlanItemsLauncher
     public function blockReason(MacroPlan $plan, Document $planDoc): ?string
     {
         if (!in_array($plan->status, self::ALLOWED_STATUSES, true)) {
-            return 'As campanhas e projetos são criados quando o planejamento chega em Aprovação (depois da Revisão Interna).';
+            return 'As campanhas e projetos são criados quando o planejamento chega em Aprovação: mude a situação direto de Em Planejamento para Aprovação.';
         }
         if ($planDoc->schema()->hasBlockingIssues($planDoc->content)) {
             return 'O documento ainda tem regra do modelo quebrada.';
@@ -67,8 +74,9 @@ class PlanItemsLauncher
         $existing = $this->created($planDoc);
         $position = (int) $plan->projects()->max('position');
         $created  = 0;
+        $names    = [];
 
-        DB::connection('pgsql')->transaction(function () use ($plan, $planDoc, $metas, $itens, $existing, $userId, &$position, &$created) {
+        DB::connection('pgsql')->transaction(function () use ($plan, $planDoc, $metas, $itens, $existing, $userId, &$position, &$created, &$names) {
             foreach ($itens as $id => $item) {
                 if (isset($existing[$id]) || blank($item['nome'] ?? null)) {
                     continue;
@@ -96,10 +104,37 @@ class PlanItemsLauncher
                 $this->editor->create($isCampaign ? 'campanha' : 'projeto', $plan->client_id, $project->getMorphClass(), $project->id,
                     $userId, $prefill, 'planejamento', [$planDoc->id, $id]);
                 $created++;
+                $names[] = $item['nome'];
             }
         });
 
+        if ($created) {
+            $this->notifyTeam($plan, $names, $userId);
+        }
+
         return ['created' => $created, 'skipped' => $itens->count() - $created];
+    }
+
+    /** Aviso de leitura: campanhas e projetos criados (kind 'planejamento_lancado', só informação). */
+    private function notifyTeam(MacroPlan $plan, array $names, ?int $userId): void
+    {
+        $ids = $plan->discussionRecipientIds()
+            ->merge(FunctionalRole::where('key', 'gestor_projetos')->first()?->users->pluck('id') ?? [])
+            ->filter()->unique()->reject(fn ($id) => (int) $id === (int) $userId);
+        if ($ids->isEmpty()) {
+            return;
+        }
+        $plan->loadMissing('client');
+        $count = count($names);
+        app(NotificationService::class)->notifyUsers(
+            User::whereIn('id', $ids)->get(),
+            'planejamento_lancado',
+            ($count === 1 ? '1 campanha/projeto criado' : "{$count} campanhas e projetos criados") . ' · ' . ($plan->client?->company_name ?? ''),
+            'Leia o planejamento e o documento de cada um: ' . implode(', ', $names) . '.',
+            route('macroplans.edit', [$plan, 'bloco' => 'bloco3']),
+            $plan,
+            $plan->organization_id,
+        );
     }
 
     private function campaignPrefill(array $item, string $metaNames, $metas): array

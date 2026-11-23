@@ -61,7 +61,7 @@ class InternalNotification extends Model
     /** Só informação — some quando abre; expira sozinho em 3 dias. */
     public const INFO_KINDS = [
         self::KIND_PENDENCY_RESOLVED, 'oportunidade_ganha', 'oportunidade_perdida',
-        'portal_senha_definida', 'cadastro_atualizado',
+        'portal_senha_definida', 'cadastro_atualizado', 'planejamento_lancado',
     ];
 
     /** Lembrete de reunião — some quando abre; expira quando a reunião começa. */
@@ -98,6 +98,7 @@ class InternalNotification extends Model
         self::KIND_PENDENCY_RESOLVED => 'circle-check',
         'project_comment'          => 'message-circle',
         'macro_plan_comment'       => 'messages-square',
+        'planejamento_lancado'     => 'folder-kanban',
         'ajuste_cliente'           => 'rotate-ccw',
         'ia_conta'                 => 'triangle-alert', // crédito/chave da IA (AiService::guard)
         self::KIND_ATA             => 'book-open',
