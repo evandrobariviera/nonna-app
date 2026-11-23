@@ -53,8 +53,10 @@
     </div>
 
     {{-- Gaveta do Agente Nonna (DocumentAssistant): conversa + propostas com Aceitar/Descartar --}}
+    {{-- Teleporte pro body: dentro do card (overflow/transform) o fixed ficava preso no bloco --}}
+    <template x-teleport="body">
     <div x-show="agentOpen" x-cloak class="fixed inset-0" style="z-index:90" @keydown.escape.window="agentOpen = false">
-        <div class="absolute inset-0 bg-black/30" @click="agentOpen = false"></div>
+        <div class="absolute inset-0" style="background:rgba(0,0,0,.3)" @click="agentOpen = false"></div>
         <aside class="absolute right-0 top-0 h-full flex flex-col" style="width:min(460px, 100vw); background:var(--s1); border-left:1px solid var(--border); box-shadow:-12px 0 32px rgba(0,0,0,.15)">
             <div class="px-4 py-3 flex items-center justify-between gap-2" style="border-bottom:1px solid var(--border2)">
                 <div>
@@ -120,6 +122,7 @@
             </form>
         </aside>
     </div>
+    </template>
 
     {{-- Como o cliente vê --}}
     <div x-show="view === 'cliente'" x-cloak>
