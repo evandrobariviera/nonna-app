@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Créditos de IA valem para tudo",
+            "summary": "Os créditos da semana agora contam todo uso de IA que você dispara no App (agente, gerar ATA, conferir documento, assistente de tarefas), não só o chat do agente. Automações e o Seu foco automático continuam de fora. O limite de cada pessoa fica no cadastro dela em Configurações → Equipe.",
+            "kind": "melhoria",
+            "area": "Agente Nonna"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Agente Nonna — como conversar com o App",
+            "category": "Primeiros passos",
+            "slug": "agente-nonna",
+            "body_file": "../2026-11-17-agente-nonna/ajuda-agente-nonna.html"
+        }
+    ]
+}

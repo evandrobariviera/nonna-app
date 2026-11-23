@@ -4,24 +4,30 @@ namespace App\Services\Agent;
 
 use App\Models\AgentCreditGrant;
 use App\Models\AgentCreditLimit;
-use App\Models\AiAgent;
 use App\Models\AiTokenUsage;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 /**
- * Créditos semanais do Agente Nonna. Só o chat do agente gasta crédito (as automações
- * com IA não). O gasto vem do custo real já registrado em ai_token_usage, convertido:
+ * Créditos semanais de IA por pessoa — UNIVERSAIS (decisão 23/11): conta todo uso de IA
+ * que a pessoa dispara, em qualquer tela (agente, gerar ATA, conferir documento,
+ * assistente de tarefas, diagnóstico...). Fica de fora só o que roda sem a pessoa pedir:
+ * automações (gravam user_id = quem CRIOU a automação, por isso o filtro pelo trigger) e o
+ * Seu Foco das 07:30/12:00. O gasto vem do custo real já registrado em ai_token_usage, convertido:
  * US$1 = 1.000 créditos — o time vê só créditos, nunca dinheiro. Semana começa na
  * segunda 00:00. A resposta em andamento sempre termina; o bloqueio vale pra próxima
- * pergunta (AgentController::send).
+ * pergunta (AgentController::send). Limite por pessoa: Configurações › Equipe › Editar.
  */
 class AgentCredits
 {
     public const PER_USD = 1000;
     public const DEFAULT_WEEKLY = 1000; // = US$1 por pessoa por semana (decisão 17/11)
     public const WARN_AT = 0.8;
+
+    /** Triggers que rodam sem a pessoa pedir — não gastam crédito de ninguém. */
+    public const AUTOMATIC_TRIGGERS = ['attention_digest'];
+    public const AUTOMATIC_TRIGGER_PREFIX = 'automation:';
 
     public static function weekStart(): Carbon
     {
@@ -39,15 +45,13 @@ class AgentCredits
     {
         $ids   = $users->pluck('id')->all();
         $week  = self::weekStart();
-        $agent = AiAgent::where('slug', AiAgent::SLUG_NONNA_AGENT)->value('id');
 
         $limits = AgentCreditLimit::whereIn('user_id', $ids)->pluck('weekly_credits', 'user_id');
         $extras = AgentCreditGrant::whereIn('user_id', $ids)->whereDate('week_start', $week->toDateString())
             ->groupBy('user_id')->selectRaw('user_id, sum(credits) as total')->pluck('total', 'user_id');
-        $spent  = $agent
-            ? AiTokenUsage::where('agent_id', $agent)->whereIn('user_id', $ids)->where('created_at', '>=', $week)
-                ->groupBy('user_id')->selectRaw('user_id, sum(estimated_cost_usd) as usd')->pluck('usd', 'user_id')
-            : collect();
+        $spent  = self::countedUsage(AiTokenUsage::query())
+            ->whereIn('user_id', $ids)->where('created_at', '>=', $week)
+            ->groupBy('user_id')->selectRaw('user_id, sum(estimated_cost_usd) as usd')->pluck('usd', 'user_id');
 
         $renews = $week->copy()->addWeek()->locale('pt_BR')->isoFormat('dddd, DD/MM');
         $out = [];
@@ -72,9 +76,17 @@ class AgentCredits
         return $out;
     }
 
+    /** Só o uso que a pessoa disparou (tira automações e o Seu Foco automático). */
+    public static function countedUsage($query)
+    {
+        return $query->where(fn ($q) => $q->whereNull('trigger')->orWhere(fn ($q) => $q
+            ->whereNotIn('trigger', self::AUTOMATIC_TRIGGERS)
+            ->where('trigger', 'not like', self::AUTOMATIC_TRIGGER_PREFIX . '%')));
+    }
+
     public static function blockedMessage(array $status): string
     {
-        return "Seus créditos do Agente Nonna desta semana acabaram ({$status['used']} de {$status['total']}). "
+        return "Seus créditos de IA desta semana acabaram ({$status['used']} de {$status['total']}). "
             . "Eles renovam na {$status['renews']}. Se precisar antes, peça crédito extra a um administrador.";
     }
 }

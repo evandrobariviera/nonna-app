@@ -98,6 +98,8 @@ class ServiceDiagnosticGenerator
             $agent,
             $userMessage,
             context: [],
+            // Gerado pelo botão = gasta crédito de quem apertou (AgentCredits universal).
+            userId: $generatedBy === 'manual' ? auth()->id() : null,
             clientId: $integration->client_id,
             trigger: 'service_diagnostic'
         );

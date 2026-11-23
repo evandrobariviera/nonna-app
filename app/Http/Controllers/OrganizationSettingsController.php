@@ -21,6 +21,9 @@ class OrganizationSettingsController extends Controller
         $org          = app('currentOrganization');
         $integrations = $org->integrations()->orderBy('provider')->orderBy('label')->get();
         $members      = $org->users()->withPivot(['role', 'dashboard_modes'])->with('functionalRoles')->orderBy('name')->get();
+        // Limite semanal de créditos de IA (AgentCredits) — editado no modal da pessoa.
+        $creditLimits = \App\Models\AgentCreditLimit::whereIn('user_id', $members->pluck('id'))
+            ->pluck('weekly_credits', 'user_id');
         $apiTokens    = $org->tokens()->orderByDesc('created_at')->get();
         $aiAgents     = AiAgent::where('is_active', true)->orderBy('name')->get();
         $sectors      = Sector::with('users:id,name')->orderBy('name')->get();
@@ -52,7 +55,7 @@ class OrganizationSettingsController extends Controller
             ->where('created_at', '>=', now()->subDays(7))
             ->count();
 
-        return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens', 'aiAgents', 'notificationTemplates', 'notificationSettings', 'sectors', 'orphanUsers', 'functionalRoles', 'failedDispatches'));
+        return view('settings.index', compact('org', 'integrations', 'members', 'apiTokens', 'aiAgents', 'notificationTemplates', 'notificationSettings', 'sectors', 'orphanUsers', 'functionalRoles', 'failedDispatches', 'creditLimits'));
     }
 
     public function updateNotificationSettings(Request $request): RedirectResponse

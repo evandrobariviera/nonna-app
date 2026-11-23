@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AgentCreditLimit;
 use App\Models\FunctionalRole;
 use App\Models\OrganizationUser;
 use App\Models\User;
@@ -72,6 +73,7 @@ class OrganizationMemberController extends Controller
             'remove_avatar'    => ['nullable', 'boolean'],
             'dashboard_modes'   => ['nullable', 'array'],
             'dashboard_modes.*' => ['in:' . implode(',', array_keys(DashboardModes::configurable()))],
+            'weekly_credits'    => ['nullable', 'integer', 'min:0', 'max:1000000'],
         ]);
 
         $updateData = ['name' => $data['name'], 'email' => $data['email']];
@@ -107,6 +109,14 @@ class OrganizationMemberController extends Controller
         }
 
         $this->syncFunctionalRoles($org->id, $user, $data['function_roles'] ?? []);
+
+        // Créditos de IA por semana (AgentCredits) — vazio = mantém como está.
+        if (isset($data['weekly_credits']) && $request->user()->can('manage-agent-credits')) {
+            AgentCreditLimit::updateOrCreate(
+                ['user_id' => $user->id],
+                ['weekly_credits' => $data['weekly_credits'], 'updated_by' => $request->user()->id],
+            );
+        }
 
         return back()->with('success', 'Usuário atualizado.')->with('tab', 'equipe');
     }

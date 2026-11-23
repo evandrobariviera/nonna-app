@@ -86,16 +86,16 @@
             </div>
         </div>
 
-        {{-- Créditos do Agente Nonna (AgentCredits): saldo semanal por pessoa; só o chat do agente gasta --}}
+        {{-- Créditos de IA (AgentCredits): saldo semanal por pessoa; conta todo uso de IA que a pessoa dispara --}}
         @php $canManageCredits = auth()->user()->can('manage-agent-credits'); @endphp
         <div class="mb-6" style="border:1px solid var(--border2); border-radius:8px; overflow:hidden">
             <div class="px-4 py-3 flex flex-wrap items-center justify-between gap-2"
                  style="background:var(--s2); border-bottom:1px solid var(--border2)">
                 <span class="text-xs font-semibold" style="color:var(--muted); letter-spacing:.05em">
-                    CRÉDITOS DO AGENTE NONNA — SEMANA DE {{ $creditWeek->format('d/m') }} A {{ $creditWeek->copy()->addDays(6)->format('d/m') }}
+                    CRÉDITOS DE IA — SEMANA DE {{ $creditWeek->format('d/m') }} A {{ $creditWeek->copy()->addDays(6)->format('d/m') }}
                 </span>
                 <span class="text-[11px]" style="color:var(--muted)">
-                    Padrão: {{ number_format(\App\Services\Agent\AgentCredits::DEFAULT_WEEKLY, 0, ',', '.') }} por pessoa · renova toda segunda · só o chat do agente gasta crédito
+                    Padrão: {{ number_format(\App\Services\Agent\AgentCredits::DEFAULT_WEEKLY, 0, ',', '.') }} por pessoa · renova toda segunda · conta todo uso de IA que a pessoa dispara (automações e o Seu Foco automático ficam de fora) · limite também no cadastro da pessoa em Configurações › Equipe
                 </span>
             </div>
             <div class="overflow-x-auto">

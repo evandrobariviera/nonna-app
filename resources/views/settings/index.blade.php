@@ -507,6 +507,18 @@
                             </div>
                         </div>
 
+                        {{-- Créditos de IA (AgentCredits) — só na edição; vale pra todo uso de IA que a pessoa dispara. --}}
+                        @can('manage-agent-credits')
+                        <div x-show="editing">
+                            <label class="block text-xs font-semibold mb-1" style="color:var(--muted)">Créditos de IA por semana</label>
+                            <p class="text-xs mb-2" style="color:var(--muted2)">
+                                Vale para tudo de IA que a pessoa usa no App (agente, gerar ATA, conferir documento…). Renova toda segunda. Padrão: {{ number_format(\App\Services\Agent\AgentCredits::DEFAULT_WEEKLY, 0, ',', '.') }}.
+                            </p>
+                            <input type="number" name="weekly_credits" x-model="form.weekly_credits" :disabled="!editing"
+                                   min="0" step="100" class="field w-32 px-3 py-2 text-sm">
+                        </div>
+                        @endcan
+
                         <div class="flex justify-end gap-3 pt-2">
                             <button type="button" @click="close()"
                                     class="px-4 py-2 text-sm font-semibold rounded-lg transition-colors"
@@ -528,11 +540,11 @@
              x-data="{
                 modal: false,
                 editing: null,
-                form: { name: '', email: '', password: '', role: 'member', function_roles: [], dashboard_modes: [], avatar_url: null, remove_avatar: false },
+                form: { name: '', email: '', password: '', role: 'member', function_roles: [], dashboard_modes: [], avatar_url: null, remove_avatar: false, weekly_credits: {{ \App\Services\Agent\AgentCredits::DEFAULT_WEEKLY }} },
                 open(member) {
                     if (member) {
                         this.editing = member;
-                        this.form = { name: member.name, email: member.email, password: '', role: member.role, function_roles: member.function_roles || [], dashboard_modes: member.dashboard_modes || [], avatar_url: member.avatar_url || null, remove_avatar: false };
+                        this.form = { name: member.name, email: member.email, password: '', role: member.role, function_roles: member.function_roles || [], dashboard_modes: member.dashboard_modes || [], avatar_url: member.avatar_url || null, remove_avatar: false, weekly_credits: member.weekly_credits };
                     } else {
                         this.editing = null;
                         this.form = { name: '', email: '', password: '', role: 'member', function_roles: [], dashboard_modes: [], avatar_url: null, remove_avatar: false };
@@ -606,7 +618,7 @@
                                              nenhuma ação, inclusive impossibilitado de ajustar os próprios
                                              papéis funcionais. --}}
                                         <button type="button"
-                                                @click="open({{ json_encode(['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'role' => $role, 'function_roles' => $member->functionalRoles->pluck('key')->all(), 'dashboard_modes' => \App\Support\DashboardModes::availableFor($member->pivot->dashboard_modes, $member->functionalRoles->pluck('key')->all(), false), 'avatar_url' => $member->avatarUrl()]) }})"
+                                                @click="open({{ json_encode(['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'role' => $role, 'function_roles' => $member->functionalRoles->pluck('key')->all(), 'dashboard_modes' => \App\Support\DashboardModes::availableFor($member->pivot->dashboard_modes, $member->functionalRoles->pluck('key')->all(), false), 'avatar_url' => $member->avatarUrl(), 'weekly_credits' => (int) ($creditLimits[$member->id] ?? \App\Services\Agent\AgentCredits::DEFAULT_WEEKLY)]) }})"
                                                 class="btn btn-ghost btn-xs">
                                             Editar
                                         </button>
