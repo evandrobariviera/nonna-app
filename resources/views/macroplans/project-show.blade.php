@@ -82,16 +82,62 @@
         </div>
     @endif
 
-    @include('projects._timeline', ['project' => $project, 'timeline' => $timeline])
-
-    {{-- 3 colunas (06/11, pedido do Evandro) — lida da esquerda pra direita:
-         O QUE É (resumo, equipe, reuniões, anexos) · O PLANO (documento) · O QUE FALTA FAZER
-         (pendências, tarefas, comentários). Em tela média a coluna de ação desce pra baixo do documento (a esquerda ocupa as duas linhas). Sem colunas presas ao rolar (pedido 06/11: o documento já rola sozinho),
-         em duas colunas; no celular fica tudo empilhado. --}}
     @php $projectClient = $project->client ?? $macroplan?->client; @endphp
-    <div class="grid grid-cols-1 gap-5 mb-6 lg:grid-cols-[320px_minmax(0,1fr)] min-[100rem]:grid-cols-[300px_minmax(0,1fr)_360px] items-start">
 
-    <aside class="min-w-0 lg:row-span-2 min-[100rem]:row-span-1">
+    {{-- Página em abas (23/11, mesma organização do planejamento): menu à esquerda + uma área de
+         cada vez. Documento abre primeiro quando existe. ?aba= guarda a aba (sobrevive ao recarregar);
+         eventos que abrem o quadro de tarefas (open-board, open-new-task, task-from-meeting) trocam
+         para a aba Tarefas; #comentarios abre a Discussão. --}}
+    @php
+        $mainDocument  = $project->mainDocument();
+        $fieldDocument = $project->fieldDocument()->with('client:id,company_name')->first();
+        $abas = [
+            'documento'      => ['icon' => 'file-text',       'label' => 'Documento'],
+            'tarefas'        => ['icon' => 'list-checks',     'label' => 'Tarefas', 'count' => $project->tasks->whereNotIn('status', ['concluido', 'cancelado'])->count()],
+            'linha-do-tempo' => ['icon' => 'chart-gantt',     'label' => 'Linha do tempo', 'count' => $project->phases->count() ?: null],
+            'discussao'      => ['icon' => 'messages-square', 'label' => 'Discussão', 'count' => $project->comments->count()],
+            'pendencias'     => ['icon' => 'hourglass',       'label' => 'Pendências', 'count' => $project->pendencies()->open()->count()],
+        ];
+        if ($project->adCampaigns->isNotEmpty()) {
+            $abas['anuncios'] = ['icon' => 'trending-up', 'label' => 'Anúncios', 'count' => $project->adCampaigns->count()];
+        }
+        $abaInicial = request('aba');
+        if (!isset($abas[$abaInicial])) {
+            $abaInicial = request('reuniao_run') ? 'tarefas' : (($fieldDocument || $mainDocument) ? 'documento' : 'tarefas');
+        }
+    @endphp
+    <div x-data="{ aba: @js($abaInicial) }"
+         x-init="if (location.hash === '#comentarios') aba = 'discussao';
+                 $watch('aba', v => { const u = new URL(location.href); u.searchParams.set('aba', v); u.hash = ''; history.replaceState(null, '', u); })"
+         @open-board.window="aba = 'tarefas'" @open-new-task.window="aba = 'tarefas'" @task-from-meeting.window="aba = 'tarefas'"
+         class="proj-tabs mb-6">
+    <style>
+        .proj-tabs { display: flex; flex-direction: column; gap: 1.5rem; align-items: stretch; }
+        .proj-tabs > .proj-side { width: 100%; min-width: 0; }
+        .proj-tabs > .proj-main { flex: 1 1 auto; min-width: 0; width: 100%; }
+        @media (min-width: 64rem) {
+            .proj-tabs { flex-direction: row; align-items: flex-start; }
+            .proj-tabs > .proj-side { width: 300px; flex-shrink: 0; }
+        }
+    </style>
+
+    {{-- MENU + CONTEXTO (esquerda) --}}
+    <aside class="proj-side">
+        <div class="card overflow-hidden mb-5">
+            @foreach($abas as $key => $item)
+                <button type="button" @click="aba = '{{ $key }}'; window.scrollTo({ top: 0, behavior: 'smooth' })"
+                        class="w-full flex items-center gap-3 px-4 py-3 text-left transition-all"
+                        style="border:none; {{ !$loop->last ? 'border-bottom:1px solid var(--border2);' : '' }} background:none; cursor:pointer"
+                        :style="aba === '{{ $key }}' ? 'background:rgba(100, 59, 142,.12); color:var(--purple)' : 'color:var(--muted2)'">
+                    <span class="opacity-60" style="display:inline-flex"><x-icon :name="$item['icon']" size="13" /></span>
+                    <span class="text-xs font-semibold leading-tight">{{ $item['label'] }}</span>
+                    @if(isset($item['count']))
+                        <span class="ml-auto text-xs font-mono" style="color:var(--muted)">{{ $item['count'] }}</span>
+                    @endif
+                </button>
+            @endforeach
+        </div>
+
     {{-- PROGRESSO + DETALHES — mesmo visual do "Faz parte de" da tarefa (tasks/show): rosca,
          datas e régua do período. Contadores data-stat-count são atualizados ao vivo pelo
          drag do quadro (script no fim do arquivo). --}}
@@ -308,32 +354,6 @@
         @endforeach
     </div>
 
-    {{-- CAMPANHAS VINCULADAS — campanhas de anúncio (Meta/Google) correlacionadas
-         a este projeto. Vínculo é feito na própria página da campanha
-         (Projeto Vinculado → campanhas.update-project). --}}
-    @if($project->adCampaigns->isNotEmpty())
-        <div class="card px-5 py-4 mb-5">
-            <p class="card-title mb-3">
-                Campanhas Vinculadas ({{ $project->adCampaigns->count() }})
-            </p>
-            <div class="flex flex-col gap-2">
-                @foreach($project->adCampaigns as $campaign)
-                    <a href="{{ route('campaigns.show', $campaign) }}"
-                       class="flex items-center justify-between gap-3 px-3 py-2.5 transition-colors"
-                       style="background:var(--s2); border:1px solid var(--border2)"
-                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
-                        <div class="min-w-0">
-                            <p class="text-sm font-semibold truncate" style="color:var(--text)">{{ $campaign->name }}</p>
-                            <p class="text-xs mt-0.5" style="color:var(--muted)">{{ $campaign->platform }} · {{ $campaign->adAccount?->account_name ?? $campaign->adAccount?->account_id }}</p>
-                        </div>
-                        <span class="badge badge-{{ $campaign->managementStatusColor() }} flex-shrink-0">{{ $campaign->managementStatusLabel() }}</span>
-                    </a>
-                @endforeach
-            </div>
-        </div>
-    @endif
-
-
     {{-- HISTÓRICO — só ações (status, datas, planejamento, "briefing editado"), nunca o
          conteúdo (ver ProjectObserver). Antes ficava no fim da página, depois do quadro. --}}
     <x-activity-history :activities="$project->activities" class="card px-5 py-4 mb-5" max-height="320px" />
@@ -385,14 +405,14 @@
         </form>
     </div>
 
-    </aside>{{-- /contexto --}}
+    </aside>{{-- /menu + contexto --}}
 
-    {{-- Documento estica até o fim da coluna mais comprida ao lado (pedido 06/11: sobrava vazio embaixo). --}}
-    <div class="min-w-0 self-stretch flex flex-col">
+    <div class="proj-main">
 
+    {{-- ABA DOCUMENTO --}}
+    <div x-show="aba === 'documento'" x-cloak>
     {{-- DOCUMENTO — o HTML da campanha/projeto (campo próprio document_attachment_id). É onde mora o
          briefing, as peças e a mecânica (2026-10). --}}
-    @php $mainDocument = $project->mainDocument(); $fieldDocument = $project->fieldDocument()->with('client:id,company_name')->first(); @endphp
     @if($fieldDocument)
         @php
             $itemDraftState = $fieldDocument->agent_state['draft'] ?? null;
@@ -482,131 +502,156 @@
         @endif
     </div>
     @endif
-    </div>{{-- /documento --}}
-
-    <aside class="min-w-0 lg:col-start-2 min-[100rem]:col-start-3 min-[100rem]:row-start-1 grid grid-cols-1 gap-x-5 xl:grid-cols-2 min-[100rem]:grid-cols-1 items-start">
-    <div class="min-w-0">
-    {{-- PENDÊNCIAS — o que o projeto/campanha está esperando (insumo do cliente, acesso,
-         data...). Ver <x-pendencies-panel>. --}}
-    <div class="mb-5">
-        <x-pendencies-panel :pendable="$project" alias="project" :users="$users" />
-    </div>
-
-
-    {{-- TAREFAS EM FILA, AGRUPADAS POR STATUS — leitura rápida ao lado do documento.
-         Concluídas começam fechadas. O quadro completo (arrastar, editar) fica abaixo. --}}
-    <div class="card mb-5 overflow-hidden" x-data>
-        <div class="px-5 py-3 flex items-center justify-between gap-2" style="border-bottom:1px solid var(--border2)">
-            <span class="text-xs font-semibold uppercase tracking-widest" style="color:var(--muted); letter-spacing:.1em">
-                Tarefas <span style="color:var(--muted2)">{{ $totalTasks }}</span>
-            </span>
-            <button type="button" @click="$dispatch('open-new-task')" class="btn btn-primary btn-xs">+ Nova</button>
-        </div>
-        @if($totalTasks === 0)
-            <p class="px-5 py-4 text-xs" style="color:var(--muted)">Nenhuma tarefa ainda.</p>
-        @endif
-        @foreach(\App\Models\Task::$statuses as $statusKey => $meta)
-            @continue($statusKey === 'cancelado')
-            @php $group = $kanban[$statusKey]; $hex = \App\Models\Task::colorHex($meta['color']); @endphp
-            @continue($group->isEmpty())
-            <div x-data="{ open: {{ $statusKey === 'concluido' ? 'false' : 'true' }} }" style="border-bottom:1px solid var(--border2)">
-                <button type="button" @click="open = !open" class="w-full px-5 py-2 flex items-center justify-between gap-2 text-left" style="background:var(--s2)">
-                    <span class="flex items-center gap-2 text-xs font-bold" style="color:{{ $hex }}">
-                        <span class="rounded-full" style="width:8px; height:8px; background:{{ $hex }}"></span>
-                        {{ $meta['label'] }}
-                    </span>
-                    <span class="text-xs" style="color:var(--muted)">{{ $group->count() }} <span x-text="open ? '▴' : '▾'"></span></span>
-                </button>
-                <div x-show="open" x-cloak>
-                    @foreach($group as $t)
-                        @php $late = $t->due_date && $t->due_date->lt($today) && $statusKey !== 'concluido'; @endphp
-                        <a href="{{ route('tasks.show', $t) }}" class="dd-hover block px-5 py-2 transition-colors" style="border-top:1px solid var(--border2)">
-                            <p class="text-xs font-semibold leading-snug" style="color:var(--text)">{{ $t->title }} <x-pendency-badge :task="$t" class="ml-1" /></p>
-                            <p class="text-xs mt-0.5 flex items-center gap-2" style="color:var(--muted); font-size:11px">
-                                <span class="truncate">{{ $t->executors->map(fn ($u) => \Illuminate\Support\Str::before($u->name, ' '))->join(', ') ?: 'Sem executor' }}</span>
-                                @if($t->due_date)
-                                    <span class="flex-shrink-0 font-mono" style="color:{{ $late ? 'var(--red)' : 'var(--muted)' }}">{{ $t->due_date->format('d/m') }}</span>
-                                @endif
+    {{-- BRIEFINGS --}}
+    @if($project->disciplines)
+        <div x-data="{ open: false }" class="mt-6">
+            <button @click="open = !open"
+                class="text-xs font-mono uppercase tracking-widest transition-colors flex items-center gap-2"
+                style="color:var(--muted)"
+                onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                <span :class="open ? 'rotate-90' : ''" class="transition-transform">▶</span>
+                Briefings por Head <span class="normal-case tracking-normal" style="opacity:.7">· conteúdo anterior (o atual fica no Documento)</span>
+            </button>
+            <div x-show="open" x-cloak class="mt-3 grid gap-3"
+                 style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr))">
+                @foreach($project->disciplines as $disc)
+                    @if($project->hasBriefingFor($disc))
+                        <div class="card px-4 py-4">
+                            <p class="card-title mb-2">
+                                {{ \App\Models\Project::$disciplines[$disc] ?? $disc }}
                             </p>
-                        </a>
-                    @endforeach
-                </div>
-            </div>
-        @endforeach
-    </div>
-    </div>
-    <div class="min-w-0">
-    {{-- COMENTÁRIOS — observações do time sobre a campanha/projeto (ProjectCommentController).
-         Mesmo jeito dos comentários da tarefa; comentário novo avisa a equipe. Só interno. --}}
-    <div class="card px-5 py-4 mb-5" id="comentarios" x-data="{ editId: null }" style="scroll-margin-top:16px">
-        <p class="card-title mb-3 flex items-center gap-2">
-            <x-icon name="message-circle" size="12" /> Comentários
-            @if($project->comments->isNotEmpty())
-                <span class="px-1.5 py-0.5" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $project->comments->count() }}</span>
-            @endif
-        </p>
-
-        <form method="POST" action="{{ route('project-comments.store', $project) }}" class="flex flex-col gap-2 mb-2">
-            @csrf
-            <x-rich-editor name="comment_body" min-height="80px" :upload-url="route('projects.editor-image.store', $project)" />
-            @error('comment_body')<p class="text-xs" style="color:var(--red)">{{ $message }}</p>@enderror
-            <div class="flex items-center justify-between gap-2">
-                <span class="text-xs" style="color:var(--muted2)">A equipe é avisada.</span>
-                <label class="flex items-center gap-2 text-xs ml-auto" style="color:var(--muted)">
-                    <input type="checkbox" name="visible_to_client" value="1">
-                    Visível pro cliente
-                </label>
-                <button type="submit" class="btn btn-primary btn-xs">Comentar</button>
-            </div>
-        </form>
-
-        <div class="flex flex-col" style="max-height:520px; overflow-y:auto">
-            @foreach($project->comments as $comment)
-                <div class="flex gap-2.5 py-3" style="border-top:1px solid var(--border2)">
-                    <x-user-avatar :user="$comment->user" size="7" class="mt-0.5" />
-                    <div class="flex-1 min-w-0">
-                        <div x-show="editId !== '{{ $comment->id }}'">
-                            <div class="flex items-baseline gap-2 mb-1 flex-wrap">
-                                <span class="text-sm font-semibold" style="color:var(--text)">{{ $comment->user?->name ?? '—' }}</span>
-                                <span class="text-xs" style="color:var(--muted2)" title="{{ $comment->created_at->format('d/m/Y H:i') }}">{{ $comment->created_at->diffForHumans() }}</span>
-                                @if($comment->updated_at->ne($comment->created_at))
-                                    <span class="text-xs" style="color:var(--muted2)">(editado)</span>
-                                @endif
-                                <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full" style="{{ $comment->visible_to_client ? 'background:rgba(5,150,105,.1); color:var(--green)' : 'background:var(--s3); color:var(--muted)' }}">{{ $comment->visible_to_client ? 'Visível pro cliente' : 'Interno' }}</span>
-                            </div>
-                            <x-rich-content :value="$comment->body" class="text-sm" style="color:var(--text); line-height:1.6" />
-                            @if($comment->user_id === auth()->id())
-                                <div class="flex items-center gap-3 mt-1.5">
-                                    <button type="button" @click="editId = '{{ $comment->id }}'" class="text-xs font-mono" style="color:var(--muted)">Editar</button>
-                                    <form method="POST" action="{{ route('project-comments.destroy', [$project, $comment]) }}"
-                                          @submit.prevent="if (await $store.confirmDialog.ask('Remover comentário?')) $el.submit()">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="text-xs font-mono" style="color:var(--red)">Remover</button>
-                                    </form>
-                                </div>
-                            @endif
+                            <p class="text-xs whitespace-pre-wrap leading-relaxed" style="color:var(--text)">{{ $project->{'briefing_' . $disc} }}</p>
                         </div>
-                        @if($comment->user_id === auth()->id())
-                            <template x-if="editId === '{{ $comment->id }}'">
-                                <form method="POST" action="{{ route('project-comments.update', [$project, $comment]) }}" class="flex flex-col gap-2">
-                                    @csrf @method('PATCH')
-                                    <x-rich-editor name="comment_body" min-height="80px" :value="$comment->body" :upload-url="route('projects.editor-image.store', $project)" />
-                                    <div class="flex gap-2">
-                                        <button type="submit" class="btn btn-primary btn-xs">Salvar</button>
-                                        <button type="button" @click="editId = null" class="btn btn-ghost btn-xs">Cancelar</button>
-                                    </div>
-                                </form>
-                            </template>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    {{-- BRIEF CRIATIVO (campanhas com brief detalhado) --}}
+    @if($project->isCampaignDetailed())
+        <div x-data="{ open: true }" class="mt-6">
+            <button @click="open = !open"
+                class="text-xs font-mono uppercase tracking-widest transition-colors flex items-center gap-2"
+                style="color:var(--muted)"
+                onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+                <span :class="open ? 'rotate-90' : ''" class="transition-transform">▶</span>
+                Brief Criativo <span class="normal-case tracking-normal" style="opacity:.7">· conteúdo anterior (o atual fica no Documento)</span>
+            </button>
+            <div x-show="open" x-cloak class="mt-3 space-y-4">
+                @if($project->big_idea_titulo || $project->big_idea_manifesto)
+                    <div class="card px-5 py-4">
+                        <p class="card-title mb-2" style="color:var(--purple)">Big Idea</p>
+                        @if($project->big_idea_titulo)
+                            <p class="text-base font-bold mb-2" style="color:var(--text)">{{ $project->big_idea_titulo }}</p>
+                        @endif
+                        @if($project->big_idea_manifesto)
+                            <p class="text-sm whitespace-pre-wrap leading-relaxed" style="color:var(--muted2)">{{ $project->big_idea_manifesto }}</p>
                         @endif
                     </div>
-                </div>
-            @endforeach
-        </div>
-    </div>
-    </div>
-    </aside>{{-- /o que falta fazer --}}
-    </div>{{-- /grid 3 colunas --}}
+                @endif
 
+                @if($project->territorio_alternativo)
+                    <div class="card px-5 py-4">
+                        <p class="card-title mb-2">Território Alternativo (rota B)</p>
+                        <p class="text-sm whitespace-pre-wrap leading-relaxed" style="color:var(--muted2)">{{ $project->territorio_alternativo }}</p>
+                    </div>
+                @endif
+
+                @if($project->racional_estrategico)
+                    <div class="card px-5 py-4">
+                        <p class="card-title mb-2">Racional Estratégico</p>
+                        <p class="text-sm whitespace-pre-wrap leading-relaxed" style="color:var(--text)">{{ $project->racional_estrategico }}</p>
+                    </div>
+                @endif
+
+                @if(!empty($project->tom_comunicacao) || $project->frase_voz)
+                    <div class="card px-5 py-4">
+                        <p class="card-title mb-2">Linha de Comunicação</p>
+                        @if(!empty($project->tom_comunicacao))
+                            <div class="flex flex-wrap gap-1.5 mb-2">
+                                @foreach($project->tom_comunicacao as $tom)
+                                    <span class="px-2.5 py-1 text-xs font-mono rounded-full" style="background:rgba(100, 59, 142,.12); color:var(--purple)">{{ $tom }}</span>
+                                @endforeach
+                            </div>
+                        @endif
+                        @if($project->frase_voz)
+                            <p class="text-sm italic" style="color:var(--muted2)">"{{ $project->frase_voz }}"</p>
+                        @endif
+                    </div>
+                @endif
+
+                @if(!empty($project->angulos))
+                    <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr))">
+                        @foreach($project->angulos as $ang)
+                            <div class="card px-4 py-4">
+                                <p class="text-xs font-bold mb-1" style="color:var(--purple)">{{ $ang['titulo'] ?? '' }}</p>
+                                <p class="text-xs leading-relaxed" style="color:var(--muted2)">{{ $ang['texto'] ?? '' }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                @if($project->assinatura)
+                    <div class="card px-5 py-4 text-center">
+                        <p class="text-base font-bold" style="color:var(--text)">{{ $project->assinatura }}</p>
+                    </div>
+                @endif
+
+                @if(!empty($project->mecanica))
+                    <div class="card px-5 py-4">
+                        <p class="card-title mb-3">Mecânica da Campanha</p>
+                        <div class="space-y-3">
+                            @foreach($project->mecanica as $i => $passo)
+                                <div class="flex gap-3">
+                                    <span class="text-xs font-mono flex-shrink-0" style="color:var(--purple)">{{ $i + 1 }}.</span>
+                                    <div>
+                                        <p class="text-sm font-bold" style="color:var(--text)">{{ $passo['titulo'] ?? '' }}</p>
+                                        <p class="text-xs leading-relaxed" style="color:var(--muted2)">{{ $passo['texto'] ?? '' }}</p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                @if($project->ponto_atencao)
+                    <div class="px-4 py-3 text-xs rounded" style="background:rgba(238, 121, 25,.06); border:1px solid rgba(238, 121, 25,.2); color:var(--orange)">
+                        {{ $project->ponto_atencao }}
+                    </div>
+                @endif
+
+                @if(!empty($project->referencias_visuais))
+                    <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr))">
+                        @foreach($project->referencias_visuais as $ref)
+                            <div class="card px-4 py-4">
+                                <p class="card-title mb-2">{{ $ref['label'] ?? '' }}</p>
+                                <p class="text-xs leading-relaxed" style="color:var(--muted2)">{{ $ref['texto'] ?? '' }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                @if(!empty($project->pecas))
+                    <div class="card px-5 py-4">
+                        <p class="card-title mb-3">Desdobramento em Peças</p>
+                        <ul class="space-y-2">
+                            @foreach($project->pecas as $peca)
+                                <li style="border-bottom:1px solid var(--border2)" class="pb-2">
+                                    <p class="text-sm font-bold" style="color:var(--text)">{{ $peca['nome'] ?? '' }}</p>
+                                    <p class="text-xs leading-relaxed" style="color:var(--muted2)">{{ $peca['direcionamento'] ?? '' }}</p>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
+    </div>
+
+    {{-- ABA TAREFAS --}}
+    <div x-show="aba === 'tarefas'" x-cloak>
     {{-- TAREFAS: Quadro (Kanban) ou Fila (lista) — recolhido quando há documento (a lateral
          já mostra a fila por status); aberto quando não há, pra página não ficar vazia.
          O "+ Nova" da lateral dispara open-new-task e abre o formulário aqui. --}}
@@ -616,7 +661,7 @@
     @endphp
     {{-- fromMeeting: "Criar tarefa" de uma pendência sugerida pela reunião (painel Pendências) —
          abre este formulário com título/descrição preenchidos e marca o item na análise ao salvar. --}}
-    <div x-data="{ addCol: null, editTaskId: null, showDone: false, view: 'quadro', phaseMoved: false, boardOpen: {{ $mainDocument ? 'false' : 'true' }}, fromMeeting: null }"
+    <div x-data="{ addCol: null, editTaskId: null, showDone: false, view: 'quadro', phaseMoved: false, boardOpen: true, fromMeeting: null }"
          @open-board.window="boardOpen = true; $nextTick(() => $el.scrollIntoView({ behavior: 'smooth', block: 'start' }))"
          @open-new-task.window="fromMeeting = null; addCol = 'backlog'; $nextTick(() => $refs.newTaskForm.scrollIntoView({ behavior: 'smooth', block: 'start' }))"
          @if($meetingTask) x-init="setTimeout(() => window.dispatchEvent(new CustomEvent('task-from-meeting', { detail: @js($meetingTask) })), 300)" @endif
@@ -1236,153 +1281,125 @@
     </div>{{-- /x-data kanban --}}
     <x-badge-fill-menu />
     <x-person-fill-menu :users="$users" />
+    </div>
 
-    {{-- BRIEFINGS --}}
-    @if($project->disciplines)
-        <div x-data="{ open: false }" class="mt-6">
-            <button @click="open = !open"
-                class="text-xs font-mono uppercase tracking-widest transition-colors flex items-center gap-2"
-                style="color:var(--muted)"
-                onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
-                <span :class="open ? 'rotate-90' : ''" class="transition-transform">▶</span>
-                Briefings por Head <span class="normal-case tracking-normal" style="opacity:.7">· conteúdo anterior (o atual fica no Documento)</span>
-            </button>
-            <div x-show="open" x-cloak class="mt-3 grid gap-3"
-                 style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr))">
-                @foreach($project->disciplines as $disc)
-                    @if($project->hasBriefingFor($disc))
-                        <div class="card px-4 py-4">
-                            <p class="card-title mb-2">
-                                {{ \App\Models\Project::$disciplines[$disc] ?? $disc }}
-                            </p>
-                            <p class="text-xs whitespace-pre-wrap leading-relaxed" style="color:var(--text)">{{ $project->{'briefing_' . $disc} }}</p>
+    {{-- ABA LINHA DO TEMPO --}}
+    <div x-show="aba === 'linha-do-tempo'" x-cloak>
+    @include('projects._timeline', ['project' => $project, 'timeline' => $timeline])
+    </div>
+
+    {{-- ABA DISCUSSÃO --}}
+    <div x-show="aba === 'discussao'" x-cloak>
+    {{-- COMENTÁRIOS — observações do time sobre a campanha/projeto (ProjectCommentController).
+         Mesmo jeito dos comentários da tarefa; comentário novo avisa a equipe. Só interno. --}}
+    <div class="card px-5 py-4 mb-5" id="comentarios" x-data="{ editId: null }" style="scroll-margin-top:16px">
+        <p class="card-title mb-3 flex items-center gap-2">
+            <x-icon name="message-circle" size="12" /> Comentários
+            @if($project->comments->isNotEmpty())
+                <span class="px-1.5 py-0.5" style="background:var(--s3); border:1px solid var(--border); border-radius:8px; color:var(--muted2)">{{ $project->comments->count() }}</span>
+            @endif
+        </p>
+
+        <form method="POST" action="{{ route('project-comments.store', $project) }}" class="flex flex-col gap-2 mb-2">
+            @csrf
+            <x-rich-editor name="comment_body" min-height="80px" :upload-url="route('projects.editor-image.store', $project)" />
+            @error('comment_body')<p class="text-xs" style="color:var(--red)">{{ $message }}</p>@enderror
+            <div class="flex items-center justify-between gap-2">
+                <span class="text-xs" style="color:var(--muted2)">A equipe é avisada.</span>
+                <label class="flex items-center gap-2 text-xs ml-auto" style="color:var(--muted)">
+                    <input type="checkbox" name="visible_to_client" value="1">
+                    Visível pro cliente
+                </label>
+                <button type="submit" class="btn btn-primary btn-xs">Comentar</button>
+            </div>
+        </form>
+
+        <div class="flex flex-col" style="max-height:520px; overflow-y:auto">
+            @foreach($project->comments as $comment)
+                <div class="flex gap-2.5 py-3" style="border-top:1px solid var(--border2)">
+                    <x-user-avatar :user="$comment->user" size="7" class="mt-0.5" />
+                    <div class="flex-1 min-w-0">
+                        <div x-show="editId !== '{{ $comment->id }}'">
+                            <div class="flex items-baseline gap-2 mb-1 flex-wrap">
+                                <span class="text-sm font-semibold" style="color:var(--text)">{{ $comment->user?->name ?? '—' }}</span>
+                                <span class="text-xs" style="color:var(--muted2)" title="{{ $comment->created_at->format('d/m/Y H:i') }}">{{ $comment->created_at->diffForHumans() }}</span>
+                                @if($comment->updated_at->ne($comment->created_at))
+                                    <span class="text-xs" style="color:var(--muted2)">(editado)</span>
+                                @endif
+                                <span class="text-xs font-semibold px-1.5 py-0.5 rounded-full" style="{{ $comment->visible_to_client ? 'background:rgba(5,150,105,.1); color:var(--green)' : 'background:var(--s3); color:var(--muted)' }}">{{ $comment->visible_to_client ? 'Visível pro cliente' : 'Interno' }}</span>
+                            </div>
+                            <x-rich-content :value="$comment->body" class="text-sm" style="color:var(--text); line-height:1.6" />
+                            @if($comment->user_id === auth()->id())
+                                <div class="flex items-center gap-3 mt-1.5">
+                                    <button type="button" @click="editId = '{{ $comment->id }}'" class="text-xs font-mono" style="color:var(--muted)">Editar</button>
+                                    <form method="POST" action="{{ route('project-comments.destroy', [$project, $comment]) }}"
+                                          @submit.prevent="if (await $store.confirmDialog.ask('Remover comentário?')) $el.submit()">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-xs font-mono" style="color:var(--red)">Remover</button>
+                                    </form>
+                                </div>
+                            @endif
                         </div>
-                    @endif
+                        @if($comment->user_id === auth()->id())
+                            <template x-if="editId === '{{ $comment->id }}'">
+                                <form method="POST" action="{{ route('project-comments.update', [$project, $comment]) }}" class="flex flex-col gap-2">
+                                    @csrf @method('PATCH')
+                                    <x-rich-editor name="comment_body" min-height="80px" :value="$comment->body" :upload-url="route('projects.editor-image.store', $project)" />
+                                    <div class="flex gap-2">
+                                        <button type="submit" class="btn btn-primary btn-xs">Salvar</button>
+                                        <button type="button" @click="editId = null" class="btn btn-ghost btn-xs">Cancelar</button>
+                                    </div>
+                                </form>
+                            </template>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+    </div>
+
+    {{-- ABA PENDÊNCIAS --}}
+    <div x-show="aba === 'pendencias'" x-cloak>
+    {{-- PENDÊNCIAS — o que o projeto/campanha está esperando (insumo do cliente, acesso,
+         data...). Ver <x-pendencies-panel>. --}}
+    <div class="mb-5">
+        <x-pendencies-panel :pendable="$project" alias="project" :users="$users" />
+    </div>
+    </div>
+
+    @if(isset($abas['anuncios']))
+    <div x-show="aba === 'anuncios'" x-cloak>
+    {{-- CAMPANHAS VINCULADAS — campanhas de anúncio (Meta/Google) correlacionadas
+         a este projeto. Vínculo é feito na própria página da campanha
+         (Projeto Vinculado → campanhas.update-project). --}}
+    @if($project->adCampaigns->isNotEmpty())
+        <div class="card px-5 py-4 mb-5">
+            <p class="card-title mb-3">
+                Campanhas Vinculadas ({{ $project->adCampaigns->count() }})
+            </p>
+            <div class="flex flex-col gap-2">
+                @foreach($project->adCampaigns as $campaign)
+                    <a href="{{ route('campaigns.show', $campaign) }}"
+                       class="flex items-center justify-between gap-3 px-3 py-2.5 transition-colors"
+                       style="background:var(--s2); border:1px solid var(--border2)"
+                       onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold truncate" style="color:var(--text)">{{ $campaign->name }}</p>
+                            <p class="text-xs mt-0.5" style="color:var(--muted)">{{ $campaign->platform }} · {{ $campaign->adAccount?->account_name ?? $campaign->adAccount?->account_id }}</p>
+                        </div>
+                        <span class="badge badge-{{ $campaign->managementStatusColor() }} flex-shrink-0">{{ $campaign->managementStatusLabel() }}</span>
+                    </a>
                 @endforeach
             </div>
         </div>
     @endif
-
-    {{-- BRIEF CRIATIVO (campanhas com brief detalhado) --}}
-    @if($project->isCampaignDetailed())
-        <div x-data="{ open: true }" class="mt-6">
-            <button @click="open = !open"
-                class="text-xs font-mono uppercase tracking-widest transition-colors flex items-center gap-2"
-                style="color:var(--muted)"
-                onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
-                <span :class="open ? 'rotate-90' : ''" class="transition-transform">▶</span>
-                Brief Criativo <span class="normal-case tracking-normal" style="opacity:.7">· conteúdo anterior (o atual fica no Documento)</span>
-            </button>
-            <div x-show="open" x-cloak class="mt-3 space-y-4">
-                @if($project->big_idea_titulo || $project->big_idea_manifesto)
-                    <div class="card px-5 py-4">
-                        <p class="card-title mb-2" style="color:var(--purple)">Big Idea</p>
-                        @if($project->big_idea_titulo)
-                            <p class="text-base font-bold mb-2" style="color:var(--text)">{{ $project->big_idea_titulo }}</p>
-                        @endif
-                        @if($project->big_idea_manifesto)
-                            <p class="text-sm whitespace-pre-wrap leading-relaxed" style="color:var(--muted2)">{{ $project->big_idea_manifesto }}</p>
-                        @endif
-                    </div>
-                @endif
-
-                @if($project->territorio_alternativo)
-                    <div class="card px-5 py-4">
-                        <p class="card-title mb-2">Território Alternativo (rota B)</p>
-                        <p class="text-sm whitespace-pre-wrap leading-relaxed" style="color:var(--muted2)">{{ $project->territorio_alternativo }}</p>
-                    </div>
-                @endif
-
-                @if($project->racional_estrategico)
-                    <div class="card px-5 py-4">
-                        <p class="card-title mb-2">Racional Estratégico</p>
-                        <p class="text-sm whitespace-pre-wrap leading-relaxed" style="color:var(--text)">{{ $project->racional_estrategico }}</p>
-                    </div>
-                @endif
-
-                @if(!empty($project->tom_comunicacao) || $project->frase_voz)
-                    <div class="card px-5 py-4">
-                        <p class="card-title mb-2">Linha de Comunicação</p>
-                        @if(!empty($project->tom_comunicacao))
-                            <div class="flex flex-wrap gap-1.5 mb-2">
-                                @foreach($project->tom_comunicacao as $tom)
-                                    <span class="px-2.5 py-1 text-xs font-mono rounded-full" style="background:rgba(100, 59, 142,.12); color:var(--purple)">{{ $tom }}</span>
-                                @endforeach
-                            </div>
-                        @endif
-                        @if($project->frase_voz)
-                            <p class="text-sm italic" style="color:var(--muted2)">"{{ $project->frase_voz }}"</p>
-                        @endif
-                    </div>
-                @endif
-
-                @if(!empty($project->angulos))
-                    <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr))">
-                        @foreach($project->angulos as $ang)
-                            <div class="card px-4 py-4">
-                                <p class="text-xs font-bold mb-1" style="color:var(--purple)">{{ $ang['titulo'] ?? '' }}</p>
-                                <p class="text-xs leading-relaxed" style="color:var(--muted2)">{{ $ang['texto'] ?? '' }}</p>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
-
-                @if($project->assinatura)
-                    <div class="card px-5 py-4 text-center">
-                        <p class="text-base font-bold" style="color:var(--text)">{{ $project->assinatura }}</p>
-                    </div>
-                @endif
-
-                @if(!empty($project->mecanica))
-                    <div class="card px-5 py-4">
-                        <p class="card-title mb-3">Mecânica da Campanha</p>
-                        <div class="space-y-3">
-                            @foreach($project->mecanica as $i => $passo)
-                                <div class="flex gap-3">
-                                    <span class="text-xs font-mono flex-shrink-0" style="color:var(--purple)">{{ $i + 1 }}.</span>
-                                    <div>
-                                        <p class="text-sm font-bold" style="color:var(--text)">{{ $passo['titulo'] ?? '' }}</p>
-                                        <p class="text-xs leading-relaxed" style="color:var(--muted2)">{{ $passo['texto'] ?? '' }}</p>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                @if($project->ponto_atencao)
-                    <div class="px-4 py-3 text-xs rounded" style="background:rgba(238, 121, 25,.06); border:1px solid rgba(238, 121, 25,.2); color:var(--orange)">
-                        {{ $project->ponto_atencao }}
-                    </div>
-                @endif
-
-                @if(!empty($project->referencias_visuais))
-                    <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr))">
-                        @foreach($project->referencias_visuais as $ref)
-                            <div class="card px-4 py-4">
-                                <p class="card-title mb-2">{{ $ref['label'] ?? '' }}</p>
-                                <p class="text-xs leading-relaxed" style="color:var(--muted2)">{{ $ref['texto'] ?? '' }}</p>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
-
-                @if(!empty($project->pecas))
-                    <div class="card px-5 py-4">
-                        <p class="card-title mb-3">Desdobramento em Peças</p>
-                        <ul class="space-y-2">
-                            @foreach($project->pecas as $peca)
-                                <li style="border-bottom:1px solid var(--border2)" class="pb-2">
-                                    <p class="text-sm font-bold" style="color:var(--text)">{{ $peca['nome'] ?? '' }}</p>
-                                    <p class="text-xs leading-relaxed" style="color:var(--muted2)">{{ $peca['direcionamento'] ?? '' }}</p>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-            </div>
-        </div>
+    </div>
     @endif
+
+    </div>{{-- /área da aba --}}
+    </div>{{-- /abas --}}
+
 
 
     {{-- @push precisa ficar dentro do <x-app-layout> — fora dele, o slot já foi
