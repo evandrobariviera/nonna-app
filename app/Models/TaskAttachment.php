@@ -37,7 +37,8 @@ class TaskAttachment extends Model
 
     public function approvalLabel(): string
     {
-        return self::$approvalLabels[$this->approval_status] ?? 'Não enviada';
+        // Sem situação mas já foi numa rodada = histórico de antes da aprovação por peça.
+        return self::$approvalLabels[$this->approval_status] ?? ($this->is_deliverable ? 'Enviada' : 'Não enviada');
     }
 
     public function isSuperseded(): bool

@@ -42,7 +42,8 @@ return new class extends Migration
         ");
 
         // Ajuste antigo que já teve rodada depois = foi refeito (antes não havia
-        // "Substituir"; a equipe subia arquivos novos) → versão anterior.
+        // "Substituir"; a equipe subia arquivos novos) → versão anterior. Só conta
+        // rodada com arquivo novo (Aviso não substitui nada) — ver 2026_11_23_220000.
         DB::connection('pgsql')->statement("
             UPDATE task_attachments a
                SET approval_status = 'superseded'
@@ -52,6 +53,14 @@ return new class extends Migration
                     WHERE r.task_id = a.task_id
                       AND r.round_number > a.round_number
                       AND r.status <> 'cancelled'
+               )
+               AND EXISTS (
+                   SELECT 1
+                     FROM task_attachments b
+                     JOIN task_approval_rounds r0 ON r0.task_id = a.task_id AND r0.round_number = a.round_number
+                    WHERE b.task_id = a.task_id
+                      AND b.kind = 'entregavel'
+                      AND b.created_at > COALESCE(r0.resolved_at, r0.submitted_at)
                )
         ");
     }
