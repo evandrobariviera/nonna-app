@@ -22,7 +22,23 @@
         'decideUrl' => url('/documentos/' . $document->id . '/agente'),
         'chat'      => $document->agent_state['chat'] ?? [],
         'meetings'  => $agentMeetings,
-    ]))" class="card overflow-hidden">
+    ]))" class="card fdoc"
+     x-init="try { const v = localStorage.getItem('fdocAgent'); agentOpen = v === null ? window.matchMedia('(min-width: 96rem)').matches : v === '1'; } catch (e) {}
+             $watch('agentOpen', v => { try { localStorage.setItem('fdocAgent', v ? '1' : '0'); } catch (e) {} if (v) $nextTick(() => scrollChat()); });
+             $nextTick(() => scrollChat())">
+    {{-- Agente Nonna em coluna (24/11, pedido do Evandro: gaveta que abre e fecha cansava). Tela larga:
+         coluna à direita do documento, que acompanha a rolagem. Tela menor: painel logo abaixo do
+         cabeçalho. Abre/fecha pelo botão; a escolha fica guardada no navegador. --}}
+    <style>
+        .fdoc-body { display: flex; flex-direction: column; }
+        .fdoc-main { min-width: 0; flex: 1 1 auto; }
+        .fdoc-agent { order: -1; display: flex; flex-direction: column; max-height: 70vh; border-bottom: 1px solid var(--border2); background: var(--s1); }
+        @media (min-width: 96rem) {
+            .fdoc-body { flex-direction: row; align-items: flex-start; }
+            .fdoc-agent { order: 0; width: 420px; flex-shrink: 0; position: sticky; top: .75rem; height: calc(100vh - 9rem); max-height: none;
+                          border-bottom: 0; border-left: 1px solid var(--border2); }
+        }
+    </style>
 
     {{-- Cabeçalho --}}
     <div class="px-5 py-4 flex items-center justify-between gap-3 flex-wrap" style="border-bottom:1px solid var(--border2)">
@@ -45,85 +61,16 @@
                title="Abre a versão do cliente numa aba própria (dá para imprimir ou salvar em PDF por lá)">
                 <x-icon name="external-link" size="12" /> Abrir em nova aba
             </a>
-            <button type="button" class="btn btn-primary btn-xs flex items-center gap-1" @click="agentOpen = true; $nextTick(() => scrollChat())">
+            <button type="button" class="btn btn-primary btn-xs flex items-center gap-1" @click="agentOpen = !agentOpen"
+                    :title="agentOpen ? 'Esconder o Agente Nonna' : 'Mostrar o Agente Nonna ao lado do documento'">
                 <x-icon name="sparkles" size="12" /> Agente Nonna
                 <span x-show="pendingCount()" x-cloak class="ml-1 px-1.5 rounded-full text-[10px]" style="background:var(--orange); color:#fff" x-text="pendingCount()"></span>
             </button>
         </div>
     </div>
 
-    {{-- Gaveta do Agente Nonna (DocumentAssistant): conversa + propostas com Aceitar/Descartar --}}
-    {{-- Teleporte pro body: dentro do card (overflow/transform) o fixed ficava preso no bloco --}}
-    <template x-teleport="body">
-    <div x-show="agentOpen" x-cloak class="fixed inset-0" style="z-index:90" @keydown.escape.window="agentOpen = false">
-        <div class="absolute inset-0" style="background:rgba(0,0,0,.3)" @click="agentOpen = false"></div>
-        <aside class="absolute right-0 top-0 h-full flex flex-col" style="width:min(460px, 100vw); background:var(--s1); border-left:1px solid var(--border); box-shadow:-12px 0 32px rgba(0,0,0,.15)">
-            <div class="px-4 py-3 flex items-center justify-between gap-2" style="border-bottom:1px solid var(--border2)">
-                <div>
-                    <p class="text-sm font-bold flex items-center gap-1.5" style="color:var(--text)"><x-icon name="sparkles" size="14" style="color:var(--purple)" /> Agente Nonna</p>
-                    <p class="text-xs" style="color:var(--muted)">Ele propõe; você aceita ou descarta. A conversa fica no documento, para a equipe.</p>
-                </div>
-                <button type="button" class="btn btn-ghost btn-xs" @click="agentOpen = false">Fechar</button>
-            </div>
-
-            <div x-ref="chatBox" class="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-                <template x-if="!chat.length">
-                    <div class="text-xs space-y-2" style="color:var(--muted)">
-                        <p>Peça em palavras. Por exemplo:</p>
-                        <p class="px-2 py-1.5 rounded" style="background:var(--s2)">"Junta as duas campanhas de captação numa só."</p>
-                        <p class="px-2 py-1.5 rounded" style="background:var(--s2)">"Confere a reunião e me diz o que mudou." (escolha a reunião embaixo)</p>
-                        <p class="px-2 py-1.5 rounded" style="background:var(--s2)">"Reescreve o foco do ciclo de um jeito mais simples."</p>
-                    </div>
-                </template>
-                <template x-for="(m, mi) in chat" :key="mi">
-                    <div :class="m.role === 'user' ? 'ml-8' : 'mr-4'">
-                        <div class="text-[11px] mb-0.5" style="color:var(--muted)" x-text="m.role === 'user' ? (m.name + (m.meeting ? ' · reunião ' + m.meeting : '')) : 'Agente Nonna'"></div>
-                        <div class="text-sm px-3 py-2 rounded-lg whitespace-pre-line" x-text="m.text"
-                             :style="m.role === 'user' ? 'background:rgba(100,59,142,.10); color:var(--text)' : 'background:var(--s2); color:var(--text)'"></div>
-                        <template x-for="sg in (m.sugestoes || [])" :key="sg.id">
-                            <div class="mt-2 p-3 rounded-lg text-xs" style="border:1.5px dashed var(--orange); background:rgba(238,121,25,.05)"
-                                 :style="sg.status !== 'pendente' ? 'opacity:.6; border-style:solid; border-color:var(--border2)' : ''">
-                                <p class="font-semibold text-sm" style="color:var(--text)" x-text="sg.resumo"></p>
-                                <p x-show="sg.motivo" class="mt-0.5" style="color:var(--muted)" x-text="'Por quê: ' + sg.motivo"></p>
-                                <ul class="mt-2 space-y-1">
-                                    <template x-for="(op, oi) in sg.ops" :key="oi">
-                                        <li class="flex gap-1.5" style="color:var(--text)"><span style="color:var(--orange)">•</span><span x-text="describeOp(op)"></span></li>
-                                    </template>
-                                </ul>
-                                <div class="mt-2 flex items-center gap-2" x-show="sg.status === 'pendente'">
-                                    <button type="button" class="btn btn-primary btn-xs" :disabled="busy" @click="decide(sg.id, true)">Aceitar</button>
-                                    <button type="button" class="btn btn-ghost btn-xs" :disabled="busy" @click="decide(sg.id, false)">Descartar</button>
-                                </div>
-                                <p x-show="sg.status !== 'pendente'" class="mt-2 font-semibold" style="color:var(--muted)"
-                                   x-text="(sg.status === 'aceita' ? 'Aceita' : 'Descartada') + (sg.by ? ' por ' + sg.by : '')"></p>
-                            </div>
-                        </template>
-                    </div>
-                </template>
-                <div x-show="busy" x-cloak class="text-xs flex items-center gap-2" style="color:var(--muted)">
-                    <span class="inline-block w-3 h-3 rounded-full animate-spin" style="border:2px solid rgba(100,59,142,.25); border-top-color:var(--purple)"></span>
-                    O agente está pensando… (de 10 a 40 segundos)
-                </div>
-                <p x-show="agentError" x-cloak class="text-xs" style="color:var(--red)" x-text="agentError"></p>
-            </div>
-
-            <form class="px-4 py-3 space-y-2" style="border-top:1px solid var(--border2)" @submit.prevent="ask()">
-                <select x-model="meetingId" class="field w-full px-2 py-1.5 text-xs" x-show="cfg.meetings.length">
-                    <option value="">Sem reunião (só o documento)</option>
-                    <template x-for="mt in cfg.meetings" :key="mt.id">
-                        <option :value="mt.id" x-text="'Conferir com a reunião de ' + mt.label"></option>
-                    </template>
-                </select>
-                <div class="flex gap-2">
-                    <textarea x-model="question" rows="2" class="field flex-1 px-3 py-2 text-sm" placeholder="Peça ou pergunte…"
-                              @keydown.enter.prevent="if (!$event.shiftKey) ask(); else question += '\n'"></textarea>
-                    <button type="submit" class="btn btn-primary btn-xs self-end" :disabled="busy || !question.trim()">Enviar</button>
-                </div>
-            </form>
-        </aside>
-    </div>
-    </template>
-
+    <div class="fdoc-body">
+    <div class="fdoc-main">
     {{-- Como o cliente vê --}}
     <div x-show="view === 'cliente'" x-cloak>
         <iframe :src="clientSrc" title="Versão do cliente" style="width:100%; height:78vh; border:0; background:#F6F7FB; display:block"></iframe>
@@ -247,6 +194,79 @@
             </section>
         </template>
     </div>
+    </div>{{-- /fdoc-main --}}
+
+    {{-- Agente Nonna (DocumentAssistant): conversa + propostas com Aceitar/Descartar --}}
+    <aside class="fdoc-agent" x-show="agentOpen" x-cloak>
+            <div class="px-4 py-3 flex items-center justify-between gap-2" style="border-bottom:1px solid var(--border2)">
+                <div>
+                    <p class="text-sm font-bold flex items-center gap-1.5" style="color:var(--text)"><x-icon name="sparkles" size="14" style="color:var(--purple)" /> Agente Nonna</p>
+                    <p class="text-xs" style="color:var(--muted)">Ele propõe; você aceita ou descarta. A conversa fica no documento, para a equipe.</p>
+                </div>
+                <button type="button" class="btn btn-ghost btn-xs" @click="agentOpen = false" title="Esconder (o botão Agente Nonna mostra de novo)">Esconder</button>
+            </div>
+
+            <div x-ref="chatBox" class="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+                <template x-if="!chat.length">
+                    <div class="text-xs space-y-2" style="color:var(--muted)">
+                        <p>Peça em palavras. Por exemplo:</p>
+                        <p class="px-2 py-1.5 rounded" style="background:var(--s2)">"Junta as duas campanhas de captação numa só."</p>
+                        <p class="px-2 py-1.5 rounded" style="background:var(--s2)">"Confere a reunião e me diz o que mudou." (escolha a reunião logo abaixo)</p>
+                        <p class="px-2 py-1.5 rounded" style="background:var(--s2)">"Reescreve o foco do ciclo de um jeito mais simples."</p>
+                    </div>
+                </template>
+                <template x-for="(m, mi) in chat" :key="mi">
+                    <div :class="m.role === 'user' ? 'ml-8' : 'mr-4'">
+                        <div class="text-[11px] mb-0.5" style="color:var(--muted)" x-text="m.role === 'user' ? (m.name + (m.meeting ? ' · reunião ' + m.meeting : '')) : 'Agente Nonna'"></div>
+                        <div class="text-sm px-3 py-2 rounded-lg whitespace-pre-line" x-text="m.text"
+                             :style="m.role === 'user' ? 'background:rgba(100,59,142,.10); color:var(--text)' : 'background:var(--s2); color:var(--text)'"></div>
+                        <template x-for="sg in (m.sugestoes || [])" :key="sg.id">
+                            <div class="mt-2 p-3 rounded-lg text-xs" style="border:1.5px dashed var(--orange); background:rgba(238,121,25,.05)"
+                                 :style="sg.status !== 'pendente' ? 'opacity:.6; border-style:solid; border-color:var(--border2)' : ''">
+                                <p class="font-semibold text-sm" style="color:var(--text)" x-text="sg.resumo"></p>
+                                <p x-show="sg.motivo" class="mt-0.5" style="color:var(--muted)" x-text="'Por quê: ' + sg.motivo"></p>
+                                <ul class="mt-2 space-y-1">
+                                    <template x-for="(op, oi) in sg.ops" :key="oi">
+                                        <li class="flex gap-1.5" style="color:var(--text)"><span style="color:var(--orange)">•</span><span x-text="describeOp(op)"></span></li>
+                                    </template>
+                                </ul>
+                                <div class="mt-2 flex items-center gap-2" x-show="sg.status === 'pendente'">
+                                    <button type="button" class="btn btn-primary btn-xs" :disabled="busy" @click="decide(sg.id, true)">Aceitar</button>
+                                    <button type="button" class="btn btn-ghost btn-xs" :disabled="busy" @click="decide(sg.id, false)">Descartar</button>
+                                </div>
+                                <p x-show="sg.status !== 'pendente'" class="mt-2 font-semibold" style="color:var(--muted)"
+                                   x-text="(sg.status === 'aceita' ? 'Aceita' : 'Descartada') + (sg.by ? ' por ' + sg.by : '')"></p>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                <div x-show="busy" x-cloak class="text-xs flex items-center gap-2" style="color:var(--muted)">
+                    <span class="inline-block w-3 h-3 rounded-full animate-spin" style="border:2px solid rgba(100,59,142,.25); border-top-color:var(--purple)"></span>
+                    O agente está pensando… (de 10 a 40 segundos)
+                </div>
+                <p x-show="agentError" x-cloak class="text-xs" style="color:var(--red)" x-text="agentError"></p>
+            </div>
+
+            <form class="px-4 py-3 space-y-2" style="border-top:1px solid var(--border2)" @submit.prevent="ask()">
+                <div x-show="cfg.meetings.length">
+                    <label class="text-[11px] font-semibold uppercase" style="color:var(--muted); letter-spacing:.06em">Ler também uma reunião?</label>
+                    <select x-model="meetingId" class="field w-full px-2 py-1.5 text-xs mt-1">
+                        <option value="">Não: responder só com o documento</option>
+                        <template x-for="mt in cfg.meetings" :key="mt.id">
+                            <option :value="mt.id" x-text="'Sim: ' + mt.label"></option>
+                        </template>
+                    </select>
+                    <p class="text-[11px] mt-1" style="color:var(--muted2)">Escolha uma reunião quando o pedido depender dela: o agente lê a ATA e os trechos da transcrição ligados ao que você pediu (ex.: "o que a reunião mudou no plano?").</p>
+                </div>
+                <textarea x-model="question" rows="3" class="field w-full px-3 py-2 text-sm" placeholder="Peça ou pergunte…"
+                          @keydown.enter.prevent="if (!$event.shiftKey) ask(); else question += '\n'"></textarea>
+                <div class="flex items-center gap-2">
+                    <button type="submit" class="btn btn-primary btn-xs" :disabled="busy || !question.trim()">Enviar</button>
+                    <span class="text-[11px]" style="color:var(--muted2)">Enter envia · Shift+Enter pula linha</span>
+                </div>
+            </form>
+    </aside>
+    </div>{{-- /fdoc-body --}}
 </div>
 
 @once
