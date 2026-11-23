@@ -67,7 +67,7 @@ class TaskApprovalRound extends Model
         return TaskAttachment::where('task_id', $this->task_id)
             ->where('is_deliverable', true)
             ->where('round_number', $this->round_number)
-            ->orderBy('created_at')
+            ->inDisplayOrder()
             ->get();
     }
 

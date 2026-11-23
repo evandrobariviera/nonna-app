@@ -74,8 +74,8 @@
             const lightbox = document.getElementById('attachment-lightbox');
             if (lightbox.parentElement !== document.body) document.body.appendChild(lightbox);
 
-            const row = trigger.closest('tr[data-attachment]');
-            lightboxItems = [...document.querySelectorAll(`tr[data-attachment][data-kind="${row.dataset.kind}"]`)];
+            const row = trigger.closest('[data-attachment]');
+            lightboxItems = [...document.querySelectorAll(`[data-attachment][data-kind="${row.dataset.kind}"]`)];
             lightboxIndex = Math.max(0, lightboxItems.indexOf(row));
             showLightboxItem();
             lightbox.style.display = 'flex';
@@ -124,7 +124,7 @@
         // Remover anexo sem recarregar a página (o reload da tarefa é pesado): DELETE via
         // fetch, some a linha e o contador da seção acompanha.
         async function removeAttachment(form) {
-            const row = form.closest('tr[data-attachment]');
+            const row = form.closest('[data-attachment]');
             const button = form.querySelector('button');
             button.disabled = true;
             try {
@@ -152,12 +152,12 @@
             const kind = row.dataset.kind;
             const tbody = row.parentElement;
             row.remove();
-            const left = document.querySelectorAll(`tr[data-attachment][data-kind="${kind}"]`).length;
+            const left = document.querySelectorAll(`[data-attachment][data-kind="${kind}"]`).length;
             document.querySelectorAll(`[data-attachment-count="${kind}"]`).forEach((el) => {
                 el.textContent = left;
                 if (!left) el.remove();
             });
-            if (!tbody.children.length) tbody.closest('.overflow-x-auto')?.remove();
+            if (!tbody.children.length) (tbody.closest('[data-attachment-list]') || tbody.closest('.overflow-x-auto'))?.remove();
         }
 
         document.addEventListener('alpine:init', () => {
@@ -940,7 +940,7 @@
                       x-data="{ dragging: false }"
                       @dragover.prevent="dragging = true"
                       @dragleave.prevent="dragging = false"
-                      @drop.prevent="dragging = false; $refs.fileInputEntregavel.files = $event.dataTransfer.files; $el.submit()">
+                      @drop.prevent="dragging = false; if ($event.dataTransfer.files.length) { $refs.fileInputEntregavel.files = $event.dataTransfer.files; $el.submit() }">
                     @csrf
                     <input type="hidden" name="kind" value="entregavel">
                     <label
@@ -956,23 +956,74 @@
                 </form>
 
                 @if($entregaveis->count() > 0)
-                    <div class="mt-3 overflow-x-auto">
-                        <table class="nonna-table">
-                            <thead>
-                                <tr>
-                                    <th>Nome do Arquivo</th>
-                                    <th class="hidden sm:table-cell">Tamanho</th>
-                                    <th class="hidden sm:table-cell">Enviado por</th>
-                                    <th class="hidden sm:table-cell">Data</th>
-                                    <th class="text-right">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($entregaveis as $attachment)
-                                    @include('partials._task-attachment-row', ['task' => $task, 'attachment' => $attachment])
-                                @endforeach
-                            </tbody>
-                        </table>
+                    {{-- Miniaturas quadradas, arrastáveis: a ordem daqui é a ordem que o
+                         cliente vê na aprovação (salva sozinha ao soltar). --}}
+                    <style>
+                        .deliv-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(8.5rem, 1fr)); gap:.75rem; counter-reset:deliv; }
+                        .deliv-tile { position:relative; counter-increment:deliv; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--s1); cursor:grab; transition:box-shadow .15s, opacity .15s; }
+                        .deliv-tile:hover { box-shadow:var(--shadow); border-color:var(--border2); }
+                        .deliv-tile.is-dragging { opacity:.35; }
+                        .deliv-tile::before { content:counter(deliv); position:absolute; top:6px; left:6px; z-index:2; min-width:22px; height:22px; padding:0 6px; border-radius:11px; background:var(--purple); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,.25); }
+                        .deliv-thumb { display:block; width:100%; aspect-ratio:1/1; padding:0; border:0; background:var(--s3); cursor:zoom-in; }
+                        .deliv-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+                        .deliv-icon { display:flex; align-items:center; justify-content:center; width:100%; height:100%; font-size:34px; }
+                        .deliv-round { position:absolute; top:6px; right:6px; z-index:2; font-size:10px; font-weight:700; padding:2px 6px; border-radius:6px; background:rgba(255,255,255,.92); color:var(--purple); }
+                        .deliv-foot { display:flex; align-items:center; gap:4px; padding:6px 8px; border-top:1px solid var(--border); }
+                        .deliv-name { flex:1; min-width:0; font-size:11px; color:var(--muted2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+                        .deliv-actions { display:flex; align-items:center; gap:2px; flex-shrink:0; }
+                        .deliv-actions a, .deliv-actions button { width:22px; height:22px; display:flex; align-items:center; justify-content:center; border-radius:5px; font-size:12px; color:var(--muted2); background:transparent; border:0; cursor:pointer; text-decoration:none; }
+                        .deliv-actions a:hover { background:var(--s3); color:var(--text); }
+                        .deliv-del:hover { background:rgba(239,68,68,.12); color:#ef4444 !important; }
+                    </style>
+                    <div data-attachment-list class="mt-4"
+                         x-data="{
+                            dragEl: null, last: '', status: '',
+                            ids() { return [...$refs.grid.querySelectorAll('[data-attachment]')].map(el => el.dataset.id) },
+                            init() { this.last = this.ids().join() },
+                            start(e) {
+                                const t = e.target.closest('[data-attachment]'); if (!t) return;
+                                this.dragEl = t; t.classList.add('is-dragging');
+                                e.dataTransfer.effectAllowed = 'move';
+                                e.dataTransfer.setData('text/plain', t.dataset.id);
+                            },
+                            over(e) {
+                                if (!this.dragEl) return;
+                                const t = e.target.closest('[data-attachment]');
+                                if (!t || t === this.dragEl) return;
+                                const items = [...$refs.grid.children];
+                                $refs.grid.insertBefore(this.dragEl, items.indexOf(this.dragEl) < items.indexOf(t) ? t.nextSibling : t);
+                            },
+                            async end() {
+                                if (!this.dragEl) return;
+                                this.dragEl.classList.remove('is-dragging'); this.dragEl = null;
+                                const ids = this.ids();
+                                if (ids.join() === this.last) return;
+                                this.status = 'Salvando ordem…';
+                                try {
+                                    const res = await fetch('{{ route('task-attachments.reorder', $task) }}', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'X-Requested-With': 'XMLHttpRequest' },
+                                        body: JSON.stringify({ ids }),
+                                    });
+                                    if (!res.ok) throw new Error();
+                                    this.last = ids.join(); this.status = 'Ordem salva ✓';
+                                    setTimeout(() => { if (this.status === 'Ordem salva ✓') this.status = '' }, 2000);
+                                } catch (e) { this.status = 'Não deu pra salvar a ordem. Recarregue a página e tente de novo.' }
+                            },
+                         }">
+                        <p class="text-xs mb-2 flex items-center gap-2" style="color:var(--muted2)">
+                            <span>Arraste para mudar a ordem — é nessa ordem que o cliente vê na aprovação.</span>
+                            <span x-show="status" x-text="status" x-cloak class="font-semibold" style="color:var(--purple)"></span>
+                        </p>
+                        <div class="deliv-grid" x-ref="grid"
+                             @dragstart="start($event)"
+                             @dragover.prevent="over($event)"
+                             @drop.prevent
+                             @dragend="end()">
+                            @foreach($entregaveis as $attachment)
+                                @include('partials._task-deliverable-tile', ['task' => $task, 'attachment' => $attachment])
+                            @endforeach
+                        </div>
                     </div>
                 @endif
             </div>

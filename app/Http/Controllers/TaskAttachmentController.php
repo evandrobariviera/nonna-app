@@ -6,6 +6,7 @@ use App\Models\DeliverableFeedback;
 use App\Models\Task;
 use App\Models\TaskAttachment;
 use App\Services\TaskApprovalService;
+use App\Support\ImageThumbnail;
 use App\Support\UploadOptions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -36,7 +37,14 @@ class TaskAttachmentController extends Controller
                 return back()->with('warning', "Falha ao enviar \"{$file->getClientOriginalName()}\" — o arquivo não foi anexado. Tente de novo; se for um arquivo grande, pode levar um tempo.");
             }
 
+            // Miniatura leve só de imagem — lida do arquivo local do upload, antes
+            // de ele sumir (não baixa de volta do R2).
+            $thumb = str_starts_with((string) $mimeType, 'image/') && $file->getSize() <= 30 * 1024 * 1024
+                ? ImageThumbnail::make((string) file_get_contents($file->getRealPath()), $disk, "tasks/{$task->id}/thumbs")
+                : null;
+
             TaskAttachment::create([
+                'thumb_path'  => $thumb,
                 'task_id'     => $task->id,
                 'filename'    => $file->getClientOriginalName(),
                 'disk_path'   => $path,
@@ -107,6 +115,27 @@ class TaskAttachmentController extends Controller
         }, $zipFilename, ['Content-Type' => 'application/zip']);
     }
 
+    // Ordem dos entregáveis arrastada na tarefa — é a ordem que o cliente vê na
+    // aprovação (TaskAttachment::inDisplayOrder), inclusive em rodada já enviada.
+    public function reorder(Request $request, Task $task)
+    {
+        $data = $request->validate([
+            'ids'   => 'required|array|max:500',
+            'ids.*' => 'string',
+        ]);
+
+        $valid = TaskAttachment::where('task_id', $task->id)
+            ->whereIn('id', $data['ids'])
+            ->pluck('id')
+            ->all();
+
+        foreach (array_values(array_intersect($data['ids'], $valid)) as $i => $id) {
+            TaskAttachment::where('id', $id)->update(['sort_order' => $i + 1]);
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
     public function destroy(Task $task, TaskAttachment $attachment)
     {
         abort_unless($attachment->task_id === $task->id, 403);
@@ -123,7 +152,7 @@ class TaskAttachmentController extends Controller
                 : back()->with('warning', $message);
         }
 
-        Storage::disk($attachment->disk)->delete($attachment->disk_path);
+        Storage::disk($attachment->disk)->delete(array_filter([$attachment->disk_path, $attachment->thumb_path]));
         $attachment->delete();
 
         // A tela da tarefa remove a linha via fetch, sem recarregar a página inteira.

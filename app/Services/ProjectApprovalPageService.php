@@ -160,7 +160,7 @@ class ProjectApprovalPageService
         // por rodada) — casados por tarefa + número da rodada logo abaixo.
         $attachments = TaskAttachment::whereIn('task_id', $rounds->pluck('task_id'))
             ->where('is_deliverable', true)
-            ->orderBy('created_at')
+            ->inDisplayOrder()
             ->get()
             ->groupBy(fn ($a) => $a->task_id . '#' . $a->round_number);
 

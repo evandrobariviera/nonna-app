@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Entregáveis em miniaturas, com ordem arrastável",
+            "summary": "Na tarefa, os Entregáveis viraram miniaturas quadradas e numeradas (carregam rápido, sem baixar a arte inteira). Arraste para mudar a ordem: o cliente vê as peças na aprovação exatamente nessa sequência.",
+            "kind": "melhoria",
+            "area": "Tarefas"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Aprovações do cliente — como funciona",
+            "category": "Aprovações",
+            "slug": "aprovacoes-do-cliente-como-funciona",
+            "body_file": "ajuda-aprovacoes-do-cliente.html"
+        }
+    ]
+}

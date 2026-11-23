@@ -791,6 +791,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('task-attachments.store');
     Route::get('/tarefas/{task}/entregaveis/zip', [TaskAttachmentController::class, 'downloadDeliverablesZip'])
         ->name('task-attachments.zip');
+    Route::post('/tarefas/{task}/anexos/ordem', [TaskAttachmentController::class, 'reorder'])
+        ->name('task-attachments.reorder');
     Route::delete('/tarefas/{task}/anexos/{attachment}', [TaskAttachmentController::class, 'destroy'])
         ->name('task-attachments.destroy');
 

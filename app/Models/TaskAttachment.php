@@ -23,6 +23,7 @@ class TaskAttachment extends Model
     protected $fillable = [
         'task_id', 'filename', 'disk_path', 'disk', 'mime_type', 'size', 'uploaded_by',
         'uploaded_by_contact_id', 'is_deliverable', 'round_number', 'kind',
+        'sort_order', 'thumb_path',
     ];
 
     protected $casts = [
@@ -36,6 +37,27 @@ class TaskAttachment extends Model
         'insumo'     => 'Insumo',
         'entregavel' => 'Entregável',
     ];
+
+    // Ordem que o time arrastou na tarefa (sort_order) — é a ordem que o cliente vê
+    // na aprovação. Sem ordem definida (vazio), vale a ordem de envio, no fim da fila.
+    public function scopeInDisplayOrder($query)
+    {
+        return $query->orderByRaw('sort_order is null')
+            ->orderBy('sort_order')
+            ->orderBy('created_at');
+    }
+
+    // Miniatura leve (ver App\Support\ImageThumbnail); sem ela, o arquivo original.
+    public function thumbUrl(): string
+    {
+        if (!$this->thumb_path) {
+            return $this->url();
+        }
+        if ($this->disk === 'r2') {
+            return Storage::disk('r2')->temporaryUrl($this->thumb_path, now()->addHours(24));
+        }
+        return Storage::disk($this->disk)->url($this->thumb_path);
+    }
 
     public function kindLabel(): string
     {

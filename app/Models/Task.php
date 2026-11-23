@@ -394,7 +394,7 @@ class Task extends Model
 
     public function attachments(): HasMany
     {
-        return $this->hasMany(TaskAttachment::class)->orderBy('created_at');
+        return $this->hasMany(TaskAttachment::class)->inDisplayOrder();
     }
 
     public function firstImageAttachmentUrl(): ?string
