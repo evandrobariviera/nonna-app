@@ -25,7 +25,7 @@ class TaskApprovalToken extends Model
 
     protected $fillable = [
         'round_id', 'contact_id', 'token', 'status', 'channels', 'will_notify',
-        'overall_comment', 'notified_at', 'reviewed_at', 'expires_at', 'manually_decided_by', 'first_opened_at',
+        'overall_comment', 'caption_status', 'caption_comment', 'notified_at', 'reviewed_at', 'expires_at', 'manually_decided_by', 'first_opened_at',
     ];
 
     protected $casts = [

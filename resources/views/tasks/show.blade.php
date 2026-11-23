@@ -916,7 +916,12 @@
             @endif
 
             {{-- ENTREGÁVEIS --}}
-            @php $entregaveis = $task->attachments->where('kind', 'entregavel'); @endphp
+            @php
+                // Versão anterior (substituída) sai da grade e fica no "Versões anteriores".
+                $entregaveis   = $task->attachments->where('kind', 'entregavel')->reject->isSuperseded()->values();
+                $delivPrevious = $task->attachments->where('kind', 'entregavel')->filter->isSuperseded()->values();
+                $delivCounts   = $entregaveis->countBy(fn ($a) => $a->approval_status ?? 'none');
+            @endphp
             <div class="card card-body-lg">
                 <p class="card-title mb-1 flex items-center gap-2">
                     <span class="icon-badge">
@@ -959,15 +964,28 @@
                     {{-- Miniaturas quadradas, arrastáveis: a ordem daqui é a ordem que o
                          cliente vê na aprovação (salva sozinha ao soltar). --}}
                     <style>
-                        .deliv-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(8.5rem, 1fr)); gap:.75rem; counter-reset:deliv; }
-                        .deliv-tile { position:relative; counter-increment:deliv; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--s1); cursor:grab; transition:box-shadow .15s, opacity .15s; }
+                        .deliv-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(8.5rem, 1fr)); gap:.75rem; }
+                        .deliv-tile { position:relative; display:flex; flex-direction:column; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--s1); cursor:grab; transition:box-shadow .15s, opacity .15s; }
                         .deliv-tile:hover { box-shadow:var(--shadow); border-color:var(--border2); }
                         .deliv-tile.is-dragging { opacity:.35; }
-                        .deliv-tile::before { content:counter(deliv); position:absolute; top:6px; left:6px; z-index:2; min-width:22px; height:22px; padding:0 6px; border-radius:11px; background:var(--purple); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,.25); }
+                        .deliv-tile::before { content:attr(data-pos); position:absolute; top:6px; left:6px; z-index:2; min-width:22px; height:22px; padding:0 5px; box-sizing:border-box; border-radius:11px; background:var(--purple); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,.25); }
                         .deliv-thumb { display:block; width:100%; aspect-ratio:1/1; padding:0; border:0; background:var(--s3); cursor:zoom-in; }
                         .deliv-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
                         .deliv-icon { display:flex; align-items:center; justify-content:center; width:100%; height:100%; font-size:34px; }
-                        .deliv-round { position:absolute; top:6px; right:6px; z-index:2; font-size:10px; font-weight:700; padding:2px 6px; border-radius:6px; background:rgba(255,255,255,.92); color:var(--purple); }
+                        .deliv-ver { position:absolute; top:6px; right:6px; z-index:2; font-size:10px; font-weight:800; padding:2px 6px; border-radius:6px; background:var(--purple); color:#fff; }
+                        {{-- Situação da peça na aprovação: faixa colorida logo abaixo da miniatura. --}}
+                        .deliv-state { font-size:10px; font-weight:700; letter-spacing:.02em; padding:3px 8px; background:var(--s3); color:var(--muted2); }
+                        .deliv-pending .deliv-state { background:rgba(100, 59, 142,.1); color:var(--purple); }
+                        .deliv-approved .deliv-state { background:rgba(34,197,94,.12); color:#16a34a; }
+                        .deliv-changes_requested { border-color:var(--orange); box-shadow:0 0 0 1px var(--orange); }
+                        .deliv-changes_requested .deliv-state { background:var(--orange); color:#fff; }
+                        .deliv-ask { padding:6px 8px; background:rgba(238, 121, 25,.07); font-size:11px; line-height:1.4; color:var(--text); max-height:5.6em; overflow:hidden; }
+                        .deliv-ask p { margin:0 0 2px; }
+                        .deliv-replace label { display:block; margin:6px 8px 0; padding:5px 0; text-align:center; font-size:11px; font-weight:700; color:#fff; background:var(--orange); border-radius:6px; cursor:pointer; }
+                        .deliv-replace label:hover { opacity:.88; }
+                        .deliv-filter { font-size:11px; font-weight:600; padding:3px 9px; border-radius:999px; border:1px solid var(--border2); background:transparent; color:var(--muted2); cursor:pointer; }
+                        .deliv-filter.on { background:var(--purple); border-color:var(--purple); color:#fff; }
+                        .deliv-foot { margin-top:auto; }
                         .deliv-foot { display:flex; align-items:center; gap:4px; padding:6px 8px; border-top:1px solid var(--border); }
                         .deliv-name { flex:1; min-width:0; font-size:11px; color:var(--muted2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
                         .deliv-actions { display:flex; align-items:center; gap:2px; flex-shrink:0; }
@@ -977,9 +995,13 @@
                     </style>
                     <div data-attachment-list class="mt-4"
                          x-data="{
-                            dragEl: null, last: '', status: '',
+                            dragEl: null, last: '', status: '', filter: 'all',
                             ids() { return [...$refs.grid.querySelectorAll('[data-attachment]')].map(el => el.dataset.id) },
-                            init() { this.last = this.ids().join() },
+                            renumber() { $refs.grid.querySelectorAll('[data-attachment]').forEach((el, i) => el.dataset.pos = i + 1) },
+                            init() {
+                                this.last = this.ids().join();
+                                new MutationObserver(() => this.renumber()).observe($refs.grid, { childList: true });
+                            },
                             start(e) {
                                 const t = e.target.closest('[data-attachment]'); if (!t) return;
                                 this.dragEl = t; t.classList.add('is-dragging');
@@ -1015,15 +1037,48 @@
                             <span>Arraste para mudar a ordem — é nessa ordem que o cliente vê na aprovação.</span>
                             <span x-show="status" x-text="status" x-cloak class="font-semibold" style="color:var(--purple)"></span>
                         </p>
+
+                        {{-- Filtro por situação — com pacote grande, o designer vai direto
+                             no que voltou com ajuste. Só aparece se houver mais de uma situação. --}}
+                        @if($delivCounts->count() > 1)
+                            <div class="flex flex-wrap gap-1.5 mb-3">
+                                <button type="button" class="deliv-filter" :class="filter === 'all' && 'on'" @click="filter = 'all'">Todas ({{ $entregaveis->count() }})</button>
+                                @foreach(['changes_requested' => 'Ajuste pedido', 'pending' => 'Com o cliente', 'approved' => 'Aprovadas', 'none' => 'Não enviadas'] as $key => $label)
+                                    @if($delivCounts->get($key))
+                                        <button type="button" class="deliv-filter" :class="filter === '{{ $key }}' && 'on'" @click="filter = '{{ $key }}'">{{ $label }} ({{ $delivCounts->get($key) }})</button>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @endif
+
                         <div class="deliv-grid" x-ref="grid"
                              @dragstart="start($event)"
                              @dragover.prevent="over($event)"
                              @drop.prevent
                              @dragend="end()">
                             @foreach($entregaveis as $attachment)
-                                @include('partials._task-deliverable-tile', ['task' => $task, 'attachment' => $attachment])
+                                @include('partials._task-deliverable-tile', ['task' => $task, 'attachment' => $attachment, 'pos' => $loop->iteration])
                             @endforeach
                         </div>
+
+                        @if($delivPrevious->isNotEmpty())
+                            <details class="mt-4">
+                                <summary class="text-xs font-semibold cursor-pointer" style="color:var(--muted2)">Versões anteriores ({{ $delivPrevious->count() }}) — já substituídas</summary>
+                                <div class="mt-2 flex flex-col gap-1">
+                                    @foreach($delivPrevious as $old)
+                                        <a href="{{ $old->downloadUrl() }}" class="flex items-center gap-2 text-xs px-2 py-1.5" style="border:1px solid var(--border); border-radius:6px; color:var(--text); text-decoration:none">
+                                            @if($old->isImage())
+                                                <img src="{{ $old->thumbUrl() }}" alt="" loading="lazy" style="width:28px; height:28px; object-fit:cover; border-radius:4px">
+                                            @else
+                                                <span style="width:28px; text-align:center">{{ $old->icon() }}</span>
+                                            @endif
+                                            <span class="truncate">{{ $old->filename }}</span>
+                                            <span class="ml-auto flex-shrink-0" style="color:var(--muted)">v{{ $old->version }}@if($old->round_number) · Rodada #{{ $old->round_number }}@endif ↓</span>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </details>
+                        @endif
                     </div>
                 @endif
             </div>
@@ -1041,7 +1096,18 @@
                     <div class="px-4 py-3 flex items-start gap-3 text-sm font-semibold"
                          style="background:rgba(238, 121, 25,.07); border:1px solid rgba(238, 121, 25,.3); color:var(--orange)">
                         <span class="flex-shrink-0 text-base">✎</span>
-                        <span>O cliente solicitou ajustes na Rodada #{{ $latestReview->round_number }}. Revise os feedbacks abaixo antes de reenviar.</span>
+                        @php
+                            $roundFiles = $task->attachments->where('is_deliverable', true)->where('round_number', $latestReview->round_number);
+                            $toRedo     = $task->attachments->where('kind', 'entregavel')->where('approval_status', 'changes_requested')->count();
+                        @endphp
+                        <span>
+                            O cliente solicitou ajustes na Rodada #{{ $latestReview->round_number }}.
+                            @if($roundFiles->count() > 1 && $toRedo > 0 && $toRedo < $roundFiles->count())
+                                Só {{ $toRedo === 1 ? '1 peça voltou' : "{$toRedo} peças voltaram" }} (em laranja nos Entregáveis) — use "Substituir" em cada uma; as outras já estão aprovadas.
+                            @else
+                                Revise os feedbacks abaixo antes de reenviar.
+                            @endif
+                        </span>
                     </div>
                 @endif
 
@@ -1134,7 +1200,26 @@
                                                         </div>
                                                     @endif
 
-                                                    @if(!$token->overall_comment)
+                                                    {{-- Ajuste por peça / só na legenda --}}
+                                                    @if($token->caption_status === 'changes_requested')
+                                                        <div class="px-3 py-2" style="background:rgba(238, 121, 25,.06); border-left:3px solid var(--orange)">
+                                                            <p class="text-xs font-semibold mb-1" style="color:var(--orange)">Legenda</p>
+                                                            <p class="text-sm whitespace-pre-wrap" style="color:var(--text)">{{ $token->caption_comment }}</p>
+                                                        </div>
+                                                    @endif
+                                                    @foreach($token->feedbacks->where('status', 'changes_requested') as $fb)
+                                                        <div class="px-3 py-2 flex gap-3 items-start" style="background:rgba(238, 121, 25,.06); border-left:3px solid var(--orange)">
+                                                            @if($fb->attachment?->isImage())
+                                                                <img src="{{ $fb->attachment->thumbUrl() }}" alt="" loading="lazy" style="width:40px; height:40px; object-fit:cover; border-radius:4px; flex-shrink:0">
+                                                            @endif
+                                                            <div class="min-w-0">
+                                                                <p class="text-xs font-semibold mb-1 truncate" style="color:var(--orange)">{{ $fb->attachment?->filename ?? 'Peça removida' }}</p>
+                                                                <p class="text-sm whitespace-pre-wrap" style="color:var(--text)">{{ $fb->comment }}</p>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+
+                                                    @if(!$token->overall_comment && $token->feedbacks->isEmpty() && $token->caption_status !== 'changes_requested')
                                                         <p class="text-xs" style="color:var(--muted)">Sem comentários.</p>
                                                     @endif
                                                 </div>

@@ -56,6 +56,9 @@
                  $deliverables vem vazio (ver ApprovalController::submit()). --}}
             @if($deliverables->isNotEmpty())
                 <div style="margin-top:16px; text-align:left">
+                    @if($approvalToken->round->status === 'changes_requested')
+                        <p style="font-size:12px; color:var(--muted); margin:0 0 8px">As peças aprovadas já podem ser baixadas:</p>
+                    @endif
                     @foreach($deliverables as $file)
                         <a href="{{ $file->downloadUrl() }}" class="file-link">
                             <span style="font-size:20px">{{ $file->icon() }}</span>

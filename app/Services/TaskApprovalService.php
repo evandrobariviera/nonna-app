@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ClientContact;
 use App\Models\Contact;
+use App\Models\DeliverableFeedback;
 use App\Models\Task;
 use App\Models\TaskActivity;
 use App\Models\TaskApprovalRound;
@@ -62,6 +63,19 @@ class TaskApprovalService
             // depois, mesmo dia), porque esse guard sempre devolvia false. Só o
             // Aviso AINDA NÃO ENVIADO pode ser substituído — Aviso já enviado ou
             // rodada de aprovação normal pending não mexe (decisão real em jogo).
+            // Rodada normal ainda não enviada (Aguardando Envio): arquivo que chega
+            // depois entra nela — ex: designer substituindo várias peças uma a uma.
+            if (!$pendingRound->isAviso() && !$pendingRound->sent_at && !empty($attachmentIds)) {
+                $this->settlePreviousVersions($task, $attachmentIds);
+                TaskAttachment::whereIn('id', $attachmentIds)->where('task_id', $task->id)->update([
+                    'is_deliverable'  => true,
+                    'round_number'    => $pendingRound->round_number,
+                    'approval_status' => 'pending',
+                ]);
+
+                return false;
+            }
+
             if (!$pendingRound->isAviso() || $pendingRound->sent_at || empty($attachmentIds)) {
                 return false;
             }
@@ -71,6 +85,23 @@ class TaskApprovalService
 
         $submitter = Auth::user();
         if (!$submitter) {
+            return false;
+        }
+
+        // Cliente pediu ajuste só na legenda (nenhuma peça voltou): a rodada nova
+        // leva só a legenda corrigida — não é Aviso, ainda pede decisão.
+        if (empty($attachmentIds) && $this->onlyCaptionToFix($task)) {
+            $this->submitForApproval($task, $submitter, []);
+            session()->flash('success', 'Tarefa "' . $task->title . '" entrou em Aprovação com a legenda corrigida — envie pro cliente na Central de Aprovações.');
+
+            return true;
+        }
+
+        // Tem peça com ajuste pedido e nenhum arquivo novo: não é Aviso — falta subir
+        // a versão corrigida (botão "Substituir" na peça).
+        if (empty($attachmentIds) && TaskAttachment::where('task_id', $task->id)->where('kind', 'entregavel')->where('approval_status', 'changes_requested')->exists()) {
+            session()->flash('warning', 'Tarefa "' . $task->title . '" tem peça com ajuste pedido pelo cliente — use "Substituir" na peça para subir a versão corrigida; a rodada nova é criada quando ela chegar.');
+
             return false;
         }
 
@@ -120,9 +151,11 @@ class TaskApprovalService
 
         $roundNumber = $task->approvalRounds()->count() + 1;
 
+        $this->settlePreviousVersions($task, $attachmentIds);
+
         TaskAttachment::whereIn('id', $attachmentIds)
             ->where('task_id', $task->id)
-            ->update(['is_deliverable' => true, 'round_number' => $roundNumber]);
+            ->update(['is_deliverable' => true, 'round_number' => $roundNumber, 'approval_status' => 'pending']);
 
         $round = TaskApprovalRound::create([
             'task_id'      => $task->id,
@@ -268,7 +301,7 @@ class TaskApprovalService
         TaskAttachment::where('task_id', $round->task_id)
             ->where('kind', 'entregavel')
             ->where('round_number', $round->round_number)
-            ->update(['is_deliverable' => false]);
+            ->update(['is_deliverable' => false, 'approval_status' => null]);
 
         if ($wasPending) {
             $round->task->update(['status' => 'revisao_interna', 'situation' => 'Revisão Interna']);
@@ -324,16 +357,37 @@ class TaskApprovalService
     }
 
     /**
-     * Registra a decisão de um contato sobre a rodada inteira (todos os
-     * arquivos + legenda juntos, não peça por peça — decidido com o Evandro:
-     * pra granularidade por peça, a orientação é separar em tarefas distintas).
-     * Depois verifica se todos os aprovadores já responderam (unanimidade).
+     * Registra a decisão de um contato. Desde 23/11 dá pra pedir ajuste peça por
+     * peça (pacote de 60 cards não volta inteiro por causa de um): $pieces =
+     * [attachment_id => comentário] das peças marcadas, $captionComment = ajuste
+     * só na legenda. Sem nada marcado e decisão "changes_requested" = ajuste
+     * geral (todas as peças voltam, como antes). Depois verifica se todos os
+     * aprovadores já responderam (unanimidade).
+     *
+     * @param  array<string, string>  $pieces
      */
-    public function submitDecision(TaskApprovalToken $token, string $status, ?string $comment = null): void
+    public function submitDecision(TaskApprovalToken $token, string $status, ?string $comment = null, array $pieces = [], ?string $captionComment = null): void
     {
+        $roundFileIds = $token->round->deliverables()->pluck('id')->all();
+        $pieces = array_intersect_key($pieces, array_flip($roundFileIds));
+        $captionAsked = filled($captionComment);
+
+        if ($pieces || $captionAsked) {
+            $status = 'changes_requested';
+        }
+
+        foreach ($pieces as $attachmentId => $pieceComment) {
+            DeliverableFeedback::updateOrCreate(
+                ['token_id' => $token->id, 'attachment_id' => $attachmentId],
+                ['status' => 'changes_requested', 'comment' => trim((string) $pieceComment)],
+            );
+        }
+
         $token->update([
             'status'          => $status,
             'overall_comment' => $comment,
+            'caption_status'  => $captionAsked ? 'changes_requested' : null,
+            'caption_comment' => $captionAsked ? trim($captionComment) : null,
             'reviewed_at'     => now(),
         ]);
 
@@ -465,7 +519,16 @@ class TaskApprovalService
     {
         $round->update(['status' => $status, 'resolved_at' => now()]);
 
-        $round->task->update($status === 'changes_requested'
+        $this->applyPieceVerdicts($round, $status);
+
+        // Rodada aprovada, mas ainda sobrou peça de rodada anterior com ajuste pedido
+        // que não foi substituída → a tarefa continua em ajuste (falta refazer algo).
+        $stillToFix = $status === 'approved' && TaskAttachment::where('task_id', $round->task_id)
+            ->where('kind', 'entregavel')
+            ->where('approval_status', 'changes_requested')
+            ->exists();
+
+        $round->task->update($status === 'changes_requested' || $stillToFix
             ? ['status' => 'ajuste_alteracao', 'situation' => 'Alteração Solicitada']
             : ['status' => 'despacho_agendamento']);
 
@@ -477,6 +540,108 @@ class TaskApprovalService
             $this->notifyApproved($round);
         } else {
             $this->notifyChangesRequested($round);
+        }
+    }
+
+    /**
+     * Situação de cada peça quando a rodada fecha. Aprovada → todas aprovadas.
+     * Com ajuste: volta só a peça que algum aprovador marcou (vários aprovadores:
+     * basta um pedir). Ajuste "geral" (sem peça marcada nem só a legenda, ou
+     * decisão pelo Portal/manual) devolve todas, como era antes.
+     */
+    private function applyPieceVerdicts(TaskApprovalRound $round, string $status): void
+    {
+        $fileIds = $round->deliverables()->pluck('id');
+        if ($fileIds->isEmpty()) {
+            return;
+        }
+
+        if ($status !== 'changes_requested') {
+            TaskAttachment::whereIn('id', $fileIds)->update(['approval_status' => 'approved']);
+            return;
+        }
+
+        $asking = $round->tokens()->where('will_notify', true)->where('status', 'changes_requested')->get();
+        $pieceAsks = DeliverableFeedback::whereIn('token_id', $asking->pluck('id'))
+            ->where('status', 'changes_requested')
+            ->get(['token_id', 'attachment_id']);
+
+        $general = $round->portal_decision === 'changes_requested'
+            || $asking->contains(fn ($t) => !$pieceAsks->contains('token_id', $t->id) && $t->caption_status !== 'changes_requested');
+
+        $changed = $general ? $fileIds : $pieceAsks->pluck('attachment_id')->unique()->intersect($fileIds);
+
+        TaskAttachment::whereIn('id', $changed)->update(['approval_status' => 'changes_requested']);
+        TaskAttachment::whereIn('id', $fileIds->diff($changed))->update(['approval_status' => 'approved']);
+    }
+
+    // Última rodada voltou com ajuste só na legenda (nenhuma peça para refazer).
+    private function onlyCaptionToFix(Task $task): bool
+    {
+        $last = $task->approvalRounds()
+            ->where('status', '!=', 'cancelled')
+            ->orderByDesc('round_number')
+            ->first();
+
+        return $last
+            && $last->status === 'changes_requested'
+            && !$last->isAviso()
+            && $last->tokens()->where('caption_status', 'changes_requested')->exists()
+            && !TaskAttachment::where('task_id', $task->id)->where('approval_status', 'changes_requested')->exists();
+    }
+
+    /**
+     * Antes da rodada nova: liga o arquivo novo à peça que tinha ajuste. Com uma
+     * peça só pra refazer e um arquivo novo só, é óbvio (vira a v2 dela). Se a
+     * rodada anterior voltou inteira (ajuste geral), os arquivos novos substituem
+     * o pacote todo. Fora isso, vale o que a equipe fez no botão "Substituir" —
+     * peça com ajuste sem substituta continua laranja na tarefa (falta refazer).
+     *
+     * @param  array<string>  $newIds
+     */
+    private function settlePreviousVersions(Task $task, array $newIds): void
+    {
+        if (empty($newIds)) {
+            return;
+        }
+
+        $toFix = TaskAttachment::where('task_id', $task->id)
+            ->where('kind', 'entregavel')
+            ->where('approval_status', 'changes_requested')
+            ->get();
+        if ($toFix->isEmpty()) {
+            return;
+        }
+
+        $loose = TaskAttachment::whereIn('id', $newIds)->whereNull('replaces_id')->get();
+
+        if ($toFix->count() === 1 && $loose->count() === 1) {
+            $old = $toFix->first();
+            $loose->first()->update([
+                'replaces_id' => $old->id,
+                'version'     => ($old->version ?: 1) + 1,
+                'sort_order'  => $old->sort_order,
+            ]);
+            $old->update(['approval_status' => 'superseded']);
+            return;
+        }
+
+        $lastRound = $task->approvalRounds()
+            ->where('status', 'changes_requested')
+            ->where('type', '!=', 'aviso')
+            ->orderByDesc('round_number')
+            ->first();
+        if ($lastRound) {
+            $lastFiles = TaskAttachment::where('task_id', $task->id)
+                ->where('is_deliverable', true)
+                ->where('round_number', $lastRound->round_number)
+                ->get();
+            $wholeReturned = $lastFiles->isNotEmpty()
+                && $lastFiles->every(fn ($f) => in_array($f->approval_status, ['changes_requested', 'superseded'], true));
+
+            if ($wholeReturned && $loose->isNotEmpty()) {
+                TaskAttachment::whereIn('id', $toFix->pluck('id'))->update(['approval_status' => 'superseded']);
+            }
         }
     }
 
@@ -497,7 +662,7 @@ class TaskApprovalService
             return;
         }
 
-        $round->loadMissing(['tokens.contact', 'tokens.feedbacks']);
+        $round->loadMissing(['tokens.contact', 'tokens.feedbacks.attachment']);
         $said = collect();
         if (filled($round->portal_comment)) {
             $said->push(trim($round->portal_comment));
@@ -507,9 +672,20 @@ class TaskApprovalService
             if (filled($token->overall_comment)) {
                 $said->push($who . trim($token->overall_comment));
             }
-            foreach ($token->feedbacks->filter(fn ($f) => filled($f->comment)) as $feedback) {
-                $said->push($who . trim($feedback->comment));
+            if (filled($token->caption_comment)) {
+                $said->push($who . 'legenda — ' . trim($token->caption_comment));
             }
+            foreach ($token->feedbacks->filter(fn ($f) => filled($f->comment)) as $feedback) {
+                $piece = $feedback->attachment?->filename ? $feedback->attachment->filename . ' — ' : '';
+                $said->push($who . $piece . trim($feedback->comment));
+            }
+        }
+
+        $total = $round->deliverables()->count();
+        $back  = TaskAttachment::where('task_id', $task->id)->where('round_number', $round->round_number)
+            ->where('is_deliverable', true)->where('approval_status', 'changes_requested')->count();
+        if ($total > 1 && $back < $total) {
+            $said->prepend("{$back} de {$total} peças voltaram (as outras foram aprovadas)");
         }
 
         app(NotificationService::class)->notifyUsers(

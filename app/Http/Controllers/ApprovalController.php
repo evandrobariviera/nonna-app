@@ -104,6 +104,7 @@ class ApprovalController extends Controller
                 'round.task.comments.user',
                 'round.task.comments.contact',
                 'contact',
+                'feedbacks',
             ])
             ->firstOrFail();
 
@@ -135,7 +136,15 @@ class ApprovalController extends Controller
         // "Revisar pendentes" em andamento — barra "peça X de N" no topo.
         $review = $centralNav && ! $answered ? $this->queue->state($request, $approvalToken) : null;
 
-        return view('approval.show', compact('approvalToken', 'deliverables', 'batch', 'visibleComments', 'centralNav', 'review', 'answered'));
+        // Peças já aprovadas da tarefa (qualquer rodada) — pra baixar no modo "já respondido".
+        $approvedFiles = $answered
+            ? $approvalToken->round->task->attachments()
+                ->where('kind', 'entregavel')
+                ->where('approval_status', 'approved')
+                ->get()
+            : collect();
+
+        return view('approval.show', compact('approvalToken', 'deliverables', 'batch', 'visibleComments', 'centralNav', 'review', 'answered', 'approvedFiles'));
     }
 
     /**
@@ -174,12 +183,26 @@ class ApprovalController extends Controller
             return redirect()->route('approval.show', $token);
         }
 
+        // Ajuste por peça: pieces[<id do arquivo>] = o que mudar naquela peça;
+        // caption_comment = ajuste só na legenda. Sem nada marcado, "Solicitar
+        // ajuste" geral continua pedindo o comentário.
         $data = $request->validate([
-            'decision' => 'required|in:approved,changes_requested',
-            'comment'  => ['nullable', 'string', 'max:2000', 'required_if:decision,changes_requested'],
+            'decision'        => 'required|in:approved,changes_requested',
+            'pieces'          => 'nullable|array|max:500',
+            'pieces.*'        => 'required|string|max:1000',
+            'caption_comment' => 'nullable|string|max:2000',
+            'comment'         => ['nullable', 'string', 'max:2000'],
+        ], [
+            'pieces.*.required' => 'Escreva o que precisa ajustar em cada peça marcada.',
         ]);
 
-        $this->service->submitDecision($approvalToken, $data['decision'], $data['comment'] ?? null);
+        $pieces = $data['pieces'] ?? [];
+        $caption = $data['caption_comment'] ?? null;
+        if ($data['decision'] === 'changes_requested' && !$pieces && blank($caption) && blank($data['comment'] ?? null)) {
+            return back()->withErrors(['comment' => 'Conte o que precisa ajustar.'])->withInput();
+        }
+
+        $this->service->submitDecision($approvalToken, $data['decision'], $data['comment'] ?? null, $pieces, $caption);
 
         // Dentro do "Revisar pendentes": vai direto pra próxima peça; na última,
         // volta pra Central/Projeto de onde a revisão começou.
@@ -199,8 +222,10 @@ class ApprovalController extends Controller
 
         // Só existe entregável pra baixar se a rodada (não só este token) já fechou
         // aprovada — com mais de um aprovador, pode faltar gente decidir ainda.
-        $deliverables = $approvalToken->round->status === 'approved'
-            ? $approvalToken->round->deliverables()
+        // Com ajuste por peça, as que foram aprovadas já saem liberadas mesmo com
+        // outras voltando pra produção.
+        $deliverables = $approvalToken->round->isResolved()
+            ? $approvalToken->round->deliverables()->where('approval_status', 'approved')->values()
             : collect();
 
         $centralNav = $this->enterCentral($request, $approvalToken);

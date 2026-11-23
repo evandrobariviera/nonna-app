@@ -66,6 +66,12 @@
         .submit-btn:disabled { opacity: .3; cursor: not-allowed; }
         .submit-btn:not(:disabled):hover { opacity: .88; }
 
+        .piece-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--border); }
+        .piece-toggle { font-family: inherit; font-size: 12px; font-weight: 700; padding: 7px 12px; border: 1.5px solid var(--border2); background: transparent; color: var(--muted2); cursor: pointer; border-radius: var(--radius); }
+        .piece-toggle:hover { border-color: var(--orange); color: var(--orange); }
+        .piece-toggle.on { border-color: var(--orange); background: rgba(238, 121, 25,.1); color: var(--orange); }
+        .partial-box { border: 2px solid var(--orange); background: rgba(238, 121, 25,.08); padding: 12px 14px; margin-bottom: 14px; font-size: 14px; color: var(--text); }
+
         [x-cloak] { display: none !important; }
     </style>
 </head>
@@ -107,7 +113,30 @@
     </div>
     @endif
 
-    <main style="max-width:680px; margin:0 auto; padding:32px 16px 80px">
+    @php
+        // Pode decidir agora? (não é aviso nem peça já respondida)
+        $decidable = !$approvalToken->round->isAviso() && empty($answered);
+        // Ajuste por peça só faz sentido com 2+ peças.
+        $perPiece = $decidable && $deliverables->count() > 1;
+        // O que ESTE aprovador pediu em cada peça (modo já respondido).
+        $myFeedback = $approvalToken->feedbacks->keyBy('attachment_id');
+        $pieceTotal = $deliverables->count();
+    @endphp
+    <main style="max-width:680px; margin:0 auto; padding:32px 16px 80px"
+          x-data="{
+              marks: {{ \Illuminate\Support\Js::from($deliverables->pluck('id')->mapWithKeys(fn ($id) => [$id => false])) }},
+              captionMark: false,
+              decision: null,
+              get marked() { return Object.values(this.marks).filter(Boolean).length },
+              get partial() { return this.marked > 0 || this.captionMark },
+              summary() {
+                  const n = this.marked, ok = {{ $pieceTotal }} - n;
+                  let s = n ? (n === 1 ? '1 peça marcada para ajuste' : n + ' peças marcadas para ajuste') : '';
+                  if (this.captionMark) s += (s ? ' + ' : '') + 'ajuste na legenda';
+                  if ({{ $pieceTotal }} > 0) s += ' · ' + (ok === 1 ? '1 peça aprovada' : ok + ' peças aprovadas');
+                  return s;
+              },
+          }">
 
         {{-- CONTEXTO --}}
         <div style="margin-bottom:24px">
@@ -181,11 +210,25 @@
         </div>
         @endif
 
-        {{-- LEGENDA — largura cheia, acima do material + comentários. --}}
+        {{-- LEGENDA — largura cheia, acima do material + comentários. Dá pra pedir
+             ajuste só nela, sem devolver nenhuma peça. --}}
         @if($approvalToken->round->caption)
-        <div class="piece-card" style="padding:18px">
+        <div class="piece-card" style="padding:18px" :style="captionMark ? 'border-color:var(--orange)' : ''">
             <span class="label-sm">Legenda</span>
             <p style="font-size:14px; white-space:pre-wrap; margin:0; color:var(--text); line-height:1.6">{{ $approvalToken->round->caption }}</p>
+            @if($decidable && $deliverables->isNotEmpty())
+                <button type="button" class="piece-toggle" style="margin-top:12px"
+                        :class="captionMark ? 'on' : ''"
+                        @click="captionMark = !captionMark"
+                        x-text="captionMark ? '✕ Cancelar ajuste na legenda' : '✎ Pedir ajuste só na legenda'"></button>
+                <div x-show="captionMark" x-cloak style="margin-top:10px">
+                    <textarea class="textarea-pub" name="caption_comment" form="decision-form" rows="2"
+                              :disabled="!captionMark" :required="captionMark"
+                              placeholder="O que precisa mudar na legenda?"></textarea>
+                </div>
+            @elseif(!empty($answered) && $approvalToken->caption_status === 'changes_requested')
+                <p class="approver-feedback" style="margin-top:10px">Você pediu ajuste na legenda: "{{ $approvalToken->caption_comment }}"</p>
+            @endif
         </div>
         @endif
 
@@ -198,9 +241,9 @@
             @if($deliverables->isNotEmpty())
             <div class="media-col">
                 @foreach($deliverables as $file)
-                    <div class="piece-card">
+                    <div class="piece-card" @if($perPiece) :style="marks['{{ $file->id }}'] ? 'border-color:var(--orange); box-shadow:0 0 0 1px var(--orange)' : ''" @endif>
                         @if($file->isImage())
-                            <img src="{{ $file->url() }}" alt="{{ $file->filename }}" class="preview-img">
+                            <img src="{{ $file->url() }}" alt="{{ $file->filename }}" class="preview-img" loading="lazy">
                         @elseif($file->isVideo())
                             <video controls preload="metadata" playsinline class="preview-img">
                                 <source src="{{ $file->url() }}" type="{{ $file->mime_type }}">
@@ -228,6 +271,37 @@
                                 <span>{{ $file->filename }}</span>
                                 <span style="margin-left:auto; font-size:10px; color:var(--muted); font-variant-numeric:tabular-nums">↗ abrir</span>
                             </a>
+                        @endif
+
+                        {{-- Barra da peça: posição, "nova versão" e — com 2+ peças — o
+                             ajuste só desta peça (as outras seguem aprovadas). --}}
+                        @if($deliverables->count() > 1 || $file->version > 1)
+                            @php $mine = $myFeedback->get($file->id); @endphp
+                            <div class="piece-bar">
+                                <span class="mono" style="font-size:12px; color:var(--muted)">
+                                    Peça {{ $loop->iteration }} de {{ $deliverables->count() }}
+                                    @if($file->version > 1)<strong style="color:var(--purple); margin-left:6px">· nova versão</strong>@endif
+                                </span>
+                                @if($perPiece)
+                                    <button type="button" class="piece-toggle"
+                                            :class="marks['{{ $file->id }}'] ? 'on' : ''"
+                                            @click="marks['{{ $file->id }}'] = !marks['{{ $file->id }}']"
+                                            x-text="marks['{{ $file->id }}'] ? '✕ Cancelar ajuste' : '✎ Pedir ajuste nesta peça'"></button>
+                                @elseif(!empty($answered) && $mine)
+                                    <span class="badge badge-changes">✎ Você pediu ajuste</span>
+                                @elseif(!empty($answered) && $file->approval_status === 'approved')
+                                    <span class="badge badge-approved">✓ Aprovada</span>
+                                @endif
+                            </div>
+                            @if($perPiece)
+                                <div x-show="marks['{{ $file->id }}']" x-cloak style="padding:0 14px 14px">
+                                    <textarea class="textarea-pub" name="pieces[{{ $file->id }}]" form="decision-form" rows="2"
+                                              :disabled="!marks['{{ $file->id }}']" :required="marks['{{ $file->id }}']"
+                                              placeholder="O que precisa mudar nesta peça?"></textarea>
+                                </div>
+                            @elseif(!empty($answered) && $mine?->comment)
+                                <p class="approver-feedback" style="margin:0 14px 14px">"{{ $mine->comment }}"</p>
+                            @endif
                         @endif
                     </div>
                 @endforeach
@@ -280,57 +354,67 @@
             @if($approvalToken->overall_comment)
                 <p class="approver-feedback">"{{ $approvalToken->overall_comment }}"</p>
             @endif
-            @if($myApproved && $approvalToken->round->status !== 'approved')
-                <p style="font-size:12px; color:var(--muted); margin:10px 0 0">Aguardando os outros aprovadores. Quando todos aprovarem, o download fica liberado aqui.</p>
+            @if($approvalToken->round->status === 'pending')
+                <p style="font-size:12px; color:var(--muted); margin:10px 0 0">Aguardando os outros aprovadores. Quando todos responderem, o download das peças aprovadas fica liberado aqui.</p>
             @endif
         </div>
 
-        @if($approvalToken->round->status === 'approved' && $deliverables->isNotEmpty())
-            @if($deliverables->count() > 1)
-                <span class="label-sm">Baixar arquivos</span>
-            @endif
+        {{-- Peças aprovadas da tarefa (de todas as rodadas) — com ajuste por peça,
+             as aprovadas já saem liberadas mesmo com outras voltando pro time. --}}
+        @if($approvedFiles->isNotEmpty())
+            <span class="label-sm">{{ $approvedFiles->count() > 1 ? 'Baixar peças aprovadas' : 'Baixar' }}</span>
             <div style="display:flex; flex-direction:column; gap:8px">
-                @foreach($deliverables as $file)
+                @foreach($approvedFiles as $file)
                     <a href="{{ $file->downloadUrl() }}" class="submit-btn" style="display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; box-sizing:border-box">
                         <x-icon name="download" size="18" />
-                        <span>Baixar {{ $deliverables->count() > 1 ? $file->filename : 'arquivo' }}</span>
+                        <span>Baixar {{ $approvedFiles->count() > 1 ? $file->filename : 'arquivo' }}</span>
                     </a>
                 @endforeach
             </div>
         @endif
         @else
-        <div x-data="{ decision: null }">
-            <form method="POST" action="{{ route('approval.submit', $approvalToken->token) }}">
+        <div>
+            <form id="decision-form" method="POST" action="{{ route('approval.submit', $approvalToken->token) }}">
                 @csrf
-                <input type="hidden" name="decision" x-model="decision">
+                <input type="hidden" name="decision" :value="partial ? 'changes_requested' : (decision ?? '')">
 
                 <span class="label-sm">Sua avaliação</span>
-                <div style="display:flex; gap:8px; margin-bottom:14px">
+
+                {{-- Marcou peça(s) ou a legenda: o resto fica aprovado. --}}
+                <div x-show="partial" x-cloak class="partial-box">
+                    <strong x-text="summary()"></strong>
+                    <span style="display:block; font-size:12px; color:var(--muted2); margin-top:4px">Só o que você marcou volta para o time ajustar.</span>
+                </div>
+
+                <div x-show="!partial" style="display:flex; gap:8px; margin-bottom:14px">
                     <button type="button" class="btn-decision"
                             :class="decision === 'approved' ? 'sel-approve' : ''"
                             @click="decision = 'approved'">
-                        ✓ Aprovar Item
+                        ✓ Aprovar {{ $perPiece ? 'Tudo' : 'Item' }}
                     </button>
                     <button type="button" class="btn-decision"
                             :class="decision === 'changes_requested' ? 'sel-changes' : ''"
                             @click="decision = 'changes_requested'">
-                        ✎ Solicitar Ajuste
+                        ✎ Solicitar Ajuste{{ $perPiece ? ' em Tudo' : '' }}
                     </button>
                 </div>
+                @if($perPiece)
+                    <p x-show="!partial" style="font-size:12px; color:var(--muted); margin:-6px 0 14px">Só uma ou outra peça precisa mudar? Use "Pedir ajuste nesta peça" em cada uma.</p>
+                @endif
 
                 <div style="background:var(--s1); border:1px solid var(--border); padding:18px; margin-bottom:20px">
                     <span class="label-sm">
-                        Comentário
-                        <span x-show="decision === 'changes_requested'" style="color:var(--orange)">(obrigatório)</span>
-                        <span x-show="decision !== 'changes_requested'" style="color:var(--muted); font-size:8px">(opcional)</span>
+                        Comentário geral
+                        <span x-show="!partial && decision === 'changes_requested'" style="color:var(--orange)">(obrigatório)</span>
+                        <span x-show="partial || decision !== 'changes_requested'" style="color:var(--muted); font-size:8px">(opcional)</span>
                     </span>
                     <textarea class="textarea-pub" name="comment"
-                              :required="decision === 'changes_requested'"
+                              :required="!partial && decision === 'changes_requested'"
                               placeholder="Descreva o que precisa ajustar..."
                               rows="3"></textarea>
                 </div>
 
-                <button type="submit" class="submit-btn" :disabled="decision === null">
+                <button type="submit" class="submit-btn" :disabled="!partial && decision === null">
                     {{ !empty($review) ? 'Enviar e seguir para a próxima' : 'Enviar Avaliação' }}
                 </button>
             </form>

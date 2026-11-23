@@ -23,8 +23,39 @@ class TaskAttachment extends Model
     protected $fillable = [
         'task_id', 'filename', 'disk_path', 'disk', 'mime_type', 'size', 'uploaded_by',
         'uploaded_by_contact_id', 'is_deliverable', 'round_number', 'kind',
-        'sort_order', 'thumb_path',
+        'sort_order', 'thumb_path', 'approval_status', 'replaces_id', 'version',
     ];
+
+    // Situação de cada peça na aprovação do cliente (ver migration 2026_11_23_210000).
+    // null = ainda não foi para o cliente.
+    public static array $approvalLabels = [
+        'pending'           => 'Com o cliente',
+        'approved'          => 'Aprovada',
+        'changes_requested' => 'Ajuste pedido',
+        'superseded'        => 'Versão anterior',
+    ];
+
+    public function approvalLabel(): string
+    {
+        return self::$approvalLabels[$this->approval_status] ?? 'Não enviada';
+    }
+
+    public function isSuperseded(): bool
+    {
+        return $this->approval_status === 'superseded';
+    }
+
+    // Versão anterior desta peça (quem foi "Substituído" por este arquivo).
+    public function replaces(): BelongsTo
+    {
+        return $this->belongsTo(TaskAttachment::class, 'replaces_id');
+    }
+
+    // Retorno de cada aprovador sobre esta peça específica.
+    public function feedbacks(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(DeliverableFeedback::class, 'attachment_id');
+    }
 
     protected $casts = [
         'is_deliverable' => 'boolean',

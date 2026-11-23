@@ -72,7 +72,10 @@ class TaskAttachmentController extends Controller
     // em vez de ZipArchive porque a imagem Docker não tem a extensão nativa `zip` instalada.
     public function downloadDeliverablesZip(Task $task)
     {
-        $attachments = $task->attachments()->where('kind', 'entregavel')->get();
+        // Sem as versões anteriores (substituídas) — o zip é o pacote atual.
+        $attachments = $task->attachments()->where('kind', 'entregavel')
+            ->where(fn ($q) => $q->whereNull('approval_status')->orWhere('approval_status', '!=', 'superseded'))
+            ->get();
 
         abort_if($attachments->isEmpty(), 404);
 
@@ -113,6 +116,62 @@ class TaskAttachmentController extends Controller
 
             $zip->finish();
         }, $zipFilename, ['Content-Type' => 'application/zip']);
+    }
+
+    /**
+     * "Substituir": sobe a versão corrigida de uma peça. A nova herda a posição e
+     * fica ligada à anterior (v2, v3...); a anterior vira "Versão anterior" e sai
+     * da grade (continua no histórico da rodada em que foi enviada). Só a nova vai
+     * na próxima rodada — as aprovadas não voltam pro cliente.
+     */
+    public function replace(Request $request, Task $task, TaskAttachment $attachment, TaskApprovalService $approvalService)
+    {
+        abort_unless($attachment->task_id === $task->id && $attachment->kind === 'entregavel', 403);
+
+        $request->validate(['file' => 'required|file|max:153600']);
+
+        if ($attachment->approval_status === 'approved') {
+            return back()->with('warning', 'Essa peça já foi aprovada pelo cliente — não precisa substituir.');
+        }
+        if ($attachment->approval_status === 'pending') {
+            return back()->with('warning', 'Essa peça está com o cliente agora. Espere a resposta (ou cancele a rodada na Central) antes de substituir.');
+        }
+
+        $file = $request->file('file');
+        $disk = config('filesystems.default', 'r2');
+        $mimeType = $file->getMimeType();
+        $path = $file->store("tasks/{$task->id}", UploadOptions::forStore($mimeType, $disk));
+        if ($path === false) {
+            return back()->with('warning', "Falha ao enviar \"{$file->getClientOriginalName()}\" — tente de novo.");
+        }
+
+        $thumb = str_starts_with((string) $mimeType, 'image/') && $file->getSize() <= 30 * 1024 * 1024
+            ? ImageThumbnail::make((string) file_get_contents($file->getRealPath()), $disk, "tasks/{$task->id}/thumbs")
+            : null;
+
+        TaskAttachment::create([
+            'task_id'     => $task->id,
+            'filename'    => $file->getClientOriginalName(),
+            'disk_path'   => $path,
+            'disk'        => $disk,
+            'mime_type'   => $mimeType,
+            'size'        => $file->getSize(),
+            'uploaded_by' => Auth::id(),
+            'kind'        => 'entregavel',
+            'thumb_path'  => $thumb,
+            'replaces_id' => $attachment->id,
+            'version'     => ($attachment->version ?: 1) + 1,
+            'sort_order'  => $attachment->sort_order,
+        ]);
+
+        // Ainda não foi pro cliente (approval_status vazio): a antiga some de vez da
+        // grade do mesmo jeito — quem vale é a nova.
+        $attachment->update(['approval_status' => 'superseded']);
+
+        $roundCreated = $approvalService->maybeAutoSubmitOnApprovalTransition($task);
+        $redirect = redirect()->route('tasks.show', $task);
+
+        return $roundCreated ? $redirect : $redirect->with('success', 'Peça substituída — a versão nova vai na próxima rodada.');
     }
 
     // Ordem dos entregáveis arrastada na tarefa — é a ordem que o cliente vê na

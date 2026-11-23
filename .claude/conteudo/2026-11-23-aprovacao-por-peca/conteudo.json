@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Cliente pede ajuste peça por peça",
+            "summary": "Pacote com várias peças não volta mais inteiro por causa de uma: o cliente marca só as que precisam de ajuste (ou só a legenda) e o resto fica aprovado e liberado pra baixar. Na tarefa, as peças com ajuste ficam em laranja com o comentário do cliente e o botão Substituir; a próxima rodada leva só as corrigidas.",
+            "kind": "novidade",
+            "area": "Aprovações"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Aprovações do cliente — como funciona",
+            "category": "Aprovações",
+            "slug": "aprovacoes-do-cliente-como-funciona",
+            "body_file": "ajuda-aprovacoes-do-cliente.html"
+        }
+    ]
+}

@@ -158,6 +158,11 @@ class TaskController extends Controller
             'observers',
             'attachments.uploadedBy',
             'attachments.uploadedByContact',
+            // Ajuste por peça: o que o cliente pediu em cada entregável (e na versão
+            // anterior, pra v2 ainda não enviada mostrar o pedido que está atendendo).
+            'attachments.feedbacks.token.contact',
+            'attachments.replaces.feedbacks.token.contact',
+            'approvalRounds.tokens.feedbacks.attachment',
             'comments.user',
             'createdBy',
             'activities.user',
