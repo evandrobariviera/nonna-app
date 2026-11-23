@@ -5,6 +5,10 @@
 @php
     $schema  = $document->schema();
     $payload = app(\App\Services\Documents\DocumentEditor::class)->payload($document);
+    // Reuniões do cliente com ATA, para o agente conferir (gaveta do Agente Nonna).
+    $agentMeetings = \App\Models\Meeting::where('client_id', $document->client_id)->whereNotNull('ata')
+        ->orderByDesc('scheduled_at')->limit(10)->get(['id', 'title', 'scheduled_at'])
+        ->map(fn ($m) => ['id' => $m->id, 'label' => $m->scheduled_at?->format('d/m/Y') . ' · ' . $m->title])->values();
 @endphp
 
 <div x-data="fieldDocEditor(@js([
@@ -14,6 +18,10 @@
         'listUrl'   => route('documents.list', $document),
         'renderUrl' => route('documents.render', $document),
         'itemLinks' => $itemLinks ?? (object) [],
+        'askUrl'    => route('documents.agent.ask', $document),
+        'decideUrl' => url('/documentos/' . $document->id . '/agente'),
+        'chat'      => $document->agent_state['chat'] ?? [],
+        'meetings'  => $agentMeetings,
     ]))" class="card overflow-hidden">
 
     {{-- Cabeçalho --}}
@@ -37,7 +45,80 @@
                title="Abre a versão do cliente numa aba própria (dá para imprimir ou salvar em PDF por lá)">
                 <x-icon name="external-link" size="12" /> Abrir em nova aba
             </a>
+            <button type="button" class="btn btn-primary btn-xs flex items-center gap-1" @click="agentOpen = true; $nextTick(() => scrollChat())">
+                <x-icon name="sparkles" size="12" /> Agente Nonna
+                <span x-show="pendingCount()" x-cloak class="ml-1 px-1.5 rounded-full text-[10px]" style="background:var(--orange); color:#fff" x-text="pendingCount()"></span>
+            </button>
         </div>
+    </div>
+
+    {{-- Gaveta do Agente Nonna (DocumentAssistant): conversa + propostas com Aceitar/Descartar --}}
+    <div x-show="agentOpen" x-cloak class="fixed inset-0" style="z-index:90" @keydown.escape.window="agentOpen = false">
+        <div class="absolute inset-0 bg-black/30" @click="agentOpen = false"></div>
+        <aside class="absolute right-0 top-0 h-full flex flex-col" style="width:min(460px, 100vw); background:var(--s1); border-left:1px solid var(--border); box-shadow:-12px 0 32px rgba(0,0,0,.15)">
+            <div class="px-4 py-3 flex items-center justify-between gap-2" style="border-bottom:1px solid var(--border2)">
+                <div>
+                    <p class="text-sm font-bold flex items-center gap-1.5" style="color:var(--text)"><x-icon name="sparkles" size="14" style="color:var(--purple)" /> Agente Nonna</p>
+                    <p class="text-xs" style="color:var(--muted)">Ele propõe; você aceita ou descarta. A conversa fica no documento, para a equipe.</p>
+                </div>
+                <button type="button" class="btn btn-ghost btn-xs" @click="agentOpen = false">Fechar</button>
+            </div>
+
+            <div x-ref="chatBox" class="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+                <template x-if="!chat.length">
+                    <div class="text-xs space-y-2" style="color:var(--muted)">
+                        <p>Peça em palavras. Por exemplo:</p>
+                        <p class="px-2 py-1.5 rounded" style="background:var(--s2)">"Junta as duas campanhas de captação numa só."</p>
+                        <p class="px-2 py-1.5 rounded" style="background:var(--s2)">"Confere a reunião e me diz o que mudou." (escolha a reunião embaixo)</p>
+                        <p class="px-2 py-1.5 rounded" style="background:var(--s2)">"Reescreve o foco do ciclo de um jeito mais simples."</p>
+                    </div>
+                </template>
+                <template x-for="(m, mi) in chat" :key="mi">
+                    <div :class="m.role === 'user' ? 'ml-8' : 'mr-4'">
+                        <div class="text-[11px] mb-0.5" style="color:var(--muted)" x-text="m.role === 'user' ? (m.name + (m.meeting ? ' · reunião ' + m.meeting : '')) : 'Agente Nonna'"></div>
+                        <div class="text-sm px-3 py-2 rounded-lg whitespace-pre-line" x-text="m.text"
+                             :style="m.role === 'user' ? 'background:rgba(100,59,142,.10); color:var(--text)' : 'background:var(--s2); color:var(--text)'"></div>
+                        <template x-for="sg in (m.sugestoes || [])" :key="sg.id">
+                            <div class="mt-2 p-3 rounded-lg text-xs" style="border:1.5px dashed var(--orange); background:rgba(238,121,25,.05)"
+                                 :style="sg.status !== 'pendente' ? 'opacity:.6; border-style:solid; border-color:var(--border2)' : ''">
+                                <p class="font-semibold text-sm" style="color:var(--text)" x-text="sg.resumo"></p>
+                                <p x-show="sg.motivo" class="mt-0.5" style="color:var(--muted)" x-text="'Por quê: ' + sg.motivo"></p>
+                                <ul class="mt-2 space-y-1">
+                                    <template x-for="(op, oi) in sg.ops" :key="oi">
+                                        <li class="flex gap-1.5" style="color:var(--text)"><span style="color:var(--orange)">•</span><span x-text="describeOp(op)"></span></li>
+                                    </template>
+                                </ul>
+                                <div class="mt-2 flex items-center gap-2" x-show="sg.status === 'pendente'">
+                                    <button type="button" class="btn btn-primary btn-xs" :disabled="busy" @click="decide(sg.id, true)">Aceitar</button>
+                                    <button type="button" class="btn btn-ghost btn-xs" :disabled="busy" @click="decide(sg.id, false)">Descartar</button>
+                                </div>
+                                <p x-show="sg.status !== 'pendente'" class="mt-2 font-semibold" style="color:var(--muted)"
+                                   x-text="(sg.status === 'aceita' ? 'Aceita' : 'Descartada') + (sg.by ? ' por ' + sg.by : '')"></p>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                <div x-show="busy" x-cloak class="text-xs flex items-center gap-2" style="color:var(--muted)">
+                    <span class="inline-block w-3 h-3 rounded-full animate-spin" style="border:2px solid rgba(100,59,142,.25); border-top-color:var(--purple)"></span>
+                    O agente está pensando… (de 10 a 40 segundos)
+                </div>
+                <p x-show="agentError" x-cloak class="text-xs" style="color:var(--red)" x-text="agentError"></p>
+            </div>
+
+            <form class="px-4 py-3 space-y-2" style="border-top:1px solid var(--border2)" @submit.prevent="ask()">
+                <select x-model="meetingId" class="field w-full px-2 py-1.5 text-xs" x-show="cfg.meetings.length">
+                    <option value="">Sem reunião (só o documento)</option>
+                    <template x-for="mt in cfg.meetings" :key="mt.id">
+                        <option :value="mt.id" x-text="'Conferir com a reunião de ' + mt.label"></option>
+                    </template>
+                </select>
+                <div class="flex gap-2">
+                    <textarea x-model="question" rows="2" class="field flex-1 px-3 py-2 text-sm" placeholder="Peça ou pergunte…"
+                              @keydown.enter.prevent="if (!$event.shiftKey) ask(); else question += '\n'"></textarea>
+                    <button type="submit" class="btn btn-primary btn-xs self-end" :disabled="busy || !question.trim()">Enviar</button>
+                </div>
+            </form>
+        </aside>
     </div>
 
     {{-- Como o cliente vê --}}
@@ -178,6 +259,85 @@ function fieldDocEditor(cfg) {
         savedLabel: '',
         issuesOpen: false,
         timers: {},
+        agentOpen: false,
+        chat: cfg.chat || [],
+        question: '',
+        meetingId: '',
+        busy: false,
+        agentError: '',
+
+        pendingCount() {
+            return this.chat.reduce((n, m) => n + (m.sugestoes || []).filter(s => s.status === 'pendente').length, 0);
+        },
+        scrollChat() {
+            const box = this.$refs.chatBox;
+            if (box) box.scrollTop = box.scrollHeight;
+        },
+        // Rótulo humano de um caminho ("metas.ab12.alvo" -> "Metas do ciclo · Pedidos · Quanto").
+        pathLabel(path) {
+            const [key, id, field] = String(path || '').split('.');
+            for (const s of this.cfg.sections) {
+                for (const b of s.blocks) {
+                    if (b.key !== key) continue;
+                    if (b.type === 'field') return b.label;
+                    const item = (this.state.content[key] || []).find(i => i.id === id);
+                    const f = (b.fields || []).find(f => f.key === field);
+                    const name = item ? (item[b.title_field] || b.item_label) : b.item_label;
+                    return name + (f ? ' · ' + f.label : '');
+                }
+            }
+            return path;
+        },
+        valueLabel(v) {
+            if (Array.isArray(v)) {
+                const all = Object.values(this.state.content).filter(Array.isArray).flat();
+                return v.map(id => { const it = all.find(i => i && i.id === id); return it ? (it.nome || it.o_que || id) : id; }).join(', ') || '(nada)';
+            }
+            if (v === null || v === '') return '(vazio)';
+            return String(v).length > 140 ? String(v).slice(0, 140) + '…' : String(v);
+        },
+        describeOp(op) {
+            if (op.op === 'set') return this.pathLabel(op.path) + ' → ' + this.valueLabel(op.value);
+            if (op.op === 'remove') return 'Remover: ' + this.pathLabel(op.list + '.' + op.item + '.');
+            if (op.op === 'tipo') return 'Trocar para ' + op.value + ': ' + this.pathLabel(op.list + '.' + op.item + '.');
+            if (op.op === 'add') {
+                const vals = op.values || {};
+                return 'Adicionar em ' + (this.cfg.sections.flatMap(s => s.blocks).find(b => b.key === op.list)?.item_label || op.list) + ': ' + (vals.nome || vals.o_que || vals.area || vals.se || vals.plataforma || '(novo)');
+            }
+            return op.op;
+        },
+        async ask() {
+            const message = this.question.trim();
+            if (!message || this.busy) return;
+            this.busy = true; this.agentError = '';
+            this.chat.push({ role: 'user', name: 'Você', text: message });
+            this.question = '';
+            this.$nextTick(() => this.scrollChat());
+            const data = await this.agentSend(this.cfg.askUrl, { message, meeting_id: this.meetingId || null });
+            if (data) this.chat = data.chat; else this.chat.pop();
+            this.busy = false;
+            this.$nextTick(() => this.scrollChat());
+        },
+        async decide(id, accept) {
+            if (this.busy) return;
+            this.busy = true; this.agentError = '';
+            const data = await this.agentSend(this.cfg.decideUrl + '/' + id, { accept });
+            if (data) {
+                this.chat = data.chat;
+                this.state = { content: data.content, provenance: data.provenance, issues: data.issues, statuses: data.statuses, blocking: data.blocking };
+                if (data.skipped && data.skipped.length) this.agentError = 'Parte não entrou: ' + data.skipped.join(' · ');
+            }
+            this.busy = false;
+        },
+        async agentSend(url, body) {
+            try {
+                const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }, body: JSON.stringify(body) });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) { this.agentError = data.error || data.message || 'Não deu certo. Tente de novo.'; return null; }
+                return data;
+            } catch (e) { this.agentError = 'Sem conexão. Tente de novo.'; return null; }
+        },
 
         statusLabel(s) { return { vazia: 'vazia', erro: 'regra', falta: 'falta', pronta: 'pronta', opcional: 'opcional' }[s] || ''; },
         statusStyle(s) {

@@ -138,6 +138,43 @@ class FieldDocumentController extends Controller
         return redirect($url)->with('success', 'Documento em campos criado. Cada campo salva sozinho.');
     }
 
+    /** Pergunta ao Agente Nonna ao lado do documento. */
+    public function ask(Request $request, Document $document, \App\Services\Documents\DocumentAssistant $assistant): JsonResponse
+    {
+        $data = $request->validate([
+            'message'    => 'required|string|max:4000',
+            'meeting_id' => 'nullable|uuid',
+        ]);
+        $credits = \App\Services\Agent\AgentCredits::status($request->user());
+        if ($credits['blocked']) {
+            return response()->json(['error' => \App\Services\Agent\AgentCredits::blockedMessage($credits)], 422);
+        }
+
+        try {
+            $result = $assistant->ask($document, $request->user(), $data['message'], $data['meeting_id'] ?? null);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json(['error' => 'O agente não conseguiu responder agora: ' . \Illuminate\Support\Str::limit($e->getMessage(), 200)], 422);
+        }
+
+        return response()->json($result);
+    }
+
+    /** Aceitar ou descartar uma proposta do agente. */
+    public function decide(Request $request, Document $document, string $suggestion, \App\Services\Documents\DocumentAssistant $assistant): JsonResponse
+    {
+        $data = $request->validate(['accept' => 'required|boolean']);
+
+        try {
+            $result = $assistant->decide($document, $suggestion, (bool) $data['accept'], $request->user());
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+
+        return response()->json($this->editor->payload($result['document']) + ['chat' => $result['chat'], 'skipped' => $result['skipped']]);
+    }
+
     public function field(Request $request, Document $document): JsonResponse
     {
         $data = $request->validate([

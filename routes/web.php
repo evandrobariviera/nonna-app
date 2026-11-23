@@ -731,6 +731,13 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('macroplans.field-document.launch');
     Route::post('/projetos/{project}/documento-em-campos', [\App\Http\Controllers\FieldDocumentController::class, 'startForProject'])
         ->name('projects.field-document.start');
+    // Agente Nonna ao lado do documento (DocumentAssistant): conversa + propostas com Aceitar/Descartar.
+    Route::post('/documentos/{document}/agente', [\App\Http\Controllers\FieldDocumentController::class, 'ask'])
+        ->middleware('throttle:20,1')
+        ->name('documents.agent.ask');
+    Route::post('/documentos/{document}/agente/{suggestion}', [\App\Http\Controllers\FieldDocumentController::class, 'decide'])
+        ->where('suggestion', '[a-z0-9]{8}')
+        ->name('documents.agent.decide');
     Route::patch('/documentos/{document}/campo', [\App\Http\Controllers\FieldDocumentController::class, 'field'])
         ->middleware('throttle:240,1')
         ->name('documents.field');
