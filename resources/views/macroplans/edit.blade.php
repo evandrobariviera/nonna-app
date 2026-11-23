@@ -191,7 +191,35 @@
             {{-- ══ DOCUMENTO — o HTML do planejamento (campo próprio document_attachment_id) ══ --}}
             <div x-show="block === 'documento'" x-cloak>
                 @if($fieldDocument)
-                    @include('documents._editor', ['document' => $fieldDocument])
+                    @if(session('error'))
+                        <div class="mb-3 px-4 py-3 text-sm font-semibold" style="background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.25); color:var(--red)">{{ session('error') }}</div>
+                    @endif
+                    {{-- Do plano para as campanhas e projetos de verdade (PlanItemsLauncher) --}}
+                    @php $missing = $planLaunch['total'] - $planLaunch['created']; @endphp
+                    <div class="card mb-3 px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold" style="color:var(--text)">
+                                Campanhas e projetos: {{ $planLaunch['created'] }} de {{ $planLaunch['total'] }} criados no App
+                            </p>
+                            <p class="text-xs mt-0.5" style="color:var(--muted)">
+                                @if($missing === 0 && $planLaunch['total'])
+                                    Todos já existem. Cada um tem o seu documento; o link aparece no cartão da seção 04.
+                                @elseif($planLaunch['reason'])
+                                    {{ $planLaunch['reason'] }}
+                                @else
+                                    Cada item da seção 04 vira uma campanha ou projeto, com o documento já preenchido com o que veio daqui (nome, datas, objetivo, metas, verba).
+                                @endif
+                            </p>
+                        </div>
+                        @if($missing > 0)
+                            <form method="POST" action="{{ route('macroplans.field-document.launch', $macroplan) }}"
+                                  @submit.prevent="if (await $store.confirmDialog.ask('Criar {{ $missing }} campanha(s)/projeto(s) a partir do documento? Depois de criados, cada um é dono do próprio documento: mudar o planejamento não muda eles.')) $el.submit()">
+                                @csrf
+                                <button type="submit" class="btn btn-primary btn-xs" @disabled($planLaunch['reason'])>Criar {{ $missing }} campanha(s)/projeto(s)</button>
+                            </form>
+                        @endif
+                    </div>
+                    @include('documents._editor', ['document' => $fieldDocument, 'itemLinks' => $planLaunch['links']])
                     @if($mainDocument)
                         <p class="text-xs mt-2" style="color:var(--muted)">
                             O documento HTML anterior continua nos Anexos ({{ $mainDocument->filename }}).

@@ -395,7 +395,24 @@
 
     {{-- DOCUMENTO — o HTML da campanha/projeto (campo próprio document_attachment_id). É onde mora o
          briefing, as peças e a mecânica (2026-10), e o que o Assistente de Tarefas lê. --}}
-    @php $mainDocument = $project->mainDocument(); @endphp
+    @php $mainDocument = $project->mainDocument(); $fieldDocument = $project->fieldDocument()->with('client:id,company_name')->first(); @endphp
+    @if($fieldDocument)
+        @include('documents._editor', ['document' => $fieldDocument])
+        @if($mainDocument)
+            <p class="text-xs mt-2" style="color:var(--muted)">O documento HTML anterior continua nos Anexos ({{ $mainDocument->filename }}).</p>
+        @endif
+    @else
+    <div class="card mb-3 px-5 py-3 flex items-center justify-between gap-3 flex-wrap"
+         style="border:1px dashed rgba(100,59,142,.35); background:rgba(100,59,142,.04)">
+        <p class="text-xs" style="color:var(--muted); max-width:60ch">
+            <b style="color:var(--text)">Documento em campos (novo):</b> {{ $project->type === 'campanha' ? 'a campanha' : 'o projeto' }} no modelo padrão, preenchido aqui seção por seção, com as regras avisando o que falta.
+        </p>
+        <form method="POST" action="{{ route('projects.field-document.start', $project) }}"
+              @submit.prevent="if (await $store.confirmDialog.ask('Começar o documento em campos? {{ $mainDocument ? 'O HTML atual continua nos anexos.' : '' }}')) $el.submit()">
+            @csrf
+            <button type="submit" class="btn btn-primary btn-xs">Começar documento em campos</button>
+        </form>
+    </div>
     <div class="card overflow-hidden flex flex-col" :class="open ? 'flex-1' : ''" x-data="{ open: {{ $mainDocument ? 'true' : 'false' }} }">
         <div class="px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
             <button type="button" @click="open = !open" class="flex items-center gap-2 text-left min-w-0">
@@ -442,6 +459,7 @@
             </p>
         @endif
     </div>
+    @endif
     </div>{{-- /documento --}}
 
     <aside class="min-w-0 lg:col-start-2 min-[100rem]:col-start-3 min-[100rem]:row-start-1 grid grid-cols-1 gap-x-5 xl:grid-cols-2 min-[100rem]:grid-cols-1 items-start">

@@ -1,7 +1,7 @@
 {{-- Editor de documento em campos (23/11) — genérico: tudo vem do modelo do tipo
      (App\Services\Documents\DocumentSchema). Cada campo salva sozinho (DocumentEditor);
      a lista "O que falta" e a situação de cada seção são calculadas no servidor.
-     Recebe: $document (App\Models\Document). --}}
+     Recebe: $document (App\Models\Document); opcional $itemLinks (lista => [item id => [url, rótulo]]). --}}
 @php
     $schema  = $document->schema();
     $payload = app(\App\Services\Documents\DocumentEditor::class)->payload($document);
@@ -13,12 +13,13 @@
         'fieldUrl'  => route('documents.field', $document),
         'listUrl'   => route('documents.list', $document),
         'renderUrl' => route('documents.render', $document),
+        'itemLinks' => $itemLinks ?? (object) [],
     ]))" class="card overflow-hidden">
 
     {{-- Cabeçalho --}}
     <div class="px-5 py-4 flex items-center justify-between gap-3 flex-wrap" style="border-bottom:1px solid var(--border2)">
         <div>
-            <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">Documento do planejamento · em campos</p>
+            <p class="text-xs font-mono uppercase tracking-widest mb-0.5" style="color:var(--muted)">{{ $schema->title() }} · em campos</p>
             <p class="text-xs" style="color:var(--muted2)">
                 <span x-show="saving" x-cloak>Salvando…</span>
                 <span x-show="!saving && error" x-cloak style="color:var(--red)" x-text="error"></span>
@@ -114,6 +115,10 @@
                                                 </template>
                                                 <span class="text-sm font-semibold" style="color:var(--text)"
                                                       x-text="item[b.title_field] || (b.item_label + ' ' + (idx + 1))"></span>
+                                                <template x-if="cfg.itemLinks[b.key] && cfg.itemLinks[b.key][item.id]">
+                                                    <a :href="cfg.itemLinks[b.key][item.id][0]" class="text-xs font-semibold hover:underline" style="color:var(--purple)"
+                                                       x-text="cfg.itemLinks[b.key][item.id][1]"></a>
+                                                </template>
                                                 <div class="ml-auto flex items-center gap-1">
                                                     <button type="button" class="btn btn-ghost btn-xs" title="Subir" :disabled="idx === 0" @click="listOp(b.key, 'up', item.id)">↑</button>
                                                     <button type="button" class="btn btn-ghost btn-xs" title="Descer" :disabled="idx === state.content[b.key].length - 1" @click="listOp(b.key, 'down', item.id)">↓</button>
@@ -171,10 +176,11 @@ function fieldDocEditor(cfg) {
         issuesOpen: false,
         timers: {},
 
-        statusLabel(s) { return { vazia: 'vazia', erro: 'regra', falta: 'falta', pronta: 'pronta' }[s] || ''; },
+        statusLabel(s) { return { vazia: 'vazia', erro: 'regra', falta: 'falta', pronta: 'pronta', opcional: 'opcional' }[s] || ''; },
         statusStyle(s) {
             return {
                 vazia:  'background:var(--s3); color:var(--muted)',
+                opcional: 'background:var(--s3); color:var(--muted2)',
                 erro:   'background:rgba(239,68,68,.12); color:var(--red)',
                 falta:  'background:rgba(238,121,25,.12); color:var(--orange)',
                 pronta: 'background:rgba(52,211,153,.14); color:var(--green)',
@@ -186,7 +192,7 @@ function fieldDocEditor(cfg) {
             const parts = [];
             if (regras) parts.push(regras + (regras === 1 ? ' regra do modelo quebrada' : ' regras do modelo quebradas'));
             if (faltas) parts.push(faltas + (faltas === 1 ? ' coisa faltando' : ' coisas faltando'));
-            return parts.join(' · ') + (regras ? ' (seguram o envio para revisão)' : '');
+            return parts.join(' · ') + (regras ? ' (corrija as regras antes de seguir)' : '');
         },
         applies(f, item) {
             return Object.entries(f.only || {}).every(([k, v]) => item && item[k] === v);
@@ -204,7 +210,7 @@ function fieldDocEditor(cfg) {
                 && Object.entries(f.refs_filter || {}).every(([k, v]) => o[k] === v));
         },
         refLabel(o) {
-            return o.nome || o.o_que || 'Sem nome';
+            return o.nome || o.o_que || o.area || o.plataforma || 'Sem nome';
         },
         hasIssue(path) {
             return this.state.issues.some(i => i.path === path);

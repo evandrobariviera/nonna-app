@@ -19,20 +19,36 @@ class DocumentEditor
     /** Edições seguidas da mesma pessoa no mesmo campo dentro desta janela viram uma linha só. */
     private const MERGE_MINUTES = 10;
 
-    public function create(string $kind, string $clientId, ?string $documentableType, ?string $documentableId, ?int $userId): Document
+    /**
+     * $prefill: valores iniciais (campos simples ou listas inteiras), por exemplo herdados do
+     * planejamento, marcados em provenance como $prefillBy. $source: [documento de origem, id do item].
+     */
+    public function create(string $kind, string $clientId, ?string $documentableType, ?string $documentableId, ?int $userId,
+                           array $prefill = [], string $prefillBy = 'planejamento', array $source = []): Document
     {
-        $schema = DocumentSchema::for($kind);
+        $schema  = DocumentSchema::for($kind);
+        $content = $schema->emptyContent();
+        $prov    = [];
+        $at      = now()->toIso8601String();
+        foreach ($prefill as $key => $value) {
+            if (array_key_exists($key, $content)) {
+                $content[$key] = $value;
+                $prov[$key] = ['by' => $prefillBy, 'user_id' => $userId, 'at' => $at];
+            }
+        }
 
         return Document::create([
-            'client_id'         => $clientId,
-            'kind'              => $kind,
-            'schema_version'    => $schema->version(),
-            'documentable_type' => $documentableType,
-            'documentable_id'   => $documentableId,
-            'content'           => $schema->emptyContent(),
-            'provenance'        => [],
-            'created_by'        => $userId,
-            'updated_by'        => $userId,
+            'client_id'          => $clientId,
+            'kind'               => $kind,
+            'schema_version'     => $schema->version(),
+            'documentable_type'  => $documentableType,
+            'documentable_id'    => $documentableId,
+            'source_document_id' => $source[0] ?? null,
+            'source_item_id'     => $source[1] ?? null,
+            'content'            => $content,
+            'provenance'         => $prov,
+            'created_by'         => $userId,
+            'updated_by'         => $userId,
         ]);
     }
 
@@ -54,6 +70,8 @@ class DocumentEditor
                 $before = $item[$target['key']] ?? null;
                 if ($target['field']['input'] === 'refs') {
                     $value = $this->validRefs($content, $schema, $target['field'], $value, $target['item']);
+                } elseif ($target['field']['input'] === 'ref' && $value !== null) {
+                    $value = $this->validRefs($content, $schema, $target['field'], [$value], $target['item'])[0] ?? null;
                 }
                 $content[$target['list']][$index][$target['key']] = $value;
             }
@@ -169,9 +187,24 @@ class DocumentEditor
 
             $fresh->update(['content' => $content, 'provenance' => $provenance, 'updated_by' => $userId]);
             $this->log($fresh, $userId, $actor, $action, $path, $before, $after);
+            $this->mirror($fresh, $path, $after);
 
             return $fresh;
         });
+    }
+
+    /** Campo espelhado (DocumentSchema::mirrors) atualiza a coluna do dono. */
+    private function mirror(Document $document, string $path, mixed $value): void
+    {
+        $column = $document->schema()->mirrors()[$path] ?? null;
+        $owner  = $column ? $document->documentable : null;
+        if (!$owner) {
+            return;
+        }
+        if ($column === 'title' && blank($value)) {
+            return; // nome é obrigatório no dono: apagar no documento não apaga lá
+        }
+        $owner->forceFill([$column => $value])->save();
     }
 
     private function log(Document $document, ?int $userId, string $actor, string $action, string $path, mixed $before, mixed $after): void
@@ -235,10 +268,16 @@ class DocumentEditor
                     continue;
                 }
                 foreach ($block['fields'] as $field) {
-                    if ($field['input'] !== 'refs' || ($onlyField && $field['key'] !== $onlyField)) {
+                    if (!in_array($field['input'], ['refs', 'ref'], true) || ($onlyField && $field['key'] !== $onlyField)) {
                         continue;
                     }
                     foreach ($content[$block['key']] ?? [] as $i => $item) {
+                        if ($field['input'] === 'ref') {
+                            if (($item[$field['key']] ?? null) === $itemId) {
+                                $content[$block['key']][$i][$field['key']] = null;
+                            }
+                            continue;
+                        }
                         $refs = $item[$field['key']] ?? [];
                         if (in_array($itemId, $refs, true)) {
                             $content[$block['key']][$i][$field['key']] = array_values(array_diff($refs, [$itemId]));

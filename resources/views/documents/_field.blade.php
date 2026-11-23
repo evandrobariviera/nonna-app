@@ -44,6 +44,35 @@
         </div>
     </template>
 
+    {{-- Número --}}
+    <template x-if="{{ $F }}.input === 'number'">
+        <input type="number" min="0" step="1" class="field w-32 px-3 py-2 text-sm" :value="{{ $V }} ?? ''"
+               @input="edit({{ $P }}, $event.target.value, {{ $I }}, {{ $F }}.key)"
+               @blur="flush({{ $P }}, $event.target.value)">
+    </template>
+
+    {{-- Escolha de uma lista fixa --}}
+    <template x-if="{{ $F }}.input === 'select'">
+        <select class="field w-full px-3 py-2 text-sm"
+                @change="edit({{ $P }}, $event.target.value, {{ $I }}, {{ $F }}.key); flush({{ $P }}, $event.target.value)">
+            <option value="">Escolha…</option>
+            <template x-for="(label, value) in {{ $F }}.options" :key="value">
+                <option :value="value" :selected="value === {{ $V }}" x-text="label"></option>
+            </template>
+        </select>
+    </template>
+
+    {{-- Um item de outra lista (ex.: o ângulo criativo de uma peça) --}}
+    <template x-if="{{ $F }}.input === 'ref'">
+        <select class="field w-full px-3 py-2 text-sm"
+                @change="edit({{ $P }}, $event.target.value || null, {{ $I }}, {{ $F }}.key); flush({{ $P }}, $event.target.value || null)">
+            <option value="">— (não é anúncio)</option>
+            <template x-for="o in refOptions({{ $F }}, {{ $I }})" :key="o.id">
+                <option :value="o.id" :selected="o.id === {{ $V }}" x-text="refLabel(o)"></option>
+            </template>
+        </select>
+    </template>
+
     {{-- Ligações com itens de outra lista (ex.: metas que a campanha carrega) --}}
     <template x-if="{{ $F }}.input === 'refs'">
         <div class="flex flex-wrap gap-1.5">

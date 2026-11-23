@@ -159,6 +159,22 @@ class MacroPlanController extends Controller
         $mainDocument = $macroplan->mainDocument();
         // Documento em campos (23/11): quando existe, é ele que a aba Documento mostra.
         $fieldDocument = $macroplan->fieldDocument()->with('client:id,company_name')->first();
+        // Itens do documento que já viraram campanha/projeto (link no cartão) + se dá para criar os outros.
+        $planLaunch = null;
+        if ($fieldDocument) {
+            $launcher = app(\App\Services\Documents\PlanItemsLauncher::class);
+            $created  = $launcher->created($fieldDocument);
+            $named    = collect($fieldDocument->content['itens'] ?? [])->filter(fn ($i) => filled($i['nome'] ?? null));
+            $planLaunch = [
+                'links'   => ['itens' => collect($created)->map(fn ($p) => [
+                    route('macroplans.projects.show', [$macroplan, $p]),
+                    ($p->type === 'campanha' ? 'Abrir campanha' : 'Abrir projeto') . ' →',
+                ])->all()],
+                'total'   => $named->count(),
+                'created' => $named->filter(fn ($i) => isset($created[$i['id']]))->count(),
+                'reason'  => $launcher->blockReason($macroplan, $fieldDocument),
+            ];
+        }
         $currentBlock = $request->get('bloco', 'documento');
 
         if (!in_array($currentBlock, array_merge(['documento', 'linha-do-tempo', 'bloco3', 'discussao', 'pendencias', 'meta'], $legacyBlocks), true)) {
@@ -178,7 +194,7 @@ class MacroPlanController extends Controller
         // Quem a discussão avisa — aparece embaixo do campo de comentário.
         $discussionRecipients = User::whereIn('id', $macroplan->discussionRecipientIds())->orderBy('name')->pluck('name');
 
-        return view('macroplans.edit', compact('macroplan', 'users', 'currentBlock', 'legacyBlocks', 'mainDocument', 'discussionItems', 'relatedMeetings', 'planTimeline', 'discussionRecipients', 'fieldDocument'));
+        return view('macroplans.edit', compact('macroplan', 'users', 'currentBlock', 'legacyBlocks', 'mainDocument', 'discussionItems', 'relatedMeetings', 'planTimeline', 'discussionRecipients', 'fieldDocument', 'planLaunch'));
     }
 
     public function update(Request $request, MacroPlan $macroplan)

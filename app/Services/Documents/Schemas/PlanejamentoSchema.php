@@ -26,6 +26,11 @@ class PlanejamentoSchema extends DocumentSchema
         return 'documents.render.planejamento';
     }
 
+    public function title(): string
+    {
+        return 'Documento do planejamento';
+    }
+
     public function sections(): array
     {
         return [

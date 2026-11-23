@@ -11,11 +11,13 @@ use Illuminate\Support\Str;
  * cliente e (depois) o agente leem daqui; ninguém cria componente que não esteja aqui.
  *
  * Bloco de seção:
- *   campo: ['type' => 'field', 'key', 'label', 'input' => line|text|date|money|select|refs,
+ *   campo: ['type' => 'field', 'key', 'label', 'input' => line|text|date|money|number|select|ref|refs,
  *           'placeholder'?, 'required'?, 'options'? (select), 'refs'? (lista de origem),
  *           'refs_filter'? (['tipo' => 'campanha']), 'only'? (['tipo' => 'projeto']), 'half'?]
  *   lista: ['type' => 'list', 'key', 'item_label', 'title_field', 'fields' => [campos...],
- *           'add' => [['label', 'attrs' => [...]], ...], 'switch'? => campo select que troca o tipo]
+ *           'add' => [['label', 'attrs' => [...]], ...], 'switch'? => campo select que troca o tipo,
+ *           'min'?, 'max'? (quantos itens o modelo pede), 'start'? (itens com que o documento nasce)]
+ *   ref = escolhe UM item de outra lista (guarda o id); refs = vários.
  *
  * Conteúdo: valores simples por chave; lista = array de itens com 'id' próprio.
  * Caminho de um campo: "chave" ou "lista.<id do item>.chave".
@@ -34,13 +36,28 @@ abstract class DocumentSchema
     /** Regras próprias do tipo (além de obrigatório vazio e "A confirmar"). */
     abstract protected function rules(array $content): array;
 
-    /** View Blade da versão do cliente (recebe $document, $content, $schema, $extra). */
+    /** View Blade da versão do cliente (recebe $document, $content, $schema, $owner). */
     abstract public function clientView(): string;
+
+    /** Nome do documento na tela ("Documento da campanha"). */
+    abstract public function title(): string;
+
+    /**
+     * Campos do documento que espelham uma coluna do dono (ex.: nome da campanha -> projects.title),
+     * pra o resto do App (listas, linha do tempo, tarefas) continuar lendo de onde sempre leu.
+     * O documento manda: editar aqui atualiza lá.
+     */
+    public function mirrors(): array
+    {
+        return [];
+    }
 
     public static function for(string $kind): self
     {
         return match ($kind) {
             'planejamento' => new PlanejamentoSchema(),
+            'campanha'     => new Schemas\CampanhaSchema(),
+            'projeto'      => new Schemas\ProjetoSchema(),
             default        => throw new \InvalidArgumentException("Tipo de documento desconhecido: {$kind}"),
         };
     }
@@ -82,7 +99,7 @@ abstract class DocumentSchema
 
         $item = ['id' => Str::lower(Str::random(8))];
         foreach ($list['fields'] as $field) {
-            $item[$field['key']] = $field['input'] === 'refs' ? [] : null;
+            $item[$field['key']] = $field['input'] === 'refs' ? [] : ($field['default'] ?? null);
         }
 
         return array_merge($item, array_intersect_key($attrs, $item));
@@ -127,6 +144,14 @@ abstract class DocumentSchema
                 $num = is_numeric($value) ? (float) $value : \App\Services\MacroPlanBudgetSync::parseMoney((string) $value);
 
                 return $num === null ? null : round($num, 2);
+            case 'number':
+                if ($value === null || $value === '' || !is_numeric($value)) {
+                    return null;
+                }
+
+                return $value + 0;
+            case 'ref':
+                return filled($value) ? (string) $value : null;
             case 'date':
                 $value = trim((string) $value);
 
@@ -165,6 +190,15 @@ abstract class DocumentSchema
                 if ($block['type'] === 'field') {
                     $issues = array_merge($issues, $this->fieldIssues($section['key'], $block, $content[$block['key']] ?? null, $block['key'], null));
                     continue;
+                }
+                $count = count($content[$block['key']] ?? []);
+                if (isset($block['min']) && $count < $block['min']) {
+                    $issues[] = ['section' => $section['key'], 'level' => 'falta', 'path' => null,
+                        'text' => "{$block['item_label']}: o modelo pede pelo menos {$block['min']} (tem {$count})."];
+                }
+                if (isset($block['max']) && $count > $block['max']) {
+                    $issues[] = ['section' => $section['key'], 'level' => 'erro', 'path' => null,
+                        'text' => "{$block['item_label']}: o modelo aceita no máximo {$block['max']} (tem {$count})."];
                 }
                 foreach ($content[$block['key']] ?? [] as $item) {
                     $title = trim((string) ($item[$block['title_field']] ?? '')) ?: $block['item_label'] . ' sem nome';
@@ -220,6 +254,7 @@ abstract class DocumentSchema
             }
 
             $out[$section['key']] = match (true) {
+                !$filled && !empty($section['optional']) && !$mine          => 'opcional',
                 !$filled && empty($section['optional'])                    => 'vazia',
                 (bool) array_filter($mine, fn ($i) => $i['level'] === 'erro') => 'erro',
                 (bool) $mine                                                 => 'falta',

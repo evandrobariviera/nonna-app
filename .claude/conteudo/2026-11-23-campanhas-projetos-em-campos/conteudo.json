@@ -1,0 +1,60 @@
+{
+    "novidades": [
+        {
+            "title": "Campanhas e projetos nascem do planejamento, já preenchidos",
+            "summary": "Com o planejamento em Aprovação, o botão \"Criar campanhas e projetos\" transforma cada item do plano em campanha ou projeto de verdade, cada um com o seu documento em campos já preenchido com nome, datas, objetivo, metas e verba. O documento se preenche na própria página da campanha, e o App avisa o que falta.",
+            "kind": "novidade",
+            "area": "Planejamentos"
+        },
+        {
+            "title": "Ganchos agora são só as primeiras frases",
+            "summary": "No ângulo criativo da campanha, os ganchos passam a ser só as primeiras frases. Como a peça de cada ângulo fica na tela é decidido pela Criação no Conceito criativo, que ficou mais enxuto.",
+            "kind": "melhoria",
+            "area": "Documentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Documento de campanha — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-campanha",
+            "body_file": "ajuda-documento-de-campanha.html"
+        },
+        {
+            "title": "Documento de projeto — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-projeto",
+            "body_file": "ajuda-documento-de-projeto.html"
+        },
+        {
+            "title": "Planejamento do ciclo — como preencher",
+            "category": "Documentos",
+            "slug": "planejamento-do-ciclo",
+            "body_file": "ajuda-planejamento-do-ciclo.html"
+        },
+        {
+            "title": "Ângulos criativos: motivo e momento",
+            "category": "Documentos",
+            "slug": "angulos-criativos",
+            "body_file": "ajuda-angulos-criativos.html"
+        },
+        {
+            "title": "Conceito criativo — como preencher",
+            "category": "Documentos",
+            "slug": "conceito-criativo",
+            "body_file": "ajuda-conceito-criativo.html"
+        }
+    ],
+    "documentos": [
+        {
+            "slug": "documento-campanha",
+            "template_file": "../../docs/templates/nonna-campanha-modelo.html",
+            "name": "Documento de campanha"
+        },
+        {
+            "slug": "conceito-criativo",
+            "template_file": "../../docs/templates/nonna-conceito-criativo-modelo.html",
+            "name": "Conceito criativo"
+        }
+    ]
+}

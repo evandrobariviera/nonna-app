@@ -23,7 +23,7 @@ class Document extends Model
 
     protected $fillable = [
         'organization_id', 'client_id', 'kind', 'schema_version',
-        'documentable_type', 'documentable_id', 'content', 'provenance',
+        'documentable_type', 'documentable_id', 'source_document_id', 'source_item_id', 'content', 'provenance',
         'created_by', 'updated_by',
     ];
 

@@ -66,6 +66,12 @@ class Project extends Model
         'highlight_task_id',
     ];
 
+    /** Documento em campos (23/11) — campanha ou projeto no modelo padrão (DocumentEditor). */
+    public function fieldDocument(): \Illuminate\Database\Eloquent\Relations\MorphOne
+    {
+        return $this->morphOne(Document::class, 'documentable');
+    }
+
     public static array $types = [
         'projeto'  => ['label' => 'Projeto',  'color' => 'purple'],
         'campanha' => ['label' => 'Campanha', 'color' => 'green'],
