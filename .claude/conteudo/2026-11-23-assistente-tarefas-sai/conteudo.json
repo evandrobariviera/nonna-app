@@ -1,0 +1,10 @@
+{
+    "novidades": [
+        {
+            "title": "Assistente de Tarefas saiu da campanha e do projeto",
+            "summary": "O botão \"Assistente de Tarefas\" no topo da campanha e do projeto foi desligado: a ideia é ter um agente só, o Agente Nonna. Os Playbooks continuam no mesmo lugar, e tarefa avulsa pode ser pedida ao Agente Nonna.",
+            "kind": "melhoria",
+            "area": "Tarefas"
+        }
+    ]
+}

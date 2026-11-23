@@ -39,10 +39,7 @@
                     @endforeach
                 </select>
             </form>
-            <button type="button" @click="$store.taskAssistant.open = true" class="btn btn-ghost btn-xs flex items-center gap-1.5">
-                <x-icon name="sparkles" size="14" style="color:var(--purple)" />
-                Assistente de Tarefas
-            </button>
+            {{-- Assistente de Tarefas desligado em 23/11: o único agente da Nonna é o universal (Agente Nonna). --}}
             @include('projects._apply-playbook-picker', ['project' => $project, 'playbooks' => $playbooks, 'compact' => true])
             <button type="button" @click="editingProject = !editingProject" class="btn btn-ghost btn-xs">
                 <span x-text="editingProject ? 'Fechar edição' : 'Editar Projeto'"></span>
@@ -394,7 +391,7 @@
     <div class="min-w-0 self-stretch flex flex-col">
 
     {{-- DOCUMENTO — o HTML da campanha/projeto (campo próprio document_attachment_id). É onde mora o
-         briefing, as peças e a mecânica (2026-10), e o que o Assistente de Tarefas lê. --}}
+         briefing, as peças e a mecânica (2026-10). --}}
     @php $mainDocument = $project->mainDocument(); $fieldDocument = $project->fieldDocument()->with('client:id,company_name')->first(); @endphp
     @if($fieldDocument)
         @include('documents._editor', ['document' => $fieldDocument])
@@ -455,7 +452,7 @@
         @else
             <p class="px-5 pb-4 text-xs" style="color:var(--muted)">
                 Envie o HTML {{ $project->type === 'campanha' ? 'da campanha (skill de campanha)' : 'do projeto (skill de projeto)' }} pelo botão
-                "Enviar documento (HTML)" — ele aparece aqui e o Assistente de Tarefas passa a ler. Arquivos em "Anexos" não aparecem aqui.
+                "Enviar documento (HTML)" — ele aparece aqui. Arquivos em "Anexos" não aparecem aqui.
             </p>
         @endif
     </div>
@@ -1445,11 +1442,4 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
     @endpush
 
-    @include('projects._task-assistant-drawer', [
-        'project'         => $project,
-        'assistantAgent'  => $assistantAgent,
-        'playbooks'       => $playbooks,
-        'chatMessages'    => $chatMessages,
-        'team'            => $team,
-    ])
 </x-app-layout>
