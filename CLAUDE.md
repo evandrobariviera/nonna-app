@@ -124,6 +124,7 @@ Ver [.claude/docs/architecture.md](.claude/docs/architecture.md) para schema com
 - [.claude/docs/clickup-import-api.md](.claude/docs/clickup-import-api.md) — contrato da API que o n8n usa para importar dados do ClickUp (tarefas, projetos, macroplanejamentos) para o App
 - [.claude/docs/approval-webhook-api.md](.claude/docs/approval-webhook-api.md) — contrato do webhook `approval_requested` que o App dispara pro n8n quando uma tarefa é enviada para aprovação do cliente (WhatsApp/e-mail)
 - [.claude/docs/notification-webhook-api.md](.claude/docs/notification-webhook-api.md) — contrato do webhook genérico de mensagens padrão (`NotificationDispatchService`) que o App dispara pro n8n — unificado com o antigo webhook exclusivo de aprovação; `chamado_aberto` e `aprovacao` já disparam de verdade
+- [.claude/docs/acompanhamento-campanhas.md](.claude/docs/acompanhamento-campanhas.md) — escopo da etapa E: coordenador por campanha/projeto, rotina de conferência a cada N dias, três pilares (sistema, coordenador, cliente), o que o agente lê; e o fio condutor do planejamento conduzido pelo agente
 - [.claude/docs/templates/](.claude/docs/templates/) — HTMLs de diagnóstico, planejamento e apresentação (referência de UX/campos)
 
 ## Convenções
