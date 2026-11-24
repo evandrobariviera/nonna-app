@@ -87,7 +87,7 @@ class DocumentDrafter
         foreach ($schema->sections() as $section) {
             foreach ($section['blocks'] as $b) {
                 if ($b['type'] === 'field') {
-                    if (array_key_exists($b['key'], (array) ($a['campos'] ?? [])) && !in_array($b['input'], ['ref', 'refs'], true)) {
+                    if (array_key_exists($b['key'], (array) ($a['campos'] ?? [])) && !in_array($b['input'], ['ref', 'refs', 'user'], true)) {
                         $fields[$b['key']] = $schema->normalize($b, $a['campos'][$b['key']]);
                     }
                     continue;
@@ -101,7 +101,7 @@ class DocumentDrafter
                     $attrs = isset($b['switch'], $row[$b['switch']]) ? [$b['switch'] => $row[$b['switch']]] : [];
                     $item  = $schema->newItem($b['key'], $attrs);
                     foreach ($b['fields'] as $f) {
-                        if ($f['key'] === ($b['switch'] ?? null) || in_array($f['input'], ['ref', 'refs'], true)) {
+                        if ($f['key'] === ($b['switch'] ?? null) || in_array($f['input'], ['ref', 'refs', 'user'], true)) {
                             continue;
                         }
                         if (array_key_exists($f['key'], $row)) {

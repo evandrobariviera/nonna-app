@@ -9,6 +9,20 @@
     $agentMeetings = \App\Models\Meeting::where('client_id', $document->client_id)->whereNotNull('ata')
         ->orderByDesc('scheduled_at')->limit(10)->get(['id', 'title', 'scheduled_at'])
         ->map(fn ($m) => ['id' => $m->id, 'label' => $m->scheduled_at?->format('d/m/Y') . ' · ' . $m->title])->values();
+    // Campo "pessoa da equipe" (coordenador): quem tem o Papel Funcional vem primeiro.
+    $docPeople = [];
+    if ($schema->hasUserField()) {
+        $team = \App\Models\User::whereIn('id', \App\Models\OrganizationUser::where('organization_id', $document->organization_id)->pluck('user_id'))
+            ->orderBy('name')->get(['id', 'name']);
+        $coordIds = \App\Models\FunctionalRole::where('organization_id', $document->organization_id)->where('key', 'coordenador')
+            ->first()?->users()->pluck('users.id')->all() ?? [];
+        [$coords, $others] = $team->partition(fn ($u) => in_array($u->id, $coordIds));
+        $map = fn ($c) => $c->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])->values();
+        $docPeople = array_values(array_filter([
+            $coords->isNotEmpty() ? ['label' => 'Coordenadores', 'users' => $map($coords)] : null,
+            $others->isNotEmpty() ? ['label' => $coords->isNotEmpty() ? 'Outras pessoas da equipe' : 'Equipe', 'users' => $map($others)] : null,
+        ]));
+    }
 @endphp
 
 <div x-data="fieldDocEditor(@js([
@@ -22,6 +36,7 @@
         'decideUrl' => url('/documentos/' . $document->id . '/agente'),
         'chat'      => $document->agent_state['chat'] ?? [],
         'meetings'  => $agentMeetings,
+        'people'    => $docPeople,
         'research'  => $document->kind === 'campanha' ? [
             'url'    => route('documents.research', $document),
             'status' => !empty($document->agent_state['pesquisando']) ? 'pesquisando' : (!empty($document->agent_state['pesquisa']) ? 'pronta' : 'nenhuma'),
@@ -348,6 +363,7 @@
 function fieldDocEditor(cfg) {
     return {
         cfg,
+        people: cfg.people || [],
         state: cfg.payload,
         view: 'editar',
         clientSrc: '',

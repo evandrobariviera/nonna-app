@@ -39,6 +39,7 @@ class SchemaPrompt
             'date'   => 'data AAAA-MM-DD',
             'money'  => 'número em reais',
             'number' => 'número',
+            'user'   => 'pessoa da equipe: só a equipe escolhe, deixe vazio',
             'text'   => 'texto, parágrafos curtos ou uma linha por item',
             default  => 'texto curto',
         };

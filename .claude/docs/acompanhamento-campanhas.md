@@ -79,7 +79,16 @@ Princípio (24/11): o centro são **as metas** (números da seção 01 da campan
 4. Cliente: avalia **a cada 15 dias**, **aparece no Portal**; formato a definir.
 5. **Projetos usam a mesma rotina** (no lugar dos números: "pronto quando" e "o que melhora depois").
 
-Em aberto: refinar o formulário (coordenador e cliente) antes de construir.
+### Decisões (24/11, rodada 2)
+
+6. **Formulário do coordenador APROVADO** (pode construir): três blocos —
+   - **Metas:** uma linha por número (principal + até 2 de apoio). Sistema mostra ponto de partida · quanto queremos · valor atual · semáforo pelo ritmo. Quando "informado", coordenador digita o valor. Coordenador marca **vai bater / em risco / não vai bater** + frase opcional.
+   - **Pontos de cuidado:** uma linha por sinal de alerta. **Aconteceu? sim/não**; se sim, **fizemos o combinado? sim/não/em andamento**.
+   - **Andamento:** Sistema mostra tarefas atrasadas, ajustes pedidos, pendências do cliente. Coordenador: **no rumo / atenção / fora do rumo** · "o que travou e de quem depende" · **próximo passo (único texto obrigatório)**.
+7. **Cliente avalia POR CAMPANHA/PROJETO** (não uma por cliente): nota 1–5 "Como está o andamento?" + "Algo que gostaria de ajustar?" opcional, a cada 15 dias, Portal + link sem senha.
+8. **Seção 09 da campanha:** "Quem acompanha" (papel) é TROCADO pelo coordenador (pessoa, filtrada pelo Papel Funcional novo), espelhado no campo da campanha.
+
+Projeto (conferido 24/11): tem "Quando vamos conferir" (s01 `conferir_em`) e "Conferimos se melhorou em" (s06 `conferir_beneficio`) — a mesma data pedida duas vezes — + "Cliente aprova a entrega em" (s06 `aceite`). Nenhuma é periódica. **Decidido:** acrescentar "Conferir a cada quantos dias" (padrão 15) na s06 do projeto e tirar a data repetida da s01 (fica só `conferir_beneficio`). Conferências periódicas até a entrega; a última é na data de "conferimos se melhorou" (= fechamento).
 
 ## Ordem sugerida de implementação
 

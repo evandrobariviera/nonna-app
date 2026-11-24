@@ -298,7 +298,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
     <div class="num">09</div>
     <h2>Acompanhamento e fechamento</h2>
     <div class="cols">
-      <div class="box"><span class="label">Quem acompanha</span><p>{{ $content['quem_acompanha'] ?? '' }}</p></div>
+      <div class="box"><span class="label">Coordenador da campanha</span><p>{{ filled($content['coordenador'] ?? null) ? \App\Models\User::withoutGlobalScopes()->whereKey($content['coordenador'])->value('name') : ($content['quem_acompanha'] ?? '') }}</p></div>
       @php
         $checkin = ($content['checkin_dias'] ?? null) ? 'A cada ' . $content['checkin_dias'] . ' dias' : '';
         if ($checkin && ($content['checkin_inicio'] ?? null)) { $checkin .= ', a partir de ' . $d($content['checkin_inicio']); }

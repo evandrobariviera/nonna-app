@@ -1,0 +1,24 @@
+{
+    "novidades": [
+        {
+            "title": "Coordenador em cada campanha e projeto",
+            "summary": "Cada campanha e cada projeto agora tem um coordenador: a pessoa da equipe que confere, a cada tantos dias, se o trabalho está andando. Ele é escolhido no próprio documento, na seção de acompanhamento. No projeto, a data de conferir o ganho, que aparecia duas vezes, ficou só no fim do documento.",
+            "kind": "melhoria",
+            "area": "Documentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Documento de campanha — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-campanha",
+            "body_file": "ajuda-documento-de-campanha.html"
+        },
+        {
+            "title": "Documento de projeto — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-projeto",
+            "body_file": "ajuda-documento-de-projeto.html"
+        }
+    ]
+}

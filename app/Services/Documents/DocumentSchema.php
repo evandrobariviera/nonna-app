@@ -18,6 +18,7 @@ use Illuminate\Support\Str;
  *           'add' => [['label', 'attrs' => [...]], ...], 'switch'? => campo select que troca o tipo,
  *           'min'?, 'max'? (quantos itens o modelo pede), 'start'? (itens com que o documento nasce)]
  *   ref = escolhe UM item de outra lista (guarda o id); refs = vários.
+ *   user = uma pessoa da equipe (guarda o id do usuário). Só PESSOA escolhe; o agente não preenche nem propõe.
  *
  * Conteúdo: valores simples por chave; lista = array de itens com 'id' próprio.
  * Caminho de um campo: "chave" ou "lista.<id do item>.chave".
@@ -50,6 +51,21 @@ abstract class DocumentSchema
     public function mirrors(): array
     {
         return [];
+    }
+
+    /** O modelo tem campo de pessoa da equipe? (a tela só busca a equipe quando precisa) */
+    public function hasUserField(): bool
+    {
+        foreach ($this->sections() as $section) {
+            foreach ($section['blocks'] as $block) {
+                $fields = $block['type'] === 'list' ? $block['fields'] : [$block];
+                if (collect($fields)->contains('input', 'user')) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     public static function for(string $kind): self
@@ -152,6 +168,8 @@ abstract class DocumentSchema
                 return $value + 0;
             case 'ref':
                 return filled($value) ? (string) $value : null;
+            case 'user':
+                return (is_int($value) || (is_string($value) && ctype_digit($value))) && (int) $value > 0 ? (int) $value : null;
             case 'date':
                 $value = trim((string) $value);
 
@@ -289,6 +307,9 @@ abstract class DocumentSchema
         $fmt = function (array $field, mixed $v) use ($names) {
             if ($v === null || $v === '' || $v === []) {
                 return null;
+            }
+            if ($field['input'] === 'user') {
+                return \App\Models\User::withoutGlobalScopes()->whereKey($v)->value('name');
             }
 
             return match ($field['input']) {

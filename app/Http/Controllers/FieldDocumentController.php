@@ -178,7 +178,9 @@ class FieldDocumentController extends Controller
                 'objetivo' => $project->objective,
                 'inicio'   => $project->start_date?->toDateString(),
                 'fim'      => $project->end_date?->toDateString(),
-            ] + ($kind === 'campanha' ? ['entrega_pecas' => $project->pieces_due_date?->toDateString(), 'checkin_dias' => 15] : []));
+                'checkin_dias' => 15,
+                'coordenador'  => $project->coordinator_id,
+            ] + ($kind === 'campanha' ? ['entrega_pecas' => $project->pieces_due_date?->toDateString()] : []));
             $this->editor->create($kind, $project->client_id, $project->getMorphClass(), $project->id, Auth::id(), $prefill, 'cadastro');
         }
 

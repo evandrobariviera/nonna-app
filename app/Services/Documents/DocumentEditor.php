@@ -54,9 +54,18 @@ class DocumentEditor
 
     public function setField(Document $document, string $path, mixed $value, ?int $userId, string $actor = 'pessoa'): Document
     {
-        return $this->mutate($document, function (array &$content, DocumentSchema $schema) use ($path, $value) {
+        return $this->mutate($document, function (array &$content, DocumentSchema $schema) use ($document, $path, $value, $actor) {
             $target = $schema->resolve($path);
             $value  = $schema->normalize($target['field'], $value);
+            if ($target['field']['input'] === 'user') {
+                // Pessoa da equipe (ex.: coordenador): só gente escolhe, e só quem é da organização.
+                if ($actor !== 'pessoa') {
+                    throw new \InvalidArgumentException('Quem coordena é escolhido pela equipe.');
+                }
+                if ($value !== null && !\App\Models\OrganizationUser::where('organization_id', $document->organization_id)->where('user_id', $value)->exists()) {
+                    throw new \InvalidArgumentException('Essa pessoa não é da equipe.');
+                }
+            }
 
             if ($target['list'] === null) {
                 $before = $content[$target['key']] ?? null;

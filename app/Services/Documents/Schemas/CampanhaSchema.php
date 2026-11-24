@@ -47,7 +47,7 @@ class CampanhaSchema extends DocumentSchema
 
     public function mirrors(): array
     {
-        return ['nome' => 'title', 'objetivo' => 'objective', 'inicio' => 'start_date', 'fim' => 'end_date', 'entrega_pecas' => 'pieces_due_date'];
+        return ['nome' => 'title', 'objetivo' => 'objective', 'inicio' => 'start_date', 'fim' => 'end_date', 'entrega_pecas' => 'pieces_due_date', 'coordenador' => 'coordinator_id'];
     }
 
     public function sections(): array
@@ -194,9 +194,9 @@ class CampanhaSchema extends DocumentSchema
             ],
             [
                 'key' => 's09', 'num' => '09', 'title' => 'Acompanhamento',
-                'help' => 'Quem acompanha a campanha e de quanto em quanto tempo conferimos como ela vai. A conferência é rápida: verde, amarelo ou vermelho, e uma frase sobre o que mudou.',
+                'help' => 'O coordenador é a pessoa que confere, a cada tantos dias, se a campanha está andando: olha as metas, os sinais de alerta e a produção, e registra o próximo passo na aba Acompanhamento. O App avisa no dia de cada conferência. A última conferência é o fechamento.',
                 'blocks' => [
-                    ['type' => 'field', 'key' => 'quem_acompanha', 'label' => 'Quem acompanha', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'O papel: Tráfego, Atendimento...'],
+                    ['type' => 'field', 'key' => 'coordenador', 'label' => 'Coordenador da campanha', 'input' => 'user', 'required' => true, 'half' => true],
                     ['type' => 'field', 'key' => 'checkin_dias', 'label' => 'Conferir a cada quantos dias', 'input' => 'number', 'required' => true, 'half' => true],
                     ['type' => 'field', 'key' => 'checkin_inicio', 'label' => 'Primeira conferência', 'input' => 'date', 'required' => true, 'half' => true],
                     ['type' => 'field', 'key' => 'fechamento', 'label' => 'Data do fechamento', 'input' => 'date', 'required' => true, 'half' => true],

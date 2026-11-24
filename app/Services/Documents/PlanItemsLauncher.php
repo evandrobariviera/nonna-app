@@ -179,7 +179,8 @@ class PlanItemsLauncher
             'carrega'       => $metaNames ?: ($prepara ? "Prepara o terreno para {$prepara}" : null),
             'pronto_quando' => $item['pronto_quando'] ?? null,
             'beneficio'     => $item['beneficio'] ?? null,
-            'conferir_em'   => $item['beneficio_em'] ?? null,
+            'conferir_beneficio' => $item['beneficio_em'] ?? null,
+            'checkin_dias'  => 15,
         ];
     }
 }

@@ -66,6 +66,21 @@
         </select>
     </template>
 
+    {{-- Pessoa da equipe (ex.: coordenador). Quem tem o Papel Funcional vem primeiro. --}}
+    <template x-if="{{ $F }}.input === 'user'">
+        <select class="field w-full px-3 py-2 text-sm"
+                @change="edit({{ $P }}, $event.target.value || null, {{ $I }}, {{ $F }}.key); flush({{ $P }}, $event.target.value || null)">
+            <option value="">Escolha a pessoa…</option>
+            <template x-for="g in people" :key="g.label">
+                <optgroup :label="g.label">
+                    <template x-for="u in g.users" :key="u.id">
+                        <option :value="u.id" :selected="String(u.id) === String({{ $V }})" x-text="u.name"></option>
+                    </template>
+                </optgroup>
+            </template>
+        </select>
+    </template>
+
     {{-- Um item de outra lista (ex.: o ângulo criativo de uma peça) --}}
     <template x-if="{{ $F }}.input === 'ref'">
         <select class="field w-full px-3 py-2 text-sm"

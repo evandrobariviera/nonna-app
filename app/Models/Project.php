@@ -208,6 +208,15 @@ class Project extends Model
             ->withTimestamps();
     }
 
+    /**
+     * Coordenador (24/11, etapa E): a pessoa que confere a cada N dias se a campanha/projeto
+     * está andando. Escolhido no documento em campos (espelha o campo "coordenador").
+     */
+    public function coordinator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'coordinator_id');
+    }
+
     /** Comentários/observações do time — mais recente primeiro. */
     public function comments(): HasMany
     {

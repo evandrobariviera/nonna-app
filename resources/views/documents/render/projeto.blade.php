@@ -164,7 +164,7 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
       <div class="campos">
         <div><span class="label">Ponto de partida</span><b>{{ $content['beneficio_hoje'] ?? '' }}</b></div>
         <div><span class="label">Quanto esperamos</span><b>{{ $content['beneficio_esperado'] ?? '' }}</b></div>
-        <div><span class="label">Quando vamos conferir</span><b>{{ $d($content['conferir_em'] ?? null) }}</b></div>
+        <div><span class="label">Quando vamos conferir</span><b>{{ $d($content['conferir_beneficio'] ?? null) }}</b></div>
         <div><span class="label">Onde vemos esse número</span><b>{{ $content['beneficio_fonte'] ?? '' }}</b></div>
       </div>
     </div>
@@ -234,8 +234,10 @@ footer { text-align: center; font: 500 12px "IBM Plex Mono", monospace; color: v
 
   <section>
     <div class="num">06</div>
-    <h2>Entrega e fechamento</h2>
+    <h2>Acompanhamento, entrega e fechamento</h2>
     <div class="lista-dupla">
+      <div class="chave">Coordenador do projeto</div><div>{{ filled($content['coordenador'] ?? null) ? \App\Models\User::withoutGlobalScopes()->whereKey($content['coordenador'])->value('name') : '' }}</div>
+      <div class="chave">Conferência</div><div>{{ ($content['checkin_dias'] ?? null) ? 'A cada ' . $content['checkin_dias'] . ' dias' : '' }}</div>
       <div class="chave">Cliente aprova a entrega em</div><div>{{ $d($content['aceite'] ?? null) }}</div>
       <div class="chave">Conferimos se melhorou em</div><div>{{ $d($content['conferir_beneficio'] ?? null) }}</div>
     </div>

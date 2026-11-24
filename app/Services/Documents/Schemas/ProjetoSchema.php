@@ -33,7 +33,7 @@ class ProjetoSchema extends DocumentSchema
 
     public function mirrors(): array
     {
-        return ['nome' => 'title', 'objetivo' => 'objective', 'inicio' => 'start_date', 'fim' => 'end_date'];
+        return ['nome' => 'title', 'objetivo' => 'objective', 'inicio' => 'start_date', 'fim' => 'end_date', 'coordenador' => 'coordinator_id'];
     }
 
     public function sections(): array
@@ -52,7 +52,7 @@ class ProjetoSchema extends DocumentSchema
             ],
             [
                 'key' => 's01', 'num' => '01', 'title' => 'Objetivo e como saber que deu certo',
-                'help' => 'Projeto é avaliado duas vezes: na entrega (ficou pronto?) e depois (valeu a pena?). "Está pronto quando" é o que o cliente precisa ver funcionando e aprovar. "O que melhora" é o ganho que esperamos depois da entrega, com o ponto de partida (como está antes do projeto), quanto esperamos e quando vamos conferir.',
+                'help' => 'Projeto é avaliado duas vezes: na entrega (ficou pronto?) e depois (valeu a pena?). "Está pronto quando" é o que o cliente precisa ver funcionando e aprovar. "O que melhora" é o ganho que esperamos depois da entrega, com o ponto de partida (como está antes do projeto) e quanto esperamos. A data de conferir o ganho fica na seção 06.',
                 'blocks' => [
                     ['type' => 'field', 'key' => 'objetivo', 'label' => 'Para que serve o projeto', 'input' => 'line', 'required' => true, 'placeholder' => 'Em uma frase, começando por um verbo'],
                     ['type' => 'field', 'key' => 'carrega', 'label' => 'Ajuda a bater a meta · ou · Deixa pronto para a campanha', 'input' => 'line', 'required' => true,
@@ -64,7 +64,6 @@ class ProjetoSchema extends DocumentSchema
                     ['type' => 'field', 'key' => 'beneficio', 'label' => 'O que melhora depois de pronto', 'input' => 'line', 'required' => true, 'placeholder' => 'Ex.: mais pedidos vindos do site'],
                     ['type' => 'field', 'key' => 'beneficio_hoje', 'label' => 'Ponto de partida (como está antes do projeto)', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Ex.: 3 dias para responder um orçamento (ou "A confirmar")'],
                     ['type' => 'field', 'key' => 'beneficio_esperado', 'label' => 'Quanto esperamos', 'input' => 'line', 'required' => true, 'half' => true],
-                    ['type' => 'field', 'key' => 'conferir_em', 'label' => 'Quando vamos conferir', 'input' => 'date', 'required' => true, 'half' => true],
                     ['type' => 'field', 'key' => 'beneficio_fonte', 'label' => 'Onde vemos esse número (no começo e no fim)', 'input' => 'line', 'required' => true, 'half' => true, 'placeholder' => 'Ex.: Central de Leads, CRM, planilha do cliente'],
                 ],
             ],
@@ -118,9 +117,11 @@ class ProjetoSchema extends DocumentSchema
                 ],
             ],
             [
-                'key' => 's06', 'num' => '06', 'title' => 'Entrega e fechamento',
-                'help' => 'A data em que o cliente aprova a entrega e a data em que conferimos se o ganho esperado (seção 01) apareceu.',
+                'key' => 's06', 'num' => '06', 'title' => 'Acompanhamento, entrega e fechamento',
+                'help' => 'O coordenador é a pessoa que confere, a cada tantos dias, se o projeto está andando e registra o próximo passo na aba Acompanhamento; o App avisa no dia de cada conferência. Depois, a data em que o cliente aprova a entrega e a data em que conferimos se o ganho esperado (seção 01) apareceu: essa última conferência é o fechamento.',
                 'blocks' => [
+                    ['type' => 'field', 'key' => 'coordenador', 'label' => 'Coordenador do projeto', 'input' => 'user', 'required' => true, 'half' => true],
+                    ['type' => 'field', 'key' => 'checkin_dias', 'label' => 'Conferir a cada quantos dias', 'input' => 'number', 'required' => true, 'half' => true],
                     ['type' => 'field', 'key' => 'aceite', 'label' => 'Cliente aprova a entrega em', 'input' => 'date', 'required' => true, 'half' => true],
                     ['type' => 'field', 'key' => 'conferir_beneficio', 'label' => 'Conferimos se melhorou em', 'input' => 'date', 'required' => true, 'half' => true],
                 ],

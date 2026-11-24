@@ -285,6 +285,7 @@ TXT;
             'date'   => 'data',
             'money'  => 'número em reais',
             'number' => 'número',
+            'user'   => 'pessoa da equipe: só a equipe escolhe, nunca proponha',
             'text'   => 'texto, parágrafos',
             default  => 'texto curto',
         };
