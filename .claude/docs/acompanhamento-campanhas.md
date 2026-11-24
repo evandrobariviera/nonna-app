@@ -12,7 +12,7 @@ O Agente Nonna conduz o processo inteiro: **planejamento → campanhas e projeto
 - Peças e entregas viram tarefas (sem IA).
 - Cliente lê planejamento e campanhas no link do aviso de execução e no Portal.
 
-Falta: **E (este documento)** e **F (manuais do agente editáveis no App)**. Também combinado e não feito: (1) rascunho do planejamento lendo os números da Central de Performance (ponto de partida das metas); (2) agente da coluna com ferramentas (números, pesquisa, campanhas anteriores).
+Falta: **E (este documento)** e **F (manuais do agente editáveis no App)**. Feito em 24/11 (1ca8b5a): rascunho do planejamento lê os números da Central (ponto de partida das metas de anúncio); agente da coluna consulta números, campanhas anteriores e pesquisa de mercado (botão em segundo plano).
 
 ## O papel: Coordenador da campanha/projeto
 
