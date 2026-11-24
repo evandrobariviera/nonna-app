@@ -78,13 +78,13 @@ class ProjectCheckin extends Model
             $lines = ['- ' . $c->checked_on->format('d/m/Y') . ($c->is_closing ? ' (FECHAMENTO)' : '') . ': '
                 . (self::SITUACOES[$c->situacao]['label'] ?? $c->situacao)];
             foreach ($c->metas ?? [] as $m) {
-                $lines[] = '  · ' . $m['nome'] . ($m['atual'] ? ": está em {$m['atual']}" : '') . ($m['meta'] ? " (queremos {$m['meta']})" : '')
+                $lines[] = '  · ' . ($m['nome'] ?? '') . (($m['atual'] ?? null) ? ": está em {$m['atual']}" : '') . (($m['meta'] ?? null) ? " (queremos {$m['meta']})" : '')
                     . (isset($lights[$m['semaforo'] ?? '']) ? ', ' . $lights[$m['semaforo']] : '')
-                    . ($m['avaliacao'] ? ' — coordenador: ' . mb_strtolower(self::AVALIACOES[$m['avaliacao']] ?? '') : '')
-                    . ($m['comentario'] ? " ({$m['comentario']})" : '');
+                    . (($m['avaliacao'] ?? null) ? ' — coordenador: ' . mb_strtolower(self::AVALIACOES[$m['avaliacao']] ?? '') : '')
+                    . (($m['comentario'] ?? null) ? " ({$m['comentario']})" : '');
             }
             foreach (collect($c->cuidados ?? [])->where('aconteceu', 'sim') as $a) {
-                $lines[] = "  · Sinal de alerta aconteceu: {$a['se']}" . ($a['combinado'] ? ' — fizemos o combinado: ' . mb_strtolower(self::COMBINADO[$a['combinado']] ?? '') : '');
+                $lines[] = "  · Sinal de alerta aconteceu: {$a['se']}" . (($a['combinado'] ?? null) ? ' — fizemos o combinado: ' . mb_strtolower(self::COMBINADO[$a['combinado']] ?? '') : '');
             }
             if ($c->travou) {
                 $lines[] = "  · Travou: {$c->travou}" . ($c->depende ? ' (' . mb_strtolower(self::DEPENDE[$c->depende] ?? '') . ')' : '');

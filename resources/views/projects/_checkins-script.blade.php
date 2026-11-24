@@ -13,12 +13,14 @@ function checkinForm(initial, ritmo) {
         const v = parseFloat(n); return isNaN(v) ? null : v;
     };
     return {
-        metas: initial.metas, cuidados: initial.cuidados, situacao: initial.situacao, fechar: !!initial.fechar,
+        metas: initial.metas, cuidados: initial.cuidados || {}, situacao: initial.situacao, fechar: !!initial.fechar,
         light(k) {
-            const [p0, m0] = meta[k] || []; const p = num(p0), m = num(m0), a = num(this.metas[k]?.atual);
-            if (p === null || m === null || a === null || m === p || ritmo === null) return null;
+            // ref[k] = [partida, meta, ritmo próprio da linha?] — no planejamento cada meta tem o seu "até quando".
+            const [p0, m0, r0] = meta[k] || []; const p = num(p0), m = num(m0), a = num(this.metas[k]?.atual);
+            const rit = (r0 !== undefined && r0 !== null) ? r0 : ritmo;
+            if (p === null || m === null || a === null || m === p || rit === null) return null;
             const feito = (a - p) / (m - p); if (feito >= 1) return 'verde';
-            const r = feito / Math.max(ritmo / 100, 0.1);
+            const r = feito / Math.max(rit / 100, 0.1);
             return r >= 0.9 ? 'verde' : (r >= 0.6 ? 'amarelo' : 'vermelho');
         },
         lightColor(k) { return (lights[this.light(k)] || [])[0]; },

@@ -98,6 +98,7 @@ Projeto (conferido 24/11): tem "Quando vamos conferir" (s01 `conferir_em`) e "Co
 - **4 ESTACIONADA (24/11, Evandro):** avaliação do cliente espera o futuro setor de **Sucesso do Cliente** — repensar o formato junto com ele.
 - **5 feita (24/11):** `ProjectCheckin::historyText()` entra na coluna do agente (campanha/projeto: as suas; planejamento: das campanhas do ciclo), no `planText` do planejamento anterior (rascunho do próximo ciclo) e em `CreativeContext::previousCampaigns`. Só leitura.
 - **Etapa E concluída**, exceto a 4 (cliente), estacionada.
+- **Metas do planejamento (24/11, Evandro: "as metas do planejamento são as mais importantes"):** `macro_plan_checkins` + `MacroPlanCheckin` + `Services\Projects\PlanCheckinSystem` + `MacroPlanCheckinController` + aba Acompanhamento no planejamento (`macroplans/_checkins`, lazy). Por meta: números + semáforo (ritmo do começo do ciclo ao "até quando" da meta) + campanhas/projetos que ajudam (refs da seção 04 → `PlanItemsLauncher::created`) com a última conferência. Quem: responsável do planejamento. Quando: a cada 30 dias + revisão do meio + fechamento (o mais cedo vence; nunca depois do fechamento), pelo mesmo comando `projects:checkin-pendencies`. Fechamento: resultado final por meta → seção `fech` nova do PlanejamentoSchema (`resultado_metas` montado sozinho, `aprendemos`, `levamos`). Agente lê (coluna do planejamento + planText).
 
 ## Ordem sugerida de implementação
 

@@ -192,7 +192,7 @@ class MacroPlanController extends Controller
         }
         $currentBlock = $request->get('bloco', 'documento');
 
-        if (!in_array($currentBlock, array_merge(['documento', 'linha-do-tempo', 'bloco3', 'discussao', 'pendencias', 'meta'], $legacyBlocks), true)) {
+        if (!in_array($currentBlock, array_merge(['documento', 'acompanhamento', 'linha-do-tempo', 'bloco3', 'discussao', 'pendencias', 'meta'], $legacyBlocks), true)) {
             $currentBlock = 'documento';
         }
 

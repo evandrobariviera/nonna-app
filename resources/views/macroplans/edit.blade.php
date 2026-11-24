@@ -59,6 +59,7 @@
         @php
                     $nav = [
                         'documento' => ['icon' => 'file-text',     'label' => 'Documento'],
+                        'acompanhamento' => ['icon' => 'activity', 'label' => 'Acompanhamento', 'count' => $macroplan->checkins()->count() ?: null],
                         'linha-do-tempo' => ['icon' => 'chart-gantt', 'label' => 'Linha do tempo'],
                         'bloco3'    => ['icon' => 'folder-kanban', 'label' => 'Campanhas e Projetos', 'count' => $macroplan->projects->count()],
                         'discussao' => ['icon' => 'messages-square', 'label' => 'Discussão', 'count' => $macroplan->comments->count()],
@@ -563,6 +564,25 @@
                     @endif
                 </div>
             </div>
+
+            {{-- ══ ACOMPANHAMENTO — conferência das metas do ciclo (24/11). Pesado: só monta quando a aba
+                 é aberta; aberta direto pela URL (?bloco=acompanhamento, ex.: volta do formulário) vem pronta. ══ --}}
+            @include('projects._checkins-script')
+            @if($currentBlock === 'acompanhamento')
+                <div x-show="block === 'acompanhamento'" x-cloak>
+                    @include('macroplans._checkins', ['macroplan' => $macroplan])
+                </div>
+            @else
+                <div x-show="block === 'acompanhamento'" x-cloak
+                     x-data="{ loaded: false, html: '<p class=&quot;text-sm px-1 py-4&quot; style=&quot;color:var(--muted)&quot;>Carregando…</p>' }"
+                     x-effect="if (block === 'acompanhamento' && !loaded) { loaded = true;
+                         fetch(@js(route('macroplan-checkins.show', $macroplan)), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                             .then(r => r.ok ? r.text() : Promise.reject())
+                             .then(t => html = t)
+                             .catch(() => { loaded = false; html = '<p class=&quot;text-sm px-1 py-4&quot; style=&quot;color:var(--orange)&quot;>Não foi possível carregar. Abra a aba de novo.</p>'; }) }">
+                    <div x-html="html"></div>
+                </div>
+            @endif
 
             {{-- ══ LINHA DO TEMPO — etapas do ciclo + campanhas/projetos (MacroPlanTimeline) ══ --}}
             <div x-show="block === 'linha-do-tempo'" x-cloak>

@@ -303,6 +303,11 @@ class PlanningSources
             $parts[] = "## Fechamento das campanhas e projetos\n" . implode("\n", $closings);
         }
 
+        // Conferências das METAS do ciclo (responsável do planejamento) — o mais importante.
+        if ($h = \App\Models\MacroPlanCheckin::historyText($plan->id, 3)) {
+            $parts[] = "## Conferências das metas do ciclo (mais recente primeiro)\n{$h}";
+        }
+
         // Conferências do coordenador ao longo do ciclo (etapa E.5): como cada uma andou.
         $checkins = [];
         foreach ($plan->projects as $project) {

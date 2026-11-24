@@ -138,6 +138,18 @@ class PlanejamentoSchema extends DocumentSchema
                      ]],
                 ],
             ],
+            [
+                // 24/11: preenchido pela conferência de fechamento (aba Acompanhamento do planejamento).
+                'key' => 'fech', 'num' => null, 'title' => 'Fechamento do ciclo (preencher no fechamento)',
+                'help' => 'O resultado de cada meta do ciclo, o que aprendemos e o que levamos para o próximo planejamento. É preenchido na conferência de fechamento, na aba Acompanhamento, e é a primeira coisa que o próximo planejamento lê.',
+                'optional' => true,
+                'blocks' => [
+                    ['type' => 'field', 'key' => 'resultado_metas', 'label' => 'Resultado das metas', 'input' => 'text',
+                     'placeholder' => 'Uma linha por meta: atingiu, parcial ou não atingiu, e o número final'],
+                    ['type' => 'field', 'key' => 'aprendemos', 'label' => 'O que aprendemos', 'input' => 'text'],
+                    ['type' => 'field', 'key' => 'levamos', 'label' => 'O que levamos para o próximo ciclo', 'input' => 'text'],
+                ],
+            ],
         ];
     }
 

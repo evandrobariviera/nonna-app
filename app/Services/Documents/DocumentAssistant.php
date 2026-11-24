@@ -107,6 +107,9 @@ class DocumentAssistant
         if ($owner instanceof \App\Models\Project && ($h = \App\Models\ProjectCheckin::historyText($owner->id, 4))) {
             $out .= "\n\nCONFERÊNCIAS DO COORDENADOR (mais recente primeiro):\n{$h}";
         } elseif ($owner instanceof \App\Models\MacroPlan) {
+            if ($h = \App\Models\MacroPlanCheckin::historyText($owner->id, 3)) {
+                $out .= "\n\nCONFERÊNCIAS DAS METAS DO CICLO (mais recente primeiro):\n{$h}";
+            }
             $parts = $owner->projects()->get(['id', 'title'])
                 ->map(fn ($p) => ($h = \App\Models\ProjectCheckin::historyText($p->id, 2)) ? "### {$p->title}\n{$h}" : null)->filter();
             if ($parts->isNotEmpty()) {

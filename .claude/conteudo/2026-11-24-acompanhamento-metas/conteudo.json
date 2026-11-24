@@ -1,0 +1,24 @@
+{
+    "novidades": [
+        {
+            "title": "Acompanhamento das metas do planejamento",
+            "summary": "O planejamento ganhou a aba Acompanhamento. Nela o responsável confere cada meta do ciclo vendo, embaixo dela, as campanhas e projetos que ajudam a batê-la, com a última conferência de cada um. O App avisa a cada 30 dias, na revisão do meio e no fechamento, e o resultado de cada meta vai para o documento.",
+            "kind": "novidade",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Acompanhamento de campanhas e projetos",
+            "category": "Documentos",
+            "slug": "acompanhamento-de-campanhas-e-projetos",
+            "body_file": "ajuda-acompanhamento.html"
+        },
+        {
+            "title": "Planejamento do ciclo — como preencher",
+            "category": "Documentos",
+            "slug": "planejamento-do-ciclo",
+            "body_file": "ajuda-planejamento-do-ciclo.html"
+        }
+    ]
+}

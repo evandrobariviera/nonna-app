@@ -344,6 +344,12 @@ class MacroPlan extends Model
         return $this->hasMany(MacroPlanAttachment::class)->latest();
     }
 
+    /** Conferências das metas do ciclo (aba Acompanhamento) — mais recente primeiro. */
+    public function checkins(): HasMany
+    {
+        return $this->hasMany(MacroPlanCheckin::class)->orderByDesc('checked_on')->orderByDesc('created_at');
+    }
+
     public function pendencies(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(Pendency::class, 'pendable');

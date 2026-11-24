@@ -681,6 +681,13 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('macroplans.update');
     Route::patch('/planejamentos/{macroplan}/status', [MacroPlanController::class, 'updateStatus'])
         ->name('macroplans.update-status');
+    // ── Acompanhamento das metas do planejamento ──
+    Route::get('/planejamentos/{macroplan}/acompanhamento', [\App\Http\Controllers\MacroPlanCheckinController::class, 'show'])
+        ->name('macroplan-checkins.show');
+    Route::post('/planejamentos/{macroplan}/conferencias', [\App\Http\Controllers\MacroPlanCheckinController::class, 'store'])
+        ->name('macroplan-checkins.store');
+    Route::delete('/planejamentos/{macroplan}/conferencias/{checkin}', [\App\Http\Controllers\MacroPlanCheckinController::class, 'destroy'])
+        ->name('macroplan-checkins.destroy');
     // ── Discussão do planejamento ──
     Route::post('/planejamentos/{macroplan}/comentarios', [\App\Http\Controllers\MacroPlanCommentController::class, 'store'])
         ->name('macroplan-comments.store');
