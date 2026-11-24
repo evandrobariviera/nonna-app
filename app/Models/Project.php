@@ -217,6 +217,12 @@ class Project extends Model
         return $this->belongsTo(User::class, 'coordinator_id');
     }
 
+    /** Conferências do coordenador — mais recente primeiro. */
+    public function checkins(): HasMany
+    {
+        return $this->hasMany(ProjectCheckin::class)->orderByDesc('checked_on')->orderByDesc('created_at');
+    }
+
     /** Comentários/observações do time — mais recente primeiro. */
     public function comments(): HasMany
     {

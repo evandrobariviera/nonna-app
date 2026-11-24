@@ -94,6 +94,7 @@
         $abas = [
             'documento'      => ['icon' => 'file-text',       'label' => 'Documento'],
             'tarefas'        => ['icon' => 'list-checks',     'label' => 'Tarefas', 'count' => $project->tasks->whereNotIn('status', ['concluido', 'cancelado'])->count()],
+            'acompanhamento' => ['icon' => 'activity',        'label' => 'Acompanhamento', 'count' => $project->checkins()->count() ?: null],
             'linha-do-tempo' => ['icon' => 'chart-gantt',     'label' => 'Linha do tempo', 'count' => $project->phases->count() ?: null],
             'discussao'      => ['icon' => 'messages-square', 'label' => 'Discussão', 'count' => $project->comments->count()],
             'pendencias'     => ['icon' => 'hourglass',       'label' => 'Pendências', 'count' => $project->pendencies()->open()->count()],
@@ -1287,6 +1288,26 @@
     <x-badge-fill-menu />
     <x-person-fill-menu :users="$users" />
     </div>
+
+    {{-- ABA ACOMPANHAMENTO — conferências do coordenador (etapa E, 24/11) --}}
+    {{-- Pesado (tarefas, aprovações, pendências, anúncios): só monta quando a aba é aberta. Aberta
+         direto pela URL (?aba=acompanhamento, ex.: volta do formulário com erro) vem pronta do servidor. --}}
+    @include('projects._checkins-script')
+    @if($abaInicial === 'acompanhamento')
+        <div x-show="aba === 'acompanhamento'" x-cloak>
+        @include('projects._checkins', ['project' => $project])
+        </div>
+    @else
+        <div x-show="aba === 'acompanhamento'" x-cloak
+             x-data="{ loaded: false, html: '<p class=&quot;text-sm px-1 py-4&quot; style=&quot;color:var(--muted)&quot;>Carregando…</p>' }"
+             x-effect="if (aba === 'acompanhamento' && !loaded) { loaded = true;
+                 fetch(@js(route('project-checkins.show', $project)), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                     .then(r => r.ok ? r.text() : Promise.reject())
+                     .then(t => html = t)
+                     .catch(() => { loaded = false; html = '<p class=&quot;text-sm px-1 py-4&quot; style=&quot;color:var(--orange)&quot;>Não foi possível carregar. Abra a aba de novo.</p>'; }) }">
+            <div x-html="html"></div>
+        </div>
+    @endif
 
     {{-- ABA LINHA DO TEMPO --}}
     <div x-show="aba === 'linha-do-tempo'" x-cloak>

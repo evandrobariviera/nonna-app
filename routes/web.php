@@ -926,6 +926,13 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         ->name('projects.phases.sync');
     Route::patch('/tarefas/{task}/fase', [\App\Http\Controllers\ProjectPhaseController::class, 'updateTask'])
         ->name('tasks.update-phase');
+    // ── Conferências da campanha/projeto (aba Acompanhamento) ──
+    Route::get('/projetos/{project}/acompanhamento', [\App\Http\Controllers\ProjectCheckinController::class, 'show'])
+        ->name('project-checkins.show');
+    Route::post('/projetos/{project}/conferencias', [\App\Http\Controllers\ProjectCheckinController::class, 'store'])
+        ->name('project-checkins.store');
+    Route::delete('/projetos/{project}/conferencias/{checkin}', [\App\Http\Controllers\ProjectCheckinController::class, 'destroy'])
+        ->name('project-checkins.destroy');
     // ── Comentários da campanha/projeto ──
     Route::post('/projetos/{project}/comentarios', [\App\Http\Controllers\ProjectCommentController::class, 'store'])
         ->name('project-comments.store');

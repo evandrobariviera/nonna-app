@@ -90,6 +90,12 @@ Princípio (24/11): o centro são **as metas** (números da seção 01 da campan
 
 Projeto (conferido 24/11): tem "Quando vamos conferir" (s01 `conferir_em`) e "Conferimos se melhorou em" (s06 `conferir_beneficio`) — a mesma data pedida duas vezes — + "Cliente aprova a entrega em" (s06 `aceite`). Nenhuma é periódica. **Decidido:** acrescentar "Conferir a cada quantos dias" (padrão 15) na s06 do projeto e tirar a data repetida da s01 (fica só `conferir_beneficio`). Conferências periódicas até a entrega; a última é na data de "conferimos se melhorou" (= fechamento).
 
+## Andamento da implementação
+
+- **1 no ar (8b84073, 24/11):** coordenador (input `user` no documento → `projects.coordinator_id`), papel `coordenador`, s09/s06.
+- **2 feita (24/11):** `project_checkins` + `ProjectCheckin` + `Services\Projects\CheckinSystem` (pilar Sistema: metas do doc + semáforo pelo ritmo, sinais de alerta, tarefas/atrasadas, ajustes `changes_requested`, pendências cliente/equipe, alertas `CampaignInsight` novo/lido, números `ad_daily_snapshots` dos anúncios ligados) + `ProjectCheckinController` (show parcial / store / destroy só autor no mesmo dia) + aba Acompanhamento (`projects/_checkins`, carregada só ao abrir a aba; script em `projects/_checkins-script`). Semáforo: feito=(atual−partida)/(meta−partida) ÷ tempo passado; verde ≥0,9, amarelo ≥0,6.
+- **Falta:** 3 (pendência automática a cada N dias + fechamento = última conferência, `is_closing`), 4 (cliente no Portal), 5 (agente lê).
+
 ## Ordem sugerida de implementação
 
 1. Campo coordenador em campanha/projeto + Papel Funcional + apontar na criação pelo planejamento.

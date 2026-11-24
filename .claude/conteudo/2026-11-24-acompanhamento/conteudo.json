@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Aba Acompanhamento: conferência da campanha e do projeto",
+            "summary": "Campanhas e projetos ganharam a aba Acompanhamento. Nela o coordenador registra, a cada tantos dias, se as metas vão bater, se algum sinal de alerta aconteceu e qual é o próximo passo, com tarefas, pendências e números dos anúncios ao lado. Fica tudo no histórico.",
+            "kind": "novidade",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Acompanhamento de campanhas e projetos",
+            "category": "Documentos",
+            "slug": "acompanhamento-de-campanhas-e-projetos",
+            "body_file": "ajuda-acompanhamento.html"
+        }
+    ]
+}
