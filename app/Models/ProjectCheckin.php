@@ -50,6 +50,16 @@ class ProjectCheckin extends Model
 
     public const DEPENDE = ['equipe' => 'Da equipe', 'cliente' => 'Do cliente'];
 
+    /** Começo do título das pendências automáticas ("Conferir a campanha — X", "Fechar o projeto — X"). */
+    public const PENDENCY_PREFIXES = ['Conferir a', 'Conferir o', 'Fechar a', 'Fechar o'];
+
+    public static function pendencyTitle(Project $project, bool $closing): string
+    {
+        $what = $project->type === 'campanha' ? 'a campanha' : 'o projeto';
+
+        return mb_substr(($closing ? 'Fechar ' : 'Conferir ') . $what . ' — ' . $project->title, 0, 500);
+    }
+
     protected function tenantParent(): array
     {
         return ['projects', 'project_id'];

@@ -59,9 +59,28 @@ class CheckinSystem
         $cuidados = collect($content['alertas'] ?? [])->filter(fn ($a) => filled($a['se'] ?? null))
             ->map(fn ($a) => ['id' => $a['id'], 'se' => $a['se'], 'fazemos' => $a['fazemos'] ?? null, 'quem' => $a['quem'] ?? null])->values()->all();
 
-        $dias = (int) ($content['checkin_dias'] ?? 0) ?: null;
+        $dias  = (int) ($content['checkin_dias'] ?? 0) ?: null;
+        $sched = self::schedule($kind, $content, $last, $project->checkins()->where('is_closing', true)->exists());
+
+        // Campos do Fechamento do documento (seção 'fech'), para a conferência de fechamento.
+        $fech = [];
+        if ($doc) {
+            foreach ($doc->schema()->sections() as $section) {
+                if ($section['key'] === 'fech') {
+                    foreach ($section['blocks'] as $b) {
+                        if ($b['type'] === 'field') {
+                            $fech[] = $b + ['value' => $content[$b['key']] ?? null];
+                        }
+                    }
+                }
+            }
+        }
 
         return [
+            'fechamento'   => $sched['closing']?->toDateString(),
+            'hora_fechar'  => $sched['closing_due'],
+            'fechada'      => $sched['closed'],
+            'fech_fields'  => $fech,
             'kind'         => $kind,
             'ritmo'        => $ritmo,
             'periodo'      => [$from?->toDateString(), $to?->toDateString()],
@@ -70,7 +89,7 @@ class CheckinSystem
             'andamento'    => $this->andamento($project),
             'anuncios'     => $this->anuncios($project, $from),
             'checkin_dias' => $dias,
-            'proxima'      => $this->next($content, $last, $dias)?->toDateString(),
+            'proxima'      => $sched['next']?->toDateString(),
         ];
     }
 
@@ -155,8 +174,34 @@ class CheckinSystem
         return [$from, $to];
     }
 
+    /**
+     * Agenda da conferência (sem consulta pesada — usada também pelo comando diário):
+     * next = próxima conferência (nunca depois do fechamento); closing = data do fechamento
+     * (campanha: "Data do fechamento" ou término; projeto: "Conferimos se melhorou em");
+     * closing_due = a próxima conferência já é a de fechamento; closed = já houve o fechamento.
+     *
+     * @return array{next: ?Carbon, closing: ?Carbon, closing_due: bool, closed: bool}
+     */
+    public static function schedule(string $kind, array $content, $last, bool $closed): array
+    {
+        $d = fn ($v) => filled($v) ? Carbon::parse($v)->startOfDay() : null;
+        $closing = $kind === 'campanha'
+            ? ($d($content['fechamento'] ?? null) ?? $d($content['fim'] ?? null))
+            : $d($content['conferir_beneficio'] ?? null);
+        if ($closed) {
+            return ['next' => null, 'closing' => $closing, 'closing_due' => false, 'closed' => true];
+        }
+        $dias = (int) ($content['checkin_dias'] ?? 0) ?: null;
+        $next = self::next($content, $last, $dias);
+        if ($closing && (!$next || $next->gte($closing))) {
+            $next = $closing;
+        }
+
+        return ['next' => $next, 'closing' => $closing, 'closing_due' => $closing !== null && $next !== null && $next->eq($closing), 'closed' => false];
+    }
+
     /** Próxima conferência: última + N dias (ou a primeira combinada / começo + N). */
-    private function next(array $content, $last, ?int $dias): ?Carbon
+    private static function next(array $content, $last, ?int $dias): ?Carbon
     {
         if (!$dias) {
             return null;

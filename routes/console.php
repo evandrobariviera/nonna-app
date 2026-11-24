@@ -14,6 +14,8 @@ Schedule::command('ad-accounts:check-connections')->dailyAt('05:50')->withoutOve
 Schedule::command('campaigns:generate-insights')->dailyAt('08:00');
 Schedule::command('financial:generate-contract-transactions')->dailyAt('06:00');
 Schedule::command('automations:check-date-triggers')->dailyAt('07:00');
+// Dia da conferência da campanha/projeto → pendência "Conferir ..." / "Fechar ..." pro coordenador.
+Schedule::command('projects:checkin-pendencies')->dailyAt('07:10')->withoutOverlapping();
 // Reunião terminou sem ATA → pendência "Registrar a ATA" pro organizador.
 Schedule::command('meetings:ata-pendencies')->everyFifteenMinutes()->withoutOverlapping();
 // Planejamento/campanha/projeto entrou em execução → aviso ao cliente, depois da espera.

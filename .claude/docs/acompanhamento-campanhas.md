@@ -94,7 +94,8 @@ Projeto (conferido 24/11): tem "Quando vamos conferir" (s01 `conferir_em`) e "Co
 
 - **1 no ar (8b84073, 24/11):** coordenador (input `user` no documento → `projects.coordinator_id`), papel `coordenador`, s09/s06.
 - **2 feita (24/11):** `project_checkins` + `ProjectCheckin` + `Services\Projects\CheckinSystem` (pilar Sistema: metas do doc + semáforo pelo ritmo, sinais de alerta, tarefas/atrasadas, ajustes `changes_requested`, pendências cliente/equipe, alertas `CampaignInsight` novo/lido, números `ad_daily_snapshots` dos anúncios ligados) + `ProjectCheckinController` (show parcial / store / destroy só autor no mesmo dia) + aba Acompanhamento (`projects/_checkins`, carregada só ao abrir a aba; script em `projects/_checkins-script`). Semáforo: feito=(atual−partida)/(meta−partida) ÷ tempo passado; verde ≥0,9, amarelo ≥0,6.
-- **Falta:** 3 (pendência automática a cada N dias + fechamento = última conferência, `is_closing`), 4 (cliente no Portal), 5 (agente lê).
+- **3 feita (24/11):** comando `projects:checkin-pendencies` (07:10, só em_execucao + coordenador + doc) abre "Conferir a campanha — X" no dia (`CheckinSystem::schedule`: última + N, nunca depois do fechamento); no dia do fechamento vira "Fechar ...". Conferência resolve a pendência. Fechamento: caixa no formulário com os campos da seção `fech` do schema → `DocumentEditor::setField` (pessoa); `is_closing`; depois disso não abre mais.
+- **Falta:** 4 (cliente no Portal, POR campanha/projeto, nota 1–5 + texto), 5 (agente lê).
 
 ## Ordem sugerida de implementação
 

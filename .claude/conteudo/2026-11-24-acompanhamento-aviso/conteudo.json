@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "O App avisa o dia de conferir a campanha e o projeto",
+            "summary": "No dia combinado, o coordenador recebe a pendência \"Conferir a campanha\" (ou o projeto), que se resolve sozinha quando a conferência é registrada. Na data do fechamento, ela vira \"Fechar a campanha\" e o resultado vai direto para o Fechamento do documento.",
+            "kind": "melhoria",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Acompanhamento de campanhas e projetos",
+            "category": "Documentos",
+            "slug": "acompanhamento-de-campanhas-e-projetos",
+            "body_file": "ajuda-acompanhamento.html"
+        }
+    ]
+}

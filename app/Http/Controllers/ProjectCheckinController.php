@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\ProjectCheckin;
+use App\Services\Documents\DocumentEditor;
+use App\Services\PendencyService;
 use App\Services\Projects\CheckinSystem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +24,7 @@ class ProjectCheckinController extends Controller
         return view('projects._checkins', ['project' => $project]);
     }
 
-    public function store(Request $request, Project $project, CheckinSystem $system)
+    public function store(Request $request, Project $project, CheckinSystem $system, PendencyService $pendencies)
     {
         $data = $request->validate([
             'situacao'              => ['required', Rule::in(array_keys(ProjectCheckin::SITUACOES))],
@@ -36,6 +38,9 @@ class ProjectCheckinController extends Controller
             'cuidados'              => ['array'],
             'cuidados.*.aconteceu'  => ['nullable', Rule::in(['sim', 'nao'])],
             'cuidados.*.combinado'  => ['nullable', Rule::in(array_keys(ProjectCheckin::COMBINADO))],
+            'fechar'                => ['nullable', 'boolean'],
+            'fech'                  => ['array'],
+            'fech.*'                => ['nullable', 'string', 'max:8000'],
         ], [
             'proximo_passo.required' => 'Escreva o próximo passo.',
             'situacao.required'      => 'Escolha a situação geral.',
@@ -84,9 +89,28 @@ class ProjectCheckinController extends Controller
             'depende'         => $data['depende'] ?? null,
             'proximo_passo'   => trim($data['proximo_passo']),
             'sistema'         => ['ritmo' => $sys['ritmo'], 'andamento' => $sys['andamento'], 'anuncios' => $sys['anuncios']],
+            'is_closing'      => $closing = (bool) ($data['fechar'] ?? false) && !$sys['fechada'],
         ]);
 
-        return redirect()->to($this->url($project))->with('success', 'Conferência registrada.');
+        // Fechamento: o que foi escrito na conferência vai para a seção "Fechamento" do documento
+        // (o documento continua sendo a fonte — é ele que o próximo planejamento lê).
+        if ($closing && ($doc = $project->fieldDocument()->first())) {
+            $editor = app(DocumentEditor::class);
+            foreach ($sys['fech_fields'] as $f) {
+                if (array_key_exists($f['key'], $data['fech'] ?? [])) {
+                    $editor->setField($doc, $f['key'], $data['fech'][$f['key']], Auth::id());
+                }
+            }
+        }
+
+        // A pendência automática "Conferir ..." / "Fechar ..." se resolve com a conferência.
+        $open = $project->pendencies()->open()
+            ->where(fn ($w) => collect(ProjectCheckin::PENDENCY_PREFIXES)->each(fn ($p) => $w->orWhere('title', 'like', $p . ' %')))->get();
+        foreach ($open as $pendency) {
+            $pendencies->resolve($pendency, Auth::id(), $closing ? 'Fechamento registrado.' : 'Conferência registrada.');
+        }
+
+        return redirect()->to($this->url($project))->with('success', $closing ? 'Fechamento registrado.' : 'Conferência registrada.');
     }
 
     public function destroy(Project $project, ProjectCheckin $checkin)

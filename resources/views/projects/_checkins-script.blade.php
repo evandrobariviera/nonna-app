@@ -13,7 +13,7 @@ function checkinForm(initial, ritmo) {
         const v = parseFloat(n); return isNaN(v) ? null : v;
     };
     return {
-        metas: initial.metas, cuidados: initial.cuidados, situacao: initial.situacao,
+        metas: initial.metas, cuidados: initial.cuidados, situacao: initial.situacao, fechar: !!initial.fechar,
         light(k) {
             const [p0, m0] = meta[k] || []; const p = num(p0), m = num(m0), a = num(this.metas[k]?.atual);
             if (p === null || m === null || a === null || m === p || ritmo === null) return null;

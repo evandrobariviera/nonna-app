@@ -20,6 +20,7 @@
         ]])->all(),
         'cuidados' => collect($sys['cuidados'])->mapWithKeys(fn ($c) => [$c['id'] => ['aconteceu' => old("cuidados.{$c['id']}.aconteceu")]])->all(),
         'situacao' => old('situacao'),
+        'fechar'   => (bool) old('fechar', $sys['hora_fechar'] && $proxima && $proxima->lte(today())),
         'ref'      => collect($sys['metas'])->mapWithKeys(fn ($m) => [$m['key'] => [$m['partida'], $m['meta']]])->all(),
     ];
 @endphp
@@ -55,7 +56,11 @@
         <div>
             <span class="text-[11px] font-semibold uppercase" style="color:var(--muted); letter-spacing:.06em">Próxima conferência</span>
             <p style="color:{{ $proxima && $proxima->lt(today()) ? 'var(--orange)' : 'var(--text)' }}">
-                {{ $proxima ? $proxima->format('d/m/Y') . ($proxima->lt(today()) ? ' (atrasada)' : ($proxima->isToday() ? ' (hoje)' : '')) : '—' }}</p>
+                {{ $proxima ? $proxima->format('d/m/Y') . ($proxima->lt(today()) ? ' (atrasada)' : ($proxima->isToday() ? ' (hoje)' : '')) . ($sys['hora_fechar'] ? ' · fechamento' : '') : ($sys['fechada'] ? 'Encerrado' : '—') }}</p>
+        </div>
+        <div>
+            <span class="text-[11px] font-semibold uppercase" style="color:var(--muted); letter-spacing:.06em">Fechamento</span>
+            <p style="color:var(--text)">{{ $sys['fechamento'] ? \Carbon\Carbon::parse($sys['fechamento'])->format('d/m/Y') : 'Sem data no documento' }}@if($sys['fechada']) <b style="color:#16a34a">· registrado</b>@endif</p>
         </div>
         @if($sys['ritmo'] !== null)
             <div class="flex-1 min-w-[10rem]">
@@ -74,7 +79,13 @@
 @endif
 
 <div class="ck-grid mb-6">
-    {{-- Formulário da conferência --}}
+    {{-- Formulário da conferência (some depois do fechamento) --}}
+    @if($sys['fechada'])
+    <div class="card px-5 py-4">
+        <p class="card-title mb-1">Fechamento registrado</p>
+        <p class="text-sm" style="color:var(--muted)">O resultado está na seção Fechamento do documento e entra no próximo planejamento. Não abrimos mais conferências {{ $isCampaign ? 'desta campanha' : 'deste projeto' }}.</p>
+    </div>
+    @else
     <form method="POST" action="{{ route('project-checkins.store', $project) }}" class="card px-5 py-4"
           x-data="checkinForm(@js($initial), {{ $sys['ritmo'] ?? 'null' }})">
         @csrf
@@ -179,10 +190,42 @@
                       placeholder="O que vamos fazer até a próxima conferência, e quem faz">{{ old('proximo_passo') }}</textarea>
         </div>
 
+        {{-- Fechamento: a última conferência preenche a seção Fechamento do documento. --}}
+        @if($sys['fech_fields'])
+        <div class="ck-row mb-4" :style="fechar ? 'border-color:var(--purple)' : ''">
+            <label class="flex items-center gap-2 text-sm font-semibold cursor-pointer" style="color:var(--text)">
+                <input type="checkbox" name="fechar" value="1" x-model="fechar">
+                Esta é a conferência de fechamento
+            </label>
+            <p class="text-xs mt-1" style="color:var(--muted)">
+                @if($sys['hora_fechar'])Chegou a data do fechamento ({{ \Carbon\Carbon::parse($sys['fechamento'])->format('d/m/Y') }}).@else Marque só se {{ $isCampaign ? 'a campanha terminou' : 'o projeto terminou e já dá para conferir o ganho' }}.@endif
+                O que você escrever aqui vai para a seção Fechamento do documento, que o próximo planejamento lê.</p>
+            <div x-show="fechar" x-cloak class="flex flex-col gap-3 mt-3">
+                @foreach($sys['fech_fields'] as $f)
+                    <div>
+                        <label class="block text-xs mb-1 font-semibold" style="color:var(--text)">{{ $f['label'] }}</label>
+                        @if($f['input'] === 'select')
+                            <select name="fech[{{ $f['key'] }}]" class="field px-3 py-2 text-sm">
+                                <option value="">Escolha…</option>
+                                @foreach($f['options'] as $val => $label)
+                                    <option value="{{ $val }}" @selected(old("fech.{$f['key']}", $f['value']) === $val)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        @else
+                            <textarea name="fech[{{ $f['key'] }}]" rows="2" maxlength="8000" class="field w-full px-3 py-2 text-sm" style="resize:vertical"
+                                      placeholder="{{ $f['placeholder'] ?? '' }}">{{ old("fech.{$f['key']}", $f['value']) }}</textarea>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
         <div class="flex justify-end">
-            <button type="submit" class="btn btn-primary">Registrar conferência</button>
+            <button type="submit" class="btn btn-primary" x-text="fechar ? 'Registrar fechamento' : 'Registrar conferência'">Registrar conferência</button>
         </div>
     </form>
+    @endif
 
     {{-- O que o Sistema vê --}}
     <div class="card px-5 py-4">
@@ -227,6 +270,7 @@
             <div class="flex flex-wrap items-center gap-2 mb-1">
                 <span class="ck-dot" style="background:{{ $s['color'] ?? 'var(--muted)' }}"></span>
                 <b class="text-sm" style="color:var(--text)">{{ $ck->checked_on->format('d/m/Y') }} · {{ $s['label'] ?? $ck->situacao }}</b>
+                @if($ck->is_closing)<span class="text-[10px] font-semibold px-1.5 rounded" style="background:rgba(22,163,74,.12); color:#16a34a">Fechamento</span>@endif
                 <span class="text-xs" style="color:var(--muted)">por {{ $ck->user?->name ?? '—' }}</span>
                 @if($ck->user_id === auth()->id() && $ck->created_at->gt(now()->subDay()))
                     <form method="POST" action="{{ route('project-checkins.destroy', [$project, $ck]) }}" class="ml-auto"
