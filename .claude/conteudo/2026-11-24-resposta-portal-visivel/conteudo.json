@@ -1,0 +1,11 @@
+{
+    "novidades": [
+        {
+            "title": "Resposta do cliente pelo Portal aparece na tarefa",
+            "summary": "Quando o cliente aprova ou pede ajuste entrando no Portal (e não pelo link do WhatsApp), o que ele escreveu agora aparece em Retorno do Cliente na tarefa e na Central de Aprovações — antes ficava escondido.",
+            "kind": "correcao",
+            "area": "Aprovações"
+        }
+    ],
+    "ajuda": []
+}

@@ -347,6 +347,11 @@
 
                     {{-- Feedback expandido quando há ajustes solicitados --}}
                     @if($isChanges)
+                        @if($round->portal_decision)
+                            <div class="px-5 pb-4 pt-0">
+                                @include('partials._approval-portal-decision', ['round' => $round])
+                            </div>
+                        @endif
                         @foreach($round->tokens->where('status', 'changes_requested') as $token)
                             @if($token->overall_comment || $token->feedbacks->where('status','changes_requested')->count() > 0)
                                 <div class="px-5 pb-4 pt-0"

@@ -1158,6 +1158,7 @@
 
                                 {{-- Corpo da rodada --}}
                                 <div x-show="open" x-cloak class="flex flex-col gap-3 px-4 pb-4 pt-3">
+                                    @include('partials._approval-portal-decision', ['round' => $round])
                                     @foreach($round->tokens as $token)
                                         @if($token->reviewed_at)
                                             <div style="border:1px solid var(--border2)">
