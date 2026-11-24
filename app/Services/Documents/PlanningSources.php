@@ -63,6 +63,12 @@ class PlanningSources
             $out[] = ['key' => 'briefing', 'group' => 'Cliente', 'label' => 'Briefing do cliente', 'detail' => 'cadastro do cliente', 'default' => true];
         }
 
+        // Números reais (24/11): ponto de partida das metas sai daqui em vez de "A confirmar".
+        if ($plan->client && app(CreativeContext::class)->hasPerformance($plan->client)) {
+            $out[] = ['key' => 'dados:performance', 'group' => 'Dados do cliente', 'label' => 'Desempenho real dos anúncios',
+                'detail' => 'últimos 90 dias na Central de Performance: gasto, resultados, custo e CTR por plataforma e campanha', 'default' => true];
+        }
+
         foreach (MacroPlanAttachment::where('macro_plan_id', $plan->id)->latest()->get() as $a) {
             $out[] = ['key' => "att:macro:{$a->id}", 'group' => 'Anexos', 'label' => $a->filename,
                 'detail' => 'anexo deste planejamento', 'default' => false];
@@ -114,6 +120,11 @@ class PlanningSources
             } elseif ($type === 'briefing') {
                 $result['blocks'][] = ['title' => 'Briefing do cliente', 'text' => trim(SourceText::html((string) $plan->client->briefing))];
                 $result['used'][] = 'Briefing do cliente';
+            } elseif ($type === 'dados' && $id === 'performance') {
+                if ($text = app(CreativeContext::class)->performance($plan->client)) {
+                    $result['blocks'][] = ['title' => 'Desempenho real dos anúncios do cliente (Central de Performance)', 'text' => $text];
+                    $result['used'][] = 'Desempenho dos anúncios (90 dias)';
+                }
             } elseif ($type === 'att') {
                 $att = $id === 'macro' ? MacroPlanAttachment::find($sub) : MeetingAttachment::find($sub);
                 $this->addFile($result, $att?->disk, $att?->disk_path, $att?->mime_type, $att?->filename ?? $label);

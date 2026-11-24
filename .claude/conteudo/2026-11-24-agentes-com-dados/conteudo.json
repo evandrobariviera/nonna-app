@@ -1,0 +1,30 @@
+{
+    "novidades": [
+        {
+            "title": "Rascunho do planejamento já traz os números dos anúncios",
+            "summary": "Ao montar o rascunho do planejamento, o Agente Nonna lê os últimos 90 dias da Central de Performance e preenche sozinho o ponto de partida das metas de anúncio (custo por resultado, CTR). Menos perguntas, metas com número certo desde o começo.",
+            "kind": "melhoria",
+            "area": "Planejamentos"
+        },
+        {
+            "title": "Agente da coluna consulta números, campanhas anteriores e pesquisa de mercado",
+            "summary": "Na conversa ao lado do documento, o Agente Nonna agora responde com os números reais dos anúncios do cliente e, na campanha, com as campanhas anteriores e a pesquisa de mercado. O botão \"Fazer pesquisa de mercado\" roda a pesquisa em segundo plano; depois ele usa sem custo extra.",
+            "kind": "melhoria",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Planejamento do ciclo — como preencher",
+            "category": "Documentos",
+            "slug": "planejamento-do-ciclo",
+            "body_file": "ajuda-planejamento-do-ciclo.html"
+        },
+        {
+            "title": "Documento de campanha — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-campanha",
+            "body_file": "ajuda-documento-de-campanha.html"
+        }
+    ]
+}

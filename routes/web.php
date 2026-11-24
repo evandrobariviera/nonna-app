@@ -743,6 +743,11 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::post('/documentos/{document}/agente', [\App\Http\Controllers\FieldDocumentController::class, 'ask'])
         ->middleware('throttle:20,1')
         ->name('documents.agent.ask');
+    Route::post('/documentos/{document}/pesquisa', [\App\Http\Controllers\FieldDocumentController::class, 'startResearch'])
+        ->middleware('throttle:4,1')
+        ->name('documents.research');
+    Route::get('/documentos/{document}/pesquisa', [\App\Http\Controllers\FieldDocumentController::class, 'researchStatus'])
+        ->name('documents.research.status');
     Route::post('/documentos/{document}/agente/{suggestion}', [\App\Http\Controllers\FieldDocumentController::class, 'decide'])
         ->where('suggestion', '[a-z0-9]{8}')
         ->name('documents.agent.decide');

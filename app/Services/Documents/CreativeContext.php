@@ -137,10 +137,10 @@ class CreativeContext
      *
      * @return array{text: string, sources: array, at: string}|null
      */
-    public function market(Document $document, Project $project, ?int $userId): ?array
+    public function market(Document $document, Project $project, ?int $userId, bool $fresh = false): ?array
     {
         $cached = $document->agent_state['pesquisa'] ?? null;
-        if ($cached && now()->diffInDays(\Carbon\Carbon::parse($cached['at']), true) < self::RESEARCH_DAYS) {
+        if (!$fresh && $cached && now()->diffInDays(\Carbon\Carbon::parse($cached['at']), true) < self::RESEARCH_DAYS) {
             return $cached;
         }
         $agent = AiAgent::bySlug(AiAgent::SLUG_NONNA_AGENT);

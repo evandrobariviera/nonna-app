@@ -25,7 +25,7 @@ class DocumentAssistant
     private const KEEP       = 40;   // mensagens guardadas na conversa
     private const HISTORY    = 8;    // mensagens que voltam para a IA
 
-    public function __construct(private AiService $ai, private DocumentEditor $editor) {}
+    public function __construct(private AiService $ai, private DocumentEditor $editor, private CreativeContext $creative) {}
 
     /** @return array{chat: array} */
     public function ask(Document $document, User $user, string $message, ?string $meetingId): array
@@ -44,6 +44,7 @@ class DocumentAssistant
             . "\n\nCAMPOS QUE UMA PESSOA JÁ EDITOU (só proponha mudar se pedirem ou se houver motivo forte, e diga qual):\n"
             . (implode(', ', $this->personPaths($document)) ?: 'nenhum')
             . "\n\nAVISOS DO MODELO AGORA:\n" . (collect($schema->issues($document->content))->map(fn ($i) => "- [{$i['level']}] {$i['text']}")->implode("\n") ?: 'nenhum');
+        $context .= $this->toolsContext($document);
         if ($meeting) {
             $context .= "\n\nREUNIÃO ESCOLHIDA: {$meeting->title} (" . $meeting->scheduled_at?->format('d/m/Y') . ")\nATA:\n"
                 . mb_substr(trim(SourceText::html((string) $meeting->ata)), 0, 30000);
@@ -77,10 +78,36 @@ class DocumentAssistant
         $chat[] = ['role' => 'user', 'name' => $user->name, 'user_id' => $user->id, 'text' => Str::limit($message, 4000), 'at' => $now,
             'meeting' => $meeting ? "{$meeting->title} (" . $meeting->scheduled_at?->format('d/m/Y') . ')' : null];
         $chat[] = ['role' => 'agent', 'text' => trim((string) ($answer['resposta'] ?? '')) ?: 'Pronto.', 'at' => now()->toIso8601String(), 'sugestoes' => $suggestions];
-        $state['chat'] = array_slice($chat, -self::KEEP);
-        Document::whereKey($document->id)->update(['agent_state' => json_encode($state, JSON_UNESCAPED_UNICODE)]);
+        // Relê antes de gravar: a pesquisa (job) pode ter terminado enquanto o agente pensava.
+        $fresh = Document::withoutGlobalScopes()->find($document->id)->agent_state ?? [];
+        $fresh['chat'] = array_slice($chat, -self::KEEP);
+        Document::whereKey($document->id)->update(['agent_state' => json_encode($fresh, JSON_UNESCAPED_UNICODE)]);
 
-        return ['chat' => $state['chat']];
+        return ['chat' => $fresh['chat']];
+    }
+
+    /**
+     * Ferramentas do agente da coluna (24/11): o que ele consulta além do documento. Números reais
+     * dos anúncios do cliente (planejamento e campanha), outras campanhas do cliente (campanha) e a
+     * pesquisa de mercado guardada no documento (campanha), sem custo extra de IA.
+     */
+    private function toolsContext(Document $document): string
+    {
+        $owner  = $document->documentable;
+        $client = \App\Models\Client::withoutGlobalScopes()->find($document->client_id);
+        $out = '';
+        if ($client && in_array($document->kind, ['planejamento', 'campanha'], true) && $this->creative->hasPerformance($client)) {
+            $out .= "\n\nDESEMPENHO REAL DOS ANÚNCIOS DO CLIENTE (Central de Performance):\n" . $this->creative->performance($client);
+        }
+        if ($owner instanceof \App\Models\Project && $document->kind === 'campanha' && ($prev = $this->creative->previousCampaigns($owner, 2))) {
+            $out .= "\n\nOUTRAS CAMPANHAS DO CLIENTE:\n{$prev}";
+        }
+        $research = (Document::withoutGlobalScopes()->find($document->id)->agent_state ?? [])['pesquisa'] ?? null;
+        if ($research) {
+            $out .= "\n\nPESQUISA DE MERCADO NA INTERNET (" . \Carbon\Carbon::parse($research['at'])->format('d/m/Y') . "):\n" . $research['text'];
+        }
+
+        return $out;
     }
 
     /**
@@ -242,6 +269,7 @@ COMO RESPONDER
    Use só IDs que existem no DOCUMENTO ATUAL. Para juntar dois itens: ajuste um com "set" e remova o outro.
 4. Use só o que está no documento, na conversa e na reunião escolhida. Nunca invente número, data ou verba. Nunca proponha APAGAR um campo por falta de informação: se o número não existe, o valor é "A confirmar" (e, se depender do cliente, proponha um pedido na lista de pedidos).
 5. Respeite o que uma pessoa já editou: só proponha mudar esses campos se pedirem ou se houver motivo forte, e diga isso no motivo.
+5b. Você tem ferramentas já consultadas no contexto: DESEMPENHO REAL DOS ANÚNCIOS (use para responder sobre números, ponto de partida das metas, o que funcionou e o que não), OUTRAS CAMPANHAS DO CLIENTE e PESQUISA DE MERCADO (concorrentes, público, regras do setor). Use e cite de onde veio. Se pedirem pesquisa e não houver pesquisa no contexto, diga para clicar em "Fazer pesquisa de mercado" na coluna.
 6. Regras do modelo: "Onde vemos esse número" (fonte) é a FERRAMENTA ou o sistema onde o número aparece, no começo e no fim do ciclo (ex.: Gerenciador de Anúncios da Meta, Google Ads, GA4, Central de Leads, Perfil da Empresa no Google, planilha do cliente). Nunca é a reunião, a ATA ou um documento: eles são de onde veio a informação, não onde se mede. Se não souber a ferramenta, escreva "A confirmar". Meta é RESULTADO medível, não tarefa; toda meta ajudada por pelo menos uma campanha ou projeto; campanha que continua é a mesma campanha; quem age é um papel, nunca nome de pessoa.
 
 FORMATO: {"resposta": "...", "sugestoes": [{"resumo": "...", "motivo": "...", "ops": [...]}]}

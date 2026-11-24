@@ -22,10 +22,15 @@
         'decideUrl' => url('/documentos/' . $document->id . '/agente'),
         'chat'      => $document->agent_state['chat'] ?? [],
         'meetings'  => $agentMeetings,
+        'research'  => $document->kind === 'campanha' ? [
+            'url'    => route('documents.research', $document),
+            'status' => !empty($document->agent_state['pesquisando']) ? 'pesquisando' : (!empty($document->agent_state['pesquisa']) ? 'pronta' : 'nenhuma'),
+            'at'     => !empty($document->agent_state['pesquisa']['at']) ? \Carbon\Carbon::parse($document->agent_state['pesquisa']['at'])->format('d/m/Y') : null,
+        ] : null,
     ]))" class="fdoc"
      x-init="try { const v = localStorage.getItem('fdocAgent'); agentOpen = v === null ? true : v === '1'; } catch (e) {}
              $watch('agentOpen', v => { try { localStorage.setItem('fdocAgent', v ? '1' : '0'); } catch (e) {} if (v) $nextTick(() => scrollChat()); });
-             $nextTick(() => scrollChat())">
+             $nextTick(() => scrollChat()); if (research === 'pesquisando') pollResearch()">
     {{-- Agente Nonna em coluna (24/11, pedido do Evandro: gaveta que abre e fecha cansava). Tela larga:
          coluna à direita do documento, que acompanha a rolagem. Tela menor: painel logo abaixo do
          cabeçalho. Abre/fecha pelo botão; a escolha fica guardada no navegador. --}}
@@ -278,6 +283,18 @@
             </div>
 
             <form class="px-4 py-3 space-y-2" style="border-top:1px solid var(--border2)" @submit.prevent="ask()">
+                <template x-if="cfg.research">
+                    <div class="text-[11px] flex items-center gap-2 flex-wrap" style="color:var(--muted2)">
+                        <span x-show="research === 'pronta'" x-text="'Usa a pesquisa de mercado de ' + (cfg.research.at || '') + '.'"></span>
+                        <span x-show="research === 'pesquisando'" class="flex items-center gap-1.5">
+                            <span class="inline-block w-3 h-3 rounded-full animate-spin" style="border:2px solid rgba(100,59,142,.25); border-top-color:var(--purple)"></span>
+                            Pesquisando o mercado (1 a 2 minutos)…
+                        </span>
+                        <button type="button" x-show="research !== 'pesquisando'" class="underline" style="color:var(--purple)" @click="startResearch()"
+                                x-text="research === 'pronta' ? 'Pesquisar de novo' : 'Fazer pesquisa de mercado'"
+                                title="Concorrentes da região, como o público fala e regras do setor. Uns 100 a 150 créditos; depois o agente usa sem custo."></button>
+                    </div>
+                </template>
                 <div x-show="cfg.meetings.length">
                     <label class="text-[11px] font-semibold uppercase" style="color:var(--muted); letter-spacing:.06em">Ler também uma reunião?</label>
                     <select x-model="meetingId" class="field w-full px-2 py-1.5 text-xs mt-1">
@@ -325,6 +342,29 @@ function fieldDocEditor(cfg) {
         chat: cfg.chat || [],
         question: '',
         meetingId: '',
+        research: cfg.research ? cfg.research.status : null,
+        async startResearch() {
+            if (!await this.$store.confirmDialog.ask('Fazer a pesquisa de mercado na internet? Leva 1 a 2 minutos e gasta uns 100 a 150 créditos seus. Depois o agente usa a pesquisa em toda pergunta, sem custo extra.', { ok: 'Pesquisar' })) return;
+            try {
+                const r = await fetch(this.cfg.research.url, { method: 'POST', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content } });
+                const d = await r.json();
+                if (!r.ok) { this.agentError = d.error || 'Não deu para pesquisar agora.'; return; }
+                this.research = 'pesquisando';
+                this.pollResearch();
+            } catch (e) { this.agentError = 'Não deu para pesquisar agora.'; }
+        },
+        pollResearch() {
+            const t = setInterval(async () => {
+                try {
+                    const d = await (await fetch(this.cfg.research.url, { headers: { Accept: 'application/json' } })).json();
+                    if (d.status !== 'pesquisando') {
+                        clearInterval(t);
+                        this.research = d.status;
+                        if (d.at) this.cfg.research.at = new Date(d.at).toLocaleDateString('pt-BR');
+                    }
+                } catch (e) {}
+            }, 6000);
+        },
         busy: false,
         agentError: '',
 

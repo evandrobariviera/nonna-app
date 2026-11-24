@@ -215,6 +215,36 @@ class FieldDocumentController extends Controller
         return response()->json($result);
     }
 
+    /** Pesquisa de mercado pedida na coluna (só campanha): roda em segundo plano (ResearchDocumentJob). */
+    public function startResearch(Request $request, Document $document): JsonResponse
+    {
+        $project = $document->documentable;
+        abort_unless($document->kind === 'campanha' && $project instanceof Project, 404);
+        $credits = \App\Services\Agent\AgentCredits::status($request->user());
+        if ($credits['blocked']) {
+            return response()->json(['error' => \App\Services\Agent\AgentCredits::blockedMessage($credits)], 422);
+        }
+        $state = $document->agent_state ?? [];
+        if (!empty($state['pesquisando']) && now()->diffInMinutes(\Carbon\Carbon::parse($state['pesquisando']), true) < 10) {
+            return response()->json(['status' => 'pesquisando']);
+        }
+        $state['pesquisando'] = now()->toIso8601String();
+        $document->update(['agent_state' => $state]);
+        \App\Jobs\ResearchDocumentJob::dispatch($document->id, $project->id, (int) Auth::id());
+
+        return response()->json(['status' => 'pesquisando']);
+    }
+
+    public function researchStatus(Document $document): JsonResponse
+    {
+        $state = $document->fresh()->agent_state ?? [];
+
+        return response()->json([
+            'status' => !empty($state['pesquisando']) ? 'pesquisando' : (!empty($state['pesquisa']) ? 'pronta' : 'nenhuma'),
+            'at'     => $state['pesquisa']['at'] ?? null,
+        ]);
+    }
+
     /** Aceitar ou descartar uma proposta do agente. */
     public function decide(Request $request, Document $document, string $suggestion, \App\Services\Documents\DocumentAssistant $assistant): JsonResponse
     {
