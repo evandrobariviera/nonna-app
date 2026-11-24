@@ -32,12 +32,14 @@ class DocumentTasks
         $created = Task::where('project_id', $project->id)->whereNotNull('document_item_id')
             ->get(['id', 'title', 'status', 'document_item_id'])->keyBy('document_item_id');
 
-        $rows = $document->kind === 'campanha' ? $this->campaignRows($c) : $this->projectRows($c);
+        $rows      = $document->kind === 'campanha' ? $this->campaignRows($c) : $this->projectRows($c);
+        $dismissed = array_flip($document->agent_state['tarefas_dispensadas'] ?? []);
 
-        return array_map(function ($r) use ($created) {
+        return array_map(function ($r) use ($created, $dismissed) {
             $task = $created->get($r['item_id']);
             $r['task'] = $task ? ['id' => $task->id, 'title' => $task->title, 'status' => $task->statusLabel(), 'url' => route('tasks.show', $task)] : null;
-            $r['checked'] = $r['checked'] && !$task;
+            $r['dismissed'] = !$task && isset($dismissed[$r['item_id']]);
+            $r['checked'] = $r['checked'] && !$task && !$r['dismissed'];
 
             return $r;
         }, $rows);
@@ -141,10 +143,11 @@ class DocumentTasks
     }
 
     /**
-     * Cria as tarefas escolhidas. Nunca confia na tela: a linha precisa existir no documento e
-     * ainda não ter virado tarefa; o texto da descrição é sempre o do documento.
+     * Cria as tarefas escolhidas. A linha do documento precisa existir e ainda não ter virado
+     * tarefa. A descrição vem da tela (a pessoa pode editar); vazia, usa a do documento.
+     * Linha sem item_id = tarefa acrescentada à mão (não fica presa a nenhuma linha do documento).
      *
-     * @param  array<int, array{item_id: string, title: string, task_type: string, due_date: ?string, responsavel_user_id: ?int, executor_user_id: ?int}>  $picked
+     * @param  array<int, array{item_id: ?string, title: string, description: ?string, task_type: string, due_date: ?string, responsavel_user_id: ?int, executor_user_id: ?int}>  $picked
      * @return array{created: int, skipped: string[], warnings: string[]}
      */
     public function create(Document $document, Project $project, array $picked, int $userId): array
@@ -154,7 +157,22 @@ class DocumentTasks
         $drafts  = [];
         $skipped = [];
 
+        $person = fn ($id) => is_numeric($id) && $team->has((int) $id) ? (int) $id : null;
+
         foreach ($picked as $p) {
+            $desc = trim((string) ($p['description'] ?? ''));
+            if (blank($p['item_id'] ?? null)) {
+                $drafts[] = [
+                    'title'               => trim($p['title']),
+                    'description'         => $desc !== '' ? $desc : null,
+                    'task_type'           => $p['task_type'],
+                    'destination'         => $this->destination($document),
+                    'due_date'            => $p['due_date'] ?: null,
+                    'responsavel_user_id' => $person($p['responsavel_user_id'] ?? null),
+                    'executor_user_id'    => $person($p['executor_user_id'] ?? null),
+                ];
+                continue;
+            }
             $row = $rows->get($p['item_id']);
             if (!$row) {
                 $skipped[] = 'Uma linha não existe mais no documento.';
@@ -164,10 +182,9 @@ class DocumentTasks
                 $skipped[] = "\"{$row['title']}\" já virou tarefa.";
                 continue;
             }
-            $person = fn ($id) => is_numeric($id) && $team->has((int) $id) ? (int) $id : null;
             $drafts[] = [
                 'title'               => trim($p['title']) !== '' ? trim($p['title']) : $row['title'],
-                'description'         => $row['description'],
+                'description'         => $desc !== '' ? $desc : $row['description'],
                 'task_type'           => $p['task_type'],
                 'destination'         => $row['destination'],
                 'due_date'            => $p['due_date'] ?: null,
@@ -180,6 +197,35 @@ class DocumentTasks
         $result = $drafts ? $this->tasks->createFromDrafts($project, $drafts, $userId, 'documento') : ['tasks' => collect(), 'warnings' => []];
 
         return ['created' => $result['tasks']->count(), 'skipped' => $skipped, 'warnings' => $result['warnings']];
+    }
+
+    /**
+     * Dispensa (ou traz de volta) uma linha sugerida: some da lista sem mexer no documento.
+     * Guardado em agent_state.tarefas_dispensadas, relido com trava (jobs do agente também gravam ali).
+     */
+    public function dismiss(Document $document, string $itemId, bool $dismiss): void
+    {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($document, $itemId, $dismiss) {
+            $fresh = Document::withoutGlobalScopes()->whereKey($document->id)->lockForUpdate()->firstOrFail();
+            $state = $fresh->agent_state ?? [];
+            $list  = array_values(array_diff($state['tarefas_dispensadas'] ?? [], [$itemId]));
+            if ($dismiss) {
+                $list[] = $itemId;
+            }
+            $state['tarefas_dispensadas'] = $list;
+            $fresh->forceFill(['agent_state' => $state])->saveQuietly();
+        });
+    }
+
+    /** Destino padrão de uma tarefa acrescentada à mão. */
+    private function destination(Document $document): ?string
+    {
+        if ($document->kind !== 'campanha') {
+            return null;
+        }
+        $pago = collect($document->content['midia'] ?? [])->contains(fn ($m) => trim((string) ($m['plataforma'] ?? '')) !== '');
+
+        return $pago ? 'campanhas_patrocinadas' : 'publicacao_organica';
     }
 
     /** Tipo de tarefa pelo nome/formato da peça ou pela área da entrega. Na dúvida, Material Gráfico. */

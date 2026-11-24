@@ -1,0 +1,24 @@
+{
+    "novidades": [
+        {
+            "title": "Peças viram tarefas: editar, dispensar e acrescentar",
+            "summary": "Na lista de tarefas que sai do documento da campanha ou do projeto, agora dá para editar a descrição de cada tarefa, dispensar a sugestão que não faz sentido (e trazer de volta) e acrescentar tarefas que não estão no documento.",
+            "kind": "melhoria",
+            "area": "Tarefas"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Documento de campanha — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-campanha",
+            "body_file": "ajuda-documento-de-campanha.html"
+        },
+        {
+            "title": "Documento de projeto — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-projeto",
+            "body_file": "ajuda-documento-de-projeto.html"
+        }
+    ]
+}

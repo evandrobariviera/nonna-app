@@ -739,6 +739,9 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::post('/projetos/{project}/documento-tarefas', [\App\Http\Controllers\FieldDocumentController::class, 'createTasks'])
         ->middleware('throttle:20,1')
         ->name('projects.field-document.tasks');
+    Route::post('/projetos/{project}/documento-tarefas/dispensar', [\App\Http\Controllers\FieldDocumentController::class, 'dismissTaskRow'])
+        ->middleware('throttle:60,1')
+        ->name('projects.field-document.tasks.dismiss');
     // Agente Nonna ao lado do documento (DocumentAssistant): conversa + propostas com Aceitar/Descartar.
     Route::post('/documentos/{document}/agente', [\App\Http\Controllers\FieldDocumentController::class, 'ask'])
         ->middleware('throttle:20,1')

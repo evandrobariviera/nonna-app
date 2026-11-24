@@ -314,14 +314,26 @@ class FieldDocumentController extends Controller
 
         $data = $request->validate([
             'rows'                       => 'required|array|min:1|max:60',
-            'rows.*.item_id'             => 'required|string|max:16',
+            'rows.*.item_id'             => 'nullable|string|max:16',
             'rows.*.title'               => 'required|string|max:300',
+            'rows.*.description'         => 'nullable|string|max:20000',
             'rows.*.task_type'           => 'required|in:' . implode(',', array_keys(\App\Models\Task::$types)),
             'rows.*.due_date'            => 'nullable|date_format:Y-m-d',
             'rows.*.responsavel_user_id' => 'nullable|integer',
             'rows.*.executor_user_id'    => 'nullable|integer',
-        ], ['rows.*.task_type.required' => 'Escolha o tipo de cada tarefa.']);
+        ], ['rows.*.task_type.required' => 'Escolha o tipo de cada tarefa.', 'rows.*.title.required' => 'Dê um título a cada tarefa marcada.']);
 
         return response()->json($service->create($doc, $project, $data['rows'], Auth::id()));
+    }
+
+    /** Dispensa / traz de volta uma linha sugerida em "Peças viram tarefas". */
+    public function dismissTaskRow(Request $request, Project $project, \App\Services\Documents\DocumentTasks $service): JsonResponse
+    {
+        $doc = $project->fieldDocument;
+        abort_unless($doc, 404);
+        $data = $request->validate(['item_id' => 'required|string|max:16', 'dispensar' => 'required|boolean']);
+        $service->dismiss($doc, $data['item_id'], (bool) $data['dispensar']);
+
+        return response()->json(['ok' => true]);
     }
 }
