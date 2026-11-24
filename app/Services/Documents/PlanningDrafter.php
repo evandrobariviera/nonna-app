@@ -192,7 +192,7 @@ REGRAS
 5. Escreva em português do Brasil, do jeito que se fala no dia a dia: frases curtas, sem jargão de marketing, sem exagero. Texto livre só em parágrafos curtos.
 6. Nunca use nome de pessoa da equipe da agência como responsável; se precisar, use o papel (Estratégia, Tráfego, Criação, Atendimento).
 7. "Onde vemos esse número" (fonte) é a FERRAMENTA ou o sistema onde o número aparece, no começo e no fim do ciclo (ex.: Gerenciador de Anúncios da Meta, Google Ads, GA4, Central de Leads, Perfil da Empresa no Google, planilha do cliente). Nunca é a reunião, a ATA ou um documento: eles são de onde veio a informação, não onde se mede. Se não souber a ferramenta, escreva "A confirmar".
-7b. Se o planejamento anterior trouxer resultados ou aprendizados (fechamento), use em "situacao" e "o_que_muda".
+7b. Se o planejamento anterior trouxer resultados ou aprendizados (fechamento das campanhas e conferências do coordenador: metas em risco, sinais de alerta que aconteceram, o que travou), use em "situacao" e "o_que_muda".
 8. CAMPANHAS E PROJETOS: antes de criar um, confira a lista "CAMPANHAS E PROJETOS DO CLIENTE QUE JÁ EXISTEM NO APP". Se o assunto já existe e continua neste ciclo, use EXATAMENTE o mesmo nome e não crie outro parecido. Só crie item para o que foi DECIDIDO nas fontes; ideia comentada mas não decidida vira pergunta, não campanha. Prefira poucos itens bem definidos a muitos pequenos: ajustes de rotina (trocar criativo, testar mensagem) ficam dentro da campanha que já existe.
 9. "perguntas": de 3 a 8 perguntas objetivas para a equipe responder, sobre o que faltou ou ficou ambíguo nas fontes, cada uma dizendo a seção ("02", "04"...). Nada de pergunta genérica.
 

@@ -126,8 +126,11 @@ class CreativeContext
 
         return $others->map(function ($pair) {
             [$p, $doc] = $pair;
+            $checkins = \App\Models\ProjectCheckin::historyText($p->id, 2);
+
             return "### {$p->title} (" . (\App\Models\Project::$statuses[$p->status]['label'] ?? $p->status) . ")\n"
-                . mb_substr($doc->schema()->toText($doc->content), 0, 3500);
+                . mb_substr($doc->schema()->toText($doc->content), 0, 3500)
+                . ($checkins ? "\nComo andou (conferências do coordenador):\n{$checkins}" : '');
         })->implode("\n\n");
     }
 

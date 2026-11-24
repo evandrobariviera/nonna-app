@@ -60,6 +60,41 @@ class ProjectCheckin extends Model
         return mb_substr(($closing ? 'Fechar ' : 'Conferir ') . $what . ' — ' . $project->title, 0, 500);
     }
 
+    /**
+     * As conferências da campanha/projeto em texto curto, para o agente ler (etapa E.5): coluna do
+     * documento, rascunho do próximo planejamento e "outras campanhas do cliente". Mais recente
+     * primeiro; null se não houver nenhuma.
+     */
+    public static function historyText(string $projectId, int $limit = 4): ?string
+    {
+        $rows = self::withoutGlobalScopes()->where('project_id', $projectId)
+            ->orderByDesc('checked_on')->orderByDesc('created_at')->limit($limit)->get();
+        if ($rows->isEmpty()) {
+            return null;
+        }
+        $lights = ['verde' => 'no ritmo', 'amarelo' => 'abaixo do ritmo', 'vermelho' => 'bem abaixo do ritmo'];
+
+        return $rows->map(function (self $c) use ($lights) {
+            $lines = ['- ' . $c->checked_on->format('d/m/Y') . ($c->is_closing ? ' (FECHAMENTO)' : '') . ': '
+                . (self::SITUACOES[$c->situacao]['label'] ?? $c->situacao)];
+            foreach ($c->metas ?? [] as $m) {
+                $lines[] = '  · ' . $m['nome'] . ($m['atual'] ? ": está em {$m['atual']}" : '') . ($m['meta'] ? " (queremos {$m['meta']})" : '')
+                    . (isset($lights[$m['semaforo'] ?? '']) ? ', ' . $lights[$m['semaforo']] : '')
+                    . ($m['avaliacao'] ? ' — coordenador: ' . mb_strtolower(self::AVALIACOES[$m['avaliacao']] ?? '') : '')
+                    . ($m['comentario'] ? " ({$m['comentario']})" : '');
+            }
+            foreach (collect($c->cuidados ?? [])->where('aconteceu', 'sim') as $a) {
+                $lines[] = "  · Sinal de alerta aconteceu: {$a['se']}" . ($a['combinado'] ? ' — fizemos o combinado: ' . mb_strtolower(self::COMBINADO[$a['combinado']] ?? '') : '');
+            }
+            if ($c->travou) {
+                $lines[] = "  · Travou: {$c->travou}" . ($c->depende ? ' (' . mb_strtolower(self::DEPENDE[$c->depende] ?? '') . ')' : '');
+            }
+            $lines[] = "  · Próximo passo: {$c->proximo_passo}";
+
+            return implode("\n", $lines);
+        })->implode("\n");
+    }
+
     protected function tenantParent(): array
     {
         return ['projects', 'project_id'];

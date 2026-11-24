@@ -303,6 +303,17 @@ class PlanningSources
             $parts[] = "## Fechamento das campanhas e projetos\n" . implode("\n", $closings);
         }
 
+        // Conferências do coordenador ao longo do ciclo (etapa E.5): como cada uma andou.
+        $checkins = [];
+        foreach ($plan->projects as $project) {
+            if ($h = \App\Models\ProjectCheckin::historyText($project->id, 3)) {
+                $checkins[] = "### {$project->title}\n{$h}";
+            }
+        }
+        if ($checkins) {
+            $parts[] = "## Conferências das campanhas e projetos (mais recente primeiro)\n" . implode("\n\n", $checkins);
+        }
+
         return $parts ? implode("\n\n", $parts) : null;
     }
 }

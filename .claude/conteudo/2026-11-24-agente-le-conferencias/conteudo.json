@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Agente Nonna lê as conferências",
+            "summary": "O Agente Nonna passou a ler as conferências do coordenador: na coluna do documento da campanha, do projeto e do planejamento, e no rascunho do próximo planejamento e de campanhas novas. Assim ele sabe o que está em risco, que sinal de alerta aconteceu e o que travou.",
+            "kind": "melhoria",
+            "area": "Agente Nonna"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Acompanhamento de campanhas e projetos",
+            "category": "Documentos",
+            "slug": "acompanhamento-de-campanhas-e-projetos",
+            "body_file": "ajuda-acompanhamento.html"
+        }
+    ]
+}

@@ -102,6 +102,17 @@ class DocumentAssistant
         if ($owner instanceof \App\Models\Project && $document->kind === 'campanha' && ($prev = $this->creative->previousCampaigns($owner, 2))) {
             $out .= "\n\nOUTRAS CAMPANHAS DO CLIENTE:\n{$prev}";
         }
+        // Conferências do coordenador (etapa E.5): desta campanha/projeto, ou das campanhas e
+        // projetos do planejamento. Só leitura: o agente nunca preenche conferência.
+        if ($owner instanceof \App\Models\Project && ($h = \App\Models\ProjectCheckin::historyText($owner->id, 4))) {
+            $out .= "\n\nCONFERÊNCIAS DO COORDENADOR (mais recente primeiro):\n{$h}";
+        } elseif ($owner instanceof \App\Models\MacroPlan) {
+            $parts = $owner->projects()->get(['id', 'title'])
+                ->map(fn ($p) => ($h = \App\Models\ProjectCheckin::historyText($p->id, 2)) ? "### {$p->title}\n{$h}" : null)->filter();
+            if ($parts->isNotEmpty()) {
+                $out .= "\n\nCONFERÊNCIAS DAS CAMPANHAS E PROJETOS DESTE PLANEJAMENTO:\n" . $parts->implode("\n\n");
+            }
+        }
         $research = (Document::withoutGlobalScopes()->find($document->id)->agent_state ?? [])['pesquisa'] ?? null;
         if ($research) {
             $out .= "\n\nPESQUISA DE MERCADO NA INTERNET (" . \Carbon\Carbon::parse($research['at'])->format('d/m/Y') . "):\n" . $research['text'];
@@ -269,7 +280,7 @@ COMO RESPONDER
    Use só IDs que existem no DOCUMENTO ATUAL. Para juntar dois itens: ajuste um com "set" e remova o outro.
 4. Use só o que está no documento, na conversa e na reunião escolhida. Nunca invente número, data ou verba. Nunca proponha APAGAR um campo por falta de informação: se o número não existe, o valor é "A confirmar" (e, se depender do cliente, proponha um pedido na lista de pedidos).
 5. Respeite o que uma pessoa já editou: só proponha mudar esses campos se pedirem ou se houver motivo forte, e diga isso no motivo.
-5b. Você tem ferramentas já consultadas no contexto: DESEMPENHO REAL DOS ANÚNCIOS (use para responder sobre números, ponto de partida das metas, o que funcionou e o que não), OUTRAS CAMPANHAS DO CLIENTE e PESQUISA DE MERCADO (concorrentes, público, regras do setor). Use e cite de onde veio. Se pedirem pesquisa e não houver pesquisa no contexto, diga para clicar em "Fazer pesquisa de mercado" na coluna.
+5b. Você tem ferramentas já consultadas no contexto: DESEMPENHO REAL DOS ANÚNCIOS (use para responder sobre números, ponto de partida das metas, o que funcionou e o que não), OUTRAS CAMPANHAS DO CLIENTE, PESQUISA DE MERCADO (concorrentes, público, regras do setor) e CONFERÊNCIAS DO COORDENADOR (como a campanha/projeto está andando: metas, sinais de alerta que aconteceram, o que travou, próximo passo). Use e cite de onde veio (ex.: "na conferência de 10/12"). Você só lê as conferências; quem registra é o coordenador. Se pedirem pesquisa e não houver pesquisa no contexto, diga para clicar em "Fazer pesquisa de mercado" na coluna.
 6. Regras do modelo: "Onde vemos esse número" (fonte) é a FERRAMENTA ou o sistema onde o número aparece, no começo e no fim do ciclo (ex.: Gerenciador de Anúncios da Meta, Google Ads, GA4, Central de Leads, Perfil da Empresa no Google, planilha do cliente). Nunca é a reunião, a ATA ou um documento: eles são de onde veio a informação, não onde se mede. Se não souber a ferramenta, escreva "A confirmar". Meta é RESULTADO medível, não tarefa; toda meta ajudada por pelo menos uma campanha ou projeto; campanha que continua é a mesma campanha; quem age é um papel, nunca nome de pessoa.
 
 FORMATO: {"resposta": "...", "sugestoes": [{"resumo": "...", "motivo": "...", "ops": [...]}]}
