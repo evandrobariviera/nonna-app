@@ -1,0 +1,30 @@
+{
+    "novidades": [
+        {
+            "title": "Documento em blocos: uma seção por vez",
+            "summary": "No planejamento, na campanha e no projeto, cada seção virou um bloco com cabeçalho próprio, e as metas, ângulos e peças viraram cartões numerados. O documento abre só com a Capa e o botão \"Próxima\" leva para a seção seguinte.",
+            "kind": "melhoria",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Planejamento do ciclo — como preencher",
+            "category": "Documentos",
+            "slug": "planejamento-do-ciclo",
+            "body_file": "ajuda-planejamento-do-ciclo.html"
+        },
+        {
+            "title": "Documento de campanha — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-campanha",
+            "body_file": "ajuda-documento-de-campanha.html"
+        },
+        {
+            "title": "Documento de projeto — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-projeto",
+            "body_file": "ajuda-documento-de-projeto.html"
+        }
+    ]
+}

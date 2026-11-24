@@ -37,6 +37,16 @@
     <style>
         /* Mesa do documento (protótipo de 23/11): seções · documento · agente. */
         .fdoc textarea.field { field-sizing: content; min-height: 4.8em; }
+        .fdoc-sec { border: 1px solid var(--border2); border-radius: 12px; background: var(--s1); overflow: hidden; }
+        .fdoc-sec.aberta { border-color: rgba(100,59,142,.35); box-shadow: 0 4px 16px rgba(100,59,142,.07); }
+        .fdoc-sec-head { padding: 12px 16px; }
+        .fdoc-sec.aberta .fdoc-sec-head { background: rgba(100,59,142,.06); border-bottom: 1px solid rgba(100,59,142,.15); }
+        .fdoc-sec-num { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 8px;
+                        background: rgba(100,59,142,.12); color: var(--purple); font: 700 12px/1 ui-monospace, monospace; }
+        .fdoc-sec-body { padding: 16px 18px 14px; }
+        .fdoc-item { border: 1px solid var(--border2); border-left: 4px solid rgba(100,59,142,.45); border-radius: 10px; background: var(--s1); overflow: visible; }
+        .fdoc-item-head { padding: 8px 12px; background: var(--s2); border-bottom: 1px solid var(--border2); border-radius: 6px 10px 0 0; }
+        .fdoc-item-body { padding: 12px; }
         .fdoc-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
         .fdoc-nav { position: static; }
         .fdoc-agent { display: flex; flex-direction: column; max-height: 75vh; overflow: hidden; }
@@ -122,7 +132,7 @@
                         <span class="font-semibold flex-shrink-0" :style="i.level === 'erro' ? 'color:var(--red)' : 'color:var(--orange)'"
                               x-text="i.level === 'erro' ? 'Regra' : 'Falta'"></span>
                         <button type="button" class="text-left hover:underline" style="color:var(--text)" x-text="i.text"
-                                @click="collapsed[i.section] = false; $nextTick(() => scrollTo(i.path ? 'f-' + i.path : 'sec-' + i.section))"></button>
+                                @click="openSection(i.section); $nextTick(() => scrollTo(i.path ? 'f-' + i.path : 'sec-' + i.section))"></button>
                     </li>
                 </template>
             </ul>
@@ -143,16 +153,17 @@
 
         {{-- Seções --}}
         <template x-for="s in cfg.sections" :key="s.key">
-            <section :id="'sec-' + s.key" class="mb-5 pb-5" style="border-bottom:1px solid var(--border2); scroll-margin-top:80px">
-                <button type="button" class="w-full flex items-baseline gap-2 text-left" @click="collapsed[s.key] = !collapsed[s.key]; regrow()"
+            <section :id="'sec-' + s.key" class="fdoc-sec mb-3" :class="collapsed[s.key] ? '' : 'aberta'" style="scroll-margin-top:80px">
+                <button type="button" class="fdoc-sec-head w-full flex items-center gap-3 text-left"
+                        @click="collapsed[s.key] ? openSection(s.key) : (collapsed[s.key] = true)"
                         :title="collapsed[s.key] ? 'Abrir a seção' : 'Recolher a seção'">
-                    <span class="text-xs font-mono font-bold" style="color:var(--purple)" x-text="s.num"></span>
+                    <span class="fdoc-sec-num" x-text="s.num || '•'"></span>
                     <h3 class="text-base font-bold" style="color:var(--text)" x-text="s.title"></h3>
                     <span class="font-semibold px-1.5 rounded-full text-[10px]" :style="statusStyle(state.statuses[s.key])" x-text="statusLabel(state.statuses[s.key])"></span>
                     <span class="ml-auto text-xs" style="color:var(--muted)" x-text="collapsed[s.key] ? 'Abrir' : 'Recolher'"></span>
                 </button>
-                <div x-show="!collapsed[s.key]">
-                <p class="text-xs mt-1 mb-4" style="color:var(--muted); max-width:80ch" x-text="s.help"></p>
+                <div x-show="!collapsed[s.key]" class="fdoc-sec-body">
+                <p class="text-xs mb-4" style="color:var(--muted); max-width:80ch" x-text="s.help"></p>
 
                 <div class="grid gap-4" style="grid-template-columns:repeat(2, minmax(0, 1fr))">
                     <template x-for="b in s.blocks" :key="b.key">
@@ -168,9 +179,15 @@
                             {{-- Lista (componente repetível) --}}
                             <template x-if="b.type === 'list'">
                                 <div class="space-y-3">
+                                    <p class="text-[11px] font-semibold uppercase flex items-center gap-2" style="color:var(--muted); letter-spacing:.06em"
+                                       x-show="s.blocks.length > 1">
+                                        <span x-text="b.item_label"></span>
+                                        <span class="font-mono px-1.5 rounded" style="background:var(--s2)" x-text="(state.content[b.key] || []).length"></span>
+                                    </p>
                                     <template x-for="(item, idx) in (state.content[b.key] || [])" :key="item.id">
-                                        <div class="p-4" style="border:1px solid var(--border2); border-radius:10px; background:var(--s1)">
-                                            <div class="flex items-center gap-2 mb-3 flex-wrap">
+                                        <div class="fdoc-item" :style="'border-left-color:' + (b.switch && item[b.switch] === 'projeto' ? 'var(--purple)' : (b.switch ? 'var(--orange)' : 'rgba(100,59,142,.45)'))">
+                                            <div class="fdoc-item-head flex items-center gap-2 flex-wrap">
+                                                <span class="text-[11px] font-mono font-semibold" style="color:var(--muted)" x-text="String(idx + 1).padStart(2, '0')"></span>
                                                 <template x-if="b.switch">
                                                     <span class="text-[10px] font-mono font-semibold uppercase px-2 py-0.5 rounded-full"
                                                           :style="item[b.switch] === 'projeto' ? 'background:rgba(100,59,142,.12); color:var(--purple)' : 'background:rgba(238,121,25,.12); color:var(--orange)'"
@@ -204,7 +221,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="grid gap-3" style="grid-template-columns:repeat(2, minmax(0, 1fr))">
+                                            <div class="fdoc-item-body grid gap-3" style="grid-template-columns:repeat(2, minmax(0, 1fr))">
                                                 <template x-for="f in b.fields.filter(f => f.key !== b.switch && applies(f, item))" :key="f.key">
                                                     <div :id="'f-' + b.key + '.' + item.id + '.' + f.key" :style="(f.half ? '' : 'grid-column:1 / -1') + '; scroll-margin-top:90px'">
                                                         @include('documents._field', ['fieldExpr' => 'f', 'pathExpr' => "b.key + '.' + item.id + '.' + f.key", 'valueExpr' => 'item[f.key]', 'itemExpr' => 'item'])
@@ -221,6 +238,15 @@
                                 </div>
                             </template>
                         </div>
+                    </template>
+                </div>
+                <div class="mt-5 pt-3 flex items-center justify-end gap-2" style="border-top:1px dashed var(--border2)">
+                    <template x-if="nextSection(s.key)">
+                        <button type="button" class="btn btn-ghost btn-xs" @click="openSection(nextSection(s.key).key)"
+                                x-text="'Próxima: ' + (nextSection(s.key).num ? nextSection(s.key).num + ' ' : '') + nextSection(s.key).title + ' →'"></button>
+                    </template>
+                    <template x-if="!nextSection(s.key)">
+                        <button type="button" class="btn btn-ghost btn-xs" @click="collapsed[s.key] = true">Recolher (última seção)</button>
                     </template>
                 </div>
                 </div>
@@ -331,13 +357,18 @@ function fieldDocEditor(cfg) {
         issuesOpen: false,
         timers: {},
         agentOpen: true,
-        collapsed: Object.fromEntries(cfg.sections.map(s => [s.key, cfg.payload.statuses[s.key] === 'pronta'])),
+        // Acordeão (24/11): começa só a primeira seção (Capa) aberta; abrir uma fecha as outras.
+        collapsed: Object.fromEntries(cfg.sections.map((s, i) => [s.key, i !== 0])),
+        nextSection(key) {
+            const i = this.cfg.sections.findIndex(s => s.key === key);
+            return this.cfg.sections[i + 1] || null;
+        },
 
         readyCount() {
             return this.cfg.sections.filter(s => ['pronta', 'opcional'].includes(this.state.statuses[s.key])).length;
         },
         openSection(key) {
-            this.collapsed[key] = false;
+            for (const k in this.collapsed) this.collapsed[k] = k !== key;
             this.regrow();
             this.$nextTick(() => this.scrollTo('sec-' + key));
         },
