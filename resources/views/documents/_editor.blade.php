@@ -36,6 +36,7 @@
          cabeçalho. Abre/fecha pelo botão; a escolha fica guardada no navegador. --}}
     <style>
         /* Mesa do documento (protótipo de 23/11): seções · documento · agente. */
+        .fdoc textarea.field { field-sizing: content; min-height: 4.8em; }
         .fdoc-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
         .fdoc-nav { position: static; }
         .fdoc-agent { display: flex; flex-direction: column; max-height: 75vh; overflow: hidden; }
@@ -143,7 +144,7 @@
         {{-- Seções --}}
         <template x-for="s in cfg.sections" :key="s.key">
             <section :id="'sec-' + s.key" class="mb-5 pb-5" style="border-bottom:1px solid var(--border2); scroll-margin-top:80px">
-                <button type="button" class="w-full flex items-baseline gap-2 text-left" @click="collapsed[s.key] = !collapsed[s.key]"
+                <button type="button" class="w-full flex items-baseline gap-2 text-left" @click="collapsed[s.key] = !collapsed[s.key]; regrow()"
                         :title="collapsed[s.key] ? 'Abrir a seção' : 'Recolher a seção'">
                     <span class="text-xs font-mono font-bold" style="color:var(--purple)" x-text="s.num"></span>
                     <h3 class="text-base font-bold" style="color:var(--text)" x-text="s.title"></h3>
@@ -337,6 +338,7 @@ function fieldDocEditor(cfg) {
         },
         openSection(key) {
             this.collapsed[key] = false;
+            this.regrow();
             this.$nextTick(() => this.scrollTo('sec-' + key));
         },
         chat: cfg.chat || [],
@@ -500,9 +502,17 @@ function fieldDocEditor(cfg) {
             this.view = 'cliente';
             this.clientSrc = this.cfg.renderUrl + '?t=' + Date.now();
         },
+        // Altura do texto longo. Chrome/Edge: o CSS (field-sizing) já ajusta sozinho, sempre.
+        // Outros: calcula aqui, mas só com o campo visível (seção recolhida ou outra aba davam altura
+        // zero e o campo abria espremido — 24/11); ao abrir a seção, recalcula (regrow).
         grow(el) {
+            if (window.CSS && CSS.supports('field-sizing', 'content')) return;
+            if (!el.offsetParent) return;
             el.style.height = 'auto';
             el.style.height = (el.scrollHeight + 2) + 'px';
+        },
+        regrow() {
+            this.$nextTick(() => this.$root.querySelectorAll('textarea.field').forEach(el => this.grow(el)));
         },
 
         // Campo: guarda o valor local na hora e salva depois de uma pausa (ou ao sair do campo).
