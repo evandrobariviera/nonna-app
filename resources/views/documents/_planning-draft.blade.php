@@ -43,11 +43,11 @@
                 </p>
             @endif
             @if($status === 'pronto')
-                <p class="text-xs" style="color:var(--muted)">Montar de novo troca o rascunho atual. Só dá enquanto ninguém editou o documento.</p>
+                <p class="text-xs" style="color:var(--muted)">@isset($draftKeepsInherited)Rodar de novo só completa o que ainda estiver vazio: o que já foi escrito fica como está.@else Montar de novo troca o rascunho atual. Só dá enquanto ninguém editou o documento.@endisset</p>
             @endif
             <p class="text-xs" style="color:var(--muted); max-width:80ch">
                 Marque o que o agente deve ler. Ele lê tudo uma vez, preenche as seções e deixa perguntas sobre o que faltou.
-                Número que ninguém falou fica "A confirmar": ele não inventa.@isset($draftKeepsInherited) O que veio do planejamento fica como está: ele só completa o que está vazio.@endisset
+                Número que ninguém falou fica "A confirmar": ele não inventa.@isset($draftKeepsInherited) O que já está escrito (do planejamento ou da equipe) fica como está: ele só completa o que está vazio, então dá para rodar mesmo depois de editar.@endisset
             </p>
 
             @forelse(collect($draft['sources'])->groupBy('group') as $group => $items)

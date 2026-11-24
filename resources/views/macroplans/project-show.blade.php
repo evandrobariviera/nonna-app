@@ -422,11 +422,11 @@
                 $itemDraftState['status'] = 'erro';
                 $itemDraftState['error'] = 'O agente parou no meio (o sistema pode ter sido atualizado). Tente de novo.';
             }
-            $itemTouched = app(\App\Services\Documents\DocumentEditor::class)->touchedByPerson($fieldDocument);
             $itemDraft = [
                 'state'     => $itemDraftState,
-                'canDraft'  => !$itemTouched && ($itemDraftState['status'] ?? null) !== 'processando',
-                'sources'   => !$itemTouched ? app(\App\Services\Documents\PlanningSources::class)->availableForProject($project) : [],
+                // Campanha/projeto: o agente só completa o vazio, então pode rodar mesmo com o documento editado.
+                'canDraft'  => ($itemDraftState['status'] ?? null) !== 'processando',
+                'sources'   => app(\App\Services\Documents\PlanningSources::class)->availableForProject($project),
                 'perguntas' => empty($fieldDocument->agent_state['perguntas_ocultas']) ? ($fieldDocument->agent_state['perguntas'] ?? []) : [],
             ];
         @endphp

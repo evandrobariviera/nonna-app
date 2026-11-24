@@ -1,0 +1,24 @@
+{
+    "novidades": [
+        {
+            "title": "Rascunho da campanha não falha mais no meio e roda mesmo depois de editar",
+            "summary": "Corrigimos o erro \"O agente passou do tempo\" no rascunho da campanha (a fila cancelava trabalhos longos por engano). E agora o rascunho da campanha e do projeto pode rodar mesmo depois de alguém editar: o agente só completa o que está vazio e nunca mexe no que já foi escrito.",
+            "kind": "correcao",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Documento de campanha — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-campanha",
+            "body_file": "ajuda-documento-de-campanha.html"
+        },
+        {
+            "title": "Documento de projeto — como preencher",
+            "category": "Documentos",
+            "slug": "documento-de-projeto",
+            "body_file": "ajuda-documento-de-projeto.html"
+        }
+    ]
+}

@@ -24,9 +24,6 @@ class DocumentDrafter
     /** @return array{perguntas: array, used: array, skipped: array} */
     public function draft(Document $document, Project $project, array $keys, array $uploadIds, int $userId, string $note = ''): array
     {
-        if ($this->editor->touchedByPerson($document)) {
-            throw new \InvalidArgumentException('Alguém já editou este documento: o rascunho do agente só entra em documento ainda não editado.');
-        }
         $agent = AiAgent::bySlug(AiAgent::SLUG_NONNA_AGENT) ?? throw new \RuntimeException('O Agente Nonna está inativo.');
 
         $keys = array_merge($keys, array_map(fn ($id) => "att:project:{$id}", $uploadIds));

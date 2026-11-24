@@ -99,9 +99,6 @@ class FieldDocumentController extends Controller
             'files.*'   => 'file|max:15360|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,csv,txt,md,html,htm,png,jpg,jpeg,webp',
         ], ['files.*.mimes' => 'Arquivo de tipo que o agente não lê.', 'files.*.max' => 'Cada arquivo pode ter até 15 MB.']);
 
-        if ($this->editor->touchedByPerson($doc)) {
-            return $back->with('error', 'Este documento já foi editado: o rascunho do agente só entra em documento ainda não preenchido.');
-        }
         if (($doc->agent_state['draft']['status'] ?? null) === 'processando') {
             return $back->with('error', 'O agente já está montando o rascunho.');
         }

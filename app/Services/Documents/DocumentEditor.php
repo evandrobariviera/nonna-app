@@ -208,10 +208,9 @@ class DocumentEditor
     public function fillEmptyByAgent(Document $document, array $fields, array $lists, int $userId): Document
     {
         return DB::connection('pgsql')->transaction(function () use ($document, $fields, $lists, $userId) {
+            // Sem trava de "alguém editou": aqui só entra o que está VAZIO (24/11) — o que a pessoa
+            // escreveu, antes ou durante o trabalho do agente, nunca é sobrescrito.
             $fresh = Document::whereKey($document->id)->lockForUpdate()->firstOrFail();
-            if ($this->touchedByPerson($fresh)) {
-                throw new \InvalidArgumentException('Alguém editou o documento enquanto o agente trabalhava: o rascunho não foi aplicado.');
-            }
             $schema  = $fresh->schema();
             $content = $fresh->content;
             $before  = $content;
