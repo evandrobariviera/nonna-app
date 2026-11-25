@@ -406,6 +406,7 @@
                                 <span class="font-normal">(BM ID, MCC ID, Team ID...)</span>
                             </label>
                             <input type="text" name="external_id" x-model="form.external_id"
+                                   autocomplete="off" data-lpignore="true" data-1p-ignore
                                    placeholder="Ex: 123456789"
                                    class="field w-full px-3 py-2 text-sm font-mono">
                         </div>
@@ -433,8 +434,12 @@
                             {{-- Meta / TikTok / LinkedIn / Pinterest: token único --}}
                             <div x-show="['meta','tiktok','linkedin','pinterest'].includes(form.provider)" class="mb-3">
                                 <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Access Token</label>
+                                {{-- :disabled — 3 campos com o mesmo name (Meta, Google Maps, genérico): só o
+                                     visível pode ir no POST, senão o último (escondido) vence. new-password = o
+                                     gerenciador de senhas do navegador não preenche senha salva aqui. --}}
                                 <input type="password" name="credentials[access_token]" x-model="form.credentials.access_token"
-                                       placeholder="{{ '' }}" autocomplete="off"
+                                       :disabled="!['meta','tiktok','linkedin','pinterest'].includes(form.provider)"
+                                       placeholder="{{ '' }}" autocomplete="new-password" data-lpignore="true" data-1p-ignore
                                        class="field w-full px-3 py-2 text-sm font-mono">
                             </div>
 
@@ -442,7 +447,7 @@
                             <div x-show="form.provider === 'google'" class="space-y-3 mb-3">
                                 <div>
                                     <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Developer Token</label>
-                                    <input type="password" name="credentials[developer_token]" x-model="form.credentials.developer_token" autocomplete="off"
+                                    <input type="password" name="credentials[developer_token]" x-model="form.credentials.developer_token" autocomplete="new-password" data-lpignore="true" data-1p-ignore
                                            class="field w-full px-3 py-2 text-sm font-mono">
                                 </div>
                                 <div>
@@ -470,7 +475,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">OAuth Client Secret</label>
-                                    <input type="password" name="credentials[client_secret]" x-model="form.credentials.client_secret" autocomplete="off"
+                                    <input type="password" name="credentials[client_secret]" x-model="form.credentials.client_secret" autocomplete="new-password" data-lpignore="true" data-1p-ignore
                                            class="field w-full px-3 py-2 text-sm font-mono">
                                 </div>
                                 <p class="text-xs" style="color:var(--muted)">
@@ -495,14 +500,17 @@
                                 <p class="text-xs mb-1.5" style="color:var(--muted)">
                                     Do projeto do Google Cloud só da prospecção (Central de Comércio), com a "Places API (New)" ativada e a chave restrita a ela. Status precisa estar "Conectado".
                                 </p>
-                                <input type="password" name="credentials[access_token]" x-model="form.credentials.access_token" autocomplete="off"
+                                <input type="password" name="credentials[access_token]" x-model="form.credentials.access_token"
+                                       :disabled="form.provider !== 'google_maps'" autocomplete="new-password" data-lpignore="true" data-1p-ignore
                                        placeholder="AIza..." class="field w-full px-3 py-2 text-sm font-mono">
                             </div>
 
                             {{-- Demais providers: token genérico --}}
                             <div x-show="form.provider && !['meta','tiktok','linkedin','pinterest','google','n8n','google_maps'].includes(form.provider)" class="mb-3">
                                 <label class="block text-xs font-semibold mb-1.5" style="color:var(--muted)">Access Token / API Key</label>
-                                <input type="password" name="credentials[access_token]" x-model="form.credentials.access_token" autocomplete="off"
+                                <input type="password" name="credentials[access_token]" x-model="form.credentials.access_token"
+                                       :disabled="!form.provider || ['meta','tiktok','linkedin','pinterest','google','n8n','google_maps'].includes(form.provider)"
+                                       autocomplete="new-password" data-lpignore="true" data-1p-ignore
                                        class="field w-full px-3 py-2 text-sm font-mono">
                             </div>
                         </div>

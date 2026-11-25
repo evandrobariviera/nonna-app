@@ -57,10 +57,21 @@ class OrganizationIntegrationController extends Controller
 
     private function extractCredentials(Request $request): array
     {
-        return collect(self::CREDENTIAL_FIELDS)
-            ->mapWithKeys(fn ($field) => [$field => $request->input("credentials.{$field}")])
+        $creds = collect(self::CREDENTIAL_FIELDS)
+            ->mapWithKeys(fn ($field) => [$field => is_string($v = $request->input("credentials.{$field}")) ? trim($v) : $v])
             ->filter(fn ($value) => filled($value))
             ->all();
+
+        // Chave do Google Maps tem formato fixo (AIza + 35). Barra senha salva que o navegador
+        // preencheu sozinho no campo (aconteceu em 25/11/2026: ficou uma senha de 13 caracteres).
+        if ($request->input('provider') === 'google_maps' && isset($creds['access_token'])
+            && !preg_match('/^AIza[0-9A-Za-z_\-]{35}$/', $creds['access_token'])) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'credentials.access_token' => 'Isso não parece uma chave do Google: ela começa com "AIza" e tem 39 caracteres. Copie de novo em Google Cloud → Credenciais → Mostrar chave.',
+            ]);
+        }
+
+        return $creds;
     }
 
     public function destroy(OrganizationIntegration $integration): RedirectResponse
