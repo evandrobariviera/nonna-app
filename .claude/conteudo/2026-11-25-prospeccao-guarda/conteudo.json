@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Prospecção consulta o Google uma vez só por empresa",
+            "summary": "Nome, endereço, telefone, nota e avaliações ficam guardados depois da primeira consulta: a lista e a página da empresa abrem sem gastar franquia, e dá para buscar empresa por nome. \"Atualizar dados\" busca de novo quando precisar.",
+            "kind": "melhoria",
+            "area": "Comercial"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Prospecção — encontrar empresas por cidade e segmento",
+            "category": "Comercial",
+            "slug": "prospeccao-varredura",
+            "body_file": "ajuda-prospeccao.html"
+        }
+    ]
+}

@@ -1,6 +1,6 @@
 {{-- Central de Comércio → Prospecção (CommerceProspectingController).
      Etapa 2: varredura no Google Places por cidade + segmento/nicho. Termos do Google:
-     no banco só o place_id; nome/endereço vêm ao vivo ($live) e só para a página atual,
+     dados do Google guardados em google_data (decisão 25/11/2026); quem ainda não tem é consultado 1x,
      sempre com a atribuição "Google Maps". Config (segmentos/cidades): só admin/dono. --}}
 @php
     $canEdit = $isOrgAdmin ?? false;
@@ -15,7 +15,7 @@
         <div class="flex items-start justify-between gap-4 flex-wrap mb-5">
             <p class="text-sm max-w-2xl" style="color:var(--muted2); line-height:1.6">
                 Encontre empresas de um segmento numa cidade, veja quem são e prepare a abordagem.
-                A varredura busca no Google Maps e não tem custo. Nome e endereço aparecem na hora e não ficam guardados no App.
+                A varredura busca no Google Maps e não tem custo. Os dados de cada empresa são consultados no Google uma vez e ficam guardados no App.
             </p>
             <button type="button" class="btn btn-primary btn-sm" @click="newScan = !newScan" @disabled(!$configured)>
                 <x-icon name="search" size="14" /> Nova varredura
@@ -103,6 +103,7 @@
             {{-- Filtros --}}
             <form method="GET" class="flex items-center gap-2 flex-wrap mb-4">
                 <input type="hidden" name="aba" value="empresas">
+                <input type="search" name="busca" value="{{ $filters['busca'] ?? '' }}" placeholder="Buscar por nome" class="field text-sm px-2.5 py-1.5" style="width:180px">
                 <select name="cidade" class="field text-sm px-2.5 py-1.5" onchange="this.form.submit()">
                     <option value="">Todas as cidades</option>
                     @foreach($cities as $c)<option value="{{ $c->id }}" @selected(($filters['cidade'] ?? '') === $c->id)>{{ $c->label() }}</option>@endforeach
@@ -189,7 +190,7 @@
                 </table>
             </div>
             <div class="flex items-center justify-between mt-3 flex-wrap gap-2">
-                <span class="text-xs" style="color:var(--muted)">Dados de empresas: <b>Google Maps</b>. Buscados agora, não ficam guardados.</span>
+                <span class="text-xs" style="color:var(--muted)">Dados de empresas: <b>Google Maps</b>. Consultados uma vez e guardados no App; "Atualizar dados" na empresa busca de novo.</span>
                 {{ $places->links() }}
             </div>
             <p class="text-xs mt-2" style="color:var(--muted)">Nota Nonna: perfil no Google (30) + reputação (30) + site (20). A parte "nas IAs" (20) entra com as rodadas de IA; até lá a nota vai até 80. Menor nota primeiro: é quem mais precisa de ajuda.</p>

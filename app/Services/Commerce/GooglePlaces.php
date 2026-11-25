@@ -167,7 +167,7 @@ class GooglePlaces
     }
 
     /** Campos da coleta (SKU Enterprise, ~1 chamada por empresa): o que a Nota Nonna precisa. */
-    public const COLLECT_FIELDS = 'id,displayName,formattedAddress,primaryType,primaryTypeDisplayName,nationalPhoneNumber,websiteUri,regularOpeningHours,rating,userRatingCount,photos,googleMapsUri,businessStatus';
+    public const COLLECT_FIELDS = 'id,displayName,formattedAddress,shortFormattedAddress,primaryType,primaryTypeDisplayName,nationalPhoneNumber,websiteUri,regularOpeningHours,rating,userRatingCount,photos,googleMapsUri,businessStatus';
 
     /**
      * Dados de uma empresa para calcular a nota e mostrar o raio-x. Ao vivo, NUNCA guardar
@@ -197,6 +197,7 @@ class GooglePlaces
         return [
             'name'         => $r->json('displayName.text'),
             'address'      => $r->json('formattedAddress'),
+            'short_address' => $r->json('shortFormattedAddress'),
             'type'         => $r->json('primaryTypeDisplayName.text'),
             'primary_type' => $r->json('primaryType'),
             'phone'        => $r->json('nationalPhoneNumber'),

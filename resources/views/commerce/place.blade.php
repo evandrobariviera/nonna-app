@@ -1,5 +1,5 @@
 {{-- Central de Comércio → Prospecção → empresa (CommerceProspectingController@showPlace).
-     Dados do Google ($g, $topLive) são lidos ao vivo e não ficam guardados (termos do Google);
+     Dados do Google ($g, $topLive) ficam guardados em google_data (decisão 25/11/2026), consultados 1x;
      sempre com a atribuição "Google Maps". Pontos, sinais do site e conferência de anúncio são da Nonna. --}}
 @php
     $parts = $place->score_parts['parts'] ?? null;
@@ -92,11 +92,11 @@
                 @endforelse
                 @if($max < 100)<li class="text-sm flex gap-2"><b style="color:var(--muted); width:14px">…</b><span style="color:var(--muted)">Presença nas IAs: entra com as rodadas de IA.</span></li>@endif
             </ul>
-            @if($g)<p class="text-xs mt-3" style="color:var(--muted)">Notas e avaliações: <b>Google Maps</b> · buscadas agora.</p>@endif
+            @if($g)<p class="text-xs mt-3" style="color:var(--muted)">Notas e avaliações: <b>Google Maps</b> · {{ $place->google_data_at ? "consultadas em " . $place->google_data_at->format("d/m/Y") : "consultadas agora" }}.</p>@endif
         </section>
 
         {{-- Contatos: os do SITE ficam guardados (SiteInspector::contacts, não são do Google);
-             os do Google (telefone, site) aparecem ao vivo e não são guardados. --}}
+             os do Google (telefone) também ficam guardados em google_data. --}}
         @php
             $ct = $site['contacts'] ?? [];
             $digits = fn ($s) => preg_replace('/\D/', '', $s);
@@ -116,7 +116,7 @@
                     @endforeach
                     @if(!empty($g['phone']) && !in_array($g['phone'], array_merge($ct['phones'] ?? [], $ct['whatsapp'] ?? []), true))
                         <li class="flex items-center gap-2"><x-icon name="phone" size="14" style="color:var(--muted)" />
-                            <a href="tel:{{ $digits($g['phone']) }}" class="underline">{{ $g['phone'] }}</a> <span class="text-xs" style="color:var(--muted)">telefone no Google (ao vivo)</span></li>
+                            <a href="tel:{{ $digits($g['phone']) }}" class="underline">{{ $g['phone'] }}</a> <span class="text-xs" style="color:var(--muted)">telefone no Google</span></li>
                     @endif
                     @foreach($ct['emails'] ?? [] as $e)
                         <li class="flex items-center gap-2"><x-icon name="mail" size="14" style="color:var(--muted)" />
@@ -138,7 +138,7 @@
                         </li>
                     @endif
                 </ul>
-                <p class="text-xs mt-3" style="color:var(--muted)">Os contatos do site ficam guardados no App. Os do Google aparecem ao vivo.</p>
+                <p class="text-xs mt-3" style="color:var(--muted)">Contatos guardados no App: do site da empresa e do perfil no Google.</p>
             @else
                 <p class="text-sm mt-2" style="color:var(--muted)">{{ $place->collected_at ? 'Nenhum contato publicado no site nem no Google.' : 'Aparece depois da coleta.' }}</p>
             @endif
@@ -161,7 +161,7 @@
                         @endunless
                     </tbody>
                 </table>
-                <p class="text-xs mt-2" style="color:var(--muted)">Nomes: <b>Google Maps</b> · buscados agora.</p>
+                <p class="text-xs mt-2" style="color:var(--muted)">Nomes: <b>Google Maps</b>.</p>
             </section>
         @endif
 

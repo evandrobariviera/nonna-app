@@ -44,8 +44,9 @@ class CommerceProspectingController extends Controller
             ->selectRaw('sp.scan_id, count(*) as total, count(p.collected_at) as collected')->groupBy('sp.scan_id')->get()->keyBy('scan_id');
 
         if ($tab === 'empresas') {
-            $filters = $request->only('cidade', 'segmento', 'varredura', 'situacao', 'sinal');
+            $filters = $request->only('cidade', 'segmento', 'varredura', 'situacao', 'sinal', 'busca');
             $query = CommercePlace::with('city', 'segment')
+                ->when(filled($filters['busca'] ?? null), fn ($q) => $q->whereRaw("google_data->>'name' ilike ?", ['%' . trim($filters['busca']) . '%']))
                 ->when($filters['cidade'] ?? null, fn ($q, $v) => $q->where('city_id', $v))
                 ->when($filters['segmento'] ?? null, fn ($q, $v) => $q->where('segment_id', $v))
                 ->when($filters['varredura'] ?? null, fn ($q, $v) => $q->whereHas('scans', fn ($s) => $s->whereKey($v)))
@@ -63,8 +64,8 @@ class CommerceProspectingController extends Controller
                 $places = $query->paginate(self::PER_PAGE)->withQueryString();
             }
             $signals = $places->getCollection()->mapWithKeys(fn ($p) => [$p->id => OpportunitySignal::for($p, $advertisers->has($p->segment_id . '|' . $p->city_id))]);
-            // Ao vivo, só os da página (termos do Google: não guardar). Custa por empresa mostrada.
-            $live = $google->details($places->pluck('place_id')->all());
+            // Guardado no App; só quem ainda não tem dado do Google é consultado (uma vez).
+            $live = $this->googleNames($places->getCollection(), $google);
 
             $data += compact('filters', 'places', 'live', 'counts', 'signals');
         }
@@ -162,16 +163,46 @@ class CommerceProspectingController extends Controller
         return back()->with('google_paid', $est + ['n' => $n, 'url' => $url, 'hidden' => $hidden, 'can' => $isAdmin]);
     }
 
-    /** Página da empresa: nota, o que pesou, posição na cidade, sinais e conferência de anúncio. Dados do Google ao vivo. */
+    /**
+     * Nome, tipo, endereço e link do Maps de cada empresa: do que está guardado (google_data);
+     * quem ainda não tem é consultado no Google UMA vez e passa a ficar guardado.
+     *
+     * @return array<string, array{name: ?string, address: ?string, type: ?string, maps_url: ?string, closed: bool}>
+     */
+    private function googleNames(\Illuminate\Support\Collection $places, GooglePlaces $google): array
+    {
+        $out = [];
+        $missing = [];
+        foreach ($places as $p) {
+            if ($d = $p->google_data) {
+                $out[$p->place_id] = ['name' => $d['name'] ?? null, 'address' => $d['short_address'] ?? $d['address'] ?? null,
+                    'type' => $d['type'] ?? null, 'maps_url' => $d['maps_url'] ?? null, 'closed' => (bool) ($d['closed'] ?? false)];
+            } else {
+                $missing[$p->place_id] = $p;
+            }
+        }
+        foreach ($missing ? $google->details(array_keys($missing)) : [] as $placeId => $d) {
+            $out[$placeId] = $d;
+            $missing[$placeId]->update(['google_data' => ['name' => $d['name'], 'short_address' => $d['address'], 'type' => $d['type'],
+                'maps_url' => $d['maps_url'], 'closed' => $d['closed']], 'google_data_at' => now()]);
+        }
+
+        return $out;
+    }
+
+    /** Página da empresa: nota, o que pesou, posição na cidade, sinais e conferência de anúncio. Dados do Google guardados. */
     public function showPlace(CommercePlace $place): View
     {
         $place->load('city', 'segment', 'adsChecker:id,name', 'scans.city', 'scans.segment');
         $google = GooglePlaces::forOrganization($place->organization_id);
-        $g = null;
         $liveError = null;
-        if ($google->configured()) {
+        // Já coletada: lê o que está guardado. Senão, consulta o Google uma vez e guarda.
+        $g = isset($place->google_data['reviews']) ? $place->google_data : null;
+        if (!$g && $google->configured()) {
             try {
-                $g = $google->collect($place->place_id); // ao vivo, não guardar
+                if ($g = $google->collect($place->place_id)) {
+                    $place->update(['google_data' => $g, 'google_data_at' => now()]);
+                }
             } catch (\Throwable $e) {
                 $liveError = $e->getMessage();
             }
@@ -181,7 +212,7 @@ class CommerceProspectingController extends Controller
             ->whereNotNull('score')->where('status', '!=', 'discarded')->orderByDesc('score')->get(['id', 'place_id', 'score', 'score_parts']);
         $rank = $place->score !== null ? $peers->search(fn ($p) => $p->id === $place->id) : false;
         $top = $peers->take(3);
-        $topLive = $google->details($top->pluck('place_id')->all());
+        $topLive = $this->googleNames(CommercePlace::whereIn('id', $top->pluck('id'))->get(), $google);
         $signal = OpportunitySignal::for($place, $this->advertisers()->has($place->segment_id . '|' . $place->city_id));
         $reasons = PlaceScorer::reasons($g, $place->site_signals ?? []);
 

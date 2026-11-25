@@ -23,6 +23,7 @@ class CommercePlace extends Model
         'organization_id', 'place_id', 'city_id', 'segment_id', 'status', 'score', 'score_parts',
         'last_seen_at', 'place_id_checked_at', 'site_signals', 'collected_at', 'collect_error',
         'ads_meta', 'ads_google', 'ads_checked_by', 'ads_checked_at',
+        'google_data', 'google_data_at', // dados do Google guardados (decisão 25/11/2026, ver migration)
     ];
 
     protected $casts = [
@@ -32,6 +33,8 @@ class CommercePlace extends Model
         'site_signals'        => 'array',
         'collected_at'        => 'datetime',
         'ads_checked_at'      => 'datetime',
+        'google_data'         => 'array',
+        'google_data_at'      => 'datetime',
     ];
 
     public static array $statuses = [

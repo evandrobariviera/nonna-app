@@ -32,6 +32,8 @@ class PlaceCollector
                 'score'         => $score['total'],
                 'score_parts'   => $score,
                 'site_signals'  => $site,
+                'google_data'    => $g, // guardado: consulta uma vez só (decisão 25/11/2026)
+                'google_data_at' => now(),
                 'status'        => in_array($place->status, ['mapped', 'scored'], true) ? ($g['closed'] ? 'discarded' : 'scored') : $place->status,
                 'collected_at'  => now(),
                 'collect_error' => null,
