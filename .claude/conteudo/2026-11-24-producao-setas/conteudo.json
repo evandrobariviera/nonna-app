@@ -1,0 +1,11 @@
+{
+    "novidades": [
+        {
+            "title": "Setas do quadro da Produção não somem mais",
+            "summary": "As setas ‹ › nas pontas do quadro da semana agora ficam sempre visíveis: dá pra andar um dia por vez para frente ou para trás sem limite, em qualquer semana escolhida.",
+            "kind": "correcao",
+            "area": "Produção"
+        }
+    ],
+    "ajuda": []
+}

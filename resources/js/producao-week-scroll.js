@@ -1,9 +1,10 @@
 // Carrossel dia-a-dia da Semana de Produção: sempre 5 dias na tela. Os botões ‹ › nas pontas
 // deslocam a janela um dia por vez — soma um dia novo de um lado e tira o mais distante do
 // outro, buscando via AJAX só o dia que entra (não a semana toda de novo, ver
-// ProductionPanelController::diaKanban()). Limitado a ±7 dias de hoje; pra ir mais longe, os
-// botões "‹ Semana anterior / Próxima semana ›" (também AJAX, só que trocam os 5 de uma vez)
-// continuam ali em cima.
+// ProductionPanelController::diaKanban()). Os botões ficam SEMPRE visíveis (sem trava de dias
+// a partir de hoje — antes sumiam ao passar de ±7 dias, e sumiam os dois de uma vez quando a
+// semana escolhida lá em cima já estava longe de hoje). Os botões "‹ Semana anterior / Próxima
+// semana ›" (também AJAX, só que trocam os 5 de uma vez) continuam ali em cima.
 // Registrado em window (não export puro) igual initKanbanDnd — a página chama isso de um
 // <script> comum no blade, não de um módulo ES.
 export function registerProducaoWeekScroll() {
@@ -17,8 +18,6 @@ function initProducaoWeekScroll() {
     const filterForm = document.getElementById('producao-week-filter-form');
     if (!board || !btnBefore || !btnAfter || !filterForm) return;
 
-    const LIMITE_DIAS = 7;
-
     function proximoDiaUtil(dataIso, direcao) {
         const d = new Date(dataIso + 'T00:00:00');
         do {
@@ -27,24 +26,8 @@ function initProducaoWeekScroll() {
         return d.toISOString().slice(0, 10);
     }
 
-    function diasDeHoje(dataIso) {
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
-        const d = new Date(dataIso + 'T00:00:00');
-        return Math.round((d - hoje) / 86400000);
-    }
-
     function colunas() {
         return Array.from(board.querySelectorAll('[data-kanban-column]'));
-    }
-
-    function atualizarLimites() {
-        const cols = colunas();
-        if (!cols.length) return;
-        const primeira = cols[0].dataset.status;
-        const ultima = cols[cols.length - 1].dataset.status;
-        btnBefore.style.display = Math.abs(diasDeHoje(proximoDiaUtil(primeira, -1))) > LIMITE_DIAS ? 'none' : '';
-        btnAfter.style.display = Math.abs(diasDeHoje(proximoDiaUtil(ultima, 1))) > LIMITE_DIAS ? 'none' : '';
     }
 
     function deslocar(direcao) {
@@ -53,7 +36,6 @@ function initProducaoWeekScroll() {
 
         const referencia = direcao < 0 ? cols[0].dataset.status : cols[cols.length - 1].dataset.status;
         const alvo = proximoDiaUtil(referencia, direcao);
-        if (Math.abs(diasDeHoje(alvo)) > LIMITE_DIAS) return;
 
         const btn = direcao < 0 ? btnBefore : btnAfter;
         if (btn.disabled) return;
@@ -82,7 +64,6 @@ function initProducaoWeekScroll() {
                 // (coluna com muito card) simplesmente não respondem.
                 if (window.Alpine && novaColuna) window.Alpine.initTree(novaColuna);
                 window.initKanbanDnd('#producao-week-board');
-                atualizarLimites();
             })
             .catch(() => { /* silencioso: o pior caso é o botão simplesmente não responder */ })
             .finally(() => { btn.disabled = false; });
@@ -90,5 +71,7 @@ function initProducaoWeekScroll() {
 
     btnBefore.onclick = () => deslocar(-1);
     btnAfter.onclick = () => deslocar(1);
-    atualizarLimites();
+    // Garante os dois visíveis mesmo se algum HTML antigo (cache) vier com display:none.
+    btnBefore.style.display = '';
+    btnAfter.style.display = '';
 }

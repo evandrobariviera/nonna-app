@@ -48,8 +48,8 @@
     </p>
 @endif
 
-{{-- Os botões ‹ › nas pontas estendem a régua um dia por vez (JS em producao-week-scroll.js),
-     limitados a ±7 dias de hoje — além disso, use a navegação de semana acima. Ficam sempre
+{{-- Os botões ‹ › nas pontas andam a régua um dia por vez (JS em producao-week-scroll.js),
+     sempre visíveis, sem trava de dias. Ficam sempre
      como primeiro/último filho: o JS insere as colunas novas ao lado deles, nunca antes. --}}
 <div id="producao-week-board" class="kb-board"
      data-kanban-board data-status-field="approval_date">
@@ -60,7 +60,7 @@
                      color:var(--muted); font-size:16px; cursor:pointer';
     @endphp
 
-    <button type="button" id="producao-week-extend-before" style="{{ $btnStyle }}; display:none"
+    <button type="button" id="producao-week-extend-before" style="{{ $btnStyle }}"
             title="Andar um dia pra trás">‹</button>
 
     @foreach($dias as $dia)

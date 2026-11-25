@@ -608,9 +608,9 @@ class ProductionPanelController extends Controller
         $data = (string) $request->get('data');
         abort_unless(preg_match('/^\d{4}-\d{2}-\d{2}$/', $data), 422);
 
-        // A régua no front já trava em ±7 dias de hoje; esta é só uma segunda trava, generosa,
-        // contra uso indevido do endpoint (ex: alguém automatizando requisições direto).
-        abort_if(abs(\Carbon\Carbon::parse($data)->diffInDays(now())) > 60, 422);
+        // A régua no front não tem mais trava (botões sempre visíveis); esta é só uma trava
+        // bem folgada contra uso indevido do endpoint (ex: alguém automatizando requisições).
+        abort_if(abs(\Carbon\Carbon::parse($data)->diffInDays(now())) > 400, 422);
 
         return view('producao._week-day-column', ['dia' => $this->diaKanban($data)]);
     }
