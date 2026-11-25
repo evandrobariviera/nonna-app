@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Prospecção com trava de custo do Google",
+            "summary": "O quadro \"Google neste mês\" mostra quanto da franquia grátis já foi usado. Quando acaba, o App trava: coleta acima da franquia só com a confirmação de um administrador, mostrando antes quanto vai custar.",
+            "kind": "novidade",
+            "area": "Comercial"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Prospecção — encontrar empresas por cidade e segmento",
+            "category": "Comercial",
+            "slug": "prospeccao-varredura",
+            "body_file": "ajuda-prospeccao.html"
+        }
+    ]
+}

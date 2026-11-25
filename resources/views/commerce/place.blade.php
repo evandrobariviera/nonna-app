@@ -26,6 +26,7 @@
     @if(session('error'))
         <div class="mb-5 px-4 py-3 text-sm font-semibold" style="background:rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.25); color:var(--red); border-radius:var(--radius)">{{ session('error') }}</div>
     @endif
+    @include('commerce._google-paid')
 
     <div class="flex items-start justify-between gap-4 flex-wrap mb-5">
         <div class="min-w-0">

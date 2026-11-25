@@ -28,14 +28,41 @@ class GooglePlaces
 
     public const DETAIL_FIELDS = 'id,displayName,shortFormattedAddress,primaryTypeDisplayName,googleMapsUri,businessStatus';
 
-    public function __construct(private ?string $apiKey = null) {}
+    /** Liberado por admin ao pedir coleta acima da franquia (GoogleUsage). Sem isso, nada pago. */
+    private bool $allowPaid = false;
+
+    public function __construct(private ?string $apiKey = null, private ?string $organizationId = null) {}
 
     public static function forOrganization(string $organizationId): self
     {
         $integration = OrganizationIntegration::withoutGlobalScopes()
             ->where('organization_id', $organizationId)->where('provider', 'google_maps')->where('status', 'connected')->first();
 
-        return new self($integration?->credential('access_token'));
+        return new self($integration?->credential('access_token'), $organizationId);
+    }
+
+    public function allowPaid(bool $allow = true): self
+    {
+        $this->allowPaid = $allow;
+
+        return $this;
+    }
+
+    private function record(string $sku, int $calls): void
+    {
+        if ($this->organizationId) {
+            GoogleUsage::record($this->organizationId, $sku, $calls);
+        }
+    }
+
+    /** Quantas chamadas desse tipo ainda pode fazer sem gerar custo (null = sem limite). */
+    private function allowedCalls(string $sku): ?int
+    {
+        if ($this->allowPaid || !$this->organizationId) {
+            return null;
+        }
+
+        return GoogleUsage::freeLeft($this->organizationId, $sku);
     }
 
     public function configured(): bool
@@ -84,6 +111,7 @@ class GooglePlaces
             $token = $response->json('nextPageToken');
         } while ($token && $pages < self::MAX_PAGES);
 
+        $this->record('busca', $calls); // grátis, mas fica no medidor
         $ids = array_values(array_unique($ids));
 
         // Voltou cheio (3 páginas e ainda havia próxima, ou 60 resultados): pode haver mais empresas.
@@ -102,6 +130,16 @@ class GooglePlaces
         if (!$placeIds || !$this->configured()) {
             return [];
         }
+
+        // Automático (abrir a tela): só o que cabe na franquia grátis; o resto fica sem nome.
+        $allowed = $this->allowedCalls('lista');
+        if ($allowed !== null) {
+            $placeIds = array_slice($placeIds, 0, $allowed);
+            if (!$placeIds) {
+                return [];
+            }
+        }
+        $this->record('lista', count($placeIds));
 
         $responses = Http::pool(fn (Pool $pool) => array_map(
             fn ($id) => $pool->as($id)->timeout(15)
@@ -141,6 +179,10 @@ class GooglePlaces
     public function collect(string $placeId): ?array
     {
         $this->ensureConfigured();
+        if ($this->allowedCalls('coleta') === 0) {
+            throw new FreeTierExhausted('coleta');
+        }
+        $this->record('coleta', 1);
         $r = Http::timeout(20)
             ->withHeaders(['X-Goog-Api-Key' => $this->apiKey, 'X-Goog-FieldMask' => self::COLLECT_FIELDS])
             ->get(self::BASE . '/places/' . rawurlencode($placeId), ['languageCode' => 'pt-BR', 'regionCode' => 'BR']);

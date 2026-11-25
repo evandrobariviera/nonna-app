@@ -28,6 +28,27 @@
         @if(session('error'))
             <div class="mb-5 px-4 py-3 text-sm font-semibold" style="background:rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.25); color:var(--red); border-radius:var(--radius)">{{ session('error') }}</div>
         @endif
+        @include('commerce._google-paid')
+
+        {{-- Medidor do Google no mês (trava de custo — GoogleUsage). --}}
+        @if($configured)
+            <div class="mb-5 px-4 py-3 text-xs flex flex-wrap gap-x-6 gap-y-2 items-center" style="border:1px solid var(--border2); border-radius:var(--radius); color:var(--muted2)">
+                <span class="font-semibold flex items-center gap-1.5" style="color:var(--text)"><x-icon name="circle-dollar-sign" size="14" /> Google neste mês</span>
+                @foreach($usage as $u)
+                    @php $pct = $u['free'] ? min(100, round($u['used'] / $u['free'] * 100)) : 0; @endphp
+                    <span title="{{ $u['label'] }}">
+                        {{ \Illuminate\Support\Str::before($u['label'], ' (') }}:
+                        @if($u['free'] === null)
+                            <b style="color:var(--text)">{{ number_format($u['used'], 0, ',', '.') }}</b> · sem custo
+                        @else
+                            <b style="color:{{ $pct >= 100 ? 'var(--red)' : ($pct >= 80 ? 'var(--orange)' : 'var(--text)') }}">{{ number_format($u['used'], 0, ',', '.') }} de {{ number_format($u['free'], 0, ',', '.') }}</b> grátis
+                            @if($u['left'] === 0)<span style="color:var(--red)"> · acabou, travado</span>@endif
+                        @endif
+                    </span>
+                @endforeach
+            </div>
+        @endif
+
         @if(!$configured)
             <div class="mb-5 px-4 py-3 text-sm" style="background:rgba(238,121,25,.08); border:1px solid rgba(238,121,25,.3); border-radius:var(--radius)">
                 <b>Falta a chave do Google Maps.</b> Peça para o administrador cadastrar em
@@ -121,7 +142,7 @@
                                         @if($g['closed'])<span class="badge badge-red ml-1">fechada</span>@endif
                                         <span class="block text-xs" style="color:var(--muted2)">{{ $g['type'] }}{{ $g['type'] && $g['address'] ? ' · ' : '' }}{{ $g['address'] }}</span>
                                     @else
-                                        <a href="{{ route('commerce.places.show', $p) }}" class="text-xs hover:underline" style="color:var(--muted)">{{ $configured ? 'Não foi possível ler agora' : 'Sem chave do Google' }}</a>
+                                        <a href="{{ route('commerce.places.show', $p) }}" class="text-xs hover:underline" style="color:var(--muted)">{{ $configured ? (($usage['lista']['left'] ?? 1) === 0 ? 'Franquia do mês acabou' : 'Não foi possível ler agora') : 'Sem chave do Google' }}</a>
                                     @endif
                                 </td>
                                 <td class="text-xs" style="color:var(--muted2)">{{ $p->segment?->name ?? '—' }} · {{ $p->city?->name ?? '—' }}</td>

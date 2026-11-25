@@ -21,7 +21,8 @@ class CollectCommercePlaceJob implements ShouldQueue
     public int $tries = 1;
     public int $timeout = 88;
 
-    public function __construct(public string $placeId)
+    /** $allowPaid: admin confirmou coletar acima da franquia grátis do Google (GoogleUsage). */
+    public function __construct(public string $placeId, public bool $allowPaid = false)
     {
         $this->onQueue('prospecting');
     }
@@ -30,7 +31,7 @@ class CollectCommercePlaceJob implements ShouldQueue
     {
         $place = CommercePlace::withoutGlobalScopes()->find($this->placeId);
         if ($place && $place->status !== 'opted_out') {
-            $collector->collect($place);
+            $collector->collect($place, allowPaid: $this->allowPaid);
         }
     }
 }

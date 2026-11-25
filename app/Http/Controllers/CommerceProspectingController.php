@@ -9,6 +9,7 @@ use App\Models\CommercePlace;
 use App\Models\CommerceScan;
 use App\Models\CommerceSegment;
 use App\Services\Commerce\GooglePlaces;
+use App\Services\Commerce\GoogleUsage;
 use App\Services\Commerce\OpportunitySignal;
 use App\Services\Commerce\PlaceScorer;
 use App\Services\Commerce\ScanRunner;
@@ -68,6 +69,9 @@ class CommerceProspectingController extends Controller
             $data += compact('filters', 'places', 'live', 'counts', 'signals');
         }
 
+        // Depois das consultas desta página, pra o medidor já mostrar o que ela gastou.
+        $data['usage'] = GoogleUsage::summary($org->id);
+
         return view('commerce.prospecting', $data);
     }
 
@@ -112,8 +116,13 @@ class CommerceProspectingController extends Controller
         $places = $scan->places()->whereNotIn('status', ['discarded', 'opted_out'])
             ->when(!$request->boolean('todas'), fn ($q) => $q->where(fn ($w) => $w->whereNull('collected_at')->orWhere('collected_at', '<', now()->subDays(7))))
             ->pluck('commerce_places.id');
+
+        if ($stop = $this->paidGate($request, $scan->organization_id, $places->count(), route('commerce.scans.collect', $scan), array_filter(['todas' => $request->boolean('todas') ? 1 : null]))) {
+            return $stop;
+        }
+        $allowPaid = $request->boolean('aceito_pago');
         foreach ($places as $id) {
-            CollectCommercePlaceJob::dispatch($id);
+            CollectCommercePlaceJob::dispatch($id, $allowPaid);
         }
 
         return redirect()->route('commerce.prospecting', ['aba' => 'varreduras'])->with('success', $places->count()
@@ -121,14 +130,36 @@ class CommerceProspectingController extends Controller
             : 'Todas as empresas dessa varredura já foram coletadas nos últimos 7 dias.');
     }
 
-    public function collectPlace(CommercePlace $place): RedirectResponse
+    public function collectPlace(Request $request, CommercePlace $place): RedirectResponse
     {
         if (!GooglePlaces::forOrganization($place->organization_id)->configured()) {
             return back()->with('error', 'Falta a chave do Google Maps (Places) em Configurações → Integrações.');
         }
-        CollectCommercePlaceJob::dispatch($place->id);
+        if ($stop = $this->paidGate($request, $place->organization_id, 1, route('commerce.places.collect', $place))) {
+            return $stop;
+        }
+        CollectCommercePlaceJob::dispatch($place->id, $request->boolean('aceito_pago'));
 
         return back()->with('success', 'Coleta pedida. Em até 1 minuto a nota aparece; recarregue a página.');
+    }
+
+    /**
+     * Trava de custo (GoogleUsage): coleta que passa da franquia grátis do mês NÃO vai pra fila
+     * sem confirmação — volta mostrando quantas seriam pagas e o custo estimado. Só admin/dono
+     * libera (aceito_pago). Dentro da franquia segue direto. null = pode seguir.
+     */
+    private function paidGate(Request $request, string $organizationId, int $n, string $url, array $hidden = []): ?RedirectResponse
+    {
+        $est = GoogleUsage::estimate($organizationId, 'coleta', $n);
+        if ($est['paid'] === 0) {
+            return null;
+        }
+        $isAdmin = in_array(app()->has('currentOrgRole') ? app('currentOrgRole') : null, ['owner', 'admin'], true);
+        if ($request->boolean('aceito_pago')) {
+            return $isAdmin ? null : back()->with('error', 'Só admin ou dono da organização libera uso pago do Google.');
+        }
+
+        return back()->with('google_paid', $est + ['n' => $n, 'url' => $url, 'hidden' => $hidden, 'can' => $isAdmin]);
     }
 
     /** Página da empresa: nota, o que pesou, posição na cidade, sinais e conferência de anúncio. Dados do Google ao vivo. */

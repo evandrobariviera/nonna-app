@@ -12,9 +12,9 @@ class PlaceCollector
 {
     public function __construct(private ?GooglePlaces $places = null, private ?SiteInspector $inspector = null) {}
 
-    public function collect(CommercePlace $place, bool $withPagespeed = true): CommercePlace
+    public function collect(CommercePlace $place, bool $withPagespeed = true, bool $allowPaid = false): CommercePlace
     {
-        $google = $this->places ?? GooglePlaces::forOrganization($place->organization_id);
+        $google = $this->places ?? GooglePlaces::forOrganization($place->organization_id)->allowPaid($allowPaid);
         $inspector = $this->inspector ?? new SiteInspector($google->apiKey());
 
         try {
@@ -36,6 +36,9 @@ class PlaceCollector
                 'collected_at'  => now(),
                 'collect_error' => null,
             ]);
+        } catch (FreeTierExhausted $e) {
+            // Trava de custo: não marca como coletada (collected_at fica), dá pra pedir de novo.
+            $place->update(['collect_error' => $e->getMessage()]);
         } catch (\Throwable $e) {
             $place->update(['collect_error' => mb_substr($e->getMessage(), 0, 500), 'collected_at' => now()]);
         }
