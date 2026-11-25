@@ -1,0 +1,11 @@
+{
+    "novidades": [
+        {
+            "title": "Trava de 2 em produção agora diz quais são as tarefas",
+            "summary": "Quando o App não deixa puxar mais uma tarefa para Em Produção, o aviso lista as 2 que já estão com você — e avisa se alguma está em outra sprint, que não aparece na tela de Execução.",
+            "kind": "melhoria",
+            "area": "Tarefas"
+        }
+    ],
+    "ajuda": []
+}

@@ -679,16 +679,20 @@ class Task extends Model
         };
     }
 
-    // Quantas tarefas o usuário tem em "Em Produção" agora — conta pelo executor_id
-    // legado OU pelo papel 'executor' na task_executors (mesmo padrão dual usado em
-    // executorGroupKey()). $excludeTaskId tira a própria tarefa sendo salva da conta.
+    // Tarefas do usuário em "Em Produção" agora — quem executa segue a mesma regra da fila
+    // (ExecutorQueue: pivot executor; executor_id legado só sem pivot) e cliente inativo não
+    // conta. Em QUALQUER sprint: Em Produção é trabalho na mão agora, esteja onde estiver.
+    // $excludeTaskId tira a própria tarefa sendo salva da conta.
+    private static function wipQuery(string $userId, ?string $excludeTaskId = null): Builder
+    {
+        return \App\Services\Tasks\ExecutorQueue::activeClients(
+            \App\Services\Tasks\ExecutorQueue::executedBy(static::where('status', 'em_producao'), (int) $userId)
+        )->when($excludeTaskId, fn ($q) => $q->where('tasks.id', '!=', $excludeTaskId));
+    }
+
     public static function wipCount(string $userId, ?string $excludeTaskId = null): int
     {
-        return static::where('status', 'em_producao')
-            ->when($excludeTaskId, fn ($q) => $q->where('id', '!=', $excludeTaskId))
-            ->where(fn ($q) => $q->where('executor_id', $userId)
-                ->orWhereHas('executors', fn ($q2) => $q2->where('users.id', $userId)->where('task_executors.role', 'executor')))
-            ->count();
+        return static::wipQuery($userId, $excludeTaskId)->count();
     }
 
     // Trava de carga: máximo 2 tarefas em produção por executor. Só dispara quando a
@@ -700,12 +704,18 @@ class Task extends Model
             return null;
         }
 
-        $count = static::wipCount($userId, $excludeTaskId);
-        if ($count < 2) {
+        $tasks = static::wipQuery($userId, $excludeTaskId)->with('sprint:id,title')->get(['tasks.id', 'tasks.title', 'tasks.sprint_id']);
+        if ($tasks->count() < 2) {
             return null;
         }
 
+        // Lista quais são (e de que sprint): a tela de Execução só mostra a sprint ativa, então
+        // uma Em Produção esquecida em outra sprint parecia "conta errada" (Vitor, 25/11/2026).
+        $activeId = \App\Services\Tasks\ExecutorQueue::activeSprint()?->id;
+        $lista = $tasks->map(fn ($t) => '"' . \Illuminate\Support\Str::limit($t->title, 50) . '"'
+            . ($t->sprint_id === $activeId && $activeId ? '' : ' (' . ($t->sprint?->title ?? 'sem sprint') . ')'))->join('; ');
+
         $name = User::find($userId)?->name ?? 'Esse usuário';
-        return "{$name} já tem {$count} tarefas em Em Produção (limite atingido). Conclua ou mova uma antes de iniciar outra.";
+        return "{$name} já tem {$tasks->count()} tarefas em Em Produção (limite atingido): {$lista}. Conclua ou mova uma antes de iniciar outra.";
     }
 }
