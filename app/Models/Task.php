@@ -546,7 +546,7 @@ class Task extends Model
                     ->orWhereNull('due_date')
                     ->orWhereNull('approval_date')
                     ->orWhereNull('origin')
-                    ->orWhere(fn (Builder $q2) => $q2->whereNull('description')->orWhere('description', ''))
+                    ->orWhere(fn (Builder $q2) => $q2->whereNull('tasks.description')->orWhereRaw(self::BLANK_DESCRIPTION_SQL))
                     // Executor: pivot "executor" OU, como herança, tasks.executor_id — mesma
                     // regra do Painel de Produção/Placar/Distribuição. Só o pivot deixava
                     // tarefa com Executor visível na tela (que lê executor_id) travada como
@@ -589,10 +589,45 @@ class Task extends Model
             'Vencimento'          => $this->due_date === null,
             'Aprovação'           => $this->approval_date === null,
             'Origem'              => $this->origin === null,
-            'Briefing / Descrição' => in_array($this->description, [null, ''], true),
+            'Briefing / Descrição' => self::isBlankText($this->description),
             'Executor'            => !$hasExecutor,
             'Responsável'         => !$this->responsibles()->exists(),
         ]));
+    }
+
+    /**
+     * Descrição "vazia" de verdade: o editor rico salva "<p></p>" (ou "<p><br></p>", &nbsp;)
+     * quando ninguém escreveu nada — isso NÃO é descrição. Mesma regra em SQL
+     * (BLANK_DESCRIPTION_SQL, pro scopePendente) e em PHP (aqui).
+     */
+    public const BLANK_DESCRIPTION_SQL = "btrim(regexp_replace(regexp_replace(tasks.description,'<[^>]*>', '', 'g'), '&nbsp;|\\s', '', 'g')) = ''";
+
+    public static function isBlankText(?string $html): bool
+    {
+        if ($html === null) {
+            return true;
+        }
+        $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+        return trim(preg_replace('/[\s\x{00A0}]+/u', '', $text)) === '';
+    }
+
+    /**
+     * Regra dura (Evandro, 25/11/2026: "isso não pode acontecer jamais"): tarefa sem
+     * Briefing / Descrição NÃO fica em sprint. Vale para entrar na sprint (criar já com
+     * sprint, mover, duplicar, automação) e para apagar a descrição de quem já está nela.
+     * Guardada no TaskObserver::saving() — nenhum caminho escapa.
+     */
+    public function breaksSprintDescriptionRule(): bool
+    {
+        if (! $this->sprint_id || in_array($this->status, ['concluido', 'cancelado'], true)) {
+            return false;
+        }
+        if (! $this->exists || $this->isDirty('sprint_id') || $this->isDirty('description')) {
+            return self::isBlankText($this->description);
+        }
+
+        return false;
     }
 
     public static function joinFields(array $fields): string

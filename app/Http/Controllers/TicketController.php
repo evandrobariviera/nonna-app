@@ -146,6 +146,13 @@ class TicketController extends Controller
             'files.*'            => 'file|max:153600', // 150 MB
         ]);
 
+        // Sem Briefing / Descrição não entra em sprint (ver Task::breaksSprintDescriptionRule()).
+        if (!empty($data['sprint_id']) && Task::isBlankText($data['description'] ?? null)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'description' => 'Para o chamado já entrar na sprint, escreva o Briefing / Descrição. Sem descrição, deixe "sem sprint".',
+            ]);
+        }
+
         if (!empty($data['project_id'])) {
             $project = Project::findOrFail($data['project_id']);
             abort_unless($project->client_id === $data['client_id'], 422, 'Esse projeto/campanha é de outro cliente.');

@@ -413,12 +413,20 @@ class SprintController extends Controller
 
         // update() em massa (não each->update()) pula Observers de propósito — mesma regra
         // de bulk actions do resto do app (ver TaskController::bulkUpdate).
-        $moved = $sprint->tasks()
-            ->whereNotIn('status', ['concluido', 'cancelado'])
-            ->update(['sprint_id' => $nextSprint->id]);
+        // Sem Briefing / Descrição não entra em sprint (Task::breaksSprintDescriptionRule()):
+        // essas voltam pra Fila em vez de seguir pra próxima.
+        $abertas = fn () => $sprint->tasks()->whereNotIn('status', ['concluido', 'cancelado']);
+        $semDescricao = $abertas()
+            ->where(fn ($q) => $q->whereNull('tasks.description')->orWhereRaw(Task::BLANK_DESCRIPTION_SQL))
+            ->update(['sprint_id' => null]);
+        $moved = $abertas()->update(['sprint_id' => $nextSprint->id]);
 
-        return redirect()->route('sprints.show', $sprint)
-            ->with('success', "{$moved} tarefa(s) movida(s) para a Sprint \"{$nextSprint->title}\".");
+        $msg = "{$moved} tarefa(s) movida(s) para a Sprint \"{$nextSprint->title}\".";
+        if ($semDescricao) {
+            $msg .= " {$semDescricao} sem Briefing / Descrição voltaram para a Fila.";
+        }
+
+        return redirect()->route('sprints.show', $sprint)->with('success', $msg);
     }
 
     public function addTask(Sprint $sprint, Task $task)

@@ -37,6 +37,8 @@ class TaskObserver
     // Pontos de sprint sempre em dia (formato detectado pelo título / tipo / ajuste manual).
     public function saving(Task $task): void
     {
+        $this->guardSprintDescription($task);
+
         app(SprintPoints::class)->apply($task);
 
         // Fase é do projeto: trocou de projeto (por qualquer caminho — tela, sync, assistente)
@@ -44,6 +46,39 @@ class TaskObserver
         if ($task->isDirty('project_id') && !$task->isDirty('project_phase_id')) {
             $task->project_phase_id = null;
         }
+    }
+
+    /**
+     * Tarefa sem Briefing / Descrição não fica em sprint (Task::breaksSprintDescriptionRule()).
+     *  - Criando: nunca quebra a criação (automação/duplicar/assistente podem criar no meio de
+     *    outra ação) — a tarefa nasce SEM sprint e cai na Fila, onde aparece como pendente.
+     *  - Mudando (mover pra sprint ou apagar a descrição): na tela, bloqueia com a mensagem;
+     *    em job/comando/API, desfaz só a mudança que quebrou a regra.
+     */
+    private function guardSprintDescription(Task $task): void
+    {
+        if (! $task->breaksSprintDescriptionRule()) {
+            return;
+        }
+
+        if (! $task->exists) {
+            $task->sprint_id = null;
+            return;
+        }
+
+        $movendo = $task->isDirty('sprint_id');
+
+        // Job, comando ou API (n8n/ClickUp): não tem tela pra mostrar o aviso.
+        if (app()->runningInConsole() || request()->is('api/*')) {
+            $movendo
+                ? $task->sprint_id = $task->getOriginal('sprint_id')
+                : $task->description = $task->getOriginal('description');
+            return;
+        }
+
+        throw \Illuminate\Validation\ValidationException::withMessages($movendo
+            ? ['sprint_id' => "Para enviar \"{$task->title}\" à sprint, escreva o Briefing / Descrição primeiro."]
+            : ['description' => 'A tarefa está numa sprint: o Briefing / Descrição não pode ficar vazio.']);
     }
 
     public function updated(Task $task): void

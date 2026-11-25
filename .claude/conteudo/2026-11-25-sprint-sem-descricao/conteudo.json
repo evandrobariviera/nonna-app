@@ -1,0 +1,12 @@
+{
+    "novidades": [
+        {
+            "title": "Tarefa sem Briefing / Descrição não entra mais na Sprint, por nenhum caminho",
+            "summary": "A trava agora vale para tudo: criar tarefa já na Sprint, mover, duplicar, chamado e automações. E \"descrição\" em branco do editor não conta mais como preenchida.",
+            "body": "<p>A regra já existia, mas tinha brechas: o editor de texto salva um parágrafo vazio quando ninguém escreve nada, e o App achava que aquilo era descrição. Algumas tarefas também nasciam direto dentro da Sprint sem passar pela checagem. Agora:</p><ul><li><strong>Mandar para a Sprint</strong> (botão, campo Sprint da tarefa, envio em lote): sem descrição, o App avisa e não deixa.</li><li><strong>Chamado com Sprint escolhida</strong>: precisa da descrição, ou deixe \"sem sprint\".</li><li><strong>Tarefa criada por automação, duplicada ou pelo assistente</strong> sem descrição: nasce na Fila, não na Sprint.</li><li><strong>Apagar a descrição</strong> de tarefa que já está na Sprint: não deixa.</li><li><strong>Mover o que não terminou para a próxima Sprint</strong>: as que estão sem descrição voltam para a Fila.</li></ul>",
+            "kind": "melhoria",
+            "area": "Sprint"
+        }
+    ],
+    "ajuda": []
+}
