@@ -130,7 +130,7 @@
             <div class="card" style="padding:0; overflow-x:auto">
                 <table class="nonna-table w-full">
                     <thead>
-                        <tr><th>Empresa</th><th>Segmento · Cidade</th><th>Nota Nonna</th><th>Sinal</th><th>Situação</th><th></th></tr>
+                        <tr><th>Empresa</th><th>Segmento · Cidade</th><th>Nota Nonna</th><th>Contato</th><th>Sinal</th><th>Situação</th><th></th></tr>
                     </thead>
                     <tbody>
                         @forelse($places as $p)
@@ -155,6 +155,20 @@
                                         <span style="color:var(--muted)">—</span>
                                     @endif
                                 </td>
+                                {{-- Contatos achados no site (guardados, sem custo de Google) --}}
+                                @php $ct = $p->site_signals['contacts'] ?? []; @endphp
+                                <td class="whitespace-nowrap text-xs">
+                                    @if($wa = $ct['whatsapp'][0] ?? null)
+                                        <a href="https://wa.me/55{{ preg_replace('/\D/', '', $wa) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 underline" style="color:var(--green)"><x-icon name="message-circle" size="12" />{{ $wa }}</a>
+                                    @elseif($tel = $ct['phones'][0] ?? null)
+                                        <span class="inline-flex items-center gap-1" style="color:var(--muted2)"><x-icon name="phone" size="12" />{{ $tel }}</span>
+                                    @endif
+                                    <span class="inline-flex gap-1 align-middle">
+                                        @if($ig = $ct['instagram'][0] ?? null)<a href="{{ $ig }}" target="_blank" rel="noopener" title="Instagram" class="badge badge-muted" style="padding:1px 5px">IG</a>@endif
+                                        @if($em = $ct['emails'][0] ?? null)<a href="mailto:{{ $em }}" title="{{ $em }}" class="badge badge-muted" style="padding:1px 5px"><x-icon name="mail" size="11" /></a>@endif
+                                    </span>
+                                    @if(!$ct && !$p->collected_at)<span style="color:var(--muted)">—</span>@endif
+                                </td>
                                 <td>@php $sg = \App\Services\Commerce\OpportunitySignal::$labels[$signals[$p->id] ?? ''] ?? null; @endphp
                                     @if($sg && $p->collected_at)<span class="badge badge-{{ $sg['color'] }}" title="{{ $sg['hint'] }}">{{ $sg['label'] }}</span>@endif
                                 </td>
@@ -169,7 +183,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="text-sm" style="color:var(--muted)">Nenhuma empresa ainda. Faça uma varredura.</td></tr>
+                            <tr><td colspan="7" class="text-sm" style="color:var(--muted)">Nenhuma empresa ainda. Faça uma varredura.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

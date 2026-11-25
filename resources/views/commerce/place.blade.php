@@ -95,6 +95,55 @@
             @if($g)<p class="text-xs mt-3" style="color:var(--muted)">Notas e avaliações: <b>Google Maps</b> · buscadas agora.</p>@endif
         </section>
 
+        {{-- Contatos: os do SITE ficam guardados (SiteInspector::contacts, não são do Google);
+             os do Google (telefone, site) aparecem ao vivo e não são guardados. --}}
+        @php
+            $ct = $site['contacts'] ?? [];
+            $digits = fn ($s) => preg_replace('/\D/', '', $s);
+            $temContato = collect($ct)->flatten()->isNotEmpty() || !empty($g['phone']) || !empty($g['website']);
+        @endphp
+        <section class="card p-5 min-w-0">
+            <h2 class="card-title">Contatos</h2>
+            @if($temContato)
+                <ul class="mt-3 flex flex-col gap-2 text-sm">
+                    @foreach($ct['whatsapp'] ?? [] as $n)
+                        <li class="flex items-center gap-2"><x-icon name="message-circle" size="14" style="color:var(--green)" />
+                            <a href="https://wa.me/55{{ $digits($n) }}" target="_blank" rel="noopener" class="underline">{{ $n }}</a> <span class="text-xs" style="color:var(--muted)">WhatsApp do site</span></li>
+                    @endforeach
+                    @foreach($ct['phones'] ?? [] as $n)
+                        <li class="flex items-center gap-2"><x-icon name="phone" size="14" style="color:var(--muted)" />
+                            <a href="tel:{{ $digits($n) }}" class="underline">{{ $n }}</a> <span class="text-xs" style="color:var(--muted)">telefone do site</span></li>
+                    @endforeach
+                    @if(!empty($g['phone']) && !in_array($g['phone'], array_merge($ct['phones'] ?? [], $ct['whatsapp'] ?? []), true))
+                        <li class="flex items-center gap-2"><x-icon name="phone" size="14" style="color:var(--muted)" />
+                            <a href="tel:{{ $digits($g['phone']) }}" class="underline">{{ $g['phone'] }}</a> <span class="text-xs" style="color:var(--muted)">telefone no Google (ao vivo)</span></li>
+                    @endif
+                    @foreach($ct['emails'] ?? [] as $e)
+                        <li class="flex items-center gap-2"><x-icon name="mail" size="14" style="color:var(--muted)" />
+                            <a href="mailto:{{ $e }}" class="underline">{{ $e }}</a></li>
+                    @endforeach
+                    @php $siteLink = $site['site_url'] ?? ($g['website'] ?? null); @endphp
+                    @if($siteLink)
+                        <li class="flex items-center gap-2"><x-icon name="globe" size="14" style="color:var(--muted)" />
+                            <a href="{{ $siteLink }}" target="_blank" rel="noopener" class="underline truncate">{{ preg_replace('#^https?://(www\.)?#', '', rtrim($siteLink, '/')) }}</a></li>
+                    @endif
+                    @php $redes = ['instagram' => 'Instagram', 'facebook' => 'Facebook', 'linkedin' => 'LinkedIn', 'tiktok' => 'TikTok', 'youtube' => 'YouTube']; @endphp
+                    @if(collect($redes)->keys()->contains(fn ($k) => !empty($ct[$k])))
+                        <li class="flex items-center gap-2 flex-wrap"><x-icon name="link" size="14" style="color:var(--muted)" />
+                            @foreach($redes as $k => $label)
+                                @foreach($ct[$k] ?? [] as $url)
+                                    <a href="{{ $url }}" target="_blank" rel="noopener" class="badge badge-muted" title="{{ $url }}">{{ $label }}{{ count($ct[$k]) > 1 ? ' ' . $loop->iteration : '' }} ↗</a>
+                                @endforeach
+                            @endforeach
+                        </li>
+                    @endif
+                </ul>
+                <p class="text-xs mt-3" style="color:var(--muted)">Os contatos do site ficam guardados no App. Os do Google aparecem ao vivo.</p>
+            @else
+                <p class="text-sm mt-2" style="color:var(--muted)">{{ $place->collected_at ? 'Nenhum contato publicado no site nem no Google.' : 'Aparece depois da coleta.' }}</p>
+            @endif
+        </section>
+
         {{-- Comparação --}}
         @if($top->isNotEmpty())
             <section class="card p-5 min-w-0">

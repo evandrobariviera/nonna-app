@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Prospecção guarda os contatos do site da empresa",
+            "summary": "Na coleta, o App anota o WhatsApp, telefone, e-mail e redes sociais que a empresa publica no próprio site. Eles aparecem na coluna Contato da lista e no card Contatos da empresa, com um clique para abrir a conversa.",
+            "kind": "novidade",
+            "area": "Comercial"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Prospecção — encontrar empresas por cidade e segmento",
+            "category": "Comercial",
+            "slug": "prospeccao-varredura",
+            "body_file": "ajuda-prospeccao.html"
+        }
+    ]
+}
