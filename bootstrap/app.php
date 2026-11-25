@@ -26,6 +26,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'portal'        => \App\Http\Middleware\EnsurePortalAccess::class,
             'portal.client' => \App\Http\Middleware\ResolvePortalClientContext::class,
             'not-client'    => \App\Http\Middleware\EnsureNotClient::class,
+            // Contador de limite separado por rota (o padrão do Laravel junta todas por usuário).
+            'throttle'      => \App\Http\Middleware\ThrottlePerRoute::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

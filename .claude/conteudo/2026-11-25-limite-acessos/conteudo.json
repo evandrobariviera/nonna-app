@@ -1,0 +1,11 @@
+{
+    "novidades": [
+        {
+            "title": "\"Montar rascunho\" não dá mais erro 429 depois de editar o documento",
+            "summary": "Editar vários campos da campanha ou do projeto e logo depois pedir o rascunho ao Agente Nonna podia abrir uma tela \"429 Too Many Requests\". Agora cada botão tem o seu próprio limite e um não trava o outro.",
+            "kind": "correcao",
+            "area": "Planejamentos"
+        }
+    ],
+    "ajuda": []
+}
