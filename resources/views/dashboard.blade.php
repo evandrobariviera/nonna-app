@@ -677,12 +677,43 @@
                             </x-slot:meta>
                         </x-item-card>
                     @empty
-                        <div class="kb-empty flex items-center justify-center gap-1.5">
-                            <x-icon name="party-popper" size="13" />
-                            Nada por aqui.
-                        </div>
+                        @unless($q['status'] === 'em_producao' && $myProductionElsewhere->isNotEmpty())
+                            <div class="kb-empty flex items-center justify-center gap-1.5">
+                                <x-icon name="party-popper" size="13" />
+                                Nada por aqui.
+                            </div>
+                        @endunless
                     @endforelse
                 </div>
+
+                {{-- Em Produção de OUTRA sprint: aparece TRAVADA (fora do data-kanban-list, sem
+                     arrastar). Conta na trava de 2 em produção; pra trabalhar nela, traga pra
+                     sprint atual (passa pelas regras de entrada: descrição, cadastro). --}}
+                @if($q['status'] === 'em_producao' && $myProductionElsewhere->isNotEmpty())
+                    <div class="px-2 pb-2 space-y-1.5">
+                        @foreach($myProductionElsewhere as $task)
+                            <div style="opacity:.75; border:1px dashed var(--border2); border-radius:var(--radius)">
+                                <x-item-card kind="tarefa" :icon="$task->typeIcon()" :title="$task->title" :href="route('tasks.show', $task)">
+                                    <x-slot:badge><span class="font-bold mr-1 px-1.5 inline-flex items-center gap-0.5" style="font-size:10px; color:var(--muted); border:1px solid var(--border2); border-radius:5px; vertical-align:1px"><x-icon name="lock" size="10" /> TRAVADA</span></x-slot:badge>
+                                    <x-slot:meta>
+                                        <span class="truncate">{{ $task->client?->displayName() ?? '—' }}</span>
+                                        <span style="color:var(--orange)">{{ $task->sprint?->title ?? 'Sem sprint' }}</span>
+                                    </x-slot:meta>
+                                </x-item-card>
+                                @unless($viewingAs)
+                                    <form method="POST" action="{{ route('tasks.update-sprint', $task) }}" class="px-2 pb-1.5">
+                                        @csrf @method('PATCH')
+                                        <input type="hidden" name="sprint_id" value="{{ $activeSprint->id }}">
+                                        <button type="submit" class="btn btn-ghost btn-xs w-full">Trazer para a sprint atual</button>
+                                    </form>
+                                @endunless
+                            </div>
+                        @endforeach
+                        <p class="text-[11px] px-1" style="color:var(--muted)">
+                            Em produção, mas de outra sprint: fica travada e conta no limite de 2 em produção.
+                        </p>
+                    </div>
+                @endif
             </div>
         @endforeach
     </div>

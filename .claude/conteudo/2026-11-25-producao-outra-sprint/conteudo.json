@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Execução mostra a tarefa Em Produção que está em outra sprint, travada",
+            "summary": "Se você tem uma tarefa em Em Produção marcada em outra sprint, ela aparece na coluna Em Produção com o selo TRAVADA: conta no limite de 2, mas só dá para trabalhar nela trazendo para a sprint atual.",
+            "body": "<p>Antes essa tarefa ficava escondida: a tela de Execução só mostra a sprint atual, mas a trava de 2 em produção contava ela. Resultado: o App dizia que você tinha 2 em produção e você só via 1.</p><p>Agora ela aparece embaixo da coluna Em Produção, apagada, com o selo <strong>TRAVADA</strong> e o nome da sprint dela. Não dá para arrastar. Para trabalhar nela, use o botão <strong>Trazer para a sprint atual</strong> (vale a regra de sempre: precisa ter Briefing / Descrição e cadastro completo). Se não vai trabalhar nela agora, abra a tarefa e volte para Backlog, que libera a vaga.</p>",
+            "kind": "melhoria",
+            "area": "Tarefas"
+        },
+        {
+            "title": "Link na descrição da pendência agora é clicável",
+            "summary": "Endereços colados na descrição de uma pendência (como o link de uma tarefa) viram link: é só clicar para abrir.",
+            "kind": "melhoria",
+            "area": "Pendências"
+        }
+    ],
+    "ajuda": []
+}

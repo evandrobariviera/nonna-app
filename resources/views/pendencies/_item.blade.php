@@ -35,7 +35,8 @@
                 </span>
             </div>
             @if($p->description)
-                <p class="text-xs mt-0.5" style="color:var(--muted2); white-space:pre-line">{{ $p->description }}</p>
+                {{-- Texto escapado primeiro; só depois o endereço (http/https) vira link clicável. --}}
+                <p class="text-xs mt-0.5" style="color:var(--muted2); white-space:pre-line; overflow-wrap:anywhere">{!! preg_replace('~https?://[^\s<]+~', '<a href="$0" class="underline" style="color:var(--purple)">$0</a>', e($p->description)) !!}</p>
             @endif
 
             <div class="flex items-center flex-wrap gap-x-1.5 gap-y-1 mt-1.5 text-xs" style="color:var(--muted)">

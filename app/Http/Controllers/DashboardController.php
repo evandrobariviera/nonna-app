@@ -131,6 +131,7 @@ class DashboardController extends Controller
         $myAdjustmentTasks = collect();
         $myProductionTasks = collect();
         $myReadyForProductionTasks = collect();
+        $myProductionElsewhere = collect();
 
         // Revisão interna esperando EU revisar (sou o Responsável — quem responde pela
         // qualidade, não quem produz). Vira uma coluna a mais no quadro da Execução, entre
@@ -156,6 +157,16 @@ class DashboardController extends Controller
             $myAdjustmentTasks         = $queue->where('status', 'ajuste_alteracao')->values();
             $myProductionTasks         = $queue->where('status', 'em_producao')->values();
             $myReadyForProductionTasks = $queue->where('status', 'backlog')->values();
+
+            // Em Produção que está em OUTRA sprint (ou sem sprint): aparece na coluna, mas
+            // TRAVADA — sem arrastar, porque não é trabalho desta sprint (Evandro, 25/11/2026).
+            // Conta na trava de 2 em produção (Task::wipBlockReason), então precisa ser visível.
+            $myProductionElsewhere = ExecutorQueue::activeClients(
+                    ExecutorQueue::executedBy(Task::where('status', 'em_producao'), (int) $userId))
+                ->where(fn ($q) => $q->whereNull('sprint_id')->orWhere('sprint_id', '!=', $activeSprint->id))
+                ->with(['client', 'sprint:id,title'])
+                ->orderBy('approval_date')
+                ->get();
         }
 
         // "Meus Números na Sprint" — recorte pessoal acima dos 3 quadros de Operação:
@@ -481,7 +492,7 @@ class DashboardController extends Controller
         return view('dashboard', compact(
             'literaryQuote',
             'activeSprint', 'sprintTotal', 'sprintDone', 'sprintProgress', 'sprintByStatus',
-            'myAdjustmentTasks', 'myProductionTasks', 'myReadyForProductionTasks',
+            'myAdjustmentTasks', 'myProductionTasks', 'myReadyForProductionTasks', 'myProductionElsewhere',
             'myExecutorSprintByStatus', 'myExecutorSprintTotal',
             'myMeetingsByStatus',
             'meetingsPosReuniao', 'meetingsRealizadas',
