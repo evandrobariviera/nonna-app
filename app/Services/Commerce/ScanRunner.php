@@ -34,13 +34,18 @@ class ScanRunner
         $scan->update(['status' => 'running', 'error' => null]);
 
         try {
+            // Cidade cadastrada antes da localização (ou sem chave na hora): localiza agora.
+            if (!$scan->city->located()) {
+                $scan->city->locate($places);
+            }
+
             // Nicho é texto livre: sem filtro de tipo (o recorte pode não bater com o tipo do Google).
             $type = $scan->niche ? null : $scan->segment?->google_type;
             $terms = [];
             $ids = [];
             $calls = 0;
             foreach (self::queries($scan) as $query) {
-                $res = $places->searchIds($query, $type);
+                $res = $places->searchIds($query, $type, $scan->city->viewport);
                 $calls += $res['calls'];
                 $terms[] = ['term' => $query, 'found' => count($res['ids']), 'saturated' => $res['saturated']];
                 $ids = array_merge($ids, $res['ids']);

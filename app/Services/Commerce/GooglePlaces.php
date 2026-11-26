@@ -75,7 +75,7 @@ class GooglePlaces
      *
      * @return array{ids: string[], saturated: bool, calls: int}
      */
-    public function searchIds(string $query, ?string $includedType = null): array
+    public function searchIds(string $query, ?string $includedType = null, ?array $viewport = null): array
     {
         $this->ensureConfigured();
         $ids = [];
@@ -87,6 +87,8 @@ class GooglePlaces
             $body = array_filter([
                 'textQuery'    => $query,
                 'includedType' => $includedType ?: null,
+                // Prende a busca dentro dos limites da cidade (CommerceCity::viewport).
+                'locationRestriction' => $viewport ? ['rectangle' => ['low' => $viewport['low'], 'high' => $viewport['high']]] : null,
                 'languageCode' => 'pt-BR',
                 'regionCode'   => 'BR',
                 'pageSize'     => self::PAGE_SIZE,
@@ -214,6 +216,48 @@ class GooglePlaces
     public function apiKey(): ?string
     {
         return $this->apiKey;
+    }
+
+    /**
+     * Acha a cidade no Google e devolve os limites no mapa. Tenta o município inteiro
+     * (administrative_area_level_2) e, se o Google não tiver, a localidade (área urbana) —
+     * cada cidade está cadastrada de um jeito lá. Confere UF e nome: pedir "Tangará, Mato
+     * Grosso" devolve "Tangará da Serra", e isso não pode passar. 1-2 chamadas por cidade.
+     *
+     * @return array{google_place_id: string, google_label: string, viewport: array}
+     */
+    public function locateCity(string $name, string $uf): array
+    {
+        $this->ensureConfigured();
+        $uf = strtoupper($uf);
+        $query = $name . ', ' . (\App\Models\CommerceCity::UFS[$uf] ?? $uf) . ', Brasil';
+        $norm = fn (?string $s) => \Illuminate\Support\Str::of((string) $s)->ascii()->lower()->squish()->value();
+        $found = [];
+
+        foreach (['administrative_area_level_2', 'locality'] as $type) {
+            $response = Http::timeout(20)
+                ->withHeaders(['X-Goog-Api-Key' => $this->apiKey, 'X-Goog-FieldMask' => 'places.id,places.displayName,places.formattedAddress,places.viewport,places.addressComponents'])
+                ->post(self::BASE . '/places:searchText', [
+                    'textQuery' => $query, 'includedType' => $type, 'strictTypeFiltering' => true,
+                    'languageCode' => 'pt-BR', 'regionCode' => 'BR', 'pageSize' => 5,
+                ]);
+            $this->record('cidade', 1);
+
+            if (!$response->successful()) {
+                throw new \RuntimeException('Google Places recusou a busca da cidade: ' . ($response->json('error.message') ?? 'HTTP ' . $response->status()));
+            }
+
+            foreach ((array) $response->json('places', []) as $p) {
+                $placeUf = collect($p['addressComponents'] ?? [])->first(fn ($c) => in_array('administrative_area_level_1', $c['types'] ?? [], true))['shortText'] ?? null;
+                $found[] = $p['formattedAddress'] ?? ($p['displayName']['text'] ?? '');
+                if (strtoupper((string) $placeUf) === $uf && $norm($p['displayName']['text'] ?? '') === $norm($name) && !empty($p['viewport']['low'])) {
+                    return ['google_place_id' => $p['id'], 'google_label' => $p['formattedAddress'] ?? "{$name} - {$uf}", 'viewport' => $p['viewport']];
+                }
+            }
+        }
+
+        $found = array_values(array_unique(array_filter($found)));
+        throw new \RuntimeException("Não achei {$name} - {$uf} no Google." . ($found ? ' O Google sugeriu: ' . implode('; ', $found) . '. Confira o nome (com acento) e a UF.' : ' Confira o nome (com acento) e a UF.'));
     }
 
     private function ensureConfigured(): void

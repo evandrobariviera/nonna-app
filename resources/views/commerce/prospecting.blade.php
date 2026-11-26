@@ -281,7 +281,12 @@
                     <div class="flex flex-col gap-2 mt-3">
                         @foreach($cities as $c)
                             <div class="flex items-center justify-between rounded px-3 py-2 text-sm" style="background:var(--s2)">
-                                <span>{{ $c->label() }}</span>
+                                <span class="min-w-0">{{ $c->label() }}
+                                    <span class="block text-xs" style="color:var(--muted2)">
+                                        @if($c->located())<x-icon name="map" size="11" /> Google: {{ $c->google_label }} · a varredura fica dentro da cidade
+                                        @else Ainda não localizada no Google · localiza na próxima varredura @endif
+                                    </span>
+                                </span>
                                 @if($canEdit)
                                     <form method="POST" action="{{ route('commerce.cities.destroy', $c) }}" @submit.prevent="if (await $store.confirmDialog.ask('Tirar {{ addslashes($c->name) }} da lista?')) $el.submit()">@csrf @method('DELETE')
                                         <button type="submit" class="btn btn-xs">Remover</button>
@@ -296,6 +301,8 @@
                             <input type="text" name="state" class="field text-sm px-2.5 py-1.5" style="width:64px" placeholder="UF" required maxlength="2">
                             <button type="submit" class="btn btn-sm">Incluir</button>
                         </form>
+                        @error('city')<p class="text-xs mt-2" style="color:var(--red)">{{ $message }}</p>@enderror
+                        <p class="text-xs mt-2" style="color:var(--muted)">Escreva com acento (Tangará, não Tangara). O App confere no Google se a cidade existe naquela UF.</p>
                     @endif
                     @unless($canEdit)<p class="text-xs mt-3" style="color:var(--muted)">Só administradores mudam segmentos e cidades.</p>@endunless
                 </section>

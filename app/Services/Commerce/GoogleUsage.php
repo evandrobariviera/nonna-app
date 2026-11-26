@@ -23,6 +23,7 @@ class GoogleUsage
 {
     public const SKUS = [
         'busca'  => ['label' => 'Varredura (Text Search, só IDs)',           'free' => null, 'usd_per_1000' => 0.0],
+        'cidade' => ['label' => 'Localizar cidade (Text Search Pro)',        'free' => 5000, 'usd_per_1000' => 32.0],
         'lista'  => ['label' => 'Nome e endereço na tela (Place Details Pro)', 'free' => 5000, 'usd_per_1000' => 17.0],
         'coleta' => ['label' => 'Coleta da Nota Nonna (Place Details Enterprise)', 'free' => 1000, 'usd_per_1000' => 20.0],
     ];

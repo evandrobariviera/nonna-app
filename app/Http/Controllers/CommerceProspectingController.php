@@ -287,12 +287,29 @@ class CommerceProspectingController extends Controller
             'state' => ['required', 'string', 'size:2'],
         ], [], ['name' => 'cidade', 'state' => 'UF']);
         $state = strtoupper($v['state']);
-        if (CommerceCity::where('name', trim($v['name']))->where('state', $state)->exists()) {
-            return back()->withErrors(['name' => 'Essa cidade já está na lista.'])->withInput();
+        if (!isset(CommerceCity::UFS[$state])) {
+            return back()->withErrors(['city' => 'UF inválida.'])->withInput();
         }
-        CommerceCity::create(['organization_id' => $org->id, 'name' => trim($v['name']), 'state' => $state]);
+        if (CommerceCity::where('name', trim($v['name']))->where('state', $state)->exists()) {
+            return back()->withErrors(['city' => 'Essa cidade já está na lista.'])->withInput();
+        }
+        $city = new CommerceCity(['organization_id' => $org->id, 'name' => trim($v['name']), 'state' => $state]);
 
-        return redirect()->route('commerce.prospecting', ['aba' => 'configurar'])->with('success', 'Cidade incluída.');
+        // Localiza já no cadastro: cidade com nome/UF errados nem entra na lista.
+        // Sem chave do Google, entra e é localizada na primeira varredura.
+        $google = GooglePlaces::forOrganization($org->id);
+        if ($google->configured()) {
+            try {
+                $city->locate($google);
+            } catch (\RuntimeException $e) {
+                return back()->withErrors(['city' => $e->getMessage()])->withInput();
+            }
+        } else {
+            $city->save();
+        }
+
+        return redirect()->route('commerce.prospecting', ['aba' => 'configurar'])
+            ->with('success', $city->located() ? "Cidade incluída: {$city->google_label}." : 'Cidade incluída.');
     }
 
     public function destroyCity(CommerceCity $city): RedirectResponse

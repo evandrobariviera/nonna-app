@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Varredura não sai mais da cidade escolhida",
+            "summary": "Na Prospecção, a cidade agora é localizada no Google ao ser cadastrada, e a varredura fica presa dentro dela. Antes, \"Tangará · SC\" podia trazer empresas de Tangará da Serra (MT).",
+            "kind": "correcao",
+            "area": "Comercial"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Prospecção — encontrar empresas por cidade e segmento",
+            "category": "Comercial",
+            "slug": "prospeccao-varredura",
+            "body_file": "ajuda-prospeccao.html"
+        }
+    ]
+}
