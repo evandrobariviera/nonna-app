@@ -243,19 +243,19 @@
             <div class="grid gap-5" style="grid-template-columns:repeat(auto-fit, minmax(320px, 1fr))">
                 <section class="card p-5 min-w-0">
                     <h2 class="card-title">Segmentos</h2>
-                    <p class="text-xs mt-1 mb-3" style="color:var(--muted2)">Cada termo vira uma busca no Google ("dentista em Videira SC"). O tipo do Google filtra a busca (opcional, em inglês, ex.: <code>dentist</code>).</p>
+                    <p class="text-xs mt-1 mb-3" style="color:var(--muted2)">Cada termo vira uma busca no Google ("dentista em Videira SC"). O tipo do Google filtra a busca (opcional) — no campo, digite em português que ele sugere; a tabela de consulta fica no fim da página.</p>
                     <div class="flex flex-col gap-2">
                         @foreach($segments as $s)
                             <details class="rounded px-3 py-2" style="background:var(--s2)">
                                 <summary class="text-sm cursor-pointer"><b style="color:var(--text)">{{ $s->name }}</b>
                                     @unless($s->is_active)<span class="badge badge-muted ml-1">desativado</span>@endunless
-                                    <span class="block text-xs" style="color:var(--muted2)">{{ implode(', ', $s->search_terms ?? []) }}{{ $s->google_type ? ' · tipo ' . $s->google_type : '' }}</span>
+                                    <span class="block text-xs" style="color:var(--muted2)">{{ implode(', ', $s->search_terms ?? []) }}@if($s->google_type) · tipo {{ \App\Services\Commerce\GooglePlaceTypes::label($s->google_type) ? \App\Services\Commerce\GooglePlaceTypes::label($s->google_type) . ' (' . $s->google_type . ')' : $s->google_type }}@endif</span>
                                 </summary>
                                 @if($canEdit)
                                     <form method="POST" action="{{ route('commerce.segments.update', $s) }}" class="grid gap-2 mt-3">@csrf @method('PATCH')
                                         <input type="text" name="name" value="{{ $s->name }}" class="field text-sm px-2.5 py-1.5" required maxlength="120">
                                         <textarea name="search_terms" rows="2" class="field text-sm px-2.5 py-1.5" required>{{ implode("\n", $s->search_terms ?? []) }}</textarea>
-                                        <input type="text" name="google_type" value="{{ $s->google_type }}" class="field text-sm px-2.5 py-1.5" placeholder="tipo do Google (opcional)">
+                                        <input type="text" name="google_type" list="google-types" autocomplete="off" value="{{ $s->google_type }}" class="field text-sm px-2.5 py-1.5" placeholder="tipo do Google (opcional) — digite em português">
                                         <label class="text-xs flex items-center gap-2"><input type="hidden" name="is_active" value="0"><input type="checkbox" name="is_active" value="1" @checked($s->is_active)> Ativo</label>
                                         <div><button type="submit" class="btn btn-xs btn-primary">Salvar</button></div>
                                     </form>
@@ -268,7 +268,8 @@
                             <p class="text-xs font-semibold" style="color:var(--text)">Novo segmento</p>
                             <input type="text" name="name" value="{{ old('name') }}" class="field text-sm px-2.5 py-1.5" placeholder="ex.: Saúde · Fisioterapia" required maxlength="120">
                             <textarea name="search_terms" rows="2" class="field text-sm px-2.5 py-1.5" placeholder="um termo por linha: fisioterapia, clínica de fisioterapia" required>{{ old('search_terms') }}</textarea>
-                            <input type="text" name="google_type" value="{{ old('google_type') }}" class="field text-sm px-2.5 py-1.5" placeholder="tipo do Google (opcional), ex.: physiotherapist">
+                            <input type="text" name="google_type" id="new-segment-type" list="google-types" autocomplete="off" value="{{ old('google_type') }}" class="field text-sm px-2.5 py-1.5" placeholder="tipo do Google (opcional) — digite em português, ex.: fisio">
+                            <span class="text-xs" style="color:var(--muted)">Não sabe o tipo? Veja a tabela de consulta logo abaixo.</span>
                             @foreach(['name', 'search_terms', 'google_type'] as $f)@error($f)<span class="text-xs" style="color:var(--red)">{{ $message }}</span>@enderror @endforeach
                             <div><button type="submit" class="btn btn-sm">Incluir segmento</button></div>
                         </form>
@@ -299,6 +300,52 @@
                     @unless($canEdit)<p class="text-xs mt-3" style="color:var(--muted)">Só administradores mudam segmentos e cidades.</p>@endunless
                 </section>
             </div>
+
+            {{-- Tipos do Google traduzidos (GooglePlaceTypes): sugestão nos campos + tabela de consulta. --}}
+            <datalist id="google-types">
+                @foreach($googleTypes as $type => $t)<option value="{{ $type }}" label="{{ $t['label'] }} · {{ $t['group'] }}"></option>@endforeach
+            </datalist>
+
+            <section class="card p-5 mt-5" x-data="{ q: '', norm: s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase() }">
+                <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+                    <div>
+                        <h2 class="card-title">Tipos do Google — consulta</h2>
+                        <p class="text-xs mt-1 max-w-2xl" style="color:var(--muted2); line-height:1.6">
+                            O tipo é opcional e filtra a varredura: só entram empresas que o Google classificou daquele jeito.
+                            Cada segmento aceita <b>um tipo só</b> — se o segmento mistura coisas diferentes (ex.: carros e motos), deixe em branco e use só os termos.
+                            <a href="{{ \App\Services\Commerce\GooglePlaceTypes::SOURCE_URL }}" target="_blank" rel="noopener" class="underline">Lista completa do Google</a>.
+                        </p>
+                    </div>
+                    <input type="search" x-model="q" placeholder="Buscar: dentista, pizza, loja…" class="field text-sm px-2.5 py-1.5" style="width:220px">
+                </div>
+                <div class="overflow-y-auto" style="max-height:420px; border:1px solid var(--border2); border-radius:var(--radius)">
+                    <table class="w-full text-sm">
+                        <thead class="sticky top-0" style="background:var(--s2)">
+                            <tr class="text-left text-xs" style="color:var(--muted2)">
+                                <th class="px-3 py-2 font-semibold">Em português</th>
+                                <th class="px-3 py-2 font-semibold">Tipo do Google</th>
+                                <th class="px-3 py-2 font-semibold">Área</th>
+                                @if($canEdit)<th class="px-3 py-2"></th>@endif
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($googleTypes as $type => $t)
+                                <tr x-show="!q || norm(@js($t['label'] . ' ' . $type . ' ' . $t['group'])).includes(norm(q))" style="border-top:1px solid var(--border)">
+                                    <td class="px-3 py-1.5" style="color:var(--text)">{{ $t['label'] }}</td>
+                                    <td class="px-3 py-1.5"><code class="text-xs">{{ $type }}</code></td>
+                                    <td class="px-3 py-1.5 text-xs" style="color:var(--muted2)">{{ $t['group'] }}</td>
+                                    @if($canEdit)
+                                        <td class="px-3 py-1.5 text-right">
+                                            <button type="button" class="btn btn-xs" title="Preencher o tipo no Novo segmento"
+                                                    @click="const f = document.getElementById('new-segment-type'); f.value = @js($type); f.scrollIntoView({ behavior: 'smooth', block: 'center' }); f.focus()">Usar</button>
+                                        </td>
+                                    @endif
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         @endif
     </div>
 </x-app-layout>

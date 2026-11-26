@@ -36,6 +36,7 @@ class CommerceProspectingController extends Controller
         $google = GooglePlaces::forOrganization($org->id);
 
         $data = compact('tab', 'segments', 'cities') + ['configured' => $google->configured()];
+        $data['googleTypes'] = \App\Services\Commerce\GooglePlaceTypes::all();
         $data['scans'] = CommerceScan::with('city', 'segment', 'creator:id,name')->latest()->limit(50)->get();
         $data['running'] = $data['scans']->whereIn('status', ['queued', 'running'])->isNotEmpty();
         // Coleta por varredura: quantas empresas já foram coletadas.

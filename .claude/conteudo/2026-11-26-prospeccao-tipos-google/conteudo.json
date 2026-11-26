@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Tipos do Google em português no cadastro de segmento",
+            "summary": "Na Prospecção, o campo \"tipo do Google\" agora sugere o tipo certo enquanto você digita em português, e o fim da aba Segmentos e cidades tem uma tabela de consulta com busca e botão Usar.",
+            "kind": "melhoria",
+            "area": "Comercial"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Prospecção — encontrar empresas por cidade e segmento",
+            "category": "Comercial",
+            "slug": "prospeccao-varredura",
+            "body_file": "ajuda-prospeccao.html"
+        }
+    ]
+}
