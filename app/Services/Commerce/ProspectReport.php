@@ -54,7 +54,12 @@ class ProspectReport
         $others = $peerScores->reject(fn ($p) => $p['id'] === $place->id);
 
         $type = mb_strtolower(trim((string) ($g['type'] ?? '')));
-        $weak = array_slice(self::weakPoints($points, $parts, $g, $site, $type, $top), 0, 3);
+        $weakAll = self::weakPoints($points, $parts, $g, $site, $type, $top);
+        if ($ai = self::aiPoint($place, $parts, $type)) {
+            $weakAll[] = $ai;
+            usort($weakAll, fn ($a, $b) => $b['weight'] <=> $a['weight']);
+        }
+        $weak = array_slice($weakAll, 0, 3);
 
         // Simulação: nota e posição se os 3 pontos fossem resolvidos (teto).
         $potential = null;
@@ -66,9 +71,9 @@ class ProspectReport
             }
         }
 
-        // As três áreas da nota (a de IAs entra na etapa 4).
+        // As áreas da nota ("Nas IAs" só depois de uma rodada de IA do segmento e cidade).
         $areas = [];
-        foreach (['profile' => ['Perfil no Google', 30], 'reputation' => ['Reputação', 30], 'site' => ['Site', 20]] as $k => [$label, $of]) {
+        foreach (['profile' => ['Perfil no Google', 30], 'reputation' => ['Reputação', 30], 'site' => ['Site', 20], 'ai' => ['Nas IAs (ChatGPT)', 20]] as $k => [$label, $of]) {
             if (isset($parts[$k])) {
                 $areas[] = ['label' => $label, 'pct' => (int) round($parts[$k] / $of * 100)];
             }
@@ -89,7 +94,7 @@ class ProspectReport
             'reviews'   => (int) ($g['reviews'] ?? 0),
             'topReviews'=> $top->isNotEmpty() ? [$top->min('reviews'), $top->max('reviews')] : null,
             'weak'      => $weak,
-            'strong'    => array_slice(self::strongPoints($points, $g, $site), 0, 3),
+            'strong'    => array_slice(array_merge(self::aiStrong($place), self::strongPoints($points, $g, $site)), 0, 3),
             'areas'     => $areas,
             'potential' => $potential,
             'ads'       => self::ads($place, $site, $peers),
@@ -205,6 +210,45 @@ class ProspectReport
 
         return ['case' => $case, 'meta' => $meta, 'google' => $google, 'ready' => $ready,
             'rivals' => $rivals, 'rivalsChecked' => $checked->count(), 'hasSite' => !empty($site['reachable'])];
+    }
+
+    /**
+     * "Quase não aparece nas IAs" (etapa 4): só quando há rodada de IA do segmento e cidade.
+     * Conta quantas vezes o ChatGPT citou a empresa e quantas citou a mais lembrada (sem nome).
+     */
+    private static function aiPoint(CommercePlace $place, array $parts, string $type): ?array
+    {
+        $d = $place->score_parts['ai_detail'] ?? null;
+        $pts = $parts['ai'] ?? null;
+        if (!$d || $pts === null || $pts >= 14) {
+            return null;
+        }
+        $best = (int) \Illuminate\Support\Facades\DB::connection('pgsql')->table('commerce_ai_round_place')->where('round_id', $d['round_id'])->max('mentions');
+        $n = (int) $d['mentions'];
+        $who = $type ?: 'empresa';
+        $city = $place->city?->name;
+        $text = "Perguntamos {$d['answers']} vezes ao ChatGPT qual {$who} procurar" . ($city ? " em {$city}" : '') . '. '
+            . ($n === 0 ? 'Você não foi citado nenhuma vez.' : 'Você foi citado ' . ($n === 1 ? '1 vez' : "{$n} vezes") . '.')
+            . ($best > $n ? " A empresa mais lembrada apareceu {$best} vezes." : '');
+
+        return [
+            'title'  => $n === 0 ? 'Não aparece nas IAs' : 'Quase não aparece nas IAs',
+            'text'   => $text,
+            'fix'    => 'As IAs indicam quem tem perfil completo no Google, boas avaliações e um site que explica bem o que você faz. Cada vez mais gente pergunta ao ChatGPT antes de escolher. A gente cuida disso.',
+            'who'    => 'nos',
+            'weight' => 20 - (int) $pts,
+            'gain'   => (int) min(20 - (int) $pts, 10), // meta realista: metade do que falta
+        ];
+    }
+
+    /** "Aparece bem nas IAs" — entra primeiro no "O que já está bom". */
+    private static function aiStrong(CommercePlace $place): array
+    {
+        $d = $place->score_parts['ai_detail'] ?? null;
+
+        return $d && ($place->score_parts['parts']['ai'] ?? 0) >= 14
+            ? ["Aparece bem nas IAs: citada em {$d['mentions']} de {$d['answers']} respostas do ChatGPT"]
+            : [];
     }
 
     /** O que já está bom (para a página não ser só crítica). */

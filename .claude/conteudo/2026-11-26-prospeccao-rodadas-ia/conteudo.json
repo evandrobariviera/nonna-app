@@ -1,0 +1,19 @@
+{
+    "novidades": [
+        {
+            "title": "Rodadas de IA: sua empresa aparece quando perguntam ao ChatGPT?",
+            "summary": "Nova aba na Prospecção pergunta ao ChatGPT, com busca na internet, qual o melhor do segmento na cidade e conta quem foi citado. Vira a parte Nas IAs da nota (que agora vai até 100) e aparece no raio-x.",
+            "kind": "novidade",
+            "area": "Comercial",
+            "destaque": true
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Prospecção — encontrar empresas por cidade e segmento",
+            "category": "Comercial",
+            "slug": "prospeccao-varredura",
+            "body_file": "ajuda-prospeccao.html"
+        }
+    ]
+}

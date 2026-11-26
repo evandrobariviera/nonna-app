@@ -30,7 +30,7 @@ class CommerceProspectingController extends Controller
     public function index(Request $request): View
     {
         $org = app('currentOrganization');
-        $tab = in_array($request->get('aba'), ['empresas', 'varreduras', 'configurar'], true) ? $request->get('aba') : 'empresas';
+        $tab = in_array($request->get('aba'), ['empresas', 'varreduras', 'ia', 'configurar'], true) ? $request->get('aba') : 'empresas';
         $segments = CommerceSegment::orderBy('sort_order')->orderBy('name')->get();
         $cities = CommerceCity::orderBy('name')->get();
         $google = GooglePlaces::forOrganization($org->id);
@@ -91,6 +91,23 @@ class CommerceProspectingController extends Controller
             $data += compact('filters', 'places', 'live', 'counts', 'signals', 'kpi');
         }
 
+        if ($tab === 'ia') {
+            // Rodadas de IA (etapa 4): respostas que chegaram, custo e quem aparece.
+            $rounds = \App\Models\CommerceAiRound::with('city', 'segment', 'creator:id,name')->latest()->limit(30)->get();
+            $answered = \App\Models\CommerceAiAnswer::whereIn('round_id', $rounds->pluck('id'))
+                ->selectRaw('round_id, count(*) as n, count(*) filter (where error is null) as ok')->groupBy('round_id')->get()->keyBy('round_id');
+            $mentions = \Illuminate\Support\Facades\DB::connection('pgsql')->table('commerce_ai_round_place as rp')
+                ->join('commerce_places as p', 'p.id', '=', 'rp.place_id')->whereIn('rp.round_id', $rounds->pluck('id'))
+                ->orderByDesc('rp.mentions')->get(['rp.round_id', 'rp.mentions', 'p.id', 'p.google_data'])->groupBy('round_id');
+            $data['rounds'] = $rounds;
+            $data['roundAnswered'] = $answered;
+            $data['roundMentions'] = $mentions;
+            $data['roundCost'] = $rounds->mapWithKeys(fn ($r) => [$r->id => \App\Services\Commerce\AiRoundRunner::cost($r, (int) ($answered[$r->id]->ok ?? 0))]);
+            $data['running'] = $data['running'] || $rounds->whereIn('status', ['queued', 'running'])->isNotEmpty();
+            $seg = $segments->firstWhere('is_active', true);
+            $data['exampleQuestions'] = $seg && $cities->isNotEmpty() ? \App\Services\Commerce\AiRoundRunner::defaultQuestions($seg, $cities->first()) : [];
+        }
+
         // Depois das consultas desta página, pra o medidor já mostrar o que ela gastou.
         $data['usage'] = GoogleUsage::summary($org->id);
         // Custo estimado do mês: o que passou da franquia grátis de cada tipo de consulta.
@@ -130,6 +147,47 @@ class CommerceProspectingController extends Controller
 
         return redirect()->route('commerce.prospecting', ['aba' => 'varreduras'])
             ->with('success', "Varredura começou: {$n} busca(s) no Google. Leva menos de um minuto.");
+    }
+
+    /**
+     * Nova rodada de IA (etapa 4): perguntas de cliente ao ChatGPT com busca na web, cada uma
+     * repetida N vezes; uma tarefa por resposta, na fila da prospecção.
+     */
+    public function storeAiRound(Request $request): RedirectResponse
+    {
+        $org = app('currentOrganization');
+        $v = $request->validate([
+            'city_id'     => ['required', Rule::exists('pgsql.commerce_cities', 'id')->where('organization_id', $org->id)],
+            'segment_id'  => ['required', Rule::exists('pgsql.commerce_segments', 'id')->where('organization_id', $org->id)],
+            'questions'   => ['nullable', 'string', 'max:2000'],
+            'repetitions' => ['nullable', 'integer', 'min:1', 'max:3'],
+        ], [], ['city_id' => 'cidade', 'segment_id' => 'segmento', 'questions' => 'perguntas']);
+
+        $running = \App\Models\CommerceAiRound::where('city_id', $v['city_id'])->where('segment_id', $v['segment_id'])->whereIn('status', ['queued', 'running'])->exists();
+        if ($running) {
+            return back()->with('error', 'Já tem uma rodada desse segmento e cidade em andamento. Espere terminar.');
+        }
+        $questions = collect(preg_split('/\r?\n/', (string) ($v['questions'] ?? '')))->map(fn ($q) => trim($q))->filter()->take(8)->values()->all();
+        if (!$questions) {
+            $questions = \App\Services\Commerce\AiRoundRunner::defaultQuestions(CommerceSegment::find($v['segment_id']), CommerceCity::find($v['city_id']));
+        }
+        $round = \App\Models\CommerceAiRound::create([
+            'organization_id' => $org->id,
+            'city_id'         => $v['city_id'],
+            'segment_id'      => $v['segment_id'],
+            'questions'       => $questions,
+            'repetitions'     => (int) ($v['repetitions'] ?? 3),
+            'status'          => 'queued',
+            'created_by'      => $request->user()->id,
+        ]);
+        foreach ($questions as $q => $_) {
+            for ($rep = 1; $rep <= $round->repetitions; $rep++) {
+                \App\Jobs\AskCommerceAiJob::dispatch($round->id, $q, $rep);
+            }
+        }
+
+        return redirect()->route('commerce.prospecting', ['aba' => 'ia'])->with('success',
+            "Rodada começou: {$round->expected()} perguntas ao ChatGPT com busca na web. Leva alguns minutos; a página se atualiza sozinha.");
     }
 
     /** Coleta (Google + site + nota) de todas as empresas da varredura, em segundo plano. */

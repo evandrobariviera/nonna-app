@@ -24,15 +24,16 @@
             </div>
         </div>
 
-        {{-- Abas — padrão do App (.tab-bar/.tab-btn). Rodadas de IA e Envios e metas entram nas etapas 4 a 6. --}}
+        {{-- Abas — padrão do App (.tab-bar/.tab-btn). Envios e metas entram na etapa 6. --}}
         <nav class="tab-bar" aria-label="Prospecção">
             @foreach([
                 'empresas'   => ['Empresas', 'building-2'],
+                'ia'         => ['Rodadas de IA', 'sparkles'],
                 'varreduras' => ['Histórico de varreduras', 'history'],
             ] as $key => [$label, $icon])
                 <a href="{{ $tabUrl($key) }}" class="tab-btn {{ $tab === $key ? 'active' : '' }}" @if($tab === $key) aria-current="page" @endif>
                     <x-icon :name="$icon" size="15" /> {{ $label }}
-                    @if($key === 'varreduras' && $running)<span class="badge badge-orange">varrendo</span>@endif
+                    @if($key === 'varreduras' && $running && $tab !== 'ia')<span class="badge badge-orange">varrendo</span>@endif
                 </a>
             @endforeach
             @if($tab === 'configurar')
@@ -76,7 +77,7 @@
         @endif
 
         {{-- Nova varredura: sempre à vista em cima da lista (protótipo), não mais escondida atrás de botão. --}}
-        @if($tab !== 'configurar')
+        @if(!in_array($tab, ['configurar', 'ia'], true))
             <div class="card p-5 mb-5">
                 <h2 class="card-title mb-3 flex items-center gap-1.5"><x-icon name="search" size="15" /> Nova varredura</h2>
                 <form method="POST" action="{{ route('commerce.scans.store') }}" class="grid gap-3 items-start" style="grid-template-columns:repeat(auto-fit, minmax(190px, 1fr))">
@@ -228,7 +229,7 @@
                                 <th style="width:32px"><input type="checkbox" aria-label="Marcar todas desta página"
                                        :checked="page.length && page.every(id => sel.includes(id))"
                                        @change="sel = $event.target.checked ? [...new Set([...sel, ...page])] : sel.filter(id => !page.includes(id))"></th>
-                                <th>Empresa</th><th>Nota Nonna</th><th>Google</th><th>Site</th><th>Contato</th><th>Sinal</th><th>Situação</th><th></th>
+                                <th>Empresa</th><th>Nota Nonna</th><th>Google</th><th>Site</th><th title="Em quantas respostas do ChatGPT a empresa foi citada (Rodadas de IA)">Nas IAs</th><th>Contato</th><th>Sinal</th><th>Situação</th><th></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -286,6 +287,15 @@
                                             <span style="color:var(--green)">no ar</span>
                                         @endif
                                     </td>
+                                    {{-- Nas IAs: citações na última rodada de IA do segmento e cidade. --}}
+                                    @php $ai = $p->score_parts['ai_detail'] ?? null; @endphp
+                                    <td class="whitespace-nowrap text-xs">
+                                        @if($ai)
+                                            <span style="color:{{ $ai['mentions'] ? 'var(--green)' : 'var(--red)' }}">{{ $ai['mentions'] }}/{{ $ai['answers'] }}</span>
+                                        @else
+                                            <span style="color:var(--muted)">—</span>
+                                        @endif
+                                    </td>
                                     {{-- Contatos achados no site (guardados, sem custo de Google) --}}
                                     @php $ct = $site['contacts'] ?? []; @endphp
                                     <td class="whitespace-nowrap text-xs">
@@ -314,7 +324,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="9" class="text-sm" style="color:var(--muted)">Nenhuma empresa aqui. Faça uma varredura ou mude os filtros.</td></tr>
+                                <tr><td colspan="10" class="text-sm" style="color:var(--muted)">Nenhuma empresa aqui. Faça uma varredura ou mude os filtros.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -324,8 +334,116 @@
                 <span class="text-xs" style="color:var(--muted)">Dados de empresas: <b>Google Maps</b>. Consultados uma vez e guardados no App; "Atualizar dados" na empresa busca de novo.</span>
                 {{ $places->links() }}
             </div>
-            <p class="text-xs mt-2" style="color:var(--muted)">Nota Nonna: perfil no Google (30) + reputação (30) + site (20). A parte "nas IAs" (20) entra com as rodadas de IA; até lá a nota vai até 80. Menor nota primeiro: é quem mais precisa de ajuda.</p>
+            <p class="text-xs mt-2" style="color:var(--muted)">Nota Nonna: perfil no Google (30) + reputação (30) + site (20) + nas IAs (20). Enquanto o segmento e a cidade não tiverem rodada de IA, a nota vai até 80. Menor nota primeiro: é quem mais precisa de ajuda.</p>
 
+        @elseif($tab === 'ia')
+            {{-- Rodadas de IA (etapa 4): perguntas de cliente ao ChatGPT com busca na web. --}}
+            <div class="card p-5 mb-5">
+                <h2 class="card-title mb-1 flex items-center gap-1.5"><x-icon name="sparkles" size="15" /> Nova rodada de IA</h2>
+                <p class="text-xs mb-3" style="color:var(--muted2)">Perguntas que um cliente faria à IA. Cada uma roda algumas vezes no <b>ChatGPT com busca na internet</b>, porque a resposta muda a cada vez. Uma rodada vale para todas as empresas daquele segmento e cidade: quantas vezes cada uma foi citada vira a parte <b>"Nas IAs"</b> da nota (20 pontos).</p>
+                <form method="POST" action="{{ route('commerce.ai-rounds.store') }}" class="grid gap-3" style="grid-template-columns:repeat(auto-fit, minmax(190px, 1fr))">
+                    @csrf
+                    <label class="text-xs flex flex-col gap-1" style="color:var(--muted2)">Cidade *
+                        <select name="city_id" class="field text-sm px-2.5 py-1.5" required>
+                            @foreach($cities as $c)<option value="{{ $c->id }}" @selected(old('city_id') === $c->id)>{{ $c->label() }}</option>@endforeach
+                        </select>
+                    </label>
+                    <label class="text-xs flex flex-col gap-1" style="color:var(--muted2)">Segmento *
+                        <select name="segment_id" class="field text-sm px-2.5 py-1.5" required>
+                            @foreach($segments->where('is_active', true) as $s)<option value="{{ $s->id }}" @selected(old('segment_id') === $s->id)>{{ $s->name }}</option>@endforeach
+                        </select>
+                        @error('segment_id')<span style="color:var(--red)">{{ $message }}</span>@enderror
+                    </label>
+                    <label class="text-xs flex flex-col gap-1" style="color:var(--muted2)">Repetições
+                        <select name="repetitions" class="field text-sm px-2.5 py-1.5">
+                            <option value="3">3 vezes cada pergunta (recomendado)</option>
+                            <option value="2">2 vezes</option>
+                            <option value="1">1 vez (teste rápido)</option>
+                        </select>
+                    </label>
+                    <label class="text-xs flex flex-col gap-1" style="color:var(--muted2); grid-column:1/-1">Perguntas (opcional, uma por linha, até 8)
+                        <textarea name="questions" rows="3" class="field text-sm px-2.5 py-1.5" placeholder="Deixe em branco para usar as 5 perguntas padrão, montadas com o 1º termo do segmento e a cidade. Exemplo:&#10;{{ implode('&#10;', $exampleQuestions) }}">{{ old('questions') }}</textarea>
+                    </label>
+                    <div><button type="submit" class="btn btn-primary btn-sm"><x-icon name="sparkles" size="14" /> Perguntar à IA</button></div>
+                </form>
+            </div>
+
+            @forelse($rounds as $round)
+                @php
+                    $st = \App\Models\CommerceAiRound::$statuses[$round->status] ?? null;
+                    $ans = $roundAnswered[$round->id] ?? null;
+                    $ok = (int) ($ans->ok ?? 0);
+                    $cited = $roundMentions[$round->id] ?? collect();
+                    $cityName = $round->city?->name;
+                    $keys = $cited->mapWithKeys(fn ($m) => [$m->id => \App\Services\Commerce\AiRoundRunner::nameKeys((string) (json_decode($m->google_data, true)['name'] ?? ''), $cityName)]);
+                @endphp
+                <details class="card mb-3" style="padding:0" @if($loop->first) open @endif>
+                    <summary class="px-5 py-4 cursor-pointer flex items-center gap-3 flex-wrap" style="list-style:none">
+                        <b style="color:var(--text)">{{ $round->label() }}</b>
+                        @if($st)<span class="badge badge-{{ $st['color'] }}">{{ $st['label'] }}</span>@endif
+                        <span class="text-xs" style="color:var(--muted2)">
+                            {{ count($round->questions) }} perguntas × {{ $round->repetitions }} = {{ $round->expected() }} respostas
+                            @if(in_array($round->status, ['queued', 'running'], true)) · {{ (int) ($ans->n ?? 0) }} de {{ $round->expected() }} prontas @endif
+                            · ChatGPT com busca · custo US$ {{ number_format($roundCost[$round->id] ?? 0, 2, ',', '.') }}
+                            · {{ $round->created_at->format('d/m H:i') }}{{ $round->creator ? ' · ' . $round->creator->name : '' }}
+                        </span>
+                        @if($round->status === 'error')<span class="text-xs w-full" style="color:var(--red)">{{ $round->error }}</span>@endif
+                    </summary>
+                    <div class="px-5 pb-5 grid gap-5" style="grid-template-columns:repeat(auto-fit, minmax(300px, 1fr))">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted)">Perguntas</p>
+                            <ol class="text-sm flex flex-col gap-1" style="list-style:decimal; padding-left:18px">
+                                @foreach($round->questions as $q)<li>{{ $q }}</li>@endforeach
+                            </ol>
+                            <p class="text-xs mt-3" style="color:var(--muted)">A resposta da IA muda a cada vez que se pergunta. Por isso cada pergunta roda {{ $round->repetitions }} {{ $round->repetitions === 1 ? 'vez' : 'vezes' }}, e a nota usa a frequência, não uma resposta só.</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted)">Quem aparece nas respostas</p>
+                            @if($round->status !== 'done')
+                                <p class="text-sm" style="color:var(--muted)">Aparece quando todas as respostas chegarem.</p>
+                            @elseif($cited->isEmpty())
+                                <p class="text-sm" style="color:var(--muted)">Nenhuma empresa mapeada foi citada nas {{ $ok }} respostas.</p>
+                            @else
+                                <table class="w-full text-sm">
+                                    @foreach($cited as $m)
+                                        @php $gd = json_decode($m->google_data, true) ?? []; @endphp
+                                        <tr style="border-bottom:1px solid var(--border)">
+                                            <td class="py-1.5"><a href="{{ route('commerce.places.show', $m->id) }}" class="hover:underline" style="color:var(--text)">{{ $gd['name'] ?? '—' }}</a></td>
+                                            <td class="py-1.5 text-right whitespace-nowrap"><b>{{ $m->mentions }}</b><span style="color:var(--muted)">/{{ $ok }}</span></td>
+                                        </tr>
+                                    @endforeach
+                                </table>
+                                <p class="text-xs mt-2" style="color:var(--muted)">As outras empresas do segmento na cidade: 0/{{ $ok }}.</p>
+                            @endif
+                        </div>
+                        @if($round->status === 'done')
+                            @php
+                                $answers = $round->answers()->orderBy('question_index')->orderBy('repetition')->get();
+                                $loose = $answers->pluck('names')->flatten()->filter()->map(fn ($n) => trim($n))->unique(fn ($n) => \App\Services\Commerce\AiRoundRunner::norm($n))
+                                    ->reject(fn ($n) => $keys->flatten()->contains(fn ($k) => str_contains(' ' . \App\Services\Commerce\AiRoundRunner::norm($n) . ' ', " {$k} ")))->values();
+                            @endphp
+                            <div style="grid-column:1/-1">
+                                @if($loose->isNotEmpty())
+                                    <p class="text-xs mb-3" style="color:var(--muted2)"><b style="color:var(--text)">Citados pela IA que não batem com nenhuma empresa mapeada ({{ $loose->count() }}):</b> {{ $loose->take(20)->implode(' · ') }}. Pode ser empresa que a varredura não achou, ou nome escrito diferente do Google.</p>
+                                @endif
+                                <details>
+                                    <summary class="text-xs cursor-pointer" style="color:var(--purple)">Ler as {{ $answers->count() }} respostas da IA</summary>
+                                    <div class="flex flex-col gap-3 mt-3">
+                                        @foreach($answers as $a)
+                                            <div class="rounded px-3 py-2 text-sm" style="background:var(--s2)">
+                                                <p class="text-xs font-semibold mb-1" style="color:var(--muted2)">{{ $round->questions[$a->question_index] ?? '' }} · {{ $a->repetition }}ª vez</p>
+                                                @if($a->error)<p style="color:var(--red)">{{ $a->error }}</p>@else<div style="white-space:pre-line; color:var(--text)">{{ $a->answer }}</div>@endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </details>
+                            </div>
+                        @endif
+                    </div>
+                </details>
+            @empty
+                <div class="card card-body text-sm" style="color:var(--muted)">Nenhuma rodada ainda. Comece por um segmento e cidade que já tenham varredura e empresas com nota.</div>
+            @endforelse
 
         @elseif($tab === 'varreduras')
             <div class="card" style="padding:0; overflow-x:auto">

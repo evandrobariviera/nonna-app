@@ -27,6 +27,9 @@ class PlaceCollector
 
             $site = $inspector->inspect($g['website'] ?? null, $withPagespeed);
             $score = PlaceScorer::score($g, $site, $place->score_parts['parts']['ai'] ?? null);
+            if (isset($place->score_parts['ai_detail'])) {
+                $score['ai_detail'] = $place->score_parts['ai_detail']; // resultado da rodada de IA (etapa 4) continua
+            }
 
             $place->update([
                 'score'         => $score['total'],

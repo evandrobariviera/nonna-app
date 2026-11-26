@@ -104,7 +104,13 @@
                         </div>
                     @endforeach
                 </div>
-                <p class="text-xs mt-3" style="color:var(--muted)">Coletada {{ $place->collected_at?->diffForHumans() }}.</p>
+                <p class="text-xs mt-3" style="color:var(--muted)">Coletada {{ $place->collected_at?->diffForHumans() }}.
+                    @if($ai = $place->score_parts['ai_detail'] ?? null)
+                        Nas IAs: citada em <b style="color:var(--text)">{{ $ai['mentions'] }} de {{ $ai['answers'] }}</b> respostas do ChatGPT (<a href="{{ route('commerce.prospecting', ['aba' => 'ia']) }}" class="underline">rodada de {{ \Illuminate\Support\Carbon::parse($ai['at'])->format('d/m') }}</a>).
+                    @else
+                        Para completar a nota, faça uma <a href="{{ route('commerce.prospecting', ['aba' => 'ia']) }}" class="underline">rodada de IA</a> deste segmento e cidade.
+                    @endif
+                </p>
             @elseif($place->collect_error)
                 <p class="text-sm mt-2" style="color:var(--red)">A última coleta deu erro: {{ $place->collect_error }}</p>
             @else
