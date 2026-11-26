@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Raio-x agora se apresenta",
+            "summary": "Logo abaixo da nota, a página que a empresa recebe explica quem fez a análise e por quê: a Nonna analisou a presença digital dela para mostrar onde estão as oportunidades, sem custo e sem compromisso.",
+            "kind": "melhoria",
+            "area": "Comercial"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Prospecção — encontrar empresas por cidade e segmento",
+            "category": "Comercial",
+            "slug": "prospeccao-varredura",
+            "body_file": "ajuda-prospeccao.html"
+        }
+    ]
+}

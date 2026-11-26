@@ -89,6 +89,12 @@
         .tag.voce { background:rgba(22,163,74,.12); color:var(--green); }
         .tag.nos { background:rgba(100,59,142,.12); color:var(--purple); }
 
+        /* Apresentação */
+        .intro { margin-top:-18px; position:relative; z-index:2; border:0; box-shadow:0 10px 30px rgba(60,30,90,.12); }
+        .intro p { margin:0 0 10px; font-size:15px; color:#3f3a48; }
+        .intro .hello { font-size:18px; font-weight:800; color:var(--text); margin-bottom:6px; }
+        .intro .sign { margin:4px 0 0; font-size:12px; font-weight:600; color:var(--purple); letter-spacing:.02em; }
+
         /* Anúncios */
         .adsbox { border:1px solid #f3c9a2; background:linear-gradient(160deg, #fff 0%, #fff8f1 100%); position:relative; overflow:hidden; }
         .adsbox::before { content:''; position:absolute; left:0; top:0; bottom:0; width:5px; background:linear-gradient(180deg, var(--orange), #f7b267); }
@@ -182,6 +188,16 @@
                 <p class="hint" style="margin:0">Se mudar de ideia, é só responder a mensagem em que veio este link.</p>
             </div>
         @endif
+
+        {{-- Apresentação: por que a empresa está recebendo isto (primeiro contato). --}}
+        @unless($optedOut || session('opted_out'))
+            <div class="card intro reveal">
+                <p class="hello">Olá! 👋</p>
+                <p>A <b>{{ $orgName }}</b> fez uma análise da sua presença digital: como <b>{{ $r['name'] }}</b> aparece no Google, no site e nos anúncios, em comparação com outras empresas do seu segmento{{ $r['city'] ? ' em ' . $r['city'] : '' }}.</p>
+                <p>Preparamos este raio-x para mostrar, de forma simples, <b>onde estão as oportunidades de atrair mais clientes</b>. Algumas você mesmo resolve em minutos; outras, a gente pode fazer por você.</p>
+                <p class="sign">Sem custo e sem compromisso · leitura de 2 minutos</p>
+            </div>
+        @endunless
 
         {{-- Anúncios — carro-chefe da agência. Fora da nota; só afirma o que a equipe conferiu. --}}
         @php
