@@ -16,11 +16,9 @@ class ApprovalDashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // "Por cliente" é a aba padrão — Quadros e Lista só são montados quando
-        // a pessoa abre uma delas (a view busca o fragmento em approvals.results).
-        // Link com filtro de Lista (ex: "Ver todas as aprovações" do Dashboard,
-        // ?status=pending) continua abrindo direto na Lista.
-        $activeTab = $request->input('view', $request->hasAny(['status', 'client_id', 'project_id', 'type', 'mostrar_aprovados']) ? 'list' : 'clientes');
+        // Lista é a aba padrão (Evandro, 26/11/2026; antes era "Por cliente").
+        // Quadros e Lista só são montados quando a aba aberta é uma delas.
+        $activeTab = $request->input('view', 'list');
         [$rounds, $board] = $activeTab === 'clientes' ? [null, null] : $this->roundsAndBoard($request);
 
         // Os 5 números do topo numa consulta só (antes: 5 counts, sem filtrar a organização).
@@ -110,7 +108,15 @@ class ApprovalDashboardController extends Controller
             ->orderByDesc('submitted_at');
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            // Os cards do topo viram filtro e mostram exatamente o que contam
+            // (mesmas regras da consulta de $stats em index()).
+            match ($request->status) {
+                'awaiting_send'  => $query->where('status', 'pending')->whereNull('sent_at'),
+                'waiting_reply'  => $query->where('status', 'pending')->whereNotNull('sent_at'),
+                'changes_open'   => $query->where('status', 'changes_requested')->whereNull('handled_at'),
+                'approved_today' => $query->where('status', 'approved')->whereDate('resolved_at', today()),
+                default          => $query->where('status', $request->status),
+            };
         } else {
             // Ajuste solicitado já significa que a tarefa voltou pra produção —
             // some da Lista assim que o cliente pede, sem esperar handled_at

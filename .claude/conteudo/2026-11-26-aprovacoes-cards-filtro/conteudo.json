@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Central de Aprovações: os números do topo viraram filtros",
+            "summary": "Clique em Aguardando Envio, Aguardando Resposta, Ajustes Solicitados, Aprovados Hoje ou Total Aprovados e a lista mostra só aquelas rodadas. A Central agora abre direto na Lista.",
+            "kind": "melhoria",
+            "area": "Aprovações"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Aprovações do cliente — como funciona",
+            "category": "Aprovações",
+            "slug": "aprovacoes-do-cliente-como-funciona",
+            "body_file": "ajuda-aprovacoes-do-cliente.html"
+        }
+    ]
+}

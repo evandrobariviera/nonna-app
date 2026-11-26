@@ -24,7 +24,7 @@
                     'color' => 'var(--muted2)',
                     'bg'    => 'var(--s2)',
                     'border'=> 'var(--border2)',
-                    'filter'=> null,
+                    'filter'=> 'awaiting_send',
                 ],
                 [
                     'label' => 'Aguardando Resposta',
@@ -32,7 +32,7 @@
                     'color' => 'var(--purple)',
                     'bg'    => 'rgba(100, 59, 142,.08)',
                     'border'=> 'rgba(100, 59, 142,.2)',
-                    'filter'=> 'pending',
+                    'filter'=> 'waiting_reply',
                 ],
                 [
                     'label' => 'Ajustes Solicitados',
@@ -40,7 +40,7 @@
                     'color' => 'var(--orange)',
                     'bg'    => 'rgba(238, 121, 25,.08)',
                     'border'=> 'rgba(238, 121, 25,.2)',
-                    'filter'=> 'changes_requested',
+                    'filter'=> 'changes_open',
                 ],
                 [
                     'label' => 'Aprovados Hoje',
@@ -48,7 +48,7 @@
                     'color' => 'var(--green)',
                     'bg'    => 'rgba(34,197,94,.08)',
                     'border'=> 'rgba(34,197,94,.2)',
-                    'filter'=> null,
+                    'filter'=> 'approved_today',
                 ],
                 [
                     'label' => 'Total Aprovados',
@@ -61,42 +61,45 @@
             ];
         @endphp
 
+        {{-- Cada card é um filtro da Lista: mostra exatamente o que ele conta.
+             Clicar de novo no card ativo tira o filtro. --}}
         @foreach($statCards as $card)
-            @if($card['filter'])
-                <a href="{{ route('approvals.index', ['status' => $card['filter'], 'view' => 'list']) }}"
-                   class="card card-body transition-all"
-                   style="border-color:{{ request('status') === $card['filter'] ? $card['border'] : 'var(--border2)' }}; text-decoration:none"
-                   onmouseover="this.style.borderColor='{{ $card['border'] }}'" onmouseout="this.style.borderColor='{{ request('status') === $card['filter'] ? $card['border'] : 'var(--border2)' }}'">
-            @else
-                <div class="card card-body">
-            @endif
-                <p class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:var(--muted); letter-spacing:.08em">{{ $card['label'] }}</p>
+            @php
+                $active = request('status') === $card['filter'];
+                $cardParams = request()->except('status', 'page', 'view') + ['view' => 'list'];
+                if (!$active) $cardParams['status'] = $card['filter'];
+            @endphp
+            <a href="{{ route('approvals.index', $cardParams) }}"
+               class="card card-body transition-all"
+               title="{{ $active ? 'Tirar o filtro' : 'Filtrar a lista: ' . $card['label'] }}"
+               style="border-color:{{ $active ? $card['border'] : 'var(--border2)' }}; {{ $active ? 'background:' . $card['bg'] . ';' : '' }} text-decoration:none"
+               onmouseover="this.style.borderColor='{{ $card['border'] }}'" onmouseout="this.style.borderColor='{{ $active ? $card['border'] : 'var(--border2)' }}'">
+                <p class="text-xs font-semibold uppercase tracking-widest mb-2 flex items-center justify-between gap-2" style="color:var(--muted); letter-spacing:.08em">
+                    <span>{{ $card['label'] }}</span>
+                    @if($active)<span style="color:{{ $card['color'] }}" aria-hidden="true">✕</span>@endif
+                </p>
                 <p class="text-3xl font-bold" style="color:{{ $card['color'] }}; letter-spacing:-.03em">{{ $card['value'] }}</p>
-            @if($card['filter'])
-                </a>
-            @else
-                </div>
-            @endif
+            </a>
         @endforeach
     </div>
 
-    {{-- "Por cliente" é a aba padrão. Quadros/Lista só carregam (fetch do fragmento,
-         via live-filter) na primeira vez que alguém abre uma delas. --}}
+    {{-- Lista é a aba padrão. Se a página abrir em "Por cliente", Quadros/Lista só
+         carregam (fetch do fragmento, via live-filter) na primeira vez que abrirem. --}}
     <div x-data="{ tab: '{{ $activeTab }}', loaded: {{ $rounds ? 'true' : 'false' }} }"
          x-init="$watch('tab', v => { if (v !== 'clientes' && !loaded) { loaded = true; $nextTick(() => window.refreshLiveFilter()) } })"
          x-cloak>
 
         {{-- ══ TOGGLE QUADROS / LISTA ══ --}}
         <div class="flex items-center gap-1 mb-5" style="border-bottom:1px solid var(--border2)">
-            <button @click="tab = 'board'"
-                class="px-4 py-2 text-xs font-mono uppercase tracking-widest transition-colors"
-                :style="tab === 'board' ? 'color:var(--purple); border-bottom:2px solid var(--purple)' : 'color:var(--muted)'">
-                Quadros
-            </button>
             <button @click="tab = 'list'"
                 class="px-4 py-2 text-xs font-mono uppercase tracking-widest transition-colors"
                 :style="tab === 'list' ? 'color:var(--purple); border-bottom:2px solid var(--purple)' : 'color:var(--muted)'">
                 Lista
+            </button>
+            <button @click="tab = 'board'"
+                class="px-4 py-2 text-xs font-mono uppercase tracking-widest transition-colors"
+                :style="tab === 'board' ? 'color:var(--purple); border-bottom:2px solid var(--purple)' : 'color:var(--muted)'">
+                Quadros
             </button>
             <button @click="tab = 'clientes'"
                 class="px-4 py-2 text-xs font-mono uppercase tracking-widest transition-colors"
@@ -133,9 +136,17 @@
                 <select name="status" class="field px-3 py-2 text-sm focus:outline-none"
                     style="min-width:180px">
                     <option value="">Todos os status</option>
-                    <option value="pending"            {{ request('status') === 'pending'            ? 'selected' : '' }}>Aguardando Resposta</option>
-                    <option value="changes_requested"  {{ request('status') === 'changes_requested'  ? 'selected' : '' }}>Ajustes Solicitados</option>
-                    <option value="approved"           {{ request('status') === 'approved'           ? 'selected' : '' }}>Aprovado</option>
+                    @foreach([
+                        'awaiting_send'     => 'Aguardando envio',
+                        'waiting_reply'     => 'Aguardando resposta',
+                        'pending'           => 'Pendentes (envio + resposta)',
+                        'changes_open'      => 'Ajustes solicitados (não tratados)',
+                        'changes_requested' => 'Ajustes solicitados (todos)',
+                        'approved_today'    => 'Aprovados hoje',
+                        'approved'          => 'Aprovados (todos)',
+                    ] as $v => $l)
+                        <option value="{{ $v }}" @selected(request('status') === $v)>{{ $l }}</option>
+                    @endforeach
                 </select>
             </div>
 
