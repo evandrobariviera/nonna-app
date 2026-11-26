@@ -89,6 +89,25 @@
         .tag.voce { background:rgba(22,163,74,.12); color:var(--green); }
         .tag.nos { background:rgba(100,59,142,.12); color:var(--purple); }
 
+        /* Anúncios */
+        .adsbox { border:1px solid #f3c9a2; background:linear-gradient(160deg, #fff 0%, #fff8f1 100%); position:relative; overflow:hidden; }
+        .adsbox::before { content:''; position:absolute; left:0; top:0; bottom:0; width:5px; background:linear-gradient(180deg, var(--orange), #f7b267); }
+        .kicker { margin:0 0 4px; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--orange); }
+        .adsbox h2 { font-size:19px; line-height:1.25; margin-bottom:6px; }
+        .lead { margin:0; color:#4a4453; font-size:14px; }
+        .plat { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }
+        .plat div { background:#fff; border:1px solid var(--line); border-radius:12px; padding:10px; }
+        .plat span { display:block; font-size:12px; color:var(--muted); }
+        .plat em { font-style:normal; font-weight:700; font-size:13px; }
+        .plat em.yes { color:var(--green); } .plat em.no { color:#d9480f; } .plat em.na { color:var(--muted); }
+        .rivals { margin-top:14px; }
+        .rivals p { margin:8px 0 0; font-size:14px; }
+        .dots { display:flex; flex-wrap:wrap; gap:6px; }
+        .dots i { width:16px; height:16px; border-radius:50%; background:#e7e1ee; transform:scale(.4); opacity:0; transition:transform .5s cubic-bezier(.3,1.6,.5,1), opacity .4s ease, background .4s ease; }
+        .in .dots i { transform:scale(1); opacity:1; }
+        .in .dots i.on { background:var(--orange); box-shadow:0 0 0 3px rgba(238,121,25,.15); }
+        .ready { margin-top:12px; }
+
         .stars { position:relative; display:inline-block; font-size:22px; letter-spacing:2px; line-height:1; color:#e5e0ec; }
         .stars i { position:absolute; left:0; top:0; overflow:hidden; white-space:nowrap; color:#f5b301; font-style:normal; width:0; transition:width 1.2s ease; }
         .ok { display:flex; gap:8px; align-items:flex-start; font-size:14px; padding:4px 0; }
@@ -113,7 +132,7 @@
         .reveal.in { opacity:1; transform:none; }
         @media (prefers-reduced-motion: reduce) {
             .reveal { opacity:1; transform:none; transition:none; }
-            .fill, .ring .val, .stars i { transition:none; }
+            .fill, .ring .val, .stars i, .dots i { transition:none; }
             .boost .arrow { animation:none; }
         }
     </style>
@@ -163,6 +182,70 @@
                 <p class="hint" style="margin:0">Se mudar de ideia, é só responder a mensagem em que veio este link.</p>
             </div>
         @endif
+
+        {{-- Anúncios — carro-chefe da agência. Fora da nota; só afirma o que a equipe conferiu. --}}
+        @php
+            $ads = $r['ads'];
+            $pill = fn ($v) => match ($v) {
+                'yes'   => ['Anuncia', 'yes'],
+                'no'    => ['Não encontramos anúncios', 'no'],
+                default => ['Não conferido', 'na'],
+            };
+            $where = $r['type'] ? $r['type'] : 'o que você oferece';
+        @endphp
+        <div class="card adsbox reveal">
+            <p class="kicker">Anúncios no Google e no Instagram</p>
+            @if($ads['case'] === 'none')
+                <h2>Não encontramos anúncios seus</h2>
+                <p class="lead">Pesquisamos na Biblioteca de Anúncios da Meta (Instagram e Facebook) e na Central de Transparência do Google.</p>
+            @elseif($ads['case'] === 'no_tracking')
+                <h2>Você anuncia, mas não está medindo o resultado</h2>
+                <p class="lead">O anúncio está no ar, mas o site não tem como contar quantos clientes vieram dele. É como pagar a propaganda sem saber se o telefone tocou por causa dela.</p>
+            @elseif($ads['case'] === 'measured')
+                <h2>Você já anuncia e mede. Ótimo começo.</h2>
+                <p class="lead">Dá para ir além: campanhas por bairro e horário, público de quem já visitou o site e relatório de quanto custou cada cliente.</p>
+            @else
+                <h2>Seu site está pronto para anunciar?</h2>
+                <p class="lead">Para anunciar e saber quantos clientes vieram de cada real investido, o site precisa de três medições.</p>
+            @endif
+
+            @if($ads['case'] !== 'unchecked')
+                <div class="plat">
+                    @foreach(['google' => 'Google', 'meta' => 'Instagram e Facebook'] as $k => $label)
+                        @php [$txt, $cls] = $pill($ads[$k]); @endphp
+                        <div><span>{{ $label }}</span><em class="{{ $cls }}">{{ $txt }}</em></div>
+                    @endforeach
+                </div>
+            @endif
+
+            @if($ads['case'] === 'none' && ($ads['rivals'] > 0 || $ads['rivalsChecked'] >= 3))
+                <div class="rivals">
+                    <div class="dots" aria-hidden="true">
+                        @for($i = 0; $i < $ads['rivalsChecked']; $i++)<i class="{{ $i < $ads['rivals'] ? 'on' : '' }}" style="transition-delay:{{ $i * 90 }}ms"></i>@endfor
+                    </div>
+                    @if($ads['rivals'] > 0)
+                        <p><b>{{ $ads['rivals'] }} {{ $ads['rivals'] === 1 ? 'concorrente' : 'concorrentes' }}</b> de {{ $r['city'] ?: 'sua cidade' }} {{ $ads['rivals'] === 1 ? 'anuncia' : 'anunciam' }} (de {{ $ads['rivalsChecked'] }} que conferimos). Quem procura {{ $where }} no Google ou rola o Instagram vê {{ $ads['rivals'] === 1 ? 'ela' : 'elas' }} primeiro.</p>
+                    @else
+                        <p>Nenhuma das {{ $ads['rivalsChecked'] }} concorrentes que conferimos em {{ $r['city'] ?: 'sua cidade' }} anuncia. <b>Quem começar primeiro sai na frente.</b></p>
+                    @endif
+                </div>
+            @endif
+
+            @if($ads['ready'])
+                <div class="ready">
+                    @foreach($ads['ready'] as $it)
+                        <div class="ok"><i style="color:{{ $it['ok'] ? 'var(--green)' : '#d9480f' }}">{{ $it['ok'] ? '✓' : '✗' }}</i><span>{{ $it['label'] }}</span></div>
+                    @endforeach
+                </div>
+            @elseif(!$ads['hasSite'])
+                <p class="hint">Sem um site no ar, o anúncio não tem para onde levar a pessoa nem como medir o resultado.</p>
+            @endif
+
+            @if($ads['case'] !== 'measured')
+                <div class="fix" style="margin-top:12px"><span class="tag nos">A gente resolve para você</span><br>
+                    Campanhas no Google e no Instagram com a medição instalada desde o primeiro dia: você sabe quanto custou cada cliente.</div>
+            @endif
+        </div>
 
         @if($r['potential'])
             <div class="card boost reveal">

@@ -41,7 +41,7 @@ class ProspectReport
             ->where('city_id', $place->city_id)
             ->when($place->segment_id, fn ($q, $v) => $q->where('segment_id', $v), fn ($q) => $q->whereNull('segment_id'))
             ->whereNotNull('score')->where('status', '!=', 'discarded')
-            ->orderByDesc('score')->get(['id', 'score', 'score_parts', 'google_data']);
+            ->orderByDesc('score')->get(['id', 'score', 'score_parts', 'google_data', 'ads_meta', 'ads_google']);
 
         $score = $scale($place->score, $max);
         $peerScores = $peers->map(fn ($p) => ['id' => $p->id, 'score' => $scale($p->score, $p->scoreMax()),
@@ -92,6 +92,7 @@ class ProspectReport
             'strong'    => array_slice(self::strongPoints($points, $g, $site), 0, 3),
             'areas'     => $areas,
             'potential' => $potential,
+            'ads'       => self::ads($place, $site, $peers),
             'mapsUrl'   => $g['maps_url'] ?? null,
             'date'      => ($place->collected_at ?? $place->report_at ?? now())->format('d/m/Y'),
         ];
@@ -167,6 +168,43 @@ class ProspectReport
         usort($out, fn ($a, $b) => $b['weight'] <=> $a['weight']);
 
         return $out;
+    }
+
+    /**
+     * Bloco "Anúncios" (carro-chefe da agência). Fica FORA da nota, como o sinal de oportunidade.
+     * Só afirma algo sobre anúncio quando a equipe conferiu (Biblioteca da Meta / Transparência do
+     * Google); sem conferência, mostra só se o site está pronto para anunciar. Concorrentes: só a
+     * contagem, entre as que foram conferidas.
+     *
+     * @return array{case: string, meta: ?string, google: ?string, ready: array, rivals: int, rivalsChecked: int}
+     */
+    private static function ads(CommercePlace $place, array $site, $peers): array
+    {
+        $meta = $place->ads_meta;
+        $google = $place->ads_google;
+        $others = $peers->reject(fn ($p) => $p->id === $place->id);
+        $checked = $others->filter(fn ($p) => in_array($p->ads_meta, ['yes', 'no'], true) || in_array($p->ads_google, ['yes', 'no'], true));
+        $rivals = $checked->filter(fn ($p) => $p->ads_meta === 'yes' || $p->ads_google === 'yes')->count();
+
+        $ready = [
+            ['label' => 'Pixel da Meta (mede Instagram e Facebook)', 'ok' => !empty($site['pixel'])],
+            ['label' => 'Tag do Google Ads (mede anúncios no Google)', 'ok' => !empty($site['ads_tag'])],
+            ['label' => 'Google Analytics (mede as visitas do site)', 'ok' => !empty($site['ga4']) || !empty($site['gtm'])],
+        ];
+        if (empty($site['reachable'])) {
+            $ready = []; // sem site no ar não há o que medir; o bloco fala disso no texto
+        }
+
+        $advertises = $meta === 'yes' || $google === 'yes';
+        $case = match (true) {
+            $meta === null && $google === null => 'unchecked',
+            $advertises && (($meta === 'yes' && empty($site['pixel'])) || ($google === 'yes' && empty($site['ads_tag']) && empty($site['ga4']))) => 'no_tracking',
+            $advertises => 'measured',
+            default => 'none',
+        };
+
+        return ['case' => $case, 'meta' => $meta, 'google' => $google, 'ready' => $ready,
+            'rivals' => $rivals, 'rivalsChecked' => $checked->count(), 'hasSite' => !empty($site['reachable'])];
     }
 
     /** O que já está bom (para a página não ser só crítica). */

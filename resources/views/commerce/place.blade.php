@@ -63,6 +63,12 @@
             @endif
         </div>
     </div>
+    @if($place->score !== null && $place->ads_meta === null && $place->ads_google === null && !in_array($place->status, ['opted_out', 'discarded'], true))
+        <div class="-mt-2 mb-5 px-4 py-3 text-sm flex items-center gap-2" style="background:rgba(238,121,25,.08); border:1px solid rgba(238,121,25,.3); border-radius:var(--radius)">
+            <x-icon name="megaphone" size="15" style="color:var(--orange)" />
+            <span><b>Confira os anúncios antes de mandar o raio-x</b> (quadro "Anúncios", mais abaixo). É o gancho principal: sem a conferência, o raio-x não diz se a empresa anuncia nem quantas concorrentes anunciam.</span>
+        </div>
+    @endif
     @if($place->report_token)
         <p class="text-xs -mt-3 mb-5" style="color:var(--muted2)">
             Raio-x gerado {{ $place->report_at?->format('d/m H:i') }} ·
