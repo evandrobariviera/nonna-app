@@ -57,7 +57,7 @@ class PlaceScorer
         ];
     }
 
-    private static function ratingPoints(?float $rating, int $reviews): int
+    public static function ratingPoints(?float $rating, int $reviews): int
     {
         if ($rating === null || $reviews === 0) {
             return 0;
@@ -66,7 +66,7 @@ class PlaceScorer
         return (int) round(max(0, min(1, ($rating - 3.5) / 1.4)) * 15);
     }
 
-    private static function volumePoints(int $reviews): int
+    public static function volumePoints(int $reviews): int
     {
         return (int) min(15, round(15 * log10($reviews + 1) / log10(201)));
     }

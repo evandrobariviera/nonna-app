@@ -566,6 +566,7 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
         Route::post('/prospeccao/segmentos', [\App\Http\Controllers\CommerceProspectingController::class, 'storeSegment'])->name('commerce.segments.store');
         Route::patch('/prospeccao/segmentos/{segment}', [\App\Http\Controllers\CommerceProspectingController::class, 'updateSegment'])->name('commerce.segments.update');
         Route::delete('/prospeccao/varreduras/{scan}', [\App\Http\Controllers\CommerceProspectingController::class, 'destroyScan'])->name('commerce.scans.destroy');
+        Route::post('/prospeccao/raio-x-contato', [\App\Http\Controllers\CommerceProspectingController::class, 'saveReportContact'])->name('commerce.report-contact');
         Route::post('/prospeccao/cidades',[\App\Http\Controllers\CommerceProspectingController::class, 'storeCity'])->name('commerce.cities.store');
         Route::delete('/prospeccao/cidades/{city}', [\App\Http\Controllers\CommerceProspectingController::class, 'destroyCity'])->name('commerce.cities.destroy');
     });
@@ -1364,6 +1365,9 @@ Route::get('/aprovar/{token}/central', [ApprovalController::class, 'central'])
 Route::get('/rx/{token}', [\App\Http\Controllers\CommerceReportController::class, 'show'])
     ->middleware('throttle:30,1')
     ->name('commerce.report.show');
+Route::get('/rx/{token}/conversar', [\App\Http\Controllers\CommerceReportController::class, 'talk'])
+    ->middleware('throttle:10,1')
+    ->name('commerce.report.talk');
 Route::post('/rx/{token}/sair', [\App\Http\Controllers\CommerceReportController::class, 'optOut'])
     ->middleware('throttle:10,1')
     ->name('commerce.report.opt-out');

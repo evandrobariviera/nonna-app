@@ -465,6 +465,22 @@
                     @endif
                     @unless($canEdit)<p class="text-xs mt-3" style="color:var(--muted)">Só administradores mudam segmentos e cidades.</p>@endunless
                 </section>
+
+                {{-- Botão do raio-x público: "Quero melhorar meu raio-x" abre este WhatsApp com mensagem pronta. --}}
+                <section id="raio-x" class="card p-5 min-w-0">
+                    <h2 class="card-title">WhatsApp do raio-x</h2>
+                    <p class="text-xs mt-1 mb-3" style="color:var(--muted2)">É o número do botão <b>"Quero melhorar meu raio-x"</b>, na página que a empresa recebe. Ele abre o WhatsApp com a mensagem "Vi o raio-x da [empresa] e quero entender como melhorar", e o clique aparece na página da empresa. Sem número, a página pede para responder a mensagem da abordagem.</p>
+                    @php $rxWhats = data_get(app('currentOrganization')->settings, 'prospecting.whatsapp'); @endphp
+                    @if($canEdit)
+                        <form method="POST" action="{{ route('commerce.report-contact') }}" class="flex gap-2 flex-wrap">@csrf
+                            <input type="text" name="whatsapp" value="{{ old('whatsapp', $rxWhats) }}" class="field text-sm px-2.5 py-1.5 flex-1 min-w-0" placeholder="(49) 99999-9999" maxlength="30">
+                            <button type="submit" class="btn btn-sm">Salvar</button>
+                        </form>
+                        @error('whatsapp')<p class="text-xs mt-2" style="color:var(--red)">{{ $message }}</p>@enderror
+                    @else
+                        <p class="text-sm">{{ $rxWhats ?: 'Ainda sem número.' }}</p>
+                    @endif
+                </section>
             </div>
 
             {{-- Tipos do Google traduzidos (GooglePlaceTypes): sugestão nos campos + tabela de consulta. --}}

@@ -24,7 +24,7 @@ class CommercePlace extends Model
         'last_seen_at', 'place_id_checked_at', 'site_signals', 'collected_at', 'collect_error',
         'ads_meta', 'ads_google', 'ads_checked_by', 'ads_checked_at',
         'google_data', 'google_data_at', // dados do Google guardados (decisão 25/11/2026, ver migration)
-        'report_token', 'report_at', 'report_views', 'report_last_view_at', 'opted_out_at', // raio-x público (etapa 5)
+        'report_token', 'report_at', 'report_views', 'report_last_view_at', 'opted_out_at', 'report_cta_clicks', 'report_cta_at', // raio-x público (etapa 5)
     ];
 
     protected $casts = [
@@ -40,6 +40,8 @@ class CommercePlace extends Model
         'report_last_view_at' => 'datetime',
         'opted_out_at'        => 'datetime',
         'report_views'        => 'integer',
+        'report_cta_at'       => 'datetime',
+        'report_cta_clicks'   => 'integer',
     ];
 
     /**

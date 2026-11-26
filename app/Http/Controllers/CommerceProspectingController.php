@@ -348,6 +348,19 @@ class CommerceProspectingController extends Controller
 
     // ── Configuração (só admin/dono) ──
 
+    /** WhatsApp da agência no botão "Quero melhorar meu raio-x" (settings.prospecting.whatsapp). */
+    public function saveReportContact(Request $request): RedirectResponse
+    {
+        $data = $request->validate(['whatsapp' => ['nullable', 'string', 'max:30', 'regex:/^[\d\s()+-]*$/']], [], ['whatsapp' => 'WhatsApp']);
+        $org = app('currentOrganization');
+        $settings = $org->settings ?? [];
+        $settings['prospecting']['whatsapp'] = filled($data['whatsapp'] ?? null) ? trim($data['whatsapp']) : null;
+        $org->update(['settings' => $settings]);
+
+        return redirect()->route('commerce.prospecting', ['aba' => 'configurar'])->with('success',
+            $settings['prospecting']['whatsapp'] ? 'WhatsApp do raio-x salvo. O botão "Quero melhorar meu raio-x" já aparece na página.' : 'WhatsApp do raio-x removido. A página volta a pedir para responder a mensagem.');
+    }
+
     public function storeSegment(Request $request): RedirectResponse
     {
         CommerceSegment::create($this->segmentData($request) + ['organization_id' => app('currentOrganization')->id, 'sort_order' => (int) CommerceSegment::max('sort_order') + 1]);

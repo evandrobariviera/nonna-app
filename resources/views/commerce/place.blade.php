@@ -71,6 +71,7 @@
             @else
                 a empresa ainda não abriu
             @endif
+            @if($place->report_cta_at) · <span class="badge badge-green">clicou em "Quero melhorar" {{ $place->report_cta_at->format('d/m H:i') }}</span>@endif
             @if($place->opted_out_at) · <span style="color:var(--red)">pediu para não receber mensagens em {{ $place->opted_out_at->format('d/m H:i') }}</span>@endif
             · o link mostra sempre os dados mais recentes da empresa.
         </p>
@@ -234,6 +235,7 @@
             <h2 class="card-title">Histórico</h2>
             <ul class="mt-3 flex flex-col gap-2 text-sm">
                 @if($place->opted_out_at)<li style="color:var(--red)">Pediu para não receber mensagens (pelo raio-x) <span class="text-xs block" style="color:var(--muted)">{{ $place->opted_out_at->format('d/m/Y H:i') }}</span></li>@endif
+                @if($place->report_cta_at)<li style="color:var(--green)">Clicou em "Quero melhorar meu raio-x" ({{ $place->report_cta_clicks }}x) <span class="text-xs block" style="color:var(--muted)">última em {{ $place->report_cta_at->format('d/m/Y H:i') }}</span></li>@endif
                 @if($place->report_last_view_at)<li>Empresa abriu o raio-x ({{ $place->report_views }}x) <span class="text-xs block" style="color:var(--muted)">última em {{ $place->report_last_view_at->format('d/m/Y H:i') }}</span></li>@endif
                 @if($place->report_at)<li>Raio-x gerado <span class="text-xs block" style="color:var(--muted)">{{ $place->report_at->format('d/m/Y H:i') }}</span></li>@endif
                 @if($place->collected_at)<li>Dados e site coletados <span class="text-xs block" style="color:var(--muted)">{{ $place->collected_at->format('d/m/Y H:i') }}</span></li>@endif

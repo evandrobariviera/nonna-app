@@ -14,6 +14,9 @@ use App\Models\CommercePlace;
  * A nota aparece em escala de 100: enquanto a parte "nas IAs" (etapa 4) não existe, a nota
  * interna vai até 80 e é convertida (46/80 → 58/100). Concorrentes aparecem só com a nota,
  * nunca com o nome.
+ *
+ * "Se você resolver": soma os pontos que cada um dos 3 pontos fracos devolveria (teto da régua,
+ * por isso a página fala em "até") e recalcula a posição contra as notas atuais da cidade.
  */
 class ProspectReport
 {
@@ -29,7 +32,9 @@ class ProspectReport
         $g = $place->google_data ?? [];
         $site = $place->site_signals ?? [];
         $points = $place->score_parts['points'] ?? [];
-        $scale = fn (?int $s, ?int $max) => $s === null ? null : (int) round($s / max(1, $max ?: 100) * 100);
+        $parts = $place->score_parts['parts'] ?? [];
+        $max = $place->scoreMax();
+        $scale = fn (?int $s, ?int $m) => $s === null ? null : (int) round($s / max(1, $m ?: 100) * 100);
 
         $peers = CommercePlace::withoutGlobalScopes()
             ->where('organization_id', $place->organization_id)
@@ -38,7 +43,7 @@ class ProspectReport
             ->whereNotNull('score')->where('status', '!=', 'discarded')
             ->orderByDesc('score')->get(['id', 'score', 'score_parts', 'google_data']);
 
-        $score = $scale($place->score, $place->scoreMax());
+        $score = $scale($place->score, $max);
         $peerScores = $peers->map(fn ($p) => ['id' => $p->id, 'score' => $scale($p->score, $p->scoreMax()),
             'reviews' => (int) ($p->google_data['reviews'] ?? 0), 'rating' => $p->google_data['rating'] ?? null]);
         $position = $peerScores->search(fn ($p) => $p['id'] === $place->id);
@@ -46,14 +51,33 @@ class ProspectReport
         // cada um com a posição de verdade. $top (os outros) alimenta as faixas de comparação.
         $ranking = $peerScores->take(3)->map(fn ($p, $i) => $p + ['pos' => $i + 1, 'me' => $p['id'] === $place->id])->values();
         $top = $peerScores->reject(fn ($p) => $p['id'] === $place->id)->take(3)->values();
+        $others = $peerScores->reject(fn ($p) => $p['id'] === $place->id);
 
         $type = mb_strtolower(trim((string) ($g['type'] ?? '')));
-        $city = $place->city?->name;
+        $weak = array_slice(self::weakPoints($points, $parts, $g, $site, $type, $top), 0, 3);
+
+        // Simulação: nota e posição se os 3 pontos fossem resolvidos (teto).
+        $potential = null;
+        if ($place->score !== null && $weak) {
+            $raw = min($max, $place->score + array_sum(array_column($weak, 'gain')));
+            $pScore = $scale($raw, $max);
+            if ($pScore > $score) {
+                $potential = ['score' => $pScore, 'position' => 1 + $others->where('score', '>', $pScore)->count()];
+            }
+        }
+
+        // As três áreas da nota (a de IAs entra na etapa 4).
+        $areas = [];
+        foreach (['profile' => ['Perfil no Google', 30], 'reputation' => ['Reputação', 30], 'site' => ['Site', 20]] as $k => [$label, $of]) {
+            if (isset($parts[$k])) {
+                $areas[] = ['label' => $label, 'pct' => (int) round($parts[$k] / $of * 100)];
+            }
+        }
 
         return [
             'name'      => $g['name'] ?? 'Sua empresa',
             'type'      => $type ?: null,
-            'city'      => $city,
+            'city'      => $place->city?->name,
             'score'     => $score,
             'position'  => $position === false ? null : $position + 1,
             'total'     => $peerScores->count(),
@@ -64,58 +88,83 @@ class ProspectReport
             'rating'    => isset($g['rating']) ? (float) $g['rating'] : null,
             'reviews'   => (int) ($g['reviews'] ?? 0),
             'topReviews'=> $top->isNotEmpty() ? [$top->min('reviews'), $top->max('reviews')] : null,
-            'topRating' => $top->pluck('rating')->filter()->avg(),
-            'weak'      => array_slice(self::weakPoints($points, $g, $site, $type, $top), 0, 3),
+            'weak'      => $weak,
             'strong'    => array_slice(self::strongPoints($points, $g, $site), 0, 3),
+            'areas'     => $areas,
+            'potential' => $potential,
             'mapsUrl'   => $g['maps_url'] ?? null,
+            'date'      => ($place->collected_at ?? $place->report_at ?? now())->format('d/m/Y'),
         ];
     }
 
     /**
      * Pontos que mais tiraram nota, do maior para o menor peso.
+     * weight = ordem na página; gain = pontos reais que voltam se resolver (para a simulação);
+     * who = 'voce' (o dono resolve sozinho, dica de graça) ou 'nos' (a agência resolve).
      *
-     * @return array<int, array{title: string, text: string, lost: int}>
+     * @return array<int, array{title: string, text: string, fix: string, who: string, weight: int, gain: int}>
      */
-    private static function weakPoints(array $pt, array $g, array $site, string $type, $top): array
+    private static function weakPoints(array $pt, array $parts, array $g, array $site, string $type, $top): array
     {
         $lost = fn (string $k) => self::MAX[$k] - (int) ($pt[$k] ?? 0);
         $out = [];
-        $add = function (int $lost, string $title, string $text) use (&$out) {
-            if ($lost >= 2) {
-                $out[] = compact('title', 'text', 'lost');
+        $add = function (int $weight, int $gain, string $title, string $text, string $fix, string $who) use (&$out) {
+            if ($weight >= 2) {
+                $out[] = compact('title', 'text', 'fix', 'who', 'weight', 'gain');
             }
         };
 
-        $add($lost('hours'), 'Horário não cadastrado no Google',
-            'Quem procura "' . ($type ?: 'empresa') . ' aberto agora" não encontra você.');
+        $add($lost('hours'), $lost('hours'), 'Horário não cadastrado no Google',
+            'Quem procura "' . ($type ?: 'empresa') . ' aberto agora" não encontra você.',
+            'No seu Perfil da Empresa no Google, abra Editar perfil → Horário e preencha os dias e horários. Leva 5 minutos.', 'voce');
         $photos = (int) ($g['photos'] ?? 0);
-        $add($lost('photos'), $photos ? 'Poucas fotos no perfil do Google' : 'Nenhuma foto no perfil do Google',
-            'Perfis com mais fotos recebem mais cliques, ligações e pedidos de rota.');
-        $add($lost('phone'), 'Sem telefone no perfil do Google', 'Quem encontra você no Maps não consegue ligar direto.');
-        $add($lost('category'), 'Perfil sem endereço completo ou sem categoria', 'O Google mostra menos a sua empresa quando faltam essas informações.');
+        $add($lost('photos'), $lost('photos'), $photos ? 'Poucas fotos no perfil do Google' : 'Nenhuma foto no perfil do Google',
+            'Perfis com mais fotos recebem mais cliques, ligações e pedidos de rota.',
+            'Suba pelo menos 10 fotos: fachada, ambiente, equipe e o seu trabalho. Dá para fazer pelo próprio app do Google Maps.', 'voce');
+        $add($lost('phone'), $lost('phone'), 'Sem telefone no perfil do Google', 'Quem encontra você no Maps não consegue ligar direto.',
+            'Em Editar perfil → Contato, coloque o telefone ou o WhatsApp da empresa.', 'voce');
+        $add($lost('category'), $lost('category'), 'Perfil sem endereço completo ou sem categoria', 'O Google mostra menos a sua empresa quando faltam essas informações.',
+            'Em Editar perfil, confira o endereço completo e escolha a categoria principal certa.', 'voce');
 
+        // Metas realistas para a simulação: até 30 avaliações a mais (sem passar do nível do 3º colocado,
+        // mínimo 20) com nota 4,7; site novo "bom" (no ar, cadeado, celular ~80, WhatsApp, medição).
         $reviews = (int) ($g['reviews'] ?? 0);
+        $targetReviews = max($reviews, min($reviews + 30, max(20, (int) ($top->min('reviews') ?? 0))));
+        $volGain = max(0, PlaceScorer::volumePoints($targetReviews) - (int) ($pt['volume'] ?? 0));
+        $rateGain = max(0, PlaceScorer::ratingPoints(max(4.7, (float) ($g['rating'] ?? 0)), $targetReviews) - (int) ($pt['rating'] ?? 0));
+        $goodSite = 5 + 3 + 5 + 3 + 3;
         if ($reviews === 0) {
-            $add($lost('rating') + $lost('volume'), 'Nenhuma avaliação no Google', 'Avaliação é a primeira coisa que as pessoas olham antes de escolher.');
+            $add($lost('rating') + $lost('volume'), $volGain + $rateGain, 'Nenhuma avaliação no Google',
+                'Avaliação é a primeira coisa que as pessoas olham antes de escolher.',
+                'Peça para os clientes satisfeitos avaliarem, mandando o link direto do seu perfil. A gente pode automatizar esse pedido depois de cada atendimento.', 'nos');
         } else {
             $range = $top->isNotEmpty() ? ' Os mais bem colocados da cidade têm entre ' . $top->min('reviews') . ' e ' . $top->max('reviews') . '.' : '';
-            $add($lost('volume'), 'Poucas avaliações no Google', "Você tem {$reviews}." . $range);
-            $add($lost('rating'), 'Nota ' . number_format((float) $g['rating'], 1, ',', '') . ' no Google',
-                'Uma nota mais alta faz diferença na hora em que a pessoa compara opções.');
+            $add($lost('volume'), $volGain, 'Poucas avaliações no Google', "Você tem {$reviews}." . $range,
+                'Peça avaliação para quem já foi atendido, com o link direto do perfil. A gente pode automatizar esse pedido.', 'nos');
+            $add($lost('rating'), $rateGain, 'Nota ' . number_format((float) $g['rating'], 1, ',', '') . ' no Google',
+                'Uma nota mais alta faz diferença na hora em que a pessoa compara opções.',
+                'Responda todas as avaliações, inclusive as negativas, e peça avaliação para os clientes satisfeitos.', 'voce');
         }
 
+        $siteNow = (int) ($parts['site'] ?? 0);
         if (empty($g['website'])) {
-            $add($lost('website') + 20, 'Sem site', 'Quem quer saber mais sobre você não tem para onde ir além do Maps.');
+            $add($lost('website') + 20, $lost('website') + $goodSite, 'Sem site', 'Quem quer saber mais sobre você não tem para onde ir além do Maps.',
+                'Um site simples, rápido no celular e com botão de WhatsApp já resolve. A gente faz.', 'nos');
         } elseif (!empty($site['checked']) && empty($site['reachable'])) {
-            $add(20, 'O site não abre', 'Quem clica no link do seu perfil encontra uma página com erro.');
+            $add(20, max(0, $goodSite - $siteNow), 'O site não abre', 'Quem clica no link do seu perfil encontra uma página com erro.',
+                'Precisa ver a hospedagem e o domínio. A gente confere e coloca no ar.', 'nos');
         } elseif (!empty($site['reachable'])) {
-            $add($lost('speed'), 'Site lento no celular', 'Ele demora para abrir, e boa parte das pessoas desiste antes de ver o conteúdo.');
-            $add($lost('https') + 1, 'Site sem cadeado de segurança', 'O navegador avisa "não seguro", o que afasta quem chega.');
-            $add($lost('whatsapp') + 1, 'Site sem botão de WhatsApp', 'Quem quer falar com você precisa procurar o número.');
-            $add($lost('tracking') + 1, 'Site sem medição de visitas', 'Não dá para saber de onde vêm os clientes, nem se um anúncio está funcionando.');
+            $add($lost('speed'), $lost('speed'), 'Site lento no celular', 'Ele demora para abrir, e boa parte das pessoas desiste antes de ver o conteúdo.',
+                'Otimizar imagens e a hospedagem costuma resolver. A gente faz.', 'nos');
+            $add($lost('https') + 1, $lost('https'), 'Site sem cadeado de segurança', 'O navegador avisa "não seguro", o que afasta quem chega.',
+                'Ativar o certificado de segurança (https) na hospedagem. A gente faz.', 'nos');
+            $add($lost('whatsapp') + 1, $lost('whatsapp'), 'Site sem botão de WhatsApp', 'Quem quer falar com você precisa procurar o número.',
+                'Um botão fixo de WhatsApp no site. A gente coloca.', 'nos');
+            $add($lost('tracking') + 1, $lost('tracking'), 'Site sem medição de visitas', 'Não dá para saber de onde vêm os clientes, nem se um anúncio está funcionando.',
+                'Instalar Google Analytics e Pixel da Meta. A gente instala e configura.', 'nos');
         }
 
-        usort($out, fn ($a, $b) => $b['lost'] <=> $a['lost']);
+        usort($out, fn ($a, $b) => $b['weight'] <=> $a['weight']);
 
         return $out;
     }
