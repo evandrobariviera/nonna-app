@@ -559,6 +559,7 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::post('/prospeccao/empresas/{place}/coletar', [\App\Http\Controllers\CommerceProspectingController::class, 'collectPlace'])->name('commerce.places.collect');
     Route::post('/prospeccao/empresas/{place}/anuncios', [\App\Http\Controllers\CommerceProspectingController::class, 'markAds'])->name('commerce.places.ads');
     Route::post('/prospeccao/varreduras/{scan}/coletar', [\App\Http\Controllers\CommerceProspectingController::class, 'collectScan'])->name('commerce.scans.collect');
+    Route::post('/prospeccao/varreduras/{scan}/varrer-de-novo', [\App\Http\Controllers\CommerceProspectingController::class, 'rerunScan'])->name('commerce.scans.rerun');
     Route::middleware('org.admin')->group(function () {
         Route::post('/prospeccao/segmentos', [\App\Http\Controllers\CommerceProspectingController::class, 'storeSegment'])->name('commerce.segments.store');
         Route::patch('/prospeccao/segmentos/{segment}', [\App\Http\Controllers\CommerceProspectingController::class, 'updateSegment'])->name('commerce.segments.update');

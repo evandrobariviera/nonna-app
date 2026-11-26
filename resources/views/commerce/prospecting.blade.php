@@ -127,7 +127,8 @@
                 @if(!empty($filters['varredura']))
                     @php $sc = $scans->firstWhere('id', $filters['varredura']); @endphp
                     <input type="hidden" name="varredura" value="{{ $filters['varredura'] }}">
-                    <a href="{{ route('commerce.prospecting', array_merge(['aba' => 'empresas'], \Illuminate\Support\Arr::except($filters, 'varredura'))) }}" class="badge badge-purple" style="padding:4px 10px">Varredura: {{ $sc?->label() ?? '—' }} ✕</a>
+                    @if(!empty($filters['novas']))<input type="hidden" name="novas" value="1">@endif
+                    <a href="{{ route('commerce.prospecting', array_merge(['aba' => 'empresas'], \Illuminate\Support\Arr::except($filters, ['varredura', 'novas']))) }}" class="badge badge-purple" style="padding:4px 10px">Varredura: {{ $sc?->label() ?? '—' }}{{ !empty($filters['novas']) ? ' · só as novas da última rodada' : '' }} ✕</a>
                 @endif
                 <span class="text-xs ml-auto" style="color:var(--muted)">{{ $places->total() }} empresa(s)</span>
             </form>
@@ -217,9 +218,24 @@
                                         <span class="block text-xs mt-1" style="color:var(--orange)">Alguma busca voltou cheia (60, o máximo do Google): pode haver mais empresas. Rode nichos mais específicos para completar.</span>
                                     @endif
                                 </td>
-                                <td class="text-xs whitespace-nowrap" style="color:var(--muted2)">{{ $s->created_at->format('d/m H:i') }}<span class="block">{{ $s->creator?->name }}</span></td>
+                                <td class="text-xs whitespace-nowrap" style="color:var(--muted2)">
+                                    @if($s->runs > 1)
+                                        Última: {{ $s->lastRunStart()->format('d/m H:i') }}
+                                        <span class="block">rodou {{ $s->runs }} vezes</span>
+                                        <span class="block" style="color:var(--muted)">1ª em {{ $s->created_at->format('d/m') }} · {{ $s->creator?->name }}</span>
+                                    @else
+                                        {{ $s->created_at->format('d/m H:i') }}<span class="block">{{ $s->creator?->name }}</span>
+                                    @endif
+                                </td>
                                 @php $pg = $progress[$s->id] ?? null; @endphp
-                                <td class="text-sm">{{ $s->status === 'done' ? $s->places_found : '—' }}@if($s->status === 'done' && $s->places_new)<span class="block text-xs" style="color:var(--green)">{{ $s->places_new }} nova(s)</span>@endif
+                                <td class="text-sm">{{ $s->status === 'done' ? $s->places_found : '—' }}
+                                    @if($s->status === 'done')
+                                        @if($s->places_new)
+                                            <a href="{{ $tabUrl('empresas', ['varredura' => $s->id, 'novas' => 1]) }}" class="block text-xs underline" style="color:var(--green)" title="Empresas que entraram {{ $s->runs > 1 ? 'na última rodada' : 'nesta varredura' }}">{{ $s->runs > 1 ? 'Ver as ' . $s->places_new . ' novas' : $s->places_new . ' nova(s)' }}</a>
+                                        @elseif($s->runs > 1)
+                                            <span class="block text-xs" style="color:var(--muted)">nenhuma nova na última rodada</span>
+                                        @endif
+                                    @endif
                                     @if($pg && $pg->total)<span class="block text-xs" style="color:var(--muted2)">{{ $pg->collected }} de {{ $pg->total }} coletada(s)</span>@endif
                                 </td>
                                 <td>@if($st)<span class="badge badge-{{ $st['color'] }}">{{ $st['label'] }}</span>@endif</td>
@@ -230,6 +246,13 @@
                                             <button type="submit" class="btn btn-xs btn-primary" title="Busca os dados no Google, checa o site e calcula a Nota Nonna de cada empresa">Coletar e dar nota</button>
                                         </form>
                                     @endif
+                                @endif
+                                @if(in_array($s->status, ['done', 'error'], true))
+                                    <form method="POST" action="{{ route('commerce.scans.rerun', $s) }}" class="inline">@csrf
+                                        <button type="submit" class="btn btn-xs" title="Roda a mesma busca de novo e atualiza esta linha. Quem já estava não duplica; as novas aparecem aqui.">
+                                            <x-icon name="refresh-cw" size="12" /> {{ $s->status === 'error' ? 'Tentar de novo' : 'Varrer de novo' }}
+                                        </button>
+                                    </form>
                                 @endif</td>
                             </tr>
                         @empty

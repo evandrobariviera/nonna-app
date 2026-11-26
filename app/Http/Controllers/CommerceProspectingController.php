@@ -45,12 +45,17 @@ class CommerceProspectingController extends Controller
             ->selectRaw('sp.scan_id, count(*) as total, count(p.collected_at) as collected')->groupBy('sp.scan_id')->get()->keyBy('scan_id');
 
         if ($tab === 'empresas') {
-            $filters = $request->only('cidade', 'segmento', 'varredura', 'situacao', 'sinal', 'busca');
+            $filters = $request->only('cidade', 'segmento', 'varredura', 'situacao', 'sinal', 'busca', 'novas');
+            // "Ver as N novas": só as empresas que entraram na última rodada da varredura.
+            $novasDesde = filled($filters['novas'] ?? null) && filled($filters['varredura'] ?? null)
+                ? $data['scans']->firstWhere('id', $filters['varredura'])?->lastRunStart()
+                : null;
             $query = CommercePlace::with('city', 'segment')
                 ->when(filled($filters['busca'] ?? null), fn ($q) => $q->whereRaw("google_data->>'name' ilike ?", ['%' . trim($filters['busca']) . '%']))
                 ->when($filters['cidade'] ?? null, fn ($q, $v) => $q->where('city_id', $v))
                 ->when($filters['segmento'] ?? null, fn ($q, $v) => $q->where('segment_id', $v))
                 ->when($filters['varredura'] ?? null, fn ($q, $v) => $q->whereHas('scans', fn ($s) => $s->whereKey($v)))
+                ->when($novasDesde, fn ($q, $d) => $q->where('commerce_places.created_at', '>=', $d))
                 ->when(isset(CommercePlace::$statuses[$filters['situacao'] ?? '']), fn ($q) => $q->where('status', $filters['situacao']), fn ($q) => $q->where('status', '!=', 'discarded'));
 
             $counts = (clone $query)->toBase()->reorder()->selectRaw('status, count(*) n')->groupBy('status')->pluck('n', 'status');
@@ -110,6 +115,31 @@ class CommerceProspectingController extends Controller
     }
 
     /** Coleta (Google + site + nota) de todas as empresas da varredura, em segundo plano. */
+    /**
+     * Roda a mesma varredura outra vez, atualizando a própria linha (Evandro, 26/11/2026).
+     * Empresa que já existia não duplica (ScanRunner::store); places_new vira "novas nesta rodada".
+     */
+    public function rerunScan(CommerceScan $scan): RedirectResponse
+    {
+        if (in_array($scan->status, ['queued', 'running'], true)) {
+            return back()->with('error', 'Essa varredura já está rodando.');
+        }
+        if (!GooglePlaces::forOrganization($scan->organization_id)->configured()) {
+            return back()->with('error', 'Falta a chave do Google Maps (Places) em Configurações → Integrações.');
+        }
+
+        $scan->update([
+            'status'      => 'queued',
+            'error'       => null,
+            'runs'        => $scan->status === 'error' ? $scan->runs : $scan->runs + 1,
+            'last_run_at' => now(),
+        ]);
+        RunCommerceScanJob::dispatch($scan->id);
+
+        return redirect()->route('commerce.prospecting', ['aba' => 'varreduras'])
+            ->with('success', 'Varrendo de novo: ' . $scan->label() . '. Empresas que já estavam não duplicam; as novas aparecem na linha.');
+    }
+
     public function collectScan(Request $request, CommerceScan $scan): RedirectResponse
     {
         if (!GooglePlaces::forOrganization($scan->organization_id)->configured()) {

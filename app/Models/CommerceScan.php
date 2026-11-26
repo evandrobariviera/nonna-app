@@ -20,14 +20,22 @@ class CommerceScan extends Model
 
     protected $fillable = [
         'organization_id', 'city_id', 'segment_id', 'niche', 'status', 'terms', 'places_found', 'places_new',
-        'saturated', 'api_calls', 'error', 'created_by', 'finished_at',
+        'saturated', 'api_calls', 'error', 'created_by', 'finished_at', 'runs', 'last_run_at',
     ];
 
     protected $casts = [
         'terms'       => 'array',
         'saturated'   => 'boolean',
         'finished_at' => 'datetime',
+        'last_run_at' => 'datetime',
+        'runs'        => 'integer',
     ];
+
+    /** Começo da última rodada: empresas criadas a partir daqui são as "novas" dela. */
+    public function lastRunStart(): \Illuminate\Support\Carbon
+    {
+        return $this->last_run_at ?? $this->created_at;
+    }
 
     public static array $statuses = [
         'queued'  => ['label' => 'Na fila',     'color' => 'muted'],

@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Varrer de novo a mesma cidade, sem criar outra varredura",
+            "summary": "Na aba Varreduras da Prospecção, o botão Varrer de novo roda a mesma busca e atualiza a linha: mostra quantas empresas novas entraram e o link para ver só elas. Quem já estava não duplica.",
+            "kind": "melhoria",
+            "area": "Comercial"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Prospecção — encontrar empresas por cidade e segmento",
+            "category": "Comercial",
+            "slug": "prospeccao-varredura",
+            "body_file": "ajuda-prospeccao.html"
+        }
+    ]
+}
