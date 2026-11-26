@@ -22,6 +22,20 @@
             </button>
         </div>
 
+        {{-- Abas — padrão do App (.tab-bar/.tab-btn, igual Cliente e Configurações). --}}
+        <nav class="tab-bar" aria-label="Prospecção">
+            @foreach([
+                'empresas'   => ['Empresas', 'building-2'],
+                'varreduras' => ['Varreduras', 'history'],
+                'configurar' => ['Segmentos e cidades', 'settings-2'],
+            ] as $key => [$label, $icon])
+                <a href="{{ $tabUrl($key) }}" class="tab-btn {{ $tab === $key ? 'active' : '' }}" @if($tab === $key) aria-current="page" @endif>
+                    <x-icon :name="$icon" size="15" /> {{ $label }}
+                    @if($key === 'varreduras' && $running)<span class="badge badge-orange">varrendo</span>@endif
+                </a>
+            @endforeach
+        </nav>
+
         @if(session('success'))
             <div class="mb-5 px-4 py-3 text-sm font-semibold" style="background:rgba(52,211,153,.08); border:1px solid rgba(52,211,153,.25); color:var(--green); border-radius:var(--radius)">{{ session('success') }}</div>
         @endif
@@ -87,16 +101,6 @@
                     <button type="submit" class="btn btn-primary btn-sm">Varrer</button>
                 </div>
             </form>
-        </div>
-
-        {{-- Abas --}}
-        <div class="flex gap-1 mb-4 flex-wrap" style="border-bottom:1px solid var(--border)">
-            @foreach(['empresas' => 'Empresas', 'varreduras' => 'Varreduras', 'configurar' => 'Segmentos e cidades'] as $key => $label)
-                <a href="{{ $tabUrl($key) }}" class="px-3 py-2 text-sm font-semibold"
-                   style="{{ $tab === $key ? 'color:var(--purple); border-bottom:2px solid var(--purple)' : 'color:var(--muted)' }}">{{ $label }}
-                    @if($key === 'varreduras' && $running)<span class="badge badge-orange ml-1">varrendo</span>@endif
-                </a>
-            @endforeach
         </div>
 
         @if($tab === 'empresas')
