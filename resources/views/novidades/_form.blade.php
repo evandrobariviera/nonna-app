@@ -53,6 +53,14 @@
             </p>
         </div>
 
+        <label class="flex items-start gap-2 text-sm" style="color:var(--text)">
+            <input type="checkbox" name="is_featured" value="1" class="mt-0.5" @checked(old('is_featured', $u?->is_featured))>
+            <span>
+                <b>Destaque</b>
+                <span class="block text-xs" style="color:var(--muted2)">Na janela de novidades que abre no primeiro acesso do dia, aparece em cima, grande e com os detalhes abertos. Use para o que todo mundo precisa saber.</span>
+            </span>
+        </label>
+
         <label class="flex items-center gap-2 text-sm" style="color:var(--text)">
             <input type="checkbox" name="publicar" value="1"
                    @checked(old('publicar', $u ? (bool) $u->published_at : true))>

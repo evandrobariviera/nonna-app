@@ -20,12 +20,61 @@ class AppUpdate extends Model
 
     protected $fillable = [
         'organization_id', 'title', 'summary', 'body', 'kind', 'area',
-        'published_at', 'created_by',
+        'published_at', 'created_by', 'is_featured',
     ];
 
     protected $casts = [
         'published_at' => 'datetime',
+        'is_featured'  => 'boolean',
     ];
+
+    /** Até quantos dias pra trás a janela olha quando a pessoa nunca abriu as Novidades. */
+    public const POPUP_JANELA_DIAS = 14;
+
+    /**
+     * O que a janela do primeiro acesso do dia mostra pra essa pessoa — ou null se não
+     * é pra abrir (já abriu hoje, é cliente, ou não tem nada novo). Abrir já marca o dia,
+     * então ela aparece uma vez só mesmo que a pessoa troque de tela sem fechar.
+     * Custo: fora a 1ª página do dia, é só a comparação de data no próprio usuário.
+     *
+     * @return array{destaques: \Illuminate\Support\Collection, outras: \Illuminate\Support\Collection, total: int}|null
+     */
+    public static function popupPara(?User $user): ?array
+    {
+        // Roda em toda tela: qualquer falha aqui (ex.: migration não aplicada) só esconde a janela.
+        try {
+            return static::montarPopup($user);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return null;
+        }
+    }
+
+    private static function montarPopup(?User $user): ?array
+    {
+        if (! $user || $user->isClient() || $user->app_updates_popup_on?->isToday()) {
+            return null;
+        }
+
+        $user->forceFill(['app_updates_popup_on' => today()])->saveQuietly();
+
+        $desde = $user->app_updates_seen_at ?? now()->subDays(self::POPUP_JANELA_DIAS);
+        $base = static::publicadas()->whereRaw('greatest(published_at, created_at) > ?', [$desde]);
+
+        $total = (clone $base)->count();
+        if ($total === 0) {
+            return null;
+        }
+
+        $itens = $base->orderByDesc('is_featured')->orderByRaw('greatest(published_at, created_at) desc')->limit(8)->get();
+
+        return [
+            'destaques' => $itens->where('is_featured', true)->values(),
+            'outras'    => $itens->where('is_featured', false)->values(),
+            'total'     => $total,
+        ];
+    }
 
     // Rótulo e cor por tipo. "Novidade" é coisa que não existia; "melhoria" mexe em algo
     // que já existia; "correção" conserta o que estava errado.

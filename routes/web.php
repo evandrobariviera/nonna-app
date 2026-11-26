@@ -1118,6 +1118,8 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     // ── Novidades do App (linha do tempo do que muda no sistema) ──
     Route::get('/novidades', [\App\Http\Controllers\AppUpdateController::class, 'index'])
         ->name('app-updates.index');
+    Route::post('/novidades/janela-vista', [\App\Http\Controllers\AppUpdateController::class, 'popupVisto'])
+        ->name('app-updates.popup-seen');
     Route::get('/novidades/nova', [\App\Http\Controllers\AppUpdateController::class, 'create'])
         ->name('app-updates.create');
     Route::post('/novidades', [\App\Http\Controllers\AppUpdateController::class, 'store'])

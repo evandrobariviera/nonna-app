@@ -16,7 +16,7 @@ use Illuminate\Support\Carbon;
  *
  * Formato:
  * {
- *   "novidades": [{"title", "summary", "body"?, "kind": novidade|melhoria|correcao, "area", "published_at"?}],
+ *   "novidades": [{"title", "summary", "body"?, "kind": novidade|melhoria|correcao, "area", "published_at"?, "destaque"?: true}],
  *   "ajuda":     [{"title", "category", "slug"?, "body_file": "arquivo.html" (relativo ao JSON)}],
  *   "documentos": [{"slug", "name", "stage", "position", "status": na_fila|em_construcao|fechado,
  *                   "summary"?, "when_made"?, "made_by"?, "reviewed_by"?, "inputs"?, "next_step"?,
@@ -74,6 +74,7 @@ class PublishAppContent extends Command
                     'body'            => $item['body'] ?? null,
                     'kind'            => $item['kind'],
                     'area'            => $item['area'] ?? null,
+                    'is_featured'     => (bool) ($item['destaque'] ?? false),
                     'published_at'    => isset($item['published_at']) ? Carbon::parse($item['published_at']) : now(),
                     'created_by'      => $userId,
                 ]);

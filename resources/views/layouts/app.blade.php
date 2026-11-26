@@ -442,6 +442,11 @@
             @include('layouts.bottom-nav')
         @endunless
 
+        {{-- Janela de Novidades no primeiro acesso do dia (só se tiver algo novo). --}}
+        @unless($embed || request()->routeIs('app-updates.*'))
+            @include('partials._novidades-popup')
+        @endunless
+
         {{-- ── CHAT DA EQUIPE (widget flutuante) — só equipe interna; some no modo embed
              (popup de tarefa) e na própria tela cheia /chat ── --}}
         @unless($embed || request()->routeIs('chat.index') || auth()->user()->isClient())

@@ -55,6 +55,9 @@
                                 @if($u->area)
                                     <span class="badge" style="font-size:10px">{{ $u->area }}</span>
                                 @endif
+                                @if($u->is_featured)
+                                    <span class="badge badge-orange" style="font-size:10px">destaque</span>
+                                @endif
                                 @if($novo)
                                     <span class="text-xs font-bold" style="color:var(--purple)">novo pra você</span>
                                 @endif

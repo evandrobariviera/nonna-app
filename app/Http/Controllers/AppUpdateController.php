@@ -82,6 +82,14 @@ class AppUpdateController extends Controller
         return redirect()->route('app-updates.index')->with('success', 'Novidade removida.');
     }
 
+    /** "Entendi" na janela do primeiro acesso do dia: conta como ter lido as Novidades. */
+    public function popupVisto(Request $request)
+    {
+        $request->user()->forceFill(['app_updates_seen_at' => now()])->saveQuietly();
+
+        return response()->noContent();
+    }
+
     private function dadosValidados(Request $request, ?AppUpdate $existente = null): array
     {
         $dados = $request->validate([
@@ -93,6 +101,7 @@ class AppUpdateController extends Controller
         ]);
 
         $dados['body'] = RichTextSanitizer::clean($dados['body'] ?? '') ?: null;
+        $dados['is_featured'] = $request->boolean('is_featured');
 
         // Publicar é uma escolha explícita: enquanto não for, ninguém além de quem escreve vê.
         // Corrigir o texto de algo já publicado não muda a data — senão um ajuste de vírgula

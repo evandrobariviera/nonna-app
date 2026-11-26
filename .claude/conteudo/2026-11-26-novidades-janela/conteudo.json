@@ -1,0 +1,20 @@
+{
+    "novidades": [
+        {
+            "title": "Janela de novidades no primeiro acesso do dia",
+            "summary": "Ao abrir o App pela primeira vez no dia, aparece uma janela com o que mudou desde a sua última visita. As novidades marcadas como Destaque vêm em cima, com os detalhes.",
+            "body": "<p>A janela só abre quando tem novidade que você ainda não viu, e uma vez por dia. Clique em <strong>Entendi</strong> e ela some até a próxima novidade. Quem cadastra novidades (administradores) agora tem a caixinha <strong>Destaque</strong>, para o que todo mundo precisa saber.</p>",
+            "kind": "novidade",
+            "area": "Novidades",
+            "destaque": true
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Novidades do App — como ficar sabendo do que mudou",
+            "category": "Primeiros passos",
+            "slug": "novidades-do-app",
+            "body_file": "ajuda-novidades.html"
+        }
+    ]
+}

@@ -43,6 +43,7 @@ class User extends Authenticatable
             'password'            => 'hashed',
             'is_super_admin'      => 'boolean',
             'app_updates_seen_at' => 'datetime', // até onde leu as Novidades do App
+            'app_updates_popup_on' => 'date',    // dia em que a janela de Novidades já abriu
         ];
     }
 
