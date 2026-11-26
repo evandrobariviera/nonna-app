@@ -64,6 +64,33 @@ class CommerceScan extends Model
         return $this->belongsToMany(CommercePlace::class, 'commerce_scan_place', 'scan_id', 'place_id');
     }
 
+    /** Empresas que já tiveram conversa (enviada, respondeu, pediu pra sair) nunca são apagadas. */
+    public const PROTECTED_PLACE_STATUSES = ['sent', 'replied', 'opted_out'];
+
+    /**
+     * Apaga a varredura e as empresas que só vieram por ela (Evandro, 26/11/2026).
+     * Fica: empresa que também está em outra varredura, ou que já teve conversa.
+     *
+     * @return array{deleted:int, kept:int}
+     */
+    public function deleteWithPlaces(): array
+    {
+        return \Illuminate\Support\Facades\DB::connection($this->connection)->transaction(function () {
+            $ids = $this->places()->pluck('commerce_places.id');
+
+            $onlyHere = CommercePlace::withoutGlobalScopes()->whereIn('id', $ids)
+                ->whereNotIn('status', self::PROTECTED_PLACE_STATUSES)
+                ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('commerce_scan_place as o')
+                    ->whereColumn('o.place_id', 'commerce_places.id')->where('o.scan_id', '!=', $this->id))
+                ->pluck('id');
+
+            $this->delete(); // o vínculo (commerce_scan_place) sai junto, em cascata
+            $deleted = CommercePlace::withoutGlobalScopes()->whereIn('id', $onlyHere)->delete();
+
+            return ['deleted' => $deleted, 'kept' => $ids->count() - $deleted];
+        });
+    }
+
     public function label(): string
     {
         $what = $this->niche ?: ($this->segment?->name ?? 'Varredura');

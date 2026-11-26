@@ -253,6 +253,15 @@
                                             <x-icon name="refresh-cw" size="12" /> {{ $s->status === 'error' ? 'Tentar de novo' : 'Varrer de novo' }}
                                         </button>
                                     </form>
+                                @endif
+                                @if($canEdit && !in_array($s->status, ['queued', 'running'], true))
+                                    <form method="POST" action="{{ route('commerce.scans.destroy', $s) }}" class="inline" x-data
+                                          @submit.prevent="if (await $store.confirmDialog.ask('Excluir a varredura {{ addslashes($s->label()) }} e as empresas que vieram só por ela? Empresas que também estão em outra varredura, ou que já tiveram conversa, ficam. Não dá para desfazer.')) $el.submit()">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn btn-xs" style="color:var(--red)" title="Apaga a varredura e as empresas que só vieram por ela">
+                                            <x-icon name="trash-2" size="12" /> Excluir
+                                        </button>
+                                    </form>
                                 @endif</td>
                             </tr>
                         @empty

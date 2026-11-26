@@ -268,6 +268,20 @@ class CommerceProspectingController extends Controller
             ->get(['segment_id', 'city_id'])->mapWithKeys(fn ($p) => [$p->segment_id . '|' . $p->city_id => true]);
     }
 
+    // Excluir varredura (só admin/dono): apaga ela e as empresas que só vieram por ela.
+    public function destroyScan(CommerceScan $scan): RedirectResponse
+    {
+        if (in_array($scan->status, ['queued', 'running'], true)) {
+            return back()->with('error', 'Essa varredura ainda está rodando. Espere terminar para excluir.');
+        }
+        $label = $scan->label();
+        ['deleted' => $deleted, 'kept' => $kept] = $scan->deleteWithPlaces();
+
+        return redirect()->route('commerce.prospecting', ['aba' => 'varreduras'])->with('success',
+            "Varredura \"{$label}\" excluída, com {$deleted} empresa(s)."
+            . ($kept ? " {$kept} ficaram, porque também estão em outra varredura ou já tiveram conversa." : ''));
+    }
+
     public function discard(CommercePlace $place): RedirectResponse
     {
         $place->update(['status' => $place->status === 'discarded' ? 'mapped' : 'discarded']);

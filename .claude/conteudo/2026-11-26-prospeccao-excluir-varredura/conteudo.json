@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Excluir uma varredura junto com as empresas dela",
+            "summary": "Na aba Varreduras da Prospecção, o botão Excluir apaga a varredura e as empresas que vieram só por ela. Quem está em outra varredura ou já teve conversa fica.",
+            "kind": "novidade",
+            "area": "Comercial"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Prospecção — encontrar empresas por cidade e segmento",
+            "category": "Comercial",
+            "slug": "prospeccao-varredura",
+            "body_file": "ajuda-prospeccao.html"
+        }
+    ]
+}
