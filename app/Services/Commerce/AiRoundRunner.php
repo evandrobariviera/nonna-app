@@ -29,6 +29,13 @@ class AiRoundRunner
     /** Custo da ferramenta de busca da OpenAI por chamada (além dos tokens, que vêm do registro). */
     public const SEARCH_FEE_USD = 0.01;
 
+    /**
+     * Modelo da rodada: o mais barato da OpenAI cadastrado (Evandro achou caro com o do Agente Nonna,
+     * ~US$ 0,055 por resposta). Para "pesquise e diga quem indica" ele dá conta; esforço baixo e
+     * busca curta. Se não estiver cadastrado no provedor, usa o modelo do próprio agente.
+     */
+    public const MODEL = 'gpt-5.6-luna';
+
     /** Proporção de respostas que já vale a nota cheia (20): aparecer em 60% ou mais. */
     private const FULL_RATIO = 0.6;
 
@@ -45,11 +52,10 @@ TXT;
         $term = mb_strtolower(trim((string) (($segment->search_terms ?? [])[0] ?? $segment->name)));
         $where = "{$city->name} {$city->state}";
 
+        // 3 perguntas (× 2 repetições = 6 respostas) por padrão, para a rodada sair barata.
         return [
             "Qual o melhor {$term} em {$where}?",
             "Me indica um {$term} bem avaliado em {$city->name}?",
-            "Quais as opções de {$term} em {$where}?",
-            "Onde encontrar {$term} de confiança em {$city->name}?",
             "Preciso de um {$term} em {$city->name}, {$city->state}. Quem você recomenda?",
         ];
     }
@@ -68,7 +74,7 @@ TXT;
             if (!$agent) {
                 throw new \RuntimeException('O Agente Nonna (usado para pesquisar na internet) não está ativo em Agentes & IA.');
             }
-            $r = $this->ai->webResearch($agent, self::INSTRUCTIONS, $round->questions[$q], 4000, $round->created_by, null, $round->trigger());
+            $r = $this->ai->webResearch(self::cheap($agent), self::INSTRUCTIONS, $round->questions[$q], 3000, $round->created_by, null, $round->trigger(), 'low', 'low');
             [$answer, $names] = self::splitNames($r['text']);
             $data += ['answer' => $answer, 'names' => $names, 'sources' => array_slice($r['sources'], 0, 10)];
         } catch (\Throwable $e) {
@@ -77,6 +83,17 @@ TXT;
         CommerceAiAnswer::create($data);
 
         $this->finishIfComplete($round);
+    }
+
+    /** Cópia do agente (sem salvar) com o modelo barato, se o provedor tiver ele cadastrado. */
+    public static function cheap(AiAgent $agent): AiAgent
+    {
+        $copy = clone $agent;
+        if (collect($agent->provider->models ?? [])->contains('id', self::MODEL)) {
+            $copy->model = self::MODEL;
+        }
+
+        return $copy;
     }
 
     /** Quando todas as respostas chegaram: conta as citações e atualiza a nota das empresas. */

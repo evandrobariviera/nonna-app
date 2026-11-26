@@ -176,7 +176,7 @@ class CommerceProspectingController extends Controller
             'city_id'         => $v['city_id'],
             'segment_id'      => $v['segment_id'],
             'questions'       => $questions,
-            'repetitions'     => (int) ($v['repetitions'] ?? 3),
+            'repetitions'     => (int) ($v['repetitions'] ?? 2),
             'status'          => 'queued',
             'created_by'      => $request->user()->id,
         ]);
@@ -272,9 +272,36 @@ class CommerceProspectingController extends Controller
         if (in_array($place->status, ['opted_out', 'discarded'], true)) {
             return back()->with('error', $place->status === 'opted_out' ? 'Essa empresa pediu para não receber mensagens.' : 'Essa empresa está descartada.');
         }
+        $cov = $place->peerCoverage();
+        if (!$cov['ok']) {
+            return back()->with('error', "O raio-x compara a empresa com as outras do segmento na cidade, e só {$cov['scored']} de {$cov['mapped']} têm nota. "
+                . 'Clique em "Coletar as que faltam" para a comparação ficar justa (precisa de pelo menos ' . (int) (CommercePlace::REPORT_MIN_COVERAGE * 100) . '%).');
+        }
         $place->ensureReport();
 
         return back()->with('success', 'Raio-x pronto. Use "Ver raio-x" para conferir e "Copiar link" para mandar.');
+    }
+
+    /** "Coletar as que faltam": as empresas do mesmo segmento e cidade ainda sem nota (para o ranking do raio-x). */
+    public function collectPeers(Request $request, CommercePlace $place): RedirectResponse
+    {
+        if (!GooglePlaces::forOrganization($place->organization_id)->configured()) {
+            return back()->with('error', 'Falta a chave do Google Maps (Places) em Configurações → Integrações.');
+        }
+        $ids = CommercePlace::where('city_id', $place->city_id)
+            ->when($place->segment_id, fn ($q, $v) => $q->where('segment_id', $v), fn ($q) => $q->whereNull('segment_id'))
+            ->whereNull('score')->whereNotIn('status', ['discarded', 'opted_out'])->pluck('id');
+        if ($ids->isEmpty()) {
+            return back()->with('success', 'Todas as empresas do segmento na cidade já têm nota.');
+        }
+        if ($stop = $this->paidGate($request, $place->organization_id, $ids->count(), route('commerce.places.collect-peers', $place))) {
+            return $stop;
+        }
+        foreach ($ids as $id) {
+            CollectCommercePlaceJob::dispatch($id, $request->boolean('aceito_pago'));
+        }
+
+        return back()->with('success', "{$ids->count()} empresa(s) na fila de coleta. Leva até 1 minuto cada; depois disso o raio-x pode ser gerado.");
     }
 
     public function collectPlace(Request $request, CommercePlace $place): RedirectResponse
@@ -362,7 +389,9 @@ class CommerceProspectingController extends Controller
         $signal = OpportunitySignal::for($place, $this->advertisers()->has($place->segment_id . '|' . $place->city_id));
         $reasons = PlaceScorer::reasons($g, $place->site_signals ?? []);
 
-        return view('commerce.place', compact('place', 'g', 'liveError', 'peers', 'rank', 'top', 'topLive', 'signal', 'reasons'));
+        $coverage = $place->peerCoverage();
+
+        return view('commerce.place', compact('place', 'g', 'liveError', 'peers', 'rank', 'top', 'topLive', 'signal', 'reasons', 'coverage'));
     }
 
     public function markAds(Request $request, CommercePlace $place): RedirectResponse

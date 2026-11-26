@@ -714,7 +714,7 @@ class AiService
      *
      * @return array{text: string, sources: array<int, array{title: string, url: string}>}
      */
-    public function webResearch(AiAgent $agent, string $instructions, string $question, int $maxTokens, ?int $userId, ?string $clientId, string $trigger): array
+    public function webResearch(AiAgent $agent, string $instructions, string $question, int $maxTokens, ?int $userId, ?string $clientId, string $trigger, string $effort = 'medium', ?string $searchContext = null): array
     {
         $agent->loadMissing('provider');
         if ($agent->provider->slug !== 'openai') {
@@ -729,12 +729,13 @@ class AiService
             'model'             => $agent->model,
             'instructions'      => $instructions,
             'input'             => [['role' => 'user', 'content' => $question]],
-            'tools'             => [['type' => 'web_search']],
+            // search_context_size "low": lê menos páginas por busca (mais barato) — rodadas de IA da prospecção.
+            'tools'             => [$searchContext ? ['type' => 'web_search', 'search_context_size' => $searchContext] : ['type' => 'web_search']],
             'max_output_tokens' => $maxTokens,
             'store'             => false,
         ];
         if ($this->isReasoningModel($agent->model)) {
-            $payload['reasoning'] = ['effort' => 'medium'];
+            $payload['reasoning'] = ['effort' => $effort];
         }
 
         [$result, $usage] = $this->guard($agent, function () use ($agent, $apiKey, $payload) {

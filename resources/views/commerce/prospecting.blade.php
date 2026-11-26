@@ -356,13 +356,13 @@
                     </label>
                     <label class="text-xs flex flex-col gap-1" style="color:var(--muted2)">Repetições
                         <select name="repetitions" class="field text-sm px-2.5 py-1.5">
-                            <option value="3">3 vezes cada pergunta (recomendado)</option>
-                            <option value="2">2 vezes</option>
+                            <option value="2">2 vezes cada pergunta (recomendado)</option>
+                            <option value="3">3 vezes (mais preciso, custa 50% a mais)</option>
                             <option value="1">1 vez (teste rápido)</option>
                         </select>
                     </label>
                     <label class="text-xs flex flex-col gap-1" style="color:var(--muted2); grid-column:1/-1">Perguntas (opcional, uma por linha, até 8)
-                        <textarea name="questions" rows="3" class="field text-sm px-2.5 py-1.5" placeholder="Deixe em branco para usar as 5 perguntas padrão, montadas com o 1º termo do segmento e a cidade. Exemplo:&#10;{{ implode('&#10;', $exampleQuestions) }}">{{ old('questions') }}</textarea>
+                        <textarea name="questions" rows="3" class="field text-sm px-2.5 py-1.5" placeholder="Deixe em branco para usar as 3 perguntas padrão, montadas com o 1º termo do segmento e a cidade. Exemplo:&#10;{{ implode('&#10;', $exampleQuestions) }}">{{ old('questions') }}</textarea>
                     </label>
                     <div><button type="submit" class="btn btn-primary btn-sm"><x-icon name="sparkles" size="14" /> Perguntar à IA</button></div>
                 </form>

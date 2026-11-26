@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreignUuid('city_id')->constrained('commerce_cities')->restrictOnDelete();
             $table->foreignUuid('segment_id')->nullable()->constrained('commerce_segments')->nullOnDelete();
             $table->json('questions');
-            $table->unsignedSmallInteger('repetitions')->default(3);
+            $table->unsignedSmallInteger('repetitions')->default(2);
             $table->string('provider', 30)->default('chatgpt');
             $table->string('status', 20)->default('queued'); // queued | running | done | error
             $table->text('error')->nullable();

@@ -555,6 +555,7 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::get('/prospeccao', [\App\Http\Controllers\CommerceProspectingController::class, 'index'])->name('commerce.prospecting');
     Route::post('/prospeccao/varreduras', [\App\Http\Controllers\CommerceProspectingController::class, 'storeScan'])->name('commerce.scans.store');
     Route::post('/prospeccao/empresas/coletar', [\App\Http\Controllers\CommerceProspectingController::class, 'collectSelected'])->name('commerce.places.collect-selected');
+    Route::post('/prospeccao/empresas/{place}/coletar-segmento', [\App\Http\Controllers\CommerceProspectingController::class, 'collectPeers'])->name('commerce.places.collect-peers');
     Route::post('/prospeccao/empresas/{place}/raio-x', [\App\Http\Controllers\CommerceProspectingController::class, 'generateReport'])->name('commerce.places.report');
     Route::post('/prospeccao/empresas/{place}/descartar', [\App\Http\Controllers\CommerceProspectingController::class, 'discard'])->name('commerce.places.discard');
     Route::get('/prospeccao/empresas/{place}', [\App\Http\Controllers\CommerceProspectingController::class, 'showPlace'])->name('commerce.places.show');

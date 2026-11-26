@@ -86,6 +86,8 @@ class ProspectReport
             'score'     => $score,
             'position'  => $position === false ? null : $position + 1,
             'total'     => $peerScores->count(),
+            // Ranking só com amostra mínima (e o "Gerar raio-x" exige 80% do segmento com nota).
+            'compare'   => $peerScores->count() >= 5,
             'top'       => $top,
             'ranking'   => $ranking,
             'inTop'     => $ranking->contains('me', true),

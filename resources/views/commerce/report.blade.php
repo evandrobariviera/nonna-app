@@ -169,14 +169,14 @@
                         <div class="num"><b data-count="{{ $r['score'] }}">{{ $r['score'] }}</b><small>de 100</small></div>
                     </div>
                     <div>
-                        @if($r['position'] === 1 && $r['total'] > 1)
-                            <p>A mais bem colocada entre as {{ $r['total'] }} da cidade. Dá para abrir ainda mais vantagem.</p>
-                        @elseif($r['topRange'])
-                            <p>Os mais bem colocados da cidade têm entre <b>{{ $r['topRange'][0] }}</b> e <b>{{ $r['topRange'][1] }}</b>.</p>
+                        @if($r['compare'] && $r['position'] === 1)
+                            <p>A mais bem colocada entre as {{ $r['total'] }} que analisamos{{ $r['city'] ? ' em ' . $r['city'] : '' }}. Dá para abrir ainda mais vantagem.</p>
+                        @elseif($r['compare'] && $r['topRange'])
+                            <p>As mais bem colocadas entre as {{ $r['total'] }} que analisamos{{ $r['city'] ? ' em ' . $r['city'] : '' }} têm entre <b>{{ $r['topRange'][0] }}</b> e <b>{{ $r['topRange'][1] }}</b>.</p>
                         @else
                             <p>Sua nota de presença digital no Google e no site.</p>
                         @endif
-                        @if($r['position'] && $r['total'] > 1)<span class="pos">{{ $r['position'] }}º de {{ $r['total'] }} na cidade</span>@endif
+                        @if($r['compare'] && $r['position'])<span class="pos">{{ $r['position'] }}º de {{ $r['total'] }} analisadas</span>@endif
                     </div>
                 </div>
             @endif
@@ -267,11 +267,11 @@
             <div class="card boost reveal">
                 <h2>Se você resolver os {{ count($r['weak']) === 1 ? 'ponto' : count($r['weak']) . ' pontos' }} abaixo</h2>
                 <div class="cmp">
-                    <div class="now"><b>{{ $r['score'] }}</b><small>{{ $r['position'] ? $r['position'] . 'º hoje' : 'hoje' }}</small></div>
+                    <div class="now"><b>{{ $r['score'] }}</b><small>{{ $r['compare'] && $r['position'] ? $r['position'] . 'º hoje' : 'hoje' }}</small></div>
                     <div class="arrow" aria-hidden="true">➜</div>
-                    <div class="then"><b data-count="{{ $r['potential']['score'] }}">{{ $r['potential']['score'] }}</b><small>até {{ $r['potential']['position'] }}º lugar</small></div>
+                    <div class="then"><b data-count="{{ $r['potential']['score'] }}">{{ $r['potential']['score'] }}</b><small>{{ $r['compare'] ? 'até ' . $r['potential']['position'] . 'º lugar' : 'pontos' }}</small></div>
                 </div>
-                <p class="hint">Sua nota pode chegar a até {{ $r['potential']['score'] }}. Com as notas de hoje, isso {{ $r['potential']['position'] === 1 ? 'coloca você em 1º lugar' : 'leva você para o ' . $r['potential']['position'] . 'º lugar' }} entre {{ $r['total'] }} {{ $r['type'] ? 'concorrentes' : 'empresas' }}{{ $r['city'] ? ' de ' . $r['city'] : '' }}.</p>
+                <p class="hint">Sua nota pode chegar a até {{ $r['potential']['score'] }}.@if($r['compare']) Com as notas de hoje, isso {{ $r['potential']['position'] === 1 ? 'coloca você em 1º lugar' : 'leva você para o ' . $r['potential']['position'] . 'º lugar' }} entre as {{ $r['total'] }} que analisamos{{ $r['city'] ? ' em ' . $r['city'] : '' }}.@endif</p>
             </div>
         @endif
 
@@ -294,7 +294,7 @@
             </div>
         @endif
 
-        @if($r['total'] > 1 && $r['score'] !== null)
+        @if($r['compare'] && $r['score'] !== null)
             <div class="card reveal">
                 <h2>Onde você está</h2>
                 <div class="bars">
@@ -311,7 +311,7 @@
                         </div>
                     @endunless
                 </div>
-                <p class="hint">Comparamos {{ $r['total'] }} empresas do mesmo segmento{{ $r['city'] ? ' em ' . $r['city'] : '' }}. Os nomes das outras não aparecem aqui.</p>
+                <p class="hint">Analisamos {{ $r['total'] }} empresas do mesmo segmento{{ $r['city'] ? ' em ' . $r['city'] : '' }}, encontradas no Google Maps. Os nomes das outras não aparecem aqui.</p>
             </div>
         @endif
 

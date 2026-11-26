@@ -57,12 +57,27 @@
                     <x-icon name="copy" size="14" /> <span x-text="ok ? 'Copiado!' : 'Copiar link'">Copiar link</span>
                 </button>
             @elseif($place->score !== null && !in_array($place->status, ['opted_out', 'discarded'], true))
-                <form method="POST" action="{{ route('commerce.places.report', $place) }}">@csrf
-                    <button type="submit" class="btn btn-sm btn-primary" title="Cria a página que a empresa recebe pelo link: a nota explicada, comparada com a cidade"><x-icon name="file-text" size="14" /> Gerar raio-x</button>
-                </form>
+                @if($coverage['ok'])
+                    <form method="POST" action="{{ route('commerce.places.report', $place) }}">@csrf
+                        <button type="submit" class="btn btn-sm btn-primary" title="Cria a página que a empresa recebe pelo link: a nota explicada, comparada com as outras do segmento na cidade"><x-icon name="file-text" size="14" /> Gerar raio-x</button>
+                    </form>
+                @else
+                    <button type="button" class="btn btn-sm" disabled title="Falta nota em boa parte das empresas do segmento na cidade (veja o aviso abaixo)"><x-icon name="file-text" size="14" /> Gerar raio-x</button>
+                @endif
             @endif
         </div>
     </div>
+    {{-- Ranking justo: o raio-x só compara quando quase todas do segmento na cidade têm nota. --}}
+    @if($place->score !== null && !$coverage['ok'] && !in_array($place->status, ['opted_out', 'discarded'], true))
+        <div class="-mt-2 mb-5 px-4 py-3 text-sm flex items-center gap-3 flex-wrap" style="background:rgba(100,59,142,.07); border:1px solid rgba(100,59,142,.25); border-radius:var(--radius)">
+            <x-icon name="bar-chart-3" size="15" style="color:var(--purple)" />
+            <span class="flex-1 min-w-0"><b>Só {{ $coverage['scored'] }} de {{ $coverage['mapped'] }} empresas do segmento na cidade têm nota.</b>
+                O raio-x diz em que posição a empresa está; para essa comparação ser justa, colete as que faltam (pelo menos {{ (int) (\App\Models\CommercePlace::REPORT_MIN_COVERAGE * 100) }}% com nota).</span>
+            <form method="POST" action="{{ route('commerce.places.collect-peers', $place) }}">@csrf
+                <button type="submit" class="btn btn-sm btn-primary">Coletar as {{ $coverage['missing'] }} que faltam</button>
+            </form>
+        </div>
+    @endif
     @if($place->score !== null && $place->ads_meta === null && $place->ads_google === null && !in_array($place->status, ['opted_out', 'discarded'], true))
         <div class="-mt-2 mb-5 px-4 py-3 text-sm flex items-center gap-2" style="background:rgba(238,121,25,.08); border:1px solid rgba(238,121,25,.3); border-radius:var(--radius)">
             <x-icon name="megaphone" size="15" style="color:var(--orange)" />

@@ -61,6 +61,27 @@ class CommercePlace extends Model
         ]);
     }
 
+    /**
+     * O raio-x compara a empresa com as outras do mesmo segmento e cidade; só é justo se quase
+     * todas tiverem nota (Evandro, 26/11/2026: "7º de 7" com 41 sem avaliar não tem lógica).
+     */
+    public const REPORT_MIN_COVERAGE = 0.8;
+
+    /** @return array{scored: int, mapped: int, missing: int, ok: bool} */
+    public function peerCoverage(): array
+    {
+        $row = static::withoutGlobalScopes()
+            ->where('organization_id', $this->organization_id)->where('city_id', $this->city_id)
+            ->when($this->segment_id, fn ($q, $v) => $q->where('segment_id', $v), fn ($q) => $q->whereNull('segment_id'))
+            ->whereNotIn('status', ['discarded'])
+            ->selectRaw('count(*) as mapped, count(score) as scored')->first();
+        $mapped = (int) $row->mapped;
+        $scored = (int) $row->scored;
+
+        return ['scored' => $scored, 'mapped' => $mapped, 'missing' => $mapped - $scored,
+            'ok' => $mapped > 0 && $scored / $mapped >= self::REPORT_MIN_COVERAGE];
+    }
+
     public function reportUrl(): ?string
     {
         return $this->report_token ? route('commerce.report.show', $this->report_token) : null;
