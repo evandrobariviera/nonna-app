@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Prospecção com cara nova: números no topo, filtros rápidos e coleta das marcadas",
+            "summary": "A lista de empresas mostra Mapeadas, Com nota, Com WhatsApp e o custo do mês; filtra por situação num clique, ordena por nota ou avaliações, mostra a nota do Google e o site, e coleta só as empresas que você marcar.",
+            "kind": "melhoria",
+            "area": "Comercial"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Prospecção — encontrar empresas por cidade e segmento",
+            "category": "Comercial",
+            "slug": "prospeccao-varredura",
+            "body_file": "ajuda-prospeccao.html"
+        }
+    ]
+}

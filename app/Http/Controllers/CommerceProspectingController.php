@@ -45,21 +45,36 @@ class CommerceProspectingController extends Controller
             ->selectRaw('sp.scan_id, count(*) as total, count(p.collected_at) as collected')->groupBy('sp.scan_id')->get()->keyBy('scan_id');
 
         if ($tab === 'empresas') {
-            $filters = $request->only('cidade', 'segmento', 'varredura', 'situacao', 'sinal', 'busca', 'novas');
+            $filters = $request->only('cidade', 'segmento', 'varredura', 'situacao', 'sinal', 'busca', 'novas', 'ordem');
             // "Ver as N novas": só as empresas que entraram na última rodada da varredura.
             $novasDesde = filled($filters['novas'] ?? null) && filled($filters['varredura'] ?? null)
                 ? $data['scans']->firstWhere('id', $filters['varredura'])?->lastRunStart()
                 : null;
-            $query = CommercePlace::with('city', 'segment')
+            // Recorte (cidade, segmento, varredura, busca) sem a situação: base dos números do
+            // topo e das contagens dos filtros rápidos (protótipo da Central de Comércio).
+            $base = CommercePlace::query()
                 ->when(filled($filters['busca'] ?? null), fn ($q) => $q->whereRaw("google_data->>'name' ilike ?", ['%' . trim($filters['busca']) . '%']))
                 ->when($filters['cidade'] ?? null, fn ($q, $v) => $q->where('city_id', $v))
                 ->when($filters['segmento'] ?? null, fn ($q, $v) => $q->where('segment_id', $v))
                 ->when($filters['varredura'] ?? null, fn ($q, $v) => $q->whereHas('scans', fn ($s) => $s->whereKey($v)))
-                ->when($novasDesde, fn ($q, $d) => $q->where('commerce_places.created_at', '>=', $d))
+                ->when($novasDesde, fn ($q, $d) => $q->where('commerce_places.created_at', '>=', $d));
+
+            $counts = (clone $base)->toBase()->selectRaw('status, count(*) n')->groupBy('status')->pluck('n', 'status');
+            $kpi = (clone $base)->toBase()->where('status', '!=', 'discarded')->selectRaw("
+                count(*) as mapeadas,
+                count(score) as com_nota,
+                count(*) filter (where json_array_length(coalesce(site_signals->'contacts'->'whatsapp', '[]'::json)) > 0) as com_whatsapp
+            ")->first();
+
+            $query = (clone $base)->with('city', 'segment')
                 ->when(isset(CommercePlace::$statuses[$filters['situacao'] ?? '']), fn ($q) => $q->where('status', $filters['situacao']), fn ($q) => $q->where('status', '!=', 'discarded'));
 
-            $counts = (clone $query)->toBase()->reorder()->selectRaw('status, count(*) n')->groupBy('status')->pluck('n', 'status');
-            $query->orderByRaw('score is null')->orderBy('score')->orderByDesc('created_at');
+            match ($filters['ordem'] ?? '') {
+                'maior'      => $query->orderByRaw('score is null')->orderByDesc('score')->orderByDesc('created_at'),
+                'avaliacoes' => $query->orderByRaw("coalesce((google_data->>'reviews')::int, -1) desc")->orderByDesc('created_at'),
+                'recentes'   => $query->orderByDesc('created_at'),
+                default      => $query->orderByRaw('score is null')->orderBy('score')->orderByDesc('created_at'),
+            };
             $advertisers = $this->advertisers();
             if (isset(OpportunitySignal::$labels[$filters['sinal'] ?? ''])) {
                 // Sinal é calculado (site + conferência de anúncio): filtra em memória.
@@ -73,11 +88,14 @@ class CommerceProspectingController extends Controller
             // Guardado no App; só quem ainda não tem dado do Google é consultado (uma vez).
             $live = $this->googleNames($places->getCollection(), $google);
 
-            $data += compact('filters', 'places', 'live', 'counts', 'signals');
+            $data += compact('filters', 'places', 'live', 'counts', 'signals', 'kpi');
         }
 
         // Depois das consultas desta página, pra o medidor já mostrar o que ela gastou.
         $data['usage'] = GoogleUsage::summary($org->id);
+        // Custo estimado do mês: o que passou da franquia grátis de cada tipo de consulta.
+        $data['usageUsd'] = collect($data['usage'])->sum(fn ($u) => $u['free'] === null ? 0
+            : max(0, $u['used'] - $u['free']) * ($u['usd_per_1000'] ?? 0) / 1000);
 
         return view('commerce.prospecting', $data);
     }
@@ -160,6 +178,31 @@ class CommerceProspectingController extends Controller
         return redirect()->route('commerce.prospecting', ['aba' => 'varreduras'])->with('success', $places->count()
             ? "{$places->count()} empresa(s) na fila de coleta. Cada uma leva até 1 minuto (site e velocidade no celular)."
             : 'Todas as empresas dessa varredura já foram coletadas nos últimos 7 dias.');
+    }
+
+    /** "Coletar selecionadas": as empresas marcadas na lista (ids separados por vírgula ou array). */
+    public function collectSelected(Request $request): RedirectResponse
+    {
+        $org = app('currentOrganization');
+        if (!GooglePlaces::forOrganization($org->id)->configured()) {
+            return back()->with('error', 'Falta a chave do Google Maps (Places) em Configurações → Integrações.');
+        }
+        $raw = $request->input('ids', []);
+        $ids = collect(is_array($raw) ? $raw : explode(',', (string) $raw))->filter()->unique()->take(200);
+        $places = CommercePlace::whereIn('id', $ids)->whereNotIn('status', ['discarded', 'opted_out'])->pluck('id');
+        if ($places->isEmpty()) {
+            return back()->with('error', 'Marque pelo menos uma empresa na lista.');
+        }
+
+        if ($stop = $this->paidGate($request, $org->id, $places->count(), route('commerce.places.collect-selected'), ['ids' => $places->implode(',')])) {
+            return $stop;
+        }
+        $allowPaid = $request->boolean('aceito_pago');
+        foreach ($places as $id) {
+            CollectCommercePlaceJob::dispatch($id, $allowPaid);
+        }
+
+        return back()->with('success', "{$places->count()} empresa(s) na fila de coleta. Cada uma leva até 1 minuto (site e velocidade no celular). Atualize a página daqui a pouco.");
     }
 
     public function collectPlace(Request $request, CommercePlace $place): RedirectResponse
