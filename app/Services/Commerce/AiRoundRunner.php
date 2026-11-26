@@ -197,19 +197,26 @@ TXT;
      */
     public static function nameKey(string $name, ?string $city = null): ?string
     {
-        $generic = ['dr', 'dra', 'doutor', 'doutora', 'clinica', 'clinicas', 'consultorio', 'odontologia', 'odontologica', 'odontologico',
-            'odonto', 'especializada', 'especializado', 'ltda', 'me', 'eireli', 'epp', 'de', 'da', 'do', 'das', 'dos', 'e', 'em',
-            'centro', 'saude', 'estetica', 'oficina', 'mecanica', 'auto', 'centro', 'studio', 'estudio', 'salao', 'unidade', 'filial', 'sc', 'rs', 'pr'];
         $cityWords = $city ? explode(' ', self::norm($city)) : [];
         $all = array_values(array_filter(explode(' ', self::norm($name))));
-        $kept = array_values(array_filter($all, fn ($w) => !in_array($w, $generic, true) && !in_array($w, $cityWords, true)));
+        $kept = array_values(array_filter($all, fn ($w) => !in_array($w, self::GENERIC, true) && !in_array($w, $cityWords, true)));
         $key = implode(' ', $kept);
-        if (mb_strlen($key) < 4) {
-            $key = implode(' ', $all); // nome todo genérico ("Clínica Odontológica"): usa o nome inteiro
-        }
 
-        return mb_strlen($key) >= 4 ? $key : null;
+        // Nome só de palavras genéricas ("Dentista em Videira") não identifica ninguém: sem chave.
+        // Uma palavra só precisa de 5 letras ou mais ("seven", "vitta"; "oral" não).
+        $min = count($kept) === 1 ? 5 : 4;
+
+        return mb_strlen($key) >= $min ? $key : null;
     }
+
+    /** Palavras que não identificam uma empresa (segmento, títulos, ligação, sufixos de razão social). */
+    private const GENERIC = ['dr', 'dra', 'doutor', 'doutora', 'clinica', 'clinicas', 'consultorio', 'consultorios',
+        'odontologia', 'odontologica', 'odontologico', 'odontologicos', 'odonto', 'dentista', 'dentistas', 'odontopediatra',
+        'odontopediatria', 'ortodontia', 'ortodontista', 'implante', 'implantes', 'especializada', 'especializado',
+        'cirurgiao', 'cirurgioes', 'cirurgia', 'especialista', 'especialistas', 'reabilitacao', 'dentario', 'dentarios',
+        'protese', 'proteses', 'integrada', 'integrado', 'integrados', 'harmonizacao', 'facial', 'ss', 's',
+        'ltda', 'me', 'eireli', 'epp', 'de', 'da', 'do', 'das', 'dos', 'e', 'em', 'a', 'o', 'centro', 'saude', 'estetica',
+        'oficina', 'mecanica', 'auto', 'studio', 'estudio', 'salao', 'unidade', 'filial', 'sc', 'rs', 'pr', 'sp', 'brasil'];
 
     /**
      * Formas do nome que contam como citação: a parte que identifica a empresa e, quando ela tem
@@ -219,16 +226,26 @@ TXT;
      */
     public static function nameKeys(string $name, ?string $city = null): array
     {
-        $key = self::nameKey($name, $city);
-        if (!$key) {
-            return [];
-        }
-        $words = explode(' ', $key);
-        $keys = [$key];
-        if (count($words) >= 3 && mb_strlen($words[0] . $words[1]) >= 8) {
-            $keys[] = $words[0] . ' ' . $words[1];
+        // Nome do Google costuma vir com partes ("Dornelles Odontologia - Dentista Videira",
+        // "Dentista em Videira | Odontopediatra | Clínica Alegrim"): cada parte é procurada.
+        $parts = array_merge([$name], preg_split('/\s+[|\-–—]\s+|\s*\|\s*/u', $name) ?: []);
+        $keys = [];
+        foreach ($parts as $part) {
+            $key = self::nameKey($part, $city);
+            if (!$key) {
+                continue;
+            }
+            $keys[] = $key;
+            $words = explode(' ', $key);
+            $n = count($words);
+            if ($n >= 3 && mb_strlen($words[0] . $words[1]) >= 8) {
+                $keys[] = $words[0] . ' ' . $words[1];
+            }
+            if ($n >= 3 && mb_strlen($words[$n - 2] . $words[$n - 1]) >= 8) {
+                $keys[] = $words[$n - 2] . ' ' . $words[$n - 1]; // "Reabilitação Oral Dr Evandro Petri" → "evandro petri"
+            }
         }
 
-        return $keys;
+        return array_values(array_unique($keys));
     }
 }
