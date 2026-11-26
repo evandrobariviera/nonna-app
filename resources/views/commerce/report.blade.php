@@ -114,6 +114,25 @@
         .in .dots i.on { background:var(--orange); box-shadow:0 0 0 3px rgba(238,121,25,.15); }
         .ready { margin-top:12px; }
 
+        /* Perguntamos ao ChatGPT */
+        .aibox { border:1px solid #d9c9ec; background:linear-gradient(160deg, #fff 0%, #f8f3fd 100%); position:relative; overflow:hidden; }
+        .aibox::before { content:''; position:absolute; left:0; top:0; bottom:0; width:5px; background:linear-gradient(180deg, var(--purple), var(--purple2)); }
+        .aibox h2 { font-size:19px; line-height:1.25; margin-bottom:6px; }
+        .chat { display:flex; flex-direction:column; gap:8px; margin:14px 0 10px; }
+        .bubble { max-width:86%; padding:10px 13px; border-radius:16px; font-size:14px; }
+        .bubble.me { align-self:flex-end; background:var(--purple); color:#fff; border-bottom-right-radius:4px; }
+        .bubble.bot { align-self:flex-start; background:#fff; border:1px solid var(--line); color:var(--muted); border-bottom-left-radius:4px; display:flex; align-items:center; gap:8px; }
+        .bubble.bot em { font-style:normal; font-size:12px; }
+        .typing { display:inline-flex; gap:3px; }
+        .typing i { width:6px; height:6px; border-radius:50%; background:#b9a8cf; animation:blink 1.2s infinite ease-in-out; }
+        .typing i:nth-child(2) { animation-delay:.2s; } .typing i:nth-child(3) { animation-delay:.4s; }
+        @keyframes blink { 0%,80%,100% { opacity:.3; transform:translateY(0) } 40% { opacity:1; transform:translateY(-2px) } }
+        .muted-sm { margin:0; font-size:12px; color:var(--muted); }
+        .aicount { margin-top:12px; }
+        .aicount p { margin:8px 0 0; font-size:14px; }
+        .dots.ai i { width:22px; height:22px; border-radius:7px; }
+        .in .dots.ai i.on { background:var(--purple); box-shadow:0 0 0 3px rgba(100,59,142,.15); }
+
         .stars { position:relative; display:inline-block; font-size:22px; letter-spacing:2px; line-height:1; color:#e5e0ec; }
         .stars i { position:absolute; left:0; top:0; overflow:hidden; white-space:nowrap; color:#f5b301; font-style:normal; width:0; transition:width 1.2s ease; }
         .ok { display:flex; gap:8px; align-items:flex-start; font-size:14px; padding:4px 0; }
@@ -139,7 +158,7 @@
         @media (prefers-reduced-motion: reduce) {
             .reveal { opacity:1; transform:none; transition:none; }
             .fill, .ring .val, .stars i, .dots i { transition:none; }
-            .boost .arrow { animation:none; }
+            .boost .arrow, .typing i { animation:none; }
         }
     </style>
 </head>
@@ -262,6 +281,43 @@
                     Campanhas no Google e no Instagram com a medição instalada desde o primeiro dia: você sabe quanto custou cada cliente.</div>
             @endif
         </div>
+
+        {{-- Perguntamos ao ChatGPT (etapa 4): resultado da rodada de IA do segmento e cidade. --}}
+        @if($ai = $r['aiBlock'])
+            <div class="card aibox reveal">
+                <p class="kicker" style="color:var(--purple)">Inteligência artificial</p>
+                <h2>
+                    @if($ai['case'] === 'none') O ChatGPT não indica você
+                    @elseif($ai['case'] === 'low') O ChatGPT quase não indica você
+                    @else O ChatGPT indica você @endif
+                </h2>
+                <p class="lead">Cada vez mais gente pergunta à inteligência artificial antes de escolher. Nós perguntamos:</p>
+                <div class="chat">
+                    <div class="bubble me">{{ $ai['question'] }}</div>
+                    <div class="bubble bot"><span class="typing"><i></i><i></i><i></i></span> <em>ChatGPT, com busca na internet</em></div>
+                </div>
+                <p class="muted-sm">Fizemos {{ $ai['questions'] === 1 ? 'essa pergunta' : 'essa e outras ' . ($ai['questions'] - 1) . ' perguntas parecidas' }}, {{ $ai['repetitions'] }} {{ $ai['repetitions'] === 1 ? 'vez' : 'vezes cada' }}: {{ $ai['answers'] }} respostas.</p>
+                <div class="aicount">
+                    <div class="dots ai" aria-hidden="true">
+                        @for($i = 0; $i < $ai['answers']; $i++)<i class="{{ $i < $ai['mentions'] ? 'on' : '' }}" style="transition-delay:{{ $i * 110 }}ms"></i>@endfor
+                    </div>
+                    <p>
+                        @if($ai['mentions'] === 0)
+                            <b>Você não apareceu em nenhuma das {{ $ai['answers'] }} respostas.</b>
+                        @else
+                            <b>Você apareceu em {{ $ai['mentions'] }} de {{ $ai['answers'] }} respostas.</b>
+                        @endif
+                        @if($ai['best'] > $ai['mentions']) A empresa mais lembrada apareceu em {{ $ai['best'] }}. @endif
+                    </p>
+                </div>
+                @if($ai['case'] !== 'good')
+                    <div class="fix" style="margin-top:12px"><span class="tag nos">A gente resolve para você</span><br>
+                        A IA indica quem tem perfil completo no Google, boas avaliações e um site que explica bem o que você faz. É o que a gente arruma para você começar a aparecer.</div>
+                @else
+                    <p class="hint">Ótimo sinal: quem pergunta à IA já chega até você. Vale manter o perfil e as avaliações em dia para continuar assim.</p>
+                @endif
+            </div>
+        @endif
 
         @if($r['potential'])
             <div class="card boost reveal">

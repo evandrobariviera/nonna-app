@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Raio-x mostra o que o ChatGPT responde",
+            "summary": "Quando o segmento e a cidade têm rodada de IA, o raio-x ganha o bloco Perguntamos ao ChatGPT: a pergunta, em quantas respostas a empresa apareceu e quantas a mais lembrada teve.",
+            "kind": "melhoria",
+            "area": "Comercial"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Prospecção — encontrar empresas por cidade e segmento",
+            "category": "Comercial",
+            "slug": "prospeccao-varredura",
+            "body_file": "ajuda-prospeccao.html"
+        }
+    ]
+}
