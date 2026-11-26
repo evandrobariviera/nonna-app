@@ -205,6 +205,20 @@ class CommerceProspectingController extends Controller
         return back()->with('success', "{$places->count()} empresa(s) na fila de coleta. Cada uma leva até 1 minuto (site e velocidade no celular). Atualize a página daqui a pouco.");
     }
 
+    /** Gera o link do raio-x público (etapa 5). Precisa de nota: o raio-x é a nota explicada. */
+    public function generateReport(CommercePlace $place): RedirectResponse
+    {
+        if ($place->score === null) {
+            return back()->with('error', 'Colete os dados e a nota antes de gerar o raio-x.');
+        }
+        if (in_array($place->status, ['opted_out', 'discarded'], true)) {
+            return back()->with('error', $place->status === 'opted_out' ? 'Essa empresa pediu para não receber mensagens.' : 'Essa empresa está descartada.');
+        }
+        $place->ensureReport();
+
+        return back()->with('success', 'Raio-x pronto. Use "Ver raio-x" para conferir e "Copiar link" para mandar.');
+    }
+
     public function collectPlace(Request $request, CommercePlace $place): RedirectResponse
     {
         if (!GooglePlaces::forOrganization($place->organization_id)->configured()) {

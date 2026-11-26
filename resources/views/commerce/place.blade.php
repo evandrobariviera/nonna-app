@@ -47,10 +47,34 @@
             @if($g && $g['maps_url'])<a href="{{ $g['maps_url'] }}" target="_blank" rel="noopener" class="btn btn-sm">Ver no Maps</a>@endif
             @if($g && $g['website'])<a href="{{ $g['website'] }}" target="_blank" rel="noopener" class="btn btn-sm">Abrir site</a>@endif
             <form method="POST" action="{{ route('commerce.places.collect', $place) }}">@csrf
-                <button type="submit" class="btn btn-sm btn-primary">{{ $place->collected_at ? 'Atualizar dados' : 'Coletar e dar nota' }}</button>
+                <button type="submit" class="btn btn-sm {{ $place->score === null ? 'btn-primary' : '' }}">{{ $place->collected_at ? 'Atualizar dados' : 'Coletar e dar nota' }}</button>
             </form>
+            {{-- Raio-x público (etapa 5): página que a empresa recebe pelo link. --}}
+            @if($place->report_token)
+                <a href="{{ $place->reportUrl() }}" target="_blank" rel="noopener" class="btn btn-sm btn-primary"><x-icon name="file-text" size="14" /> Ver raio-x</a>
+                <button type="button" class="btn btn-sm" x-data="{ ok: false }"
+                        @click="navigator.clipboard.writeText(@js($place->reportUrl())).then(() => { ok = true; setTimeout(() => ok = false, 2000) })">
+                    <x-icon name="copy" size="14" /> <span x-text="ok ? 'Copiado!' : 'Copiar link'">Copiar link</span>
+                </button>
+            @elseif($place->score !== null && !in_array($place->status, ['opted_out', 'discarded'], true))
+                <form method="POST" action="{{ route('commerce.places.report', $place) }}">@csrf
+                    <button type="submit" class="btn btn-sm btn-primary" title="Cria a página que a empresa recebe pelo link: a nota explicada, comparada com a cidade"><x-icon name="file-text" size="14" /> Gerar raio-x</button>
+                </form>
+            @endif
         </div>
     </div>
+    @if($place->report_token)
+        <p class="text-xs -mt-3 mb-5" style="color:var(--muted2)">
+            Raio-x gerado {{ $place->report_at?->format('d/m H:i') }} ·
+            @if($place->report_views)
+                a empresa abriu <b style="color:var(--text)">{{ $place->report_views }} {{ $place->report_views === 1 ? 'vez' : 'vezes' }}</b>, a última em {{ $place->report_last_view_at?->format('d/m H:i') }}
+            @else
+                a empresa ainda não abriu
+            @endif
+            @if($place->opted_out_at) · <span style="color:var(--red)">pediu para não receber mensagens em {{ $place->opted_out_at->format('d/m H:i') }}</span>@endif
+            · o link mostra sempre os dados mais recentes da empresa.
+        </p>
+    @endif
 
     <div class="grid gap-5" style="grid-template-columns:repeat(auto-fit, minmax(320px, 1fr))">
         {{-- Nota --}}
@@ -209,6 +233,9 @@
         <section class="card p-5 min-w-0">
             <h2 class="card-title">Histórico</h2>
             <ul class="mt-3 flex flex-col gap-2 text-sm">
+                @if($place->opted_out_at)<li style="color:var(--red)">Pediu para não receber mensagens (pelo raio-x) <span class="text-xs block" style="color:var(--muted)">{{ $place->opted_out_at->format('d/m/Y H:i') }}</span></li>@endif
+                @if($place->report_last_view_at)<li>Empresa abriu o raio-x ({{ $place->report_views }}x) <span class="text-xs block" style="color:var(--muted)">última em {{ $place->report_last_view_at->format('d/m/Y H:i') }}</span></li>@endif
+                @if($place->report_at)<li>Raio-x gerado <span class="text-xs block" style="color:var(--muted)">{{ $place->report_at->format('d/m/Y H:i') }}</span></li>@endif
                 @if($place->collected_at)<li>Dados e site coletados <span class="text-xs block" style="color:var(--muted)">{{ $place->collected_at->format('d/m/Y H:i') }}</span></li>@endif
                 @foreach($place->scans->sortByDesc('created_at') as $s)
                     <li>Mapeada na varredura "{{ $s->label() }}" <span class="text-xs block" style="color:var(--muted)">{{ $s->created_at->format('d/m/Y H:i') }}</span></li>

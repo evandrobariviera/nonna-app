@@ -1,0 +1,19 @@
+{
+    "novidades": [
+        {
+            "title": "Raio-x da prospecção: a página que a empresa recebe",
+            "summary": "Na página da empresa, Gerar raio-x cria um link para mandar ao dono: a nota de 0 a 100, a posição na cidade (sem o nome das concorrentes), os 3 pontos que mais pesaram e o que já está bom. Dá para ver se ele abriu.",
+            "kind": "novidade",
+            "area": "Comercial",
+            "destaque": true
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Prospecção — encontrar empresas por cidade e segmento",
+            "category": "Comercial",
+            "slug": "prospeccao-varredura",
+            "body_file": "ajuda-prospeccao.html"
+        }
+    ]
+}

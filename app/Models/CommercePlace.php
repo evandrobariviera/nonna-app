@@ -24,6 +24,7 @@ class CommercePlace extends Model
         'last_seen_at', 'place_id_checked_at', 'site_signals', 'collected_at', 'collect_error',
         'ads_meta', 'ads_google', 'ads_checked_by', 'ads_checked_at',
         'google_data', 'google_data_at', // dados do Google guardados (decisão 25/11/2026, ver migration)
+        'report_token', 'report_at', 'report_views', 'report_last_view_at', 'opted_out_at', // raio-x público (etapa 5)
     ];
 
     protected $casts = [
@@ -35,7 +36,33 @@ class CommercePlace extends Model
         'ads_checked_at'      => 'datetime',
         'google_data'         => 'array',
         'google_data_at'      => 'datetime',
+        'report_at'           => 'datetime',
+        'report_last_view_at' => 'datetime',
+        'opted_out_at'        => 'datetime',
+        'report_views'        => 'integer',
     ];
+
+    /**
+     * Cria o link do raio-x (uma vez; o mesmo link continua valendo e mostra sempre os dados
+     * mais recentes). Empresa Mapeada/Com nota passa para "Raio-x pronto".
+     */
+    public function ensureReport(): void
+    {
+        if ($this->report_token) {
+            return;
+        }
+        $this->update([
+            // 32 hex sem hífen (ver memória whatsapp-uuid-pix-link-bug).
+            'report_token' => \Illuminate\Support\Str::uuid()->getHex()->toString(),
+            'report_at'    => now(),
+            'status'       => in_array($this->status, ['mapped', 'scored'], true) ? 'report' : $this->status,
+        ]);
+    }
+
+    public function reportUrl(): ?string
+    {
+        return $this->report_token ? route('commerce.report.show', $this->report_token) : null;
+    }
 
     public static array $statuses = [
         'mapped'    => ['label' => 'Mapeada',          'color' => 'muted'],

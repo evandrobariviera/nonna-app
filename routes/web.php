@@ -555,6 +555,7 @@ Route::middleware(['auth', 'verified', 'not-client'])->group(function () {
     Route::get('/prospeccao', [\App\Http\Controllers\CommerceProspectingController::class, 'index'])->name('commerce.prospecting');
     Route::post('/prospeccao/varreduras', [\App\Http\Controllers\CommerceProspectingController::class, 'storeScan'])->name('commerce.scans.store');
     Route::post('/prospeccao/empresas/coletar', [\App\Http\Controllers\CommerceProspectingController::class, 'collectSelected'])->name('commerce.places.collect-selected');
+    Route::post('/prospeccao/empresas/{place}/raio-x', [\App\Http\Controllers\CommerceProspectingController::class, 'generateReport'])->name('commerce.places.report');
     Route::post('/prospeccao/empresas/{place}/descartar', [\App\Http\Controllers\CommerceProspectingController::class, 'discard'])->name('commerce.places.discard');
     Route::get('/prospeccao/empresas/{place}', [\App\Http\Controllers\CommerceProspectingController::class, 'showPlace'])->name('commerce.places.show');
     Route::post('/prospeccao/empresas/{place}/coletar', [\App\Http\Controllers\CommerceProspectingController::class, 'collectPlace'])->name('commerce.places.collect');
@@ -1358,6 +1359,14 @@ Route::post('/aprovar/{token}', [ApprovalController::class, 'submit'])
 // Link do lembrete único — abre a Central de Aprovações do contato (login mágico).
 Route::get('/aprovar/{token}/central', [ApprovalController::class, 'central'])
     ->name('approval.central');
+
+// ── Raio-x da prospecção (Central de Comércio) — página pública do link da abordagem ──
+Route::get('/rx/{token}', [\App\Http\Controllers\CommerceReportController::class, 'show'])
+    ->middleware('throttle:30,1')
+    ->name('commerce.report.show');
+Route::post('/rx/{token}/sair', [\App\Http\Controllers\CommerceReportController::class, 'optOut'])
+    ->middleware('throttle:10,1')
+    ->name('commerce.report.opt-out');
 
 // ── Documento do planejamento/campanha/projeto pro cliente (sem senha — link tokenizado) ──
 Route::get('/documento/{token}', [\App\Http\Controllers\PublicItemController::class, 'show'])
