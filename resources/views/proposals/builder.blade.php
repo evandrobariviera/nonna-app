@@ -161,10 +161,22 @@
                                     <span class="badge" :class="item(l.catalog_item_id)?.kind === 'monthly' ? 'badge-blue' : 'badge-orange'" style="font-size:9px" x-text="item(l.catalog_item_id)?.kind === 'monthly' ? 'mensal' : 'único'"></span>
                                     <span x-show="item(l.catalog_item_id)?.value_status === 'suggested'" class="badge badge-yellow" style="font-size:9px">sugerido</span>
                                 </p>
-                                <p class="text-xs" style="color:var(--muted)">
-                                    <span x-text="item(l.catalog_item_id)?.description || ''"></span>
+                                <p class="text-xs" style="color:var(--muted)" x-show="!l.editDesc">
+                                    <span x-text="lineDesc(l)"></span>
+                                    <span x-show="l.description" class="badge badge-purple" style="font-size:9px">ajustada</span>
+                                    <button type="button" class="font-semibold" style="color:var(--purple)" @click="l.editDesc = true; if (!l.description) l.description = item(l.catalog_item_id)?.description || ''; $nextTick(() => $el.closest('div').querySelector('textarea')?.focus())"
+                                            x-text="(lineDesc(l) ? ' · ' : '') + 'ajustar descrição'"></button>
                                     <span x-show="blockReason(item(l.catalog_item_id))" style="color:var(--red)" x-text="' · ' + blockReason(item(l.catalog_item_id))"></span>
                                 </p>
+                                <div x-show="l.editDesc" x-cloak class="mt-1">
+                                    <textarea x-model="l.description" rows="2" maxlength="1000" class="field w-full text-xs" :aria-label="'Descrição de ' + item(l.catalog_item_id)?.name + ' nesta proposta'"
+                                              placeholder="Como este item aparece pro cliente nesta proposta"></textarea>
+                                    <p class="text-xs mt-0.5" style="color:var(--muted)">
+                                        Só nesta proposta; o catálogo não muda.
+                                        <button type="button" class="font-semibold" style="color:var(--purple)" @click="l.editDesc = false">Pronto</button>
+                                        · <button type="button" style="color:var(--muted2)" @click="l.description = null; l.editDesc = false">voltar à do catálogo</button>
+                                    </p>
+                                </div>
                             </div>
                             <div class="flex items-center" style="border:1px solid var(--border); border-radius:7px; overflow:hidden">
                                 <button type="button" class="px-2 py-1" style="background:var(--s2)" @click="l.quantity = Math.max(1, l.quantity - 1); changed()" :disabled="l.quantity <= 1" aria-label="Menos">−</button>
@@ -247,6 +259,13 @@
                             <template x-if="!(calc?.excess > 0)"><span>Dentro do teto do nível (<span x-text="brl(pkg()?.rules.ad_budget_cap)"></span>). Nada a cobrar a mais.</span></template>
                         </p>
                     </div>
+                </div>
+
+                {{-- Observações (aparecem pro cliente na página da proposta) --}}
+                <div class="card card-body">
+                    <label for="pb-notes" class="text-sm font-bold" style="color:var(--text)">Observações</label>
+                    <p class="text-xs mb-2" style="color:var(--muted)">Aparecem pro cliente, no fim da proposta. Ex.: prazo de entrega, o que fica por conta dele, validade dos valores.</p>
+                    <textarea id="pb-notes" x-model="s.notes" rows="4" maxlength="5000" class="field w-full" placeholder="Escreva aqui o que o cliente precisa saber além dos valores"></textarea>
                 </div>
 
                 {{-- Condições --}}
@@ -366,6 +385,7 @@
                 lines() { return [...new Set(this.cfg.items.map(i => i.line))]; },
                 hasLine(id) { return this.s.lines.some(l => l.catalog_item_id === id); },
                 group() { return this.s.group; },
+                lineDesc(l) { return l.description || this.item(l.catalog_item_id)?.description || ''; },
                 unitPrice(l) { const it = this.item(l.catalog_item_id); return it?.starting && l.unit_price !== '' && l.unit_price != null ? +l.unit_price : (it?.price || 0); },
                 startGroups() {
                     const closed = this.cfg.packages.filter(p => p.type === 'closed'), open = this.cfg.packages.filter(p => p.type !== 'closed');
@@ -403,7 +423,8 @@
                     return {
                         package_id: this.s.package_id || null, ad_budget: this.s.ad_budget || 0, discount: this.s.discount || 0,
                         installments: this.s.installments || 1, group: this.s.group,
-                        lines: this.s.lines.map(l => ({catalog_item_id: l.catalog_item_id, quantity: l.quantity, unit_price: this.unitPrice(l)})),
+                        notes: this.s.notes || '',
+                        lines: this.s.lines.map(l => ({catalog_item_id: l.catalog_item_id, quantity: l.quantity, unit_price: this.unitPrice(l), description: l.description || null})),
                     };
                 },
                 async post(url, body, method = 'POST') {

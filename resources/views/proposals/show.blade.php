@@ -75,7 +75,8 @@
                             @foreach($proposal->items as $item)
                                 <tr>
                                     <td><span class="font-semibold" style="color:var(--text)">{{ $item->name }}</span>
-                                        <span class="badge {{ $item->kind === 'monthly' ? 'badge-blue' : 'badge-orange' }}" style="font-size:9px">{{ $item->kind === 'monthly' ? 'mensal' : 'único' }}</span></td>
+                                        <span class="badge {{ $item->kind === 'monthly' ? 'badge-blue' : 'badge-orange' }}" style="font-size:9px">{{ $item->kind === 'monthly' ? 'mensal' : 'único' }}</span>
+                                        @if($item->description)<p class="text-xs mt-0.5" style="color:var(--muted2); white-space:pre-line">{{ $item->description }} <span class="badge badge-purple" style="font-size:9px">descrição ajustada</span></p>@endif</td>
                                     <td class="num">{{ $item->quantity }}</td>
                                     <td class="num" style="white-space:nowrap">{{ $brl($item->unit_price) }}
                                         @if((float) $item->unit_price !== (float) $item->list_price)<span class="text-xs" style="color:var(--muted)">(tabela {{ $brl($item->list_price) }})</span>@endif</td>
@@ -101,6 +102,13 @@
                             </div>
                         @endforeach
                     </div>
+                </div>
+            @endif
+
+            @if($proposal->notes)
+                <div class="card card-body">
+                    <p class="text-xs font-semibold uppercase mb-2" style="color:var(--muted); letter-spacing:.06em">Observações (o cliente vê)</p>
+                    <p class="text-sm" style="color:var(--text); white-space:pre-line">{{ $proposal->notes }}</p>
                 </div>
             @endif
 

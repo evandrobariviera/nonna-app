@@ -18,7 +18,7 @@ use Illuminate\Validation\ValidationException;
  * recusar, e registrar os produtos no cliente quando a oportunidade é ganha.
  *
  * "state" (o que a tela manda):
- *  package_id, lines [{catalog_item_id, quantity, unit_price?}], ad_budget, discount, installments,
+ *  package_id, lines [{catalog_item_id, quantity, unit_price?, description?}], ad_budget, discount, installments, notes,
  *  group {on, name, mode: sum|fixed, monthly, one_time}
  */
 class ProposalService
@@ -64,6 +64,8 @@ class ProposalService
                 'quantity'   => max(1, (int) ($row['quantity'] ?? 1)),
                 'rules'      => $item->rules ?? [],
                 'starting'   => $item->price_is_starting,
+                // Descrição ajustada só nesta proposta; igual à do catálogo (ou vazia) = null
+                'description' => $this->customDescription($row['description'] ?? null, $item->description),
             ];
         }
 
@@ -82,6 +84,7 @@ class ProposalService
                 'monthly'  => (float) ($group['monthly'] ?? 0),
                 'one_time' => (float) ($group['one_time'] ?? 0),
             ],
+            'notes'        => mb_substr(trim((string) ($state['notes'] ?? '')), 0, 5000) ?: null,
         ];
 
         return ['input' => $input, 'errors' => $errors];
@@ -152,6 +155,7 @@ class ProposalService
                 'one_time_total'   => $calc['one_time'],
                 'contract_total'   => $calc['total'],
                 'calculation'      => ['calc' => $calc, 'upgrade' => $p['upgrade'], 'warnings' => $p['warnings']],
+                'notes'            => $in['notes'],
             ]);
             if (!$proposal->exists) {
                 $proposal->version = (int) Proposal::where('opportunity_id', $opportunity->id)->max('version') + 1;
@@ -164,6 +168,7 @@ class ProposalService
                 $proposal->items()->create([
                     'catalog_item_id' => $l['id'],
                     'name'            => $l['name'],
+                    'description'     => $l['description'],
                     'kind'            => $l['kind'],
                     'quantity'        => $l['quantity'],
                     'list_price'      => $l['list_price'],
@@ -281,7 +286,7 @@ class ProposalService
             ]);
             $copy->save();
             foreach ($proposal->items as $item) {
-                $copy->items()->create($item->only(['catalog_item_id', 'name', 'kind', 'quantity', 'list_price', 'unit_price', 'subtotal', 'rules', 'sort_order']));
+                $copy->items()->create($item->only(['catalog_item_id', 'name', 'description', 'kind', 'quantity', 'list_price', 'unit_price', 'subtotal', 'rules', 'sort_order']));
             }
             return $copy;
         });
@@ -341,6 +346,13 @@ class ProposalService
         }
 
         return count($rows);
+    }
+
+    private function customDescription(mixed $text, ?string $catalog): ?string
+    {
+        $text = trim((string) $text);
+
+        return $text === '' || $text === trim((string) $catalog) ? null : mb_substr($text, 0, 1000);
     }
 
     public function packageInput(CatalogItem $pkg): array

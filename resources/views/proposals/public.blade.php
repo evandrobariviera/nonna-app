@@ -112,6 +112,7 @@
         .row.green span:last-child { color:var(--green); }
         .row.total { border-top:2px solid var(--text); margin-top:6px; padding-top:12px; font-size:16px; font-weight:800; }
         .row.total span:last-child { color:var(--purple); font-size:18px; }
+        .notes { margin-top:10px; font-size:14.5px; line-height:1.6; }
         .aside { margin-top:14px; background:#faf8fc; border-radius:12px; padding:11px 13px; font-size:13px; color:#4a4453; }
 
         .steps { counter-reset:s; list-style:none; padding:0; margin:12px 0 0; }
@@ -235,7 +236,7 @@
                         <div class="item">
                             <div>
                                 <div class="name">@if($item->quantity > 1)<span class="qty">{{ $item->quantity }}×</span>@endif{{ $item->name }}</div>
-                                @if($d = $descriptions[$item->catalog_item_id] ?? null)<p>{{ $d }}</p>@endif
+                                @if($d = $item->description ?: ($descriptions[$item->catalog_item_id] ?? null))<p>{!! nl2br(e($d)) !!}</p>@endif
                             </div>
                             <div class="val">
                                 @unless($groupFixed)
@@ -288,6 +289,14 @@
             <p class="aside"><b>Verba de anúncios:</b> {{ $brl($proposal->ad_budget) }}/mês, paga por você direto ao Meta e ao Google. Ela não entra nos valores acima.</p>
         @endif
     </section>
+
+    @if($proposal->notes)
+        <section class="card">
+            <p class="kicker">Observações</p>
+            <h2>Bom saber</h2>
+            <p class="lead notes">{!! nl2br(e($proposal->notes)) !!}</p>
+        </section>
+    @endif
 
     @if($isOpen)
         <section class="card">

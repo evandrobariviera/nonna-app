@@ -17,6 +17,7 @@ class ProposalItem extends Model
         'proposal_id',
         'catalog_item_id',
         'name',
+        'description',
         'kind',
         'quantity',
         'list_price',

@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Proposta com observações e descrição ajustável",
+            "summary": "Na montagem da proposta agora tem o campo Observações (prazo, validade, o que fica com o cliente) e, em cada item, o ajustar descrição, que muda o texto só naquela proposta. Os dois aparecem na página e no PDF do cliente.",
+            "kind": "melhoria",
+            "area": "Comercial"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Propostas e catálogo de produtos — como montar um orçamento",
+            "category": "Comercial",
+            "slug": "propostas",
+            "body_file": "ajuda-propostas.html"
+        }
+    ]
+}
