@@ -136,6 +136,27 @@
                 </div>
             @endif
 
+            {{-- Página do cliente: o link que vai pro cliente e que também vira PDF --}}
+            <div class="card card-body flex flex-col gap-2 text-sm" x-data="{ copied: false }">
+                <p class="text-xs font-semibold uppercase" style="color:var(--muted); letter-spacing:.06em">Página do cliente</p>
+                <a href="{{ $publicUrl }}" target="_blank" rel="noopener" class="btn btn-sm w-full"><x-icon name="external-link" size="13" /> {{ $proposal->isPublic() ? 'Abrir página / baixar PDF' : 'Ver prévia' }}</a>
+                @if($proposal->isPublic())
+                    <button type="button" class="btn btn-sm w-full"
+                            @click="navigator.clipboard.writeText(@js($publicUrl)).then(() => { copied = true; setTimeout(() => copied = false, 2000) })">
+                        <x-icon name="copy" size="13" /> <span x-text="copied ? 'Link copiado!' : 'Copiar link pro cliente'"></span>
+                    </button>
+                    <p class="text-xs" style="color:var(--muted)">
+                        @if($proposal->public_views)
+                            O cliente abriu {{ $proposal->public_views }} {{ $proposal->public_views === 1 ? 'vez' : 'vezes' }} · última em {{ $proposal->public_last_view_at?->format('d/m/Y H:i') }}
+                        @else
+                            O cliente ainda não abriu o link.
+                        @endif
+                    </p>
+                @else
+                    <p class="text-xs" style="color:var(--muted)">O link só abre pro cliente depois de marcar como enviada (assim os valores não mudam depois que ele viu).</p>
+                @endif
+            </div>
+
             <div class="card card-body flex flex-col gap-2">
                 @if($proposal->isEditable())
                     <a href="{{ route('proposals.edit', $proposal) }}" class="btn btn-sm"><x-icon name="pencil" size="13" /> Editar</a>

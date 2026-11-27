@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Proposta com página pro cliente e PDF",
+            "summary": "Toda proposta agora tem uma página bonita pro cliente, com a marca da Nonna e botão de WhatsApp. Marque como enviada, clique em Copiar link pro cliente ou baixe o PDF. Dá até para ver se o cliente abriu.",
+            "kind": "novidade",
+            "area": "Comercial"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Propostas e catálogo de produtos — como montar um orçamento",
+            "category": "Comercial",
+            "slug": "propostas",
+            "body_file": "ajuda-propostas.html"
+        }
+    ]
+}

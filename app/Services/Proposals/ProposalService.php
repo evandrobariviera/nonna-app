@@ -272,7 +272,7 @@ class ProposalService
     public function newVersion(Proposal $proposal, ?int $userId): Proposal
     {
         return DB::transaction(function () use ($proposal, $userId) {
-            $copy = $proposal->replicate(['status', 'sent_at', 'accepted_at', 'rejected_at', 'released_percent', 'released_by', 'released_at', 'release_note']);
+            $copy = $proposal->replicate(['status', 'sent_at', 'accepted_at', 'rejected_at', 'released_percent', 'released_by', 'released_at', 'release_note', 'public_token', 'public_views', 'public_last_view_at']);
             $copy->fill([
                 'parent_id'  => $proposal->id,
                 'status'     => 'draft',

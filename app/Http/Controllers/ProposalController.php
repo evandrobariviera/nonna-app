@@ -59,7 +59,9 @@ class ProposalController extends Controller
     {
         $proposal->load('items', 'opportunity.contact', 'createdBy', 'releasedBy', 'parent');
 
-        return view('proposals.show', compact('proposal'));
+        $publicUrl = $proposal->publicUrl();
+
+        return view('proposals.show', compact('proposal', 'publicUrl'));
     }
 
     public function preview(Request $request): JsonResponse

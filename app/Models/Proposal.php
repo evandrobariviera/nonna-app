@@ -48,6 +48,9 @@ class Proposal extends Model
         'accepted_at',
         'rejected_at',
         'created_by',
+        'public_token',
+        'public_views',
+        'public_last_view_at',
     ];
 
     protected $casts = [
@@ -68,6 +71,8 @@ class Proposal extends Model
         'sent_at'          => 'datetime',
         'accepted_at'      => 'datetime',
         'rejected_at'      => 'datetime',
+        'public_views'     => 'integer',
+        'public_last_view_at' => 'datetime',
     ];
 
     public static array $statuses = [
@@ -138,6 +143,30 @@ class Proposal extends Model
     {
         return $this->package_snapshot['name']
             ?? ($this->group_on && $this->group_name ? $this->group_name : 'Itens avulsos');
+    }
+
+    /** Código do link da página do cliente (criado uma vez; 32 hex sem hífen — ver whatsapp-uuid-pix-link-bug). */
+    public function ensurePublicToken(): string
+    {
+        if (!$this->public_token) {
+            // Sem mexer no updated_at: a lista de propostas ordena por ele
+            $this->timestamps = false;
+            $this->forceFill(['public_token' => \Illuminate\Support\Str::uuid()->getHex()->toString()])->saveQuietly();
+            $this->timestamps = true;
+        }
+
+        return $this->public_token;
+    }
+
+    public function publicUrl(): string
+    {
+        return route('proposals.public', $this->ensurePublicToken());
+    }
+
+    /** Rascunho e "aguardando liberação" ainda mudam: o link só abre pro cliente depois de enviada. */
+    public function isPublic(): bool
+    {
+        return in_array($this->status, ['sent', 'accepted', 'rejected'], true);
     }
 
     public function displayTitle(): string

@@ -1374,6 +1374,14 @@ Route::post('/rx/{token}/sair', [\App\Http\Controllers\CommerceReportController:
     ->middleware('throttle:10,1')
     ->name('commerce.report.opt-out');
 
+// ── Proposta comercial pro cliente (Central de Comércio) — link tokenizado, sem senha ──
+Route::get('/proposta/{token}', [\App\Http\Controllers\PublicProposalController::class, 'show'])
+    ->middleware('throttle:60,1')
+    ->name('proposals.public');
+Route::get('/proposta/{token}/conversar', [\App\Http\Controllers\PublicProposalController::class, 'talk'])
+    ->middleware('throttle:10,1')
+    ->name('proposals.public.talk');
+
 // ── Documento do planejamento/campanha/projeto pro cliente (sem senha — link tokenizado) ──
 Route::get('/documento/{token}', [\App\Http\Controllers\PublicItemController::class, 'show'])
     ->middleware('throttle:60,1')
