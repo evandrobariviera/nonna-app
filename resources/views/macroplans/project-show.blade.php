@@ -1330,8 +1330,14 @@
             @csrf
             <x-rich-editor name="comment_body" min-height="80px" :upload-url="route('projects.editor-image.store', $project)" />
             @error('comment_body')<p class="text-xs" style="color:var(--red)">{{ $message }}</p>@enderror
-            <div class="flex items-center justify-between gap-2">
-                <span class="text-xs" style="color:var(--muted2)">A equipe é avisada.</span>
+            <div class="flex items-start justify-between gap-2">
+                <span class="text-xs" style="color:var(--muted2)">
+                    @if(($commentRecipients ?? collect())->isNotEmpty())
+                        Avisa: {{ $commentRecipients->join(', ', ' e ') }}.
+                    @else
+                        Ninguém pra avisar ainda — monte a equipe no card Equipe.
+                    @endif
+                </span>
                 <label class="flex items-center gap-2 text-xs ml-auto" style="color:var(--muted)">
                     <input type="checkbox" name="visible_to_client" value="1">
                     Visível pro cliente

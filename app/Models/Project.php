@@ -230,6 +230,27 @@ class Project extends Model
     }
 
     /**
+     * Quem é avisado no sino quando alguém comenta neste item (ProjectCommentController) — e a
+     * frase "Avisa: …" embaixo do campo. Equipe do item + responsável criativo do cliente + quem
+     * já comentou. Evandro, 27/11: a equipe voltou a ser avisada (de 06/11 a 27/11 só ia pra quem
+     * já comentou ou foi citado, e a equipe não ficava sabendo). Repetições não abertas viram um
+     * aviso só (NotificationService), o que segura o volume.
+     */
+    public function commentRecipientIds(): \Illuminate\Support\Collection
+    {
+        $leadId = $this->client?->creative_lead_id ?? $this->macroPlan?->client?->creative_lead_id;
+
+        return \Illuminate\Support\Facades\DB::connection('pgsql')->table('project_members')
+            ->where('project_id', $this->id)->pluck('user_id')
+            // reorder(): comments() vem com ->latest(); DISTINCT + ORDER BY fora do SELECT quebra no Postgres.
+            ->merge($this->comments()->reorder()->whereNotNull('user_id')->distinct()->pluck('user_id'))
+            ->push($leadId)
+            ->filter()
+            ->unique()
+            ->values();
+    }
+
+    /**
      * Reuniões de discussão (Alinhamento de Projeto) que citaram este item na pauta — é o
      * que conta pro "X de Y já com reunião de discussão". Qualquer reunião relacionada
      * (inclusive via tarefa) é Meeting::relatedToProject.

@@ -1,0 +1,25 @@
+{
+  "novidades": [
+    {
+      "title": "Comentário em campanha e projeto volta a avisar a equipe",
+      "summary": "Comentou numa campanha ou projeto, toda a equipe do item recebe o aviso em Notificações → Conversas, junto com o responsável do cliente e quem já comentou. Embaixo do campo aparece \"Avisa: …\" com os nomes.",
+      "body": "<p>Desde 06/11, o comentário em campanha ou projeto avisava só o responsável do cliente, quem já tinha comentado e quem fosse citado com @Nome. Na prática, a equipe do item muitas vezes não ficava sabendo: em vários comentários, ninguém foi avisado. Agora o aviso vai para a <strong>equipe da campanha/projeto</strong>, para o <strong>responsável do cliente</strong> e para <strong>quem já comentou</strong>, menos quem escreveu, igual à Discussão do planejamento. Embaixo do campo de comentário aparece <em>Avisa: …</em> com os nomes. Comentários seguidos que você ainda não abriu continuam virando um aviso só (<em>3×</em>).</p>",
+      "kind": "melhoria",
+      "area": "Notificações"
+    }
+  ],
+  "ajuda": [
+    {
+      "title": "Avisos do sino — quem recebe o quê",
+      "category": "Primeiros passos",
+      "slug": "avisos-do-sino-quem-recebe-o-que",
+      "body_file": "ajuda-avisos-do-sino.html"
+    },
+    {
+      "title": "Planejamento, campanhas e reunião de discussão — como funciona",
+      "category": "Planejamentos",
+      "slug": "planejamento-campanhas-e-reuniao-de-discussao-como-funciona",
+      "body_file": "ajuda-planejamento-discussao.html"
+    }
+  ]
+}

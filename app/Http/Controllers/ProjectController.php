@@ -193,6 +193,7 @@ class ProjectController extends Controller
         ), $this->chatDrawerData($project), [
             'relatedMeetings' => $this->relatedMeetings($project),
             'timeline'        => \App\Services\Projects\ProjectTimeline::for($project),
+            'commentRecipients' => User::whereIn('id', $project->commentRecipientIds())->orderBy('name')->pluck('name'),
         ]));
     }
 
@@ -259,6 +260,7 @@ class ProjectController extends Controller
         ), $this->chatDrawerData($project), [
             'relatedMeetings' => $this->relatedMeetings($project),
             'timeline'        => \App\Services\Projects\ProjectTimeline::for($project),
+            'commentRecipients' => User::whereIn('id', $project->commentRecipientIds())->orderBy('name')->pluck('name'),
         ]));
     }
 
