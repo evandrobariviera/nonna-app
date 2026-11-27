@@ -1,0 +1,18 @@
+{
+    "novidades": [
+        {
+            "title": "Proposta com texto de contexto",
+            "summary": "Na montagem da proposta, o campo Sobre esta proposta: conte pra quem é, o que vocês conversaram e o que ela contempla. Aparece pro cliente no topo da página e no PDF.",
+            "kind": "melhoria",
+            "area": "Comercial"
+        }
+    ],
+    "ajuda": [
+        {
+            "title": "Propostas e catálogo de produtos — como montar um orçamento",
+            "category": "Comercial",
+            "slug": "propostas",
+            "body_file": "ajuda-propostas.html"
+        }
+    ]
+}

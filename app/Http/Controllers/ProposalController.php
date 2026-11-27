@@ -84,6 +84,7 @@ class ProposalController extends Controller
             'title'                     => 'nullable|string|max:160',
             'state'                     => 'required|array',
             'state.notes'               => 'nullable|string|max:5000',
+            'state.context'             => 'nullable|string|max:5000',
             'state.lines.*.description' => 'nullable|string|max:1000',
             'target'                    => 'nullable|in:opportunity,contact,new_contact',
             'opportunity_id'            => 'exclude_unless:target,opportunity|required|uuid|exists:opportunities,id',
@@ -102,6 +103,7 @@ class ProposalController extends Controller
             'new.contact.source.required' => 'Informe de onde veio o contato.',
             'new.contact.email.email'   => 'O e-mail do contato não parece válido.',
             'state.notes.max'           => 'As observações passam de 5.000 letras.',
+            'state.context.max'         => 'O "Sobre esta proposta" passa de 5.000 letras.',
             'state.lines.*.description.max' => 'Uma descrição de item passa de 1.000 letras.',
         ]);
         if ($v->fails()) {
@@ -135,8 +137,8 @@ class ProposalController extends Controller
     public function update(Request $request, Proposal $proposal): JsonResponse
     {
         $v = Validator::make($request->all(), ['title' => 'nullable|string|max:160', 'state' => 'required|array',
-            'state.notes' => 'nullable|string|max:5000', 'state.lines.*.description' => 'nullable|string|max:1000'], [
-            'state.notes.max' => 'As observações passam de 5.000 letras.', 'state.lines.*.description.max' => 'Uma descrição de item passa de 1.000 letras.']);
+            'state.notes' => 'nullable|string|max:5000', 'state.context' => 'nullable|string|max:5000', 'state.lines.*.description' => 'nullable|string|max:1000'], [
+            'state.notes.max' => 'As observações passam de 5.000 letras.', 'state.context.max' => 'O "Sobre esta proposta" passa de 5.000 letras.', 'state.lines.*.description.max' => 'Uma descrição de item passa de 1.000 letras.']);
         if ($v->fails()) {
             return response()->json(['errors' => $v->errors()->all()], 422);
         }
@@ -234,6 +236,7 @@ class ProposalController extends Controller
             'discount'     => (float) ($proposal->discount_percent ?? 0),
             'installments' => $proposal->installments ?? 1,
             'notes'        => $proposal->notes ?? '',
+            'context'      => $proposal->context ?? '',
             'group'        => [
                 'on'       => (bool) $proposal->group_on,
                 'name'     => $proposal->group_name ?? '',

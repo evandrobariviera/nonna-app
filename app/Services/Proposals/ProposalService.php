@@ -18,7 +18,7 @@ use Illuminate\Validation\ValidationException;
  * recusar, e registrar os produtos no cliente quando a oportunidade é ganha.
  *
  * "state" (o que a tela manda):
- *  package_id, lines [{catalog_item_id, quantity, unit_price?, description?}], ad_budget, discount, installments, notes,
+ *  package_id, lines [{catalog_item_id, quantity, unit_price?, description?}], ad_budget, discount, installments, notes, context,
  *  group {on, name, mode: sum|fixed, monthly, one_time}
  */
 class ProposalService
@@ -85,6 +85,7 @@ class ProposalService
                 'one_time' => (float) ($group['one_time'] ?? 0),
             ],
             'notes'        => mb_substr(trim((string) ($state['notes'] ?? '')), 0, 5000) ?: null,
+            'context'      => mb_substr(trim((string) ($state['context'] ?? '')), 0, 5000) ?: null,
         ];
 
         return ['input' => $input, 'errors' => $errors];
@@ -156,6 +157,7 @@ class ProposalService
                 'contract_total'   => $calc['total'],
                 'calculation'      => ['calc' => $calc, 'upgrade' => $p['upgrade'], 'warnings' => $p['warnings']],
                 'notes'            => $in['notes'],
+                'context'          => $in['context'],
             ]);
             if (!$proposal->exists) {
                 $proposal->version = (int) Proposal::where('opportunity_id', $opportunity->id)->max('version') + 1;

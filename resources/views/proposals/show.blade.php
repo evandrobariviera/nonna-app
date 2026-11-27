@@ -43,6 +43,13 @@
 
     <div class="grid gap-5 items-start" style="grid-template-columns:minmax(0,1fr) minmax(0,340px)">
         <div class="flex flex-col gap-4 min-w-0">
+            @if($proposal->context)
+                <div class="card card-body">
+                    <p class="text-xs font-semibold uppercase mb-2" style="color:var(--muted); letter-spacing:.06em">Sobre esta proposta (o cliente vê)</p>
+                    <p class="text-sm" style="color:var(--text); white-space:pre-line">{{ $proposal->context }}</p>
+                </div>
+            @endif
+
             @if($snap)
                 <div class="card card-body">
                     <div class="flex justify-between gap-3">

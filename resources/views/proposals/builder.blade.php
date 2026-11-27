@@ -90,6 +90,11 @@
                 <label class="text-xs font-semibold" for="pb-title" style="color:var(--muted2)">Nome da proposta <span style="color:var(--muted)">(em branco = automático)</span></label>
                 <input id="pb-title" x-model="title" class="field w-full" maxlength="160" placeholder="Ex.: Caminho com site novo">
             </div>
+            <div class="mt-3">
+                <label class="text-xs font-semibold" for="pb-context" style="color:var(--muted2)">Sobre esta proposta <span style="color:var(--muted)">(o cliente vê no topo da página)</span></label>
+                <textarea id="pb-context" x-model="s.context" rows="4" maxlength="5000" class="field w-full"
+                          placeholder="Contexto: pra quem é, o que vocês conversaram, o que esta proposta resolve e o que ela contempla."></textarea>
+            </div>
         </div>
 
         <div class="grid gap-4 items-start" :style="{gridTemplateColumns: wide ? 'minmax(0,1fr) 340px' : '1fr'}">
@@ -423,7 +428,7 @@
                     return {
                         package_id: this.s.package_id || null, ad_budget: this.s.ad_budget || 0, discount: this.s.discount || 0,
                         installments: this.s.installments || 1, group: this.s.group,
-                        notes: this.s.notes || '',
+                        notes: this.s.notes || '', context: this.s.context || '',
                         lines: this.s.lines.map(l => ({catalog_item_id: l.catalog_item_id, quantity: l.quantity, unit_price: this.unitPrice(l), description: l.description || null})),
                     };
                 },

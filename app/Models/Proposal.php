@@ -49,6 +49,7 @@ class Proposal extends Model
         'rejected_at',
         'created_by',
         'notes',
+        'context',
         'public_token',
         'public_views',
         'public_last_view_at',

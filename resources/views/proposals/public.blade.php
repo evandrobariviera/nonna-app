@@ -197,6 +197,13 @@
         @endif
     </section>
 
+    @if($proposal->context)
+        <section class="card">
+            <p class="kicker">Sobre esta proposta</p>
+            <p class="lead notes">{!! nl2br(e($proposal->context)) !!}</p>
+        </section>
+    @endif
+
     @if($snap)
         <section class="card pkg">
             <div class="head">
